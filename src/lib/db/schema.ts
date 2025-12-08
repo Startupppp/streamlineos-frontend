@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Enums
@@ -142,7 +142,7 @@ export const tickets = pgTable("tickets", {
   priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),
   sprintId: integer("sprint_id").references(() => sprints.id),
-  epicId: integer("epic_id").references(() => tickets.id),
+  epicId: integer("epic_id"),
   assigneeId: text("assignee_id").references(() => users.id),
   reporterId: text("reporter_id").references(() => users.id),
   points: integer("points"),
@@ -150,7 +150,12 @@ export const tickets = pgTable("tickets", {
   timeSpent: decimal("time_spent").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (t) => ({
+  epicReference: foreignKey({
+      columns: [t.epicId],
+      foreignColumns: [t.id]
+  })
+}));
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),

@@ -47,7 +47,7 @@ export function AttendancePageClient() {
                                 <div className={`font-bold ${log.isOvertime ? "text-yellow-600" : "text-primary"}`}>
                                     {log.workHours || "0"} hrs
                                 </div>
-                                <div className="text-xs text-muted-foreground capitalize">{log.status.toLowerCase()}</div>
+                                <div className="text-xs text-muted-foreground capitalize">{(log.status || "Unknown").toLowerCase()}</div>
                             </div>
                         </div>
                     ))}

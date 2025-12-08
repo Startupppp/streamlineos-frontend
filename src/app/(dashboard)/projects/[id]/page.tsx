@@ -38,7 +38,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
       <div className="flex-1 overflow-hidden">
         <KanbanBoard 
-            tickets={(data.tickets || []).map((t: Ticket) => ({
+            tickets={(data.tickets as any || []).map((t: any) => ({
                 id: t.id,
                 title: t.title,
                 status: t.status ?? "TODO",
