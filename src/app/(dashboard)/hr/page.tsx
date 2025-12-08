@@ -38,13 +38,13 @@ export default async function HROverviewPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="p-8 space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-white">HR Management</h2>
         <p className="text-zinc-400">Manage your organization's workforce.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {modules.map((mod) => (
           <Link key={mod.href} href={mod.href}>
             <Card className="hover:bg-white/5 transition-colors cursor-pointer border-white/10 bg-white/5">
