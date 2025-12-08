@@ -7,6 +7,7 @@ import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
 import { ErrorMessage } from "@/components/pre-ui/error-message";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 
 export default function DashboardPage() {
   const { data: stats, isLoading, error, refetch } = api.dashboard.getStats.useQuery(undefined, {
@@ -76,9 +77,12 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
-        <p className="text-zinc-400">Overview for {stats.orgName}</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
+          <p className="text-zinc-400">Overview for {stats.orgName}</p>
+        </div>
+        <ClockInWidget />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
