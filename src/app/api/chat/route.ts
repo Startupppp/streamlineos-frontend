@@ -16,5 +16,5 @@ export async function POST(req: Request) {
     If asked about company data, say you can access real-time stats (Mock this for now).`,
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }

@@ -11,7 +11,7 @@ export default async function ProjectBoardPage({ params }: PageProps) {
   const { id } = await params;
   const data = await getProjectDetails(parseInt(id));
 
-  if (!data.project) return notFound();
+  if (!data) return notFound();
 
   return (
     <div className="p-8 h-full flex flex-col">
@@ -24,7 +24,15 @@ export default async function ProjectBoardPage({ params }: PageProps) {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <KanbanBoard tickets={data.tickets} projectId={parseInt(id)} />
+        <KanbanBoard 
+            tickets={data.tickets.map(t => ({
+                ...t,
+                status: t.status ?? "TODO",
+                type: t.type ?? "TASK",
+                assignee: t.assignee ? { firstName: t.assignee.firstName ?? undefined } : undefined
+            }))} 
+            projectId={parseInt(id)} 
+        />
       </div>
     </div>
   );
