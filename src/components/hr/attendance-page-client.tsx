@@ -4,7 +4,7 @@ import { AttendanceTracker } from "@/components/hr/attendance-tracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { api } from "@/trpc/react";
-import { AttendanceStatus } from "@/components/hr/attendance-tracker";
+import { type AttendanceStatus, type AttendanceLog } from "@/types/api";
 
 export function AttendancePageClient() {
   const { data, isLoading } = api.hr.getAttendanceStatus.useQuery();
@@ -34,8 +34,7 @@ export function AttendancePageClient() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {logs.map((log: any) => (
+                    {logs.map((log: AttendanceLog) => (
                         <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg">
                             <div>
                                 <div className="font-semibold">{format(new Date(log.date), "EEE, MMM dd")}</div>

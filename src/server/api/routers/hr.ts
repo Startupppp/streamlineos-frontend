@@ -4,6 +4,9 @@ import { departments, users, attendance, leaveRequests, leaveBalances, leaveType
 import { eq, and, desc } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
+import { checkInInputSchema } from "@/lib/validations/attendance";
+import { requestLeaveInputSchema } from "@/lib/validations/leave";
+import { createDepartmentInputSchema, updateProfileInputSchema, generatePayrollInputSchema } from "@/lib/validations/hr";
 
 export const hrRouter = createTRPCRouter({
   // --- DEPARTMENTS & EMPLOYEES ---
@@ -14,7 +17,7 @@ export const hrRouter = createTRPCRouter({
   }),
 
   createDepartment: protectedProcedure
-    .input(z.object({ name: z.string().min(1) }))
+    .input(createDepartmentInputSchema)
     .mutation(async ({ ctx, input }) => {
       await ctx.db.insert(departments).values({
         name: input.name,
@@ -23,12 +26,7 @@ export const hrRouter = createTRPCRouter({
     }),
 
   updateProfile: protectedProcedure
-    .input(z.object({
-        userId: z.string(),
-        designation: z.string().optional(),
-        departmentId: z.number().optional(),
-        phone: z.string().optional()
-    }))
+    .input(updateProfileInputSchema)
     .mutation(async ({ ctx, input }) => {
        await ctx.db.update(users)
         .set({
@@ -66,7 +64,7 @@ export const hrRouter = createTRPCRouter({
   }),
 
   checkIn: protectedProcedure
-    .input(z.object({ location: z.any().optional() }))
+    .input(checkInInputSchema)
     .mutation(async ({ ctx, input }) => {
         const today = format(new Date(), "yyyy-MM-dd");
         const existing = await ctx.db.query.attendance.findFirst({
@@ -142,7 +140,7 @@ export const hrRouter = createTRPCRouter({
   }),
 
   requestLeave: protectedProcedure
-    .input(z.object({ typeId: z.number(), startDate: z.string(), endDate: z.string(), reason: z.string() }))
+    .input(requestLeaveInputSchema)
     .mutation(async ({ ctx, input }) => {
         await ctx.db.insert(leaveRequests).values({
             orgId: ctx.session.orgId,
@@ -162,4 +160,53 @@ export const hrRouter = createTRPCRouter({
         orderBy: [desc(payrolls.createdAt)]
       });
   }),
+
+  generatePayroll: protectedProcedure
+    .input(generatePayrollInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { clerkClient } = await import("@clerk/nextjs/server");
+      const client = await clerkClient();
+      const memberships = await client.organizations.getOrganizationMembershipList({ 
+        organizationId: ctx.session.orgId 
+      });
+      
+      for (const mem of memberships.data) {
+        const uId = mem.publicUserData?.userId;
+        if (!uId) continue;
+
+        // TODO: Fetch from salaryStructures table
+        // Create salaryStructures table with fields: userId, orgId, basicSalary, hraPercentage, allowances, deductions
+        // For now, using placeholder values - this should be replaced with actual salary structure lookup
+        const basic = 50000;
+        const hra = basic * 0.4;
+        const allowances = 5000;
+        const deductions = 2000;
+        const gross = basic + hra + allowances;
+        const net = gross - deductions;
+
+        const existing = await ctx.db.query.payrolls.findFirst({
+          where: and(
+            eq(payrolls.userId, uId), 
+            eq(payrolls.month, input.month), 
+            eq(payrolls.orgId, ctx.session.orgId)
+          )
+        });
+
+        if (!existing) {
+          await ctx.db.insert(payrolls).values({
+            orgId: ctx.session.orgId,
+            userId: uId,
+            month: input.month,
+            basicSalary: basic.toString(),
+            hra: hra.toString(),
+            allowances: allowances.toString(),
+            deductions: deductions.toString(),
+            grossSalary: gross.toString(),
+            netSalary: net.toString(),
+            status: "DRAFT",
+            generatedBy: ctx.session.userId,
+          });
+        }
+      }
+    }),
 });

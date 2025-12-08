@@ -1,71 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Coffee, LogOut } from "lucide-react";
 import { format } from "date-fns";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
-
-export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
+import { type AttendanceStatus, type TodayLog } from "@/types/api";
+import { useAttendanceTimer } from "@/hooks/useAttendanceTimer";
 
 interface AttendanceTrackerProps {
   initialStatus: AttendanceStatus;
-  todayLog: any;
+  todayLog: TodayLog | null;
 }
 
 export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTrackerProps) {
-  const router = useRouter();
-  const [elapsed, setElapsed] = useState(0);
+  const { elapsed, formatTime } = useAttendanceTimer(todayLog, initialStatus);
 
   const utils = api.useUtils();
   const checkInMutation = api.hr.checkIn.useMutation({
       onSuccess: () => {
           toast.success("Checked In!");
-          router.refresh();
+          utils.hr.getAttendanceStatus.invalidate();
       },
       onError: (e) => toast.error(e.message)
   });
   const checkOutMutation = api.hr.checkOut.useMutation({
       onSuccess: () => {
           toast.success("Checked Out!");
-          router.refresh();
+          utils.hr.getAttendanceStatus.invalidate();
       },
       onError: (e) => toast.error(e.message)
   });
   const toggleBreakMutation = api.hr.toggleBreak.useMutation({
       onSuccess: () => {
           toast.success("Break status updated!");
-          router.refresh();
+          utils.hr.getAttendanceStatus.invalidate();
       },
       onError: (e) => toast.error(e.message)
   });
 
   const loading = checkInMutation.isPending || checkOutMutation.isPending || toggleBreakMutation.isPending;
-
-  useEffect(() => {
-    // Timer logic
-    if (todayLog?.checkIn && !todayLog?.checkOut && initialStatus !== "ON_BREAK") {
-      const interval = setInterval(() => {
-        const start = new Date(todayLog.checkIn).getTime();
-        const now = new Date().getTime();
-        const breakMs = (Number(todayLog.breakHours) || 0) * 60 * 60 * 1000;
-        setElapsed(now - start - breakMs);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [todayLog, initialStatus]);
-
-  const formatTime = (ms: number) => {
-    if (ms < 0) return "00:00:00";
-    const seconds = Math.floor((ms / 1000) % 60);
-    const minutes = Math.floor((ms / (1000 * 60)) % 60);
-    const hours = Math.floor((ms / (1000 * 60 * 60)));
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
 
   const handleCheckIn = async () => {
     if ("geolocation" in navigator) {
@@ -73,11 +49,11 @@ export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTracker
         const { latitude, longitude } = position.coords;
         checkInMutation.mutate({ location: { latitude, longitude } });
     }, (error) => {
-        alert("Location required for Check-In");
+        toast.error("Location required for Check-In");
         console.error(error);
     });
     } else {
-    alert("Geolocation not supported");
+      toast.error("Geolocation not supported");
     }
   };
 

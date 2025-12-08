@@ -64,8 +64,7 @@ export function AssistantBot() {
                         <p>Ask me about attendance, payroll, or projects.</p>
                     </div>
                 )}
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {messages.map((m: any) => (
+                {messages.map((m) => (
                     <div key={m.id} className={cn("flex w-full", m.role === 'user' ? "justify-end" : "justify-start")}>
                         <div className={cn(
                             "max-w-[80%] rounded-lg px-3 py-2 text-sm",
