@@ -10,18 +10,19 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-
-const mockAttendanceData = [
-  { id: 1, date: "07-12-2025", status: "WO", inTime: "--", outTime: "--", workDuration: "--", overtime: "--", breakDuration: "--" },
-  { id: 2, date: "06-12-2025", status: "WO", inTime: "--", outTime: "--", workDuration: "--", overtime: "--", breakDuration: "--" },
-  { id: 3, date: "05-12-2025", status: "A", inTime: "--", outTime: "--", workDuration: "--", overtime: "--", breakDuration: "--" },
-  { id: 4, date: "04-12-2025", status: "A", inTime: "--", outTime: "--", workDuration: "--", overtime: "--", breakDuration: "--" },
-  { id: 5, date: "03-12-2025", status: "P", inTime: "11:38 AM", outTime: "11:38 AM", workDuration: "00:00", overtime: "--", breakDuration: "--" },
-  { id: 6, date: "02-12-2025", status: "A", inTime: "--", outTime: "--", workDuration: "--", overtime: "--", breakDuration: "--" },
-  { id: 7, date: "01-12-2025", status: "P / HL", inTime: "10:52 AM", outTime: "10:52 AM", workDuration: "00:00", overtime: "--", breakDuration: "--" },
-];
+import { api } from "@/trpc/react";
+import { format } from "date-fns";
+import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
 
 export function MonthlyLog() {
+  const { data, isLoading } = api.hr.getAttendanceStatus.useQuery();
+
+  if (isLoading) {
+      return <div className="p-8 flex justify-center"><LoadingSpinner /></div>;
+  }
+
+  const logs = data?.logs || [];
+
   return (
     <div className="rounded-md border border-white/10 bg-white/5">
       <Table>
@@ -40,28 +41,34 @@ export function MonthlyLog() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockAttendanceData.map((row) => (
-            <TableRow key={row.id} className="border-white/10 hover:bg-white/5 text-zinc-300">
-              <TableCell>
-                <Checkbox className="border-white/50" />
-              </TableCell>
-              <TableCell className="font-medium">{row.date}</TableCell>
-              <TableCell>
-                {row.status === "P" || row.status.includes("P /") ? (
-                  <Badge className="bg-emerald-500/10 text-emerald-500 border-0">{row.status}</Badge>
-                ) : row.status === "WO" ? (
-                  <Badge className="bg-blue-500/10 text-blue-500 border-0">{row.status}</Badge>
-                ) : (
-                  <Badge className="bg-red-500/10 text-red-500 border-0">{row.status}</Badge>
-                )}
-              </TableCell>
-              <TableCell>{row.inTime}</TableCell>
-              <TableCell>{row.outTime}</TableCell>
-              <TableCell>{row.workDuration}</TableCell>
-              <TableCell>{row.overtime}</TableCell>
-              <TableCell>{row.breakDuration}</TableCell>
-            </TableRow>
-          ))}
+          {logs.length === 0 ? (
+              <TableRow className="border-white/10 hover:bg-white/5 text-zinc-400">
+                  <TableCell colSpan={8} className="text-center py-8">No attendance logs found for this month.</TableCell>
+              </TableRow>
+          ) : (
+            logs.map((row) => (
+                <TableRow key={row.id} className="border-white/10 hover:bg-white/5 text-zinc-300">
+                <TableCell>
+                    <Checkbox className="border-white/50" />
+                </TableCell>
+                <TableCell className="font-medium">{format(new Date(row.date), "dd-MM-yyyy")}</TableCell>
+                <TableCell>
+                    {row.status === "PRESENT" ? (
+                    <Badge className="bg-emerald-500/10 text-emerald-500 border-0">P</Badge>
+                    ) : row.status === "ABSENT" ? (
+                    <Badge className="bg-red-500/10 text-red-500 border-0">A</Badge>
+                    ) : (
+                    <Badge className="bg-blue-500/10 text-blue-500 border-0">{row.status}</Badge>
+                    )}
+                </TableCell>
+                <TableCell>{row.checkIn ? format(new Date(row.checkIn), "hh:mm a") : "--"}</TableCell>
+                <TableCell>{row.checkOut ? format(new Date(row.checkOut), "hh:mm a") : "--"}</TableCell>
+                <TableCell>{row.workHours ? `${row.workHours} hrs` : "--"}</TableCell>
+                <TableCell>{row.isOvertime ? "Yes" : "--"}</TableCell>
+                <TableCell>{row.breakHours ? `${row.breakHours} hrs` : "--"}</TableCell>
+                </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </div>
