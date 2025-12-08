@@ -199,3 +199,7 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
     relationName: "reporter",
   }),
 }));
+
+export const projectsRelations = relations(projects, ({ many }) => ({
+  tickets: many(tickets),
+}));
