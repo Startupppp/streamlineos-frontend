@@ -3,20 +3,48 @@
 import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, CalendarCheck, CreditCard } from "lucide-react";
+import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
+import { ErrorMessage } from "@/components/pre-ui/error-message";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 export default function DashboardPage() {
-  const { data: stats, isLoading } = api.dashboard.getStats.useQuery();
+  const { data: stats, isLoading, error, refetch } = api.dashboard.getStats.useQuery(undefined, {
+    retry: 2,
+    retryDelay: 1000,
+  });
 
   if (isLoading) {
     return (
       <div className="p-8 space-y-8">
-        <div className="text-muted-foreground">Loading dashboard...</div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <LoadingSpinner />
+          <span>Loading dashboard...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="space-y-4">
+          <ErrorMessage message={error.message || "Failed to load dashboard stats"} />
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (!stats) {
-    return <div>Please select an organization.</div>;
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-muted-foreground">Please select an organization.</div>
+      </div>
+    );
   }
 
   const statCards = [

@@ -24,7 +24,7 @@ export default function RootLayout({
             baseTheme: dark
         }}
     >
-        <html lang="en" suppressHydrationWarning>
+        <html lang="en" className="dark" suppressHydrationWarning>
           <body className={`${inter.className} min-h-screen bg-black text-white antialiased selection:bg-gold/30 selection:text-gold`}>
             <TRPCReactProvider>
                 {children}
