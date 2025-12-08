@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MonthlyLog } from "@/components/attendance/monthly-log";
+import { DailyLog } from "@/components/attendance/daily-log";
 
 export default function AttendancePage() {
   return (
@@ -9,25 +10,23 @@ export default function AttendancePage() {
         <p className="text-zinc-400">View and manage attendance logs.</p>
       </div>
 
-      <Tabs defaultValue="monthly" className="w-full">
+      <Tabs defaultValue="daily" className="w-full">
         <TabsList className="bg-white/5 border border-white/10">
           <TabsTrigger 
             value="daily"
-            className="data-[state=active]:bg-gold data-[state=active]:text-primary"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-zinc-400"
           >
             Daily Log
           </TabsTrigger>
           <TabsTrigger 
             value="monthly" 
-            className="data-[state=active]:bg-gold data-[state=active]:text-primary text-zinc-400"
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-zinc-400"
           >
             Monthly Log
           </TabsTrigger>
         </TabsList>
         <TabsContent value="daily" className="mt-6">
-          <div className="p-4 rounded-md border border-white/10 bg-white/5 text-zinc-400">
-            Daily Log View (Coming Soon)
-          </div>
+            <DailyLog />
         </TabsContent>
         <TabsContent value="monthly" className="mt-6">
           <div className="space-y-4">
