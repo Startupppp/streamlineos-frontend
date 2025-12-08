@@ -3,14 +3,15 @@
 import { db } from "@/lib/db";
 import { projects, tickets, users } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function getProjects() {
-   const { userId } = await auth();
-   if (!userId) throw new Error("Unauthorized");
+   const { orgId } = await auth();
+   if (!orgId) return [];
 
    return await db.query.projects.findMany({
+       where: eq(projects.orgId, orgId),
        with: {
         // tickets: true // if needed
        }
@@ -18,15 +19,17 @@ export async function getProjects() {
 }
 
 export async function getProjectDetails(projectId: number) {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const { orgId } = await auth();
+    if (!orgId) throw new Error("Unauthorized");
 
     const project = await db.query.projects.findFirst({
-        where: eq(projects.id, projectId),
+        where: and(eq(projects.id, projectId), eq(projects.orgId, orgId)),
     });
 
+    if (!project) return null;
+
     const allTickets = await db.query.tickets.findMany({
-        where: eq(tickets.projectId, projectId),
+        where: and(eq(tickets.projectId, projectId), eq(tickets.orgId, orgId)),
         with: {
             assignee: true
         }
@@ -36,10 +39,11 @@ export async function getProjectDetails(projectId: number) {
 }
 
 export async function createTicket(data: { title: string; projectId: number; description?: string; type?: "TASK" | "BUG" | "EPIC" | "STORY" }) {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const { orgId, userId } = await auth();
+    if (!orgId || !userId) throw new Error("Unauthorized");
 
     await db.insert(tickets).values({
+        orgId,
         title: data.title,
         projectId: data.projectId,
         description: data.description,
@@ -52,12 +56,29 @@ export async function createTicket(data: { title: string; projectId: number; des
 }
 
 export async function updateTicketStatus(ticketId: number, status: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE") {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const { orgId } = await auth();
+    if (!orgId) throw new Error("Unauthorized");
 
+    // Ideally verify orgId of the ticket first
     await db.update(tickets)
         .set({ status, updatedAt: new Date() })
-        .where(eq(tickets.id, ticketId));
+        .where(and(eq(tickets.id, ticketId), eq(tickets.orgId, orgId)));
 
-    revalidatePath("/projects"); // Revalidate broadly or specifically
+    revalidatePath("/projects");
+}
+
+export async function updateProjectSettings(projectId: number, data: { name: string; description?: string; status: string }) {
+    const { orgId } = await auth();
+    if (!orgId) throw new Error("Unauthorized");
+
+    await db.update(projects)
+        .set({
+            name: data.name,
+            description: data.description,
+            status: data.status,
+        })
+        .where(and(eq(projects.id, projectId), eq(projects.orgId, orgId)));
+    
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath("/projects");
 }

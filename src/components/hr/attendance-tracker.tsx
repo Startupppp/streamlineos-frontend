@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { checkIn, checkOut, toggleBreak, AttendanceStatus } from "@/app/actions/attendance";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Coffee, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
+
+export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
 
 interface AttendanceTrackerProps {
   initialStatus: AttendanceStatus;
@@ -16,8 +19,32 @@ interface AttendanceTrackerProps {
 
 export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTrackerProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+
+  const utils = api.useUtils();
+  const checkInMutation = api.hr.checkIn.useMutation({
+      onSuccess: () => {
+          toast.success("Checked In!");
+          router.refresh();
+      },
+      onError: (e) => toast.error(e.message)
+  });
+  const checkOutMutation = api.hr.checkOut.useMutation({
+      onSuccess: () => {
+          toast.success("Checked Out!");
+          router.refresh();
+      },
+      onError: (e) => toast.error(e.message)
+  });
+  const toggleBreakMutation = api.hr.toggleBreak.useMutation({
+      onSuccess: () => {
+          toast.success("Break status updated!");
+          router.refresh();
+      },
+      onError: (e) => toast.error(e.message)
+  });
+
+  const loading = checkInMutation.isPending || checkOutMutation.isPending || toggleBreakMutation.isPending;
 
   useEffect(() => {
     // Timer logic
@@ -41,33 +68,17 @@ export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTracker
   };
 
   const handleCheckIn = async () => {
-    setLoading(true);
-    try {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          const { latitude, longitude } = position.coords;
-          await checkIn({ latitude, longitude });
-          router.refresh();
-        }, (error) => {
-          alert("Location required for Check-In");
-          console.error(error);
-          setLoading(false);
-        });
-      } else {
-        alert("Geolocation not supported");
-        setLoading(false);
-      }
-    } catch (e) {
-      console.error(e);
-      setLoading(false);
+    if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        checkInMutation.mutate({ location: { latitude, longitude } });
+    }, (error) => {
+        alert("Location required for Check-In");
+        console.error(error);
+    });
+    } else {
+    alert("Geolocation not supported");
     }
-  };
-
-  const handleAction = async (action: () => Promise<void>) => {
-    setLoading(true);
-    await action();
-    setLoading(false);
-    router.refresh();
   };
 
   return (
@@ -100,7 +111,7 @@ export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTracker
             {(initialStatus === "PRESENT" || initialStatus === "ON_BREAK") && (
                 <>
                      <Button 
-                        onClick={() => handleAction(toggleBreak)} 
+                        onClick={() => toggleBreakMutation.mutate()} 
                         disabled={loading}
                         variant="outline"
                         className={cn("h-12 border-primary/20", initialStatus === "ON_BREAK" ? "bg-yellow-500/20 text-yellow-400" : "text-white hover:bg-white/10")}
@@ -110,7 +121,7 @@ export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTracker
                     </Button>
 
                     <Button 
-                        onClick={() => handleAction(checkOut)} 
+                        onClick={() => checkOutMutation.mutate()} 
                         disabled={loading || initialStatus === "ON_BREAK"}
                         variant="destructive"
                         className="h-12"

@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
-import Providers from "@/components/providers";
+import { dark } from "@clerk/themes";
+import { Toaster } from "@/components/ui/sonner";
+import { TRPCReactProvider } from "@/trpc/react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Vaivamm CRM",
@@ -25,15 +19,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-        <html lang="en">
-        <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-            <Providers>
+    <ClerkProvider
+        appearance={{
+            baseTheme: dark
+        }}
+    >
+        <html lang="en" suppressHydrationWarning>
+          <body className={`${inter.className} min-h-screen bg-black text-white antialiased selection:bg-gold/30 selection:text-gold`}>
+            <TRPCReactProvider>
                 {children}
-            </Providers>
-        </body>
+            </TRPCReactProvider>
+            <Toaster position="bottom-right" theme="dark" />
+          </body>
         </html>
     </ClerkProvider>
   );

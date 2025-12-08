@@ -12,21 +12,28 @@ export const payrollStatusEnum = pgEnum("payroll_status", ["DRAFT", "PENDING_APP
 
 export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   name: text("name").notNull(),
-  managerId: text("manager_id"),
+  managerId: text("manager_id"), // Relation defined below
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(), // Clerk User ID
-  email: text("email").notNull().unique(),
+  email: text("email").notNull(),
   firstName: text("first_name"),
   lastName: text("last_name"),
+  // Note: Role is now primarily managed by Clerk Organization, but we keep this for caching/display if needed, 
+  // or for global system roles.
   role: roleEnum("role").default("MEMBER").notNull(),
+  
+  // For MVP, we allow linking to ONE department here. 
+  // In a complex multi-org setup, this should be in a separate 'members' table.
   departmentId: integer("department_id").references(() => departments.id),
+  
   designation: text("designation"),
   phone: text("phone"),
-  metadata: jsonb("metadata"), // flexible storage
+  metadata: jsonb("metadata"), 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -35,28 +42,31 @@ export const users = pgTable("users", {
 
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   date: date("date").notNull(),
   checkIn: timestamp("check_in"),
   checkOut: timestamp("check_out"),
-  status: text("status").default("PRESENT"), // PRESENT, ABSENT, HALF_DAY
+  status: text("status").default("PRESENT"), 
   workHours: decimal("work_hours"),
   breakHours: decimal("break_hours").default("0"),
-  breaks: jsonb("breaks").$type<{ start: string; end?: string }[]>().default([]), // Track break intervals
-  locationData: jsonb("location_data"), // { lat, long, ip, device }
+  breaks: jsonb("breaks").$type<{ start: string; end?: string }[]>().default([]),
+  locationData: jsonb("location_data"),
   isOvertime: boolean("is_overtime").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const leaveTypes = pgTable("leave_types", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(), // Casual, Sick, Earned
+  orgId: text("org_id").notNull(),
+  name: text("name").notNull(), 
   daysPerYear: integer("days_per_year").notNull(),
   carryForward: boolean("carry_forward").default(false),
 });
 
 export const leaveBalances = pgTable("leave_balances", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   leaveTypeId: integer("leave_type_id").references(() => leaveTypes.id),
   balance: decimal("balance").default("0").notNull(),
@@ -65,6 +75,7 @@ export const leaveBalances = pgTable("leave_balances", {
 
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   leaveTypeId: integer("leave_type_id").references(() => leaveTypes.id),
   startDate: date("start_date").notNull(),
@@ -78,12 +89,13 @@ export const leaveRequests = pgTable("leave_requests", {
 
 export const payrolls = pgTable("payrolls", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   month: text("month").notNull(), // "2024-01"
   basicSalary: decimal("basic_salary").notNull(),
   hra: decimal("hra").default("0"),
   allowances: decimal("allowances").default("0"),
-  deductions: decimal("deductions").default("0"), // Tax, PF
+  deductions: decimal("deductions").default("0"),
   grossSalary: decimal("gross_salary").notNull(),
   netSalary: decimal("net_salary").notNull(),
   status: payrollStatusEnum("status").default("DRAFT"),
@@ -97,9 +109,10 @@ export const payrolls = pgTable("payrolls", {
 
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  clientId: text("client_id").references(() => users.id), // Guest Access
+  clientId: text("client_id").references(() => users.id),
   managerId: text("manager_id").references(() => users.id),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
@@ -108,35 +121,38 @@ export const projects = pgTable("projects", {
 
 export const sprints = pgTable("sprints", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   projectId: integer("project_id").references(() => projects.id),
   name: text("name").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   goal: text("goal"),
-  status: text("status").default("PLANNED"), // ACTIVE, COMPLETED
+  status: text("status").default("PLANNED"),
 });
 
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   type: ticketTypeEnum("type").default("TASK"),
   status: ticketStatusEnum("status").default("TODO"),
-  priority: text("priority").default("MEDIUM"), // LOW, MEDIUM, HIGH, URGENT
+  priority: text("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),
   sprintId: integer("sprint_id").references(() => sprints.id),
-  epicId: integer("epic_id").references((): any => tickets.id), // Self-reference for Epics
+  epicId: integer("epic_id").references((): any => tickets.id),
   assigneeId: text("assignee_id").references(() => users.id),
   reporterId: text("reporter_id").references(() => users.id),
-  points: integer("points"), // Story points
-  originalEstimate: decimal("original_estimate"), // Hours
-  timeSpent: decimal("time_spent").default("0"), // Logged hours
+  points: integer("points"),
+  originalEstimate: decimal("original_estimate"), 
+  timeSpent: decimal("time_spent").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull(),
   userId: text("user_id").references(() => users.id),
   ticketId: integer("ticket_id").references(() => tickets.id),
   date: date("date").notNull(),

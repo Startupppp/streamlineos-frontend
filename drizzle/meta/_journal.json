@@ -15,6 +15,13 @@
       "when": 1765130418675,
       "tag": "0001_bitter_odin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765134347587,
+      "tag": "0002_glorious_silk_fever",
+      "breakpoints": true
     }
   ]
 }

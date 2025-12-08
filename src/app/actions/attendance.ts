@@ -14,17 +14,17 @@ export async function getAttendanceStatus(): Promise<{
   logs: any;
   todayLog: any;
 }> {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) throw new Error("Unauthorized");
 
   const today = format(new Date(), "yyyy-MM-dd");
 
   const todayLog = await db.query.attendance.findFirst({
-    where: and(eq(attendance.userId, userId), eq(attendance.date, today)),
+    where: and(eq(attendance.userId, userId), eq(attendance.date, today), eq(attendance.orgId, orgId)),
   });
 
   const logs = await db.query.attendance.findMany({
-    where: eq(attendance.userId, userId),
+    where: and(eq(attendance.userId, userId), eq(attendance.orgId, orgId)),
     orderBy: [desc(attendance.date)],
     limit: 10,
   });
@@ -45,18 +45,19 @@ export async function getAttendanceStatus(): Promise<{
 }
 
 export async function checkIn(locationData: any) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) throw new Error("Unauthorized");
 
   const today = format(new Date(), "yyyy-MM-dd");
 
   const existing = await db.query.attendance.findFirst({
-    where: and(eq(attendance.userId, userId), eq(attendance.date, today)),
+    where: and(eq(attendance.userId, userId), eq(attendance.date, today), eq(attendance.orgId, orgId)),
   });
 
   if (existing) throw new Error("Already checked in for today");
 
   await db.insert(attendance).values({
+    orgId,
     userId,
     date: today,
     checkIn: new Date(),
@@ -68,13 +69,13 @@ export async function checkIn(locationData: any) {
 }
 
 export async function checkOut() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) throw new Error("Unauthorized");
   
   const today = format(new Date(), "yyyy-MM-dd");
 
   const log = await db.query.attendance.findFirst({
-    where: and(eq(attendance.userId, userId), eq(attendance.date, today)),
+    where: and(eq(attendance.userId, userId), eq(attendance.date, today), eq(attendance.orgId, orgId)),
   });
 
   if (!log || log.checkOut) throw new Error("Cannot check out");
@@ -103,12 +104,12 @@ export async function checkOut() {
 }
 
 export async function toggleBreak() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) throw new Error("Unauthorized");
 
   const today = format(new Date(), "yyyy-MM-dd");
   const log = await db.query.attendance.findFirst({
-    where: and(eq(attendance.userId, userId), eq(attendance.date, today)),
+    where: and(eq(attendance.userId, userId), eq(attendance.date, today), eq(attendance.orgId, orgId)),
   });
 
   if (!log || log.checkOut) throw new Error("Invalid action");

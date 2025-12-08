@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { updateTicketStatus } from "@/app/actions/projects";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MoreHorizontal } from "lucide-react";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +18,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface KanbanBoardProps {
-  tickets: any[];
+  tickets: Array<{
+    id: number;
+    title: string;
+    status: string;
+    type: string;
+    assignee?: { firstName?: string };
+  }>;
   projectId: number;
 }
 
@@ -29,19 +37,30 @@ const COLUMNS = [
 
 export function KanbanBoard({ tickets }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
+  const router = useRouter(); 
+  const utils = api.useUtils();
+
+  const updateStatus = api.project.updateTicketStatus.useMutation({
+      onMutate: async (newTicket) => {
+          await utils.project.getProjectDetails.cancel();
+          const previous = optimisticTickets;
+          setOptimisticTickets((prev) => 
+            prev.map((t) => (t.id === newTicket.ticketId ? { ...t, status: newTicket.status } : t))
+          );
+          return { previous };
+      },
+      onError: (err, newTicket, context) => {
+          setOptimisticTickets(context?.previous || []);
+          toast.error("Failed to update status");
+      },
+      onSettled: () => {
+          router.refresh();
+          utils.project.getProjectDetails.invalidate();
+      }
+  });
 
   const moveTicket = async (ticketId: number, newStatus: string) => {
-    // Optimistic Update
-    setOptimisticTickets((prev) =>
-      prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
-    );
-
-    try {
-      await updateTicketStatus(ticketId, newStatus as any);
-    } catch {
-       // Revert on error
-       console.error("Failed to move ticket");
-    }
+      updateStatus.mutate({ ticketId, status: newStatus as "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE" });
   };
 
   return (

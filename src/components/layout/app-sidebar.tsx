@@ -11,9 +11,8 @@ import {
   Clock,
   CalendarCheck,
   CreditCard,
-  // LogOut
 } from "lucide-react";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser, OrganizationSwitcher } from "@clerk/nextjs";
 
 const routes = [
   {
@@ -66,15 +65,31 @@ export function AppSidebar() {
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-lg">
       <div className="px-3 py-2 flex-1">
-        <Link href="/dashboard" className="flex items-center pl-3 mb-14">
+        <Link href="/dashboard" className="flex items-center pl-3 mb-6">
           <div className="relative w-8 h-8 mr-4">
-            {/* Logo placeholder */}
             <div className="absolute inset-0 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-lg shadow-lg" />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
             Vaivamm
           </h1>
         </Link>
+        
+        <div className="px-3 mb-6">
+            <OrganizationSwitcher 
+                hidePersonal={true}
+                afterSelectOrganizationUrl="/dashboard"
+                afterCreateOrganizationUrl="/dashboard"
+                afterLeaveOrganizationUrl="/org-selection"
+                appearance={{
+                    elements: {
+                        rootBox: "w-full",
+                        organizationSwitcherTrigger: "w-full justify-between text-white hover:bg-white/10 p-2 rounded-lg border border-white/10",
+                        organizationPreviewTextContainer: "text-white"
+                    }
+                }}
+            />
+        </div>
+
         <div className="space-y-1">
           {routes.map((route) => (
             <Link
@@ -98,9 +113,9 @@ export function AppSidebar() {
       <div className="px-3 py-2 border-t border-white/10">
         <div className="flex items-center gap-x-3 p-3 text-sm">
              <UserButton afterSignOutUrl="/" />
-             <div className="flex flex-col">
-                <span className="font-semibold text-white">{user?.fullName}</span>
-                <span className="text-xs text-zinc-400 capitalize">{user?.publicMetadata?.role as string || "Member"}</span>
+             <div className="flex flex-col overflow-hidden">
+                <span className="font-semibold text-white truncate">{user?.fullName}</span>
+                <span className="text-xs text-zinc-400 truncate">{user?.primaryEmailAddress?.emailAddress}</span>
              </div>
         </div>
       </div>

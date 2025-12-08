@@ -1,41 +1,42 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { attendance, payrolls, users } from "@/lib/db/schema";
-import { auth } from "@clerk/nextjs/server";
-import { eq, and } from "drizzle-orm";
+import { payrolls, users } from "@/lib/db/schema";
+import { auth, clerkClient } from "@clerk/nextjs/server";
+import { eq, and, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function generatePayroll(month: string) { // YYYY-MM
-  const { userId } = await auth();
-  if (!userId) throw new Error("Unauthorized");
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) throw new Error("Unauthorized");
 
-  // Fetch all users
-  const allUsers = await db.select().from(users);
+  // In V2, we generate payroll for all members in the organization.
+  // We fetch members from Clerk to ensure we have the correct list for this Org.
+  
+  const client = await clerkClient();
+  const memberships = await client.organizations.getOrganizationMembershipList({ organizationId: orgId });
+  
+  for (const mem of memberships.data) {
+      const uId = mem.publicUserData?.userId;
+      if (!uId) continue;
 
-  for (const user of allUsers) {
-      // 1. Calculate Attendance
-      // For MVP, simplistic: Count distinct days present in that month
-      // In real app, date range query
-      
-      // Mocking salary structure for now as it's not in DB yet (or stored in metadata)
-      // Assuming Basic = 50000
+      // Mocking salary structure
       const basic = 50000;
       const hra = basic * 0.4;
       const allowances = 5000;
       const deductions = 2000; // PT + PF
-
       const gross = basic + hra + allowances;
       const net = gross - deductions;
 
       // Check if payroll already exists
       const existing = await db.query.payrolls.findFirst({
-        where: and(eq(payrolls.userId, user.id), eq(payrolls.month, month))
+        where: and(eq(payrolls.userId, uId), eq(payrolls.month, month), eq(payrolls.orgId, orgId))
       });
 
       if (!existing) {
         await db.insert(payrolls).values({
-            userId: user.id,
+            orgId,
+            userId: uId,
             month,
             basicSalary: basic.toString(),
             hra: hra.toString(),
@@ -53,13 +54,11 @@ export async function generatePayroll(month: string) { // YYYY-MM
 }
 
 export async function getPayrolls() {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized");
+    const { userId, orgId } = await auth();
+    if (!userId || !orgId) throw new Error("Unauthorized");
 
-    // If admin, see all. If member, see own.
-    // Syncing simplistic logic
     return await db.query.payrolls.findMany({
-        where: eq(payrolls.userId, userId), // For now only showing own for safety
+        where: and(eq(payrolls.userId, userId), eq(payrolls.orgId, orgId)),
         orderBy: (payrolls, { desc }) => [desc(payrolls.createdAt)]
     });
 }
