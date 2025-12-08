@@ -5,6 +5,8 @@ import { relations } from "drizzle-orm";
 export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER", "CLIENT"]);
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
+export const ticketPriorityEnum = pgEnum("ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
+export const projectStatusEnum = pgEnum("project_status", ["ACTIVE", "COMPLETED", "ARCHIVED"]);
 export const leaveStatusEnum = pgEnum("leave_status", ["PENDING", "APPROVED", "REJECTED"]);
 export const payrollStatusEnum = pgEnum("payroll_status", ["DRAFT", "PENDING_APPROVAL", "APPROVED", "PAID"]);
 
@@ -116,7 +118,7 @@ export const projects = pgTable("projects", {
   managerId: text("manager_id").references(() => users.id),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
-  status: text("status").default("ACTIVE"),
+  status: projectStatusEnum("status").default("ACTIVE"),
 });
 
 export const sprints = pgTable("sprints", {
@@ -137,10 +139,10 @@ export const tickets = pgTable("tickets", {
   description: text("description"),
   type: ticketTypeEnum("type").default("TASK"),
   status: ticketStatusEnum("status").default("TODO"),
-  priority: text("priority").default("MEDIUM"),
+  priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),
   sprintId: integer("sprint_id").references(() => sprints.id),
-  epicId: integer("epic_id").references((): any => tickets.id),
+  epicId: integer("epic_id").references(() => tickets.id),
   assigneeId: text("assignee_id").references(() => users.id),
   reporterId: text("reporter_id").references(() => users.id),
   points: integer("points"),

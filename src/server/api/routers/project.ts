@@ -2,6 +2,11 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { projects, tickets } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { 
+  createTicketInputSchema, 
+  updateTicketStatusInputSchema, 
+  updateProjectSettingsInputSchema 
+} from "@/lib/validations/project";
 
 export const projectRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
@@ -28,14 +33,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   createTicket: protectedProcedure
-    .input(z.object({
-        projectId: z.number(),
-        title: z.string().min(1),
-        description: z.string().optional(),
-        type: z.enum(["BUG", "FEATURE", "TASK", "EPIC", "STORY"]),
-        priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-        assigneeId: z.string().optional()
-    }))
+    .input(createTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
         // Map generic priority or type if needed. Schema has Epic/Story/Task/Bug.
         await ctx.db.insert(tickets).values({
@@ -51,7 +49,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   updateTicketStatus: protectedProcedure
-    .input(z.object({ ticketId: z.number(), status: z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]) }))
+    .input(updateTicketStatusInputSchema)
     .mutation(async ({ ctx, input }) => {
         await ctx.db.update(tickets)
             .set({ status: input.status })
@@ -59,7 +57,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   updateProjectSettings: protectedProcedure
-    .input(z.object({ projectId: z.number(), name: z.string(), description: z.string().optional(), status: z.string() }))
+    .input(updateProjectSettingsInputSchema)
     .mutation(async ({ ctx, input }) => {
         await ctx.db.update(projects)
             .set({
