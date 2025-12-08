@@ -1,54 +1,46 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+"use client";
+
+import { api } from "@/trpc/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, CalendarCheck, CreditCard } from "lucide-react";
-import { db } from "@/lib/db";
-import { projects, attendance } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { format } from "date-fns";
 
-export default async function DashboardPage() {
-  const { orgId, userId } = await auth();
-  
-  if (!orgId) {
-      return <div>Please select an organization.</div>;
+export default function DashboardPage() {
+  const { data: stats, isLoading } = api.dashboard.getStats.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-muted-foreground">Loading dashboard...</div>
+      </div>
+    );
   }
 
-  const client = await clerkClient();
-  const org = await client.organizations.getOrganization({ organizationId: orgId });
-  const memberships = await client.organizations.getOrganizationMembershipList({ organizationId: orgId });
-  
-  // Fetch DB Stats
-  const activeProjectsCount = (await db.query.projects.findMany({
-      where: eq(projects.orgId, orgId)
-  })).length;
+  if (!stats) {
+    return <div>Please select an organization.</div>;
+  }
 
-  const today = format(new Date(), "yyyy-MM-dd");
-  const presentCount = (await db.query.attendance.findMany({
-      where: and(eq(attendance.orgId, orgId), eq(attendance.date, today))
-  })).length;
-
-  const stats = [
+  const statCards = [
     {
       label: "Total Employees",
-      value: memberships.totalCount,
+      value: stats.totalEmployees,
       icon: Users,
       color: "text-pink-500",
     },
     {
       label: "Active Projects",
-      value: activeProjectsCount,
+      value: stats.activeProjects,
       icon: Briefcase,
       color: "text-violet-500",
     },
     {
       label: "Present Today",
-      value: presentCount,
+      value: stats.presentToday,
       icon: CalendarCheck,
       color: "text-emerald-500",
     },
     {
        label: "Organization ID",
-       value: org.slug || orgId.slice(0, 8),
+       value: stats.orgSlug,
        icon: CreditCard,
        color: "text-zinc-500"
     }
@@ -58,11 +50,11 @@ export default async function DashboardPage() {
     <div className="p-8 space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
-        <p className="text-zinc-400">Overview for {org.name}</p>
+        <p className="text-zinc-400">Overview for {stats.orgName}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.label} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white">{stat.label}</CardTitle>

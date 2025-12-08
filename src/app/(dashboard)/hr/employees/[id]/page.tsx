@@ -1,32 +1,34 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+"use client";
+
+import { use } from "react";
+import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { getDepartments } from "@/app/actions/hr";
+import { api } from "@/trpc/react";
 import { EmployeeProfileForm } from "@/components/hr/employee-profile-form";
 
-export default async function EmployeeProfilePage({ params }: { params: { id: string } }) {
-  const { orgId } = await auth();
-  if (!orgId) redirect("/org-selection");
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const { id } = await params;
+export default function EmployeeProfilePage({ params }: PageProps) {
+  const { id } = use(params);
+  const { user: clerkUser } = useUser();
+  
+  const { data: departments, isLoading: deptLoading } = api.hr.getDepartments.useQuery();
+  const { data: dbUser, isLoading: userLoading } = api.hr.getDepartments.useQuery(); // TODO: Add getUser procedure
 
-  const client = await clerkClient();
-  let clerkUser;
-  try {
-      clerkUser = await client.users.getUser(id);
-  } catch (e) {
-      return <div>User not found</div>;
+  if (deptLoading || userLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
   }
 
-  const dbUser = await db.query.users.findFirst({
-      where: eq(users.id, id)
-  });
-  
-  const allDepartments = await getDepartments();
+  if (!clerkUser) {
+    return <div>User not found</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -37,7 +39,7 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
         </Avatar>
         <div>
             <h1 className="text-3xl font-bold text-white">{clerkUser.firstName} {clerkUser.lastName}</h1>
-            <p className="text-zinc-400">{clerkUser.emailAddresses[0]?.emailAddress}</p>
+            <p className="text-zinc-400">{clerkUser.primaryEmailAddress?.emailAddress}</p>
         </div>
       </div>
 
@@ -50,11 +52,11 @@ export default async function EmployeeProfilePage({ params }: { params: { id: st
                 <EmployeeProfileForm 
                     userId={id}
                     initialData={{
-                        designation: dbUser?.designation,
-                        departmentId: dbUser?.departmentId,
-                        phone: dbUser?.phone
+                        designation: null, // TODO: Get from tRPC
+                        departmentId: null,
+                        phone: null
                     }}
-                    departments={allDepartments}
+                    departments={departments || []}
                 />
             </CardContent>
         </Card>

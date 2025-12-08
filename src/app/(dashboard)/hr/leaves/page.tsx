@@ -1,4 +1,6 @@
-import { getLeaveData } from "@/app/actions/leaves";
+"use client";
+
+import { api } from "@/trpc/react";
 import { LeaveRequestForm } from "@/components/hr/leave-request-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,19 +13,29 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 
-export default async function LeavesPage() {
-  const { balances, allTypes, requests } = await getLeaveData();
+export default function LeavesPage() {
+  const { data, isLoading } = api.hr.getLeaves.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  const { balances, types, requests } = data || { balances: [], types: [], requests: [] };
 
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary">Leave Management</h1>
-        <LeaveRequestForm types={allTypes} />
+        <LeaveRequestForm types={types} />
       </div>
 
       {/* Balances */}
       <div className="grid gap-4 md:grid-cols-3">
-        {balances.length > 0 ? balances.map((balance: any) => (
+        {balances.length > 0 ? balances.map((balance) => (
             <Card key={balance.id}>
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -60,7 +72,7 @@ export default async function LeavesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requests.map((req: any) => (
+              {requests.map((req) => (
                 <TableRow key={req.id}>
                   <TableCell>
                     {format(new Date(req.startDate), "MMM d")} - {format(new Date(req.endDate), "MMM d, yyyy")}
