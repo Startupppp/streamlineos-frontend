@@ -9,8 +9,12 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function AssistantBot() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { messages, append } = useChat() as any;
+  const { messages, append, isLoading } = useChat({
+    api: '/api/chat',
+    onError: (e) => {
+        console.error("AI Error:", e);
+    }
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [inputData, setInputData] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -84,7 +88,7 @@ export function AssistantBot() {
                 placeholder="Type a message..." 
                 className="flex-1"
               />
-              <Button type="submit" size="icon" disabled={!inputData.trim()}>
+              <Button type="submit" size="icon" disabled={!inputData.trim() || isLoading}>
                 <Send className="h-4 w-4" />
               </Button>
             </form>
