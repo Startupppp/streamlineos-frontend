@@ -4,7 +4,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
 export default async function HROverviewPage() {
-  const { orgId } = await auth();
+  await auth();
 
   const modules = [
     {
@@ -41,7 +41,7 @@ export default async function HROverviewPage() {
     <div className="p-8 space-y-8">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-white">HR Management</h2>
-        <p className="text-zinc-400">Manage your organization's workforce.</p>
+        <p className="text-zinc-400">Manage your organization&apos;s workforce.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
