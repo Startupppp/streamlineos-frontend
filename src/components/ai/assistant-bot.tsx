@@ -9,14 +9,13 @@ import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function AssistantBot() {
-  const { messages, append, isLoading } = useChat({
+  const { messages, isLoading, input, handleInputChange, handleSubmit } = (useChat as any)({
     api: '/api/chat',
-    onError: (e) => {
+    onError: (e: any) => {
         console.error("AI Error:", e);
     }
   });
   const [isOpen, setIsOpen] = useState(false);
-  const [inputData, setInputData] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,13 +23,6 @@ export function AssistantBot() {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!inputData.trim()) return;
-      await append({ role: 'user', content: inputData });
-      setInputData("");
-  };
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
@@ -64,7 +56,6 @@ export function AssistantBot() {
                         <p>Ask me about attendance, payroll, or projects.</p>
                     </div>
                 )}
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {messages.map((m: any) => (
                     <div key={m.id} className={cn("flex w-full", m.role === 'user' ? "justify-end" : "justify-start")}>
                         <div className={cn(
@@ -83,12 +74,12 @@ export function AssistantBot() {
           <CardFooter className="p-3 border-t bg-background">
             <form onSubmit={handleSubmit} className="flex w-full gap-2">
               <Input 
-                value={inputData} 
-                onChange={(e) => setInputData(e.target.value)} 
+                value={input} 
+                onChange={handleInputChange} 
                 placeholder="Type a message..." 
                 className="flex-1"
               />
-              <Button type="submit" size="icon" disabled={!inputData.trim() || isLoading}>
+              <Button type="submit" size="icon" disabled={!input || isLoading}>
                 <Send className="h-4 w-4" />
               </Button>
             </form>

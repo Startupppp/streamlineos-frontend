@@ -1,29 +1,49 @@
-import { generatePayroll, getPayrolls } from "@/app/actions/payroll";
+"use client";
+
+import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
-export default async function PayrollPage() {
-  const payrolls = await getPayrolls();
+export default function PayrollPage() {
+  const { data: payrolls, isLoading } = api.hr.getPayrolls.useQuery();
+  const utils = api.useUtils();
   
-  // Actions wrapper for button
-  async function generateAction() {
-      "use server";
-      const currentMonth = format(new Date(), "yyyy-MM");
-      await generatePayroll(currentMonth);
+  const generateMutation = api.hr.generatePayroll.useMutation({
+    onSuccess: () => {
+      toast.success("Payroll generated successfully");
+      utils.hr.getPayrolls.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to generate payroll");
+    },
+  });
+
+  const handleGenerate = () => {
+    const currentMonth = format(new Date(), "yyyy-MM");
+    generateMutation.mutate({ month: currentMonth });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="p-8 space-y-8">
        <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary">Payroll</h1>
-        <form action={generateAction}>
-            <Button>Generate {format(new Date(), "MMMM")} Payroll</Button>
-        </form>
+        <Button onClick={handleGenerate} disabled={generateMutation.isPending}>
+          {generateMutation.isPending ? "Generating..." : `Generate ${format(new Date(), "MMMM")} Payroll`}
+        </Button>
       </div>
 
       <div className="grid gap-4">
-        {payrolls.map((p: any) => (
+        {payrolls?.map((p) => (
             <Card key={p.id}>
                 <CardHeader>
                     <CardTitle>{p.month} - {p.status}</CardTitle>
@@ -43,7 +63,7 @@ export default async function PayrollPage() {
                 </CardContent>
             </Card>
         ))}
-         {payrolls.length === 0 && <p className="text-muted-foreground">No payslips generated.</p>}
+         {payrolls && payrolls.length === 0 && <p className="text-muted-foreground">No payslips generated.</p>}
       </div>
     </div>
   );

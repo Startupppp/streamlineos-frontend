@@ -1,34 +1,91 @@
-import { auth } from "@clerk/nextjs/server";
-import { getProjectDetails, updateProjectSettings } from "@/app/actions/projects";
-import { redirect } from "next/navigation";
+"use client";
+
+import { use } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@/trpc/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
+import { z } from "zod";
 
-export default async function ProjectSettingsPage({ params }: { params: { id: string } }) {
-  const { orgId } = await auth();
-  if (!orgId) redirect("/org-selection");
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const projectId = parseInt(params.id);
-  const data = await getProjectDetails(projectId);
+const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
+type FormValues = z.infer<typeof formSchema>;
 
-  if (!data?.project) {
-      return <div>Project not found</div>;
+export default function ProjectSettingsPage({ params }: PageProps) {
+  const { id } = use(params);
+  const projectId = parseInt(id);
+  const router = useRouter();
+  
+  const { data: project, isLoading } = api.project.getProjectDetails.useQuery({ id: projectId });
+  const utils = api.useUtils();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      status: "ACTIVE",
+    },
+    values: project ? {
+      name: project.name || "",
+      description: project.description || "",
+      status: (project.status as "ACTIVE" | "COMPLETED" | "ARCHIVED") || "ACTIVE",
+    } : undefined,
+  });
+
+  const updateMutation = api.project.updateProjectSettings.useMutation({
+    onSuccess: () => {
+      toast.success("Project settings updated");
+      utils.project.getProjectDetails.invalidate({ id: projectId });
+      router.push(`/projects/${projectId}`);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update project settings");
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 max-w-2xl mx-auto">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
   }
 
-  const { project } = data;
-
-  async function saveSettings(formData: FormData) {
-      "use server";
-      const name = formData.get("name") as string;
-      const description = formData.get("description") as string;
-      const status = formData.get("status") as string;
-
-      await updateProjectSettings(projectId, { name, description, status });
-      redirect(`/projects/${projectId}`);
+  if (!project) {
+    return <div>Project not found</div>;
   }
+
+  const onSubmit = (values: FormValues) => {
+    updateMutation.mutate({
+      projectId,
+      ...values,
+    });
+  };
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
@@ -39,34 +96,70 @@ export default async function ProjectSettingsPage({ params }: { params: { id: st
                 <CardTitle className="text-white">General Information</CardTitle>
             </CardHeader>
             <CardContent>
-                <form action={saveSettings} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name" className="text-white">Project Name</Label>
-                        <Input id="name" name="name" defaultValue={project.name} className="bg-black/20 border-white/10 text-white" />
-                    </div>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Project Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              className="bg-black/20 border-white/10 text-white" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
-                    <div className="space-y-2">
-                        <Label htmlFor="description" className="text-white">Description</Label>
-                        <Textarea id="description" name="description" defaultValue={project.description || ""} className="bg-black/20 border-white/10 text-white" />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Description</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field}
+                              className="bg-black/20 border-white/10 text-white" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="space-y-2">
-                        <Label htmlFor="status" className="text-white">Status</Label>
-                        <select 
-                            name="status" 
-                            defaultValue={project.status || "ACTIVE"}
-                            className="flex h-10 w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-gold"
-                        >
-                            <option value="ACTIVE">Active</option>
-                            <option value="COMPLETED">Completed</option>
-                            <option value="ARCHIVED">Archived</option>
-                        </select>
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="ACTIVE">Active</SelectItem>
+                              <SelectItem value="COMPLETED">Completed</SelectItem>
+                              <SelectItem value="ARCHIVED">Archived</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <Button type="submit" className="w-full bg-gold text-black hover:bg-yellow-500">
-                        Save Changes
+                    <Button type="submit" disabled={updateMutation.isPending} className="w-full bg-gold text-black hover:bg-yellow-500">
+                        {updateMutation.isPending ? "Saving..." : "Save Changes"}
                     </Button>
-                </form>
+                  </form>
+                </Form>
             </CardContent>
         </Card>
     </div>

@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { MoreHorizontal } from "lucide-react";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,9 +34,8 @@ const COLUMNS = [
   { id: "DONE", label: "Done", color: "bg-green-50 border-green-200" },
 ];
 
-export function KanbanBoard({ tickets }: KanbanBoardProps) {
+export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
-  const router = useRouter(); 
   const utils = api.useUtils();
 
   const updateStatus = api.project.updateTicketStatus.useMutation({
@@ -54,8 +52,7 @@ export function KanbanBoard({ tickets }: KanbanBoardProps) {
           toast.error("Failed to update status");
       },
       onSettled: () => {
-          router.refresh();
-          utils.project.getProjectDetails.invalidate();
+          utils.project.getProjectDetails.invalidate({ id: projectId });
       }
   });
 

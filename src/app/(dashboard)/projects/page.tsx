@@ -1,11 +1,21 @@
-import { getProjects } from "@/app/actions/projects";
+"use client";
+
+import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-export default async function ProjectsPage() {
-  const projects = await getProjects();
+export default function ProjectsPage() {
+  const { data: projects, isLoading } = api.project.getProjects.useQuery();
+
+  if (isLoading) {
+    return (
+      <div className="p-8 space-y-8">
+        <div className="text-muted-foreground">Loading projects...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8">
@@ -17,7 +27,7 @@ export default async function ProjectsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {projects.map((project: any) => (
+        {projects?.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
                 <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                     <CardHeader>
@@ -33,14 +43,14 @@ export default async function ProjectsPage() {
                                 {project.status}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                                {new Date(project.startDate).toLocaleDateString()}
+                                {project.startDate ? new Date(project.startDate).toLocaleDateString() : "No date"}
                             </span>
                         </div>
                     </CardContent>
                 </Card>
             </Link>
         ))}
-         {projects.length === 0 && (
+         {projects && projects.length === 0 && (
              <div className="col-span-full text-center py-12 text-muted-foreground">
                  No active projects.
              </div>

@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -67,7 +68,13 @@ export function AppSidebar() {
       <div className="px-3 py-2 flex-1">
         <Link href="/dashboard" className="flex items-center pl-3 mb-6">
           <div className="relative w-8 h-8 mr-4">
-            <div className="absolute inset-0 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-lg shadow-lg" />
+            <Image 
+              src="/logo.svg" 
+              alt="Vaivamm Logo" 
+              width={32} 
+              height={32}
+              className="rounded-lg"
+            />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
             Vaivamm
