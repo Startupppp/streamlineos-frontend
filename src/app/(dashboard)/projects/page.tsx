@@ -1,13 +1,13 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useProjects } from "@/lib/hooks/trpc-hooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function ProjectsPage() {
-  const { data: projects, isLoading } = api.project.getProjects.useQuery();
+  const { data: projects, isLoading } = useProjects();
 
   if (isLoading) {
     return (

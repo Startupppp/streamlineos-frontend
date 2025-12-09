@@ -1,12 +1,40 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { departments, users, attendance, leaveRequests, leaveBalances, leaveTypes, payrolls } from "@/lib/db/schema";
+import {
+  departments,
+  users,
+  attendance,
+  leaveRequests,
+  leaveBalances,
+  leaveTypes,
+  payrolls,
+  salaryStructures,
+  expenses,
+  assets,
+  documents,
+  performanceReviews,
+  goals,
+  helpdeskTickets,
+} from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "@/lib/validations/attendance";
 import { requestLeaveInputSchema } from "@/lib/validations/leave";
-import { createDepartmentInputSchema, updateProfileInputSchema, generatePayrollInputSchema } from "@/lib/validations/hr";
+import {
+  createDepartmentInputSchema,
+  updateProfileInputSchema,
+  generatePayrollInputSchema,
+  createSalaryStructureInputSchema,
+  createExpenseInputSchema,
+  updateExpenseStatusInputSchema,
+  createAssetInputSchema,
+  updateAssetInputSchema,
+  createDocumentInputSchema,
+  createPerformanceReviewInputSchema,
+  createGoalInputSchema,
+  updateGoalInputSchema,
+} from "@/lib/validations/hr";
 
 export const hrRouter = createTRPCRouter({
   // --- DEPARTMENTS & EMPLOYEES ---
@@ -166,30 +194,44 @@ export const hrRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { clerkClient } = await import("@clerk/nextjs/server");
       const client = await clerkClient();
-      const memberships = await client.organizations.getOrganizationMembershipList({ 
-        organizationId: ctx.session.orgId 
+      const memberships = await client.organizations.getOrganizationMembershipList({
+        organizationId: ctx.session.orgId,
       });
-      
+
       for (const mem of memberships.data) {
         const uId = mem.publicUserData?.userId;
         if (!uId) continue;
 
-        // TODO: Fetch from salaryStructures table
-        // Create salaryStructures table with fields: userId, orgId, basicSalary, hraPercentage, allowances, deductions
-        // For now, using placeholder values - this should be replaced with actual salary structure lookup
-        const basic = 50000;
-        const hra = basic * 0.4;
-        const allowances = 5000;
-        const deductions = 2000;
+        const salaryStructure = await ctx.db.query.salaryStructures.findFirst({
+          where: and(
+            eq(salaryStructures.userId, uId),
+            eq(salaryStructures.orgId, ctx.session.orgId),
+            eq(salaryStructures.isActive, true)
+          ),
+        });
+
+        const basic = salaryStructure
+          ? parseFloat(salaryStructure.basicSalary)
+          : 50000;
+        const hraPercentage = salaryStructure
+          ? parseFloat(salaryStructure.hraPercentage || "40")
+          : 40;
+        const hra = basic * (hraPercentage / 100);
+        const allowances = salaryStructure
+          ? parseFloat(salaryStructure.allowances || "0")
+          : 5000;
+        const deductions = salaryStructure
+          ? parseFloat(salaryStructure.deductions || "0")
+          : 2000;
         const gross = basic + hra + allowances;
         const net = gross - deductions;
 
         const existing = await ctx.db.query.payrolls.findFirst({
           where: and(
-            eq(payrolls.userId, uId), 
-            eq(payrolls.month, input.month), 
+            eq(payrolls.userId, uId),
+            eq(payrolls.month, input.month),
             eq(payrolls.orgId, ctx.session.orgId)
-          )
+          ),
         });
 
         if (!existing) {
@@ -208,5 +250,309 @@ export const hrRouter = createTRPCRouter({
           });
         }
       }
+    }),
+
+  getSalaryStructures: protectedProcedure
+    .input(z.object({ userId: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(salaryStructures.orgId, ctx.session.orgId)];
+      if (input.userId) {
+        conditions.push(eq(salaryStructures.userId, input.userId));
+      }
+      return await ctx.db.query.salaryStructures.findMany({
+        where: and(...conditions),
+        orderBy: [desc(salaryStructures.effectiveFrom)],
+      });
+    }),
+
+  createSalaryStructure: protectedProcedure
+    .input(createSalaryStructureInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(salaryStructures)
+        .set({ isActive: false })
+        .where(
+          and(
+            eq(salaryStructures.userId, input.userId),
+            eq(salaryStructures.orgId, ctx.session.orgId),
+            eq(salaryStructures.isActive, true)
+          )
+        );
+
+      const [structure] = await ctx.db
+        .insert(salaryStructures)
+        .values({
+          orgId: ctx.session.orgId,
+          userId: input.userId,
+          basicSalary: input.basicSalary.toString(),
+          hraPercentage: input.hraPercentage.toString(),
+          allowances: input.allowances.toString(),
+          deductions: input.deductions.toString(),
+          effectiveFrom: input.effectiveFrom,
+          effectiveTo: input.effectiveTo,
+          isActive: true,
+        })
+        .returning();
+      return structure;
+    }),
+
+  getExpenses: protectedProcedure
+    .input(z.object({ userId: z.string().optional(), status: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(expenses.orgId, ctx.session.orgId)];
+      if (input.userId) {
+        conditions.push(eq(expenses.userId, input.userId));
+      }
+      if (input.status) {
+        conditions.push(eq(expenses.status, input.status as any));
+      }
+      return await ctx.db.query.expenses.findMany({
+        where: and(...conditions),
+        orderBy: [desc(expenses.expenseDate)],
+      });
+    }),
+
+  createExpense: protectedProcedure.input(createExpenseInputSchema).mutation(async ({ ctx, input }) => {
+    const [expense] = await ctx.db
+      .insert(expenses)
+      .values({
+        orgId: ctx.session.orgId,
+        userId: ctx.session.userId,
+        category: input.category,
+        amount: input.amount.toString(),
+        description: input.description,
+        receiptUrl: input.receiptUrl,
+        expenseDate: input.expenseDate,
+        status: "PENDING",
+      })
+      .returning();
+    return expense;
+  }),
+
+  updateExpenseStatus: protectedProcedure
+    .input(updateExpenseStatusInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(expenses)
+        .set({
+          status: input.status,
+          approverId: ctx.session.userId,
+          rejectionReason: input.rejectionReason,
+        })
+        .where(
+          and(eq(expenses.id, input.expenseId), eq(expenses.orgId, ctx.session.orgId))
+        );
+    }),
+
+  getAssets: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.query.assets.findMany({
+      where: eq(assets.orgId, ctx.session.orgId),
+      orderBy: [desc(assets.createdAt)],
+    });
+  }),
+
+  createAsset: protectedProcedure.input(createAssetInputSchema).mutation(async ({ ctx, input }) => {
+    const [asset] = await ctx.db
+      .insert(assets)
+      .values({
+        orgId: ctx.session.orgId,
+        name: input.name,
+        type: input.type,
+        serialNumber: input.serialNumber,
+        assignedTo: input.assignedTo,
+        purchaseDate: input.purchaseDate,
+        purchaseCost: input.purchaseCost?.toString(),
+        location: input.location,
+        notes: input.notes,
+        status: input.assignedTo ? "ASSIGNED" : "AVAILABLE",
+      })
+      .returning();
+    return asset;
+  }),
+
+  updateAsset: protectedProcedure.input(updateAssetInputSchema).mutation(async ({ ctx, input }) => {
+    const { assetId, ...updateData } = input;
+    await ctx.db
+      .update(assets)
+      .set({
+        ...(updateData.name && { name: updateData.name }),
+        ...(updateData.type && { type: updateData.type }),
+        ...(updateData.serialNumber !== undefined && { serialNumber: updateData.serialNumber }),
+        ...(updateData.assignedTo !== undefined && {
+          assignedTo: updateData.assignedTo,
+          status: updateData.assignedTo ? "ASSIGNED" : "AVAILABLE",
+        }),
+        ...(updateData.status && { status: updateData.status }),
+        ...(updateData.location !== undefined && { location: updateData.location }),
+        ...(updateData.notes !== undefined && { notes: updateData.notes }),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(assets.id, assetId), eq(assets.orgId, ctx.session.orgId)));
+  }),
+
+  getDocuments: protectedProcedure
+    .input(z.object({ userId: z.string().optional(), type: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(documents.orgId, ctx.session.orgId), eq(documents.isActive, true)];
+      if (input.userId) {
+        conditions.push(eq(documents.userId, input.userId));
+      }
+      if (input.type) {
+        conditions.push(eq(documents.type, input.type as any));
+      }
+      return await ctx.db.query.documents.findMany({
+        where: and(...conditions),
+        orderBy: [desc(documents.createdAt)],
+      });
+    }),
+
+  createDocument: protectedProcedure.input(createDocumentInputSchema).mutation(async ({ ctx, input }) => {
+    const [document] = await ctx.db
+      .insert(documents)
+      .values({
+        orgId: ctx.session.orgId,
+        userId: input.userId || ctx.session.userId,
+        name: input.name,
+        type: input.type,
+        fileUrl: input.fileUrl,
+        fileSize: input.fileSize,
+        mimeType: input.mimeType,
+        uploadedBy: ctx.session.userId,
+        isActive: true,
+      })
+      .returning();
+    return document;
+  }),
+
+  getPerformanceReviews: protectedProcedure
+    .input(z.object({ userId: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(performanceReviews.orgId, ctx.session.orgId)];
+      if (input.userId) {
+        conditions.push(eq(performanceReviews.userId, input.userId));
+      }
+      return await ctx.db.query.performanceReviews.findMany({
+        where: and(...conditions),
+        orderBy: [desc(performanceReviews.periodEnd)],
+      });
+    }),
+
+  createPerformanceReview: protectedProcedure
+    .input(createPerformanceReviewInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const [review] = await ctx.db
+        .insert(performanceReviews)
+        .values({
+          orgId: ctx.session.orgId,
+          userId: input.userId,
+          reviewerId: input.reviewerId || ctx.session.userId,
+          periodStart: input.periodStart,
+          periodEnd: input.periodEnd,
+          ratings: input.ratings,
+          strengths: input.strengths,
+          improvements: input.improvements,
+          goals: input.goals,
+          overallRating: input.overallRating?.toString(),
+          comments: input.comments,
+          status: "DRAFT",
+        })
+        .returning();
+      return review;
+    }),
+
+  getGoals: protectedProcedure
+    .input(z.object({ userId: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(goals.orgId, ctx.session.orgId)];
+      if (input.userId) {
+        conditions.push(eq(goals.userId, input.userId));
+      }
+      return await ctx.db.query.goals.findMany({
+        where: and(...conditions),
+        orderBy: [desc(goals.createdAt)],
+      });
+    }),
+
+  createGoal: protectedProcedure.input(createGoalInputSchema).mutation(async ({ ctx, input }) => {
+    const [goal] = await ctx.db
+      .insert(goals)
+      .values({
+        orgId: ctx.session.orgId,
+        userId: input.userId,
+        title: input.title,
+        description: input.description,
+        type: input.type,
+        targetValue: input.targetValue?.toString(),
+        currentValue: input.currentValue.toString(),
+        unit: input.unit,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        status: "IN_PROGRESS",
+        progress: 0,
+        parentGoalId: input.parentGoalId,
+      })
+      .returning();
+    return goal;
+  }),
+
+  updateGoal: protectedProcedure.input(updateGoalInputSchema).mutation(async ({ ctx, input }) => {
+    const { goalId, ...updateData } = input;
+    await ctx.db
+      .update(goals)
+      .set({
+        ...(updateData.title && { title: updateData.title }),
+        ...(updateData.description !== undefined && { description: updateData.description }),
+        ...(updateData.targetValue !== undefined && {
+          targetValue: updateData.targetValue.toString(),
+        }),
+        ...(updateData.currentValue !== undefined && {
+          currentValue: updateData.currentValue.toString(),
+        }),
+        ...(updateData.status && { status: updateData.status }),
+        ...(updateData.progress !== undefined && { progress: updateData.progress }),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(goals.id, goalId), eq(goals.orgId, ctx.session.orgId)));
+  }),
+
+  getHelpdeskTickets: protectedProcedure
+    .input(z.object({ userId: z.string().optional(), status: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const conditions = [eq(helpdeskTickets.orgId, ctx.session.orgId)];
+      if (input.userId) {
+        conditions.push(eq(helpdeskTickets.userId, input.userId));
+      }
+      if (input.status) {
+        conditions.push(eq(helpdeskTickets.status, input.status as any));
+      }
+      return await ctx.db.query.helpdeskTickets.findMany({
+        where: and(...conditions),
+        orderBy: [desc(helpdeskTickets.createdAt)],
+      });
+    }),
+
+  createHelpdeskTicket: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().min(1),
+        description: z.string().optional(),
+        category: z.string().optional(),
+        priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [ticket] = await ctx.db
+        .insert(helpdeskTickets)
+        .values({
+          orgId: ctx.session.orgId,
+          userId: ctx.session.userId,
+          title: input.title,
+          description: input.description,
+          category: input.category,
+          priority: input.priority || "MEDIUM",
+          status: "TODO",
+        })
+        .returning();
+      return ticket;
     }),
 });

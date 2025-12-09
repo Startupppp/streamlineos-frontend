@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/trpc/react";
+import { useCreateTicket } from "@/lib/hooks/trpc-hooks";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +32,8 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { createTicketInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { vaivammKeys } from "@/lib/hooks/trpc-hooks";
 
 const formSchema = createTicketInputSchema.omit({ projectId: true });
 
@@ -39,14 +41,14 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function CreateTicketDialog({ projectId }: { projectId: number }) {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const utils = api.useUtils();
-  const createTicketMutation = api.project.createTicket.useMutation({
+  const createTicketMutation = useCreateTicket({
     onSuccess: () => {
       toast.success("Ticket created successfully");
       setOpen(false);
       form.reset();
-      utils.project.getProjectDetails.invalidate({ id: projectId });
+      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.project(projectId) });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create ticket");

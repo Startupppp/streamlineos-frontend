@@ -1,11 +1,10 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useProject } from "@/lib/hooks/trpc-hooks";
 import { KanbanBoard } from "@/components/projects/kanban-board";
 import { notFound } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { use } from "react";
-import { type Ticket } from "@/types/api";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,7 +13,7 @@ interface PageProps {
 export default function ProjectBoardPage({ params }: PageProps) {
   const { id } = use(params);
   const projectId = parseInt(id);
-  const { data, isLoading } = api.project.getProjectDetails.useQuery({ id: projectId });
+  const { data, isLoading } = useProject(projectId);
 
   if (isLoading) {
     return (

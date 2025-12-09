@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useDashboardStats } from "@/lib/hooks/trpc-hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Briefcase, CalendarCheck, CreditCard } from "lucide-react";
 import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
@@ -10,7 +10,7 @@ import { RefreshCw } from "lucide-react";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 
 export default function DashboardPage() {
-  const { data: stats, isLoading, error, refetch } = api.dashboard.getStats.useQuery(undefined, {
+  const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
     retryDelay: 1000,
   });

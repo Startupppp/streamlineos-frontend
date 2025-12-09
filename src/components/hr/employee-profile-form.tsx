@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { api } from "@/trpc/react";
+import { useUpdateProfile } from "@/lib/hooks/trpc-hooks";
 
 const profileSchema = z.object({
   designation: z.string().min(2, "Designation must be at least 2 characters."),
@@ -31,7 +31,7 @@ interface EmployeeProfileFormProps {
 export function EmployeeProfileForm({ userId, initialData, departments }: EmployeeProfileFormProps) {
   const router = useRouter();
   
-  const updateProfile = api.hr.updateProfile.useMutation({
+  const updateProfile = useUpdateProfile({
       onSuccess: () => {
           toast.success("Profile updated successfully");
           router.refresh();

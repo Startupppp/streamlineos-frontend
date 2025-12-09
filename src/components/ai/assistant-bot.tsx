@@ -8,10 +8,16 @@ import { Bot, X, Send } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
 export function AssistantBot() {
-  const { messages, isLoading, input, handleInputChange, handleSubmit } = (useChat as any)({
+  const { messages, isLoading, input, handleInputChange, handleSubmit } = useChat({
     api: '/api/chat',
-    onError: (e: any) => {
+    onError: (e: Error) => {
         console.error("AI Error:", e);
     }
   });
@@ -56,7 +62,7 @@ export function AssistantBot() {
                         <p>Ask me about attendance, payroll, or projects.</p>
                     </div>
                 )}
-                {messages.map((m: any) => (
+                {messages.map((m: ChatMessage) => (
                     <div key={m.id} className={cn("flex w-full", m.role === 'user' ? "justify-end" : "justify-start")}>
                         <div className={cn(
                             "max-w-[80%] rounded-lg px-3 py-2 text-sm",

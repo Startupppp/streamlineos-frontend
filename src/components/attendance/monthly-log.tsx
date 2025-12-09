@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { api } from "@/trpc/react";
+import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
 import { format } from "date-fns";
 import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
 
 export function MonthlyLog() {
-  const { data, isLoading } = api.hr.getAttendanceStatus.useQuery();
+  const { data, isLoading } = useHrAttendanceStatus();
 
   if (isLoading) {
       return <div className="p-8 flex justify-center"><LoadingSpinner /></div>;

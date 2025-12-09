@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/trpc/react";
+import { useRequestLeave } from "@/lib/hooks/trpc-hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,13 +47,11 @@ type FormValues = {
 export function LeaveRequestForm({ types = [] }: LeaveRequestFormProps) {
   const [open, setOpen] = useState(false);
 
-  const utils = api.useUtils();
-  const requestLeaveMutation = api.hr.requestLeave.useMutation({
+  const requestLeaveMutation = useRequestLeave({
     onSuccess: () => {
       toast.success("Leave request submitted successfully");
       setOpen(false);
       form.reset();
-      utils.hr.getLeaves.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to submit request");

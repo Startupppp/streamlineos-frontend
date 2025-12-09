@@ -1,13 +1,13 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api } from "@/trpc/react";
+import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
 import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
 import { format } from "date-fns";
 import { Clock, Coffee, AlertTriangle } from "lucide-react";
 
 export function DailyLog() {
-  const { data, isLoading } = api.hr.getAttendanceStatus.useQuery();
+  const { data, isLoading } = useHrAttendanceStatus();
 
   if (isLoading) {
     return <div className="p-8 flex justify-center"><LoadingSpinner /></div>;

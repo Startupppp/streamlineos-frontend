@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useHrLeaves } from "@/lib/hooks/trpc-hooks";
 import { LeaveRequestForm } from "@/components/hr/leave-request-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,7 +14,7 @@ import {
 import { format } from "date-fns";
 
 export default function LeavesPage() {
-  const { data, isLoading } = api.hr.getLeaves.useQuery();
+  const { data, isLoading } = useHrLeaves();
 
   if (isLoading) {
     return (

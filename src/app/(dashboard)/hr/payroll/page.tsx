@@ -1,19 +1,17 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useHrPayrolls, useGeneratePayroll } from "@/lib/hooks/trpc-hooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 export default function PayrollPage() {
-  const { data: payrolls, isLoading } = api.hr.getPayrolls.useQuery();
-  const utils = api.useUtils();
+  const { data: payrolls, isLoading } = useHrPayrolls();
   
-  const generateMutation = api.hr.generatePayroll.useMutation({
+  const generateMutation = useGeneratePayroll({
     onSuccess: () => {
       toast.success("Payroll generated successfully");
-      utils.hr.getPayrolls.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to generate payroll");

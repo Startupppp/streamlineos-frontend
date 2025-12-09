@@ -3,7 +3,7 @@
 import { use } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/trpc/react";
+import { useProject, useUpdateProjectSettings } from "@/lib/hooks/trpc-hooks";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ import {
 import { toast } from "sonner";
 import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { vaivammKeys } from "@/lib/hooks/trpc-hooks";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -39,9 +41,9 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   const { id } = use(params);
   const projectId = parseInt(id);
   const router = useRouter();
+  const queryClient = useQueryClient();
   
-  const { data: project, isLoading } = api.project.getProjectDetails.useQuery({ id: projectId });
-  const utils = api.useUtils();
+  const { data: project, isLoading } = useProject(projectId);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -57,10 +59,10 @@ export default function ProjectSettingsPage({ params }: PageProps) {
     } : undefined,
   });
 
-  const updateMutation = api.project.updateProjectSettings.useMutation({
+  const updateMutation = useUpdateProjectSettings({
     onSuccess: () => {
       toast.success("Project settings updated");
-      utils.project.getProjectDetails.invalidate({ id: projectId });
+      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.project(projectId) });
       router.push(`/projects/${projectId}`);
     },
     onError: (error) => {

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Coffee, LogOut } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
+import { useHrCheckIn, useHrCheckOut, useHrToggleBreak } from "@/lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { type AttendanceStatus, type TodayLog } from "@/types/api";
 import { useAttendanceTimer } from "@/hooks/useAttendanceTimer";
@@ -18,25 +18,21 @@ interface AttendanceTrackerProps {
 export function AttendanceTracker({ initialStatus, todayLog }: AttendanceTrackerProps) {
   const { elapsed, formatTime } = useAttendanceTimer(todayLog, initialStatus);
 
-  const utils = api.useUtils();
-  const checkInMutation = api.hr.checkIn.useMutation({
+  const checkInMutation = useHrCheckIn({
       onSuccess: () => {
           toast.success("Checked In!");
-          utils.hr.getAttendanceStatus.invalidate();
       },
       onError: (e) => toast.error(e.message)
   });
-  const checkOutMutation = api.hr.checkOut.useMutation({
+  const checkOutMutation = useHrCheckOut({
       onSuccess: () => {
           toast.success("Checked Out!");
-          utils.hr.getAttendanceStatus.invalidate();
       },
       onError: (e) => toast.error(e.message)
   });
-  const toggleBreakMutation = api.hr.toggleBreak.useMutation({
+  const toggleBreakMutation = useHrToggleBreak({
       onSuccess: () => {
           toast.success("Break status updated!");
-          utils.hr.getAttendanceStatus.invalidate();
       },
       onError: (e) => toast.error(e.message)
   });

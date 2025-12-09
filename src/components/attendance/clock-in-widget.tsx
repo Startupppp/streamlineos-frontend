@@ -3,31 +3,27 @@
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
-import { api } from "@/trpc/react";
+import { useHrAttendanceStatus, useHrCheckIn, useHrCheckOut } from "@/lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
 
 export function ClockInWidget() {
-  const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(new Date());
 
-  const utils = api.useUtils();
-  const { data: statusData, isLoading } = api.hr.getAttendanceStatus.useQuery();
+  const { data: statusData, isLoading } = useHrAttendanceStatus();
   
-  const checkInMutation = api.hr.checkIn.useMutation({
-    onSuccess: async () => {
+  const checkInMutation = useHrCheckIn({
+    onSuccess: () => {
       toast.success("Clocked in successfully!");
-      await utils.hr.getAttendanceStatus.invalidate();
     },
     onError: (err) => {
         toast.error(err.message);
     }
   });
 
-  const checkOutMutation = api.hr.checkOut.useMutation({
-    onSuccess: async () => {
+  const checkOutMutation = useHrCheckOut({
+    onSuccess: () => {
       toast.success("Clocked out successfully!");
-      await utils.hr.getAttendanceStatus.invalidate();
     },
     onError: (err) => {
         toast.error(err.message);
@@ -35,12 +31,11 @@ export function ClockInWidget() {
   });
 
   useEffect(() => {
-    setMounted(true);
-    const timer = setInterval(() => setNow(new Date()), 1000); 
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000); 
     return () => clearInterval(timer);
-  }, []);
-
-  if (!mounted) return null; 
+  }, []); 
 
   const isCheckedIn = statusData?.status === "PRESENT";
   const isCheckedOut = statusData?.status === "CHECKED_OUT";
@@ -48,8 +43,8 @@ export function ClockInWidget() {
   const handleClockAction = () => {
       if (isCheckedIn) {
           checkOutMutation.mutate();
-      } else if (!isCheckedOut) { // Only allow check in if not already checked out (assuming 1 shift per day for MVP)
-          checkInMutation.mutate({}); // No location for now
+      } else if (!isCheckedOut) {
+          checkInMutation.mutate({ location: undefined });
       } else {
         toast.error("You have already completed your shift for today.");
       }

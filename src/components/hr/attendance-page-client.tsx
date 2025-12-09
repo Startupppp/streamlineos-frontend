@@ -3,11 +3,11 @@
 import { AttendanceTracker } from "@/components/hr/attendance-tracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-import { api } from "@/trpc/react";
+import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
 import { type AttendanceStatus, type AttendanceLog } from "@/types/api";
 
 export function AttendancePageClient() {
-  const { data, isLoading } = api.hr.getAttendanceStatus.useQuery();
+  const { data, isLoading } = useHrAttendanceStatus();
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>;

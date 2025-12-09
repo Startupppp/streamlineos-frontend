@@ -1,13 +1,16 @@
 import { createTRPCRouter } from "@/server/api/trpc";
-// Import routers (to be created)
 import { hrRouter } from "./routers/hr";
 import { projectRouter } from "./routers/project";
 import { dashboardRouter } from "./routers/dashboard";
+import { rbacRouter } from "./routers/rbac";
+import { reportsRouter } from "./routers/reports";
 
 export const appRouter = createTRPCRouter({
   hr: hrRouter,
   project: projectRouter,
   dashboard: dashboardRouter,
+  rbac: rbacRouter,
+  reports: reportsRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";

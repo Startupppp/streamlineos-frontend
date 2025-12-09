@@ -4,7 +4,7 @@ import { use } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { api } from "@/trpc/react";
+import { useHrDepartments } from "@/lib/hooks/trpc-hooks";
 import { EmployeeProfileForm } from "@/components/hr/employee-profile-form";
 
 interface PageProps {
@@ -15,10 +15,9 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   const { id } = use(params);
   const { user: clerkUser } = useUser();
   
-  const { data: departments, isLoading: deptLoading } = api.hr.getDepartments.useQuery();
-  const { data: dbUser, isLoading: userLoading } = api.hr.getDepartments.useQuery(); // TODO: Add getUser procedure
+  const { data: departments, isLoading: deptLoading } = useHrDepartments();
 
-  if (deptLoading || userLoading) {
+  if (deptLoading) {
     return (
       <div className="space-y-8">
         <div className="text-muted-foreground">Loading...</div>
