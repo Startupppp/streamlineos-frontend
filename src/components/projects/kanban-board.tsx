@@ -62,7 +62,11 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
       return { previous };
     },
     onError: (err, newTicket, context) => {
-      setOptimisticTickets(context?.previous || []);
+      if (context && typeof context === 'object' && 'previous' in context) {
+        setOptimisticTickets(context.previous as typeof tickets);
+      } else {
+        setOptimisticTickets(tickets);
+      }
       toast.error("Failed to update status");
     },
     onSettled: () => {

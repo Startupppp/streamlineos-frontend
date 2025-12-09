@@ -182,13 +182,13 @@ export const reportsRouter = createTRPCRouter({
           userId: string;
           userName: string;
           totalHours: number;
-          ticketsWorked: number;
+          ticketsWorked: Set<number>;
           ticketsCompleted: number;
         }
       >();
 
       timeEntries.forEach((entry) => {
-        if (!entry.userId || !entry.ticket) return;
+        if (!entry.userId || !entry.ticket || !entry.ticketId) return;
 
         const existing = userStats.get(entry.userId);
         const hours = parseFloat(entry.hours || "0");
@@ -196,15 +196,15 @@ export const reportsRouter = createTRPCRouter({
         if (existing) {
           existing.totalHours += hours;
           if (!existing.ticketsWorked) {
-            existing.ticketsWorked = new Set();
+            existing.ticketsWorked = new Set<number>();
           }
-          (existing.ticketsWorked as any).add(entry.ticketId);
+          existing.ticketsWorked.add(entry.ticketId);
         } else {
           userStats.set(entry.userId, {
             userId: entry.userId,
-            userName: entry.ticket.assignee?.firstName || "Unknown",
+            userName: ((entry.ticket as any).assignee?.firstName) || "Unknown",
             totalHours: hours,
-            ticketsWorked: new Set([entry.ticketId]) as any,
+            ticketsWorked: new Set([entry.ticketId]),
             ticketsCompleted: 0,
           });
         }

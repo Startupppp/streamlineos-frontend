@@ -5,6 +5,8 @@ import { KanbanBoard } from "@/components/projects/kanban-board";
 import { notFound } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { use } from "react";
+import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -18,7 +20,16 @@ export default function ProjectBoardPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div className="p-8 h-full flex flex-col">
-        <div className="text-muted-foreground">Loading project...</div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-5 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <KanbanBoardSkeleton />
+        </div>
       </div>
     );
   }
@@ -42,7 +53,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 title: t.title,
                 status: t.status ?? "TODO",
                 type: t.type ?? "TASK",
-                assignee: t.assignee ? { firstName: t.assignee.firstName ?? undefined } : undefined
+                assignee: t.assignee ? { 
+                  id: t.assignee.id,
+                  firstName: t.assignee.firstName ?? undefined,
+                  lastName: t.assignee.lastName ?? undefined
+                } : null
             }))} 
             projectId={projectId} 
         />

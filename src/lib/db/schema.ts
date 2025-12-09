@@ -197,7 +197,7 @@ export const documents = pgTable("documents", {
   fileSize: integer("file_size"),
   mimeType: text("mime_type"),
   version: integer("version").default(1),
-  parentDocumentId: integer("parent_document_id").references(() => documents.id),
+  parentDocumentId: integer("parent_document_id"),
   isActive: boolean("is_active").default(true),
   metadata: jsonb("metadata"),
   uploadedBy: text("uploaded_by").references(() => users.id),
@@ -237,7 +237,7 @@ export const goals = pgTable("goals", {
   endDate: date("end_date").notNull(),
   status: text("status").default("IN_PROGRESS"),
   progress: integer("progress").default(0),
-  parentGoalId: integer("parent_goal_id").references(() => goals.id),
+  parentGoalId: integer("parent_goal_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -308,13 +308,14 @@ export const tickets = pgTable("tickets", {
   })
 }));
 
+// Fix self-referencing tables by removing inline references - they're handled in relations
 export const ticketComments = pgTable("ticket_comments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull(),
   ticketId: integer("ticket_id").references(() => tickets.id).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
-  parentCommentId: integer("parent_comment_id").references(() => ticketComments.id),
+  parentCommentId: integer("parent_comment_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

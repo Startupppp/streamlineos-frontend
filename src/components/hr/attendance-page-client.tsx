@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
 import { type AttendanceStatus, type AttendanceLog } from "@/types/api";
+import { AttendancePageSkeleton } from "@/components/ui/attendance-skeleton";
 
 export function AttendancePageClient() {
   const { data, isLoading } = useHrAttendanceStatus();
 
   if (isLoading) {
-    return <div className="p-8">Loading...</div>;
+    return <AttendancePageSkeleton />;
   }
 
   if (!data) {

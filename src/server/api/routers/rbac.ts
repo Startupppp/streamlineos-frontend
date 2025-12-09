@@ -1,13 +1,19 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { permissions, rolePermissions, userPermissions } from "@/lib/db/schema";
+import { permissions, rolePermissions, userPermissions, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { PERMISSIONS, ROLE_DEFAULT_PERMISSIONS } from "@/lib/rbac/permissions";
 import { checkPermission } from "@/lib/rbac/middleware";
 
 export const rbacRouter = createTRPCRouter({
   getUserPermissions: protectedProcedure.query(async ({ ctx }) => {
-    const { userId, orgId, role } = ctx.session;
+    const { userId, orgId } = ctx.session;
+    
+    // Get user role from database
+    const user = await ctx.db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, userId),
+    });
+    const role = user?.role;
 
     const userPerms = await ctx.db.query.userPermissions.findMany({
       where: and(
@@ -37,11 +43,17 @@ export const rbacRouter = createTRPCRouter({
     const permissionSet = new Set<string>();
 
     userPerms.forEach((up) => {
-      if (up.permission) permissionSet.add(up.permission.name);
+      const perm = up.permission as { name: string } | null | undefined;
+      if (perm?.name) {
+        permissionSet.add(perm.name);
+      }
     });
 
     rolePerms.forEach((rp) => {
-      if (rp.permission) permissionSet.add(rp.permission.name);
+      const perm = rp.permission as { name: string } | null | undefined;
+      if (perm?.name) {
+        permissionSet.add(perm.name);
+      }
     });
 
     defaultPerms.forEach((perm) => permissionSet.add(perm));
@@ -56,7 +68,11 @@ export const rbacRouter = createTRPCRouter({
   checkPermission: protectedProcedure
     .input(z.object({ permission: z.string() }))
     .query(async ({ ctx, input }) => {
-      const { userId, orgId, role } = ctx.session;
+      const { userId, orgId } = ctx.session;
+      const user = await ctx.db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, userId),
+      });
+      const role = user?.role;
       return await checkPermission(ctx.db, userId, orgId, role, input.permission);
     }),
 
@@ -74,7 +90,10 @@ export const rbacRouter = createTRPCRouter({
         },
       });
 
-      return perms.map((rp) => rp.permission?.name).filter(Boolean) as string[];
+      return perms.map((rp) => {
+        const perm = rp.permission as { name: string } | null | undefined;
+        return perm?.name;
+      }).filter(Boolean) as string[];
     }),
 
   assignRolePermission: protectedProcedure
@@ -86,11 +105,15 @@ export const rbacRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, ctx.session.userId),
+      });
+      const role = user?.role;
       const hasAccess = await checkPermission(
         ctx.db,
         ctx.session.userId,
         ctx.session.orgId,
-        ctx.session.role,
+        role,
         "settings:rbac:manage"
       );
 
@@ -114,11 +137,15 @@ export const rbacRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, ctx.session.userId),
+      });
+      const role = user?.role;
       const hasAccess = await checkPermission(
         ctx.db,
         ctx.session.userId,
         ctx.session.orgId,
-        ctx.session.role,
+        role,
         "settings:rbac:manage"
       );
 

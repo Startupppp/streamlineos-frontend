@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { PayrollListSkeleton } from "@/components/ui/payroll-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PayrollPage() {
   const { data: payrolls, isLoading } = useHrPayrolls();
@@ -26,7 +28,11 @@ export default function PayrollPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-8">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-10 w-56" />
+        </div>
+        <PayrollListSkeleton />
       </div>
     );
   }

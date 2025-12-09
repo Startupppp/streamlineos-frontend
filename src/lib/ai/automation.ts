@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { tickets, timesheets, attendance } from '@/lib/db/schema';
+import { tickets, timesheets, attendance, projects } from '@/lib/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { format } from 'date-fns';
 
@@ -73,9 +73,12 @@ export async function analyzeWorkload(orgId: string): Promise<WorkloadAnalysis[]
       existing.activeTickets += 1;
       existing.totalPoints += points;
     } else {
+      const assignee = ticket.assignee && typeof ticket.assignee === 'object' && !Array.isArray(ticket.assignee) 
+        ? ticket.assignee as { firstName?: string; lastName?: string }
+        : null;
       userWorkload.set(ticket.assigneeId, {
         userId: ticket.assigneeId,
-        userName: ticket.assignee?.firstName || 'Unknown',
+        userName: assignee?.firstName || 'Unknown',
         activeTickets: 1,
         totalPoints: points,
         hoursThisWeek: 0,

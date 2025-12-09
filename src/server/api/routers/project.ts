@@ -179,7 +179,7 @@ export const projectRouter = createTRPCRouter({
       .set({
         ...(updateData.title && { title: updateData.title }),
         ...(updateData.description !== undefined && { description: updateData.description }),
-        ...(updateData.type && { type: updateData.type }),
+        ...(updateData.type && { type: updateData.type as "EPIC" | "STORY" | "TASK" | "BUG" }),
         ...(updateData.status && { status: updateData.status }),
         ...(updateData.priority && { priority: updateData.priority }),
         ...(updateData.assigneeId !== undefined && { assigneeId: updateData.assigneeId }),
@@ -312,7 +312,7 @@ export const projectRouter = createTRPCRouter({
         orgId: ctx.session.orgId,
         userId: ctx.session.userId,
         ticketId: input.ticketId,
-        date: input.date,
+        date: format(input.date, "yyyy-MM-dd"),
         hours: input.hours.toString(),
         description: input.description,
       })

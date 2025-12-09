@@ -18,9 +18,9 @@ export const generatePayrollInputSchema = z.object({
 export const createSalaryStructureInputSchema = z.object({
   userId: z.string().min(1),
   basicSalary: z.number().positive(),
-  hraPercentage: z.number().min(0).max(100).default(40),
-  allowances: z.number().min(0).default(0),
-  deductions: z.number().min(0).default(0),
+  hraPercentage: z.number().min(0).max(100),
+  allowances: z.number().min(0),
+  deductions: z.number().min(0),
   effectiveFrom: z.date(),
   effectiveTo: z.date().optional(),
 });

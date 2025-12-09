@@ -10,7 +10,6 @@ function getBaseUrl() {
 }
 
 export const vaivammTrpcClient = createTRPCProxyClient<AppRouter>({
-  transformer: superjson,
   links: [
     loggerLink({
       enabled: (op) =>
@@ -19,6 +18,7 @@ export const vaivammTrpcClient = createTRPCProxyClient<AppRouter>({
     }),
     httpBatchLink({
       url: getBaseUrl() + "/api/trpc",
+      transformer: superjson,
       headers: () => {
         const headers = new Headers();
         headers.set("x-trpc-source", "nextjs-react");

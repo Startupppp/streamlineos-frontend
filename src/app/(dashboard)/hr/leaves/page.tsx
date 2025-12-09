@@ -12,16 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
+import { LeavesPageSkeleton } from "@/components/ui/leaves-skeleton";
 
 export default function LeavesPage() {
   const { data, isLoading } = useHrLeaves();
 
   if (isLoading) {
-    return (
-      <div className="p-8 space-y-8">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LeavesPageSkeleton />;
   }
 
   const { balances, types, requests } = data || { balances: [], types: [], requests: [] };

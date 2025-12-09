@@ -8,6 +8,8 @@ import { ErrorMessage } from "@/components/pre-ui/error-message";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
+import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
@@ -18,9 +20,31 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-8">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <LoadingSpinner />
-          <span>Loading dashboard...</span>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-5 w-64" />
+          </div>
+          <Skeleton className="h-14 w-14 rounded-full" />
+        </div>
+        <DashboardStatsSkeleton />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-4 bg-white/5 border-white/10">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+          <Card className="col-span-3 bg-white/5 border-white/10">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

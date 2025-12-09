@@ -174,8 +174,8 @@ export const hrRouter = createTRPCRouter({
             orgId: ctx.session.orgId,
             userId: ctx.session.userId,
             leaveTypeId: input.typeId,
-            startDate: input.startDate,
-            endDate: input.endDate,
+            startDate: format(input.startDate, "yyyy-MM-dd"),
+            endDate: format(input.endDate, "yyyy-MM-dd"),
             reason: input.reason,
             status: "PENDING"
         });
@@ -288,8 +288,8 @@ export const hrRouter = createTRPCRouter({
           hraPercentage: input.hraPercentage.toString(),
           allowances: input.allowances.toString(),
           deductions: input.deductions.toString(),
-          effectiveFrom: input.effectiveFrom,
-          effectiveTo: input.effectiveTo,
+          effectiveFrom: format(input.effectiveFrom, "yyyy-MM-dd"),
+          effectiveTo: input.effectiveTo ? format(input.effectiveTo, "yyyy-MM-dd") : undefined,
           isActive: true,
         })
         .returning();
@@ -322,7 +322,7 @@ export const hrRouter = createTRPCRouter({
         amount: input.amount.toString(),
         description: input.description,
         receiptUrl: input.receiptUrl,
-        expenseDate: input.expenseDate,
+        expenseDate: format(input.expenseDate, "yyyy-MM-dd"),
         status: "PENDING",
       })
       .returning();
@@ -360,7 +360,7 @@ export const hrRouter = createTRPCRouter({
         type: input.type,
         serialNumber: input.serialNumber,
         assignedTo: input.assignedTo,
-        purchaseDate: input.purchaseDate,
+        purchaseDate: input.purchaseDate ? format(input.purchaseDate, "yyyy-MM-dd") : undefined,
         purchaseCost: input.purchaseCost?.toString(),
         location: input.location,
         notes: input.notes,
@@ -446,8 +446,8 @@ export const hrRouter = createTRPCRouter({
           orgId: ctx.session.orgId,
           userId: input.userId,
           reviewerId: input.reviewerId || ctx.session.userId,
-          periodStart: input.periodStart,
-          periodEnd: input.periodEnd,
+          periodStart: format(input.periodStart, "yyyy-MM-dd"),
+          periodEnd: format(input.periodEnd, "yyyy-MM-dd"),
           ratings: input.ratings,
           strengths: input.strengths,
           improvements: input.improvements,
@@ -485,8 +485,8 @@ export const hrRouter = createTRPCRouter({
         targetValue: input.targetValue?.toString(),
         currentValue: input.currentValue.toString(),
         unit: input.unit,
-        startDate: input.startDate,
-        endDate: input.endDate,
+        startDate: format(input.startDate, "yyyy-MM-dd"),
+        endDate: format(input.endDate, "yyyy-MM-dd"),
         status: "IN_PROGRESS",
         progress: 0,
         parentGoalId: input.parentGoalId,

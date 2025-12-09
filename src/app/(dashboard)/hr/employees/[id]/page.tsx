@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useHrDepartments } from "@/lib/hooks/trpc-hooks";
 import { EmployeeProfileForm } from "@/components/hr/employee-profile-form";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,7 +21,35 @@ export default function EmployeeProfilePage({ params }: PageProps) {
   if (deptLoading) {
     return (
       <div className="space-y-8">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="flex items-center gap-6">
+          <Skeleton className="h-24 w-24 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="bg-white/5 border-white/10">
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

@@ -4,6 +4,7 @@ export default function SettingsPage() {
   return (
     <div className="flex justify-center p-6">
       <UserProfile 
+        routing="hash"
         appearance={{
             elements: {
                 rootBox: "w-full max-w-4xl",
@@ -21,3 +22,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

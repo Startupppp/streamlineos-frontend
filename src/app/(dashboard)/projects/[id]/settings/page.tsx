@@ -29,6 +29,7 @@ import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { vaivammKeys } from "@/lib/hooks/trpc-hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -73,7 +74,27 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div className="space-y-8 max-w-2xl mx-auto">
-        <div className="text-muted-foreground">Loading...</div>
+        <Skeleton className="h-9 w-48" />
+        <Card className="bg-white/5 border-white/10">
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }

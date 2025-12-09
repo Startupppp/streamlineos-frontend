@@ -28,7 +28,21 @@ export function SprintBoard({ sprintId, projectId }: SprintBoardProps) {
     return <div>Sprint not found</div>;
   }
 
-  const tickets = currentSprint.tickets || [];
+  const rawTickets = currentSprint.tickets || [];
+  const tickets = rawTickets.map((t) => ({
+    id: t.id,
+    title: t.title,
+    status: t.status ?? "TODO",
+    type: t.type ?? "TASK",
+    priority: t.priority ?? undefined,
+    points: t.points ?? null,
+    timeSpent: t.timeSpent ?? null,
+    assignee: t.assignee ? {
+      id: t.assignee.id,
+      firstName: t.assignee.firstName ?? undefined,
+      lastName: t.assignee.lastName ?? undefined,
+    } : null,
+  }));
   const totalPoints = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
   const completedPoints = tickets
     .filter((t) => t.status === "DONE")

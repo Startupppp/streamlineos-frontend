@@ -2,15 +2,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
-import { LoadingSpinner } from "@/components/pre-ui/loading-spinner";
 import { format } from "date-fns";
 import { Clock, Coffee, AlertTriangle } from "lucide-react";
+import { DailyLogSkeleton } from "@/components/ui/attendance-skeleton";
 
 export function DailyLog() {
   const { data, isLoading } = useHrAttendanceStatus();
 
   if (isLoading) {
-    return <div className="p-8 flex justify-center"><LoadingSpinner /></div>;
+    return <DailyLogSkeleton />;
   }
 
   const log = data?.todayLog;

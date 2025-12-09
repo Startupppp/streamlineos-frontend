@@ -17,6 +17,8 @@ export default function ProjectsPage() {
     );
   }
 
+  const projectsList = Array.isArray(projects) ? projects : [];
+
   return (
     <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
@@ -27,7 +29,7 @@ export default function ProjectsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {projects?.map((project) => (
+        {projectsList.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
                 <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                     <CardHeader>
@@ -50,7 +52,7 @@ export default function ProjectsPage() {
                 </Card>
             </Link>
         ))}
-         {projects && projects.length === 0 && (
+         {projectsList.length === 0 && (
              <div className="col-span-full text-center py-12 text-muted-foreground">
                  No active projects.
              </div>
