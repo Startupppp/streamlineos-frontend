@@ -1,0 +1,69 @@
+"use client";
+
+import { useProject } from "../../../../lib/hooks/trpc-hooks";
+import { KanbanBoard } from "../../../../components/projects/kanban-board";
+import { notFound } from "next/navigation";
+import { CreateTicketDialog } from "../../../../components/projects/create-ticket-dialog";
+import { use } from "react";
+import { KanbanBoardSkeleton } from "../../../../components/ui/kanban-skeleton";
+import { Skeleton } from "../../../../components/ui/skeleton";
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function ProjectBoardPage({ params }: PageProps) {
+  const { id } = use(params);
+  const projectId = parseInt(id);
+  const { data, isLoading } = useProject(projectId);
+
+  if (isLoading) {
+    return (
+      <div className="p-8 h-full flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-5 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <KanbanBoardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return notFound();
+
+  return (
+    <div className="p-8 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">{data.name}</h1>
+          <p className="text-muted-foreground">{data.description}</p>
+        </div>
+        <CreateTicketDialog projectId={projectId} />
+      </div>
+
+      <div className="flex-1 overflow-hidden">
+        <KanbanBoard
+          tickets={(data.tickets || []).map((t) => ({
+            id: t.id,
+            title: t.title,
+            status: t.status ?? "TODO",
+            type: t.type ?? "TASK",
+            assignee: t.assignee
+              ? {
+                  id: t.assignee.id,
+                  firstName: t.assignee.firstName ?? undefined,
+                  lastName: t.assignee.lastName ?? undefined,
+                }
+              : null,
+          }))}
+          projectId={projectId}
+        />
+      </div>
+    </div>
+  );
+}
