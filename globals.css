@@ -45,73 +45,75 @@
 
 :root {
   --radius: 0.625rem;
-  /* Light Mode: Navy on White/Light Gray */
-  --background: #f8fafc; /* Slate-50 */
-  --foreground: #0A192F; /* Navy Blue */
+  /* Light Mode */
+  --background: #ffffff;
+  --foreground: #0f2b7f; /* Brand Navy used as default text for strong branding, or maybe slate-950 for standard text? sticking to brand logic from request */
+  /* Actually standard text should probably be slate-950 for readability, using navy for headers/primary */
+  --foreground: #020617;
   --card: #ffffff;
-  --card-foreground: #0A192F;
+  --card-foreground: #020617;
   --popover: #ffffff;
-  --popover-foreground: #0A192F;
-  --primary: #0A192F; /* Navy Blue */
-  --primary-foreground: #FFD700; /* Gold Text on Navy */
-  --secondary: #FFD700; /* Gold */
-  --secondary-foreground: #0A192F; /* Navy Text on Gold */
+  --popover-foreground: #020617;
+  --primary: #0f2b7f; /* Brand Navy */
+  --primary-foreground: #ffffff;
+  --secondary: #ba931e; /* Brand Gold */
+  --secondary-foreground: #ffffff;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --accent: #f1f5f9;
-  --accent-foreground: #0A192F;
+  --accent-foreground: #0f2b7f;
   --destructive: #ef4444;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #0A192F;
-  --chart-1: #0A192F;
-  --chart-2: #FFD700;
+  --ring: #0f2b7f;
+  --chart-1: #0f2b7f;
+  --chart-2: #ba931e;
   --chart-3: #1e293b;
   --chart-4: #475569;
   --chart-5: #94a3b8;
-  --sidebar: #0A192F; /* Navy Sidebar */
-  --sidebar-foreground: #FFD700; /* Gold Text */
-  --sidebar-primary: #FFD700;
-  --sidebar-primary-foreground: #0A192F;
-  --sidebar-accent: #112240; /* Lighter Navy */
-  --sidebar-accent-foreground: #FFD700;
-  --sidebar-border: #1e293b;
-  --sidebar-ring: #FFD700;
+  --sidebar: #0f2b7f; /* Light mode sidebar is Brand Navy */
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ba931e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e3a8a; /* Slightly lighter navy for hover */
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1e3a8a;
+  --sidebar-ring: #ba931e;
 }
 
 .dark {
-  /* Dark Mode: Gold on Deep Navy */
-  --background: #020617; /* Very Dark Navy/Black */
+  /* Dark Mode */
+  --background: #020617; /* Deep Navy/Black */
   --foreground: #f8fafc;
-  --card: #0A192F; /* Navy Card */
+  --card: #0f172a; /* Slate 900 */
   --card-foreground: #f8fafc;
-  --popover: #0A192F;
+  --popover: #0f172a;
   --popover-foreground: #f8fafc;
-  --primary: #FFD700; /* Gold */
-  --primary-foreground: #0A192F;
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
+  --primary: #ba931e; /* Gold primary in dark mode for visibility */
+  --primary-foreground: #ffffff;
+  --secondary: #ba931e; /* Gold for Secondary in Dark Mode too, for buttons/highlights */
+  --secondary-foreground: #ffffff;
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
   --accent: #1e293b;
-  --accent-foreground: #FFD700;
+  --accent-foreground: #ba931e;
   --destructive: #7f1d1d;
   --border: #1e293b;
   --input: #1e293b;
-  --ring: #FFD700;
-  --chart-1: #FFD700;
-  --chart-2: #0A192F;
+  --ring: #ba931e;
+  --chart-1: #ba931e;
+  --chart-2: #0f2b7f;
   --chart-3: #334155;
   --chart-4: #64748b;
   --chart-5: #94a3b8;
-  --sidebar: #020617; /* Deepest Navy */
+  --sidebar: #020617; /* Deepest Navy/Black */
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #FFD700;
-  --sidebar-primary-foreground: #0A192F;
-  --sidebar-accent: #0A192F;
-  --sidebar-accent-foreground: #FFD700;
+  --sidebar-primary: #ba931e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b; /* Sidebar accents like hover items */
+  --sidebar-accent-foreground: #ba931e;
   --sidebar-border: #1e293b;
-  --sidebar-ring: #FFD700;
+  --sidebar-ring: #ba931e;
 }
 
 @layer base {
