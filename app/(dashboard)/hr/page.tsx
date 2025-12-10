@@ -6,10 +6,14 @@ import {
 } from "../../../components/ui/card";
 import { Users, Clock, CalendarCheck, CreditCard } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "../../../lib/auth";
 
 export default async function HROverviewPage() {
-  await auth();
+  const session = await auth();
+  
+  if (!session) {
+    return null;
+  }
 
   const modules = [
     {

@@ -15,6 +15,7 @@ import {
   performanceReviews,
   goals,
   helpdeskTickets,
+  organizationMembers,
 } from "../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { format } from "date-fns";
@@ -244,15 +245,13 @@ export const hrRouter = createTRPCRouter({
   generatePayroll: protectedProcedure
     .input(generatePayrollInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const { clerkClient } = await import("@clerk/nextjs/server");
-      const client = await clerkClient();
-      const memberships =
-        await client.organizations.getOrganizationMembershipList({
-          organizationId: ctx.session.orgId,
-        });
+      // Get organization members
+      const memberships = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.orgId, ctx.session.orgId),
+      });
 
-      for (const mem of memberships.data) {
-        const uId = mem.publicUserData?.userId;
+      for (const mem of memberships) {
+        const uId = mem.userId;
         if (!uId) continue;
 
         const salaryStructure = await ctx.db.query.salaryStructures.findFirst({

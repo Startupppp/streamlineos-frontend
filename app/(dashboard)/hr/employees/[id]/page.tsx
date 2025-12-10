@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import {
   Avatar,
   AvatarFallback,
@@ -16,6 +16,8 @@ import {
 import { useHrDepartments } from "../../../../../lib/hooks/trpc-hooks";
 import { EmployeeProfileForm } from "../../../../../components/hr/employee-profile-form";
 import { Skeleton } from "../../../../../components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { vaivammTrpcClient } from "../../../../../lib/trpc";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -23,11 +25,30 @@ interface PageProps {
 
 export default function EmployeeProfilePage({ params }: PageProps) {
   const { id } = use(params);
-  const { user: clerkUser } = useUser();
+  const { data: session } = useSession();
+  
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ["user", id],
+    queryFn: async () => {
+      // TODO: Create a tRPC endpoint to get user by ID
+      // For now, return session user if ID matches
+      if (session?.user?.id === id) {
+        return {
+          id: session.user.id,
+          firstName: session.user.name?.split(" ")[0],
+          lastName: session.user.name?.split(" ").slice(1).join(" "),
+          email: session.user.email,
+          image: session.user.image,
+        };
+      }
+      return null;
+    },
+    enabled: !!id,
+  });
 
   const { data: departments, isLoading: deptLoading } = useHrDepartments();
 
-  if (deptLoading) {
+  if (deptLoading || userLoading) {
     return (
       <div className="space-y-8">
         <div className="flex items-center gap-6">
@@ -63,7 +84,7 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     );
   }
 
-  if (!clerkUser) {
+  if (!user) {
     return <div>User not found</div>;
   }
 
@@ -71,15 +92,17 @@ export default function EmployeeProfilePage({ params }: PageProps) {
     <div className="space-y-8">
       <div className="flex items-center gap-6">
         <Avatar className="h-24 w-24 border-4 border-gold">
-          <AvatarImage src={clerkUser.imageUrl} />
-          <AvatarFallback>U</AvatarFallback>
+          <AvatarImage src={user.image || undefined} />
+          <AvatarFallback>
+            {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+          </AvatarFallback>
         </Avatar>
         <div>
           <h1 className="text-3xl font-bold text-white">
-            {clerkUser.firstName} {clerkUser.lastName}
+            {user.firstName} {user.lastName}
           </h1>
           <p className="text-zinc-400">
-            {clerkUser.primaryEmailAddress?.emailAddress}
+            {user.email}
           </p>
         </div>
       </div>

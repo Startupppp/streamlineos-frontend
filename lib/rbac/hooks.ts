@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { useRbacUserPermissions } from "../hooks/trpc-hooks";
 
 export function usePermissions() {
-  const { user } = useUser();
+  const { data: session } = useSession();
   const { data: userPermissions } = useRbacUserPermissions({
-    enabled: !!user,
+    enabled: !!session?.user?.id,
   });
 
   const hasPermission = useMemo(

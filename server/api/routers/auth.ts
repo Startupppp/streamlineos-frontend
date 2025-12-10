@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { users, organizations, organizationMembers, invitations, passwordResetTokens, verificationTokens } from "../../../lib/db/schema";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
@@ -65,10 +65,15 @@ export const authRouter = createTRPCRouter({
 
       // Create user
       const userId = nanoid();
+      const fullName = input.firstName && input.lastName
+        ? `${input.firstName} ${input.lastName}`
+        : input.firstName || input.lastName || null;
+      
       await ctx.db.insert(users).values({
         id: userId,
         email: input.email,
         password: hashedPassword,
+        name: fullName,
         firstName: input.firstName,
         lastName: input.lastName,
         emailVerified: null,
@@ -190,7 +195,7 @@ export const authRouter = createTRPCRouter({
         where: and(
           eq(invitations.token, input.token),
           gt(invitations.expiresAt, new Date()),
-          eq(invitations.acceptedAt, null)
+          isNull(invitations.acceptedAt)
         ),
       });
 
@@ -218,10 +223,15 @@ export const authRouter = createTRPCRouter({
 
       // Create user
       const userId = nanoid();
+      const fullName = input.firstName && input.lastName
+        ? `${input.firstName} ${input.lastName}`
+        : input.firstName || input.lastName || null;
+      
       await ctx.db.insert(users).values({
         id: userId,
         email: invitation.email,
         password: hashedPassword,
+        name: fullName,
         firstName: input.firstName,
         lastName: input.lastName,
         emailVerified: new Date(), // Auto-verify for invited users

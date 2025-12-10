@@ -14,12 +14,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
   providers: [
     Credentials({
       credentials: {
@@ -45,26 +39,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        const fullName = user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName}` 
+          : user.name || user.email;
+
         return {
           id: user.id,
           email: user.email,
-          name: user.firstName && user.lastName 
-            ? `${user.firstName} ${user.lastName}` 
-            : user.email,
+          name: fullName,
           image: user.image,
         };
       },
-    }),
-    Email({
-      server: {
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD,
-        },
-      },
-      from: process.env.SMTP_FROM || process.env.SENDGRID_FROM_EMAIL,
     }),
   ],
   session: {
@@ -72,8 +57,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     signIn: "/signin",
-    signUp: "/signup",
-    verifyRequest: "/verify-email",
     error: "/signin",
   },
   callbacks: {

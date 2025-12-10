@@ -1,6 +1,6 @@
 import { google } from "@ai-sdk/google";
 import { streamText } from "ai";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "../auth";
 import { db } from "../db";
 import {
   tickets,

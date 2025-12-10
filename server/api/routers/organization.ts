@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { organizations, organizationMembers, invitations, users } from "../../../lib/db/schema";
-import { eq, and, gt, desc, inArray } from "drizzle-orm";
+import { eq, and, gt, desc, inArray, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { sendInvitationEmail } from "../../../lib/email";
@@ -31,7 +31,7 @@ export const organizationRouter = createTRPCRouter({
         where: and(
           eq(invitations.token, input.token),
           gt(invitations.expiresAt, new Date()),
-          eq(invitations.acceptedAt, null)
+          isNull(invitations.acceptedAt)
         ),
       });
 
@@ -168,7 +168,7 @@ export const organizationRouter = createTRPCRouter({
           eq(invitations.email, input.email),
           eq(invitations.orgId, input.orgId),
           gt(invitations.expiresAt, new Date()),
-          eq(invitations.acceptedAt, null)
+          isNull(invitations.acceptedAt)
         ),
       });
 
@@ -240,7 +240,7 @@ export const organizationRouter = createTRPCRouter({
       const orgInvitations = await ctx.db.query.invitations.findMany({
         where: and(
           eq(invitations.orgId, input.orgId),
-          eq(invitations.acceptedAt, null)
+          isNull(invitations.acceptedAt)
         ),
         orderBy: [desc(invitations.createdAt)],
       });

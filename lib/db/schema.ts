@@ -131,6 +131,7 @@ export const departments = pgTable("departments", {
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
+  name: text("name"), // Required by NextAuth, computed from firstName + lastName
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified"),
   password: text("password"), // Hashed password

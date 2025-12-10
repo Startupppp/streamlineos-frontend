@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "../../../../lib/auth";
 import {
   suggestTaskAssignments,
   analyzeWorkload,
@@ -7,11 +7,14 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId, orgId } = await auth();
+    const session = await auth();
 
-    if (!userId || !orgId) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Get orgId from session or context - for now using userId as fallback
+    const orgId = (session as { orgId?: string }).orgId || session.user.id;
 
     const searchParams = req.nextUrl.searchParams;
     const type = searchParams.get("type");

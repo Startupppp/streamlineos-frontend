@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { projects, attendance } from "../../../lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { projects, attendance, organizations, organizationMembers } from "../../../lib/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import { format } from "date-fns";
 
 import { TRPCError } from "@trpc/server";
@@ -8,40 +8,41 @@ import { TRPCError } from "@trpc/server";
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const { clerkClient } = await import("@clerk/nextjs/server");
-      const client = await clerkClient();
+      // Get user's organizations to determine orgId
+      // For now, get the first organization the user belongs to
+      const userMemberships = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.userId, ctx.session.userId),
+        limit: 1,
+      });
 
-      let org;
-      let memberships;
-
-      try {
-        org = await client.organizations.getOrganization({
-          organizationId: ctx.session.orgId,
-        });
-      } catch (orgError) {
-        console.error("Error fetching organization:", orgError);
-        // If organization doesn't exist yet, return default values
+      if (!userMemberships || userMemberships.length === 0) {
         return {
           orgName: "Organization",
           totalEmployees: 0,
           activeProjects: 0,
           presentToday: 0,
-          orgSlug: ctx.session.orgId.slice(0, 8),
+          orgSlug: "",
         };
       }
 
-      try {
-        memberships = await client.organizations.getOrganizationMembershipList({
-          organizationId: ctx.session.orgId,
-        });
-      } catch (membershipError) {
-        console.error("Error fetching memberships:", membershipError);
-        memberships = { totalCount: 0, data: [] };
-      }
+      const orgId = userMemberships[0].orgId;
+
+      // Get organization details
+      const org = await ctx.db.query.organizations.findFirst({
+        where: eq(organizations.id, orgId),
+      });
+
+      // Get member count
+      const memberCountResult = await ctx.db
+        .select({ count: sql<number>`count(*)` })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.orgId, orgId));
+
+      const totalEmployees = Number(memberCountResult[0]?.count || 0);
 
       const activeProjectsCount = (
         await ctx.db.query.projects.findMany({
-          where: eq(projects.orgId, ctx.session.orgId),
+          where: eq(projects.orgId, orgId),
         })
       ).length;
 
@@ -49,7 +50,7 @@ export const dashboardRouter = createTRPCRouter({
       const presentCount = (
         await ctx.db.query.attendance.findMany({
           where: and(
-            eq(attendance.orgId, ctx.session.orgId),
+            eq(attendance.orgId, orgId),
             eq(attendance.date, today)
           ),
         })
@@ -57,10 +58,10 @@ export const dashboardRouter = createTRPCRouter({
 
       return {
         orgName: org?.name || "Organization",
-        totalEmployees: memberships?.totalCount || 0,
+        totalEmployees,
         activeProjects: activeProjectsCount,
         presentToday: presentCount,
-        orgSlug: org?.slug || ctx.session.orgId.slice(0, 8),
+        orgSlug: org?.slug || orgId.slice(0, 8),
       };
     } catch (error) {
       console.error("Dashboard getStats error:", error);
