@@ -45,7 +45,7 @@ export default function EmployeeDirectoryPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="bg-white/5 border-white/10">
+            <Card key={i} className="bg-card border-border">
               <CardHeader>
                 <Skeleton className="h-12 w-12 rounded-full mb-4" />
                 <Skeleton className="h-6 w-32 mb-2" />
@@ -62,10 +62,10 @@ export default function EmployeeDirectoryPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Employees
           </h2>
-          <p className="text-zinc-400">
+          <p className="text-muted-foreground">
             Please select an organization to view employees.
           </p>
         </div>
@@ -77,10 +77,10 @@ export default function EmployeeDirectoryPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Employees
           </h2>
-          <p className="text-zinc-400">
+          <p className="text-muted-foreground">
             Directory of all members in this organization.
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function EmployeeDirectoryPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {users && users.length > 0 ? (
           users.map((user: { id: string; firstName?: string; lastName?: string; email: string; role: string }) => (
-            <Card key={user.id} className="bg-white/5 border-white/10">
+            <Card key={user.id} className="bg-card border-border">
               <CardHeader className="flex flex-row items-center gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback>
@@ -98,10 +98,10 @@ export default function EmployeeDirectoryPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-white text-lg">
+                  <CardTitle className="text-foreground text-lg">
                     {user.firstName} {user.lastName}
                   </CardTitle>
-                  <div className="text-sm text-zinc-400">
+                  <div className="text-sm text-muted-foreground">
                     {user.email}
                   </div>
                 </div>
@@ -116,7 +116,7 @@ export default function EmployeeDirectoryPage() {
             </Card>
           ))
         ) : (
-          <div className="col-span-full text-center py-8 text-zinc-400">
+          <div className="col-span-full text-center py-8 text-muted-foreground">
             No employees found. Use the invitation system to add members.
           </div>
         )}

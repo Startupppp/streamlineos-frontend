@@ -2,7 +2,6 @@
 
 import { ThemeToggle } from "../theme-toggle"
 import { Separator } from "../ui/separator"
-import { SidebarTrigger } from "../ui/sidebar" // If I use the real sidebar, I need this. But I don't have the real sidebar setup yet.
 // For now, simple header.
 
 export function DashboardHeader() {
