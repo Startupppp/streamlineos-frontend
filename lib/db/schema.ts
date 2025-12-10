@@ -31,7 +31,7 @@ export const rolePermissions = pgTable("role_permissions", {
   id: serial("id").primaryKey(),
   role: roleEnum("role").notNull(),
   permissionId: integer("permission_id").references(() => permissions.id).notNull(),
-  orgId: text("org_id"),
+  orgId: text("org_id").references(() => organizations.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -39,34 +39,106 @@ export const userPermissions = pgTable("user_permissions", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id).notNull(),
   permissionId: integer("permission_id").references(() => permissions.id).notNull(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   granted: boolean("granted").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // --- Core Tables ---
 
+// Organizations table
+export const organizations = pgTable("organizations", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Organization members join table
+export const organizationMembers = pgTable("organization_members", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  role: roleEnum("role").default("MEMBER").notNull(),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// NextAuth tables
+export const accounts = pgTable("accounts", {
+  userId: text("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(),
+  provider: text("provider").notNull(),
+  providerAccountId: text("provider_account_id").notNull(),
+  refresh_token: text("refresh_token"),
+  access_token: text("access_token"),
+  expires_at: integer("expires_at"),
+  token_type: text("token_type"),
+  scope: text("scope"),
+  id_token: text("id_token"),
+  session_state: text("session_state"),
+}, (table) => ({
+  compoundKey: {
+    primaryKey: [table.provider, table.providerAccountId],
+  },
+}));
+
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  expires: timestamp("expires").notNull(),
+});
+
+export const verificationTokens = pgTable("verification_tokens", {
+  identifier: text("identifier").notNull(),
+  token: text("token").notNull(),
+  expires: timestamp("expires").notNull(),
+}, (table) => ({
+  compoundKey: {
+    primaryKey: [table.identifier, table.token],
+  },
+}));
+
+// Invitations table
+export const invitations = pgTable("invitations", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  role: roleEnum("role").default("MEMBER").notNull(),
+  invitedBy: text("invited_by").references(() => users.id).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Password reset tokens
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   managerId: text("manager_id"), // Relation defined below
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const users = pgTable("users", {
-  id: text("id").primaryKey(), // Clerk User ID
-  email: text("email").notNull(),
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  emailVerified: timestamp("email_verified"),
+  password: text("password"), // Hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
-  // Note: Role is now primarily managed by Clerk Organization, but we keep this for caching/display if needed, 
-  // or for global system roles.
+  image: text("image"),
   role: roleEnum("role").default("MEMBER").notNull(),
-  
-  // For MVP, we allow linking to ONE department here. 
-  // In a complex multi-org setup, this should be in a separate 'members' table.
   departmentId: integer("department_id").references(() => departments.id),
-  
   designation: text("designation"),
   phone: text("phone"),
   metadata: jsonb("metadata"), 
@@ -78,7 +150,7 @@ export const users = pgTable("users", {
 
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   date: date("date").notNull(),
   checkIn: timestamp("check_in"),
@@ -94,7 +166,7 @@ export const attendance = pgTable("attendance", {
 
 export const leaveTypes = pgTable("leave_types", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(), 
   daysPerYear: integer("days_per_year").notNull(),
   carryForward: boolean("carry_forward").default(false),
@@ -102,7 +174,7 @@ export const leaveTypes = pgTable("leave_types", {
 
 export const leaveBalances = pgTable("leave_balances", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   leaveTypeId: integer("leave_type_id").references(() => leaveTypes.id),
   balance: decimal("balance").default("0").notNull(),
@@ -111,7 +183,7 @@ export const leaveBalances = pgTable("leave_balances", {
 
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   leaveTypeId: integer("leave_type_id").references(() => leaveTypes.id),
   startDate: date("start_date").notNull(),
@@ -125,7 +197,7 @@ export const leaveRequests = pgTable("leave_requests", {
 
 export const payrolls = pgTable("payrolls", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   month: text("month").notNull(),
   basicSalary: decimal("basic_salary").notNull(),
@@ -143,7 +215,7 @@ export const payrolls = pgTable("payrolls", {
 
 export const salaryStructures = pgTable("salary_structures", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   basicSalary: decimal("basic_salary").notNull(),
   hraPercentage: decimal("hra_percentage").default("40"),
@@ -158,7 +230,7 @@ export const salaryStructures = pgTable("salary_structures", {
 
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   category: text("category").notNull(),
   amount: decimal("amount").notNull(),
@@ -173,7 +245,7 @@ export const expenses = pgTable("expenses", {
 
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(),
   serialNumber: text("serial_number"),
@@ -189,7 +261,7 @@ export const assets = pgTable("assets", {
 
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id),
   name: text("name").notNull(),
   type: documentTypeEnum("type").notNull(),
@@ -207,7 +279,7 @@ export const documents = pgTable("documents", {
 
 export const performanceReviews = pgTable("performance_reviews", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   reviewerId: text("reviewer_id").references(() => users.id),
   periodStart: date("period_start").notNull(),
@@ -225,7 +297,7 @@ export const performanceReviews = pgTable("performance_reviews", {
 
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -244,7 +316,7 @@ export const goals = pgTable("goals", {
 
 export const helpdeskTickets = pgTable("helpdesk_tickets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -262,7 +334,7 @@ export const helpdeskTickets = pgTable("helpdesk_tickets", {
 
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
   clientId: text("client_id").references(() => users.id),
@@ -274,7 +346,7 @@ export const projects = pgTable("projects", {
 
 export const sprints = pgTable("sprints", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   projectId: integer("project_id").references(() => projects.id),
   name: text("name").notNull(),
   startDate: timestamp("start_date").notNull(),
@@ -285,7 +357,7 @@ export const sprints = pgTable("sprints", {
 
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   type: ticketTypeEnum("type").default("TASK"),
@@ -311,7 +383,7 @@ export const tickets = pgTable("tickets", {
 // Fix self-referencing tables by removing inline references - they're handled in relations
 export const ticketComments = pgTable("ticket_comments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   ticketId: integer("ticket_id").references(() => tickets.id).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   content: text("content").notNull(),
@@ -322,7 +394,7 @@ export const ticketComments = pgTable("ticket_comments", {
 
 export const ticketAttachments = pgTable("ticket_attachments", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   ticketId: integer("ticket_id").references(() => tickets.id).notNull(),
   fileUrl: text("file_url").notNull(),
   fileName: text("file_name").notNull(),
@@ -334,7 +406,7 @@ export const ticketAttachments = pgTable("ticket_attachments", {
 
 export const ticketLabels = pgTable("ticket_labels", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   color: text("color").default("#3B82F6"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -349,7 +421,7 @@ export const ticketLabelMappings = pgTable("ticket_label_mappings", {
 
 export const workflows = pgTable("workflows", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
   status: workflowStatusEnum("status").default("ACTIVE"),
@@ -360,7 +432,7 @@ export const workflows = pgTable("workflows", {
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id),
   ticketId: integer("ticket_id").references(() => tickets.id),
   date: date("date").notNull(),
@@ -371,7 +443,7 @@ export const timesheets = pgTable("timesheets", {
 
 export const reports = pgTable("reports", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(),
   config: jsonb("config").$type<{ filters: Record<string, unknown>; columns: string[] }>(),
@@ -384,7 +456,7 @@ export const reports = pgTable("reports", {
 
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
-  orgId: text("org_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id),
   type: notificationTypeEnum("type").default("INFO"),
   title: text("title").notNull(),
@@ -397,13 +469,46 @@ export const notifications = pgTable("notifications", {
 
 // --- Relations ---
 
+export const organizationsRelations = relations(organizations, ({ many }) => ({
+  members: many(organizationMembers),
+  departments: many(departments),
+}));
+
+export const organizationMembersRelations = relations(organizationMembers, ({ one }) => ({
+  user: one(users, {
+    fields: [organizationMembers.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [organizationMembers.orgId],
+    references: [organizations.id],
+  }),
+}));
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   department: one(departments, {
     fields: [users.departmentId],
     references: [departments.id],
   }),
+  organizations: many(organizationMembers),
+  accounts: many(accounts),
+  sessions: many(sessions),
   assignedTickets: many(tickets, { relationName: "assignee" }),
   reportedTickets: many(tickets, { relationName: "reporter" }),
+}));
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const projectsRelations = relations(projects, ({ many }) => ({

@@ -4,8 +4,12 @@ import { projectRouter } from "./routers/project";
 import { dashboardRouter } from "./routers/dashboard";
 import { rbacRouter } from "./routers/rbac";
 import { reportsRouter } from "./routers/reports";
+import { authRouter } from "./routers/auth";
+import { organizationRouter } from "./routers/organization";
 
 export const appRouter = createTRPCRouter({
+  auth: authRouter,
+  organization: organizationRouter,
   hr: hrRouter,
   project: projectRouter,
   dashboard: dashboardRouter,

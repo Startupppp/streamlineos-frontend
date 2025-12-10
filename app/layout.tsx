@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { dark } from "@clerk/themes";
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 
 import "../globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { TRPCReactProvider } from "../trpc/react";
+import { SessionProvider } from "../components/providers/session-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,19 +17,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ClerkProvider
-      appearance={{
-        baseTheme: dark,
-      }}
-    >
-      <html lang="en" className="dark" suppressHydrationWarning>
-        <body
-          className={`${inter.className} min-h-screen bg-black text-white antialiased selection:bg-gold/30 selection:text-gold`}
-        >
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body
+        className={`${inter.className} min-h-screen bg-black text-white antialiased selection:bg-gold/30 selection:text-gold`}
+      >
+        <SessionProvider>
           <TRPCReactProvider>{children}</TRPCReactProvider>
           <Toaster position="bottom-right" theme="dark" />
-        </body>
-      </html>
-    </ClerkProvider>
+        </SessionProvider>
+      </body>
+    </html>
   );
 }
