@@ -17,7 +17,7 @@ import {
   helpdeskTickets,
   organizationMembers,
 } from "../../../lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull, ne } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
@@ -73,7 +73,8 @@ export const hrRouter = createTRPCRouter({
     const userId = ctx.session.userId;
     const orgId = ctx.session.orgId;
 
-    const todayLog = await ctx.db.query.attendance.findFirst({
+    // Fetch ALL logs for today to calculate totals
+    const todayLogs = await ctx.db.query.attendance.findMany({
       where: and(
         eq(attendance.userId, userId),
         eq(attendance.date, today),
@@ -81,20 +82,49 @@ export const hrRouter = createTRPCRouter({
       ),
     });
 
-    const logs = await ctx.db.query.attendance.findMany({
-      where: and(eq(attendance.userId, userId), eq(attendance.orgId, orgId)),
-      orderBy: [desc(attendance.date)],
-      limit: 10,
+    // Calculate aggregated stats
+    let dailyWorkHours = 0;
+    let dailyBreakHours = 0;
+    let isDailyOvertime = false;
+
+    for (const log of todayLogs) {
+      dailyWorkHours += Number(log.workHours || 0);
+      dailyBreakHours += Number(log.breakHours || 0);
+      if (log.isOvertime) isDailyOvertime = true;
+    }
+
+    // Default status logic gets tricky with multiple sessions.
+    // We check the *latest* log (by createdAt which we don't have sorted here easily without sort).
+    // Let's rely on the separate findFirst for "todayLog" which was latest.
+    
+    // Actually, we can just sort todayLogs in memory or fetch sorted.
+    // Let's keep the existing findFirst query for "latest status" to be safe and simple diff.
+    const todayLog = await ctx.db.query.attendance.findFirst({
+        where: and(
+          eq(attendance.userId, userId),
+          eq(attendance.date, today),
+          eq(attendance.orgId, orgId)
+        ),
+        orderBy: [desc(attendance.createdAt)],
     });
 
     let status = "OFFLINE";
     if (todayLog) {
-      if (todayLog.checkOut) status = "CHECKED_OUT";
+      if (todayLog.checkOut) status = "CHECKED_OUT"; // Latest is checked out
       else if (todayLog.status === "ON_BREAK") status = "ON_BREAK";
       else status = "PRESENT";
     }
 
-    return { status, logs, todayLog };
+    return { 
+        status, 
+        logs, 
+        todayLog, 
+        dailyStats: {
+            workHours: dailyWorkHours.toFixed(2),
+            breakHours: dailyBreakHours.toFixed(2),
+            isOvertime: isDailyOvertime
+        }
+    };
   }),
 
   checkIn: protectedProcedure
@@ -107,12 +137,28 @@ export const hrRouter = createTRPCRouter({
           eq(attendance.date, today),
           eq(attendance.orgId, ctx.session.orgId)
         ),
+        orderBy: [desc(attendance.createdAt)],
       });
-      if (existing)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Already checked in",
-        });
+
+      if (existing) {
+        if (!existing.checkOut) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Already checked in",
+          });
+        }
+
+        // Check 2-minute cooldown
+        const lastCheckOut = new Date(existing.checkOut);
+        const diff = new Date().getTime() - lastCheckOut.getTime();
+        const diffMinutes = diff / (1000 * 60);
+        if (diffMinutes < 2) {
+           throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Please wait 2 minutes before clocking in again.",
+          });
+        }
+      }
 
       await ctx.db.insert(attendance).values({
         orgId: ctx.session.orgId,
@@ -130,26 +176,45 @@ export const hrRouter = createTRPCRouter({
       where: and(
         eq(attendance.userId, ctx.session.userId),
         eq(attendance.date, today),
-        eq(attendance.orgId, ctx.session.orgId)
+        eq(attendance.orgId, ctx.session.orgId),
+        isNull(attendance.checkOut)
       ),
     });
 
-    if (!log || log.checkOut)
+    if (!log)
       throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot check out" });
 
+    // Calculate session duration
     const now = new Date();
     const checkInTime = new Date(log.checkIn!);
     const durationMs = now.getTime() - checkInTime.getTime();
-    const workHours =
+    const sessionWorkHours =
       durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0);
-    const isOvertime = workHours > 9;
+
+    // Calculate DAILY total to check Overtime
+    const otherLogs = await ctx.db.query.attendance.findMany({
+      where: and(
+        eq(attendance.userId, ctx.session.userId),
+        eq(attendance.date, today),
+        eq(attendance.orgId, ctx.session.orgId),
+        ne(attendance.id, log.id)
+      ),
+    });
+
+    let previousWorkHours = 0;
+    for (const l of otherLogs) {
+      previousWorkHours += Number(l.workHours || 0);
+    }
+    
+    const totalDailyWork = previousWorkHours + sessionWorkHours;
+    const isOvertime = totalDailyWork > 9.5;
 
     await ctx.db
       .update(attendance)
       .set({
         checkOut: now,
         status: "PRESENT",
-        workHours: workHours.toFixed(2),
+        workHours: sessionWorkHours.toFixed(2),
         isOvertime,
       })
       .where(eq(attendance.id, log.id));
@@ -161,10 +226,11 @@ export const hrRouter = createTRPCRouter({
       where: and(
         eq(attendance.userId, ctx.session.userId),
         eq(attendance.date, today),
-        eq(attendance.orgId, ctx.session.orgId)
+        eq(attendance.orgId, ctx.session.orgId),
+        isNull(attendance.checkOut)
       ),
     });
-    if (!log || log.checkOut)
+    if (!log)
       throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid action" });
 
     const now = new Date();

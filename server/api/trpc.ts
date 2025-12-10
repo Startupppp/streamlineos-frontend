@@ -3,7 +3,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import { auth } from "../../lib/auth";
 import { db } from "../../lib/db";
-import { organizationMembers } from "../../lib/db/schema";
+import { organizationMembers, organizations } from "../../lib/db/schema";
 import { eq } from "drizzle-orm";
 
 // 1. CONTEXT
@@ -52,7 +52,15 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
     limit: 1,
   });
 
-  const orgId = userMemberships[0]?.orgId || null;
+  let orgId = userMemberships[0]?.orgId || null;
+
+  // Fallback: If no membership, try to find ANY organization (Development fallback)
+  if (!orgId) {
+    const anyOrg = await ctx.db.query.organizations.findFirst();
+    if (anyOrg) {
+      orgId = anyOrg.id;
+    }
+  }
 
   return next({
     ctx: {

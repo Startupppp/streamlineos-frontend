@@ -15,12 +15,13 @@ export function DailyLog() {
 
   const log = data?.todayLog;
   const breaks = (log?.breaks as { start: string; end?: string }[]) || [];
+  const dailyStats = data?.dailyStats;
 
-  // Calculate durations for display
-  const workDuration = log?.workHours || "0.00";
-  const breakDuration = log?.breakHours || "0.00";
-  const overtimeDuration = log?.isOvertime
-    ? (Number(workDuration) - 9).toFixed(2)
+  // Calculate durations for display (Using Daily Totals)
+  const workDuration = dailyStats?.workHours || "0.00";
+  const breakDuration = dailyStats?.breakHours || "0.00";
+  const overtimeDuration = dailyStats?.isOvertime
+    ? (Number(workDuration) - 9.5).toFixed(2)
     : "0.00";
 
   return (
