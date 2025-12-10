@@ -26,6 +26,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { ThemeToggle } from "../../components/theme-toggle";
 
 const routes = [
   {
@@ -155,12 +156,12 @@ export function AppSidebar() {
           ))}
         </div>
       </div>
-      <div className="px-3 py-2 border-t border-white/10">
+      <div className="px-3 py-2 border-t border-white/10 flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-x-3 p-3 text-sm hover:bg-white/10"
+              className="flex-1 justify-start gap-x-3 p-3 text-sm hover:bg-white/10 overflow-hidden"
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage src={session?.user?.image || undefined} />
@@ -196,6 +197,7 @@ export function AppSidebar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <ThemeToggle className="text-white hover:bg-white/10" />
       </div>
     </div>
   );
