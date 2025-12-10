@@ -47,10 +47,8 @@ export function ClockInWidget() {
   const handleClockAction = () => {
     if (isCheckedIn) {
       checkOutMutation.mutate();
-    } else if (!isCheckedOut) {
-      checkInMutation.mutate({ location: undefined });
     } else {
-      toast.error("You have already completed your shift for today.");
+      checkInMutation.mutate({ location: undefined });
     }
   };
 

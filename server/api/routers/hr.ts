@@ -87,9 +87,24 @@ export const hrRouter = createTRPCRouter({
     let dailyBreakHours = 0;
     let isDailyOvertime = false;
 
+    const now = new Date();
+
     for (const log of todayLogs) {
-      dailyWorkHours += Number(log.workHours || 0);
       dailyBreakHours += Number(log.breakHours || 0);
+      
+      if (!log.checkOut && log.checkIn) {
+         // Active session: Calculate live work duration
+         const start = new Date(log.checkIn);
+         const durationMs = now.getTime() - start.getTime();
+         const durationHours = durationMs / (1000 * 60 * 60);
+         // Subtract breaks to get net work
+         const netWork = durationHours - (Number(log.breakHours) || 0);
+         dailyWorkHours += Math.max(0, netWork);
+      } else {
+         // Completed session
+         dailyWorkHours += Number(log.workHours || 0);
+      }
+
       if (log.isOvertime) isDailyOvertime = true;
     }
 
@@ -156,14 +171,40 @@ export const hrRouter = createTRPCRouter({
 
         // Check 2-minute cooldown
         const lastCheckOut = new Date(existing.checkOut);
-        const diff = new Date().getTime() - lastCheckOut.getTime();
-        const diffMinutes = diff / (1000 * 60);
+        const cooldownDiff = new Date().getTime() - lastCheckOut.getTime();
+        const diffMinutes = cooldownDiff / (1000 * 60);
         if (diffMinutes < 2) {
            throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Please wait 2 minutes before clocking in again.",
           });
         }
+
+        // RESUME LOGIC: Treat gap as break
+        const now = new Date();
+        const gapMs = now.getTime() - lastCheckOut.getTime();
+        const gapHours = gapMs / (1000 * 60 * 60);
+        
+        const currentBreaks = (existing.breaks as { start: string; end?: string }[]) || [];
+        const newBreaks = [
+          ...currentBreaks,
+          { start: lastCheckOut.toISOString(), end: now.toISOString() }
+        ];
+        const newBreakHours = (Number(existing.breakHours) || 0) + gapHours;
+
+        await ctx.db
+          .update(attendance)
+          .set({
+            status: "PRESENT",
+            checkOut: null,
+            breaks: newBreaks,
+            breakHours: newBreakHours.toFixed(2),
+            // We don't update workHours here, it acts as previous known, 
+            // but effectively we are in 'live' mode now.
+          })
+          .where(eq(attendance.id, existing.id));
+        
+        return; // Stop here, do not create new row
       }
 
       await ctx.db.insert(attendance).values({
