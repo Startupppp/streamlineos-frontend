@@ -115,6 +115,12 @@ export const hrRouter = createTRPCRouter({
       else status = "PRESENT";
     }
 
+    const logs = await ctx.db.query.attendance.findMany({
+      where: and(eq(attendance.userId, userId), eq(attendance.orgId, orgId)),
+      orderBy: [desc(attendance.createdAt)],
+      limit: 10,
+    });
+
     return { 
         status, 
         logs, 
@@ -426,6 +432,7 @@ export const hrRouter = createTRPCRouter({
         conditions.push(eq(expenses.userId, input.userId));
       }
       if (input.status) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         conditions.push(eq(expenses.status, input.status as any));
       }
       return await ctx.db.query.expenses.findMany({
@@ -542,6 +549,7 @@ export const hrRouter = createTRPCRouter({
         conditions.push(eq(documents.userId, input.userId));
       }
       if (input.type) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         conditions.push(eq(documents.type, input.type as any));
       }
       return await ctx.db.query.documents.findMany({
@@ -679,6 +687,7 @@ export const hrRouter = createTRPCRouter({
         conditions.push(eq(helpdeskTickets.userId, input.userId));
       }
       if (input.status) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         conditions.push(eq(helpdeskTickets.status, input.status as any));
       }
       return await ctx.db.query.helpdeskTickets.findMany({
