@@ -24,25 +24,26 @@ export function MonthlyLog() {
   const logs = data?.logs || [];
 
   return (
-    <div className="rounded-md border border-white/10 bg-white/5">
+  return (
+    <div className="rounded-md border border-border bg-card">
       <Table>
-        <TableHeader className="bg-white/5">
-          <TableRow className="border-white/10 hover:bg-white/5">
+        <TableHeader>
+          <TableRow className="border-border hover:bg-muted/50">
             <TableHead className="w-[50px]">
-              <Checkbox className="border-white/50" />
+              <Checkbox className="border-muted-foreground" />
             </TableHead>
-            <TableHead className="text-zinc-300">Date</TableHead>
-            <TableHead className="text-zinc-300">Status</TableHead>
-            <TableHead className="text-zinc-300">In Time</TableHead>
-            <TableHead className="text-zinc-300">Out Time</TableHead>
-            <TableHead className="text-zinc-300">Work Duration</TableHead>
-            <TableHead className="text-zinc-300">Overtime Duration</TableHead>
-            <TableHead className="text-zinc-300">Break Duration</TableHead>
+            <TableHead className="text-muted-foreground">Date</TableHead>
+            <TableHead className="text-muted-foreground">Status</TableHead>
+            <TableHead className="text-muted-foreground">In Time</TableHead>
+            <TableHead className="text-muted-foreground">Out Time</TableHead>
+            <TableHead className="text-muted-foreground">Work Duration</TableHead>
+            <TableHead className="text-muted-foreground">Overtime Duration</TableHead>
+            <TableHead className="text-muted-foreground">Break Duration</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {logs.length === 0 ? (
-            <TableRow className="border-white/10 hover:bg-white/5 text-zinc-400">
+            <TableRow className="border-border hover:bg-muted/50 text-muted-foreground">
               <TableCell colSpan={8} className="text-center py-8">
                 No attendance logs found for this month.
               </TableCell>
@@ -51,10 +52,10 @@ export function MonthlyLog() {
             logs.map((row) => (
               <TableRow
                 key={row.id}
-                className="border-white/10 hover:bg-white/5 text-zinc-300"
+                className="border-border hover:bg-muted/50 text-foreground"
               >
                 <TableCell>
-                  <Checkbox className="border-white/50" />
+                  <Checkbox className="border-muted-foreground" />
                 </TableCell>
                 <TableCell className="font-medium">
                   {format(new Date(row.date), "dd-MM-yyyy")}
