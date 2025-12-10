@@ -24,7 +24,6 @@ export function MonthlyLog() {
   const logs = data?.logs || [];
 
   return (
-  return (
     <div className="rounded-md border border-border bg-card">
       <Table>
         <TableHeader>
