@@ -26,7 +26,6 @@ import {
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { ThemeToggle } from "../../components/theme-toggle";
 
 const routes = [
   {
@@ -85,7 +84,7 @@ export function AppSidebar() {
   };
 
   return (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-lg">
+    <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
       <div className="px-3 py-2 flex-1">
         <Link href="/dashboard" className="flex items-center pl-3 mb-6">
           <div className="relative w-8 h-8 mr-4">
@@ -108,7 +107,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-between text-white hover:bg-white/10 p-2 rounded-lg border border-white/10"
+                  className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground p-2 rounded-lg border-sidebar-border bg-transparent"
                 >
                   <span className="truncate">
                     {organizations[0]?.name || "Select Organization"}
@@ -142,10 +141,10 @@ export function AppSidebar() {
               key={route.href}
               href={route.href}
               className={cn(
-                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition",
                 pathname === route.href
-                  ? "text-white bg-white/10"
-                  : "text-zinc-400"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                  : "text-sidebar-foreground/70"
               )}
             >
               <div className="flex items-center flex-1">
@@ -156,12 +155,12 @@ export function AppSidebar() {
           ))}
         </div>
       </div>
-      <div className="px-3 py-2 border-t border-white/10 flex items-center gap-2">
+      <div className="px-3 py-2 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex-1 justify-start gap-x-3 p-3 text-sm hover:bg-white/10 overflow-hidden"
+              className="w-full justify-start gap-x-3 p-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage src={session?.user?.image || undefined} />
@@ -170,10 +169,10 @@ export function AppSidebar() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col overflow-hidden text-left">
-                <span className="font-semibold text-white truncate">
+                <span className="font-semibold text-sidebar-foreground truncate">
                   {session?.user?.name || "User"}
                 </span>
-                <span className="text-xs text-zinc-400 truncate">
+                <span className="text-xs text-muted-foreground truncate">
                   {session?.user?.email}
                 </span>
               </div>
@@ -197,7 +196,6 @@ export function AppSidebar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <ThemeToggle className="text-white hover:bg-white/10" />
       </div>
     </div>
   );

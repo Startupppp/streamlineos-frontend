@@ -11,23 +11,23 @@ export default function AttendancePage() {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">
           Attendance
         </h2>
-        <p className="text-zinc-400">View and manage attendance logs.</p>
+        <p className="text-muted-foreground">View and manage attendance logs.</p>
       </div>
 
       <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="bg-white/5 border border-white/10">
+        <TabsList className="bg-muted text-muted-foreground">
           <TabsTrigger
             value="daily"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-zinc-400"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground"
           >
             Daily Log
           </TabsTrigger>
           <TabsTrigger
             value="monthly"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-zinc-400"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground"
           >
             Monthly Log
           </TabsTrigger>
