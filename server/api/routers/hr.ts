@@ -231,26 +231,33 @@ export const hrRouter = createTRPCRouter({
     if (!log)
       throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot check out" });
 
+    if (!log.checkIn) {
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Missing check-in time" });
+    }
+
     // Calculate session duration
     const now = new Date();
-    const checkInTime = new Date(log.checkIn!);
+    const checkInTime = new Date(log.checkIn);
     const durationMs = now.getTime() - checkInTime.getTime();
-    const sessionWorkHours =
-      durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0);
+    const sessionWorkHours = Math.max(
+      0,
+      durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0)
+    );
 
     // Calculate DAILY total to check Overtime
-    const otherLogs = await ctx.db.query.attendance.findMany({
+    const todayLogs = await ctx.db.query.attendance.findMany({
       where: and(
         eq(attendance.userId, ctx.session.userId),
         eq(attendance.date, today),
-        eq(attendance.orgId, ctx.session.orgId),
-        ne(attendance.id, log.id)
+        eq(attendance.orgId, ctx.session.orgId)
       ),
     });
 
     let previousWorkHours = 0;
-    for (const l of otherLogs) {
-      previousWorkHours += Number(l.workHours || 0);
+    for (const l of todayLogs) {
+      if (l.id !== log.id) {
+        previousWorkHours += Number(l.workHours || 0);
+      }
     }
     
     const totalDailyWork = previousWorkHours + sessionWorkHours;
