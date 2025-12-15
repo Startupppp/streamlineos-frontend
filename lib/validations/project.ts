@@ -5,7 +5,6 @@ export const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 export const ticketTypeSchema = z.enum(["BUG", "FEATURE", "TASK", "EPIC", "STORY"]);
 export const ticketStatusSchema = z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 export const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
-
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),
   name: z.string().min(1, "Project name is required"),
@@ -18,6 +17,7 @@ export const updateProjectSettingsInputSchema = z.object({
 });
 
 export const createProjectInputSchema = z.object({
+  key: z.string().min(2).optional(),
   name: z.string().min(1, "Project name is required"),
   description: z.string().optional(),
   managerId: z.string().optional(),
@@ -25,6 +25,7 @@ export const createProjectInputSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
 });
+
 
 export const createTicketInputSchema = z.object({
   projectId: z.number().int().positive(),

@@ -70,10 +70,19 @@ export const projectRouter = createTRPCRouter({
   createProject: protectedProcedure
     .input(createProjectInputSchema)
     .mutation(async ({ ctx, input }) => {
+      // Generate key if not provided: Uppercase first 3 chars or random
+      let projectKey = input.key;
+      if (!projectKey) {
+          const namePart = input.name.replace(/[^a-zA-Z]/g, "").substring(0, 3).toUpperCase();
+          const randomPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+          projectKey = (namePart.length >= 2 ? namePart : "PRJ") + "-" + randomPart;
+      }
+
       const [project] = await ctx.db
         .insert(projects)
         .values({
           orgId: ctx.session.orgId,
+          key: projectKey, // Added key
           name: input.name,
           description: input.description,
           managerId: input.managerId,
