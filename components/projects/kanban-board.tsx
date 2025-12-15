@@ -6,7 +6,7 @@ import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
-import { MoreHorizontal, Clock } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useUpdateTicketStatus } from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +24,12 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { AvatarImage } from "../ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 const TicketTypeIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -42,12 +48,6 @@ const PriorityIcon = ({ priority }: { priority: string }) => {
     default: return <ArrowRight className="h-3 w-3 text-blue-500" />;
   }
 };
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 
 interface KanbanBoardProps {
   tickets: Array<{
@@ -77,13 +77,6 @@ const COLUMNS = [
   },
   { id: "DONE", label: "Done", color: "bg-green-50 border-green-200" },
 ];
-
-const PRIORITY_COLORS: Record<string, string> = {
-  LOW: "bg-gray-100 text-gray-700",
-  MEDIUM: "bg-blue-100 text-blue-700",
-  HIGH: "bg-orange-100 text-orange-700",
-  URGENT: "bg-red-100 text-red-700",
-};
 
 export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
@@ -183,7 +176,11 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.2 }}
                     draggable
-                    onDragStart={() => handleDragStart(ticket.id)}
+                    onDragStart={(e) => {
+                       // Fix: Set dataTransfer here
+                       (e as any).dataTransfer.setData("ticketId", ticket.id.toString());
+                       handleDragStart(ticket.id);
+                    }}
                     onDragEnd={handleDragEnd}
                     data-ticket-id={ticket.id}
                   >
@@ -209,7 +206,10 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                               {COLUMNS.map((c) => (
                                 <DropdownMenuItem
                                   key={c.id}
-                                  onClick={() => moveTicket(ticket.id, c.id)}
+                                  onClick={(e) => {
+                                      e.stopPropagation(); // Prevent opening modal
+                                      moveTicket(ticket.id, c.id);
+                                  }}
                                   disabled={c.id === ticket.status}
                                 >
                                   Move to {c.label}
@@ -245,11 +245,6 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                       </CardContent>
                     </Card>
                   </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        );
                 ))}
               </AnimatePresence>
             </div>

@@ -49,6 +49,7 @@ export const vaivammKeys = {
       [...projectBaseKey, "sprints", { projectId }] as const,
     ticket: (id: number) => [...projectBaseKey, "ticket", { id }] as const,
     labels: () => [...projectBaseKey, "labels"] as const,
+    members: () => [...projectBaseKey, "members"] as const,
     timeEntries: (ticketId?: number, userId?: string) =>
       [...projectBaseKey, "timeEntries", { ticketId, userId }] as const,
     sprintBurndown: (sprintId: number) =>
@@ -872,6 +873,19 @@ export const useLabels = (
   });
 };
 
+export const useProjectMembers = (
+  options?: Omit<
+    UseQueryOptions<ProjectRouterOutputs["getProjectMembers"], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<ProjectRouterOutputs["getProjectMembers"], Error>({
+    queryKey: vaivammKeys.project.members(),
+    queryFn: () => vaivammTrpcClient.project.getProjectMembers.query(),
+    ...options,
+  });
+};
+
 export const useTimeEntries = (
   ticketId?: number,
   userId?: string,
@@ -1154,6 +1168,41 @@ export const useUpdateTicketStatus = (
       queryClient.invalidateQueries({
         queryKey: vaivammKeys.project.ticket(variables.ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.projects(),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useDeleteTicket = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["deleteTicket"],
+    Error,
+    ProjectRouterInputs["deleteTicket"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["deleteTicket"],
+        ProjectRouterInputs["deleteTicket"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["deleteTicket"],
+    Error,
+    ProjectRouterInputs["deleteTicket"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.deleteTicket.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({
         queryKey: vaivammKeys.project.projects(),
       });
