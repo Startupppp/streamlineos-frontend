@@ -39,6 +39,8 @@ export const vaivammKeys = {
     goals: (userId?: string) => [...hrBaseKey, "goals", { userId }] as const,
     helpdeskTickets: (userId?: string, status?: string) =>
       [...hrBaseKey, "helpdeskTickets", { userId, status }] as const,
+    workLogs: (year: number, quarter: number, userId?: string) =>
+      [...hrBaseKey, "workLogs", { year, quarter, userId }] as const,
   },
 
   project: {
@@ -802,6 +804,44 @@ export const useCreateHelpdeskTicket = (
     },
   });
 };
+
+// --- WORK LOGS ---
+export function useGetWorkLogs(
+  input: RouterInputs["hr"]["getWorkLogs"],
+  options?: UseQueryOptions<RouterOutputs["hr"]["getWorkLogs"]>
+) {
+  return useQuery({
+    queryKey: vaivammKeys.hr.workLogs(input.year, input.quarter, input.userId),
+    queryFn: () => vaivammTrpcClient.hr.getWorkLogs.query(input),
+    ...options,
+  });
+}
+
+export function useUpsertWorkLog(
+  options?: UseMutationOptions<
+    RouterOutputs["hr"]["upsertWorkLog"],
+    unknown,
+    RouterInputs["hr"]["upsertWorkLog"]
+  >
+) {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        RouterOutputs["hr"]["upsertWorkLog"],
+        RouterInputs["hr"]["upsertWorkLog"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation({
+    mutationFn: (input) => vaivammTrpcClient.hr.upsertWorkLog.mutate(input),
+    ...options,
+    onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries({ queryKey: vaivammKeys.hr.all });
+        if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+}
 
 export const useProjects = (
   options?: Omit<

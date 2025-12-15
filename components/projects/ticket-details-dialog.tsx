@@ -112,7 +112,6 @@ export function TicketDetailsDialog({
       priority: "MEDIUM",
       status: "TODO",
       assigneeId: undefined,
-      assigneeId: undefined,
     },
   });
 
@@ -125,7 +124,6 @@ export function TicketDetailsDialog({
         type: ticket.type || "TASK",
         priority: ticket.priority || "MEDIUM",
         status: ticket.status || "TODO",
-        assigneeId: ticket.assignee?.id,
         assigneeId: ticket.assignee?.id,
       });
     }

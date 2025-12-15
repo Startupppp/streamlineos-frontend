@@ -19,10 +19,11 @@ import {
   CheckSquare, 
   Bug, 
   Bookmark, 
-  Zap, 
-  ArrowDown, 
+  Zap,
   ArrowUp, 
-  AlertCircle 
+  ArrowDown, 
+  AlertCircle,
+  ArrowRight
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,15 +62,9 @@ interface KanbanBoardProps {
     assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
   }>;
   projectId: number;
-  statuses: Array<{
-    id: number;
-    name: string;
-    order: number;
-    color: string | null;
-  }>;
 }
 
-export function KanbanBoard({ tickets, projectId, statuses }: KanbanBoardProps) {
+export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [draggedTicket, setDraggedTicket] = useState<number | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);

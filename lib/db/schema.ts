@@ -483,7 +483,7 @@ export const timesheets = pgTable("timesheets", {
   userId: text("user_id").references(() => users.id),
   ticketId: integer("ticket_id").references(() => tickets.id),
   date: date("date").notNull(),
-  hours: decimal("hours").notNull(),
+  hours: decimal("hours").default("0"),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
 });

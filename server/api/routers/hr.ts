@@ -16,8 +16,9 @@ import {
   goals,
   helpdeskTickets,
   organizationMembers,
+  timesheets, // Added
 } from "../../../lib/db/schema";
-import { eq, and, desc, isNull, ne } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
@@ -35,6 +36,8 @@ import {
   createPerformanceReviewInputSchema,
   createGoalInputSchema,
   updateGoalInputSchema,
+  upsertWorkLogInputSchema,
+  getWorkLogsInputSchema,
 } from "../../../lib/validations/hr";
 
 export const hrRouter = createTRPCRouter({
@@ -767,5 +770,76 @@ export const hrRouter = createTRPCRouter({
         })
         .returning();
       return ticket;
+    }),
+
+  // --- WORK LOGS ---
+  getWorkLogs: protectedProcedure
+    .input(getWorkLogsInputSchema)
+    .query(async ({ ctx, input }) => {
+      const { year, quarter, userId } = input;
+      const targetUserId = userId || ctx.session.userId;
+
+      // Calculate date range for quarter
+      const startMonth = (quarter - 1) * 3; // 0, 3, 6, 9
+      const startDate = new Date(year, startMonth, 1);
+      const endDate = new Date(year, startMonth + 3, 0); // Last day of previous month from next q start
+
+      const startStr = format(startDate, "yyyy-MM-dd");
+      const endStr = format(endDate, "yyyy-MM-dd");
+
+      // We use gte/lte if imported, or just raw logic or between
+      // Since date is string 'YYYY-MM-DD' in DB (pg date), string comparison works fine for iso format
+      // But safer to import gte, lte from drizzle-orm if available. 
+      // Existing imports: eq, and, desc, isNull, ne. Need to add gte, lte.
+      // Let's rely on sql or just string comparison.
+      // Actually, drizzle `date` column is string in JS usually.
+      
+      const logs = await ctx.db.query.timesheets.findMany({
+        where: and(
+           eq(timesheets.orgId, ctx.session.orgId),
+           eq(timesheets.userId, targetUserId),
+           // For simplicity in filter, or add gte/lte imports. 
+           // Let's add gte/lte imports in a separate hunk or reused `and`.
+           // I'll try to use a specialized where clause or just filter in memory if small? 
+           // No, best to query. I'll add imports.
+        ),
+      });
+      // Filtering in memory for the quarter range to avoid adding imports in this hunk if complicated
+      // Timesheets shouldn't be massive for one user.
+      return logs.filter(l => l.date >= startStr && l.date <= endStr);
+    }),
+
+  upsertWorkLog: protectedProcedure
+    .input(upsertWorkLogInputSchema)
+    .mutation(async ({ ctx, input }) => {
+        const dateStr = format(input.date, "yyyy-MM-dd");
+        
+        const existing = await ctx.db.query.timesheets.findFirst({
+            where: and(
+                eq(timesheets.orgId, ctx.session.orgId),
+                eq(timesheets.userId, ctx.session.userId),
+                eq(timesheets.date, dateStr)
+            )
+        });
+
+        if (existing) {
+             const [updated] = await ctx.db.update(timesheets)
+                .set({
+                    description: input.description,
+                    hours: input.hours?.toString() || existing.hours,
+                })
+                .where(eq(timesheets.id, existing.id))
+                .returning();
+             return updated;
+        } else {
+             const [created] = await ctx.db.insert(timesheets).values({
+                 orgId: ctx.session.orgId,
+                 userId: ctx.session.userId,
+                 date: dateStr,
+                 description: input.description,
+                 hours: input.hours?.toString() || "0",
+             }).returning();
+             return created;
+        }
     }),
 });
