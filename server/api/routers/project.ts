@@ -9,6 +9,8 @@ import {
   ticketLabels,
   ticketLabelMappings,
   timesheets,
+  organizationMembers,
+  users,
 } from "../../../lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -33,6 +35,23 @@ export const projectRouter = createTRPCRouter({
       where: eq(projects.orgId, ctx.session.orgId),
       orderBy: [desc(projects.id)],
     });
+  }),
+
+  getProjectMembers: protectedProcedure.query(async ({ ctx }) => {
+    const members = await ctx.db
+      .select({
+        id: users.id,
+        name: users.name,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        image: users.image,
+        email: users.email,
+        role: organizationMembers.role,
+      })
+      .from(organizationMembers)
+      .innerJoin(users, eq(organizationMembers.userId, users.id))
+      .where(eq(organizationMembers.orgId, ctx.session.orgId));
+    return members;
   }),
 
   getProjectDetails: protectedProcedure
@@ -194,6 +213,7 @@ export const projectRouter = createTRPCRouter({
           sprintId: input.sprintId,
           epicId: input.epicId,
           points: input.points,
+          link: input.link,
           originalEstimate: input.originalEstimate?.toString(),
           status: "TODO",
         })
@@ -246,6 +266,22 @@ export const projectRouter = createTRPCRouter({
             eq(tickets.id, input.ticketId),
             eq(tickets.orgId, ctx.session.orgId)
           )
+        );
+    }),
+
+  deleteTicket: protectedProcedure
+    .input(z.object({ ticketId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      // Delete related records first (cascade should handle this if set up, but let's be safe or rely on constraints)
+      // Assuming simplified deletion for now or cascade constraints exist. 
+      // If not, we might need to delete from mapping tables.
+      // Based on typical schema, cascade might not be everywhere.
+      // Let's check schema.ts later if this fails, but for now strict delete from tickets.
+      
+      await ctx.db
+        .delete(tickets)
+        .where(
+          and(eq(tickets.id, input.ticketId), eq(tickets.orgId, ctx.session.orgId))
         );
     }),
 

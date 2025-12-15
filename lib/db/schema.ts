@@ -398,6 +398,7 @@ export const tickets = pgTable("tickets", {
   reporterId: text("reporter_id").references(() => users.id),
   points: integer("points"), // Story points
   storyPoints: integer("story_points"), 
+  link: text("link"),
   order: integer("order").default(0), // For Kanban ordering
   parentTicketId: integer("parent_ticket_id"), // For subtasks
   originalEstimate: decimal("original_estimate"), 
