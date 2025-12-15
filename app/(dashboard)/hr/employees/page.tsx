@@ -98,10 +98,15 @@ export default function EmployeeDirectoryPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center w-full justify-between mt-4">
                   <Badge variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}>
                     {user.role}
                   </Badge>
+                  <Link href={`/hr/employees/${user.id}`}>
+                    <Button variant="outline" size="sm">
+                        Edit
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
