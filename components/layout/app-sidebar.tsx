@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,48 +29,27 @@ import {
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-const routes = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
-    color: "text-sky-500",
-  },
-  {
-    label: "Projects",
-    icon: Briefcase,
-    href: "/projects",
-    color: "text-violet-500",
-  },
-  {
-    label: "HR & Employees",
-    icon: Users,
-    href: "/hr",
-    color: "text-pink-700",
-  },
-  {
-    label: "Attendance",
-    icon: Clock,
-    href: "/hr/attendance",
-    color: "text-orange-700",
-  },
-  {
-    label: "Leaves",
-    icon: CalendarCheck,
-    href: "/hr/leaves",
-    color: "text-emerald-500",
-  },
-  {
-    label: "Payroll",
-    icon: CreditCard,
-    href: "/hr/payroll",
-    color: "text-green-700",
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
+const adminRoutes = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
+  { label: "Employees", icon: Users, href: "/hr", color: "text-pink-700" },
+  { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
+  { label: "Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
+  { label: "Settings", icon: Settings, href: "/settings", color: "text-gray-500" },
+];
+
+const hrRoutes = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
+  { label: "Onboarding", icon: Users, href: "/hr/onboarding", color: "text-pink-700" },
+  { label: "Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
+  { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
+  { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
+];
+
+const employeeRoutes = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
+  { label: "My Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
+  { label: "My Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
+  { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
 ];
 
 export function AppSidebar() {
@@ -76,15 +57,48 @@ export function AppSidebar() {
   const router = useRouter();
   const { data: session } = useSession();
   const { data: organizations } = useGetOrganizations();
+  
+  const role = session?.user?.role;
 
-  const handleOrgChange = (orgId: string) => {
+  let routes = employeeRoutes; // Default to employee
+  if (role === "OWNER" || role === "ADMIN") {
+    routes = [...adminRoutes, ...hrRoutes.filter(r => !adminRoutes.some(ar => ar.href === r.href))]; 
+  } else if (role === "MEMBER") {
+     routes = employeeRoutes;
+  }
+
+  const handleOrgChange = (id: string) => {
     // Store selected org in session or context
+    console.log("Org switched to", id);
     router.push("/dashboard");
     router.refresh();
   };
 
+
+
+  const [pendingLeaves, setPendingLeaves] = useState(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+        try {
+            // Dynamically import to avoid server-action-in-client issues without wrapper if needed, 
+            // but Next.js handles imported server actions in Client Components fine usually.
+            const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
+            const count = await getPendingApprovalCount();
+            setPendingLeaves(count);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    if (session?.user) {
+        fetchCount();
+        const interval = setInterval(fetchCount, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }
+  }, [session]);
+
   return (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-lg">
+    <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
       <div className="px-3 py-2 flex-1">
         <Link href="/dashboard" className="flex items-center pl-3 mb-6">
           <div className="relative w-8 h-8 mr-4">
@@ -107,7 +121,7 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-between text-white hover:bg-white/10 p-2 rounded-lg border border-white/10"
+                  className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground p-2 rounded-lg border-sidebar-border bg-transparent"
                 >
                   <span className="truncate">
                     {organizations[0]?.name || "Select Organization"}
@@ -136,31 +150,41 @@ export function AppSidebar() {
         )}
 
         <div className="space-y-1">
-          {routes.map((route) => (
+          {routes.map((route) => {
+             const isLeaves = route.href === "/hr/leaves";
+             const showBadge = isLeaves && pendingLeaves > 0;
+             
+             return (
             <Link
               key={route.href}
               href={route.href}
               className={cn(
-                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition",
                 pathname === route.href
-                  ? "text-white bg-white/10"
-                  : "text-zinc-400"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
+                  : "text-sidebar-foreground/70"
               )}
             >
               <div className="flex items-center flex-1">
                 <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
                 {route.label}
+                 {showBadge && (
+                     <span className="ml-auto flex h-2.5 w-2.5 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                     </span>
+                 )}
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       </div>
-      <div className="px-3 py-2 border-t border-white/10">
+      <div className="px-3 py-2 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-x-3 p-3 text-sm hover:bg-white/10"
+              className="w-full justify-start gap-x-3 p-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage src={session?.user?.image || undefined} />
@@ -169,10 +193,10 @@ export function AppSidebar() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col overflow-hidden text-left">
-                <span className="font-semibold text-white truncate">
+                <span className="font-semibold text-sidebar-foreground truncate">
                   {session?.user?.name || "User"}
                 </span>
-                <span className="text-xs text-zinc-400 truncate">
+                <span className="text-xs text-muted-foreground truncate">
                   {session?.user?.email}
                 </span>
               </div>

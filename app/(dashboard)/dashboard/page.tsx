@@ -29,7 +29,7 @@ export default function DashboardPage() {
         </div>
         <DashboardStatsSkeleton />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4 bg-white/5 border-white/10">
+          <Card className="col-span-4 bg-card border-border">
             <CardHeader>
               <Skeleton className="h-6 w-32" />
             </CardHeader>
@@ -37,7 +37,7 @@ export default function DashboardPage() {
               <Skeleton className="h-20 w-full" />
             </CardContent>
           </Card>
-          <Card className="col-span-3 bg-white/5 border-white/10">
+          <Card className="col-span-3 bg-card border-border">
             <CardHeader>
               <Skeleton className="h-6 w-32" />
             </CardHeader>
@@ -103,21 +103,21 @@ export default function DashboardPage() {
     <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
-          <p className="text-zinc-400">Overview for {stats.orgName}</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
+          <p className="text-muted-foreground">Overview for {stats.orgName}</p>
         </div>
         <ClockInWidget />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
-          <Card key={stat.label} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
+          <Card key={stat.label} className="bg-card border-border hover:bg-accent/50 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-white">{stat.label}</CardTitle>
+              <CardTitle className="text-sm font-medium text-foreground">{stat.label}</CardTitle>
               <stat.icon className={`h-4 w-4 ${stat.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
+              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
             </CardContent>
           </Card>
         ))}
@@ -125,20 +125,20 @@ export default function DashboardPage() {
       
       {/* Recent Activity / Charts could go here */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 bg-white/5 border-white/10">
+        <Card className="col-span-4 bg-card border-border">
             <CardHeader>
-                <CardTitle className="text-white">Recent Projects</CardTitle>
+                <CardTitle className="text-foreground">Recent Projects</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-zinc-400 text-sm">No recent activity.</p>
+                <p className="text-muted-foreground text-sm">No recent activity.</p>
             </CardContent>
         </Card>
-        <Card className="col-span-3 bg-white/5 border-white/10">
+        <Card className="col-span-3 bg-card border-border">
             <CardHeader>
-                <CardTitle className="text-white">Team Availability</CardTitle>
+                <CardTitle className="text-foreground">Team Availability</CardTitle>
             </CardHeader>
              <CardContent>
-                <p className="text-zinc-400 text-sm">Everyone is offline.</p>
+                <p className="text-muted-foreground text-sm">Everyone is offline.</p>
             </CardContent>
         </Card>
       </div>

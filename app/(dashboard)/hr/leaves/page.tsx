@@ -1,127 +1,123 @@
-"use client";
-
-import { useHrLeaves } from "../../../../lib/hooks/trpc-hooks";
-import { LeaveRequestForm } from "../../../../components/hr/leave-request-form";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../../components/ui/table";
+import { 
+    getLeaveContext, 
+    getApprovers, 
+    getMyRequests, 
+    getIncomingRequests 
+} from "@/server/actions/leave-actions";
 import { format } from "date-fns";
-import { LeavesPageSkeleton } from "../../../../components/ui/leaves-skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RequestLeaveDialog } from "./request-leave-dialog";
+import { PendingRequestsList } from "./pending-requests-list"; // We just made this
+import { Badge } from "@/components/ui/badge";
+import { auth } from "@/lib/auth"; // For basic session check if needed
 
-export default function LeavesPage() {
-  const { data, isLoading } = useHrLeaves();
+export default async function LeavesPage() {
+    const session = await auth();
+    // Fetch all data in parallel
+    const [context, approvers, myRequests, incomingRequests] = await Promise.all([
+        getLeaveContext(),
+        getApprovers(),
+        getMyRequests(),
+        getIncomingRequests()
+    ]);
 
-  if (isLoading) {
-    return <LeavesPageSkeleton />;
-  }
+    if (!context.success || !context.balances) {
+        return <div>Error loading leave data. Please try again.</div>;
+    }
 
-  const { balances, types, requests } = data || {
-    balances: [],
-    types: [],
-    requests: [],
-  };
+    return (
+        <div className="flex-1 space-y-4 p-8 pt-6">
+            <div className="flex items-center justify-between space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Leave Management</h2>
+                <div className="flex items-center space-x-2">
+                    <RequestLeaveDialog 
+                        leaveTypes={context.types || []} 
+                        approvers={approvers} 
+                    />
+                </div>
+            </div>
 
-  return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-primary">Leave Management</h1>
-        <LeaveRequestForm types={types} />
-      </div>
+            {/* Balance Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {(context.balances as any[]).map((bal) => (
+                    <Card key={bal.leaveTypeId}>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                {bal.typeName}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{bal.balance}</div>
+                            <p className="text-xs text-muted-foreground">
+                                Days Available
+                            </p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
 
-      {/* Balances */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {balances.length > 0 ? (
-          balances.map((balance) => (
-            <Card key={balance.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {/* Ideally fetching name from type relation */}
-                  Leave Balance (Type {balance.leaveTypeId})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{balance.balance} days</div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">
-                No leave balances found. Contact HR.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            <Tabs defaultValue="my-requests" className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="my-requests">My Requests</TabsTrigger>
+                    {incomingRequests.length > 0 && (
+                         <TabsTrigger value="approvals" className="relative">
+                             Approvals
+                             <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                         </TabsTrigger>
+                    )}
+                </TabsList>
 
-      {/* Request History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>My Leave History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Dates</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {requests.map((req) => (
-                <TableRow key={req.id}>
-                  <TableCell>
-                    {format(new Date(req.startDate), "MMM d")} -{" "}
-                    {format(new Date(req.endDate), "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell>Type {req.leaveTypeId}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {req.reason}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold
-                      ${
-                        req.status === "APPROVED"
-                          ? "bg-green-100 text-green-700"
-                          : req.status === "REJECTED"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {requests.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-center h-24 text-muted-foreground"
-                  >
-                    No records found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  );
+                {/* My Requests Tab */}
+                <TabsContent value="my-requests" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>My History</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {myRequests.length === 0 ? (
+                                    <p className="text-muted-foreground text-sm">No leave requests found.</p>
+                                ) : (
+                                    myRequests.map((req: any) => (
+                                        <div key={req.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium leading-none">
+                                                    {req.leaveType?.name}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {format(new Date(req.startDate), "MMM dd")} - {format(new Date(req.endDate), "MMM dd, yyyy")}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant={
+                                                    req.status === 'APPROVED' ? 'default' : 
+                                                    req.status === 'REJECTED' ? 'destructive' : 'secondary'
+                                                }>
+                                                    {req.status}
+                                                </Badge>
+                                                {req.status === 'PENDING' && req.approver && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        Approver: {req.approver.name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Approvals Tab */}
+                <TabsContent value="approvals" className="space-y-4">
+                    <PendingRequestsList requests={incomingRequests} />
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
 }

@@ -86,13 +86,13 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-8 max-w-2xl mx-auto">
+      <div className="space-y-8 max-w-2xl mx-auto p-6">
         <Skeleton className="h-9 w-48" />
-        <Card className="bg-white/5 border-white/10">
+        <Card>
           <CardHeader>
             <Skeleton className="h-6 w-40" />
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
@@ -124,26 +124,26 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-white">Project Settings</h1>
+    <div className="space-y-8 max-w-2xl mx-auto p-6">
+      <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
 
-      <Card className="bg-white/5 border-white/10">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">General Information</CardTitle>
+          <CardTitle>General Information</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Project Name</FormLabel>
+                    <FormLabel>Project Name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        className="bg-black/20 border-white/10 text-white"
+                        placeholder="Enter project name"
                       />
                     </FormControl>
                     <FormMessage />
@@ -156,11 +156,12 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Description</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
-                        className="bg-black/20 border-white/10 text-white"
+                        placeholder="Project description"
+                        className="min-h-[100px]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -173,13 +174,13 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Status</FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-black/20 border-white/10 text-white">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -197,7 +198,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
               <Button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="w-full bg-gold text-black hover:bg-yellow-500"
+                className="w-full"
               >
                 {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </Button>

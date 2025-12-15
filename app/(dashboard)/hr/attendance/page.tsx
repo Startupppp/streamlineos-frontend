@@ -1,46 +1,30 @@
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../../components/ui/tabs";
-import { MonthlyLog } from "../../../../components/attendance/monthly-log";
-import { DailyLog } from "../../../../components/attendance/daily-log";
+"use client";
+
+import { ClockInWidget } from "@/components/attendance/clock-in-widget";
+import { DailyLog } from "@/components/attendance/daily-log";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export default function AttendancePage() {
   return (
-    <div className="p-8 space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">
-          Attendance
-        </h2>
-        <p className="text-zinc-400">View and manage attendance logs.</p>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Attendance</h2>
+          <p className="text-muted-foreground">
+            Track your work hours, breaks, and daily logs.
+          </p>
+        </div>
+        <div>
+           {/* Widget in header area for quick access */}
+           <ClockInWidget />
+        </div>
       </div>
+      <Separator />
 
-      <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="bg-white/5 border border-white/10">
-          <TabsTrigger
-            value="daily"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-zinc-400"
-          >
-            Daily Log
-          </TabsTrigger>
-          <TabsTrigger
-            value="monthly"
-            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-zinc-400"
-          >
-            Monthly Log
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="daily" className="mt-6">
+      <div className="space-y-4">
           <DailyLog />
-        </TabsContent>
-        <TabsContent value="monthly" className="mt-6">
-          <div className="space-y-4">
-            <MonthlyLog />
-          </div>
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 }

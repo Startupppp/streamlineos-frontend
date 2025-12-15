@@ -52,7 +52,15 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
     limit: 1,
   });
 
-  const orgId = userMemberships[0]?.orgId || null;
+  let orgId = userMemberships[0]?.orgId || null;
+
+  // Fallback: If no membership, try to find ANY organization (Development fallback)
+  if (!orgId) {
+    const anyOrg = await ctx.db.query.organizations.findFirst();
+    if (anyOrg) {
+      orgId = anyOrg.id;
+    }
+  }
 
   return next({
     ctx: {

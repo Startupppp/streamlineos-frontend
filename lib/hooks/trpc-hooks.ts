@@ -39,6 +39,8 @@ export const vaivammKeys = {
     goals: (userId?: string) => [...hrBaseKey, "goals", { userId }] as const,
     helpdeskTickets: (userId?: string, status?: string) =>
       [...hrBaseKey, "helpdeskTickets", { userId, status }] as const,
+    workLogs: (year: number, quarter: number, userId?: string) =>
+      [...hrBaseKey, "workLogs", { year, quarter, userId }] as const,
   },
 
   project: {
@@ -49,6 +51,7 @@ export const vaivammKeys = {
       [...projectBaseKey, "sprints", { projectId }] as const,
     ticket: (id: number) => [...projectBaseKey, "ticket", { id }] as const,
     labels: () => [...projectBaseKey, "labels"] as const,
+    members: () => [...projectBaseKey, "members"] as const,
     timeEntries: (ticketId?: number, userId?: string) =>
       [...projectBaseKey, "timeEntries", { ticketId, userId }] as const,
     sprintBurndown: (sprintId: number) =>
@@ -802,6 +805,44 @@ export const useCreateHelpdeskTicket = (
   });
 };
 
+// --- WORK LOGS ---
+export function useGetWorkLogs(
+  input: RouterInputs["hr"]["getWorkLogs"],
+  options?: UseQueryOptions<RouterOutputs["hr"]["getWorkLogs"]>
+) {
+  return useQuery({
+    queryKey: vaivammKeys.hr.workLogs(input.year, input.quarter, input.userId),
+    queryFn: () => vaivammTrpcClient.hr.getWorkLogs.query(input),
+    ...options,
+  });
+}
+
+export function useUpsertWorkLog(
+  options?: UseMutationOptions<
+    RouterOutputs["hr"]["upsertWorkLog"],
+    unknown,
+    RouterInputs["hr"]["upsertWorkLog"]
+  >
+) {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        RouterOutputs["hr"]["upsertWorkLog"],
+        RouterInputs["hr"]["upsertWorkLog"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation({
+    mutationFn: (input) => vaivammTrpcClient.hr.upsertWorkLog.mutate(input),
+    ...options,
+    onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries({ queryKey: vaivammKeys.hr.all });
+        if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+}
+
 export const useProjects = (
   options?: Omit<
     UseQueryOptions<ProjectRouterOutputs["getProjects"], Error>,
@@ -868,6 +909,19 @@ export const useLabels = (
   return useQuery<ProjectRouterOutputs["getLabels"], Error>({
     queryKey: vaivammKeys.project.labels(),
     queryFn: () => vaivammTrpcClient.project.getLabels.query(),
+    ...options,
+  });
+};
+
+export const useProjectMembers = (
+  options?: Omit<
+    UseQueryOptions<ProjectRouterOutputs["getProjectMembers"], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<ProjectRouterOutputs["getProjectMembers"], Error>({
+    queryKey: vaivammKeys.project.members(),
+    queryFn: () => vaivammTrpcClient.project.getProjectMembers.query(),
     ...options,
   });
 };
@@ -1154,6 +1208,41 @@ export const useUpdateTicketStatus = (
       queryClient.invalidateQueries({
         queryKey: vaivammKeys.project.ticket(variables.ticketId),
       });
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.projects(),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useDeleteTicket = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["deleteTicket"],
+    Error,
+    ProjectRouterInputs["deleteTicket"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["deleteTicket"],
+        ProjectRouterInputs["deleteTicket"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["deleteTicket"],
+    Error,
+    ProjectRouterInputs["deleteTicket"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.deleteTicket.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({
         queryKey: vaivammKeys.project.projects(),
       });
@@ -1607,5 +1696,110 @@ export const useReportsDashboardStats = (
     queryKey: vaivammKeys.reports.dashboardStats(),
     queryFn: () => vaivammTrpcClient.reports.getDashboardStats.query(),
     ...options,
+  });
+};
+
+export const useCreateProjectStatus = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["createProjectStatus"],
+    Error,
+    ProjectRouterInputs["createProjectStatus"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["createProjectStatus"],
+        ProjectRouterInputs["createProjectStatus"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["createProjectStatus"],
+    Error,
+    ProjectRouterInputs["createProjectStatus"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.createProjectStatus.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useUpdateProjectStatusOrder = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["updateProjectStatusOrder"],
+    Error,
+    ProjectRouterInputs["updateProjectStatusOrder"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["updateProjectStatusOrder"],
+        ProjectRouterInputs["updateProjectStatusOrder"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["updateProjectStatusOrder"],
+    Error,
+    ProjectRouterInputs["updateProjectStatusOrder"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.updateProjectStatusOrder.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useDeleteProjectStatus = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["deleteProjectStatus"],
+    Error,
+    ProjectRouterInputs["deleteProjectStatus"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["deleteProjectStatus"],
+        ProjectRouterInputs["deleteProjectStatus"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["deleteProjectStatus"],
+    Error,
+    ProjectRouterInputs["deleteProjectStatus"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.deleteProjectStatus.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
   });
 };

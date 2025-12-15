@@ -120,3 +120,15 @@ export const updateGoalInputSchema = z.object({
   status: z.enum(["IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   progress: z.number().min(0).max(100).optional(),
 });
+
+export const upsertWorkLogInputSchema = z.object({
+  date: z.date(),
+  description: z.string().min(1, "Log content is required"),
+  hours: z.number().min(0).optional(),
+});
+
+export const getWorkLogsInputSchema = z.object({
+  year: z.number().int().positive(),
+  quarter: z.number().int().min(1).max(4),
+  userId: z.string().optional(),
+});

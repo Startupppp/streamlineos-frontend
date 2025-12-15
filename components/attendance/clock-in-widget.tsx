@@ -47,10 +47,8 @@ export function ClockInWidget() {
   const handleClockAction = () => {
     if (isCheckedIn) {
       checkOutMutation.mutate();
-    } else if (!isCheckedOut) {
-      checkInMutation.mutate({ location: undefined });
     } else {
-      toast.error("You have already completed your shift for today.");
+      checkInMutation.mutate({ location: undefined });
     }
   };
 
@@ -59,16 +57,16 @@ export function ClockInWidget() {
 
   return (
     <div className="flex flex-col items-end gap-2">
-      <div className="text-white font-bold text-sm tracking-wide">
+      <div className="text-muted-foreground font-bold text-sm tracking-wide">
         {format(now, "EEE dd, MMM yyyy").toUpperCase()}
       </div>
       <Button
         variant={isCheckedIn ? "outline" : "destructive"}
-        disabled={isPending || isCheckedOut}
+        disabled={isPending}
         onClick={handleClockAction}
         className={`font-bold px-6 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
           isCheckedIn
-            ? "bg-transparent text-white border-white/20 hover:bg-white/10"
+            ? "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
             : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
         }`}
       >
@@ -76,8 +74,6 @@ export function ClockInWidget() {
           <LoadingSpinner size="sm" />
         ) : isCheckedIn ? (
           "WEB CLOCK-OUT"
-        ) : isCheckedOut ? (
-          "COMPLETED"
         ) : (
           "WEB CLOCK-IN"
         )}
