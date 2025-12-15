@@ -58,6 +58,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                   id: t.assignee.id,
                   firstName: t.assignee.firstName ?? undefined,
                   lastName: t.assignee.lastName ?? undefined,
+                  image: t.assignee.image ?? null,
                 }
               : null,
           }))}

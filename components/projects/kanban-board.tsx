@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback } from "../ui/avatar";
@@ -12,6 +12,36 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { vaivammKeys } from "../../lib/hooks/trpc-hooks";
+import { TicketDetailsDialog } from "./ticket-details-dialog";
+import { 
+  CheckSquare, 
+  Bug, 
+  Bookmark, 
+  Zap, 
+  ArrowDown, 
+  ArrowRight, 
+  ArrowUp, 
+  AlertCircle 
+} from "lucide-react";
+import { AvatarImage } from "../ui/avatar";
+
+const TicketTypeIcon = ({ type }: { type: string }) => {
+  switch (type) {
+    case "BUG": return <Bug className="h-3 w-3 text-red-500" />;
+    case "STORY": return <Bookmark className="h-3 w-3 text-green-500" />;
+    case "EPIC": return <Zap className="h-3 w-3 text-purple-500" />;
+    default: return <CheckSquare className="h-3 w-3 text-blue-500" />;
+  }
+};
+
+const PriorityIcon = ({ priority }: { priority: string }) => {
+  switch (priority) {
+    case "LOW": return <ArrowDown className="h-3 w-3 text-slate-500" />;
+    case "HIGH": return <ArrowUp className="h-3 w-3 text-orange-500" />;
+    case "URGENT": return <AlertCircle className="h-3 w-3 text-red-500" />;
+    default: return <ArrowRight className="h-3 w-3 text-blue-500" />;
+  }
+};
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +58,7 @@ interface KanbanBoardProps {
     priority?: string;
     points?: number | null;
     timeSpent?: string | null;
-    assignee?: { firstName?: string; lastName?: string; id: string } | null;
+    assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
   }>;
   projectId: number;
 }
@@ -58,7 +88,12 @@ const PRIORITY_COLORS: Record<string, string> = {
 export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [draggedTicket, setDraggedTicket] = useState<number | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setOptimisticTickets(tickets);
+  }, [tickets]);
 
   const updateStatus = useUpdateTicketStatus({
     onMutate: async (newTicket) => {
@@ -154,18 +189,19 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                   >
                     <Card
                       className={cn(
-                        "cursor-move hover:shadow-md transition-shadow bg-white",
+                        "cursor-move hover:shadow-md transition-shadow bg-white group",
                         draggedTicket === ticket.id && "opacity-50"
                       )}
+                      onClick={() => setSelectedTicketId(ticket.id)}
                     >
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <span className="text-xs font-mono text-muted-foreground">
-                            #{ticket.id}
-                          </span>
-                          <DropdownMenu>
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex justify-between items-start gap-2">
+                           <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-tight flex-1">
+                             {ticket.title}
+                           </h4>
+                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-6 w-6 p-0">
+                              <Button variant="ghost" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -182,53 +218,28 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <h4 className="font-medium text-sm text-foreground line-clamp-2">
-                          {ticket.title}
-                        </h4>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge
-                            variant={
-                              ticket.type === "BUG" ? "destructive" : "outline"
-                            }
-                            className="text-[10px] h-5"
-                          >
-                            {ticket.type}
-                          </Badge>
-                          {ticket.priority && (
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px] h-5",
-                                PRIORITY_COLORS[ticket.priority] || ""
-                              )}
-                            >
-                              {ticket.priority}
-                            </Badge>
-                          )}
-                          {ticket.points && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] h-5"
-                            >
-                              {ticket.points} pts
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between pt-2">
-                          {ticket.timeSpent &&
-                            parseFloat(ticket.timeSpent) > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                {parseFloat(ticket.timeSpent).toFixed(1)}h
-                              </div>
-                            )}
-                          {ticket.assignee && (
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
+                        
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="flex items-center gap-1.5">
+                             <TicketTypeIcon type={ticket.type} />
+                             {ticket.priority && (
+                                <PriorityIcon priority={ticket.priority} />
+                             )}
+                              <span className="text-[10px] text-muted-foreground font-mono">#{ticket.id}</span>
+                          </div>
+
+                          {ticket.assignee ? (
+                            <Avatar className="h-5 w-5 border border-background">
+                              <AvatarImage src={ticket.assignee.image || undefined} />
+                              <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
                                 {ticket.assignee.firstName?.[0]}
                                 {ticket.assignee.lastName?.[0]}
                               </AvatarFallback>
                             </Avatar>
+                          ) : (
+                             <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/50 flex items-center justify-center">
+                                 <span className="text-[8px] text-muted-foreground">?</span>
+                             </div>
                           )}
                         </div>
                       </CardContent>
@@ -239,7 +250,19 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
             </div>
           </motion.div>
         );
+                ))}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        );
       })}
+      
+      <TicketDetailsDialog 
+        ticketId={selectedTicketId}
+        open={!!selectedTicketId}
+        onOpenChange={(open) => !open && setSelectedTicketId(null)}
+        projectId={projectId}
+      />
     </div>
   );
 }
