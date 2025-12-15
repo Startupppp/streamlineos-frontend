@@ -1,15 +1,34 @@
 import { auth } from "./lib/auth";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 const protectedRoutes = ["/dashboard", "/projects", "/hr", "/settings"];
 const authRoutes = ["/signin", "/signup"];
 
-export default auth((req) => {
+export default async function middleware(req: any) {
   const { pathname } = req.nextUrl;
-  const isAuthenticated = !!req.auth;
+  
+  // 1. Get token to check role and flags
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const isAuthenticated = !!token;
 
-  // Check if route is protected
+  // 2. FORCE PASSWORD CHANGE CHECK
+  // If user is authenticated AND forceChangePassword is true
+  // AND they are NOT already on the reset password page or signout
+  if (isAuthenticated && token?.forceChangePassword) {
+      if (!pathname.startsWith("/auth/reset-password") && !pathname.startsWith("/api/auth/signout")) {
+           return NextResponse.redirect(new URL("/auth/reset-password", req.url));
+      }
+  }
+  
+  // If they ARE on reset password page but don't need to be there (flag false or not auth), maybe redirect back?
+  // Optional but good UX.
+  if (pathname.startsWith("/auth/reset-password") && isAuthenticated && !token?.forceChangePassword) {
+       return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+
+  // 3. Normal Route Protection
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
@@ -28,7 +47,8 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
+
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],

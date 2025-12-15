@@ -30,7 +30,8 @@ export default function RootLayout({
           >
           <SessionProvider>
             <TRPCReactProvider>{children}</TRPCReactProvider>
-            <Toaster position="bottom-right" />
+            <Toaster position="top-right" />
+
           </SessionProvider>
         </ThemeProvider>
       </body>
