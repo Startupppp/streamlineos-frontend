@@ -1,11 +1,11 @@
 import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
-import Email from "next-auth/providers/email";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "./db/schema";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
+import { Adapter } from "next-auth/adapters";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -13,7 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     accountsTable: accounts,
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
-  }),
+  }) as Adapter,
   providers: [
     Credentials({
       credentials: {
@@ -43,11 +43,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           ? `${user.firstName} ${user.lastName}` 
           : user.name || user.email;
 
+        const role = user.role as "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
+        const forceChangePassword = user.isPasswordChangeRequired || false;
+
         return {
           id: user.id,
           email: user.email,
           name: fullName,
           image: user.image,
+          role: role,
+          forceChangePassword: forceChangePassword,
         };
       },
     }),
@@ -60,10 +65,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+        if (trigger === "update" && session?.forceChangePassword !== undefined) {
+             token.forceChangePassword = session.forceChangePassword;
+        }
+
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.role = user.role;
+        token.forceChangePassword = user.forceChangePassword;
       }
       return token;
     },
@@ -71,10 +82,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        session.user.role = token.role as "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
+        session.user.forceChangePassword = token.forceChangePassword as boolean;
       }
       return session;
     },
   },
+
   secret: process.env.NEXTAUTH_SECRET,
 });
+
 

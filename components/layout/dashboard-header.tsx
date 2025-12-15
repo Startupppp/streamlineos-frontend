@@ -1,7 +1,8 @@
 "use client"
 
 import { ThemeToggle } from "../theme-toggle"
-import { Separator } from "../ui/separator"
+import { UserNav } from "./user-nav"
+
 // For now, simple header.
 
 export function DashboardHeader() {
@@ -13,7 +14,9 @@ export function DashboardHeader() {
       </div>
       <div className="flex items-center gap-2">
          <ThemeToggle />
+         <UserNav />
       </div>
+
     </header>
   )
 }

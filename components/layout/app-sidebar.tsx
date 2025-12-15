@@ -27,48 +27,27 @@ import {
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-const routes = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
-    color: "text-sky-500",
-  },
-  {
-    label: "Projects",
-    icon: Briefcase,
-    href: "/projects",
-    color: "text-violet-500",
-  },
-  {
-    label: "HR & Employees",
-    icon: Users,
-    href: "/hr",
-    color: "text-pink-700",
-  },
-  {
-    label: "Attendance",
-    icon: Clock,
-    href: "/hr/attendance",
-    color: "text-orange-700",
-  },
-  {
-    label: "Leaves",
-    icon: CalendarCheck,
-    href: "/hr/leaves",
-    color: "text-emerald-500",
-  },
-  {
-    label: "Payroll",
-    icon: CreditCard,
-    href: "/hr/payroll",
-    color: "text-green-700",
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
+const adminRoutes = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
+  { label: "Employees", icon: Users, href: "/hr", color: "text-pink-700" },
+  { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
+  { label: "Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
+  { label: "Settings", icon: Settings, href: "/settings", color: "text-gray-500" },
+];
+
+const hrRoutes = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
+  { label: "Onboarding", icon: Users, href: "/hr/onboarding", color: "text-pink-700" },
+  { label: "Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
+  { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
+  { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
+];
+
+const employeeRoutes = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
+  { label: "My Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
+  { label: "My Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
+  { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
 ];
 
 export function AppSidebar() {
@@ -76,12 +55,23 @@ export function AppSidebar() {
   const router = useRouter();
   const { data: session } = useSession();
   const { data: organizations } = useGetOrganizations();
+  
+  const role = session?.user?.role;
 
-  const handleOrgChange = (orgId: string) => {
+  let routes = employeeRoutes; // Default to employee
+  if (role === "OWNER" || role === "ADMIN") {
+    routes = [...adminRoutes, ...hrRoutes.filter(r => !adminRoutes.some(ar => ar.href === r.href))]; 
+  } else if (role === "MEMBER") {
+     routes = employeeRoutes;
+  }
+
+  const handleOrgChange = (id: string) => {
     // Store selected org in session or context
+    console.log("Org switched to", id);
     router.push("/dashboard");
     router.refresh();
   };
+
 
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">

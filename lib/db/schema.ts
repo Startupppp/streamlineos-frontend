@@ -15,6 +15,8 @@ export const documentTypeEnum = pgEnum("document_type", ["CONTRACT", "CERTIFICAT
 export const reviewStatusEnum = pgEnum("review_status", ["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]);
 export const notificationTypeEnum = pgEnum("notification_type", ["INFO", "SUCCESS", "WARNING", "ERROR"]);
 export const workflowStatusEnum = pgEnum("workflow_status", ["ACTIVE", "INACTIVE"]);
+export const onboardingStatusEnum = pgEnum("onboarding_status", ["PENDING", "IN_PROGRESS", "COMPLETED", "REJECTED"]);
+
 
 // --- RBAC Tables ---
 
@@ -137,15 +139,27 @@ export const users = pgTable("users", {
   password: text("password"), // Hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
+  skills: text("skills").array(),
+  experienceYears: decimal("experience_years"),
+  joiningDate: date("joining_date"),
+  taxId: text("tax_id"),
+  bankDetails: jsonb("bank_details").$type<{
+    accountNumber: string;
+    bankName: string;
+    ifsc: string;
+    accountHolder: string;
+  }>(),
   image: text("image"),
   role: roleEnum("role").default("MEMBER").notNull(),
   departmentId: integer("department_id").references(() => departments.id),
   designation: text("designation"),
   phone: text("phone"),
-  metadata: jsonb("metadata"), 
+  metadata: jsonb("metadata"),
+  isPasswordChangeRequired: boolean("is_password_change_required").default(false), 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
 
 // --- HR Module ---
 
@@ -193,6 +207,17 @@ export const leaveRequests = pgTable("leave_requests", {
   status: leaveStatusEnum("status").default("PENDING"),
   approverId: text("approver_id").references(() => users.id),
   rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const onboardingSteps = pgTable("onboarding_steps", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  stepName: text("step_name").notNull(), 
+  status: onboardingStatusEnum("status").default("PENDING"),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -338,9 +363,11 @@ export const projects = pgTable("projects", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
+  key: text("key").notNull().unique(), // e.g. PROJ-1
   clientId: text("client_id").references(() => users.id),
   managerId: text("manager_id").references(() => users.id),
   startDate: timestamp("start_date"),
+
   endDate: timestamp("end_date"),
   status: projectStatusEnum("status").default("ACTIVE"),
 });
@@ -369,7 +396,10 @@ export const tickets = pgTable("tickets", {
   epicId: integer("epic_id"),
   assigneeId: text("assignee_id").references(() => users.id),
   reporterId: text("reporter_id").references(() => users.id),
-  points: integer("points"),
+  points: integer("points"), // Story points
+  storyPoints: integer("story_points"), 
+  order: integer("order").default(0), // For Kanban ordering
+  parentTicketId: integer("parent_ticket_id"), // For subtasks
   originalEstimate: decimal("original_estimate"), 
   timeSpent: decimal("time_spent").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -377,6 +407,10 @@ export const tickets = pgTable("tickets", {
 }, (t) => ({
   epicReference: foreignKey({
       columns: [t.epicId],
+      foreignColumns: [t.id]
+  }),
+  parentReference: foreignKey({
+      columns: [t.parentTicketId],
       foreignColumns: [t.id]
   })
 }));
@@ -648,3 +682,15 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const onboardingStepsRelations = relations(onboardingSteps, ({ one }) => ({
+  user: one(users, {
+    fields: [onboardingSteps.userId],
+    references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [onboardingSteps.orgId],
+    references: [organizations.id],
+  }),
+}));
+

@@ -1,40 +1,47 @@
 "use client";
 
-import { useGetOrganizations } from "../../../../lib/hooks/auth-hooks";
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
-} from "../../../../components/ui/avatar";
+} from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../../components/ui/card";
-import { Badge } from "../../../../components/ui/badge";
-import { Skeleton } from "../../../../components/ui/skeleton";
-import { vaivammTrpcClient } from "../../../../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { useSession } from "next-auth/react";
+
+
+import { Button } from "@/components/ui/button"; // Correct path
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getEmployees } from "@/server/actions/hr-actions"; // Import action
 
 export default function EmployeeDirectoryPage() {
   const { data: session } = useSession();
-  const { data: organizations } = useGetOrganizations();
-  const orgId = organizations?.[0]?.id;
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["employees", orgId],
-    queryFn: async () => {
-      if (!orgId) return [];
-      // TODO: Create a tRPC endpoint to get organization members
-      // For now, return empty array
-      return [];
-    },
-    enabled: !!orgId,
-  });
+  useEffect(() => {
+    async function load() {
+        try {
+            const data = await getEmployees();
+            setEmployees(data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }
+    load();
+  }, []);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
@@ -45,29 +52,8 @@ export default function EmployeeDirectoryPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="bg-card border-border">
-              <CardHeader>
-                <Skeleton className="h-12 w-12 rounded-full mb-4" />
-                <Skeleton className="h-6 w-32 mb-2" />
-                <Skeleton className="h-4 w-48" />
-              </CardHeader>
-            </Card>
+             <Skeleton key={i} className="h-32 w-full rounded-lg" />
           ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!orgId) {
-    return (
-      <div className="space-y-8">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            Employees
-          </h2>
-          <p className="text-muted-foreground">
-            Please select an organization to view employees.
-          </p>
         </div>
       </div>
     );
@@ -84,22 +70,27 @@ export default function EmployeeDirectoryPage() {
             Directory of all members in this organization.
           </p>
         </div>
+        <Link href="/hr/employees/new">
+            <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Employee
+            </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {users && users.length > 0 ? (
-          users.map((user: { id: string; firstName?: string; lastName?: string; email: string; role: string }) => (
+        {employees && employees.length > 0 ? (
+          employees.map((user: { id: string; firstName?: string; lastName?: string; email: string; role: string }) => (
             <Card key={user.id} className="bg-card border-border">
               <CardHeader className="flex flex-row items-center gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback>
-                    {user.firstName?.charAt(0)}
-                    {user.lastName?.charAt(0)}
+                    {(user.firstName || user.email)?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <CardTitle className="text-foreground text-lg">
-                    {user.firstName} {user.lastName}
+                    {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
                   </CardTitle>
                   <div className="text-sm text-muted-foreground">
                     {user.email}
@@ -117,10 +108,12 @@ export default function EmployeeDirectoryPage() {
           ))
         ) : (
           <div className="col-span-full text-center py-8 text-muted-foreground">
-            No employees found. Use the invitation system to add members.
+            No employees found. Click &quot;Add Employee&quot; to get started.
+
           </div>
         )}
       </div>
     </div>
   );
 }
+
