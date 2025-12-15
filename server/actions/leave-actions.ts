@@ -260,9 +260,9 @@ export async function getMyRequests() {
     return await db.query.leaveRequests.findMany({
         where: eq(leaveRequests.userId, session.user.id),
         with: {
-            // @ts-expect-error - Relations need explicit type definition or augmentation
+
             leaveType: true, // Need to verify if relation exists in schema
-             // @ts-expect-error - Relations need explicit type definition or augmentation
+
              approver: true
         },
         orderBy: [desc(leaveRequests.createdAt)]
@@ -280,7 +280,7 @@ export async function getIncomingRequests() {
         ),
         with: {
             user: true,
-             // @ts-expect-error - Relations need explicit type definition or augmentation
+
              leaveType: true
         },
         orderBy: [desc(leaveRequests.createdAt)]

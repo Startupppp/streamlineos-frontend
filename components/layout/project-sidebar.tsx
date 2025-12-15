@@ -22,7 +22,7 @@ export function ProjectSidebar({ projectId, projectName, projectKey }: ProjectSi
     const baseUrl = `/projects/${projectId}`;
 
     const items = [
-        { label: "Board", icon: KanbanSquare, href: `${baseUrl}/board` },
+        { label: "Board", icon: KanbanSquare, href: `${baseUrl}` },
         { label: "Backlog", icon: ListTodo, href: `${baseUrl}/backlog` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
     ];

@@ -546,8 +546,17 @@ export const sessionsRelations = relations(sessions, ({ one }) => ({
   }),
 }));
 
-export const projectsRelations = relations(projects, ({ many }) => ({
+export const projectsRelations = relations(projects, ({ one, many }) => ({
   tickets: many(tickets),
+  manager: one(users, {
+    fields: [projects.managerId],
+    references: [users.id],
+  }),
+  client: one(users, {
+    fields: [projects.clientId],
+    references: [users.id],
+    relationName: "projectClient"
+  }),
 }));
 
 export const sprintsRelations = relations(sprints, ({ one, many }) => ({
@@ -715,6 +724,21 @@ export const leaveBalancesRelations = relations(leaveBalances, ({ one }) => ({
         fields: [leaveBalances.leaveTypeId],
         references: [leaveTypes.id],
     })
+}));
+
+export const ticketLabelMappingsRelations = relations(ticketLabelMappings, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [ticketLabelMappings.ticketId],
+    references: [tickets.id],
+  }),
+  label: one(ticketLabels, {
+    fields: [ticketLabelMappings.labelId],
+    references: [ticketLabels.id],
+  }),
+}));
+
+export const ticketLabelsRelations = relations(ticketLabels, ({ many }) => ({
+  tickets: many(ticketLabelMappings),
 }));
 
 
