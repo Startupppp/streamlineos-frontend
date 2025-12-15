@@ -3,7 +3,7 @@ import { z } from "zod";
 export const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
 export const ticketTypeSchema = z.enum(["BUG", "FEATURE", "TASK", "EPIC", "STORY"]);
-export const ticketStatusSchema = z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
+export const ticketStatusSchema = z.string();
 export const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),

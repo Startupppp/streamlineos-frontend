@@ -1658,3 +1658,108 @@ export const useReportsDashboardStats = (
     ...options,
   });
 };
+
+export const useCreateProjectStatus = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["createProjectStatus"],
+    Error,
+    ProjectRouterInputs["createProjectStatus"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["createProjectStatus"],
+        ProjectRouterInputs["createProjectStatus"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["createProjectStatus"],
+    Error,
+    ProjectRouterInputs["createProjectStatus"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.createProjectStatus.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useUpdateProjectStatusOrder = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["updateProjectStatusOrder"],
+    Error,
+    ProjectRouterInputs["updateProjectStatusOrder"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["updateProjectStatusOrder"],
+        ProjectRouterInputs["updateProjectStatusOrder"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["updateProjectStatusOrder"],
+    Error,
+    ProjectRouterInputs["updateProjectStatusOrder"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.updateProjectStatusOrder.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useDeleteProjectStatus = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["deleteProjectStatus"],
+    Error,
+    ProjectRouterInputs["deleteProjectStatus"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["deleteProjectStatus"],
+        ProjectRouterInputs["deleteProjectStatus"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["deleteProjectStatus"],
+    Error,
+    ProjectRouterInputs["deleteProjectStatus"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.deleteProjectStatus.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};

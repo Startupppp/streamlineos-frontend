@@ -389,7 +389,7 @@ export const tickets = pgTable("tickets", {
   title: text("title").notNull(),
   description: text("description"),
   type: ticketTypeEnum("type").default("TASK"),
-  status: ticketStatusEnum("status").default("TODO"),
+  status: text("status").notNull().default("TODO"),
   priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),
   sprintId: integer("sprint_id").references(() => sprints.id),
@@ -415,6 +415,17 @@ export const tickets = pgTable("tickets", {
       foreignColumns: [t.id]
   })
 }));
+
+export const projectStatuses = pgTable("project_statuses", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  name: text("name").notNull(),
+  order: integer("order").notNull().default(0),
+  color: text("color"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 // Fix self-referencing tables by removing inline references - they're handled in relations
 export const ticketComments = pgTable("ticket_comments", {
@@ -566,6 +577,14 @@ export const sprintsRelations = relations(sprints, ({ one, many }) => ({
     references: [projects.id],
   }),
   tickets: many(tickets),
+  statuses: many(projectStatuses),
+}));
+
+export const projectStatusesRelations = relations(projectStatuses, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectStatuses.projectId],
+    references: [projects.id],
+  }),
 }));
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({

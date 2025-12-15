@@ -11,8 +11,9 @@ import {
   timesheets,
   organizationMembers,
   users,
+  projectStatuses,
 } from "../../../lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { format } from "date-fns";
 import {
@@ -111,6 +112,25 @@ export const projectRouter = createTRPCRouter({
           status: "ACTIVE",
         })
         .returning();
+
+      // Seed default statuses
+      const defaultStatuses = [
+          { name: "TODO", order: 0, color: "#e2e8f0" },
+          { name: "IN_PROGRESS", order: 1, color: "#3b82f6" },
+          { name: "IN_REVIEW", order: 2, color: "#eab308" },
+          { name: "DONE", order: 3, color: "#22c55e" },
+      ];
+
+      await ctx.db.insert(projectStatuses).values(
+          defaultStatuses.map(s => ({
+              orgId: ctx.session.orgId,
+              projectId: project.id,
+              name: s.name,
+              order: s.order,
+              color: s.color,
+          }))
+      );
+
       return project;
     }),
 
@@ -542,5 +562,89 @@ export const projectRouter = createTRPCRouter({
         idealBurndown,
         actualBurndown: actualBurndownCumulative,
       };
+    }),
+
+  createProjectStatus: protectedProcedure
+    .input(z.object({
+        projectId: z.number(),
+        name: z.string(),
+        color: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+        // Get max order
+        const existingStatuses = await ctx.db.query.projectStatuses.findMany({
+            where: and(
+                eq(projectStatuses.projectId, input.projectId),
+                eq(projectStatuses.orgId, ctx.session.orgId)
+            ),
+            orderBy: [desc(projectStatuses.order)],
+            limit: 1,
+        });
+        const nextOrder = (existingStatuses[0]?.order ?? -1) + 1;
+
+        const [status] = await ctx.db.insert(projectStatuses).values({
+            orgId: ctx.session.orgId,
+            projectId: input.projectId,
+            name: input.name,
+            color: input.color,
+            order: nextOrder,
+        }).returning();
+        return status;
+    }),
+
+  updateProjectStatusOrder: protectedProcedure
+    .input(z.object({
+        projectId: z.number(),
+        statusIds: z.array(z.number()), // Ordered list of IDs
+    }))
+    .mutation(async ({ ctx, input }) => {
+        // Transaction to update orders
+        await ctx.db.transaction(async (tx) => {
+            for (let i = 0; i < input.statusIds.length; i++) {
+                await tx.update(projectStatuses)
+                    .set({ order: i })
+                    .where(and(
+                        eq(projectStatuses.id, input.statusIds[i]),
+                        eq(projectStatuses.projectId, input.projectId),
+                        eq(projectStatuses.orgId, ctx.session.orgId)
+                    ));
+            }
+        });
+    }),
+  deleteProjectStatus: protectedProcedure
+    .input(z.object({
+        statusId: z.number(),
+        projectId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+        // Check if there are tickets with this status name
+        // We need the name first
+        const status = await ctx.db.query.projectStatuses.findFirst({
+            where: eq(projectStatuses.id, input.statusId),
+        });
+
+        if (!status) return;
+
+        // Check tickets
+        const conflictTickets = await ctx.db.query.tickets.findMany({
+            where: and(
+                eq(tickets.projectId, input.projectId),
+                eq(tickets.status, status.name)
+            ),
+            limit: 1,
+        });
+
+        if (conflictTickets.length > 0) {
+            throw new TRPCError({
+                code: "PRECONDITION_FAILED", 
+                message: "Cannot delete status with existing tickets. Move them first."
+            });
+        }
+
+        await ctx.db.delete(projectStatuses)
+            .where(and(
+                eq(projectStatuses.id, input.statusId),
+                eq(projectStatuses.orgId, ctx.session.orgId)
+            ));
     }),
 });
