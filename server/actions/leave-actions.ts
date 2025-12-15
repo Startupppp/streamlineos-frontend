@@ -5,7 +5,6 @@ import {
     leaveRequests, 
     leaveTypes, 
     leaveBalances, 
-    users, 
     organizationMembers 
 } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -54,7 +53,7 @@ async function ensureUserBalances(orgId: string, userId: string, types: any[]) {
             eq(leaveBalances.year, year)
         ),
         with: {
-            // @ts-ignore - Relation naming might vary, using loose types here
+
             // leaveType: true 
         }
     });
@@ -170,7 +169,7 @@ export async function submitLeaveRequest(data: {
             startDate: data.startDate.toISOString(), // Assuming string date in DB based on Schema 'date'
             endDate: data.endDate.toISOString(),
             reason: data.reason,
-            approverId: data.approverId,
+            approverId: data.approverId, // User selected approver
             status: "PENDING"
         });
 
@@ -261,9 +260,9 @@ export async function getMyRequests() {
     return await db.query.leaveRequests.findMany({
         where: eq(leaveRequests.userId, session.user.id),
         with: {
-            // @ts-ignore
+            // @ts-expect-error - Relations need explicit type definition or augmentation
             leaveType: true, // Need to verify if relation exists in schema
-             // @ts-ignore
+             // @ts-expect-error - Relations need explicit type definition or augmentation
              approver: true
         },
         orderBy: [desc(leaveRequests.createdAt)]
@@ -281,9 +280,23 @@ export async function getIncomingRequests() {
         ),
         with: {
             user: true,
-             // @ts-ignore
+             // @ts-expect-error - Relations need explicit type definition or augmentation
              leaveType: true
         },
         orderBy: [desc(leaveRequests.createdAt)]
     });
+}
+
+export async function getPendingApprovalCount() {
+    const session = await auth();
+    if (!session?.user?.id) return 0;
+
+    const count = await db.select({ count: sql<number>`count(*)` })
+        .from(leaveRequests)
+        .where(and(
+             eq(leaveRequests.approverId, session.user.id),
+             eq(leaveRequests.status, "PENDING")
+        ));
+    
+    return Number(count[0]?.count || 0);
 }

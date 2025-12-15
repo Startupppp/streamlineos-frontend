@@ -40,19 +40,24 @@ export async function getEmployeeById(userId: string) {
   if (!requesterOrgMember) return null;
 
   // 2. Fetch target user if they are in the same org
-  const targetMember = await db.query.organizationMembers.findFirst({
-      where: and(
-          eq(organizationMembers.userId, userId),
-          eq(organizationMembers.orgId, requesterOrgMember.orgId)
-      ),
-      with: {
-          user: true
-      }
-  });
+  // 2. Fetch target user if they are in the same org
+  const rows = await db.select({
+      user: users
+  })
+  .from(users)
+  .innerJoin(organizationMembers, eq(users.id, organizationMembers.userId))
+  .where(and(
+      eq(organizationMembers.userId, userId),
+      eq(organizationMembers.orgId, requesterOrgMember.orgId)
+  ))
+  .limit(1);
 
-  if (!targetMember) return null;
+  if (rows.length === 0) return null;
 
-  return targetMember.user;
+  return rows[0].user;
+
+
+
 }
 
 export async function updateEmployee(data: {

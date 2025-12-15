@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -73,6 +75,28 @@ export function AppSidebar() {
   };
 
 
+
+  const [pendingLeaves, setPendingLeaves] = useState(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+        try {
+            // Dynamically import to avoid server-action-in-client issues without wrapper if needed, 
+            // but Next.js handles imported server actions in Client Components fine usually.
+            const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
+            const count = await getPendingApprovalCount();
+            setPendingLeaves(count);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    if (session?.user) {
+        fetchCount();
+        const interval = setInterval(fetchCount, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }
+  }, [session]);
+
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
       <div className="px-3 py-2 flex-1">
@@ -126,7 +150,11 @@ export function AppSidebar() {
         )}
 
         <div className="space-y-1">
-          {routes.map((route) => (
+          {routes.map((route) => {
+             const isLeaves = route.href === "/hr/leaves";
+             const showBadge = isLeaves && pendingLeaves > 0;
+             
+             return (
             <Link
               key={route.href}
               href={route.href}
@@ -140,9 +168,15 @@ export function AppSidebar() {
               <div className="flex items-center flex-1">
                 <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
                 {route.label}
+                 {showBadge && (
+                     <span className="ml-auto flex h-2.5 w-2.5 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                     </span>
+                 )}
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       </div>
       <div className="px-3 py-2 border-t border-sidebar-border">
