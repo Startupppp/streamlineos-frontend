@@ -694,3 +694,27 @@ export const onboardingStepsRelations = relations(onboardingSteps, ({ one }) => 
   }),
 }));
 
+export const leaveRequestsRelations = relations(leaveRequests, ({ one }) => ({
+   user: one(users, {
+       fields: [leaveRequests.userId],
+       references: [users.id],
+   }),
+   leaveType: one(leaveTypes, {
+       fields: [leaveRequests.leaveTypeId],
+       references: [leaveTypes.id],
+   }),
+   approver: one(users, {
+       fields: [leaveRequests.approverId],
+       references: [users.id],
+       relationName: "leaveApprover"
+   })
+}));
+
+export const leaveBalancesRelations = relations(leaveBalances, ({ one }) => ({
+    leaveType: one(leaveTypes, {
+        fields: [leaveBalances.leaveTypeId],
+        references: [leaveTypes.id],
+    })
+}));
+
+
