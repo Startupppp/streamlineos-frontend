@@ -63,6 +63,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
               : null,
           }))}
           projectId={projectId}
+          statuses={data.statuses || []}
         />
       </div>
     </div>

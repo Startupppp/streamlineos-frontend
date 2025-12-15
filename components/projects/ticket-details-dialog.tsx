@@ -57,6 +57,7 @@ interface TicketDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: number;
+  statuses?: Array<{ name: string; id: number }>;
 }
 
 export function TicketDetailsDialog({
@@ -64,11 +65,14 @@ export function TicketDetailsDialog({
   open,
   onOpenChange,
   projectId,
+  statuses,
 }: TicketDetailsDialogProps) {
   const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { data: ticket, isLoading } = useTicket(ticketId || 0);
   const { data: members } = useProjectMembers();
+
+  // ... (rest of hook calls) ...
 
   const updateTicketMutation = useUpdateTicket({
     onSuccess: () => {
@@ -279,10 +283,16 @@ export function TicketDetailsDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="TODO">To Do</SelectItem>
-                            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                            <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                            <SelectItem value="DONE">Done</SelectItem>
+                            {statuses?.map((s) => (
+                                <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                            )) || (
+                                <>
+                                    <SelectItem value="TODO">To Do</SelectItem>
+                                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                                    <SelectItem value="IN_REVIEW">In Review</SelectItem>
+                                    <SelectItem value="DONE">Done</SelectItem>
+                                </>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -384,24 +394,6 @@ export function TicketDetailsDialog({
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="points"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Points</FormLabel>
-                        <FormControl>
-                           <Input 
-                             type="number" 
-                             {...field} 
-                             onChange={e => field.onChange(e.target.valueAsNumber || undefined)}
-                             value={field.value ?? ""}
-                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <div className="pt-4 border-t text-xs text-muted-foreground space-y-1">
                       <div>Created: {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "-"}</div>

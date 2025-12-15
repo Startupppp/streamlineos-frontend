@@ -3,15 +3,21 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { cn } from "../../lib/utils";
-import { MoreHorizontal } from "lucide-react";
-import { useUpdateTicketStatus } from "../../lib/hooks/trpc-hooks";
+import { MoreHorizontal, Plus, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
+import { 
+  useUpdateTicketStatus, 
+  useCreateProjectStatus, 
+  useDeleteProjectStatus, 
+  useUpdateProjectStatusOrder,
+  vaivammKeys 
+} from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
-import { vaivammKeys } from "../../lib/hooks/trpc-hooks";
 import { TicketDetailsDialog } from "./ticket-details-dialog";
 import { 
   CheckSquare, 
@@ -19,17 +25,21 @@ import {
   Bookmark, 
   Zap, 
   ArrowDown, 
-  ArrowRight, 
   ArrowUp, 
   AlertCircle 
 } from "lucide-react";
-import { AvatarImage } from "../ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../ui/popover";
 
 const TicketTypeIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -61,28 +71,27 @@ interface KanbanBoardProps {
     assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
   }>;
   projectId: number;
+  statuses: Array<{
+    id: number;
+    name: string;
+    order: number;
+    color: string | null;
+  }>;
 }
 
-const COLUMNS = [
-  { id: "TODO", label: "To Do", color: "bg-slate-100 border-slate-200" },
-  {
-    id: "IN_PROGRESS",
-    label: "In Progress",
-    color: "bg-blue-50 border-blue-200",
-  },
-  {
-    id: "IN_REVIEW",
-    label: "In Review",
-    color: "bg-yellow-50 border-yellow-200",
-  },
-  { id: "DONE", label: "Done", color: "bg-green-50 border-green-200" },
-];
-
-export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
+export function KanbanBoard({ tickets, projectId, statuses }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [draggedTicket, setDraggedTicket] = useState<number | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const [newColumnName, setNewColumnName] = useState("");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  
   const queryClient = useQueryClient();
+  const createStatus = useCreateProjectStatus();
+  const deleteStatus = useDeleteProjectStatus();
+  const updateStatusOrder = useUpdateProjectStatusOrder();
+
+  const sortedColumns = [...statuses].sort((a, b) => a.order - b.order);
 
   useEffect(() => {
     setOptimisticTickets(tickets);
@@ -119,7 +128,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const moveTicket = async (ticketId: number, newStatus: string) => {
     updateStatus.mutate({
       ticketId,
-      status: newStatus as "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE",
+      status: newStatus,
     });
   };
 
@@ -138,35 +147,115 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
     setDraggedTicket(null);
   };
 
+  const handleAddColumn = async () => {
+    if (!newColumnName.trim()) return;
+    try {
+      await createStatus.mutateAsync({
+        projectId,
+        name: newColumnName,
+        color: "#e2e8f0" // Default color
+      });
+      setNewColumnName("");
+      setIsAddOpen(false);
+      toast.success("Column added");
+    } catch {
+      toast.error("Failed to add column");
+    }
+  };
+
+  const handleDeleteColumn = async (id: number) => {
+    try {
+      await deleteStatus.mutateAsync({ statusId: id, projectId });
+      toast.success("Column deleted");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete column");
+    }
+  };
+
+  const handleMoveColumn = async (index: number, direction: 'left' | 'right') => {
+    if (direction === 'left' && index === 0) return;
+    if (direction === 'right' && index === sortedColumns.length - 1) return;
+
+    const newColumns = [...sortedColumns];
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    
+    // Swap
+    [newColumns[index], newColumns[targetIndex]] = [newColumns[targetIndex], newColumns[index]];
+    
+    // Extract IDs in new order
+    const statusIds = newColumns.map(c => c.id);
+    
+    try {
+      await updateStatusOrder.mutateAsync({ projectId, statusIds });
+      // Optimistic update handled by invalidation or could serve locally
+    } catch {
+      toast.error("Failed to move column");
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-full overflow-x-auto pb-4">
-      {COLUMNS.map((col) => {
+    <div className="flex h-full overflow-x-auto pb-4 gap-4">
+      {sortedColumns.map((col, index) => {
         const columnTickets = optimisticTickets.filter(
-          (t) => t.status === col.id
+          (t) => t.status === col.name // Match by NAME since ticket.status is text now
         );
         return (
           <motion.div
             key={col.id}
-            className={cn("rounded-lg border p-4 min-h-[500px]", col.color)}
+            className={cn("rounded-lg border p-4 min-w-[280px] w-[280px] flex flex-col bg-slate-50/50")}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
               const ticketId = parseInt(e.dataTransfer.getData("ticketId"));
               if (ticketId) {
-                handleDrop(col.id, ticketId);
+                handleDrop(col.name, ticketId);
               }
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
-                {col.label}
-              </h3>
-              <Badge variant="secondary" className="bg-white/50">
-                {columnTickets.length}
-              </Badge>
+              <div className="flex items-center gap-2">
+                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: col.color || '#e2e8f0' }} />
+                 <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                    {col.name}
+                 </h3>
+              </div>
+              <div className="flex items-center gap-1">
+                 <Badge variant="secondary" className="bg-white/50 text-[10px]">
+                    {columnTickets.length}
+                 </Badge>
+                 
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                       <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <MoreHorizontal className="h-4 w-4" />
+                       </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                       <DropdownMenuItem 
+                          disabled={index === 0}
+                          onClick={() => handleMoveColumn(index, 'left')}
+                       >
+                          <ArrowLeft className="h-4 w-4 mr-2" /> Move Left
+                       </DropdownMenuItem>
+                       <DropdownMenuItem 
+                          disabled={index === sortedColumns.length - 1}
+                          onClick={() => handleMoveColumn(index, 'right')}
+                       >
+                          <ArrowRight className="h-4 w-4 mr-2" /> Move Right
+                       </DropdownMenuItem>
+                       <DropdownMenuSeparator />
+                       <DropdownMenuItem 
+                          className="text-red-600 focus:text-red-600"
+                          onClick={() => handleDeleteColumn(col.id)}
+                       >
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                       </DropdownMenuItem>
+                    </DropdownMenuContent>
+                 </DropdownMenu>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 flex-1 overflow-y-auto min-h-[50px]">
               <AnimatePresence>
                 {columnTickets.map((ticket) => (
                   <motion.div
@@ -203,16 +292,16 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {COLUMNS.map((c) => (
+                              {sortedColumns.map((c) => (
                                 <DropdownMenuItem
                                   key={c.id}
                                   onClick={(e) => {
-                                      e.stopPropagation(); // Prevent opening modal
-                                      moveTicket(ticket.id, c.id);
+                                      e.stopPropagation(); 
+                                      moveTicket(ticket.id, c.name);
                                   }}
-                                  disabled={c.id === ticket.status}
+                                  disabled={c.name === ticket.status}
                                 >
-                                  Move to {c.label}
+                                  Move to {c.name}
                                 </DropdownMenuItem>
                               ))}
                             </DropdownMenuContent>
@@ -251,12 +340,39 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
           </motion.div>
         );
       })}
+
+       <div className="min-w-[280px] w-[280px]">
+          <Popover open={isAddOpen} onOpenChange={setIsAddOpen}>
+             <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full h-[50px] border-dashed text-muted-foreground hover:text-foreground">
+                   <Plus className="mr-2 h-4 w-4" /> Add Column
+                </Button>
+             </PopoverTrigger>
+             <PopoverContent className="w-[280px] p-4">
+                <div className="space-y-4">
+                    <h4 className="font-medium leading-none">New Column</h4>
+                    <div className="space-y-2">
+                        <Input 
+                           placeholder="Column Name" 
+                           value={newColumnName}
+                           onChange={(e) => setNewColumnName(e.target.value)}
+                           onKeyDown={(e) => e.key === 'Enter' && handleAddColumn()}
+                        />
+                        <Button className="w-full" onClick={handleAddColumn} disabled={!newColumnName.trim()}>
+                           Create
+                        </Button>
+                    </div>
+                </div>
+             </PopoverContent>
+          </Popover>
+       </div>
       
       <TicketDetailsDialog 
         ticketId={selectedTicketId}
         open={!!selectedTicketId}
         onOpenChange={(open) => !open && setSelectedTicketId(null)}
         projectId={projectId}
+        statuses={sortedColumns}
       />
     </div>
   );
