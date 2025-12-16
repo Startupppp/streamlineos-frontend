@@ -37,7 +37,7 @@ const adminRoutes = [
   { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
   { label: "Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
   { label: "Timesheets", icon: Timer, href: "/timesheets", color: "text-blue-500" },
-  { label: "Billing", icon: FileText, href: "/billing", color: "text-yellow-600" },
+  // { label: "Billing", icon: FileText, href: "/billing", color: "text-yellow-600" },
   { label: "Settings", icon: Settings, href: "/settings", color: "text-gray-500" },
 ];
 
