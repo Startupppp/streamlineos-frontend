@@ -38,6 +38,10 @@ import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { vaivammKeys } from "../../../../../lib/hooks/trpc-hooks";
 import { Skeleton } from "../../../../../components/ui/skeleton";
+import { Checkbox } from "../../../../../components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "../../../../../components/ui/popover";
+import { Check, ChevronsUpDown, User } from "lucide-react";
+import { api } from "../../../../../trpc/react";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -67,6 +71,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           description: project.description || "",
           status:
             (project.status as "ACTIVE" | "COMPLETED" | "ARCHIVED") || "ACTIVE",
+          memberIds: project.members?.map((m: any) => m.userId) || [],
         }
       : undefined,
   });
@@ -195,6 +200,11 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                 )}
               />
 
+              <div className="space-y-4">
+                  <FormLabel>Team Members</FormLabel>
+                   <MembersSelector form={form} />
+              </div>
+
               <Button
                 type="submit"
                 disabled={updateMutation.isPending}
@@ -208,4 +218,71 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       </Card>
     </div>
   );
+}
+
+function MembersSelector({ form }: { form: any }) {
+    const { data: employees } = api.hr.getEmployees.useQuery();
+
+    return (
+        <FormField
+            control={form.control}
+            name="memberIds"
+            render={({ field }) => (
+            <FormItem>
+                <FormControl>
+                    <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between pl-3 text-left font-normal" role="combobox">
+                            {field.value?.length && field.value.length > 0 
+                                ? `${field.value.length} members selected`
+                                : "Select members"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[460px] p-2" align="start">
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                            <h4 className="font-medium leading-none mb-2 text-sm text-muted-foreground p-1">Select Employees</h4>
+                            {employees?.filter(e => e.role !== "CLIENT").map((emp) => (
+                                <div key={emp.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
+                                        onClick={() => {
+                                            const current = field.value || [];
+                                            const newData = current.includes(emp.id)
+                                                ? current.filter((id: string) => id !== emp.id)
+                                                : [...current, emp.id];
+                                            field.onChange(newData);
+                                        }}
+                                >
+                                    <Checkbox 
+                                        checked={field.value?.includes(emp.id)}
+                                        onCheckedChange={(checked) => {
+                                            const current = field.value || [];
+                                            if (checked) {
+                                                field.onChange([...current, emp.id]);
+                                            } else {
+                                                field.onChange(current.filter((id: string) => id !== emp.id));
+                                            }
+                                        }}
+                                    />
+                                    <div className="flex items-center space-x-2 flex-1">
+                                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
+                                            {emp.name?.charAt(0) || <User className="h-3 w-3" />}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium">{emp.name}</span>
+                                            <span className="text-xs text-muted-foreground">{emp.email}</span>
+                                        </div>
+                                    </div>
+                                    {field.value?.includes(emp.id) && <Check className="h-4 w-4 text-primary" />}
+                                </div>
+                            ))}
+                            {!employees?.length && <div className="text-sm text-center py-4 text-muted-foreground">No employees found</div>}
+                        </div>
+                    </PopoverContent>
+                    </Popover>
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
+    )
 }

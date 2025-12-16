@@ -14,9 +14,9 @@ import {
   projectStatuses,
   projectMembers,
 } from "../../../lib/db/schema";
-import { eq, and, desc, asc, sql, or, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, inArray, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays, addDays } from "date-fns";
 import {
   createTicketInputSchema,
   updateTicketInputSchema,
@@ -626,6 +626,32 @@ export const projectRouter = createTRPCRouter({
       });
     }),
 
+  getBillingSummary: protectedProcedure
+    .input(z.object({ startDate: z.date(), endDate: z.date() }))
+    .query(async ({ ctx, input }) => {
+       if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+           throw new TRPCError({ code: "FORBIDDEN" });
+       }
+       
+       const summary = await ctx.db
+         .select({
+             projectId: projects.id,
+             projectName: projects.name,
+             totalHours: sql<number>`SUM(${timesheets.hours}::numeric)`,
+         })
+         .from(timesheets)
+         .innerJoin(tickets, eq(timesheets.ticketId, tickets.id))
+         .innerJoin(projects, eq(tickets.projectId, projects.id))
+         .where(and(
+             eq(timesheets.orgId, ctx.session.orgId),
+             gte(timesheets.date, format(input.startDate, "yyyy-MM-dd")),
+             lte(timesheets.date, format(input.endDate, "yyyy-MM-dd"))
+         ))
+         .groupBy(projects.id, projects.name);
+         
+       return summary;
+    }),
+
   getSprintBurndown: protectedProcedure
     .input(z.object({ sprintId: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -643,19 +669,17 @@ export const projectRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Sprint not found" });
       }
 
-      const startDate = new Date(sprint.startDate);
-      const endDate = new Date(sprint.endDate);
       const totalPoints = sprint.tickets.reduce(
-        (sum, t) => sum + (t.points || 0),
+        (sum, ticket) => sum + (ticket.points || 0),
         0
       );
-      const days = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
 
-      const idealBurndown = Array.from({ length: days + 1 }, (_, i) => {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i);
+      const startDate = new Date(sprint.startDate);
+      const endDate = new Date(sprint.endDate);
+      const days = differenceInCalendarDays(endDate, startDate) + 1;
+
+      const idealBurndown = Array.from({ length: days }).map((_, i) => {
+        const date = addDays(startDate, i);
         const remainingDays = days - i;
         const idealPoints = Math.max(0, (totalPoints / days) * remainingDays);
         return { date, points: idealPoints };

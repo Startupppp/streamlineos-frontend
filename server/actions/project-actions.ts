@@ -3,7 +3,9 @@
 import { db } from "@/lib/db";
 import { 
     projects, 
-    organizationMembers
+    organizationMembers,
+    projectMembers,
+    projectStatuses,
 } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -38,6 +40,7 @@ export async function createProject(data: {
     key: string;
     description?: string;
     managerId?: string;
+    memberIds?: string[];
 }) {
     const session = await auth();
     if (!session?.user?.id) return { error: "Unauthorized" };
@@ -72,7 +75,38 @@ export async function createProject(data: {
             description: data.description,
             managerId: data.managerId || session.user.id,
             status: "ACTIVE"
-        });
+        }).returning();
+
+        const projectId = project[0].id;
+
+        // Seed default statuses
+        const defaultStatuses = [
+            { name: "TODO", order: 0, color: "#e2e8f0" },
+            { name: "IN_PROGRESS", order: 1, color: "#3b82f6" },
+            { name: "IN_REVIEW", order: 2, color: "#eab308" },
+            { name: "DONE", order: 3, color: "#22c55e" },
+        ];
+
+        await db.insert(projectStatuses).values(
+            defaultStatuses.map(s => ({
+                orgId: member.orgId,
+                projectId: projectId,
+                name: s.name,
+                order: s.order,
+                color: s.color,
+            }))
+        );
+
+        // Add members if provided
+        if (data.memberIds && data.memberIds.length > 0) {
+            await db.insert(projectMembers).values(
+                data.memberIds.map(userId => ({
+                    projectId: projectId,
+                    userId: userId,
+                    role: "CONTRIBUTOR",
+                }))
+            );
+        }
 
         revalidatePath("/projects");
         return { success: true };

@@ -15,6 +15,8 @@ import {
   CalendarCheck,
   CreditCard,
   LogOut,
+  Timer,
+  FileText,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -34,6 +36,8 @@ const adminRoutes = [
   { label: "Employees", icon: Users, href: "/hr", color: "text-pink-700" },
   { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
   { label: "Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
+  { label: "Timesheets", icon: Timer, href: "/timesheets", color: "text-blue-500" },
+  { label: "Billing", icon: FileText, href: "/billing", color: "text-yellow-600" },
   { label: "Settings", icon: Settings, href: "/settings", color: "text-gray-500" },
 ];
 
@@ -50,6 +54,7 @@ const employeeRoutes = [
   { label: "My Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
   { label: "My Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
   { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
+  { label: "My Timesheets", icon: Timer, href: "/timesheets", color: "text-blue-500" },
 ];
 
 export function AppSidebar() {
