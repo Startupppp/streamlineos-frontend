@@ -37,10 +37,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
   if (!data) return notFound();
 
   return (
-    <div className="p-8 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8 h-full flex flex-col">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 md:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-primary">{data.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-primary">{data.name}</h1>
           <p className="text-muted-foreground">{data.description}</p>
         </div>
         <CreateTicketDialog projectId={projectId} />

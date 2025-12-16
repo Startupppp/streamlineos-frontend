@@ -78,10 +78,10 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
 
   // Revert to static columns as requested
   const COLUMNS = [
-    { id: "TODO", label: "To Do", color: "#f1f5f9" },
-    { id: "IN_PROGRESS", label: "In Progress", color: "#eff6ff" },
-    { id: "IN_REVIEW", label: "In Review", color: "#fefce8" },
-    { id: "DONE", label: "Done", color: "#f0fdf4" },
+    { id: "TODO", label: "To Do", color: "bg-slate-100 dark:bg-slate-800" },
+    { id: "IN_PROGRESS", label: "In Progress", color: "bg-blue-50 dark:bg-blue-900/20" },
+    { id: "IN_REVIEW", label: "In Review", color: "bg-yellow-50 dark:bg-yellow-900/20" },
+    { id: "DONE", label: "Done", color: "bg-green-50 dark:bg-green-900/20" },
   ];
 
   // const DEFAULT_COLUMNS = [ // Removed
@@ -196,7 +196,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   // };
 
   return (
-    <div className="flex h-full overflow-x-auto pb-4 gap-4">
+    <div className="flex h-full overflow-x-auto pb-4 gap-4 snap-x snap-mandatory px-4 md:px-0">
       {COLUMNS.map((col) => {
         const columnTickets = optimisticTickets.filter(
           (t) => t.status === col.id // Match by ID
@@ -204,7 +204,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
         return (
           <motion.div
             key={col.id}
-            className={cn("rounded-lg border p-4 min-w-[280px] w-[280px] flex flex-col bg-slate-50/50")}
+            className={cn("rounded-lg border p-4 min-w-[85vw] md:min-w-[280px] w-[85vw] md:w-[280px] flex flex-col bg-muted/50 snap-center md:snap-align-none")}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
@@ -216,7 +216,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: col.color }} />
+                 <div className={cn("w-3 h-3 rounded-full", col.color)} />
                  <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                     {col.label}
                  </h3>
@@ -238,17 +238,18 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                     draggable
                     onDragStart={(e) => {
                        // Fix: Set dataTransfer here
-                       (e as any).dataTransfer.setData("ticketId", ticket.id.toString());
+                       const dragEvent = e as unknown as React.DragEvent<HTMLDivElement>;
+                       dragEvent.dataTransfer.setData("ticketId", ticket.id.toString());
                        handleDragStart(ticket.id);
                     }}
                     onDragEnd={handleDragEnd}
                     data-ticket-id={ticket.id}
                   >
                     <Card
-                      className={cn(
-                        "cursor-move hover:shadow-md transition-shadow bg-white group",
-                        draggedTicket === ticket.id && "opacity-50"
-                      )}
+                       className={cn(
+                         "cursor-move hover:shadow-md transition-shadow bg-card group",
+                         draggedTicket === ticket.id && "opacity-50"
+                       )}
                       onClick={() => setSelectedTicketId(ticket.id)}
                     >
                       <CardContent className="p-3 space-y-2">
