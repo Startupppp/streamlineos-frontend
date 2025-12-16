@@ -77,22 +77,26 @@ export function AppSidebar() {
 
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
+  const [unreadOnboarding, setUnreadOnboarding] = useState(0);
 
   useEffect(() => {
-    async function fetchCount() {
+    async function fetchCounts() {
         try {
-            // Dynamically import to avoid server-action-in-client issues without wrapper if needed, 
-            // but Next.js handles imported server actions in Client Components fine usually.
             const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
-            const count = await getPendingApprovalCount();
-            setPendingLeaves(count);
+            const { getUnreadOnboardingCount } = await import("@/server/actions/notification-actions");
+            
+            const leavesCount = await getPendingApprovalCount();
+            const onboardingCount = await getUnreadOnboardingCount();
+            
+            setPendingLeaves(leavesCount);
+            setUnreadOnboarding(onboardingCount);
         } catch (e) {
             console.error(e);
         }
     }
     if (session?.user) {
-        fetchCount();
-        const interval = setInterval(fetchCount, 30000); // Poll every 30s
+        fetchCounts();
+        const interval = setInterval(fetchCounts, 30000); // Poll every 30s
         return () => clearInterval(interval);
     }
   }, [session]);
@@ -152,7 +156,7 @@ export function AppSidebar() {
         <div className="space-y-1">
           {routes.map((route) => {
              const isLeaves = route.href === "/hr/leaves";
-             const showBadge = isLeaves && pendingLeaves > 0;
+             const showBadge = (isLeaves && pendingLeaves > 0) || ((route.href === "/hr" || route.href === "/hr/employees") && unreadOnboarding > 0);
              
              return (
             <Link

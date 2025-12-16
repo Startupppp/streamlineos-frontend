@@ -32,6 +32,14 @@ export default function EmployeeDirectoryPage() {
         try {
             const data = await getEmployees();
             setEmployees(data);
+            
+            // Mark notifications as read
+             try {
+                const { markOnboardingNotificationsAsRead } = await import("@/server/actions/notification-actions");
+                await markOnboardingNotificationsAsRead();
+             } catch (ign) { 
+                 // ignore 
+             }
         } catch (e) {
             console.error(e);
         } finally {
