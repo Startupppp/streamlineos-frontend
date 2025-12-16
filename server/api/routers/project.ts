@@ -12,8 +12,9 @@ import {
   organizationMembers,
   users,
   projectStatuses,
+  projectMembers,
 } from "../../../lib/db/schema";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { format } from "date-fns";
 import {
@@ -32,8 +33,30 @@ import {
 
 export const projectRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
+    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+
+    if (isOwnerOrAdmin) {
+      return await ctx.db.query.projects.findMany({
+        where: eq(projects.orgId, ctx.session.orgId),
+        orderBy: [desc(projects.id)],
+      });
+    }
+
+    const memberOf = await ctx.db
+      .select({ projectId: projectMembers.projectId })
+      .from(projectMembers)
+      .where(eq(projectMembers.userId, ctx.session.userId));
+
+    const projectIds = memberOf.map((m) => m.projectId);
+
     return await ctx.db.query.projects.findMany({
-      where: eq(projects.orgId, ctx.session.orgId),
+      where: and(
+        eq(projects.orgId, ctx.session.orgId),
+        or(
+          eq(projects.managerId, ctx.session.userId),
+          projectIds.length > 0 ? inArray(projects.id, projectIds) : undefined
+        )
+      ),
       orderBy: [desc(projects.id)],
     });
   }),
@@ -58,12 +81,78 @@ export const projectRouter = createTRPCRouter({
   getProjectDetails: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+
+      let whereClause;
+      if (isOwnerOrAdmin) {
+          whereClause = and(
+              eq(projects.id, input.id),
+              eq(projects.orgId, ctx.session.orgId)
+          );
+      } else {
+          // Check membership or manager
+          const memberOf = await ctx.db.query.projectMembers.findFirst({
+              where: and(
+                  eq(projectMembers.projectId, input.id),
+                  eq(projectMembers.userId, ctx.session.userId)
+              )
+          });
+          const isMember = !!memberOf;
+
+          whereClause = and(
+              eq(projects.id, input.id),
+              eq(projects.orgId, ctx.session.orgId),
+              or(
+                  eq(projects.managerId, ctx.session.userId),
+                  isMember ? undefined : sql`1=0` // If not member and not manager (checked in query), return empty?
+                  // Better: Just check manual membership boolean
+              )
+          );
+          
+          if (!isMember) {
+              // If not member, rely on query matching managerId.
+               whereClause = and(
+                  eq(projects.id, input.id),
+                  eq(projects.orgId, ctx.session.orgId),
+                  eq(projects.managerId, ctx.session.userId)
+               );
+          } else {
+               // If member, standard check
+               whereClause = and(
+                  eq(projects.id, input.id),
+                  eq(projects.orgId, ctx.session.orgId)
+               );
+          }
+      }
+      // Re-simplifying logic to match getProjects style
+      const memberOf = await ctx.db
+            .select({ projectId: projectMembers.projectId })
+            .from(projectMembers)
+            .where(and(eq(projectMembers.userId, ctx.session.userId), eq(projectMembers.projectId, input.id)));
+
+      const isMember = memberOf.length > 0;
+
+      if (!isOwnerOrAdmin && !isMember) {
+           whereClause = and(
+               eq(projects.id, input.id),
+               eq(projects.orgId, ctx.session.orgId),
+               eq(projects.managerId, ctx.session.userId)
+           );
+      } else {
+           whereClause = and(
+               eq(projects.id, input.id),
+               eq(projects.orgId, ctx.session.orgId)
+           );
+      }
+
       const project = await ctx.db.query.projects.findFirst({
-        where: and(
-          eq(projects.id, input.id),
-          eq(projects.orgId, ctx.session.orgId)
-        ),
+        where: whereClause,
         with: {
+          members: {
+             with: {
+                 user: true
+             }
+          },
           tickets: {
             with: {
               assignee: true,
@@ -131,6 +220,17 @@ export const projectRouter = createTRPCRouter({
           }))
       );
 
+      // Add members if provided
+      if (input.memberIds && input.memberIds.length > 0) {
+          await ctx.db.insert(projectMembers).values(
+              input.memberIds.map(userId => ({
+                  projectId: project.id,
+                  userId: userId,
+                  role: "CONTRIBUTOR",
+              }))
+          );
+      }
+
       return project;
     }),
 
@@ -150,10 +250,27 @@ export const projectRouter = createTRPCRouter({
         })
         .where(
           and(
-            eq(projects.id, input.projectId),
             eq(projects.orgId, ctx.session.orgId)
           )
         );
+
+      if (input.memberIds) {
+        // Remove existing members
+        await ctx.db
+          .delete(projectMembers)
+          .where(eq(projectMembers.projectId, input.projectId));
+
+        // Add new members
+        if (input.memberIds.length > 0) {
+          await ctx.db.insert(projectMembers).values(
+            input.memberIds.map((userId) => ({
+              projectId: input.projectId,
+              userId,
+              role: "CONTRIBUTOR",
+            }))
+          );
+        }
+      }
     }),
 
   getSprints: protectedProcedure
@@ -419,6 +536,30 @@ export const projectRouter = createTRPCRouter({
   addTimeEntry: protectedProcedure
     .input(addTimeEntryInputSchema)
     .mutation(async ({ ctx, input }) => {
+      // PERMISSION CHECK
+      const ticket = await ctx.db.query.tickets.findFirst({
+          where: eq(tickets.id, input.ticketId),
+          columns: { projectId: true },
+          with: { project: { columns: { managerId: true, id: true } } }
+      });
+
+      if (!ticket || !ticket.project) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket not found" });
+
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isManager = ticket.project.managerId === ctx.session.userId;
+
+      if (!isOwnerOrAdmin && !isManager) {
+          const membership = await ctx.db.query.projectMembers.findFirst({
+              where: and(
+                  eq(projectMembers.projectId, ticket.project.id),
+                  eq(projectMembers.userId, ctx.session.userId)
+              )
+          });
+          if (!membership) {
+              throw new TRPCError({ code: "FORBIDDEN", message: "You must be a project member to log time." });
+          }
+      }
+
       const [entry] = await ctx.db
         .insert(timesheets)
         .values({
@@ -457,15 +598,31 @@ export const projectRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const conditions = [eq(timesheets.orgId, ctx.session.orgId)];
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+
       if (input.ticketId) {
         conditions.push(eq(timesheets.ticketId, input.ticketId));
       }
       if (input.userId) {
         conditions.push(eq(timesheets.userId, input.userId));
       }
+      
+      // If not admin and no specific ticket context, restrict to own timesheets.
+      // E.g. "My Timesheets" page.
+      if (!isOwnerOrAdmin && !input.ticketId && input.userId !== ctx.session.userId) {
+          conditions.push(eq(timesheets.userId, ctx.session.userId));
+      }
+
       return await ctx.db.query.timesheets.findMany({
         where: and(...conditions),
         orderBy: [desc(timesheets.date)],
+        with: {
+            ticket: {
+                with: {
+                    project: true
+                }
+            }
+        }
       });
     }),
 
