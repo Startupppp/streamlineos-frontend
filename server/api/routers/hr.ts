@@ -20,7 +20,7 @@ import {
   onboardingSteps,
   notifications, 
 } from "../../../lib/db/schema";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, gte, lte, asc } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
@@ -649,6 +649,32 @@ export const hrRouter = createTRPCRouter({
             eq(expenses.orgId, ctx.session.orgId)
           )
         );
+    }),
+
+  getMonthlyAttendance: protectedProcedure
+    .input(z.object({
+        userId: z.string(),
+        year: z.number(),
+        month: z.number() // 0-11
+    }))
+    .query(async ({ ctx, input }) => {
+        // Auth check
+        if (ctx.session.user.id !== input.userId && ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+            throw new TRPCError({ code: "FORBIDDEN" });
+        }
+
+        const startDate = new Date(input.year, input.month, 1);
+        const endDate = new Date(input.year, input.month + 1, 0); // Last day of month
+
+        return await ctx.db.query.attendance.findMany({
+            where: and(
+                eq(attendance.userId, input.userId),
+                eq(attendance.orgId, ctx.session.orgId),
+                gte(attendance.date, format(startDate, "yyyy-MM-dd")),
+                lte(attendance.date, format(endDate, "yyyy-MM-dd"))
+            ),
+            orderBy: [asc(attendance.date)]
+        });
     }),
 
   getAssets: protectedProcedure.query(async ({ ctx }) => {
