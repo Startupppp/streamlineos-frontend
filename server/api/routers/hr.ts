@@ -51,6 +51,16 @@ export const hrRouter = createTRPCRouter({
     });
   }),
 
+  getEmployees: protectedProcedure.query(async ({ ctx }) => {
+    const members = await ctx.db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, ctx.session.orgId),
+      with: {
+        user: true,
+      },
+    });
+    return members.map((m) => m.user);
+  }),
+
   createDepartment: protectedProcedure
     .input(createDepartmentInputSchema)
     .mutation(async ({ ctx, input }) => {

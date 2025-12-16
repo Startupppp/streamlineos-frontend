@@ -56,7 +56,7 @@ export default function TimesheetsPage() {
                       <Badge variant="outline">{entry.ticket?.project?.name || "Unknown Project"}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                        {entry.ticket?.key} - {entry.ticket?.name}
+                       #{entry.ticket?.id} - {entry.ticket?.title}
                     </TableCell>
                     <TableCell>{entry.hours}h</TableCell>
                     <TableCell className="text-muted-foreground">{entry.description}</TableCell>

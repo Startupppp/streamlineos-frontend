@@ -31,7 +31,7 @@ async function main() {
     ticketComments,
     timesheets,
     reports,
-    payroll
+    payrolls
   } = await import("../lib/db/schema");
   const { eq, inArray, notInArray } = await import("drizzle-orm");
 

@@ -68,7 +68,7 @@ export async function createProject(data: {
     }
 
     try {
-        await db.insert(projects).values({
+        const [project] = await db.insert(projects).values({
             orgId: member.orgId,
             name: data.name,
             key: data.key,
@@ -77,7 +77,7 @@ export async function createProject(data: {
             status: "ACTIVE"
         }).returning();
 
-        const projectId = project[0].id;
+        const projectId = project.id;
 
         // Seed default statuses
         const defaultStatuses = [

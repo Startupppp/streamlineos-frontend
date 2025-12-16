@@ -783,4 +783,15 @@ export const ticketLabelsRelations = relations(ticketLabels, ({ many }) => ({
   tickets: many(ticketLabelMappings),
 }));
 
+export const timesheetsRelations = relations(timesheets, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [timesheets.ticketId],
+    references: [tickets.id],
+  }),
+  user: one(users, {
+    fields: [timesheets.userId],
+    references: [users.id],
+  }),
+}));
+
 
