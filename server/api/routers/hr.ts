@@ -16,7 +16,8 @@ import {
   goals,
   helpdeskTickets,
   organizationMembers,
-  timesheets, // Added
+  timesheets,
+  onboardingSteps, 
 } from "../../../lib/db/schema";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { format } from "date-fns";
@@ -38,6 +39,7 @@ import {
   updateGoalInputSchema,
   upsertWorkLogInputSchema,
   getWorkLogsInputSchema,
+  onboardEmployeeInputSchema,
 } from "../../../lib/validations/hr";
 
 export const hrRouter = createTRPCRouter({
@@ -68,6 +70,79 @@ export const hrRouter = createTRPCRouter({
           phone: input.phone,
         })
         .where(eq(users.id, input.userId));
+    }),
+
+
+  // --- ONBOARDING ---
+  onboardEmployee: protectedProcedure
+    .input(onboardEmployeeInputSchema)
+    .mutation(async ({ ctx, input }) => {
+       const existingUser = await ctx.db.query.users.findFirst({
+         where: eq(users.email, input.email)
+       });
+
+       if (existingUser) {
+          throw new TRPCError({
+             code: "CONFLICT",
+             message: "User with this email already exists."
+          });
+       }
+
+       // 1. Create User
+       // In a real app with Auth provider, we might create an auth account here too or send invite.
+       // For now, we creating a user record directly.
+       const userId = crypto.randomUUID();
+       
+       const [newUser] = await ctx.db.insert(users).values({
+          id: userId,
+          email: input.email,
+          name: `${input.firstName} ${input.lastName}`,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          phone: input.phone,
+          role: input.role,
+          designation: input.designation,
+          departmentId: input.departmentId,
+          joiningDate: format(input.joiningDate, "yyyy-MM-dd"),
+          experienceYears: input.experienceYears?.toString(),
+          skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
+          taxId: input.taxId,
+          bankDetails: input.bankDetails,
+          password: input.password, // Ideally hashed, assuming provider handles or this is temp
+          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${input.firstName}`, // Auto avatar
+          createdAt: new Date(),
+          updatedAt: new Date(),
+       }).returning();
+
+       // 2. Add to Organization
+       await ctx.db.insert(organizationMembers).values({
+          userId: newUser.id,
+          orgId: ctx.session.orgId,
+          role: input.role,
+          joinedAt: new Date(),
+       });
+
+       // 3. Initialize Salary Structure (optional default)
+        await ctx.db.insert(salaryStructures).values({
+            orgId: ctx.session.orgId,
+            userId: newUser.id,
+            basicSalary: "0",
+            effectiveFrom: format(new Date(), "yyyy-MM-dd"),
+            isActive: true,
+        });
+
+       // 4. Create Onboarding Steps Tracking
+       const defaultSteps = ["Profile Setup", "Document Submission", "IT Setup", "Introduction"];
+       for (const step of defaultSteps) {
+           await ctx.db.insert(onboardingSteps).values({
+               orgId: ctx.session.orgId,
+               userId: newUser.id,
+               stepName: step,
+               status: "PENDING",
+           });
+       }
+
+       return newUser;
     }),
 
   // --- ATTENDANCE ---

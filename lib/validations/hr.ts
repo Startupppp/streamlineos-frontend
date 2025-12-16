@@ -132,3 +132,29 @@ export const getWorkLogsInputSchema = z.object({
   quarter: z.number().int().min(1).max(4),
   userId: z.string().optional(),
 });
+
+export const onboardEmployeeInputSchema = z.object({
+  // Personal Info
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional(), // Optional if auto-generated
+
+  // Professional Info
+  designation: z.string().min(1, "Designation is required"),
+  departmentId: z.coerce.number().int().positive("Department is required"),
+  role: z.enum(["OWNER", "ADMIN", "MEMBER", "CLIENT"]).default("MEMBER"),
+  joiningDate: z.date(),
+  experienceYears: z.coerce.number().min(0).optional(),
+  skills: z.string().optional(), // Comma separated or JSON string
+  taxId: z.string().optional(),
+
+  // Banking Info
+  bankDetails: z.object({
+    accountNumber: z.string().min(1, "Account number is required"),
+    bankName: z.string().min(1, "Bank name is required"),
+    ifsc: z.string().min(1, "IFSC code is required"),
+    accountHolder: z.string().min(1, "Account holder name is required"),
+  }),
+});
