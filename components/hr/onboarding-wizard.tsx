@@ -67,10 +67,20 @@ export function OnboardingWizard() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(onboardEmployeeInputSchema) as any,
     defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "", 
+      designation: "",
+      departmentId: undefined, // Or a default department ID if needed, but select usually handles undefined better than text input. Wait, SelectValue might not. Shadcn 'Select' value prop if undefined is controlled? No.
+      // Actually for controlled Select in Shadcn, it expects a string usually. `departmentId` is number in schema but form value might be string initially or handled via onChange.
+      // Let's set it to undefined, as Select component logic handles it. But let's check input fields primarily.
       role: "MEMBER",
       joiningDate: new Date(),
       skills: "",
       experienceYears: 0,
+      taxId: "",
       bankDetails: {
           accountNumber: "",
           bankName: "",
