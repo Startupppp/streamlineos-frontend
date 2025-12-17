@@ -17,10 +17,21 @@ import { useSession } from "next-auth/react";
 
 
 import { Button } from "@/components/ui/button"; // Correct path
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getEmployees } from "@/server/actions/hr-actions"; // Import action
+import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions"; // Import action
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function EmployeeDirectoryPage() {
   const { data: session } = useSession();
@@ -110,11 +121,48 @@ export default function EmployeeDirectoryPage() {
                   <Badge variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}>
                     {user.role}
                   </Badge>
-                  <Link href={`/hr/employees/${user.id}`}>
-                    <Button variant="outline" size="sm">
-                        Edit
-                    </Button>
-                  </Link>
+                  <div className="flex gap-2">
+                      <Link href={`/hr/employees/${user.id}`}>
+                        <Button variant="outline" size="sm">
+                            Edit
+                        </Button>
+                      </Link>
+                      {(user.role !== "OWNER" && user.role !== "ADMIN") && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="destructive" 
+                                size="icon" 
+                                className="h-8 w-8"
+                              >
+                                  <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Deactivate Employee</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to deactivate {user.firstName || "this employee"}? 
+                                  They will lose access to the system immediately. 
+                                  Their past records will be preserved.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={async () => {
+                                     await deleteEmployee(user.id);
+                                     setEmployees(prev => prev.filter(e => e.id !== user.id));
+                                  }}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Deactivate
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                      )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
