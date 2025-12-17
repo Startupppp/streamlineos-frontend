@@ -24,7 +24,8 @@ export async function getEmployees() {
     }
   });
 
-  return orgMembers.map(m => m.user);
+  // Filter out inactive users
+  return orgMembers.map(m => m.user).filter(u => u.isActive !== false);
 }
 
 export async function getEmployeeById(userId: string) {
@@ -107,4 +108,27 @@ export async function updateEmployee(data: {
         console.error("Update Employee Error:", e);
         return { error: "Failed to update employee" };
     }
+}
+
+export async function deleteEmployee(userId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+  const { role } = session.user;
+
+  if (role !== "OWNER" && role !== "ADMIN") {
+      return { error: "Permission denied" };
+  }
+
+  try {
+      // Soft delete
+      await db.update(users)
+        .set({ isActive: false })
+        .where(eq(users.id, userId));
+      
+      revalidatePath("/hr/employees");
+      return { success: true };
+  } catch (error) {
+      console.error("Delete employee error:", error);
+      return { error: "Failed to delete employee" };
+  }
 }

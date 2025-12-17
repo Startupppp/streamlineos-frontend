@@ -42,6 +42,8 @@ import {
   getWorkLogsInputSchema,
   onboardEmployeeInputSchema,
 } from "../../../lib/validations/hr";
+import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "../../../lib/email";
 
 export const hrRouter = createTRPCRouter({
   // --- DEPARTMENTS & EMPLOYEES ---
@@ -58,7 +60,8 @@ export const hrRouter = createTRPCRouter({
         user: true,
       },
     });
-    return members.map((m) => m.user);
+    // Filter out inactive users (soft deleted)
+    return members.map((m) => m.user).filter((u) => u.isActive !== false);
   }),
 
   createDepartment: protectedProcedure
@@ -108,10 +111,12 @@ export const hrRouter = createTRPCRouter({
        }
 
        // 1. Create User
-       // In a real app with Auth provider, we might create an auth account here too or send invite.
-       // For now, we creating a user record directly.
        const userId = crypto.randomUUID();
        
+       // Hash the provided password or default '123456'
+       const rawPassword = input.password || "123456";
+       const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
        const [newUser] = await ctx.db.insert(users).values({
           id: userId,
           email: input.email,
@@ -127,11 +132,19 @@ export const hrRouter = createTRPCRouter({
           skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
           taxId: input.taxId,
           bankDetails: input.bankDetails,
-          password: input.password, // Ideally hashed, assuming provider handles or this is temp
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${input.firstName}`, // Auto avatar
+          password: hashedPassword,
+          isPasswordChangeRequired: true,
+          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${input.firstName}`,
           createdAt: new Date(),
           updatedAt: new Date(),
        }).returning();
+
+       // Send Welcome Email
+       await sendWelcomeEmail(
+          input.email, 
+          input.firstName, 
+          rawPassword
+       );
 
        // 2. Add to Organization
        await ctx.db.insert(organizationMembers).values({
@@ -187,7 +200,7 @@ export const hrRouter = createTRPCRouter({
         // I need to add it to schema imports too. But for now I'll fix this block.
 
         for (const recipientId of recipientIds) {
-           // @ts-ignore
+           // @ts-expect-error
            await ctx.db.insert(notifications).values({
               orgId: ctx.session.orgId,
               userId: recipientId,
@@ -200,6 +213,26 @@ export const hrRouter = createTRPCRouter({
         }
 
        return newUser;
+    }),
+
+  deleteEmployee: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+       const { user } = ctx.session;
+       if (user.role !== "OWNER" && user.role !== "ADMIN") {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Only Admins and Owners can delete employees.",
+         });
+       }
+
+       // Soft delete: Set isActive to false
+       await ctx.db
+         .update(users)
+         .set({ isActive: false })
+         .where(eq(users.id, input.userId));
+       
+       return { success: true, message: "Employee deactivated successfully." };
     }),
 
   // --- ATTENDANCE ---

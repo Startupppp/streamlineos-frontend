@@ -156,6 +156,7 @@ export const users = pgTable("users", {
   phone: text("phone"),
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false), 
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
