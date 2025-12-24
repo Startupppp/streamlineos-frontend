@@ -110,7 +110,7 @@ export function AppSidebar() {
     <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
       <div className="px-3 py-2 flex-1">
         <Link href="/dashboard" className="flex items-center pl-3 mb-6">
-          <div className="relative w-8 h-8 mr-4">
+          <div className="relative w-8 h-8 mr-4 bg-white rounded-lg flex items-center justify-center overflow-hidden">
             <Image
               src="/logo.svg"
               alt="Vaivamm Logo"
