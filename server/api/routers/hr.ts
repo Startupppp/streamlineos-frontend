@@ -200,7 +200,7 @@ export const hrRouter = createTRPCRouter({
         // I need to add it to schema imports too. But for now I'll fix this block.
 
         for (const recipientId of recipientIds) {
-           // @ts-expect-error
+
            await ctx.db.insert(notifications).values({
               orgId: ctx.session.orgId,
               userId: recipientId,
