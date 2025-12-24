@@ -392,7 +392,7 @@ export const tickets = pgTable("tickets", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  type: ticketTypeEnum("type").default("TASK"),
+  type: text("type").notNull().default("TASK"), // Changed from enum to text
   status: text("status").notNull().default("TODO"),
   priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),

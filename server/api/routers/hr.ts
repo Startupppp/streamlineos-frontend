@@ -141,11 +141,16 @@ export const hrRouter = createTRPCRouter({
        }).returning();
 
        // Send Welcome Email
-       await sendWelcomeEmail(
-          input.email, 
-          input.firstName, 
-          rawPassword
-       );
+       try {
+         await sendWelcomeEmail(
+            input.email, 
+            input.firstName, 
+            rawPassword
+         );
+       } catch (error) {
+         console.error("Failed to send welcome email:", error);
+         // Don't throw, allow onboarding to complete
+       }
 
        // 2. Add to Organization
        await ctx.db.insert(organizationMembers).values({

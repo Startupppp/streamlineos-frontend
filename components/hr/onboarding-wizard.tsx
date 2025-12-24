@@ -333,7 +333,6 @@ export function OnboardingWizard() {
                               <SelectContent>
                                 <SelectItem value="MEMBER">Member (Employee)</SelectItem>
                                 <SelectItem value="ADMIN">Admin (HR/Manager)</SelectItem>
-                                <SelectItem value="CLIENT">Client (External)</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />

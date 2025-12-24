@@ -114,7 +114,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      type: "TASK",
+      type: "Task",
       description: "",
       priority: "MEDIUM",
       link: "",
@@ -126,7 +126,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
     createTicketMutation.mutate({
       ...values,
       projectId,
-      type: values.type === "FEATURE" ? "STORY" : values.type,
+      type: values.type,
       link: values.link || undefined,
       assigneeId: values.assigneeId === "unassigned" ? undefined : values.assigneeId, 
     });
@@ -152,28 +152,25 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="TASK">
-                            <div className="flex items-center">
-                                <span className="mr-2">📝</span> Task
-                            </div>
-                        </SelectItem>
-                        <SelectItem value="BUG">
-                             <div className="flex items-center">
-                                <span className="mr-2">🐞</span> Issue
-                            </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                        <div className="relative">
+                            <Input 
+                                {...field} 
+                                list="ticket-types" 
+                                placeholder="Task, Bug, Call..." 
+                                className="w-full"
+                            />
+                            <datalist id="ticket-types">
+                                <option value="Task" />
+                                <option value="Bug" />
+                                <option value="Story" />
+                                <option value="Epic" />
+                                <option value="Call" />
+                                <option value="Followup" />
+                                <option value="Meeting" />
+                            </datalist>
+                        </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

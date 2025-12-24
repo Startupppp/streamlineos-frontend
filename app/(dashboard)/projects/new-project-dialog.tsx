@@ -37,6 +37,12 @@ const formSchema = z.object({
   key: z.string().min(2, "Key must be at least 2 characters").regex(/^[A-Z]+$/, "Key must be uppercase letters only"),
   description: z.string().optional(),
   memberIds: z.array(z.string()).optional(),
+  modules: z.object({
+      sprints: z.boolean(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+  }),
 });
 
 export function NewProjectDialog() {
@@ -50,6 +56,12 @@ export function NewProjectDialog() {
       key: "",
       description: "",
       memberIds: [],
+      modules: {
+          sprints: true,
+          epics: true,
+          timeTracking: true,
+          wiki: true,
+      }
     },
   });
 
@@ -220,6 +232,84 @@ export function NewProjectDialog() {
                         </FormItem>
                     )}
                 />
+
+                <div className="pt-2">
+                    <FormLabel className="text-sm font-medium text-foreground mb-3 block">Project Modules</FormLabel>
+                    <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                            control={form.control}
+                            name="modules.sprints"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Sprints</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Agile cycles</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="modules.epics"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Epics</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Large initiatives</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="modules.timeTracking"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Time Tracking</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Log work hours</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="modules.wiki"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Wiki</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Docs & Pages</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
             </div>
 
             <DialogFooter className="pt-2">
