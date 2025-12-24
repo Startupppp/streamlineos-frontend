@@ -95,7 +95,7 @@ export const rbacRouter = createTRPCRouter({
   }),
 
   getRolePermissions: protectedProcedure
-    .input(z.object({ role: z.enum(["OWNER", "ADMIN", "MEMBER", "CLIENT"]) }))
+    .input(z.object({ role: z.enum(["OWNER", "ADMIN", "MEMBER"]) }))
     .query(async ({ ctx, input }) => {
       const perms = await ctx.db.query.rolePermissions.findMany({
         where: eq(rolePermissions.role, input.role),
@@ -115,7 +115,7 @@ export const rbacRouter = createTRPCRouter({
   assignRolePermission: protectedProcedure
     .input(
       z.object({
-        role: z.enum(["OWNER", "ADMIN", "MEMBER", "CLIENT"]),
+        role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
         permissionId: z.number(),
         orgId: z.string().optional(),
       })

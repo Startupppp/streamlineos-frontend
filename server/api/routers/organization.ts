@@ -9,13 +9,13 @@ import { sendInvitationEmail } from "../../../lib/email";
 const inviteUserSchema = z.object({
   email: z.string().email(),
   orgId: z.string(),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER", "CLIENT"]),
+  role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
 });
 
 const updateMemberRoleSchema = z.object({
   userId: z.string(),
   orgId: z.string(),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER", "CLIENT"]),
+  role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
 });
 
 const createOrganizationSchema = z.object({
