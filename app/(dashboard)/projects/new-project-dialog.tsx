@@ -168,7 +168,7 @@ export function NewProjectDialog() {
                                             <h4 className="font-medium text-sm">Select Team Members</h4>
                                         </div>
                                         <div className="p-2 space-y-1 max-h-[240px] overflow-y-auto">
-                                            {employees?.filter(e => e.role !== "CLIENT").map((emp) => {
+                                            {employees?.map((emp) => {
                                                 const isSelected = field.value?.includes(emp.id);
                                                 return (
                                                     <div key={emp.id} 

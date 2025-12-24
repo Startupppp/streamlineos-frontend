@@ -98,7 +98,7 @@ export async function updateEmployee(data: {
                 departmentId: data.departmentId,
                 phone: data.phone,
                 gender: data.gender,
-                joiningDate: data.joiningDate ? new Date(data.joiningDate) : undefined,
+                joiningDate: data.joiningDate ? data.joiningDate.toISOString().split('T')[0] : undefined,
                 skills: data.skills,
                 experienceYears: data.experienceYears ? String(data.experienceYears) : undefined, // Schema uses decimal/string
                 taxId: data.taxId,

@@ -2,7 +2,7 @@ import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, intege
 import { relations } from "drizzle-orm";
 
 // Enums
-export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER", "CLIENT"]);
+export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER"]);
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 export const ticketPriorityEnum = pgEnum("ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);

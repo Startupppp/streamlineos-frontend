@@ -145,7 +145,7 @@ export const onboardEmployeeInputSchema = z.object({
   // Professional Info
   designation: z.string().min(1, "Designation is required"),
   departmentId: z.coerce.number().int().positive("Department is required"),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER", "CLIENT"]).default("MEMBER"),
+  role: z.enum(["OWNER", "ADMIN", "MEMBER"]).default("MEMBER"),
   joiningDate: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),
   skills: z.string().optional(), // Comma separated or JSON string

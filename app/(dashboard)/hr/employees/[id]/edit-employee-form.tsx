@@ -53,7 +53,7 @@ export interface EmployeeData {
     firstName: string | null;
     lastName: string | null;
     email: string;
-    role: "ADMIN" | "MEMBER" | "OWNER" | "CONTRIBUTOR" | null; 
+    role: "ADMIN" | "MEMBER" | "OWNER" | null; 
     designation: string | null;
     departmentId: number | null;
     phone: string | null;
