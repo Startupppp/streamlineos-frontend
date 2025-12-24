@@ -66,7 +66,7 @@ export function OnboardingWizard() {
   type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(onboardEmployeeInputSchema) as any,
+    resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
     defaultValues: {
       firstName: "",
       lastName: "",

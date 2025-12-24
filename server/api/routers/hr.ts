@@ -680,6 +680,66 @@ export const hrRouter = createTRPCRouter({
         );
     }),
 
+  getEmployeeStats: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+        // Leaves Balances (Join Types with Balances)
+        const balances = await ctx.db
+            .select({
+                id: leaveTypes.id,
+                name: leaveTypes.name,
+                daysPerYear: leaveTypes.daysPerYear,
+                balance: leaveBalances.balance,
+            })
+            .from(leaveTypes)
+            .leftJoin(leaveBalances, and(
+                eq(leaveBalances.leaveTypeId, leaveTypes.id),
+                eq(leaveBalances.userId, input.userId),
+                eq(leaveBalances.year, new Date().getFullYear())
+            ))
+            .where(eq(leaveTypes.orgId, ctx.session.orgId));
+
+        // Recent Leave Requests
+        const recentLeaves = await ctx.db.query.leaveRequests.findMany({
+            where: eq(leaveRequests.userId, input.userId),
+            limit: 5,
+            orderBy: [desc(leaveRequests.createdAt)],
+            with: {
+                leaveType: true
+            }
+        });
+
+        // Attendance (Current Month)
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0,0,0,0);
+        
+        const attendanceRecords = await ctx.db.query.attendance.findMany({
+            where: and(
+                eq(attendance.userId, input.userId),
+                gte(attendance.date, format(startOfMonth, 'yyyy-MM-dd'))
+            )
+        });
+
+        const summary = {
+            present: attendanceRecords.filter(a => a.status === 'PRESENT').length,
+            absent: attendanceRecords.filter(a => a.status === 'ABSENT').length,
+            late: attendanceRecords.filter(a => a.status === 'LATE').length, 
+            totalDays: attendanceRecords.length
+        };
+
+        return {
+            leaveBalances: balances.map(b => ({
+                id: b.id,
+                name: b.name,
+                total: b.daysPerYear,
+                remaining: b.balance ? Number(b.balance) : b.daysPerYear // Default to total if no record (assuming fresh slate)
+            })),
+            recentLeaves,
+            attendance: summary
+        };
+    }),
+
   getMonthlyAttendance: protectedProcedure
     .input(z.object({
         userId: z.string(),

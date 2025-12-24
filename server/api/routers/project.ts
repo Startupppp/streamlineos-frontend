@@ -787,4 +787,56 @@ export const projectRouter = createTRPCRouter({
                 eq(projectStatuses.orgId, ctx.session.orgId)
             ));
     }),
+  getEmployeeProjects: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // 1. Get projects user is part of
+      const userProjects = await ctx.db
+        .select({
+            project: projects,
+            role: projectMembers.role,
+        })
+        .from(projectMembers)
+        .innerJoin(projects, eq(projectMembers.projectId, projects.id))
+        .where(eq(projectMembers.userId, input.userId));
+
+      if (userProjects.length === 0) return [];
+
+      // 2. Get ticket stats for user per project
+      const projectIds = userProjects.map(p => p.project.id);
+      
+      const ticketStats = await ctx.db
+        .select({
+            projectId: tickets.projectId,
+            status: tickets.status,
+            count: sql<number>`count(*)`.mapWith(Number),
+        })
+        .from(tickets)
+        .where(and(
+            eq(tickets.assigneeId, input.userId),
+            inArray(tickets.projectId, projectIds)
+        ))
+        .groupBy(tickets.projectId, tickets.status);
+
+      // 3. Merge data
+      return userProjects.map(({ project, role }) => {
+          const stats = ticketStats.filter(s => s.projectId === project.id);
+          const todo = stats.find(s => s.status === 'TODO')?.count || 0;
+          const inProgress = stats.find(s => s.status === 'IN_PROGRESS')?.count || 0;
+          const done = stats.find(s => s.status === 'DONE')?.count || 0;
+          // Sum up others or just count active
+          const total = stats.reduce((acc, curr) => acc + curr.count, 0);
+          
+          return {
+              ...project,
+              role,
+              stats: {
+                  todo,
+                  inProgress,
+                  done,
+                  total
+              }
+          };
+      });
+    }),
 });
