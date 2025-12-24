@@ -6,10 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/trpc/react";
 import { EmployeeLeaveStats, EmployeeAttendanceSummary } from "@/components/hr/employee-stats-cards";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
+import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     const { data: stats } = api.hr.getEmployeeStats.useQuery({ userId: employee.id });
     const { data: projects } = api.project.getEmployeeProjects.useQuery({ userId: employee.id });
+    const { data: tickets } = api.project.getEmployeeTickets.useQuery({ userId: employee.id });
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">
@@ -21,7 +23,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <TabsList>
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="projects">Projects</TabsTrigger>
-                    <TabsTrigger value="attendance">Attendance & Leaves</TabsTrigger>
+                    <TabsTrigger value="tickets">Tickets</TabsTrigger>
+                    <TabsTrigger value="attendance">History & Attendance</TabsTrigger>
                     <TabsTrigger value="profile">Profile Details</TabsTrigger>
                 </TabsList>
 
@@ -37,7 +40,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                             <EmployeeLeaveStats stats={stats} />
                         </div>
                         <div className="col-span-3">
-                             {/* Minified Project List or just Stats? Reuse Project List for now */}
                              <EmployeeProjectsList projects={projects || []} />
                         </div>
                     </div>
@@ -45,6 +47,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
                 <TabsContent value="projects" className="space-y-4">
                      <EmployeeProjectsList projects={projects || []} />
+                </TabsContent>
+
+                <TabsContent value="tickets" className="space-y-4">
+                     <EmployeeTicketsList tickets={tickets || []} />
                 </TabsContent>
 
                 <TabsContent value="attendance" className="space-y-4">

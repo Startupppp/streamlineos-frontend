@@ -839,4 +839,22 @@ export const projectRouter = createTRPCRouter({
           };
       });
     }),
+
+  getEmployeeTickets: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Fetch tickets assigned to the user
+      const userTickets = await ctx.db.query.tickets.findMany({
+        where: and(
+            eq(tickets.assigneeId, input.userId),
+            eq(tickets.orgId, ctx.session.orgId)
+        ),
+        with: {
+          project: true,
+          sprint: true,
+        },
+        orderBy: [desc(tickets.updatedAt)],
+      });
+      return userTickets;
+    }),
 });
