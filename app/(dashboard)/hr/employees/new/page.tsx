@@ -33,7 +33,7 @@ const formSchema = z.object({
   lastName: z.string().min(2, "Last name is required"),
   email: z.string().email("Invalid email address"),
   role: z.enum(["ADMIN", "MEMBER"]),
-  initialPassword: z.string().min(6).optional(),
+  initialPassword: z.string().min(6).optional().or(z.literal("")),
 });
 
 export default function NewEmployeePage() {

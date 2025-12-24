@@ -142,10 +142,10 @@ export function TicketDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-                <span className="text-muted-foreground">#{ticketId}</span>
-                {isLoading ? "Loading..." : ticket?.title}
+          <DialogTitle className="flex items-center justify-between pr-8">
+            <span className="flex items-center gap-2 min-w-0">
+                <span className="text-muted-foreground shrink-0">#{ticketId}</span>
+                <span className="truncate">{isLoading ? "Loading..." : ticket?.title}</span>
             </span>
             {ticket && (
                  <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -153,7 +153,7 @@ export function TicketDetailsDialog({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 mr-8"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -342,9 +342,7 @@ export function TicketDetailsDialog({
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="TASK">Task</SelectItem>
-                            <SelectItem value="BUG">Bug</SelectItem>
-                            <SelectItem value="STORY">Story</SelectItem>
-                            <SelectItem value="EPIC">Epic</SelectItem>
+                            <SelectItem value="BUG">Issue</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

@@ -74,7 +74,12 @@ export const projectRouter = createTRPCRouter({
       })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))
-      .where(eq(organizationMembers.orgId, ctx.session.orgId));
+      .where(
+        and(
+          eq(organizationMembers.orgId, ctx.session.orgId),
+          eq(users.isActive, true)
+        )
+      );
     return members;
   }),
 

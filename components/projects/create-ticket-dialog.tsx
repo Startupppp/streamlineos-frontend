@@ -163,9 +163,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="TASK">Task</SelectItem>
-                        <SelectItem value="BUG">Bug</SelectItem>
-                        <SelectItem value="STORY">Story</SelectItem>
-                        <SelectItem value="EPIC">Epic</SelectItem>
+                        <SelectItem value="BUG">Issue</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
