@@ -131,6 +131,8 @@ export const departments = pgTable("departments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
+
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name"), // Required by NextAuth, computed from firstName + lastName
@@ -139,6 +141,7 @@ export const users = pgTable("users", {
   password: text("password"), // Hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
+  gender: genderEnum("gender"), // Added gender
   skills: text("skills").array(),
   experienceYears: decimal("experience_years"),
   joiningDate: date("joining_date"),

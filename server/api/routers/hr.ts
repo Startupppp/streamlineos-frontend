@@ -123,6 +123,7 @@ export const hrRouter = createTRPCRouter({
           name: `${input.firstName} ${input.lastName}`,
           firstName: input.firstName,
           lastName: input.lastName,
+          gender: input.gender,
           phone: input.phone,
           role: input.role,
           designation: input.designation,

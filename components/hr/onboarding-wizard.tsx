@@ -71,6 +71,7 @@ export function OnboardingWizard() {
       lastName: "",
       email: "",
       phone: "",
+      gender: "MALE",
       password: "", 
       designation: "",
       departmentId: undefined, // Or a default department ID if needed, but select usually handles undefined better than text input. Wait, SelectValue might not. Shadcn 'Select' value prop if undefined is controlled? No.
@@ -227,6 +228,28 @@ export function OnboardingWizard() {
                             <FormControl>
                               <Input placeholder="+1 234 567 8900" {...field} className="bg-background/50" />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Gender" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="MALE">Male</SelectItem>
+                                <SelectItem value="FEMALE">Female</SelectItem>
+                                <SelectItem value="OTHER">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}

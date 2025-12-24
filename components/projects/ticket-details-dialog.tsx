@@ -143,10 +143,10 @@ export function TicketDetailsDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between pr-8">
-            <span className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 mr-4">
                 <span className="text-muted-foreground shrink-0">#{ticketId}</span>
-                <span className="truncate">{isLoading ? "Loading..." : ticket?.title}</span>
-            </span>
+                <span className="text-left font-medium leading-tight">{isLoading ? "Loading..." : ticket?.title}</span>
+            </div>
             {ticket && (
                  <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
                   <PopoverTrigger asChild>

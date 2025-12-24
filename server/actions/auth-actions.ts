@@ -35,6 +35,7 @@ export async function createEmployee(data: {
     firstName: string;
     lastName: string;
     email: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
     role: "ADMIN" | "MEMBER";
     initialPassword?: string;
 }) {
@@ -81,6 +82,7 @@ export async function createEmployee(data: {
             lastName: data.lastName,
             name: `${data.firstName} ${data.lastName}`,
             role: data.role,
+            gender: data.gender,
             isPasswordChangeRequired: true, // FORCE RESET
             emailVerified: null, 
         });
