@@ -8,7 +8,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 // --- For User: Reset Password ---
-export async function resetPassword(password: string) {
+export async function resetPassword(password: string, imageUrl?: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   
@@ -19,6 +19,7 @@ export async function resetPassword(password: string) {
         .set({
            password: hashedPassword,
            isPasswordChangeRequired: false,
+           ...(imageUrl && { image: imageUrl }),
         })
         .where(eq(users.id, session.user.id));
         
