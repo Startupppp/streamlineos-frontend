@@ -374,6 +374,14 @@ export const projects = pgTable("projects", {
 
   endDate: timestamp("end_date"),
   status: projectStatusEnum("status").default("ACTIVE"),
+  settings: jsonb("settings").$type<{
+    modules: {
+        sprints: boolean;
+        epics: boolean;
+        timeTracking: boolean;
+        wiki: boolean;
+    }
+  }>(),
 });
 
 export const sprints = pgTable("sprints", {
