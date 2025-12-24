@@ -163,6 +163,14 @@ export const projectRouter = createTRPCRouter({
           startDate: input.startDate,
           endDate: input.endDate,
           status: "ACTIVE",
+          settings: {
+              modules: input.modules || {
+                  sprints: true,
+                  epics: true,
+                  timeTracking: true,
+                  wiki: true
+              }
+          }
         })
         .returning();
 

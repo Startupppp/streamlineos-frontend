@@ -145,7 +145,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="type"
@@ -157,13 +157,21 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="TASK">Task</SelectItem>
-                        <SelectItem value="BUG">Issue</SelectItem>
+                        <SelectItem value="TASK">
+                            <div className="flex items-center">
+                                <span className="mr-2">📝</span> Task
+                            </div>
+                        </SelectItem>
+                        <SelectItem value="BUG">
+                             <div className="flex items-center">
+                                <span className="mr-2">🐞</span> Issue
+                            </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -181,7 +189,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -205,7 +213,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ticket title" {...field} />
+                    <Input placeholder="E.g. Implement login page" {...field} className="text-base font-medium" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -217,11 +225,11 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description (Brief Explanation)</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the issue or task..." 
-                      className="min-h-[100px]"
+                      placeholder="Describe the issue or task in detail..." 
+                      className="min-h-[120px] resize-y"
                       {...field} 
                     />
                   </FormControl>
@@ -230,7 +238,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
                <FormField
                 control={form.control}
                 name="assigneeId"
@@ -242,20 +250,22 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select assignee" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        <SelectItem value="unassigned">
+                            <span className="text-muted-foreground">Unassigned</span>
+                        </SelectItem>
                         {members?.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-2">
-                               <Avatar className="h-4 w-4">
+                               <Avatar className="h-5 w-5">
                                   <AvatarImage src={member.image || undefined} />
-                                  <AvatarFallback className="text-[8px]">{member.firstName?.[0]}{member.lastName?.[0]}</AvatarFallback>
+                                  <AvatarFallback className="text-[10px]">{member.name?.[0] || "U"}</AvatarFallback>
                                </Avatar>
-                               <span>{member.firstName} {member.lastName}</span>
+                               <span className="truncate">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -273,8 +283,8 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                     <FormLabel>Link (Optional)</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <LinkIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input className="pl-8" placeholder="https://..." {...field} value={field.value || ""} />
+                        <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input className="pl-9" placeholder="https://..." {...field} value={field.value || ""} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -283,17 +293,18 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
               />
             </div>
             
-            <FormItem>
-                <FormLabel>Attachment (Image)</FormLabel>
+            <FormItem className="pt-2">
+                <FormLabel>Attachment</FormLabel>
                 <FormControl>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 p-4 border border-dashed rounded-lg bg-muted/20">
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="secondary"
                             onClick={() => document.getElementById('ticket-file-upload')?.click()}
+                            className="w-full sm:w-auto"
                         >
                             <Upload className="mr-2 h-4 w-4" />
-                            {file ? file.name : "Upload Image"}
+                            {file ? "Change Image" : "Upload Image"}
                         </Button>
                         <Input 
                             id="ticket-file-upload"
@@ -306,15 +317,19 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
                             }}
                         />
                          {file && (
-                            <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => setFile(null)}
-                                className="text-destructive h-8"
-                            >
-                                Remove
-                            </Button>
+                             <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="text-sm text-muted-foreground truncate">{file.name}</span>
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => setFile(null)}
+                                    className="text-destructive h-8 w-8 ml-auto"
+                                >
+                                    <span className="sr-only">Remove</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-4 w-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                </Button>
+                            </div>
                         )}
                     </div>
                 </FormControl>

@@ -81,7 +81,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const { data: departments } = api.hr.getDepartments.useQuery();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as unknown as any, // Explicit unknown cast for library type mismatch
+    resolver: zodResolver(formSchema) as unknown as any,
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",

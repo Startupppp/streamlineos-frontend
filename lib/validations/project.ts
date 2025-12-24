@@ -26,6 +26,12 @@ export const createProjectInputSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   memberIds: z.array(z.string()).optional(),
+  modules: z.object({
+      sprints: z.boolean(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+  }).optional(),
 });
 
 
