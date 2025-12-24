@@ -175,29 +175,20 @@ export const hrRouter = createTRPCRouter({
        }
 
        // 5. Notify Admins/Owners
-       // Find all admins and owners in the org (excluding potentially the creator to avoid self-notif, but typically fine)
-       // Actually, we want to notify *other* admins.
        const admins = await ctx.db.query.organizationMembers.findMany({
           where: and(
              eq(organizationMembers.orgId, ctx.session.orgId),
-             // In SQL 'in' check or or
+
           ),
           with: {
              user: true
           }
        });
        
-       // Filter in JS for simplicity or improve query
+
        const recipientIds = admins
           .filter(m => (m.role === "ADMIN" || m.role === "OWNER") && m.userId !== user.id)
           .map(m => m.userId);
-
-        // Import notifications table at top if needed, it is there.
-        // It is imported at top.
-        
-        // We also need to add 'notifications' to the imports at the top of the file if not present.
-        // Checking imports... 'notifications' is NOT imported in the original file I viewed (lines 1-21).
-        // I need to add it to schema imports too. But for now I'll fix this block.
 
         for (const recipientId of recipientIds) {
 
@@ -276,12 +267,6 @@ export const hrRouter = createTRPCRouter({
       if (log.isOvertime) isDailyOvertime = true;
     }
 
-    // Default status logic gets tricky with multiple sessions.
-    // We check the *latest* log (by createdAt which we don't have sorted here easily without sort).
-    // Let's rely on the separate findFirst for "todayLog" which was latest.
-    
-    // Actually, we can just sort todayLogs in memory or fetch sorted.
-    // Let's keep the existing findFirst query for "latest status" to be safe and simple diff.
     const todayLog = await ctx.db.query.attendance.findFirst({
         where: and(
           eq(attendance.userId, userId),
