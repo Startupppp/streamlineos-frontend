@@ -11,13 +11,17 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+
 interface ProjectSidebarProps {
     projectId: string;
     projectName: string;
     projectKey: string;
 }
 
-export function ProjectSidebar({ projectId, projectName, projectKey }: ProjectSidebarProps) {
+
+function ProjectSidebarContent({ projectId, projectName, projectKey }: ProjectSidebarProps) {
     const pathname = usePathname();
     const baseUrl = `/projects/${projectId}`;
 
@@ -28,7 +32,7 @@ export function ProjectSidebar({ projectId, projectName, projectKey }: ProjectSi
     ];
 
     return (
-        <div className="w-64 border-r bg-muted/10 h-full flex flex-col">
+        <div className="h-full flex flex-col bg-muted/10">
             <div className="p-4 border-b">
                  <Link href="/projects" className="flex items-center text-xs text-muted-foreground mb-4 hover:text-foreground">
                     <ChevronLeft className="h-3 w-3 mr-1" />
@@ -52,7 +56,7 @@ export function ProjectSidebar({ projectId, projectName, projectKey }: ProjectSi
                         href={item.href}
                         className={cn(
                             "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                            pathname?.startsWith(item.href) 
+                            (item.href === baseUrl ? pathname === baseUrl : pathname?.startsWith(item.href))
                                 ? "bg-primary/10 text-primary" 
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
@@ -73,5 +77,32 @@ export function ProjectSidebar({ projectId, projectName, projectKey }: ProjectSi
                  </Button>
             </div>
         </div>
+    );
+}
+
+export function ProjectSidebar(props: ProjectSidebarProps) {
+    return (
+        <>
+            {/* Desktop Sidebar */}
+            <div className="hidden md:flex w-64 border-r h-full flex-col">
+                <ProjectSidebarContent {...props} />
+            </div>
+
+            {/* Mobile Sidebar Trigger */}
+            <div className="md:hidden fixed top-[4.5rem] left-4 z-40">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="outline" size="icon" className="shadow-md bg-background border-border">
+                            <Menu className="h-4 w-4" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-72 p-0">
+                         <div className="h-full bg-background">
+                            <ProjectSidebarContent {...props} />
+                         </div>
+                    </SheetContent>
+                </Sheet>
+            </div>
+        </>
     );
 }

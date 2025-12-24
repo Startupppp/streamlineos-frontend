@@ -27,8 +27,19 @@ export default async function middleware(req: any) {
        return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
+  // 3. INACTIVE USER CHECK
+  // If user is authenticated but marked as inactive, force signout or block
+  if (isAuthenticated && token?.isActive === false) {
+     // Redirect to signout or a "Account Deactivated" page
+     // For now, let's just sign them out
+     if (!pathname.startsWith("/api/auth/signout")) {
+        // We can redirect to custom error page later
+        return NextResponse.redirect(new URL("/api/auth/signout", req.url));
+     }
+  }
 
-  // 3. Normal Route Protection
+
+  // 4. Normal Route Protection
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

@@ -7,6 +7,7 @@ declare module "next-auth" {
       id: string;
       role?: "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
       forceChangePassword?: boolean;
+      isActive?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -14,6 +15,7 @@ declare module "next-auth" {
     role?: "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
     forceChangePassword?: boolean;
     id?: string;
+    isActive?: boolean;
   }
 }
 
@@ -21,5 +23,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
     forceChangePassword?: boolean;
+    isActive?: boolean;
   }
 }

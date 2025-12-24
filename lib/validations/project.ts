@@ -14,6 +14,7 @@ export const updateProjectSettingsInputSchema = z.object({
   clientId: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
+  memberIds: z.array(z.string()).optional(),
 });
 
 export const createProjectInputSchema = z.object({
@@ -24,6 +25,7 @@ export const createProjectInputSchema = z.object({
   clientId: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
+  memberIds: z.array(z.string()).optional(),
 });
 
 

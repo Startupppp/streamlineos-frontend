@@ -156,6 +156,7 @@ export const users = pgTable("users", {
   phone: text("phone"),
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false), 
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -427,6 +428,14 @@ export const projectStatuses = pgTable("project_statuses", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const projectMembers = pgTable("project_members", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  role: text("role").default("CONTRIBUTOR"), // VIEWER, CONTRIBUTOR, MANAGER
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
 // Fix self-referencing tables by removing inline references - they're handled in relations
 export const ticketComments = pgTable("ticket_comments", {
   id: serial("id").primaryKey(),
@@ -569,6 +578,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [users.id],
     relationName: "projectClient"
   }),
+  members: many(projectMembers),
 }));
 
 export const sprintsRelations = relations(sprints, ({ one, many }) => ({
@@ -584,8 +594,21 @@ export const projectStatusesRelations = relations(projectStatuses, ({ one }) => 
   project: one(projects, {
     fields: [projectStatuses.projectId],
     references: [projects.id],
+    relationName: "projectStatuses"
   }),
 }));
+
+export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectMembers.projectId],
+    references: [projects.id],
+  }),
+  user: one(users, {
+    fields: [projectMembers.userId],
+    references: [users.id],
+  }),
+}));
+
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   project: one(projects, {
@@ -759,6 +782,17 @@ export const ticketLabelMappingsRelations = relations(ticketLabelMappings, ({ on
 
 export const ticketLabelsRelations = relations(ticketLabels, ({ many }) => ({
   tickets: many(ticketLabelMappings),
+}));
+
+export const timesheetsRelations = relations(timesheets, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [timesheets.ticketId],
+    references: [tickets.id],
+  }),
+  user: one(users, {
+    fields: [timesheets.userId],
+    references: [users.id],
+  }),
 }));
 
 

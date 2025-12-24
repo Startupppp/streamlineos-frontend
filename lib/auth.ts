@@ -33,6 +33,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Block inactive users
+        if (user.isActive === false) {
+           return null;
+        }
+
         const isValid = await bcrypt.compare(credentials.password as string, user.password);
 
         if (!isValid) {
@@ -52,7 +57,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: fullName,
           image: user.image,
           role: role,
+
           forceChangePassword: forceChangePassword,
+          isActive: user.isActive,
         };
       },
     }),
@@ -75,6 +82,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email;
         token.role = user.role;
         token.forceChangePassword = user.forceChangePassword;
+        token.isActive = user.isActive;
       }
       return token;
     },
@@ -84,6 +92,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.email = token.email as string;
         session.user.role = token.role as "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
         session.user.forceChangePassword = token.forceChangePassword as boolean;
+        session.user.isActive = token.isActive as boolean;
       }
       return session;
     },

@@ -16,9 +16,11 @@ import {
   goals,
   helpdeskTickets,
   organizationMembers,
-  timesheets, // Added
+  timesheets,
+  onboardingSteps,
+  notifications, 
 } from "../../../lib/db/schema";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, gte, lte, asc } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
@@ -38,7 +40,10 @@ import {
   updateGoalInputSchema,
   upsertWorkLogInputSchema,
   getWorkLogsInputSchema,
+  onboardEmployeeInputSchema,
 } from "../../../lib/validations/hr";
+import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "../../../lib/email";
 
 export const hrRouter = createTRPCRouter({
   // --- DEPARTMENTS & EMPLOYEES ---
@@ -46,6 +51,17 @@ export const hrRouter = createTRPCRouter({
     return await ctx.db.query.departments.findMany({
       where: eq(departments.orgId, ctx.session.orgId),
     });
+  }),
+
+  getEmployees: protectedProcedure.query(async ({ ctx }) => {
+    const members = await ctx.db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, ctx.session.orgId),
+      with: {
+        user: true,
+      },
+    });
+    // Filter out inactive users (soft deleted)
+    return members.map((m) => m.user).filter((u) => u.isActive !== false);
   }),
 
   createDepartment: protectedProcedure
@@ -68,6 +84,155 @@ export const hrRouter = createTRPCRouter({
           phone: input.phone,
         })
         .where(eq(users.id, input.userId));
+    }),
+
+
+  // --- ONBOARDING ---
+  onboardEmployee: protectedProcedure
+    .input(onboardEmployeeInputSchema)
+    .mutation(async ({ ctx, input }) => {
+       const { user } = ctx.session;
+       if (user.role !== "OWNER" && user.role !== "ADMIN") {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Only Admins and Owners can onboard new employees.",
+         });
+       }
+
+       const existingUser = await ctx.db.query.users.findFirst({
+         where: eq(users.email, input.email)
+       });
+
+       if (existingUser) {
+          throw new TRPCError({
+             code: "CONFLICT",
+             message: "User with this email already exists."
+          });
+       }
+
+       // 1. Create User
+       const userId = crypto.randomUUID();
+       
+       // Hash the provided password or default '123456'
+       const rawPassword = input.password || "123456";
+       const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+       const [newUser] = await ctx.db.insert(users).values({
+          id: userId,
+          email: input.email,
+          name: `${input.firstName} ${input.lastName}`,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          phone: input.phone,
+          role: input.role,
+          designation: input.designation,
+          departmentId: input.departmentId,
+          joiningDate: format(input.joiningDate, "yyyy-MM-dd"),
+          experienceYears: input.experienceYears?.toString(),
+          skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
+          taxId: input.taxId,
+          bankDetails: input.bankDetails,
+          password: hashedPassword,
+          isPasswordChangeRequired: true,
+          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${input.firstName}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+       }).returning();
+
+       // Send Welcome Email
+       await sendWelcomeEmail(
+          input.email, 
+          input.firstName, 
+          rawPassword
+       );
+
+       // 2. Add to Organization
+       await ctx.db.insert(organizationMembers).values({
+          userId: newUser.id,
+          orgId: ctx.session.orgId,
+          role: input.role,
+          joinedAt: new Date(),
+       });
+
+       // 3. Initialize Salary Structure (optional default)
+        await ctx.db.insert(salaryStructures).values({
+            orgId: ctx.session.orgId,
+            userId: newUser.id,
+            basicSalary: "0",
+            effectiveFrom: format(new Date(), "yyyy-MM-dd"),
+            isActive: true,
+        });
+
+       // 4. Create Onboarding Steps Tracking
+       const defaultSteps = ["Profile Setup", "Document Submission", "IT Setup", "Introduction"];
+       for (const step of defaultSteps) {
+           await ctx.db.insert(onboardingSteps).values({
+               orgId: ctx.session.orgId,
+               userId: newUser.id,
+               stepName: step,
+               status: "PENDING",
+           });
+       }
+
+       // 5. Notify Admins/Owners
+       // Find all admins and owners in the org (excluding potentially the creator to avoid self-notif, but typically fine)
+       // Actually, we want to notify *other* admins.
+       const admins = await ctx.db.query.organizationMembers.findMany({
+          where: and(
+             eq(organizationMembers.orgId, ctx.session.orgId),
+             // In SQL 'in' check or or
+          ),
+          with: {
+             user: true
+          }
+       });
+       
+       // Filter in JS for simplicity or improve query
+       const recipientIds = admins
+          .filter(m => (m.role === "ADMIN" || m.role === "OWNER") && m.userId !== user.id)
+          .map(m => m.userId);
+
+        // Import notifications table at top if needed, it is there.
+        // It is imported at top.
+        
+        // We also need to add 'notifications' to the imports at the top of the file if not present.
+        // Checking imports... 'notifications' is NOT imported in the original file I viewed (lines 1-21).
+        // I need to add it to schema imports too. But for now I'll fix this block.
+
+        for (const recipientId of recipientIds) {
+
+           await ctx.db.insert(notifications).values({
+              orgId: ctx.session.orgId,
+              userId: recipientId,
+              type: "INFO",
+              title: "New Employee Onboarded",
+              message: `${input.firstName} ${input.lastName} has joined as ${input.designation}.`,
+              link: "/hr/employees",
+              isRead: false,
+           });
+        }
+
+       return newUser;
+    }),
+
+  deleteEmployee: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+       const { user } = ctx.session;
+       if (user.role !== "OWNER" && user.role !== "ADMIN") {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Only Admins and Owners can delete employees.",
+         });
+       }
+
+       // Soft delete: Set isActive to false
+       await ctx.db
+         .update(users)
+         .set({ isActive: false })
+         .where(eq(users.id, input.userId));
+       
+       return { success: true, message: "Employee deactivated successfully." };
     }),
 
   // --- ATTENDANCE ---
@@ -527,6 +692,32 @@ export const hrRouter = createTRPCRouter({
             eq(expenses.orgId, ctx.session.orgId)
           )
         );
+    }),
+
+  getMonthlyAttendance: protectedProcedure
+    .input(z.object({
+        userId: z.string(),
+        year: z.number(),
+        month: z.number() // 0-11
+    }))
+    .query(async ({ ctx, input }) => {
+        // Auth check
+        if (ctx.session.user.id !== input.userId && ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+            throw new TRPCError({ code: "FORBIDDEN" });
+        }
+
+        const startDate = new Date(input.year, input.month, 1);
+        const endDate = new Date(input.year, input.month + 1, 0); // Last day of month
+
+        return await ctx.db.query.attendance.findMany({
+            where: and(
+                eq(attendance.userId, input.userId),
+                eq(attendance.orgId, ctx.session.orgId),
+                gte(attendance.date, format(startDate, "yyyy-MM-dd")),
+                lte(attendance.date, format(endDate, "yyyy-MM-dd"))
+            ),
+            orderBy: [asc(attendance.date)]
+        });
     }),
 
   getAssets: protectedProcedure.query(async ({ ctx }) => {
