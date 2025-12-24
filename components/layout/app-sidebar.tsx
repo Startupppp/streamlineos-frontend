@@ -29,6 +29,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Skeleton } from "../ui/skeleton";
 
 const adminRoutes = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
@@ -59,7 +60,7 @@ const employeeRoutes = [
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
   
   const role = session?.user?.role;
@@ -104,6 +105,39 @@ export function AppSidebar() {
         return () => clearInterval(interval);
     }
   }, [session]);
+
+  if (status === "loading") {
+    return (
+      <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
+        <div className="px-3 py-2 flex-1">
+          <div className="flex items-center pl-3 mb-6">
+            <Skeleton className="h-8 w-8 mr-4 rounded-lg" />
+            <Skeleton className="h-8 w-24 rounded-lg" />
+          </div>
+          <div className="px-3 mb-6">
+             <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-1">
+            {[1, 2, 3, 4, 5].map((i) => (
+               <div key={i} className="flex items-center p-3">
+                 <Skeleton className="h-5 w-5 mr-3 rounded-full" />
+                 <Skeleton className="h-4 w-24 rounded" />
+               </div>
+            ))}
+          </div>
+        </div>
+        <div className="px-3 py-2 border-t border-sidebar-border">
+           <div className="flex items-center p-3 gap-3">
+               <Skeleton className="h-8 w-8 rounded-full" />
+               <div className="space-y-2">
+                   <Skeleton className="h-3 w-20" />
+                   <Skeleton className="h-2 w-28" />
+               </div>
+           </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
