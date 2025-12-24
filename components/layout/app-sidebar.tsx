@@ -16,7 +16,6 @@ import {
   CreditCard,
   LogOut,
   Timer,
-  FileText,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -119,7 +118,7 @@ export function AppSidebar() {
               className="rounded-lg"
             />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-linear-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
             Vaivamm
           </h1>
         </Link>

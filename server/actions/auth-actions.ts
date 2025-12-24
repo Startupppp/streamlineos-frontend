@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, organizationMembers, roleEnum } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { users, organizationMembers } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";

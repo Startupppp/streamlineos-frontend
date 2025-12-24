@@ -34,8 +34,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function EmployeeDirectoryPage() {
-  const { data: session } = useSession();
-  const [employees, setEmployees] = useState<any[]>([]);
+  const { } = useSession();
+  interface Employee {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    role: "ADMIN" | "MEMBER" | "OWNER" | "CLIENT";
+  }
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,7 +55,7 @@ export default function EmployeeDirectoryPage() {
              try {
                 const { markOnboardingNotificationsAsRead } = await import("@/server/actions/notification-actions");
                 await markOnboardingNotificationsAsRead();
-             } catch (ign) { 
+             } catch { 
                  // ignore 
              }
         } catch (e) {
@@ -99,7 +106,7 @@ export default function EmployeeDirectoryPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {employees && employees.length > 0 ? (
-          employees.map((user: { id: string; firstName?: string; lastName?: string; email: string; role: string }) => (
+          employees.map((user) => (
             <Card key={user.id} className="bg-card border-border">
               <CardHeader className="flex flex-row items-center gap-4">
                 <Avatar className="h-12 w-12">
