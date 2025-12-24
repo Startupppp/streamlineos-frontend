@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FieldPath, DefaultValues, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { onboardEmployeeInputSchema } from "../../lib/validations/hr";
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar } from "../ui/calendar";
@@ -63,19 +63,19 @@ export function OnboardingWizard() {
     },
   });
 
-  const form = useForm<z.infer<typeof onboardEmployeeInputSchema>>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(onboardEmployeeInputSchema) as any,
+  type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
     defaultValues: {
       firstName: "",
       lastName: "",
       email: "",
       phone: "",
+      gender: "MALE",
       password: "", 
       designation: "",
-      departmentId: undefined, // Or a default department ID if needed, but select usually handles undefined better than text input. Wait, SelectValue might not. Shadcn 'Select' value prop if undefined is controlled? No.
-      // Actually for controlled Select in Shadcn, it expects a string usually. `departmentId` is number in schema but form value might be string initially or handled via onChange.
-      // Let's set it to undefined, as Select component logic handles it. But let's check input fields primarily.
+      departmentId: undefined, 
       role: "MEMBER",
       joiningDate: new Date(),
       skills: "",
@@ -87,14 +87,14 @@ export function OnboardingWizard() {
           ifsc: "",
           accountHolder: ""
       }
-    },
+    } as DefaultValues<FormValues>,
     mode: "onChange", // Validate on change for better UX
   });
 
   const { trigger, getValues } = form;
 
   const nextStep = async () => {
-    let fieldsToValidate: any[] = [];
+    let fieldsToValidate: FieldPath<FormValues>[] = [];
     
     switch (currentStep) {
         case 1: fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'password']; break;
@@ -103,8 +103,7 @@ export function OnboardingWizard() {
         case 4: fieldsToValidate = ['bankDetails.accountNumber', 'bankDetails.bankName', 'bankDetails.ifsc', 'bankDetails.accountHolder']; break;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const isValid = await trigger(fieldsToValidate as any);
+    const isValid = await trigger(fieldsToValidate);
     if (isValid) {
         setCurrentStep((p) => Math.min(STEPS.length, p + 1));
     }
@@ -122,7 +121,7 @@ export function OnboardingWizard() {
     <div className="max-w-4xl mx-auto py-8 px-4">
       {/* Progress Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold mb-2 bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
              Onboard New Talent
         </h1>
         <p className="text-muted-foreground mb-6">Complete the steps below to add a new employee to the organization.</p>
@@ -159,7 +158,7 @@ export function OnboardingWizard() {
       </div>
 
       <Card className="border-border/50 shadow-xl overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
         <CardContent className="p-6 md:p-8 min-h-[400px]">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -227,6 +226,28 @@ export function OnboardingWizard() {
                             <FormControl>
                               <Input placeholder="+1 234 567 8900" {...field} className="bg-background/50" />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Gender" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="MALE">Male</SelectItem>
+                                <SelectItem value="FEMALE">Female</SelectItem>
+                                <SelectItem value="OTHER">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -312,7 +333,6 @@ export function OnboardingWizard() {
                               <SelectContent>
                                 <SelectItem value="MEMBER">Member (Employee)</SelectItem>
                                 <SelectItem value="ADMIN">Admin (HR/Manager)</SelectItem>
-                                <SelectItem value="CLIENT">Client (External)</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -500,7 +520,7 @@ export function OnboardingWizard() {
                         </div>
 
                         <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900 p-4 rounded-lg flex gap-3 text-sm text-yellow-800 dark:text-yellow-200">
-                            <CheckSquare className="w-5 h-5 flex-shrink-0" />
+                            <CheckSquare className="w-5 h-5 shrink-0" />
                             <p>By clicking submit, the employee account will be created, and they will be added to the onboarding workflow automatically.</p>
                         </div>
                     </div>
@@ -525,7 +545,7 @@ export function OnboardingWizard() {
                     <Button
                     type="button"
                     onClick={nextStep}
-                    className="w-24 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    className="w-24 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                     >
                     Next
                     <ChevronRight className="w-4 h-4 ml-2" />
@@ -534,7 +554,7 @@ export function OnboardingWizard() {
                     <Button
                     type="submit"
                     disabled={onboardEmployee.isPending}
-                    className="w-32 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25"
+                    className="w-32 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25"
                     >
                     {onboardEmployee.isPending ? (
                         <>

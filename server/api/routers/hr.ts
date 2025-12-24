@@ -123,6 +123,7 @@ export const hrRouter = createTRPCRouter({
           name: `${input.firstName} ${input.lastName}`,
           firstName: input.firstName,
           lastName: input.lastName,
+          gender: input.gender,
           phone: input.phone,
           role: input.role,
           designation: input.designation,
@@ -140,11 +141,16 @@ export const hrRouter = createTRPCRouter({
        }).returning();
 
        // Send Welcome Email
-       await sendWelcomeEmail(
-          input.email, 
-          input.firstName, 
-          rawPassword
-       );
+       try {
+         await sendWelcomeEmail(
+            input.email, 
+            input.firstName, 
+            rawPassword
+         );
+       } catch (error) {
+         console.error("Failed to send welcome email:", error);
+         // Don't throw, allow onboarding to complete
+       }
 
        // 2. Add to Organization
        await ctx.db.insert(organizationMembers).values({
@@ -175,29 +181,20 @@ export const hrRouter = createTRPCRouter({
        }
 
        // 5. Notify Admins/Owners
-       // Find all admins and owners in the org (excluding potentially the creator to avoid self-notif, but typically fine)
-       // Actually, we want to notify *other* admins.
        const admins = await ctx.db.query.organizationMembers.findMany({
           where: and(
              eq(organizationMembers.orgId, ctx.session.orgId),
-             // In SQL 'in' check or or
+
           ),
           with: {
              user: true
           }
        });
        
-       // Filter in JS for simplicity or improve query
+
        const recipientIds = admins
           .filter(m => (m.role === "ADMIN" || m.role === "OWNER") && m.userId !== user.id)
           .map(m => m.userId);
-
-        // Import notifications table at top if needed, it is there.
-        // It is imported at top.
-        
-        // We also need to add 'notifications' to the imports at the top of the file if not present.
-        // Checking imports... 'notifications' is NOT imported in the original file I viewed (lines 1-21).
-        // I need to add it to schema imports too. But for now I'll fix this block.
 
         for (const recipientId of recipientIds) {
 
@@ -276,12 +273,6 @@ export const hrRouter = createTRPCRouter({
       if (log.isOvertime) isDailyOvertime = true;
     }
 
-    // Default status logic gets tricky with multiple sessions.
-    // We check the *latest* log (by createdAt which we don't have sorted here easily without sort).
-    // Let's rely on the separate findFirst for "todayLog" which was latest.
-    
-    // Actually, we can just sort todayLogs in memory or fetch sorted.
-    // Let's keep the existing findFirst query for "latest status" to be safe and simple diff.
     const todayLog = await ctx.db.query.attendance.findFirst({
         where: and(
           eq(attendance.userId, userId),
@@ -692,6 +683,66 @@ export const hrRouter = createTRPCRouter({
             eq(expenses.orgId, ctx.session.orgId)
           )
         );
+    }),
+
+  getEmployeeStats: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+        // Leaves Balances (Join Types with Balances)
+        const balances = await ctx.db
+            .select({
+                id: leaveTypes.id,
+                name: leaveTypes.name,
+                daysPerYear: leaveTypes.daysPerYear,
+                balance: leaveBalances.balance,
+            })
+            .from(leaveTypes)
+            .leftJoin(leaveBalances, and(
+                eq(leaveBalances.leaveTypeId, leaveTypes.id),
+                eq(leaveBalances.userId, input.userId),
+                eq(leaveBalances.year, new Date().getFullYear())
+            ))
+            .where(eq(leaveTypes.orgId, ctx.session.orgId));
+
+        // Recent Leave Requests
+        const recentLeaves = await ctx.db.query.leaveRequests.findMany({
+            where: eq(leaveRequests.userId, input.userId),
+            limit: 5,
+            orderBy: [desc(leaveRequests.createdAt)],
+            with: {
+                leaveType: true
+            }
+        });
+
+        // Attendance (Current Month)
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0,0,0,0);
+        
+        const attendanceRecords = await ctx.db.query.attendance.findMany({
+            where: and(
+                eq(attendance.userId, input.userId),
+                gte(attendance.date, format(startOfMonth, 'yyyy-MM-dd'))
+            )
+        });
+
+        const summary = {
+            present: attendanceRecords.filter(a => a.status === 'PRESENT').length,
+            absent: attendanceRecords.filter(a => a.status === 'ABSENT').length,
+            late: attendanceRecords.filter(a => a.status === 'LATE').length, 
+            totalDays: attendanceRecords.length
+        };
+
+        return {
+            leaveBalances: balances.map(b => ({
+                id: b.id,
+                name: b.name,
+                total: b.daysPerYear,
+                remaining: b.balance ? Number(b.balance) : b.daysPerYear // Default to total if no record (assuming fresh slate)
+            })),
+            recentLeaves,
+            attendance: summary
+        };
     }),
 
   getMonthlyAttendance: protectedProcedure

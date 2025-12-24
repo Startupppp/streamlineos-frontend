@@ -14,7 +14,7 @@ import {
   projectStatuses,
   projectMembers,
 } from "../../../lib/db/schema";
-import { eq, and, desc, asc, sql, or, inArray, gte, lte } from "drizzle-orm";
+import { eq, and, desc, sql, or, inArray, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import {
@@ -74,7 +74,12 @@ export const projectRouter = createTRPCRouter({
       })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))
-      .where(eq(organizationMembers.orgId, ctx.session.orgId));
+      .where(
+        and(
+          eq(organizationMembers.orgId, ctx.session.orgId),
+          eq(users.isActive, true)
+        )
+      );
     return members;
   }),
 
@@ -83,55 +88,14 @@ export const projectRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
 
-      let whereClause;
-      if (isOwnerOrAdmin) {
-          whereClause = and(
-              eq(projects.id, input.id),
-              eq(projects.orgId, ctx.session.orgId)
-          );
-      } else {
-          // Check membership or manager
-          const memberOf = await ctx.db.query.projectMembers.findFirst({
-              where: and(
-                  eq(projectMembers.projectId, input.id),
-                  eq(projectMembers.userId, ctx.session.userId)
-              )
-          });
-          const isMember = !!memberOf;
-
-          whereClause = and(
-              eq(projects.id, input.id),
-              eq(projects.orgId, ctx.session.orgId),
-              or(
-                  eq(projects.managerId, ctx.session.userId),
-                  isMember ? undefined : sql`1=0` // If not member and not manager (checked in query), return empty?
-                  // Better: Just check manual membership boolean
-              )
-          );
-          
-          if (!isMember) {
-              // If not member, rely on query matching managerId.
-               whereClause = and(
-                  eq(projects.id, input.id),
-                  eq(projects.orgId, ctx.session.orgId),
-                  eq(projects.managerId, ctx.session.userId)
-               );
-          } else {
-               // If member, standard check
-               whereClause = and(
-                  eq(projects.id, input.id),
-                  eq(projects.orgId, ctx.session.orgId)
-               );
-          }
-      }
-      // Re-simplifying logic to match getProjects style
       const memberOf = await ctx.db
             .select({ projectId: projectMembers.projectId })
             .from(projectMembers)
             .where(and(eq(projectMembers.userId, ctx.session.userId), eq(projectMembers.projectId, input.id)));
 
       const isMember = memberOf.length > 0;
-
+      
+      let whereClause;
       if (!isOwnerOrAdmin && !isMember) {
            whereClause = and(
                eq(projects.id, input.id),
@@ -199,6 +163,14 @@ export const projectRouter = createTRPCRouter({
           startDate: input.startDate,
           endDate: input.endDate,
           status: "ACTIVE",
+          settings: {
+              modules: input.modules || {
+                  sprints: true,
+                  epics: true,
+                  timeTracking: true,
+                  wiki: true
+              }
+          }
         })
         .returning();
 
@@ -719,12 +691,7 @@ export const projectRouter = createTRPCRouter({
         }
       });
 
-      const actualBurndown = Array.from(completedPointsByDate.entries()).map(
-        ([date, points]) => ({
-          date,
-          points,
-        })
-      );
+
 
       let cumulativePoints = 0;
       const actualBurndownCumulative = idealBurndown.map((ideal) => {
@@ -827,5 +794,75 @@ export const projectRouter = createTRPCRouter({
                 eq(projectStatuses.id, input.statusId),
                 eq(projectStatuses.orgId, ctx.session.orgId)
             ));
+    }),
+  getEmployeeProjects: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // 1. Get projects user is part of
+      const userProjects = await ctx.db
+        .select({
+            project: projects,
+            role: projectMembers.role,
+        })
+        .from(projectMembers)
+        .innerJoin(projects, eq(projectMembers.projectId, projects.id))
+        .where(eq(projectMembers.userId, input.userId));
+
+      if (userProjects.length === 0) return [];
+
+      // 2. Get ticket stats for user per project
+      const projectIds = userProjects.map(p => p.project.id);
+      
+      const ticketStats = await ctx.db
+        .select({
+            projectId: tickets.projectId,
+            status: tickets.status,
+            count: sql<number>`count(*)`.mapWith(Number),
+        })
+        .from(tickets)
+        .where(and(
+            eq(tickets.assigneeId, input.userId),
+            inArray(tickets.projectId, projectIds)
+        ))
+        .groupBy(tickets.projectId, tickets.status);
+
+      // 3. Merge data
+      return userProjects.map(({ project, role }) => {
+          const stats = ticketStats.filter(s => s.projectId === project.id);
+          const todo = stats.find(s => s.status === 'TODO')?.count || 0;
+          const inProgress = stats.find(s => s.status === 'IN_PROGRESS')?.count || 0;
+          const done = stats.find(s => s.status === 'DONE')?.count || 0;
+          // Sum up others or just count active
+          const total = stats.reduce((acc, curr) => acc + curr.count, 0);
+          
+          return {
+              ...project,
+              role,
+              stats: {
+                  todo,
+                  inProgress,
+                  done,
+                  total
+              }
+          };
+      });
+    }),
+
+  getEmployeeTickets: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Fetch tickets assigned to the user
+      const userTickets = await ctx.db.query.tickets.findMany({
+        where: and(
+            eq(tickets.assigneeId, input.userId),
+            eq(tickets.orgId, ctx.session.orgId)
+        ),
+        with: {
+          project: true,
+          sprint: true,
+        },
+        orderBy: [desc(tickets.updatedAt)],
+      });
+      return userTickets;
     }),
 });

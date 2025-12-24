@@ -1,14 +1,14 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, organizationMembers, roleEnum } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { users, organizationMembers } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 // --- For User: Reset Password ---
-export async function resetPassword(password: string) {
+export async function resetPassword(password: string, imageUrl?: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   
@@ -19,6 +19,7 @@ export async function resetPassword(password: string) {
         .set({
            password: hashedPassword,
            isPasswordChangeRequired: false,
+           ...(imageUrl && { image: imageUrl }),
         })
         .where(eq(users.id, session.user.id));
         
@@ -35,6 +36,7 @@ export async function createEmployee(data: {
     firstName: string;
     lastName: string;
     email: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
     role: "ADMIN" | "MEMBER";
     initialPassword?: string;
 }) {
@@ -81,6 +83,7 @@ export async function createEmployee(data: {
             lastName: data.lastName,
             name: `${data.firstName} ${data.lastName}`,
             role: data.role,
+            gender: data.gender,
             isPasswordChangeRequired: true, // FORCE RESET
             emailVerified: null, 
         });

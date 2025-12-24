@@ -2,7 +2,7 @@ import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, intege
 import { relations } from "drizzle-orm";
 
 // Enums
-export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER", "CLIENT"]);
+export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER"]);
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 export const ticketPriorityEnum = pgEnum("ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
@@ -131,6 +131,8 @@ export const departments = pgTable("departments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
+
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name"), // Required by NextAuth, computed from firstName + lastName
@@ -139,6 +141,7 @@ export const users = pgTable("users", {
   password: text("password"), // Hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
+  gender: genderEnum("gender"), // Added gender
   skills: text("skills").array(),
   experienceYears: decimal("experience_years"),
   joiningDate: date("joining_date"),
@@ -389,7 +392,7 @@ export const tickets = pgTable("tickets", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  type: ticketTypeEnum("type").default("TASK"),
+  type: text("type").notNull().default("TASK"), // Changed from enum to text
   status: text("status").notNull().default("TODO"),
   priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),

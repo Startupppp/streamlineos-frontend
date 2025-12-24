@@ -62,13 +62,12 @@ export default function BacklogPage({ params }: PageProps) {
               <TableHead>Type</TableHead>
               <TableHead>Priority</TableHead>
               <TableHead>Assignee</TableHead>
-              <TableHead className="text-right">Points</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tickets.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
                         No tickets found. Create one to get started.
                     </TableCell>
                 </TableRow>
@@ -109,7 +108,6 @@ export default function BacklogPage({ params }: PageProps) {
                         <span className="text-muted-foreground text-sm">-</span>
                     )}
                     </TableCell>
-                    <TableCell className="text-right">{ticket.points || "-"}</TableCell>
                 </TableRow>
                 ))
             )}

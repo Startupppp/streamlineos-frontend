@@ -37,6 +37,12 @@ const formSchema = z.object({
   key: z.string().min(2, "Key must be at least 2 characters").regex(/^[A-Z]+$/, "Key must be uppercase letters only"),
   description: z.string().optional(),
   memberIds: z.array(z.string()).optional(),
+  modules: z.object({
+      sprints: z.boolean(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+  }),
 });
 
 export function NewProjectDialog() {
@@ -50,6 +56,12 @@ export function NewProjectDialog() {
       key: "",
       description: "",
       memberIds: [],
+      modules: {
+          sprints: true,
+          epics: true,
+          timeTracking: true,
+          wiki: true,
+      }
     },
   });
 
@@ -78,128 +90,233 @@ export function NewProjectDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Project
+        <Button size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
-          <DialogDescription>
-            Create a new project and assign team members.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-0 shadow-lg">
+        <div className="bg-muted/40 p-6 pb-4 border-b">
+            <DialogHeader>
+                <DialogTitle className="text-xl font-semibold tracking-tight">Create Project</DialogTitle>
+                <DialogDescription className="text-muted-foreground mt-1.5">
+                    Launch a new initiative and assemble your team.
+                </DialogDescription>
+            </DialogHeader>
+        </div>
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6 pt-4">
+            <div className="space-y-4">
                 <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                        <Input placeholder="Mobile App Redesign" {...field} onChange={handleNameChange} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-sm font-medium">Project Name</FormLabel>
+                            <FormControl>
+                                <Input 
+                                    placeholder="e.g. Website Redesign" 
+                                    className="h-10" 
+                                    {...field} 
+                                    onChange={handleNameChange} 
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
+                
+                {/* Key is hidden but auto-generated */}
                 <FormField
-                control={form.control}
-                name="key"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Key</FormLabel>
-                    <FormControl>
-                        <Input placeholder="MAR" {...field} maxLength={10} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
+                    control={form.control}
+                    name="key"
+                    render={({ field }) => (
+                        <FormItem className="hidden">
+                            <FormControl>
+                                <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
                 />
-            </div>
-             <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Project goals..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="memberIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Team Members</FormLabel>
-                  <FormControl>
-                     <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-between pl-3 text-left font-normal">
-                                {field.value?.length && field.value.length > 0 
-                                    ? `${field.value.length} members selected`
-                                    : "Select members"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[460px] p-2" align="start">
-                            <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                                <h4 className="font-medium leading-none mb-2 text-sm text-muted-foreground p-1">Select Employees</h4>
-                                {employees?.filter(e => e.role !== "CLIENT").map((emp) => (
-                                    <div key={emp.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
-                                         onClick={() => {
-                                             const current = field.value || [];
-                                             const newData = current.includes(emp.id)
-                                                 ? current.filter(id => id !== emp.id)
-                                                 : [...current, emp.id];
-                                             field.onChange(newData);
-                                         }}
-                                    >
-                                        <Checkbox 
-                                            checked={field.value?.includes(emp.id)}
-                                            onCheckedChange={(checked) => {
-                                                const current = field.value || [];
-                                                if (checked) {
-                                                    field.onChange([...current, emp.id]);
-                                                } else {
-                                                    field.onChange(current.filter(id => id !== emp.id));
-                                                }
-                                            }}
-                                        />
-                                        <div className="flex items-center space-x-2 flex-1">
-                                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                                                {emp.name?.charAt(0) || <User className="h-3 w-3" />}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium">{emp.name}</span>
-                                                <span className="text-xs text-muted-foreground">{emp.email}</span>
-                                            </div>
+                <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-sm font-medium">Description <span className="text-muted-foreground font-normal ml-1">(Optional)</span></FormLabel>
+                            <FormControl>
+                                <Textarea 
+                                    placeholder="Briefly describe the project goals..." 
+                                    className="resize-none min-h-[100px]" 
+                                    {...field} 
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="memberIds"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-sm font-medium">Team Customization</FormLabel>
+                            <FormControl>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-between h-10 px-3 font-normal text-muted-foreground hover:text-foreground">
+                                            {field.value?.length && field.value.length > 0 
+                                                ? <span className="text-foreground font-medium">{field.value.length} members added</span>
+                                                : <span>Assign team members...</span>}
+                                            <User className="h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[450px] p-0" align="start">
+                                        <div className="p-3 border-b bg-muted/40">
+                                            <h4 className="font-medium text-sm">Select Team Members</h4>
                                         </div>
-                                        {field.value?.includes(emp.id) && <Check className="h-4 w-4 text-primary" />}
-                                    </div>
-                                ))}
-                                {!employees?.length && <div className="text-sm text-center py-4 text-muted-foreground">No employees found</div>}
-                            </div>
-                        </PopoverContent>
-                     </Popover>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                                        <div className="p-2 space-y-1 max-h-[240px] overflow-y-auto">
+                                            {employees?.map((emp) => {
+                                                const isSelected = field.value?.includes(emp.id);
+                                                return (
+                                                    <div key={emp.id} 
+                                                         onClick={() => {
+                                                             const current = field.value || [];
+                                                             const newData = isSelected
+                                                                 ? current.filter(id => id !== emp.id)
+                                                                 : [...current, emp.id];
+                                                             field.onChange(newData);
+                                                         }}
+                                                         className={cn(
+                                                             "flex items-center space-x-3 p-2 rounded-md cursor-pointer transition-colors",
+                                                             isSelected ? "bg-primary/10" : "hover:bg-muted"
+                                                         )}
+                                                    >
+                                                        <Checkbox 
+                                                            checked={isSelected}
+                                                            onCheckedChange={(checked) => {
+                                                                const current = field.value || [];
+                                                                if (checked) {
+                                                                    field.onChange([...current, emp.id]);
+                                                                } else {
+                                                                    field.onChange(current.filter(id => id !== emp.id));
+                                                                }
+                                                            }}
+                                                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                        />
+                                                        <div className="flex-1 flex items-center justify-between">
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                                                                    {emp.name?.charAt(0) || <User className="h-4 w-4" />}
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className={cn("text-sm font-medium", isSelected && "text-primary")}>{emp.name}</span>
+                                                                    <span className="text-xs text-muted-foreground">{emp.email}</span>
+                                                                </div>
+                                                            </div>
+                                                            {isSelected && <Check className="h-4 w-4 text-primary animate-in fade-in zoom-in" />}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {!employees?.length && <div className="text-sm text-center py-6 text-muted-foreground">No employees available</div>}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
-            <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+                <div className="pt-2">
+                    <FormLabel className="text-sm font-medium text-foreground mb-3 block">Project Modules</FormLabel>
+                    <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                            control={form.control}
+                            name="modules.sprints"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Sprints</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Agile cycles</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="modules.epics"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Epics</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Large initiatives</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="modules.timeTracking"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Time Tracking</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Log work hours</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="modules.wiki"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card hover:bg-muted/50 transition-colors">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-sm font-medium cursor-pointer">Wiki</FormLabel>
+                                        <div className="text-[10px] text-muted-foreground">Docs & Pages</div>
+                                    </div>
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+               <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px]">
                   {form.formState.isSubmitting ? "Creating..." : "Create Project"}
-              </Button>
+               </Button>
             </DialogFooter>
           </form>
         </Form>

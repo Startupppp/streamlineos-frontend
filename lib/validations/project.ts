@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
-export const ticketTypeSchema = z.enum(["BUG", "FEATURE", "TASK", "EPIC", "STORY"]);
+export const ticketTypeSchema = z.string().min(1, "Ticket type is required");
 export const ticketStatusSchema = z.string();
 export const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const updateProjectSettingsInputSchema = z.object({
@@ -26,6 +26,12 @@ export const createProjectInputSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   memberIds: z.array(z.string()).optional(),
+  modules: z.object({
+      sprints: z.boolean(),
+      epics: z.boolean(),
+      timeTracking: z.boolean(),
+      wiki: z.boolean(),
+  }).optional(),
 });
 
 

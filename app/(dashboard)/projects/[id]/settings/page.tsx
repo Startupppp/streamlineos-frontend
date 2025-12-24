@@ -242,7 +242,7 @@ function MembersSelector({ form }: { form: any }) {
                     <PopoverContent className="w-[460px] p-2" align="start">
                         <div className="space-y-2 max-h-[200px] overflow-y-auto">
                             <h4 className="font-medium leading-none mb-2 text-sm text-muted-foreground p-1">Select Employees</h4>
-                            {employees?.filter(e => e.role !== "CLIENT").map((emp) => (
+                            {employees?.map((emp) => (
                                 <div key={emp.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
                                         onClick={() => {
                                             const current = field.value || [];

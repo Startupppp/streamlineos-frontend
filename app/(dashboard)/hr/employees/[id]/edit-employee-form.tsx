@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,42 +27,105 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+
+import { api } from "@/trpc/react";
+
 const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
-  role: z.enum(["ADMIN", "MEMBER", "OWNER"]), // Added OWNER just in case, though usually manual
+  role: z.enum(["ADMIN", "MEMBER", "OWNER"]),
+  designation: z.string().optional(),
+  departmentId: z.coerce.number().optional(),
+  phone: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  joiningDate: z.date().optional(),
+  experienceYears: z.coerce.number().optional(),
+  skills: z.string().optional(),
+  taxId: z.string().optional(),
+  bankAccount: z.string().optional(),
+  bankName: z.string().optional(),
+  ifsc: z.string().optional(),
+  accountHolder: z.string().optional(),
 });
 
-interface EditEmployeeFormProps {
-  employee: {
+export interface EmployeeData {
     id: string;
     firstName: string | null;
     lastName: string | null;
     email: string;
-    role: string;
-  };
+    role: "ADMIN" | "MEMBER" | "OWNER" | null; 
+    designation: string | null;
+    departmentId: number | null;
+    phone: string | null;
+    gender: "MALE" | "FEMALE" | "OTHER" | null;
+    joiningDate: string | Date | null;
+    experienceYears: string | number | null;
+    skills: string[] | string | null;
+    taxId: string | null;
+    bankDetails: {
+        accountNumber?: string;
+        bankName?: string;
+        ifsc?: string;
+        accountHolder?: string;
+    } | null;
+    [key: string]: unknown;
+}
+
+interface EditEmployeeFormProps {
+    employee: EmployeeData;
 }
 
 export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { data: departments } = api.hr.getDepartments.useQuery();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as unknown as any,
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
       role: (employee.role as "ADMIN" | "MEMBER" | "OWNER") || "MEMBER",
+      designation: employee.designation || "",
+      departmentId: employee.departmentId || undefined,
+      phone: employee.phone || "",
+      gender: employee.gender || "MALE",
+      joiningDate: employee.joiningDate ? new Date(employee.joiningDate) : undefined,
+      experienceYears: employee.experienceYears ? Number(employee.experienceYears) : 0,
+      skills: Array.isArray(employee.skills) ? employee.skills.join(", ") : (employee.skills || ""),
+      taxId: employee.taxId || "",
+      bankAccount: employee.bankDetails?.accountNumber || "",
+      bankName: employee.bankDetails?.bankName || "",
+      ifsc: employee.bankDetails?.ifsc || "",
+      accountHolder: employee.bankDetails?.accountHolder || "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
+    
+    // Parse skills
+    const skillsArray = values.skills ? values.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
+
     const result = await updateEmployee({
         id: employee.id,
         firstName: values.firstName,
         lastName: values.lastName,
         role: values.role as "ADMIN" | "MEMBER",
+        designation: values.designation,
+        departmentId: values.departmentId,
+        phone: values.phone,
+        gender: values.gender,
+        joiningDate: values.joiningDate,
+        experienceYears: values.experienceYears,
+        skills: skillsArray,
+        taxId: values.taxId,
+        bankDetails: values.bankAccount ? {
+            accountNumber: values.bankAccount,
+            bankName: values.bankName || "",
+            ifsc: values.ifsc || "",
+            accountHolder: values.accountHolder || "",
+        } : undefined,
     });
     setLoading(false);
 
@@ -72,84 +134,178 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       router.push("/hr/employees");
       router.refresh();
     } else {
-      toast.error(result.error || "Failed to update employee");
+        toast.error(result.error || "Failed to update employee");
     }
   }
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-    <Card className="col-span-1 md:col-span-2">
+    <div className="grid gap-4">
+    <Card>
         <CardHeader>
-            <CardTitle>Employee Details</CardTitle>
+            <CardTitle>Edit Employee Profile</CardTitle>
         </CardHeader>
         <CardContent>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="firstName"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>First Name</FormLabel>
-                            <FormControl>
-                            <Input placeholder="John" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl>
-                            <Input placeholder="Doe" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                
+                {/* Personal Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Personal Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="firstName"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>First Name</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="lastName"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Last Name</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Phone</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="gender"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Gender</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select gender" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="MALE">Male</SelectItem>
+                                    <SelectItem value="FEMALE">Female</SelectItem>
+                                    <SelectItem value="OTHER">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                 </div>
 
-                <div className="grid gap-2">
-                    <FormLabel>Email Address</FormLabel>
-                     <Input disabled value={employee.email} className="bg-muted" />
-                     <p className="text-[0.8rem] text-muted-foreground">Email cannot be changed.</p>
+                {/* Professional Information */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Professional Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <FormField
+                            control={form.control}
+                            name="designation"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Designation</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="departmentId"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Department</FormLabel>
+                                <Select 
+                                    onValueChange={(val) => field.onChange(Number(val))} 
+                                    defaultValue={field.value?.toString()}
+                                    value={field.value?.toString()}
+                                >
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Department" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    {departments?.map(dept => (
+                                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                                            {dept.name}
+                                        </SelectItem>
+                                    ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="role"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Role</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select role" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="MEMBER">Member</SelectItem>
+                                    <SelectItem value="ADMIN">Admin</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="joiningDate"
+                            render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Joining Date</FormLabel>
+                                <FormControl>
+                                     <Input type="date" 
+                                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                     />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
                 </div>
 
-                <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="MEMBER">Member (Employee)</SelectItem>
-                            <SelectItem value="ADMIN">Admin (HR/Manager)</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormDescription>
-                            Members have restricted access. Admins can manage employees.
-                        </FormDescription>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <div className="flex justify-end gap-4 mt-6">
+                <div className="flex justify-end gap-4">
                     <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
                     <Button type="submit" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Changes
+                    Update Employee
                     </Button>
                 </div>
                 </form>

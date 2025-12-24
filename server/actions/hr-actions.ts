@@ -66,6 +66,20 @@ export async function updateEmployee(data: {
     firstName: string;
     lastName: string;
     role: "ADMIN" | "MEMBER";
+    designation?: string;
+    departmentId?: number;
+    phone?: string;
+    gender?: "MALE" | "FEMALE" | "OTHER";
+    joiningDate?: Date;
+    skills?: string[];
+    experienceYears?: number;
+    taxId?: string;
+    bankDetails?: {
+        accountNumber: string;
+        bankName: string;
+        ifsc: string;
+        accountHolder: string;
+    };
 }) {
     const session = await auth();
     // RBAC: Only OWNER or ADMIN can edit
@@ -80,6 +94,15 @@ export async function updateEmployee(data: {
                 lastName: data.lastName,
                 name: `${data.firstName} ${data.lastName}`,
                 role: data.role,
+                designation: data.designation,
+                departmentId: data.departmentId,
+                phone: data.phone,
+                gender: data.gender,
+                joiningDate: data.joiningDate ? data.joiningDate.toISOString().split('T')[0] : undefined,
+                skills: data.skills,
+                experienceYears: data.experienceYears ? String(data.experienceYears) : undefined, // Schema uses decimal/string
+                taxId: data.taxId,
+                bankDetails: data.bankDetails,
             })
             .where(eq(users.id, data.id));
         
