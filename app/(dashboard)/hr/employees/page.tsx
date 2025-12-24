@@ -107,15 +107,16 @@ export default function EmployeeDirectoryPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {employees && employees.length > 0 ? (
           employees.map((user) => (
-            <Card key={user.id} className="bg-card border-border">
-              <CardHeader className="flex flex-row items-center gap-4">
+            <Card key={user.id} className="bg-card border-border hover:shadow-md transition-all group relative overflow-hidden">
+                <Link href={`/hr/employees/${user.id}`} className="absolute inset-0 z-0" aria-label={`View ${user.firstName}'s profile`} />
+                <CardHeader className="flex flex-row items-center gap-4 relative z-10 pointer-events-none">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback>
                     {(user.firstName || user.email)?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-foreground text-lg">
+                  <CardTitle className="text-foreground text-lg group-hover:text-primary transition-colors">
                     {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
                   </CardTitle>
                   <div className="text-sm text-muted-foreground">
@@ -123,13 +124,13 @@ export default function EmployeeDirectoryPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10 pointer-events-none">
                 <div className="flex gap-2 items-center w-full justify-between mt-4">
                   <Badge variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}>
                     {user.role}
                   </Badge>
-                  <div className="flex gap-2">
-                      <Link href={`/hr/employees/${user.id}`}>
+                  <div className="flex gap-2 pointer-events-auto">
+                      <Link href={`/hr/employees/${user.id}?tab=profile`}>
                         <Button variant="outline" size="sm">
                             Edit
                         </Button>

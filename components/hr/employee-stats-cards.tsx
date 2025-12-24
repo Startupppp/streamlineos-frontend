@@ -104,24 +104,24 @@ export function EmployeeAttendanceSummary({ attendance }: { attendance?: Attenda
             <CardContent>
                 <div className="grid grid-cols-4 gap-2 text-center">
                     <div className="flex flex-col items-center p-2 bg-green-50 rounded-lg">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 mb-1" />
                         <span className="text-2xl font-bold text-green-700">{attendance.present}</span>
-                        <span className="text-xs text-green-600">Present</span>
+                        <span className="text-xs text-green-600 mb-1">Present</span>
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
                     </div>
                     <div className="flex flex-col items-center p-2 bg-red-50 rounded-lg">
-                         <XCircle className="h-5 w-5 text-red-600 mb-1" />
                         <span className="text-2xl font-bold text-red-700">{attendance.absent}</span>
-                        <span className="text-xs text-red-600">Absent</span>
+                        <span className="text-xs text-red-600 mb-1">Absent</span>
+                        <XCircle className="h-5 w-5 text-red-600" />
                     </div>
                      <div className="flex flex-col items-center p-2 bg-yellow-50 rounded-lg">
-                        <Clock className="h-5 w-5 text-yellow-600 mb-1" />
                         <span className="text-2xl font-bold text-yellow-700">{attendance.late}</span>
-                        <span className="text-xs text-yellow-600">Late</span>
+                        <span className="text-xs text-yellow-600 mb-1">Late</span>
+                        <Clock className="h-5 w-5 text-yellow-600" />
                     </div>
                     <div className="flex flex-col items-center p-2 bg-blue-50 rounded-lg">
-                         <AlertCircle className="h-5 w-5 text-blue-600 mb-1" />
                         <span className="text-2xl font-bold text-blue-700">{attendance.totalDays}</span>
-                        <span className="text-xs text-blue-600">Total</span>
+                        <span className="text-xs text-blue-600 mb-1">Total</span>
+                        <AlertCircle className="h-5 w-5 text-blue-600" />
                     </div>
                 </div>
             </CardContent>
