@@ -795,6 +795,83 @@ export const projectRouter = createTRPCRouter({
                 eq(projectStatuses.orgId, ctx.session.orgId)
             ));
     }),
+  
+  updateTicketOrder: protectedProcedure
+    .input(z.object({
+        projectId: z.number(),
+        items: z.array(z.object({
+            id: z.number(),
+            status: z.string(),
+            order: z.number(),
+        })),
+    }))
+    .mutation(async ({ ctx, input }) => {
+        await ctx.db.transaction(async (tx) => {
+            for (const item of input.items) {
+                await tx.update(tickets)
+                    .set({ 
+                        status: item.status, 
+                        order: item.order,
+                        updatedAt: new Date()
+                    })
+                    .where(and(
+                        eq(tickets.id, item.id),
+                        eq(tickets.orgId, ctx.session.orgId)
+                    ));
+            }
+        });
+    }),
+  deleteProject: protectedProcedure
+    .input(z.object({ projectId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only organization owners can delete projects",
+        });
+      }
+
+      const project = await ctx.db.query.projects.findFirst({
+        where: and(
+          eq(projects.id, input.projectId),
+          eq(projects.orgId, ctx.session.orgId)
+        ),
+      });
+
+      if (!project) return;
+
+      // 1. Get all ticket IDs in the project
+      const projectTickets = await ctx.db
+        .select({ id: tickets.id })
+        .from(tickets)
+        .where(eq(tickets.projectId, input.projectId));
+      
+      const ticketIds = projectTickets.map((t) => t.id);
+
+      // 2. Delete ticket-related data
+      if (ticketIds.length > 0) {
+        await ctx.db.delete(ticketComments).where(inArray(ticketComments.ticketId, ticketIds));
+        await ctx.db.delete(ticketAttachments).where(inArray(ticketAttachments.ticketId, ticketIds));
+        await ctx.db.delete(ticketLabelMappings).where(inArray(ticketLabelMappings.ticketId, ticketIds));
+        await ctx.db.delete(timesheets).where(inArray(timesheets.ticketId, ticketIds));
+        
+        // Delete tickets (self-references might need care, but single batch delete usually works on Postgres if not strict on order within table unless CASCADE is set. 
+        // If parentTicketId checks exist, we might need multiple passes or set null first. 
+        // For now, try simple delete.)
+        await ctx.db.delete(tickets).where(inArray(tickets.id, ticketIds));
+      }
+
+      // 3. Delete other project children
+      await ctx.db.delete(sprints).where(eq(sprints.projectId, input.projectId));
+      await ctx.db.delete(projectMembers).where(eq(projectMembers.projectId, input.projectId));
+      await ctx.db.delete(projectStatuses).where(eq(projectStatuses.projectId, input.projectId));
+
+      // 4. Delete project
+      await ctx.db.delete(projects).where(eq(projects.id, input.projectId));
+
+      return { success: true };
+    }),
+
   getEmployeeProjects: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {

@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
 import { MoreHorizontal } from "lucide-react";
 import { 
-  useUpdateTicketStatus, 
+  useUpdateTicketOrder, 
   vaivammKeys 
 } from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ interface KanbanBoardProps {
     points?: number | null;
     timeSpent?: string | null;
     assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
+    order?: number | null;
   }>;
   projectId: number;
 }
@@ -81,26 +82,20 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
     setOptimisticTickets(tickets);
   }, [tickets]);
 
-  const updateStatus = useUpdateTicketStatus({
-    onMutate: async (newTicket) => {
+  const updateOrder = useUpdateTicketOrder({
+    onMutate: async () => {
       await queryClient.cancelQueries({
         queryKey: vaivammKeys.project.project(projectId),
       });
       const previous = optimisticTickets;
-      setOptimisticTickets((prev) =>
-        prev.map((t) =>
-          t.id === newTicket.ticketId ? { ...t, status: newTicket.status } : t
-        )
-      );
       return { previous };
     },
-    onError: (err, newTicket, context) => {
-      if (context && typeof context === "object" && "previous" in context) {
-        setOptimisticTickets(context.previous as typeof tickets);
-      } else {
-        setOptimisticTickets(tickets);
-      }
-      toast.error("Failed to update status");
+    onError: (_err, _newOrder, context) => {
+       const ctx = context as { previous: typeof optimisticTickets } | undefined;
+       if (ctx?.previous) {
+         setOptimisticTickets(ctx.previous);
+       }
+       toast.error("Failed to update order");
     },
     onSettled: () => {
       queryClient.invalidateQueries({
@@ -125,17 +120,92 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
 
     const ticketId = parseInt(draggableId);
     const newStatus = destination.droppableId;
+    
+    // Create new array of tickets
+    const newTickets = [...optimisticTickets];
+    const movedTicketIndex = newTickets.findIndex(t => t.id === ticketId);
+    const movedTicket = { ...newTickets[movedTicketIndex], status: newStatus };
+    
+    // Remove from old position
+    // We need to simulate the column-based structure to map indices correctly
+    // Filter tickets for source and dest columns
+    const sourceTickets = newTickets
+        .filter(t => t.status === source.droppableId)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+    const destTickets = source.droppableId === destination.droppableId 
+        ? sourceTickets 
+        : newTickets
+            .filter(t => t.status === destination.droppableId)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    if (newStatus !== source.droppableId) {
-        updateStatus.mutate({
-            ticketId,
-            status: newStatus,
+    // Calculate new order
+    if (source.droppableId === destination.droppableId) {
+        // Reordering in same column
+        const items = Array.from(sourceTickets);
+        const [reorderedItem] = items.splice(source.index, 1);
+        items.splice(destination.index, 0, reorderedItem);
+        
+        // Update local state orders
+        const updates: { id: number; status: string; order: number }[] = [];
+        items.forEach((ticket, index) => {
+            const tIndex = newTickets.findIndex(t => t.id === ticket.id);
+            newTickets[tIndex] = { ...newTickets[tIndex], order: index };
+            updates.push({ id: ticket.id, status: ticket.status, order: index });
         });
+        
+        setOptimisticTickets(newTickets);
+        updateOrder.mutate({ projectId, items: updates });
+
+    } else {
+        // Moving to different column
+        const sourceItems = Array.from(sourceTickets);
+        sourceItems.splice(source.index, 1);
+        
+        const destItems = Array.from(destTickets);
+        destItems.splice(destination.index, 0, movedTicket);
+        
+        // Update updates list for both columns
+        const updates: { id: number; status: string; order: number }[] = [];
+        
+        // Update dest items
+        destItems.forEach((ticket, index) => {
+             const tIndex = newTickets.findIndex(t => t.id === ticket.id);
+             if (tIndex !== -1) {
+                newTickets[tIndex] = { ...newTickets[tIndex], status: newStatus, order: index };
+                updates.push({ id: ticket.id, status: newStatus, order: index });
+             } else {
+                 // Should be our moved ticket if not found (but it should be found)
+             }
+        });
+        
+        // Update source items (fix gaps)
+        sourceItems.forEach((ticket, index) => {
+            const tIndex = newTickets.findIndex(t => t.id === ticket.id);
+            newTickets[tIndex] = { ...newTickets[tIndex], order: index };
+            updates.push({ id: ticket.id, status: ticket.status, order: index });
+        });
+
+        setOptimisticTickets(newTickets);
+        updateOrder.mutate({ projectId, items: updates });
     }
   };
 
   const moveTicket = (ticketId: number, newStatus: string) => {
-      updateStatus.mutate({ ticketId, status: newStatus });
+      // Find ticket and get max order in dest column
+      const destTickets = optimisticTickets
+        .filter(t => t.status === newStatus);
+      const maxOrder = Math.max(...destTickets.map(t => t.order || 0), -1);
+      
+      const newTickets = optimisticTickets.map(t => 
+        t.id === ticketId ? { ...t, status: newStatus, order: maxOrder + 1 } : t
+      );
+      
+      setOptimisticTickets(newTickets);
+      updateOrder.mutate({ 
+          projectId, 
+          items: [{ id: ticketId, status: newStatus, order: maxOrder + 1 }] 
+      });
   };
 
   const [isMounted, setIsMounted] = useState(false);

@@ -1,11 +1,12 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useProject,
   useUpdateProjectSettings,
+  useDeleteProject,
 } from "../../../../../lib/hooks/trpc-hooks";
 import { useRouter } from "next/navigation";
 import {
@@ -40,8 +41,20 @@ import { vaivammKeys } from "../../../../../lib/hooks/trpc-hooks";
 import { Skeleton } from "../../../../../components/ui/skeleton";
 import { Checkbox } from "../../../../../components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../../../components/ui/popover";
-import { Check, ChevronsUpDown, User } from "lucide-react";
+import { Check, ChevronsUpDown, User, AlertTriangle } from "lucide-react";
 import { api } from "../../../../../trpc/react";
+import { useSession } from "next-auth/react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../../../../../components/ui/alert-dialog";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -55,8 +68,19 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   const projectId = parseInt(id);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   const { data: project, isLoading } = useProject(projectId);
+
+  const deleteMutation = useDeleteProject({
+    onSuccess: () => {
+      toast.success("Project deleted successfully");
+      router.push("/projects");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete project");
+    },
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -127,6 +151,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       ...values,
     });
   };
+
+  const isOwner = session?.user?.role === "OWNER";
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto p-4 md:p-6">
@@ -216,12 +242,61 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           </Form>
         </CardContent>
       </Card>
+
+      {isOwner && (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Deleting a project is irreversible. It will remove all tickets,
+              sprints, and associated data.
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full sm:w-auto">
+                  Delete Project
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the
+                    project <strong>{project.name}</strong> and remove all associated data.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => deleteMutation.mutate({ projectId })}
+                  >
+                    {deleteMutation.isPending ? "Deleting..." : "Delete Project"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
 
+
 function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
     const { data: employees } = api.hr.getEmployees.useQuery();
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredEmployees = employees?.filter(emp => 
+        emp.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        emp.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <FormField
@@ -240,9 +315,17 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] sm:w-[460px] p-2" align="start">
+                        <div className="p-1 mb-2">
+                             <Input 
+                                placeholder="Search by name or email..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-8"
+                             />
+                        </div>
                         <div className="space-y-2 max-h-[200px] overflow-y-auto">
                             <h4 className="font-medium leading-none mb-2 text-sm text-muted-foreground p-1">Select Employees</h4>
-                            {employees?.map((emp: any) => (
+                            {filteredEmployees?.map((emp: any) => (
                                 <div key={emp.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
                                         onClick={() => {
                                             const current = field.value || [];
@@ -275,7 +358,7 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
                                     {field.value?.includes(emp.id) && <Check className="h-4 w-4 text-primary" />}
                                 </div>
                             ))}
-                            {!employees?.length && <div className="text-sm text-center py-4 text-muted-foreground">No employees found</div>}
+                            {!filteredEmployees?.length && <div className="text-sm text-center py-4 text-muted-foreground">No employees found</div>}
                         </div>
                     </PopoverContent>
                     </Popover>
