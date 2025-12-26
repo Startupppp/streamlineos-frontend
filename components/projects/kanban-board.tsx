@@ -138,6 +138,14 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
       updateStatus.mutate({ ticketId, status: newStatus });
   };
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null; // Prevent hydration error
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex h-full overflow-x-auto pb-4 gap-4 snap-x snap-mandatory px-4 md:px-0">

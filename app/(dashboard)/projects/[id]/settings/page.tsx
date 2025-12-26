@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useProject,
@@ -71,7 +71,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           description: project.description || "",
           status:
             (project.status as "ACTIVE" | "COMPLETED" | "ARCHIVED") || "ACTIVE",
-          memberIds: project.members?.map((m: any) => m.userId) || [],
+          memberIds: project.members?.map((m: { userId: string }) => m.userId) || [],
         }
       : undefined,
   });
@@ -129,7 +129,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto p-6">
+    <div className="space-y-8 max-w-2xl mx-auto p-4 md:p-6">
       <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
 
       <Card>
@@ -220,7 +220,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   );
 }
 
-function MembersSelector({ form }: { form: any }) {
+function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
     const { data: employees } = api.hr.getEmployees.useQuery();
 
     return (
@@ -239,10 +239,10 @@ function MembersSelector({ form }: { form: any }) {
                             <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[460px] p-2" align="start">
+                    <PopoverContent className="w-[300px] sm:w-[460px] p-2" align="start">
                         <div className="space-y-2 max-h-[200px] overflow-y-auto">
                             <h4 className="font-medium leading-none mb-2 text-sm text-muted-foreground p-1">Select Employees</h4>
-                            {employees?.map((emp) => (
+                            {employees?.map((emp: any) => (
                                 <div key={emp.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
                                         onClick={() => {
                                             const current = field.value || [];
