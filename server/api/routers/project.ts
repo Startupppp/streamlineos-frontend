@@ -799,9 +799,15 @@ export const projectRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
       // 1. Get projects user is part of
+      // 1. Get projects user is part of
       const userProjects = await ctx.db
         .select({
-            project: projects,
+            project: {
+                id: projects.id,
+                name: projects.name,
+                description: projects.description,
+                status: projects.status,
+            },
             role: projectMembers.role,
         })
         .from(projectMembers)

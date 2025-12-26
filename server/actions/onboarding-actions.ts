@@ -41,6 +41,7 @@ export async function updateBankDetails(formData: FormData) {
   const bankDetails = {
     accountNumber: formData.get("accountNumber") as string,
     bankName: formData.get("bankName") as string,
+    branch: formData.get("branch") as string,
     ifsc: formData.get("ifsc") as string,
     accountHolder: formData.get("accountHolder") as string,
   };

@@ -200,16 +200,13 @@ export const organizationRouter = createTRPCRouter({
         where: eq(organizations.id, input.orgId),
       });
 
-      const inviter = await ctx.db.query.users.findFirst({
-        where: eq(users.id, ctx.session.user.id),
-      });
+
 
       // Send invitation email
       await sendInvitationEmail(
         input.email,
         invitationToken,
-        org?.name || "Unknown Organization",
-        inviter ? `${inviter.firstName || ""} ${inviter.lastName || ""}`.trim() : undefined
+        org?.name || "Unknown Organization"
       );
 
       return { success: true, invitationId };
