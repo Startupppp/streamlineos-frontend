@@ -47,7 +47,7 @@ export default function PayrollPage() {
 
   return (
     <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-primary">Payroll</h1>
         <Button onClick={handleGenerate} disabled={generateMutation.isPending}>
           {generateMutation.isPending
