@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FolderKanban, CheckCircle2, Circle, Clock } from "lucide-react";
+import { FolderKanban } from "lucide-react";
 import Link from "next/link";
 
 interface ProjectStats {
@@ -21,14 +21,16 @@ interface ProjectItem {
 export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) {
     if (!projects || projects.length === 0) {
         return (
-            <Card className="border-dashed shadow-none">
+            <Card className="border-dashed shadow-none border-border">
                 <CardHeader>
-                    <CardTitle className="text-lg font-medium">Projects</CardTitle>
+                    <CardTitle className="text-lg font-medium text-foreground">Projects</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                        <FolderKanban className="h-10 w-10 mb-3 opacity-20" />
-                        <p>No active projects found for this employee.</p>
+                    <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                        <div className="h-12 w-12 rounded-lg bg-muted/50 flex items-center justify-center mb-3">
+                            <FolderKanban className="h-6 w-6 text-muted-foreground/50" />
+                        </div>
+                        <p className="text-sm">No active projects found for this employee.</p>
                     </div>
                 </CardContent>
             </Card>
@@ -36,66 +38,76 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
     }
 
     return (
-        <Card className="shadow-none border-0">
-            <CardHeader className="px-0 pt-0 pb-4">
-                 <CardTitle className="text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
-                    Active Projects 
-                    <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-normal">
-                        {projects.length}
-                    </Badge>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 px-0">
+        <div className="space-y-4">
+            <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground">Active Projects</h3>
+                <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs">
+                    {projects.length}
+                </Badge>
+            </div>
+            
+            {/* Responsive grid: 1 col on mobile, 2 on tablet, adjusts to container */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 {projects.map((item) => (
                     <Link key={item.id} href={`/projects/${item.id}`} className="block group">
-                        <div className="h-full border rounded-xl p-5 hover:border-primary/50 hover:shadow-md transition-all duration-200 bg-card text-card-foreground shadow-sm flex flex-col justify-between">
-                            <div>
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-2 max-w-[70%]">
-                                         <div className="p-2 rounded-md bg-primary/10 text-primary">
-                                            <FolderKanban className="w-4 h-4" />
-                                         </div>
-                                        <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{item.name}</h3>
+                        <Card className="h-full border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
+                            <CardContent className="p-4 flex flex-col h-full">
+                                {/* Header with icon, name, and role */}
+                                <div className="flex items-start gap-3 mb-3">
+                                    <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                                        <FolderKanban className="w-4 h-4" />
                                     </div>
-                                    <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground font-medium border-0">
-                                        {item.role || 'MEMBER'}
-                                    </Badge>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                                            {item.name}
+                                        </h4>
+                                        <Badge 
+                                            variant="secondary" 
+                                            className="text-[10px] mt-1 bg-muted text-muted-foreground font-medium"
+                                        >
+                                            {item.role || 'MEMBER'}
+                                        </Badge>
+                                    </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2 mb-6 h-10 leading-relaxed">
+                                
+                                {/* Description */}
+                                <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">
                                     {item.description || "No description provided."}
                                 </p>
-                            </div>
-                            
-                            <div className="grid grid-cols-3 gap-2 text-xs text-center border-t border-dashed pt-4">
-                                <div className="flex flex-col items-center gap-1 group/stat">
-                                    <span className="text-muted-foreground/70 text-[10px] uppercase tracking-wider font-medium flex items-center gap-1">
-                                        To Do
-                                    </span>
-                                    <span className="font-bold text-base text-foreground group-hover/stat:text-primary transition-colors">
-                                        {item.stats?.todo || 0}
-                                    </span>
+                                
+                                {/* Stats Row */}
+                                <div className="grid grid-cols-3 gap-2 text-center border-t border-border pt-3">
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                            To Do
+                                        </span>
+                                        <span className="font-bold text-sm text-foreground">
+                                            {item.stats?.todo || 0}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                            In Progress
+                                        </span>
+                                        <span className="font-bold text-sm text-blue-600">
+                                            {item.stats?.inProgress || 0}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                            Done
+                                        </span>
+                                        <span className="font-bold text-sm text-emerald-600">
+                                            {item.stats?.done || 0}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-center gap-1 group/stat">
-                                    <span className="text-muted-foreground/70 text-[10px] uppercase tracking-wider font-medium flex items-center gap-1">
-                                        In Progress
-                                    </span>
-                                    <span className="font-bold text-base text-blue-600 group-hover/stat:scale-110 transition-transform">
-                                        {item.stats?.inProgress || 0}
-                                    </span>
-                                </div>
-                                <div className="flex flex-col items-center gap-1 group/stat">
-                                    <span className="text-muted-foreground/70 text-[10px] uppercase tracking-wider font-medium flex items-center gap-1">
-                                        Done
-                                    </span>
-                                    <span className="font-bold text-base text-green-600 group-hover/stat:scale-110 transition-transform">
-                                        {item.stats?.done || 0}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </Link>
                 ))}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
+

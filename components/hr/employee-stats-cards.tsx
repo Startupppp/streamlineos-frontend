@@ -34,51 +34,83 @@ interface EmployeeStats {
 }
 
 export function EmployeeLeaveStats({ stats }: { stats?: EmployeeStats | null }) {
-    if (!stats) return <div>Loading...</div>;
+    if (!stats) {
+        return (
+            <div className="grid gap-4 sm:grid-cols-2">
+                <Card className="border-border animate-pulse">
+                    <CardHeader>
+                        <div className="h-4 w-24 bg-muted rounded" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="h-4 w-full bg-muted rounded" />
+                        <div className="h-4 w-3/4 bg-muted rounded" />
+                    </CardContent>
+                </Card>
+                <Card className="border-border animate-pulse">
+                    <CardHeader>
+                        <div className="h-4 w-32 bg-muted rounded" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-4 w-full bg-muted rounded" />
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
-        <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-sm font-medium">Leave Balances</CardTitle>
+        <div className="grid gap-4 sm:grid-cols-2">
+            <Card className="border-border">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-foreground">Leave Balances</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {stats.leaveBalances.map((leave) => (
-                        <div key={leave.id} className="space-y-1">
+                        <div key={leave.id} className="space-y-2">
                             <div className="flex justify-between text-sm">
-                                <span className="font-medium">{leave.name}</span>
+                                <span className="font-medium text-foreground">{leave.name}</span>
                                 <span className="text-muted-foreground">{leave.remaining} / {leave.total} days</span>
                             </div>
-                            <Progress value={(leave.remaining / leave.total) * 100} />
+                            <Progress value={(leave.remaining / leave.total) * 100} className="h-2" />
                         </div>
                     ))}
-                    {stats.leaveBalances.length === 0 && <p className="text-sm text-muted-foreground">No leave types assigned.</p>}
+                    {stats.leaveBalances.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No leave types assigned.</p>
+                    )}
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-sm font-medium">Recent Leave Requests</CardTitle>
+            <Card className="border-border">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-foreground">Recent Leave Requests</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {stats.recentLeaves.map((req) => (
-                            <div key={req.id} className="flex items-center justify-between text-sm">
-                                <div>
-                                    <p className="font-medium">{req.leaveType?.name || "Leave"}</p>
+                            <div key={req.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-muted/30">
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-foreground truncate">{req.leaveType?.name || "Leave"}</p>
                                     <p className="text-xs text-muted-foreground">
                                         {format(new Date(req.startDate), "MMM dd")} - {format(new Date(req.endDate), "MMM dd")}
                                     </p>
                                 </div>
-                                <Badge variant={
-                                    req.status === "APPROVED" ? "default" : 
-                                    req.status === "REJECTED" ? "destructive" : "secondary"
-                                }>
+                                <Badge 
+                                    variant="outline"
+                                    className={`shrink-0 ml-2 text-xs ${
+                                        req.status === "APPROVED" 
+                                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200" 
+                                            : req.status === "REJECTED" 
+                                            ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200" 
+                                            : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200"
+                                    }`}
+                                >
                                     {req.status}
                                 </Badge>
                             </div>
                         ))}
-                         {stats.recentLeaves.length === 0 && <p className="text-sm text-muted-foreground">No recent requests.</p>}
+                        {stats.recentLeaves.length === 0 && (
+                            <p className="text-sm text-muted-foreground">No recent requests.</p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -86,45 +118,40 @@ export function EmployeeLeaveStats({ stats }: { stats?: EmployeeStats | null }) 
     );
 }
 
-interface AttendanceStats {
-    present: number;
-    absent: number;
-    late: number;
-    totalDays: number;
-}
-
 export function EmployeeAttendanceSummary({ attendance }: { attendance?: AttendanceStats | null }) {
     if (!attendance) return null;
 
     return (
-        <Card>
-             <CardHeader>
-                <CardTitle className="text-sm font-medium">Attendance (Current Month)</CardTitle>
+        <Card className="border-border">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-foreground">Attendance (Current Month)</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="flex flex-col items-center p-2 bg-green-50 rounded-lg">
-                        <span className="text-2xl font-bold text-green-700">{attendance.present}</span>
-                        <span className="text-xs text-green-600 mb-1">Present</span>
-                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                {/* 2 columns on mobile, 4 on sm and up */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="flex flex-col items-center p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
+                        <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{attendance.present}</span>
+                        <span className="text-xs text-emerald-600 dark:text-emerald-500 mb-1">Present</span>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
                     </div>
-                    <div className="flex flex-col items-center p-2 bg-red-50 rounded-lg">
-                        <span className="text-2xl font-bold text-red-700">{attendance.absent}</span>
-                        <span className="text-xs text-red-600 mb-1">Absent</span>
-                        <XCircle className="h-5 w-5 text-red-600" />
+                    <div className="flex flex-col items-center p-3 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900/50">
+                        <span className="text-2xl font-bold text-red-700 dark:text-red-400">{attendance.absent}</span>
+                        <span className="text-xs text-red-600 dark:text-red-500 mb-1">Absent</span>
+                        <XCircle className="h-4 w-4 text-red-600 dark:text-red-500" />
                     </div>
-                     <div className="flex flex-col items-center p-2 bg-yellow-50 rounded-lg">
-                        <span className="text-2xl font-bold text-yellow-700">{attendance.late}</span>
-                        <span className="text-xs text-yellow-600 mb-1">Late</span>
-                        <Clock className="h-5 w-5 text-yellow-600" />
+                    <div className="flex flex-col items-center p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                        <span className="text-2xl font-bold text-amber-700 dark:text-amber-400">{attendance.late}</span>
+                        <span className="text-xs text-amber-600 dark:text-amber-500 mb-1">Late</span>
+                        <Clock className="h-4 w-4 text-amber-600 dark:text-amber-500" />
                     </div>
-                    <div className="flex flex-col items-center p-2 bg-blue-50 rounded-lg">
-                        <span className="text-2xl font-bold text-blue-700">{attendance.totalDays}</span>
-                        <span className="text-xs text-blue-600 mb-1">Total</span>
-                        <AlertCircle className="h-5 w-5 text-blue-600" />
+                    <div className="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/50">
+                        <span className="text-2xl font-bold text-blue-700 dark:text-blue-400">{attendance.totalDays}</span>
+                        <span className="text-xs text-blue-600 dark:text-blue-500 mb-1">Total</span>
+                        <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-500" />
                     </div>
                 </div>
             </CardContent>
         </Card>
     );
 }
+

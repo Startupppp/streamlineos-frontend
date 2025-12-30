@@ -6,7 +6,7 @@ import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { 
   useUpdateTicketOrder, 
   vaivammKeys 
@@ -72,10 +72,34 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const queryClient = useQueryClient();
 
   const COLUMNS = [
-    { id: "TODO", label: "To Do", color: "bg-slate-100 dark:bg-slate-800" },
-    { id: "IN_PROGRESS", label: "In Progress", color: "bg-blue-50 dark:bg-blue-900/20" },
-    { id: "IN_REVIEW", label: "In Review", color: "bg-yellow-50 dark:bg-yellow-900/20" },
-    { id: "DONE", label: "Done", color: "bg-green-50 dark:bg-green-900/20" },
+    { 
+      id: "TODO", 
+      label: "To Do", 
+      dotColor: "bg-slate-400 dark:bg-slate-500",
+      headerBg: "bg-slate-50 dark:bg-slate-800/50",
+      borderAccent: "border-t-slate-400"
+    },
+    { 
+      id: "IN_PROGRESS", 
+      label: "In Progress", 
+      dotColor: "bg-blue-500 dark:bg-blue-400",
+      headerBg: "bg-blue-50/50 dark:bg-blue-950/30",
+      borderAccent: "border-t-blue-500"
+    },
+    { 
+      id: "IN_REVIEW", 
+      label: "In Review", 
+      dotColor: "bg-amber-500 dark:bg-amber-400",
+      headerBg: "bg-amber-50/50 dark:bg-amber-950/30",
+      borderAccent: "border-t-amber-500"
+    },
+    { 
+      id: "DONE", 
+      label: "Done", 
+      dotColor: "bg-emerald-500 dark:bg-emerald-400",
+      headerBg: "bg-emerald-50/50 dark:bg-emerald-950/30",
+      borderAccent: "border-t-emerald-500"
+    },
   ];
 
   useEffect(() => {
@@ -174,8 +198,6 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
              if (tIndex !== -1) {
                 newTickets[tIndex] = { ...newTickets[tIndex], status: newStatus, order: index };
                 updates.push({ id: ticket.id, status: newStatus, order: index });
-             } else {
-                 // Should be our moved ticket if not found (but it should be found)
              }
         });
         
@@ -220,24 +242,30 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
     <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex h-full overflow-x-auto pb-4 gap-4 snap-x snap-mandatory px-4 md:px-0">
         {COLUMNS.map((col) => {
-            const columnTickets = optimisticTickets.filter(
-            (t) => t.status === col.id
-            );
+            const columnTickets = optimisticTickets
+              .filter((t) => t.status === col.id)
+              .sort((a, b) => (a.order || 0) - (b.order || 0));
             return (
             <div
                 key={col.id}
-                className={cn("rounded-lg border p-4 min-w-[85vw] md:min-w-[280px] w-[85vw] md:w-[280px] flex flex-col bg-muted/50 snap-center md:snap-align-none")}
+                className={cn(
+                  "rounded-xl border border-border min-w-[85vw] md:min-w-[280px] w-[85vw] md:w-[280px] flex flex-col bg-muted/30 snap-center md:snap-align-none border-t-2",
+                  col.borderAccent
+                )}
             >
-                <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className={cn("w-3 h-3 rounded-full", col.color)} />
-                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                        {col.label}
-                    </h3>
-                </div>
-                <Badge variant="secondary" className="bg-white/50 text-[10px]">
-                    {columnTickets.length}
-                </Badge>
+                <div className={cn("flex items-center justify-between p-3 rounded-t-xl", col.headerBg)}>
+                  <div className="flex items-center gap-2">
+                      <div className={cn("w-2.5 h-2.5 rounded-full", col.dotColor)} />
+                      <h3 className="font-semibold text-sm text-foreground">
+                          {col.label}
+                      </h3>
+                  </div>
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-background/80 text-muted-foreground text-[10px] px-1.5 py-0 h-5"
+                  >
+                      {columnTickets.length}
+                  </Badge>
                 </div>
 
                 <Droppable droppableId={col.id}>
@@ -246,10 +274,20 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             className={cn(
-                                "flex-1 overflow-y-auto min-h-[100px] space-y-3",
-                                snapshot.isDraggingOver && "bg-muted/50 rounded-lg p-2 transition-colors"
+                                "flex-1 overflow-y-auto min-h-[120px] p-2 space-y-2 transition-colors duration-200",
+                                snapshot.isDraggingOver && "bg-primary/5"
                             )}
                         >
+                            {columnTickets.length === 0 && !snapshot.isDraggingOver && (
+                              <div className="flex flex-col items-center justify-center py-8 text-center">
+                                <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center mb-2">
+                                  <Plus className="h-5 w-5 text-muted-foreground/50" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Drop tickets here
+                                </p>
+                              </div>
+                            )}
                             {columnTickets.map((ticket, index) => (
                                 <Draggable key={ticket.id} draggableId={ticket.id.toString()} index={index}>
                                     {(provided, snapshot) => (
@@ -261,20 +299,24 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                         >
                                             <Card
                                             className={cn(
-                                                "cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow bg-card group",
-                                                snapshot.isDragging && "shadow-lg rotate-2 opacity-90 scale-105"
+                                                "cursor-grab active:cursor-grabbing transition-all duration-200 bg-card group border-border",
+                                                "hover:shadow-md hover:border-primary/20",
+                                                snapshot.isDragging && "shadow-xl rotate-1 scale-[1.02] border-primary/30"
                                             )}
                                             onClick={() => setSelectedTicketId(ticket.id)}
                                             >
                                             <CardContent className="p-3 space-y-2">
                                                 <div className="flex justify-between items-start gap-2">
-                                                <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-tight flex-1">
+                                                <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-snug flex-1">
                                                     {ticket.title}
                                                 </h4>
                                                 {/* Simplified Move Menu */}
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button 
+                                                      variant="ghost" 
+                                                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                                    >
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                     </DropdownMenuTrigger>
@@ -305,15 +347,15 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                                 </div>
 
                                                 {ticket.assignee ? (
-                                                    <Avatar className="h-5 w-5 border border-background">
+                                                    <Avatar className="h-5 w-5 border border-background ring-2 ring-background">
                                                     <AvatarImage src={ticket.assignee.image || undefined} />
-                                                    <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                                                    <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">
                                                         {ticket.assignee.firstName?.[0]}
                                                         {ticket.assignee.lastName?.[0]}
                                                     </AvatarFallback>
                                                     </Avatar>
                                                 ) : (
-                                                    <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/50 flex items-center justify-center">
+                                                    <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center">
                                                         <span className="text-[8px] text-muted-foreground">?</span>
                                                     </div>
                                                 )}
@@ -342,3 +384,4 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
     </DragDropContext>
   );
 }
+

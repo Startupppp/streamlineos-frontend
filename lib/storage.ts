@@ -43,14 +43,21 @@ export async function uploadFile(
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "-");
   const key = `${folder}/${Date.now()}-${sanitizedName}`;
   
-  await S3.send(
-    new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: mimeType,
-    })
-  );
+  console.log(`[Storage] Uploading to bucket: ${R2_BUCKET_NAME}, Endpoint: ${R2_ENDPOINT}, Key: ${key}`);
+  
+  try {
+    await S3.send(
+        new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: key,
+        Body: buffer,
+        ContentType: mimeType,
+        })
+    );
+  } catch (error) {
+    console.error(`[Storage] Upload failed:`, error);
+    throw error;
+  }
 
   const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL
     ? `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`

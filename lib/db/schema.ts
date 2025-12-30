@@ -536,6 +536,16 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const qrCodes = pgTable("qr_codes", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  targetUrl: text("target_url").notNull(),
+  slug: text("slug").notNull().unique(),
+  imageUrl: text("image_url").notNull(),
+  scanCount: integer("scan_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // --- Relations ---
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
