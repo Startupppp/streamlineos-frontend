@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { qrCodes } from "@/lib/db/schema";
 import QRCode from "qrcode";
 import { nanoid } from "nanoid";
-import { revalidatePath } from "next/cache";
+// import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
 const generateSchema = z.object({
@@ -57,12 +57,23 @@ export async function generateQRCode(formData: FormData) {
       scanCount: 0,
     });
 
-    revalidatePath("/ceo/qr-code");
+    // revalidatePath("/ceo/qr-code"); // Removing to prevent hangs
+    console.log("QR Code generated successfully for:", slug);
     return { success: true };
   } catch (error) {
     console.error("Failed to generate QR code:", error);
     // @ts-expect-error - error is unknown
     return { success: false, error: error.message || "Failed to generate QR code" };
+  }
+}
+
+export async function deleteQRCode(id: number) {
+  try {
+    await db.delete(qrCodes).where(eq(qrCodes.id, id));
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete QR code:", error);
+    return { success: false, error: "Failed to delete QR code" };
   }
 }
 

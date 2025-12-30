@@ -5,12 +5,12 @@ import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateQRCode, getQRCodes } from "./actions";
-import { Loader2, QrCode as QrCodeIcon, ExternalLink, RefreshCw, Download, FileImage, FileType } from "lucide-react";
+import { generateQRCode, getQRCodes, deleteQRCode } from "./actions";
+import { Loader2, QrCode as QrCodeIcon, ExternalLink, RefreshCw, FileImage, FileType, Trash2, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/ui/page-header";
+// import { PageHeader } from "@/components/ui/page-header";
 import {
   Table,
   TableBody,
@@ -130,6 +130,22 @@ export default function CEOQRCodePage() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this QR code? This action cannot be undone.")) return;
+    
+    try {
+      const result = await deleteQRCode(id);
+      if (result.success) {
+        toast.success("QR Code deleted successfully");
+        fetchQRCodes();
+      } else {
+        toast.error(result.error || "Failed to delete QR code");
+      }
+    } catch {
+      toast.error("An error occurred");
+    }
+  };
+
   if (isOrgLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -149,10 +165,10 @@ export default function CEOQRCodePage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="QR Code Manager"
-        description="Generate and track QR codes for your marketing campaigns."
-      />
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">QR Code Manager</h1>
+        <p className="text-muted-foreground">Generate and track QR codes for your marketing campaigns.</p>
+      </div>
 
       <Card>
         <CardHeader>
@@ -243,8 +259,9 @@ export default function CEOQRCodePage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Download className="h-4 w-4 mr-2" /> Download
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Actions</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -254,8 +271,12 @@ export default function CEOQRCodePage() {
                             <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "jpeg")}>
                                 <FileImage className="mr-2 h-4 w-4" /> JPEG
                             </DropdownMenuItem>
+
                             <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "svg")}>
                                 <FileType className="mr-2 h-4 w-4" /> SVG
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(qr.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
