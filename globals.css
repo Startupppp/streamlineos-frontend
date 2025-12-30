@@ -114,6 +114,28 @@
   --sidebar-accent-foreground: #ba931e;
   --sidebar-border: #1e293b;
   --sidebar-ring: #ba931e;
+
+  /* Dark Mode Semantic & Surface Tokens */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+  --surface-elevated: rgba(255, 255, 255, 0.04);
+  --surface-sunken: rgba(0, 0, 0, 0.08);
+  --interactive-hover: rgba(186, 147, 30, 0.12);
+  --interactive-active: rgba(186, 147, 30, 0.18);
+}
+
+/* Semantic & Surface Tokens - Light Mode Defaults */
+:root {
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+  --surface-elevated: rgba(255, 255, 255, 0.8);
+  --surface-sunken: rgba(0, 0, 0, 0.02);
+  --interactive-hover: rgba(15, 43, 127, 0.08);
+  --interactive-active: rgba(15, 43, 127, 0.12);
 }
 
 @layer base {

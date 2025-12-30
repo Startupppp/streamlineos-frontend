@@ -12,15 +12,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import { useSession } from "next-auth/react";
-
-
-import { Button } from "@/components/ui/button"; // Correct path
-import { Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plus, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions"; // Import action
+import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,11 +26,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function HRDashboardPage() {
-  const { } = useSession();
   interface Employee {
     id: string;
     firstName: string | null;
@@ -44,41 +47,51 @@ export default function HRDashboardPage() {
   }
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
   useEffect(() => {
     async function load() {
+      try {
+        const data = await getEmployees();
+        setEmployees(data);
+        
         try {
-            const data = await getEmployees();
-            setEmployees(data);
-            
-            // Mark notifications as read
-             try {
-                const { markOnboardingNotificationsAsRead } = await import("@/server/actions/notification-actions");
-                await markOnboardingNotificationsAsRead();
-             } catch { 
-                 // ignore 
-             }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+          const { markOnboardingNotificationsAsRead } = await import("@/server/actions/notification-actions");
+          await markOnboardingNotificationsAsRead();
+        } catch { 
+          // ignore 
         }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
+  const handleDelete = async () => {
+    if (!employeeToDelete) return;
+    await deleteEmployee(employeeToDelete.id);
+    setEmployees(prev => prev.filter(e => e.id !== employeeToDelete.id));
+    setDeleteDialogOpen(false);
+    setEmployeeToDelete(null);
+  };
+
   if (loading) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-8 w-48 mb-2" />
             <Skeleton className="h-5 w-64" />
           </div>
+          <Skeleton className="h-10 w-32" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-             <Skeleton key={i} className="h-32 w-full rounded-lg" />
+            <Skeleton key={i} className="h-40 w-full rounded-xl" />
           ))}
         </div>
       </div>
@@ -86,102 +99,133 @@ export default function HRDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            Employees
-          </h2>
-          <p className="text-muted-foreground">
-            Directory of all members in this organization.
-          </p>
-        </div>
-        <Link href="/hr/onboarding">
+    <div className="space-y-6">
+      <PageHeader
+        title="Employees"
+        description="Directory of all members in this organization."
+        actions={
+          <Link href="/hr/onboarding">
             <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Employee
+              <Plus className="mr-2 h-4 w-4" />
+              Add Employee
             </Button>
-        </Link>
-      </div>
+          </Link>
+        }
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {employees && employees.length > 0 ? (
-          employees.map((user) => (
-            <Card key={user.id} className="bg-card border-border hover:shadow-md transition-all group relative overflow-hidden">
-                <Link href={`/hr/employees/${user.id}`} className="absolute inset-0 z-0" aria-label={`View ${user.firstName}'s profile`} />
-                <CardHeader className="flex flex-row items-center gap-4 relative z-10 pointer-events-none">
-                <Avatar className="h-12 w-12">
-                  <AvatarFallback>
-                    {(user.firstName || user.email)?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle className="text-foreground text-lg group-hover:text-primary transition-colors">
-                    {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
-                  </CardTitle>
-                  <div className="text-sm text-muted-foreground">
-                    {user.email}
+      {employees && employees.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {employees.map((user) => (
+            <Card 
+              key={user.id} 
+              className="bg-card border-border hover:shadow-md transition-all group relative"
+            >
+              <Link 
+                href={`/hr/employees/${user.id}`} 
+                className="absolute inset-0 z-0" 
+                aria-label={`View ${user.firstName}'s profile`} 
+              />
+              <CardHeader className="flex flex-row items-start justify-between gap-4 relative z-10 pointer-events-none">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-11 w-11 border border-border">
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      {(user.firstName || user.email)?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-base group-hover:text-primary transition-colors">
+                      {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
+                </div>
+                
+                {/* Overflow Menu */}
+                <div className="pointer-events-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/hr/employees/${user.id}?tab=profile`}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Edit Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      {(user.role !== "OWNER" && user.role !== "ADMIN") && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => {
+                              setEmployeeToDelete(user);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Deactivate
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardHeader>
-              <CardContent className="relative z-10 pointer-events-none">
-                <div className="flex gap-2 items-center w-full justify-between mt-4">
-                  <Badge variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}>
-                    {user.role}
-                  </Badge>
-                  <div className="flex gap-2 pointer-events-auto">
-                      <Link href={`/hr/employees/${user.id}?tab=profile`}>
-                        <Button variant="outline" size="sm">
-                            Edit
-                        </Button>
-                      </Link>
-                      {(user.role !== "OWNER" && user.role !== "ADMIN") && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="destructive" 
-                                size="icon" 
-                                className="h-8 w-8"
-                              >
-                                  <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Deactivate Employee</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to deactivate {user.firstName || "this employee"}? 
-                                  They will lose access to the system immediately. 
-                                  Their past records will be preserved.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={async () => {
-                                     await deleteEmployee(user.id);
-                                     setEmployees(prev => prev.filter(e => e.id !== user.id));
-                                  }}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Deactivate
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                      )}
-                  </div>
-                </div>
+              <CardContent className="relative z-10 pointer-events-none pt-0">
+                <Badge 
+                  variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}
+                  className="text-xs"
+                >
+                  {user.role}
+                </Badge>
               </CardContent>
             </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            No employees found. Click &quot;Add Employee&quot; to get started.
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={Users}
+          title="No employees found"
+          description="Get started by adding your first team member."
+          action={{
+            label: "Add Employee",
+            onClick: () => window.location.href = "/hr/onboarding"
+          }}
+        />
+      )}
 
-          </div>
-        )}
-      </div>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Employee</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to deactivate {employeeToDelete?.firstName || "this employee"}? 
+              They will lose access to the system immediately. 
+              Their past records will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deactivate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
