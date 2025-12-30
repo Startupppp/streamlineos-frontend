@@ -10,7 +10,7 @@ import {
   leaveRequests,
 } from "../../../lib/db/schema";
 import { eq, and, sql, gte, lte, desc } from "drizzle-orm";
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format } from "date-fns";
 
 export const reportsRouter = createTRPCRouter({
   getAttendanceReport: protectedProcedure
@@ -218,7 +218,7 @@ export const reportsRouter = createTRPCRouter({
         } else {
           userStats.set(entry.userId, {
             userId: entry.userId,
-            userName: (entry.ticket as any).assignee?.firstName || "Unknown",
+            userName: entry.ticket?.assignee?.firstName || "Unknown",
             totalHours: hours,
             ticketsWorked: new Set([entry.ticketId]),
             ticketsCompleted: 0,
@@ -246,14 +246,14 @@ export const reportsRouter = createTRPCRouter({
 
       return Array.from(userStats.values()).map((stats) => ({
         ...stats,
-        ticketsWorked: (stats.ticketsWorked as any).size || 0,
+        ticketsWorked: stats.ticketsWorked.size || 0,
       }));
     }),
 
   getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
     const today = format(new Date(), "yyyy-MM-dd");
     const thisMonth = format(new Date(), "yyyy-MM");
-    const lastMonth = format(subMonths(new Date(), 1), "yyyy-MM");
+
 
     const [
       activeProjects,
