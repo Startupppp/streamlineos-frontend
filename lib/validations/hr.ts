@@ -147,6 +147,7 @@ export const onboardEmployeeInputSchema = z.object({
   departmentId: z.coerce.number().int().positive("Department is required"),
   role: z.enum(["OWNER", "ADMIN", "MEMBER"]).default("MEMBER"),
   joiningDate: z.date(),
+  dateOfBirth: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),
   skills: z.string().optional(), // Comma separated or JSON string
   taxId: z.string().optional(),
@@ -155,6 +156,7 @@ export const onboardEmployeeInputSchema = z.object({
   bankDetails: z.object({
     accountNumber: z.string().min(1, "Account number is required"),
     bankName: z.string().min(1, "Bank name is required"),
+    branch: z.string().min(1, "Branch name is required"),
     ifsc: z.string().min(1, "IFSC code is required"),
     accountHolder: z.string().min(1, "Account holder name is required"),
   }),

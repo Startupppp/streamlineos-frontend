@@ -78,12 +78,14 @@ export function OnboardingWizard() {
       departmentId: undefined, 
       role: "MEMBER",
       joiningDate: new Date(),
+      dateOfBirth: new Date(), 
       skills: "",
       experienceYears: 0,
       taxId: "",
       bankDetails: {
           accountNumber: "",
           bankName: "",
+          branch: "",
           ifsc: "",
           accountHolder: ""
       }
@@ -252,11 +254,52 @@ export function OnboardingWizard() {
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="dateOfBirth"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal bg-background/50",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, "PPP")
+                                    ) : (
+                                      <span>Pick a date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date("1900-01-01")
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                        <FormField
                         control={form.control}
                         name="password"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-span-2">
                             <FormLabel>Initial Password (Optional)</FormLabel>
                             <FormControl>
                               <Input type="password" placeholder="Set initial password..." {...field} className="bg-background/50" />
@@ -282,9 +325,22 @@ export function OnboardingWizard() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Designation <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Senior Developer" {...field} className="bg-background/50" />
-                            </FormControl>
+                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Designation" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Admin">Admin</SelectItem>
+                                    <SelectItem value="HR">HR</SelectItem>
+                                    <SelectItem value="Sales">Sales</SelectItem>
+                                    <SelectItem value="Customer Support">Customer Support</SelectItem>
+                                    <SelectItem value="Graphic Designer">Graphic Designer</SelectItem>
+                                    <SelectItem value="Digital Marketing">Digital Marketing</SelectItem>
+                                    <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -465,6 +521,19 @@ export function OnboardingWizard() {
                             <FormLabel>Bank Name <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. Chase, HDFC" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="bankDetails.branch"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Branch Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. Down Town Branch" {...field} className="bg-background/50" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

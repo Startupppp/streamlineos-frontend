@@ -2,14 +2,16 @@
 
 import { useDashboardStats } from "../../../lib/hooks/trpc-hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Users, Briefcase, CalendarCheck, CreditCard } from "lucide-react";
-import { LoadingSpinner } from "../../../components/pre-ui/loading-spinner";
+import { Users, Briefcase, CalendarCheck, Building2, FolderOpen, UserCheck } from "lucide-react";
 import { ErrorMessage } from "../../../components/pre-ui/error-message";
 import { Button } from "../../../components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { ClockInWidget } from "../../../components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "../../../components/ui/dashboard-skeleton";
 import { Skeleton } from "../../../components/ui/skeleton";
+import { PageHeader } from "../../../components/ui/page-header";
+import { StatCard } from "../../../components/ui/stat-card";
+import { EmptyState } from "../../../components/ui/empty-state";
 
 export default function DashboardPage() {
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
@@ -19,16 +21,16 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-8">
+      <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-2">
-            <Skeleton className="h-9 w-48" />
+            <Skeleton className="h-8 w-48" />
             <Skeleton className="h-5 w-64" />
           </div>
-          <Skeleton className="h-14 w-14 rounded-full" />
+          <Skeleton className="h-14 w-32 rounded-lg" />
         </div>
         <DashboardStatsSkeleton />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4 bg-card border-border">
             <CardHeader>
               <Skeleton className="h-6 w-32" />
@@ -52,7 +54,7 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="p-8 space-y-8">
+      <div className="space-y-8">
         <div className="space-y-4">
           <ErrorMessage message={error.message || "Failed to load dashboard stats"} />
           <Button onClick={() => refetch()} variant="outline" size="sm">
@@ -66,8 +68,16 @@ export default function DashboardPage() {
 
   if (!stats) {
     return (
-      <div className="p-8 space-y-8">
-        <div className="text-muted-foreground">Please select an organization.</div>
+      <div className="space-y-8">
+        <EmptyState
+          icon={Building2}
+          title="No organization selected"
+          description="Please select an organization to view dashboard statistics."
+          action={{
+            label: "Select Organization",
+            onClick: () => window.location.href = "/org-selection"
+          }}
+        />
       </div>
     );
   }
@@ -77,71 +87,81 @@ export default function DashboardPage() {
       label: "Total Employees",
       value: stats.totalEmployees,
       icon: Users,
-      color: "text-pink-500",
+      href: "/hr",
     },
     {
       label: "Active Projects",
       value: stats.activeProjects,
       icon: Briefcase,
-      color: "text-violet-500",
+      href: "/projects",
     },
     {
       label: "Present Today",
       value: stats.presentToday,
       icon: CalendarCheck,
-      color: "text-emerald-500",
+      href: "/hr/attendance",
     },
     {
-       label: "Organization ID",
-       value: stats.orgSlug,
-       icon: CreditCard,
-       color: "text-zinc-500"
-    }
+      label: "Organization",
+      value: stats.orgSlug,
+      icon: Building2,
+    },
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
-          <p className="text-muted-foreground">Overview for {stats.orgName}</p>
-        </div>
+        <PageHeader
+          title="Dashboard"
+          description={`Overview for ${stats.orgName}`}
+        />
         <ClockInWidget />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
-          <Card key={stat.label} className="bg-card border-border hover:bg-accent/50 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-foreground">{stat.label}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-            </CardContent>
-          </Card>
+          <StatCard
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            href={stat.href}
+          />
         ))}
       </div>
       
-      {/* Recent Activity / Charts could go here */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 bg-card border-border">
-            <CardHeader>
-                <CardTitle className="text-foreground">Recent Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground text-sm">No recent activity.</p>
-            </CardContent>
+      <div className="grid gap-6 lg:grid-cols-7">
+        <Card className="lg:col-span-4 bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Recent Projects</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EmptyState
+              icon={FolderOpen}
+              title="No recent projects"
+              description="Create your first project to start tracking work."
+              action={{
+                label: "Create Project",
+                onClick: () => window.location.href = "/projects"
+              }}
+            />
+          </CardContent>
         </Card>
-        <Card className="col-span-3 bg-card border-border">
-            <CardHeader>
-                <CardTitle className="text-foreground">Team Availability</CardTitle>
-            </CardHeader>
-             <CardContent>
-                <p className="text-muted-foreground text-sm">Everyone is offline.</p>
-            </CardContent>
+        <Card className="lg:col-span-3 bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Team Availability</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EmptyState
+              icon={UserCheck}
+              title="No team members online"
+              description="Team availability will appear here when members clock in."
+            />
+          </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
+

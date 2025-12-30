@@ -1032,6 +1032,41 @@ export const useUpdateProjectSettings = (
   });
 };
 
+export const useDeleteProject = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["deleteProject"],
+    Error,
+    ProjectRouterInputs["deleteProject"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["deleteProject"],
+        ProjectRouterInputs["deleteProject"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["deleteProject"],
+    Error,
+    ProjectRouterInputs["deleteProject"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.deleteProject.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.projects(),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
 export const useCreateSprint = (
   options?: UseMutationOptions<
     ProjectRouterOutputs["createSprint"],
@@ -1210,6 +1245,41 @@ export const useUpdateTicketStatus = (
       });
       queryClient.invalidateQueries({
         queryKey: vaivammKeys.project.projects(),
+      });
+      if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+};
+
+export const useUpdateTicketOrder = (
+  options?: UseMutationOptions<
+    ProjectRouterOutputs["updateTicketOrder"],
+    Error,
+    ProjectRouterInputs["updateTicketOrder"],
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        ProjectRouterOutputs["updateTicketOrder"],
+        ProjectRouterInputs["updateTicketOrder"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation<
+    ProjectRouterOutputs["updateTicketOrder"],
+    Error,
+    ProjectRouterInputs["updateTicketOrder"],
+    unknown
+  >({
+    mutationFn: (variables) =>
+      vaivammTrpcClient.project.updateTicketOrder.mutate(variables),
+    ...options,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(variables.projectId),
       });
       if (userOnSuccess) userOnSuccess(data, variables, context);
     },

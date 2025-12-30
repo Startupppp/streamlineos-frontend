@@ -77,6 +77,7 @@ export async function updateEmployee(data: {
     bankDetails?: {
         accountNumber: string;
         bankName: string;
+        branch: string;
         ifsc: string;
         accountHolder: string;
     };

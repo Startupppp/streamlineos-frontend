@@ -14,14 +14,18 @@ export const metadata: Metadata = {
   description: "Advanced HR and Project Management",
 };
 
+
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className="min-h-screen bg-background text-foreground antialiased selection:bg-[#ba931e]/30 selection:text-[#ba931e]"
-        style={{ fontFamily: '"Times New Roman", Times, serif' }}
+        className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-[#ba931e]/30 selection:text-[#ba931e]`}
       >
         <ThemeProvider
             attribute="class"

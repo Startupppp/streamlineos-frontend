@@ -145,10 +145,12 @@ export const users = pgTable("users", {
   skills: text("skills").array(),
   experienceYears: decimal("experience_years"),
   joiningDate: date("joining_date"),
+  dateOfBirth: date("date_of_birth"),
   taxId: text("tax_id"),
   bankDetails: jsonb("bank_details").$type<{
     accountNumber: string;
     bankName: string;
+    branch: string;
     ifsc: string;
     accountHolder: string;
   }>(),
@@ -531,6 +533,16 @@ export const notifications = pgTable("notifications", {
   link: text("link"),
   isRead: boolean("is_read").default(false),
   metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const qrCodes = pgTable("qr_codes", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  targetUrl: text("target_url").notNull(),
+  slug: text("slug").notNull().unique(),
+  imageUrl: text("image_url").notNull(),
+  scanCount: integer("scan_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

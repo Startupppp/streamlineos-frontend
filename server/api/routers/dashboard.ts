@@ -1,5 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { projects, attendance, organizations, organizationMembers } from "../../../lib/db/schema";
+import { projects, attendance, organizations, organizationMembers, users } from "../../../lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { format } from "date-fns";
 
@@ -36,7 +36,11 @@ export const dashboardRouter = createTRPCRouter({
       const memberCountResult = await ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(organizationMembers)
-        .where(eq(organizationMembers.orgId, orgId));
+        .innerJoin(users, eq(organizationMembers.userId, users.id))
+        .where(and(
+          eq(organizationMembers.orgId, orgId),
+          eq(users.isActive, true)
+        ));
 
       const totalEmployees = Number(memberCountResult[0]?.count || 0);
 

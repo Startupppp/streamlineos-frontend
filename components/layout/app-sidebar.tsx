@@ -16,6 +16,8 @@ import {
   CreditCard,
   LogOut,
   Timer,
+  UserPlus,
+  QrCode,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -31,30 +33,71 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "../ui/skeleton";
 
-const adminRoutes = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
-  { label: "Employees", icon: Users, href: "/hr", color: "text-pink-700" },
-  { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
-  { label: "Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
-  { label: "Timesheets", icon: Timer, href: "/timesheets", color: "text-blue-500" },
-  // { label: "Billing", icon: FileText, href: "/billing", color: "text-yellow-600" },
-  { label: "Settings", icon: Settings, href: "/settings", color: "text-gray-500" },
+interface NavGroup {
+  label: string;
+  routes: {
+    label: string;
+    icon: React.ElementType;
+    href: string;
+    badge?: "leaves" | "onboarding";
+  }[];
+}
+
+const adminNavGroups: NavGroup[] = [
+  {
+    label: "Core",
+    routes: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+      { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
+    ],
+  },
+  {
+    label: "HR Management",
+
+    routes: [
+      { label: "Employees", icon: Users, href: "/hr", badge: "onboarding" },
+      { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding" },
+      { label: "Attendance", icon: Clock, href: "/hr/attendance" },
+      { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
+      { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
+    ],
+  },
+  {
+    label: "Projects",
+    routes: [
+      { label: "Projects", icon: Briefcase, href: "/projects" },
+      { label: "Timesheets", icon: Timer, href: "/timesheets" },
+    ],
+  },
+  {
+    label: "System",
+    routes: [
+      { label: "Settings", icon: Settings, href: "/settings" },
+    ],
+  },
 ];
 
-const hrRoutes = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
-  { label: "Onboarding", icon: Users, href: "/hr/onboarding", color: "text-pink-700" },
-  { label: "Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
-  { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
-  { label: "Payroll", icon: CreditCard, href: "/hr/payroll", color: "text-green-700" },
-];
-
-const employeeRoutes = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", color: "text-sky-500" },
-  { label: "My Projects", icon: Briefcase, href: "/projects", color: "text-violet-500" },
-  { label: "My Attendance", icon: Clock, href: "/hr/attendance", color: "text-orange-700" },
-  { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves", color: "text-emerald-500" },
-  { label: "My Timesheets", icon: Timer, href: "/timesheets", color: "text-blue-500" },
+const employeeNavGroups: NavGroup[] = [
+  {
+    label: "Core",
+    routes: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    ],
+  },
+  {
+    label: "My Work",
+    routes: [
+      { label: "My Projects", icon: Briefcase, href: "/projects" },
+      { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+    ],
+  },
+  {
+    label: "HR",
+    routes: [
+      { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+      { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -65,21 +108,13 @@ export function AppSidebar() {
   
   const role = session?.user?.role;
 
-  let routes = employeeRoutes; // Default to employee
-  if (role === "OWNER" || role === "ADMIN") {
-    routes = [...adminRoutes, ...hrRoutes.filter(r => !adminRoutes.some(ar => ar.href === r.href))]; 
-  } else if (role === "MEMBER") {
-     routes = employeeRoutes;
-  }
+  const navGroups = role === "OWNER" || role === "ADMIN" ? adminNavGroups : employeeNavGroups;
 
   const handleOrgChange = (id: string) => {
-    // Store selected org in session or context
     console.log("Org switched to", id);
     router.push("/dashboard");
     router.refresh();
   };
-
-
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
   const [unreadOnboarding, setUnreadOnboarding] = useState(0);
@@ -101,37 +136,37 @@ export function AppSidebar() {
     }
     if (session?.user) {
         fetchCounts();
-        const interval = setInterval(fetchCounts, 30000); // Poll every 30s
+        const interval = setInterval(fetchCounts, 30000);
         return () => clearInterval(interval);
     }
   }, [session]);
 
   if (status === "loading") {
     return (
-      <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
-        <div className="px-3 py-2 flex-1">
-          <div className="flex items-center pl-3 mb-6">
-            <Skeleton className="h-8 w-8 mr-4 rounded-lg" />
-            <Skeleton className="h-8 w-24 rounded-lg" />
+      <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
+        <div className="px-4 py-4 flex-1">
+          <div className="flex items-center gap-3 mb-6">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-6 w-24 rounded" />
           </div>
-          <div className="px-3 mb-6">
+          <div className="px-2 mb-6">
              <Skeleton className="h-10 w-full rounded-lg" />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
-               <div key={i} className="flex items-center p-3">
-                 <Skeleton className="h-5 w-5 mr-3 rounded-full" />
-                 <Skeleton className="h-4 w-24 rounded" />
+               <div key={i} className="flex items-center gap-3 px-3 py-2">
+                 <Skeleton className="h-5 w-5 rounded" />
+                 <Skeleton className="h-4 w-20 rounded" />
                </div>
             ))}
           </div>
         </div>
-        <div className="px-3 py-2 border-t border-sidebar-border">
-           <div className="flex items-center p-3 gap-3">
-               <Skeleton className="h-8 w-8 rounded-full" />
-               <div className="space-y-2">
+        <div className="px-4 py-4 border-t border-sidebar-border">
+           <div className="flex items-center gap-3">
+               <Skeleton className="h-9 w-9 rounded-full" />
+               <div className="space-y-1.5">
                    <Skeleton className="h-3 w-20" />
-                   <Skeleton className="h-2 w-28" />
+                   <Skeleton className="h-2.5 w-28" />
                </div>
            </div>
         </div>
@@ -140,105 +175,126 @@ export function AppSidebar() {
   }
 
   return (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-sidebar text-sidebar-foreground">
-      <div className="px-3 py-2 flex-1">
-        <Link href="/dashboard" className="flex items-center pl-3 mb-6">
-          <div className="relative w-8 h-8 mr-4 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
+      {/* Logo */}
+      <div className="px-4 py-4">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="relative w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
             <Image
               src="/logo.svg"
               alt="Vaivamm Logo"
-              width={32}
-              height={32}
-              className="rounded-lg"
+              width={28}
+              height={28}
+              className="rounded"
             />
           </div>
-          <h1 className="text-2xl font-bold bg-linear-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
             Vaivamm
           </h1>
         </Link>
-
-        {organizations && organizations.length > 0 && (
-          <div className="px-3 mb-6">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground p-2 rounded-lg border-sidebar-border bg-transparent"
-                >
-                  <span className="truncate">
-                    {organizations[0]?.name || "Select Organization"}
-                  </span>
-                  <span className="ml-2">▼</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuLabel>Organizations</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {organizations.map((org) => (
-                  <DropdownMenuItem
-                    key={org.id}
-                    onClick={() => handleOrgChange(org.id)}
-                  >
-                    {org.name}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/org-selection")}>
-                  Manage Organizations
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-
-        <div className="space-y-1">
-          {routes.map((route) => {
-             const isLeaves = route.href === "/hr/leaves";
-             const showBadge = (isLeaves && pendingLeaves > 0) || ((route.href === "/hr" || route.href === "/hr/employees") && unreadOnboarding > 0);
-             
-             return (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition",
-                pathname === route.href
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                  : "text-sidebar-foreground/70"
-              )}
-            >
-              <div className="flex items-center flex-1">
-                <route.icon className={cn("h-5 w-5 mr-3", route.color)} />
-                {route.label}
-                 {showBadge && (
-                     <span className="ml-auto flex h-2.5 w-2.5 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                     </span>
-                 )}
-              </div>
-            </Link>
-          )})}
-        </div>
       </div>
-      <div className="px-3 py-2 border-t border-sidebar-border">
+
+      {/* Organization Switcher */}
+      {organizations && organizations.length > 0 && (
+        <div className="px-4 mb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg border-sidebar-border bg-sidebar-accent/30 h-10"
+              >
+                <span className="truncate text-sm">
+                  {organizations[0]?.name || "Select Organization"}
+                </span>
+                <span className="text-xs opacity-60">▼</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {organizations.map((org) => (
+                <DropdownMenuItem
+                  key={org.id}
+                  onClick={() => handleOrgChange(org.id)}
+                >
+                  {org.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/org-selection")}>
+                Manage Organizations
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {/* Navigation Groups */}
+      <nav className="flex-1 overflow-y-auto px-3">
+        {navGroups.map((group, groupIndex) => (
+          <div key={group.label} className={cn(groupIndex > 0 && "mt-6")}>
+            <div className="px-3 mb-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                {group.label}
+              </span>
+            </div>
+            <div className="space-y-0.5">
+              {group.routes.map((route) => {
+                const isActive = pathname === route.href || 
+                  (route.href !== "/dashboard" && pathname.startsWith(route.href));
+                const showBadge = 
+                  (route.badge === "leaves" && pendingLeaves > 0) || 
+                  (route.badge === "onboarding" && unreadOnboarding > 0);
+                
+                return (
+                  <Link
+                    key={route.href}
+                    href={route.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    <route.icon className={cn(
+                      "h-4 w-4 shrink-0",
+                      isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                    )} />
+                    <span className="flex-1">{route.label}</span>
+                    {showBadge && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* User Section */}
+      <div className="px-3 py-4 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-x-3 p-3 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="w-full justify-start gap-3 px-3 py-2 h-auto hover:bg-sidebar-accent"
             >
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-9 w-9 border border-sidebar-border">
                 <AvatarImage src={session?.user?.image || undefined} />
-                <AvatarFallback>
+                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-sm">
                   {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col overflow-hidden text-left">
-                <span className="font-semibold text-sidebar-foreground truncate">
+              <div className="flex flex-col items-start overflow-hidden">
+                <span className="font-medium text-sm text-sidebar-foreground truncate max-w-[140px]">
                   {session?.user?.name || "User"}
                 </span>
-                <span className="text-xs text-muted-foreground truncate">
+                <span className="text-xs text-sidebar-foreground/60 truncate max-w-[140px]">
                   {session?.user?.email}
                 </span>
               </div>
@@ -266,3 +322,4 @@ export function AppSidebar() {
     </div>
   );
 }
+
