@@ -208,6 +208,7 @@ export const organizationRouter = createTRPCRouter({
         invitationToken,
         org?.name || "Unknown Organization"
       );
+      
 
       return { success: true, invitationId };
     }),
