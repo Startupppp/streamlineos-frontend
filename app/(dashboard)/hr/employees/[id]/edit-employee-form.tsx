@@ -44,6 +44,7 @@ const formSchema = z.object({
   taxId: z.string().optional(),
   bankAccount: z.string().optional(),
   bankName: z.string().optional(),
+  branch: z.string().optional(),
   ifsc: z.string().optional(),
   accountHolder: z.string().optional(),
 });
@@ -65,6 +66,7 @@ export interface EmployeeData {
     bankDetails: {
         accountNumber?: string;
         bankName?: string;
+        branch?: string;
         ifsc?: string;
         accountHolder?: string;
     } | null;
@@ -96,6 +98,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       taxId: employee.taxId || "",
       bankAccount: employee.bankDetails?.accountNumber || "",
       bankName: employee.bankDetails?.bankName || "",
+      branch: employee.bankDetails?.branch || "",
       ifsc: employee.bankDetails?.ifsc || "",
       accountHolder: employee.bankDetails?.accountHolder || "",
     },
@@ -123,6 +126,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
         bankDetails: values.bankAccount ? {
             accountNumber: values.bankAccount,
             bankName: values.bankName || "",
+            branch: values.branch || "",
             ifsc: values.ifsc || "",
             accountHolder: values.accountHolder || "",
         } : undefined,
@@ -220,6 +224,62 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Professional Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         
+                         {/* Other fields ... */}
+                         
+                          <FormField
+                            control={form.control}
+                            name="bankAccount"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Account Number</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="bankName"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Bank Name</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="branch"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Branch</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="ifsc"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>IFSC Code</FormLabel>
+                                <FormControl>
+                                <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        {/* Designation, etc. */}
                          <FormField
                             control={form.control}
                             name="designation"

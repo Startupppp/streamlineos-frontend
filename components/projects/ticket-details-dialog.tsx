@@ -83,6 +83,7 @@ export function TicketDetailsDialog({
       queryClient.invalidateQueries({
         queryKey: vaivammKeys.project.ticket(ticketId!),
       });
+      onOpenChange(false); // Close dialog after successful save
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update ticket");
@@ -353,7 +354,9 @@ export function TicketDetailsDialog({
                   <FormField
                     control={form.control}
                     name="assigneeId"
-                    render={({ field }) => (
+                    render={({ field }) => {
+                      const selectedMember = members?.find(m => m.id === field.value);
+                      return (
                       <FormItem>
                         <FormLabel>Assignee</FormLabel>
                          <Select
@@ -362,7 +365,20 @@ export function TicketDetailsDialog({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Unassigned" />
+                              {field.value && field.value !== "unassigned" && selectedMember ? (
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-5 w-5">
+                                    <AvatarImage src={selectedMember.image || undefined} />
+                                    <AvatarFallback className="text-[10px]">
+                                      {selectedMember.firstName?.[0]}
+                                      {selectedMember.lastName?.[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span>{selectedMember.firstName} {selectedMember.lastName}</span>
+                                </div>
+                              ) : (
+                                <SelectValue placeholder="Unassigned" />
+                              )}
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -370,16 +386,14 @@ export function TicketDetailsDialog({
                             {members?.map((member) => (
                               <SelectItem key={member.id} value={member.id}>
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-4 w-4">
+                                  <Avatar className="h-5 w-5">
                                     <AvatarImage src={member.image || undefined} />
-                                    <AvatarFallback className="text-[8px]">
+                                    <AvatarFallback className="text-[10px]">
                                       {member.firstName?.[0]}
                                       {member.lastName?.[0]}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <span className="truncate max-w-[120px]">
-                                    {member.firstName} {member.lastName}
-                                  </span>
+                                  <span>{member.firstName} {member.lastName}</span>
                                 </div>
                               </SelectItem>
                             ))}
@@ -387,7 +401,7 @@ export function TicketDetailsDialog({
                         </Select>
                         <FormMessage />
                       </FormItem>
-                    )}
+                    )}}
                   />
                   
 

@@ -7,41 +7,39 @@ import { api } from "@/trpc/react";
 import { EmployeeLeaveStats, EmployeeAttendanceSummary } from "@/components/hr/employee-stats-cards";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
+import { PageHeader } from "@/components/ui/page-header";
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     const { data: stats } = api.hr.getEmployeeStats.useQuery({ userId: employee.id });
     const { data: projects } = api.project.getEmployeeProjects.useQuery({ userId: employee.id });
     const { data: tickets } = api.project.getEmployeeTickets.useQuery({ userId: employee.id });
 
+    const employeeName = `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employee';
+
     return (
-        <div className="flex-1 space-y-4 p-8 pt-6">
-            <div className="flex items-center justify-between space-y-2">
-                <h2 className="text-3xl font-bold tracking-tight">Employee 360° View</h2>
-            </div>
+        <div className="space-y-6">
+            <PageHeader
+                title="Employee 360° View"
+                description={`Complete overview for ${employeeName}`}
+            />
             
-            <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="projects">Projects</TabsTrigger>
-                    <TabsTrigger value="tickets">Tickets</TabsTrigger>
-                    <TabsTrigger value="attendance">History & Attendance</TabsTrigger>
-                    <TabsTrigger value="profile">Profile Details</TabsTrigger>
+            <Tabs defaultValue="overview" className="space-y-6">
+                <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+                    <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+                    <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
+                    <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
+                    <TabsTrigger value="attendance" className="text-xs sm:text-sm whitespace-nowrap">History & Attendance</TabsTrigger>
+                    <TabsTrigger value="profile" className="text-xs sm:text-sm whitespace-nowrap">Profile Details</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="overview" className="space-y-4">
+                <TabsContent value="overview" className="space-y-6">
                     {/* Attendance Summary */}
-                    <div className="grid gap-4">
-                         <EmployeeAttendanceSummary attendance={stats?.attendance} />
-                    </div>
+                    <EmployeeAttendanceSummary attendance={stats?.attendance} />
 
-                    {/* Stats Row */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                        <div className="col-span-4">
-                            <EmployeeLeaveStats stats={stats} />
-                        </div>
-                        <div className="col-span-3">
-                             <EmployeeProjectsList projects={projects || []} />
-                        </div>
+                    {/* Stats Row - stacked on mobile, side by side on larger screens */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        <EmployeeLeaveStats stats={stats} />
+                        <EmployeeProjectsList projects={projects || []} />
                     </div>
                 </TabsContent>
 
@@ -53,10 +51,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                      <EmployeeTicketsList tickets={tickets || []} />
                 </TabsContent>
 
-                <TabsContent value="attendance" className="space-y-4">
+                <TabsContent value="attendance" className="space-y-6">
                      <EmployeeLeaveStats stats={stats} />
-                     <div className="mt-6">
-                        <h3 className="text-lg font-medium mb-4">Attendance History</h3>
+                     <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Attendance History</h3>
                         <EmployeeAttendanceHistory userId={employee.id} />
                      </div>
                 </TabsContent>
@@ -68,3 +66,4 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         </div>
     );
 }
+
