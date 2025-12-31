@@ -10,6 +10,8 @@ import { Loader2, QrCode as QrCodeIcon, ExternalLink, RefreshCw, FileImage, File
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -36,11 +38,21 @@ type QRCodeData = {
 };
 
 export default function CEOQRCodePage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const { data: organizations, isLoading: isOrgLoading } = useGetOrganizations();
   const [targetUrl, setTargetUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [qrCodes, setQrCodes] = useState<QRCodeData[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  // Check if user is OWNER
+  useEffect(() => {
+    if (session?.user?.role && session.user.role !== "OWNER") {
+      toast.error("Access Denied: Only organization owners can access QR codes.");
+      router.push("/dashboard");
+    }
+  }, [session, router]);
 
   // Default to first org for now
   const orgId = organizations?.[0]?.id;
@@ -146,6 +158,15 @@ export default function CEOQRCodePage() {
       toast.error("An error occurred");
     }
   };
+
+  // Show loading or redirect if not OWNER
+  if (!session?.user || session.user.role !== "OWNER") {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   if (isOrgLoading) {
     return (

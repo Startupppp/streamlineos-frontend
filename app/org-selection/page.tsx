@@ -8,6 +8,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { toast } from "sonner";
 import { useState } from "react";
+import { generateSlug } from "../../lib/utils";
 
 export default function OrgSelectionPage() {
   const router = useRouter();
@@ -24,7 +25,20 @@ export default function OrgSelectionPage() {
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const slug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-");
+      // Generate slug from name if not provided
+      let slug = formData.slug.trim();
+      if (!slug) {
+        slug = generateSlug(formData.name);
+      } else {
+        // Clean the provided slug
+        slug = generateSlug(slug);
+      }
+      
+      if (!slug) {
+        toast.error("Unable to generate a valid slug from the organization name. Please provide a slug manually.");
+        return;
+      }
+      
       await createOrg.mutateAsync({
         name: formData.name,
         slug: slug,
@@ -33,7 +47,22 @@ export default function OrgSelectionPage() {
       setShowCreateForm(false);
       router.push("/dashboard");
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to create organization";
+      let message = "Failed to create organization";
+      
+      if (error && typeof error === "object" && "data" in error) {
+        const trpcError = error as { data?: { zodError?: { fieldErrors?: Record<string, string[]> } } };
+        if (trpcError.data?.zodError?.fieldErrors) {
+          const fieldErrors = trpcError.data.zodError.fieldErrors;
+          if (fieldErrors.slug) {
+            message = `Invalid slug: ${fieldErrors.slug[0] || "Slug must contain only lowercase letters, numbers, and hyphens"}`;
+          } else if (fieldErrors.name) {
+            message = `Invalid name: ${fieldErrors.name[0] || "Name is required"}`;
+          }
+        }
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      
       toast.error(message);
     }
   };
@@ -123,12 +152,16 @@ export default function OrgSelectionPage() {
                   <Input
                     id="slug"
                     value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    onChange={(e) => {
+                      // Auto-format slug as user types
+                      const value = generateSlug(e.target.value);
+                      setFormData({ ...formData, slug: value });
+                    }}
                     placeholder="acme-inc"
                     pattern="^[a-z0-9-]+$"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Auto-generated from name if not provided
+                    Auto-generated from name if not provided. Only lowercase letters, numbers, and hyphens allowed.
                   </p>
                 </div>
                 <div className="flex gap-2">
