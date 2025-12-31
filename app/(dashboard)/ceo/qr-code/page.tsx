@@ -10,7 +10,6 @@ import { Loader2, QrCode as QrCodeIcon, ExternalLink, RefreshCw, FileImage, File
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
-// import { PageHeader } from "@/components/ui/page-header";
 import {
   Table,
   TableBody,
@@ -77,9 +76,6 @@ export default function CEOQRCodePage() {
     const formData = new FormData();
     formData.append("targetUrl", targetUrl);
     formData.append("orgId", orgId);
-    if (typeof window !== "undefined") {
-        formData.append("origin", window.location.origin);
-    }
 
     try {
       const result = await generateQRCode(formData);
@@ -98,32 +94,37 @@ export default function CEOQRCodePage() {
     }
   };
 
-  const downloadQRCode = async (slug: string, format: "png" | "jpeg" | "svg") => {
-    const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr/${slug}` : `/qr/${slug}`;
+  const downloadQRCode = async (imageUrl: string, slug: string, format: "png" | "jpeg" | "svg") => {
     try {
-      let url = "";
       if (format === "svg") {
+        const trackingUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL 
+          ? `${process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL}/qr/${slug}`
+          : typeof window !== 'undefined' 
+            ? `${window.location.origin}/qr/${slug}` 
+            : `/qr/${slug}`;
         const svgString = await QRCode.toString(trackingUrl, { type: "svg", width: 1024, margin: 2 });
         const blob = new Blob([svgString], { type: "image/svg+xml" });
-        url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `qr-code-${slug}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       } else {
-        // png or jpeg
-        url = await QRCode.toDataURL(trackingUrl, { type: "image/jpeg", width: 1024, margin: 2 });
-        // default toDataURL returns png? checking type
-        if (format === "jpeg") {
-           url = await QRCode.toDataURL(trackingUrl, { type: "image/jpeg", width: 1024, margin: 2 });
-        } else {
-           url = await QRCode.toDataURL(trackingUrl, { type: "image/png", width: 1024, margin: 2 });
-        }
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error("Failed to fetch QR code image");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `qr-code-${slug}.${format === "jpeg" ? "jpg" : "png"}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       }
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `qr-code-${slug}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      if (format === "svg") URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
       toast.error("Failed to download QR code");
@@ -265,14 +266,13 @@ export default function CEOQRCodePage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "png")}>
+                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "png")}>
                                 <FileImage className="mr-2 h-4 w-4" /> PNG
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "jpeg")}>
+                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "jpeg")}>
                                 <FileImage className="mr-2 h-4 w-4" /> JPEG
                             </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "svg")}>
+                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "svg")}>
                                 <FileType className="mr-2 h-4 w-4" /> SVG
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete(qr.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">

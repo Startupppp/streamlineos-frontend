@@ -30,7 +30,8 @@ export interface UploadResult {
 export async function uploadFile(
   file: File | Buffer,
   folder: string = "uploads",
-  fileName?: string
+  fileName?: string,
+  mimeTypeOverride?: string
 ): Promise<UploadResult> {
   if (!R2_BUCKET_NAME) {
     throw new Error("R2 bucket not configured");
@@ -38,7 +39,7 @@ export async function uploadFile(
 
   const buffer = Buffer.isBuffer(file) ? file : Buffer.from(await file.arrayBuffer());
   const originalName = Buffer.isBuffer(file) ? fileName ?? "file" : file.name;
-  const mimeType = Buffer.isBuffer(file) ? "application/octet-stream" : file.type;
+  const mimeType = mimeTypeOverride || (Buffer.isBuffer(file) ? "application/octet-stream" : file.type);
   
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "-");
   const key = `${folder}/${Date.now()}-${sanitizedName}`;
