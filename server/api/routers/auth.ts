@@ -1,22 +1,32 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { users, organizations, organizationMembers, invitations, passwordResetTokens, verificationTokens } from "../../../lib/db/schema";
+import {
+  users,
+  organizations,
+  organizationMembers,
+  invitations,
+  passwordResetTokens,
+  verificationTokens,
+} from "../../../lib/db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
-import { sendVerificationEmail, sendPasswordResetEmail } from "../../../lib/email";
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "../../../lib/email";
 
 const signUpSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-});
-
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
 });
 
 const verifyEmailSchema = z.object({
@@ -29,12 +39,22 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
 });
 
 const acceptInvitationSchema = z.object({
   token: z.string(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
 });
@@ -65,10 +85,11 @@ export const authRouter = createTRPCRouter({
 
       // Create user
       const userId = nanoid();
-      const fullName = input.firstName && input.lastName
-        ? `${input.firstName} ${input.lastName}`
-        : input.firstName || input.lastName || null;
-      
+      const fullName =
+        input.firstName && input.lastName
+          ? `${input.firstName} ${input.lastName}`
+          : input.firstName || input.lastName || null;
+
       await ctx.db.insert(users).values({
         id: userId,
         email: input.email,
@@ -77,6 +98,43 @@ export const authRouter = createTRPCRouter({
         firstName: input.firstName,
         lastName: input.lastName,
         emailVerified: null,
+      });
+
+      // Create default organization for the user
+      const orgName =
+        fullName || input.email.split("@")[0] || "My Organization";
+      const orgSlugBase = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      // Ensure slug is unique
+      let orgSlug = orgSlugBase;
+      let slugAttempts = 0;
+      let existingOrg = await ctx.db.query.organizations.findFirst({
+        where: eq(organizations.slug, orgSlug),
+      });
+
+      while (existingOrg && slugAttempts < 10) {
+        orgSlug = `${orgSlugBase}-${nanoid(4)}`;
+        existingOrg = await ctx.db.query.organizations.findFirst({
+          where: eq(organizations.slug, orgSlug),
+        });
+        slugAttempts++;
+      }
+
+      const orgId = nanoid();
+      await ctx.db.insert(organizations).values({
+        id: orgId,
+        name: orgName,
+        slug: orgSlug,
+      });
+
+      // Add user as OWNER of the organization
+      await ctx.db.insert(organizationMembers).values({
+        userId,
+        orgId,
+        role: "OWNER",
       });
 
       // Store verification token
@@ -223,10 +281,11 @@ export const authRouter = createTRPCRouter({
 
       // Create user
       const userId = nanoid();
-      const fullName = input.firstName && input.lastName
-        ? `${input.firstName} ${input.lastName}`
-        : input.firstName || input.lastName || null;
-      
+      const fullName =
+        input.firstName && input.lastName
+          ? `${input.firstName} ${input.lastName}`
+          : input.firstName || input.lastName || null;
+
       await ctx.db.insert(users).values({
         id: userId,
         email: invitation.email,
@@ -298,4 +357,3 @@ export const authRouter = createTRPCRouter({
       return { success: true };
     }),
 });
-
