@@ -117,6 +117,49 @@ export const hrRouter = createTRPCRouter({
        const rawPassword = input.password || "123456";
        const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
+       // Handle department: if negative ID (common role), create department or find existing
+       let finalDepartmentId = input.departmentId;
+       if (input.departmentId && input.departmentId < 0) {
+          // This is a common role, need to find or create the department
+          const commonRoleNames: Record<number, string> = {
+            [-1]: "Admin",
+            [-2]: "HR",
+            [-3]: "Sales",
+            [-4]: "Customer Support",
+            [-5]: "Graphic Designer",
+            [-6]: "Digital Marketing",
+            [-7]: "Social Media Manager",
+            [-8]: "Engineering",
+            [-9]: "Product",
+            [-10]: "Design",
+            [-11]: "Marketing",
+            [-12]: "Finance",
+            [-13]: "Operations",
+          };
+          
+          const roleName = commonRoleNames[input.departmentId];
+          if (roleName) {
+            // Check if department exists
+            let existingDept = await ctx.db.query.departments.findFirst({
+              where: and(
+                eq(departments.name, roleName),
+                eq(departments.orgId, ctx.session.orgId)
+              ),
+            });
+            
+            if (!existingDept) {
+              // Create the department
+              const [newDept] = await ctx.db.insert(departments).values({
+                name: roleName,
+                orgId: ctx.session.orgId,
+              }).returning();
+              existingDept = newDept;
+            }
+            
+            finalDepartmentId = existingDept.id;
+          }
+       }
+
        const [newUser] = await ctx.db.insert(users).values({
           id: userId,
           email: input.email,
@@ -127,7 +170,7 @@ export const hrRouter = createTRPCRouter({
           phone: input.phone,
           role: input.role,
           designation: input.designation,
-          departmentId: input.departmentId,
+          departmentId: finalDepartmentId,
           joiningDate: format(input.joiningDate, "yyyy-MM-dd"),
           experienceYears: input.experienceYears?.toString(),
           skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],

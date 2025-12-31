@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm, FieldPath, DefaultValues, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import { Input } from "../ui/input";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -45,12 +46,43 @@ const STEPS = [
   { id: 5, title: "Review & Submit", icon: CheckCircle2 },
 ];
 
+// Common role-based departments that should always be available
+const COMMON_ROLE_DEPARTMENTS = [
+  "Admin",
+  "HR",
+  "Sales",
+  "Customer Support",
+  "Graphic Designer",
+  "Digital Marketing",
+  "Social Media Manager",
+  "Engineering",
+  "Product",
+  "Design",
+  "Marketing",
+  "Finance",
+  "Operations",
+];
+
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
 
   // Fetch departments for dropdown
   const { data: departments } = api.hr.getDepartments.useQuery();
+  
+  // Combine database departments with common roles
+  // If a department from DB matches a common role, use DB one; otherwise add common roles
+  const allDepartmentOptions = useMemo(() => {
+    const dbDeptNames = new Set(departments?.map(d => d.name.toLowerCase()) || []);
+    const commonRoles = COMMON_ROLE_DEPARTMENTS
+      .filter(role => !dbDeptNames.has(role.toLowerCase()))
+      .map((role, idx) => ({ id: -(idx + 1), name: role, isCommon: true }));
+    
+    return [
+      ...(departments || []),
+      ...commonRoles
+    ];
+  }, [departments]);
 
   // Mutation
   const onboardEmployee = api.hr.onboardEmployee.useMutation({
@@ -78,7 +110,7 @@ export function OnboardingWizard() {
       departmentId: undefined, 
       role: "MEMBER",
       joiningDate: new Date(),
-      dateOfBirth: new Date(), 
+      dateOfBirth: undefined, 
       skills: "",
       experienceYears: 0,
       taxId: "",
@@ -99,7 +131,7 @@ export function OnboardingWizard() {
     let fieldsToValidate: FieldPath<FormValues>[] = [];
     
     switch (currentStep) {
-        case 1: fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'password']; break;
+        case 1: fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'gender', 'dateOfBirth']; break;
         case 2: fieldsToValidate = ['designation', 'departmentId', 'role', 'joiningDate']; break;
         case 3: fieldsToValidate = ['skills', 'experienceYears', 'taxId']; break;
         case 4: fieldsToValidate = ['bankDetails.accountNumber', 'bankDetails.bankName', 'bankDetails.ifsc', 'bankDetails.accountHolder']; break;
@@ -258,39 +290,24 @@ export function OnboardingWizard() {
                         control={form.control}
                         name="dateOfBirth"
                         render={({ field }) => (
-                          <FormItem className="flex flex-col">
+                          <FormItem>
                             <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal bg-background/50",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() || date < new Date("1900-01-01")
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                                onChange={(e) => {
+                                  const date = e.target.value ? new Date(e.target.value) : null;
+                                  field.onChange(date);
+                                }}
+                                max={format(new Date(), "yyyy-MM-dd")}
+                                className="bg-background/50"
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Enter date of birth (YYYY-MM-DD format).
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -313,130 +330,148 @@ export function OnboardingWizard() {
                   )}
 
                   {currentStep === 2 && (
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <div className="md:col-span-2 mb-2">
+                    <div className="space-y-6">
+                        <div className="mb-4">
                           <h2 className="text-xl font-semibold">Role & Organization</h2>
                           <p className="text-sm text-muted-foreground">Define their position within the company.</p>
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="designation"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Designation <span className="text-red-500">*</span></FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="departmentId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Department <span className="text-red-500">*</span></FormLabel>
+                              <Select 
+                                  value={field.value !== undefined && field.value !== null ? field.value.toString() : ""}
+                                  onValueChange={(val) => {
+                                    if (val && val !== "") {
+                                      const numVal = parseInt(val, 10);
+                                      if (!isNaN(numVal)) {
+                                        field.onChange(numVal);
+                                        // Trigger validation to clear error immediately
+                                        form.trigger("departmentId");
+                                      }
+                                    } else {
+                                      field.onChange(undefined);
+                                    }
+                                  }}
+                              >
                                 <FormControl>
-                                <SelectTrigger className="bg-background/50">
-                                    <SelectValue placeholder="Select Designation" />
-                                </SelectTrigger>
+                                  <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Department" />
+                                  </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                    <SelectItem value="Admin">Admin</SelectItem>
-                                    <SelectItem value="HR">HR</SelectItem>
-                                    <SelectItem value="Sales">Sales</SelectItem>
-                                    <SelectItem value="Customer Support">Customer Support</SelectItem>
-                                    <SelectItem value="Graphic Designer">Graphic Designer</SelectItem>
-                                    <SelectItem value="Digital Marketing">Digital Marketing</SelectItem>
-                                    <SelectItem value="Social Media Manager">Social Media Manager</SelectItem>
+                                  {/* Database departments */}
+                                  {departments?.map((dept) => (
+                                      <SelectItem key={dept.id} value={dept.id.toString()}>
+                                          {dept.name}
+                                      </SelectItem>
+                                  ))}
+                                  {/* Common role-based departments */}
+                                  {allDepartmentOptions
+                                    .filter(dept => dept.id < 0) // Only show common roles (negative IDs)
+                                    .map((dept) => (
+                                      <SelectItem key={dept.id} value={dept.id.toString()}>
+                                          {dept.name}
+                                      </SelectItem>
+                                  ))}
                                 </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              </Select>
+                              <FormDescription className="text-xs">
+                                Select from existing departments or common roles.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="departmentId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Department <span className="text-red-500">*</span></FormLabel>
-                            <Select 
-                                onValueChange={(val) => field.onChange(parseInt(val))} 
-                                defaultValue={field.value?.toString()}
-                            >
+                        <FormField
+                          control={form.control}
+                          name="designation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Designation <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
-                                <SelectTrigger className="bg-background/50">
-                                  <SelectValue placeholder="Select Department" />
-                                </SelectTrigger>
+                                <Input placeholder="e.g., Senior Software Engineer" {...field} className="bg-background/50" />
                               </FormControl>
-                              <SelectContent>
-                                {departments?.map((dept) => (
-                                    <SelectItem key={dept.id} value={dept.id.toString()}>
-                                        {dept.name}
-                                    </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormDescription className="text-xs">
+                                Enter the job title or position.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                       <FormField
-                        control={form.control}
-                        name="role"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>System Role <span className="text-red-500">*</span></FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="bg-background/50">
-                                  <SelectValue placeholder="Select Role" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="MEMBER">Member (Employee)</SelectItem>
-                                <SelectItem value="ADMIN">Admin (HR/Manager)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="joiningDate"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>Joining Date <span className="text-red-500">*</span></FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
+                        <FormField
+                          control={form.control}
+                          name="role"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>System Role <span className="text-red-500">*</span></FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
                                 <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal bg-background/50",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
+                                  <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Role" />
+                                  </SelectTrigger>
                                 </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() || date < new Date("1900-01-01")
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                                <SelectContent>
+                                  <SelectItem value="MEMBER">Member (Employee)</SelectItem>
+                                  <SelectItem value="ADMIN">Admin (HR/Manager)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription className="text-xs">
+                                Permission level for system access.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="joiningDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Joining Date <span className="text-red-500">*</span></FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-full pl-3 text-left font-normal bg-background/50",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                      date > new Date() || date < new Date("1900-01-01")
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -645,10 +680,4 @@ export function OnboardingWizard() {
       </Card>
     </div>
   );
-}
-
-function FormDescription({ className, children }: { className?: string; children: React.ReactNode }) {
-    return (
-     <p className={cn("text-sm text-muted-foreground", className)}>{children}</p>
-    );
 }
