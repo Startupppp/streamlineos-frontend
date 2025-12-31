@@ -84,7 +84,6 @@ export async function generateQRCode(formData: FormData) {
       };
     }
 
-    // Build tracking URL
     const trackingUrl = `${redirectBaseUrl}/qr/${slug}`;
 
     // Get logo path

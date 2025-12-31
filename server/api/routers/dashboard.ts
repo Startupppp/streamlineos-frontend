@@ -8,8 +8,6 @@ import { TRPCError } from "@trpc/server";
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
     try {
-      // Get user's organizations to determine orgId
-      // For now, get the first organization the user belongs to
       const userMemberships = await ctx.db.query.organizationMembers.findMany({
         where: eq(organizationMembers.userId, ctx.session.userId),
         limit: 1,
@@ -27,12 +25,10 @@ export const dashboardRouter = createTRPCRouter({
 
       const orgId = userMemberships[0].orgId;
 
-      // Get organization details
       const org = await ctx.db.query.organizations.findFirst({
         where: eq(organizations.id, orgId),
       });
 
-      // Get member count
       const memberCountResult = await ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(organizationMembers)
