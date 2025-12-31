@@ -81,8 +81,9 @@ export async function uploadOnboardingDocument(formData: FormData) {
          throw new Error("No keys");
       }
     } catch (e) {
-      console.warn("Upload failed, using mock URL:", e);
-      fileUrl = `https://mock-storage.com/${file.name}`;
+      console.error("Upload failed:", e);
+      // In production, storage should be configured - don't use mock URLs
+      throw new Error("Storage not configured. Please set R2_ACCESS_KEY_ID environment variable.");
     }
 
     // Determine Org ID (fetch from user's org membership or context)

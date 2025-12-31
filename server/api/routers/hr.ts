@@ -135,7 +135,7 @@ export const hrRouter = createTRPCRouter({
           bankDetails: input.bankDetails,
           password: hashedPassword,
           isPasswordChangeRequired: true,
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${input.firstName}`,
+          image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
           createdAt: new Date(),
           updatedAt: new Date(),
        }).returning();

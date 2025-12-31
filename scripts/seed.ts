@@ -61,7 +61,7 @@ async function main() {
           name: u.name,
           password: passwordHash,
           role: u.role,
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.email}`,
+          image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${u.email}`,
         });
         console.log(`👤 Created user: ${u.email}`);
     }
