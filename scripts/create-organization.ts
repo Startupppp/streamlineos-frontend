@@ -52,15 +52,8 @@ async function createOrganization(
       role: "OWNER",
     });
 
-    console.log(`✅ Organization created successfully!`);
-    console.log(`   ID: ${orgId}`);
-    console.log(`   Name: ${name}`);
-    console.log(`   Slug: ${slug}`);
-    console.log(`   Owner: ${ownerEmail}`);
-
     return { id: orgId, name, slug };
   } catch (error) {
-    console.error("❌ Error creating organization:", error);
     throw error;
   }
 }
@@ -70,8 +63,6 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   
   if (args.length < 2) {
-    console.error("Usage: npx tsx scripts/create-organization.ts <name> <slug> [owner-email]");
-    console.error("Example: npx tsx scripts/create-organization.ts 'Acme Inc' 'acme-inc' 'owner@example.com'");
     process.exit(1);
   }
 
@@ -79,14 +70,12 @@ if (require.main === module) {
   const finalOwnerEmail = ownerEmail || process.env.OWNER_EMAIL;
 
   if (!finalOwnerEmail) {
-    console.error("Error: Owner email is required (as argument or OWNER_EMAIL env var)");
     process.exit(1);
   }
 
   createOrganization(name, slug, finalOwnerEmail)
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error(error);
       process.exit(1);
     });
 }

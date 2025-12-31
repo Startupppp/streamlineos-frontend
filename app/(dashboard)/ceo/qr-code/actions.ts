@@ -18,7 +18,6 @@ const generateSchema = z.object({
 
 export async function generateQRCode(formData: FormData) {
   try {
-    // Check authentication
     const session = await auth();
     if (!session || !session.user) {
       return { success: false, error: "Access Denied: You must be logged in to generate QR codes." };
@@ -31,9 +30,7 @@ export async function generateQRCode(formData: FormData) {
 
     const validatedData = generateSchema.parse(rawData);
 
-    // Check if user is OWNER (check session first, then database)
     if (session.user.role !== "OWNER") {
-      // Double-check from database in case session is stale
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
@@ -55,13 +52,11 @@ export async function generateQRCode(formData: FormData) {
       return { success: false, error: "Access Denied: You don't have access to this organization." };
     }
 
-    // Generate unique slug
     let slug = nanoid(8);
     let existing = await db.query.qrCodes.findFirst({
       where: eq(qrCodes.slug, slug),
     });
 
-    // Retry for collision (max 5 attempts)
     let attempts = 0;
     while (existing && attempts < 5) {
       slug = nanoid(8);
@@ -96,7 +91,6 @@ export async function generateQRCode(formData: FormData) {
     const logoPath = join(process.cwd(), "public", "logo.svg");
     const logoExists = existsSync(logoPath);
 
-    // Generate QR Code with logo
     const qrBuffer = await generateQRCodeWithLogo({
       url: trackingUrl,
       logoPath: logoExists ? logoPath : undefined,
@@ -107,7 +101,6 @@ export async function generateQRCode(formData: FormData) {
 
     let imageUrl: string;
 
-    // Try to upload to R2, fallback to local storage for development
     try {
       const uploadResult = await uploadFile(
         qrBuffer,
@@ -117,8 +110,12 @@ export async function generateQRCode(formData: FormData) {
       );
       imageUrl = uploadResult.url;
     } catch (storageError) {
-      // If R2 is not configured (local development), save to public folder
-      console.warn("R2 upload failed, using local storage:", storageError);
+      if (process.env.NODE_ENV === "production") {
+        return {
+          success: false,
+          error: "Storage service unavailable. Please configure R2 for production.",
+        };
+      }
       
       const publicQrDir = join(process.cwd(), "public", "qr-codes");
       if (!existsSync(publicQrDir)) {
@@ -130,7 +127,6 @@ export async function generateQRCode(formData: FormData) {
       imageUrl = `/qr-codes/${slug}.png`;
     }
 
-    // Save to DB
     await db.insert(qrCodes).values({
       orgId: validatedData.orgId,
       targetUrl: validatedData.targetUrl,
@@ -139,10 +135,8 @@ export async function generateQRCode(formData: FormData) {
       scanCount: 0,
     });
 
-    console.log("QR Code generated successfully for:", slug);
     return { success: true };
   } catch (error) {
-    console.error("Failed to generate QR code:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Failed to generate QR code";
     return { success: false, error: errorMessage };
@@ -151,7 +145,6 @@ export async function generateQRCode(formData: FormData) {
 
 export async function deleteQRCode(id: number) {
   try {
-    // Check authentication
     const session = await auth();
     if (!session || !session.user) {
       return { success: false, error: "Access Denied: You must be logged in to delete QR codes." };
@@ -166,9 +159,7 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "QR code not found" };
     }
 
-    // Check if user is OWNER (check session first, then database)
     if (session.user.role !== "OWNER") {
-      // Double-check from database in case session is stale
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
@@ -178,7 +169,6 @@ export async function deleteQRCode(id: number) {
       }
     }
 
-    // Verify user has access to this organization
     const userMembership = await db.query.organizationMembers.findFirst({
       where: (members, { eq: eqFn }) => and(
         eqFn(members.userId, session.user.id),
@@ -190,17 +180,13 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "Access Denied: You don't have access to this QR code." };
     }
 
-    // Delete from R2 if imageUrl is an R2 URL
     if (qrCode.imageUrl && !qrCode.imageUrl.startsWith("data:") && !qrCode.imageUrl.startsWith("/")) {
       try {
         const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
         await deleteFile(fileKey);
       } catch (r2Error) {
-        console.warn("Failed to delete QR code from R2:", r2Error);
-        // Continue with DB deletion even if R2 deletion fails
       }
     } else if (qrCode.imageUrl?.startsWith("/")) {
-      // Delete local file if it's a local path
       try {
         const { unlinkSync } = await import("fs");
         const localPath = join(process.cwd(), "public", qrCode.imageUrl);
@@ -208,16 +194,12 @@ export async function deleteQRCode(id: number) {
           unlinkSync(localPath);
         }
       } catch (localError) {
-        console.warn("Failed to delete local QR code file:", localError);
-        // Continue with DB deletion
       }
     }
 
-    // Delete from database
     await db.delete(qrCodes).where(eq(qrCodes.id, id));
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete QR code:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Failed to delete QR code";
     return { success: false, error: errorMessage };
@@ -227,15 +209,12 @@ export async function deleteQRCode(id: number) {
 export async function getQRCodes(orgId: string) {
     if (!orgId) return [];
     
-    // Check authentication
     const session = await auth();
     if (!session || !session.user) {
       return [];
     }
 
-    // Check if user is OWNER (check session first, then database)
     if (session.user.role !== "OWNER") {
-      // Double-check from database in case session is stale
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });

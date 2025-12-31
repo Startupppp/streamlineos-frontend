@@ -97,7 +97,6 @@ export default function CEOQRCodePage() {
         fetchQRCodes();
       } else {
         toast.error(result.error || "Failed to generate QR code");
-        console.error(result.error);
       }
     } catch {
       toast.error("An error occurred");
@@ -138,7 +137,6 @@ export default function CEOQRCodePage() {
         URL.revokeObjectURL(url);
       }
     } catch (err) {
-      console.error(err);
       toast.error("Failed to download QR code");
     }
   };

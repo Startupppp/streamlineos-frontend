@@ -7,8 +7,6 @@ import { nanoid } from "nanoid";
 dotenv.config({ path: ".env" });
 
 async function main() {
-  console.log("🌱 Seeding database...");
-  
   // Dynamic import to ensure env vars are loaded
   const { db } = await import("../lib/db");
   const { users, organizations, organizationMembers, departments } = await import("../lib/db/schema");
@@ -24,14 +22,12 @@ async function main() {
 
   if (existingOrg) {
       orgId = existingOrg.id;
-      console.log(`ℹ️ Organization 'Vaivamm Capital' already exists (ID: ${orgId}), skipping creation.`);
   } else {
       await db.insert(organizations).values({
         id: orgId,
         name: "Vaivamm Capital",
         slug: "vaivamm-capital",
       });
-      console.log("✅ Organization created");
   }
 
   // 2. Create Users
@@ -52,7 +48,6 @@ async function main() {
 
     if (existingUser) {
         userId = existingUser.id;
-        console.log(`ℹ️ User ${u.email} already exists, skipping creation.`);
     } else {
         userId = "user_" + nanoid();
         await db.insert(users).values({
@@ -63,7 +58,6 @@ async function main() {
           role: u.role,
           image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${u.email}`,
         });
-        console.log(`👤 Created user: ${u.email}`);
     }
 
     // Add to Org
@@ -96,15 +90,11 @@ async function main() {
     }).onConflictDoNothing(); // Warning: departments schema doesn't seem to have unique constraint on name+orgId in what I saw, but let's assume it's fine for now or it will duplicate if re-run. 
     // Ideally I should check first or add conflict handling.
     // The previous code had .onConflictDoNothing(), so I'll keep it.
-    
-    console.log(`🏢 Created department: ${deptName}`);
   }
 
-  console.log("✅ Seeding completed!");
   process.exit(0);
 }
 
 main().catch((err) => {
-  console.error("❌ Seeding failed:", err);
   process.exit(1);
 });

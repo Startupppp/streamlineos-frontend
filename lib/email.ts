@@ -1,10 +1,7 @@
-// Email Service using SendGrid
-
 import sgMail from "@sendgrid/mail";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
-// Initialize SendGrid if API key is available
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
@@ -20,13 +17,6 @@ async function sendEmail(options: EmailOptions) {
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || "noreply@vaivammcapital.com";
   
   if (!process.env.SENDGRID_API_KEY) {
-    // Mock email sending if no API key
-    console.log("---------------------------------------------------");
-    console.log("📧 MOCK EMAIL (SENDGRID_API_KEY not set)");
-    console.log(`To: ${options.to}`);
-    console.log(`From: ${fromEmail}`);
-    console.log(`Subject: ${options.subject}`);
-    console.log("---------------------------------------------------");
     return Promise.resolve();
   }
 
@@ -38,9 +28,7 @@ async function sendEmail(options: EmailOptions) {
       html: options.html,
       text: options.text || options.html.replace(/<[^>]*>/g, ""),
     });
-    console.log(`✅ Email sent to ${options.to}`);
   } catch (error) {
-    console.error("❌ Failed to send email:", error);
     throw error;
   }
 }
@@ -109,5 +97,4 @@ export async function sendWelcomeEmail(
   });
 }
 
-// Export for test script
 export { sendEmail };

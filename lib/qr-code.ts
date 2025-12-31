@@ -73,11 +73,9 @@ export async function generateQRCodeWithLogo(
 
       return finalImage;
     } catch (logoError) {
-      console.warn("Failed to embed logo, generating QR without logo:", logoError);
       return qrCodeBuffer;
     }
   } catch (error) {
-    console.error("Failed to generate QR code:", error);
     throw new Error("Failed to generate QR code");
   }
 }

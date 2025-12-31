@@ -63,7 +63,7 @@ export default function HRDashboardPage() {
           // ignore 
         }
       } catch (e) {
-        console.error(e);
+        // Error handling
       } finally {
         setLoading(false);
       }

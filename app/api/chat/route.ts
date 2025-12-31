@@ -17,7 +17,6 @@ export async function POST(req: Request) {
     const result = await processChatWithGraph(messages, session.user.id, orgId);
     return result.toTextStreamResponse();
   } catch (error) {
-    console.error("AI Chat Error:", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }

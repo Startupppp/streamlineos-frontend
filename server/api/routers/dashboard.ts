@@ -68,7 +68,6 @@ export const dashboardRouter = createTRPCRouter({
         orgSlug: org?.slug || orgId.slice(0, 8),
       };
     } catch (error) {
-      console.error("Dashboard getStats error:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message:

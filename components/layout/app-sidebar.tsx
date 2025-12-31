@@ -121,7 +121,6 @@ export function AppSidebar() {
   }
 
   const handleOrgChange = (id: string) => {
-    console.log("Org switched to", id);
     router.push("/dashboard");
     router.refresh();
   };
@@ -141,7 +140,7 @@ export function AppSidebar() {
             setPendingLeaves(leavesCount);
             setUnreadOnboarding(onboardingCount);
         } catch (e) {
-            console.error(e);
+            // Error fetching counts
         }
     }
     if (session?.user) {

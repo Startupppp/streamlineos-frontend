@@ -83,7 +83,6 @@ export function AssistantBot() {
         });
       }
     } catch (error) {
-      console.error("AI Error:", error);
       setMessages((prev) => [
         ...prev,
         {
