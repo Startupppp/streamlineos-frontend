@@ -71,7 +71,6 @@ export function FileUpload({
 
       toast.success(`Successfully uploaded ${fileArray.length} file(s)`);
     } catch (error) {
-      console.error("Upload error:", error);
       toast.error("Failed to upload file");
     } finally {
       setUploading(false);

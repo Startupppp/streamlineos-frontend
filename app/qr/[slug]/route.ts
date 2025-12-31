@@ -23,10 +23,6 @@ export async function GET(
     return new Response("QR Code not found", { status: 404 });
   }
 
-  // Increment scan count
-  // Fire and forget - don't block redirect on this update? 
-  // Ideally we should block to ensure accurate counting, but for speed we might not want to.
-  // For now, let's await it to be safe.
   await db
     .update(qrCodes)
     .set({

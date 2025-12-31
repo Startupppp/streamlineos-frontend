@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1765130233200,
-      "tag": "0000_outstanding_baron_zemo",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765130418675,
-      "tag": "0001_bitter_odin",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765134347587,
-      "tag": "0002_glorious_silk_fever",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1765361037638,
-      "tag": "0003_smooth_zzzax",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1765796524518,
-      "tag": "0004_lame_chimera",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1766729700159,
-      "tag": "0005_great_marrow",
+      "when": 1767162898184,
+      "tag": "0000_glamorous_amazoness",
       "breakpoints": true
     }
   ]

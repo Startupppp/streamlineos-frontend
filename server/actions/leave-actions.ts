@@ -176,7 +176,6 @@ export async function submitLeaveRequest(data: {
         revalidatePath("/hr/leaves");
         return { success: true };
     } catch(e) {
-        console.error(e);
         return { error: "Failed to submit request" };
     }
 }
@@ -247,7 +246,6 @@ export async function processLeaveRequest(data: {
         revalidatePath("/hr/leaves");
         return { success: true };
     } catch (e) {
-        console.error(e);
         return { error: "Failed to process request" };
     }
 }

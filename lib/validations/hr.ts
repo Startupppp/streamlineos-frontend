@@ -140,11 +140,15 @@ export const onboardEmployeeInputSchema = z.object({
   email: z.string().email("Invalid email address"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  password: z.string().min(8, "Password must be at least 8 characters").optional(), // Optional if auto-generated
+  password: z.string().refine((val) => !val || val.length >= 8, {
+    message: "Password must be at least 8 characters",
+  }).optional(), // Optional if auto-generated
 
   // Professional Info
   designation: z.string().min(1, "Designation is required"),
-  departmentId: z.coerce.number().int().positive("Department is required"),
+  departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
+    message: "Department is required",
+  }),
   role: z.enum(["OWNER", "ADMIN", "MEMBER"]).default("MEMBER"),
   joiningDate: z.date(),
   dateOfBirth: z.date(),

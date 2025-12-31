@@ -1,22 +1,32 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { users, organizations, organizationMembers, invitations, passwordResetTokens, verificationTokens } from "../../../lib/db/schema";
+import {
+  users,
+  organizations,
+  organizationMembers,
+  invitations,
+  passwordResetTokens,
+  verificationTokens,
+} from "../../../lib/db/schema";
 import { eq, and, gt, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
-import { sendVerificationEmail, sendPasswordResetEmail } from "../../../lib/email";
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "../../../lib/email";
 
 const signUpSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-});
-
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
 });
 
 const verifyEmailSchema = z.object({
@@ -29,12 +39,22 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   token: z.string(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
 });
 
 const acceptInvitationSchema = z.object({
   token: z.string(),
-  password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+  password: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    ),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
 });
@@ -43,7 +63,6 @@ export const authRouter = createTRPCRouter({
   signUp: publicProcedure
     .input(signUpSchema)
     .mutation(async ({ ctx, input }) => {
-      // Check if user already exists
       const existingUser = await ctx.db.query.users.findFirst({
         where: eq(users.email, input.email),
       });
@@ -55,20 +74,18 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(input.password, 10);
 
-      // Generate verification token
       const verificationToken = nanoid(32);
       const expires = new Date();
-      expires.setHours(expires.getHours() + 24); // 24 hours
+      expires.setHours(expires.getHours() + 24);
 
-      // Create user
       const userId = nanoid();
-      const fullName = input.firstName && input.lastName
-        ? `${input.firstName} ${input.lastName}`
-        : input.firstName || input.lastName || null;
-      
+      const fullName =
+        input.firstName && input.lastName
+          ? `${input.firstName} ${input.lastName}`
+          : input.firstName || input.lastName || null;
+
       await ctx.db.insert(users).values({
         id: userId,
         email: input.email,
@@ -79,14 +96,46 @@ export const authRouter = createTRPCRouter({
         emailVerified: null,
       });
 
-      // Store verification token
+      const orgName =
+        fullName || input.email.split("@")[0] || "My Organization";
+      const orgSlugBase = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      let orgSlug = orgSlugBase;
+      let slugAttempts = 0;
+      let existingOrg = await ctx.db.query.organizations.findFirst({
+        where: eq(organizations.slug, orgSlug),
+      });
+
+      while (existingOrg && slugAttempts < 10) {
+        orgSlug = `${orgSlugBase}-${nanoid(4)}`;
+        existingOrg = await ctx.db.query.organizations.findFirst({
+          where: eq(organizations.slug, orgSlug),
+        });
+        slugAttempts++;
+      }
+
+      const orgId = nanoid();
+      await ctx.db.insert(organizations).values({
+        id: orgId,
+        name: orgName,
+        slug: orgSlug,
+      });
+
+      await ctx.db.insert(organizationMembers).values({
+        userId,
+        orgId,
+        role: "OWNER",
+      });
+
       await ctx.db.insert(verificationTokens).values({
         identifier: input.email,
         token: verificationToken,
         expires,
       });
 
-      // Send verification email
       await sendVerificationEmail(input.email, verificationToken);
 
       return { success: true, userId };
@@ -109,13 +158,11 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Update user email verification status
       await ctx.db
         .update(users)
         .set({ emailVerified: new Date() })
         .where(eq(users.email, tokenRecord.identifier));
 
-      // Delete verification token
       await ctx.db
         .delete(verificationTokens)
         .where(eq(verificationTokens.token, input.token));
@@ -131,16 +178,13 @@ export const authRouter = createTRPCRouter({
       });
 
       if (!user) {
-        // Don't reveal if user exists
         return { success: true };
       }
 
-      // Generate reset token
       const resetToken = nanoid(32);
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour
+      expiresAt.setHours(expiresAt.getHours() + 1);
 
-      // Store reset token
       await ctx.db.insert(passwordResetTokens).values({
         id: nanoid(),
         email: input.email,
@@ -148,7 +192,6 @@ export const authRouter = createTRPCRouter({
         expiresAt,
       });
 
-      // Send reset email
       await sendPasswordResetEmail(input.email, resetToken);
 
       return { success: true };
@@ -171,16 +214,13 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Hash new password
       const hashedPassword = await bcrypt.hash(input.password, 10);
 
-      // Update user password
       await ctx.db
         .update(users)
         .set({ password: hashedPassword })
         .where(eq(users.email, tokenRecord.email));
 
-      // Delete reset token
       await ctx.db
         .delete(passwordResetTokens)
         .where(eq(passwordResetTokens.token, input.token));
@@ -206,7 +246,6 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Check if user already exists
       const existingUser = await ctx.db.query.users.findFirst({
         where: eq(users.email, invitation.email),
       });
@@ -218,15 +257,14 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(input.password, 10);
 
-      // Create user
       const userId = nanoid();
-      const fullName = input.firstName && input.lastName
-        ? `${input.firstName} ${input.lastName}`
-        : input.firstName || input.lastName || null;
-      
+      const fullName =
+        input.firstName && input.lastName
+          ? `${input.firstName} ${input.lastName}`
+          : input.firstName || input.lastName || null;
+
       await ctx.db.insert(users).values({
         id: userId,
         email: invitation.email,
@@ -234,18 +272,16 @@ export const authRouter = createTRPCRouter({
         name: fullName,
         firstName: input.firstName,
         lastName: input.lastName,
-        emailVerified: new Date(), // Auto-verify for invited users
+        emailVerified: new Date(),
         role: invitation.role,
       });
 
-      // Add user to organization
       await ctx.db.insert(organizationMembers).values({
         userId,
         orgId: invitation.orgId,
         role: invitation.role,
       });
 
-      // Mark invitation as accepted
       await ctx.db
         .update(invitations)
         .set({ acceptedAt: new Date() })
@@ -275,27 +311,22 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Generate new verification token
       const verificationToken = nanoid(32);
       const expires = new Date();
       expires.setHours(expires.getHours() + 24);
 
-      // Delete old tokens
       await ctx.db
         .delete(verificationTokens)
         .where(eq(verificationTokens.identifier, input.email));
 
-      // Store new token
       await ctx.db.insert(verificationTokens).values({
         identifier: input.email,
         token: verificationToken,
         expires,
       });
 
-      // Send verification email
       await sendVerificationEmail(input.email, verificationToken);
 
       return { success: true };
     }),
 });
-

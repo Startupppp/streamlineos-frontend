@@ -85,7 +85,6 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
           
           toast.success("Ticket created with attachment");
         } catch (error) {
-          console.error(error);
           toast.error("Ticket created but failed to upload attachment");
         } finally {
           setIsUploading(false);

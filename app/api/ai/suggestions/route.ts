@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
-    console.error("AI Suggestions Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

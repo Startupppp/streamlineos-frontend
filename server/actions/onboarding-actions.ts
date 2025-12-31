@@ -28,7 +28,6 @@ export async function updatePersonalDetails(formData: FormData) {
     await updateOnboardingStep(userId, "Personal Details", "COMPLETED");
     return { success: true };
   } catch (error) {
-    console.error("Error updating personal details:", error);
     return { error: "Failed to update profile" };
   }
 }
@@ -56,7 +55,6 @@ export async function updateBankDetails(formData: FormData) {
     await updateOnboardingStep(userId, "Bank Details", "COMPLETED");
     return { success: true };
   } catch (error) {
-    console.error("Error updating bank details:", error);
     return { error: "Failed to update bank details" };
   }
 }
@@ -81,8 +79,8 @@ export async function uploadOnboardingDocument(formData: FormData) {
          throw new Error("No keys");
       }
     } catch (e) {
-      console.warn("Upload failed, using mock URL:", e);
-      fileUrl = `https://mock-storage.com/${file.name}`;
+      // In production, storage should be configured - don't use mock URLs
+      throw new Error("Storage not configured. Please set R2_ACCESS_KEY_ID environment variable.");
     }
 
     // Determine Org ID (fetch from user's org membership or context)
@@ -110,7 +108,6 @@ export async function uploadOnboardingDocument(formData: FormData) {
     revalidatePath("/onboarding");
     return { success: true, url: fileUrl };
   } catch (error) {
-    console.error("Error uploading document:", error);
     return { error: "Failed to upload document" };
   }
 }

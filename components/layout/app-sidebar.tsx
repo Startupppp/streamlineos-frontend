@@ -108,10 +108,19 @@ export function AppSidebar() {
   
   const role = session?.user?.role;
 
-  const navGroups = role === "OWNER" || role === "ADMIN" ? adminNavGroups : employeeNavGroups;
+  // Build nav groups based on role
+  // QR Codes is OWNER-only, so we need to filter it
+  let navGroups = role === "OWNER" || role === "ADMIN" ? adminNavGroups : employeeNavGroups;
+  
+  // If user is ADMIN (not OWNER), remove QR Codes from nav
+  if (role === "ADMIN") {
+    navGroups = adminNavGroups.map(group => ({
+      ...group,
+      routes: group.routes.filter(route => route.href !== "/ceo/qr-code")
+    }));
+  }
 
   const handleOrgChange = (id: string) => {
-    console.log("Org switched to", id);
     router.push("/dashboard");
     router.refresh();
   };
@@ -131,7 +140,7 @@ export function AppSidebar() {
             setPendingLeaves(leavesCount);
             setUnreadOnboarding(onboardingCount);
         } catch (e) {
-            console.error(e);
+            // Error fetching counts
         }
     }
     if (session?.user) {

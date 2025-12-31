@@ -46,7 +46,6 @@ import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "../../../lib/email";
 
 export const hrRouter = createTRPCRouter({
-  // --- DEPARTMENTS & EMPLOYEES ---
   getDepartments: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.query.departments.findMany({
       where: eq(departments.orgId, ctx.session.orgId),
@@ -60,7 +59,6 @@ export const hrRouter = createTRPCRouter({
         user: true,
       },
     });
-    // Filter out inactive users (soft deleted)
     return members.map((m) => m.user).filter((u) => u.isActive !== false);
   }),
 
@@ -86,8 +84,6 @@ export const hrRouter = createTRPCRouter({
         .where(eq(users.id, input.userId));
     }),
 
-
-  // --- ONBOARDING ---
   onboardEmployee: protectedProcedure
     .input(onboardEmployeeInputSchema)
     .mutation(async ({ ctx, input }) => {
@@ -110,12 +106,49 @@ export const hrRouter = createTRPCRouter({
           });
        }
 
-       // 1. Create User
        const userId = crypto.randomUUID();
        
-       // Hash the provided password or default '123456'
        const rawPassword = input.password || "123456";
        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+       let finalDepartmentId = input.departmentId;
+       if (input.departmentId && input.departmentId < 0) {
+          const commonRoleNames: Record<number, string> = {
+            [-1]: "Admin",
+            [-2]: "HR",
+            [-3]: "Sales",
+            [-4]: "Customer Support",
+            [-5]: "Graphic Designer",
+            [-6]: "Digital Marketing",
+            [-7]: "Social Media Manager",
+            [-8]: "Engineering",
+            [-9]: "Product",
+            [-10]: "Design",
+            [-11]: "Marketing",
+            [-12]: "Finance",
+            [-13]: "Operations",
+          };
+          
+          const roleName = commonRoleNames[input.departmentId];
+          if (roleName) {
+            let existingDept = await ctx.db.query.departments.findFirst({
+              where: and(
+                eq(departments.name, roleName),
+                eq(departments.orgId, ctx.session.orgId)
+              ),
+            });
+            
+            if (!existingDept) {
+              const [newDept] = await ctx.db.insert(departments).values({
+                name: roleName,
+                orgId: ctx.session.orgId,
+              }).returning();
+              existingDept = newDept;
+            }
+            
+            finalDepartmentId = existingDept.id;
+          }
+       }
 
        const [newUser] = await ctx.db.insert(users).values({
           id: userId,
@@ -127,7 +160,7 @@ export const hrRouter = createTRPCRouter({
           phone: input.phone,
           role: input.role,
           designation: input.designation,
-          departmentId: input.departmentId,
+          departmentId: finalDepartmentId,
           joiningDate: format(input.joiningDate, "yyyy-MM-dd"),
           experienceYears: input.experienceYears?.toString(),
           skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
@@ -135,12 +168,11 @@ export const hrRouter = createTRPCRouter({
           bankDetails: input.bankDetails,
           password: hashedPassword,
           isPasswordChangeRequired: true,
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${input.firstName}`,
+          image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
           createdAt: new Date(),
           updatedAt: new Date(),
        }).returning();
 
-       // Send Welcome Email
        try {
          await sendWelcomeEmail(
             input.email, 
@@ -148,11 +180,8 @@ export const hrRouter = createTRPCRouter({
             rawPassword
          );
        } catch (error) {
-         console.error("Failed to send welcome email:", error);
-         // Don't throw, allow onboarding to complete
        }
 
-       // 2. Add to Organization
        await ctx.db.insert(organizationMembers).values({
           userId: newUser.id,
           orgId: ctx.session.orgId,
@@ -160,7 +189,6 @@ export const hrRouter = createTRPCRouter({
           joinedAt: new Date(),
        });
 
-       // 3. Initialize Salary Structure (optional default)
         await ctx.db.insert(salaryStructures).values({
             orgId: ctx.session.orgId,
             userId: newUser.id,
@@ -169,7 +197,6 @@ export const hrRouter = createTRPCRouter({
             isActive: true,
         });
 
-       // 4. Create Onboarding Steps Tracking
        const defaultSteps = ["Profile Setup", "Document Submission", "IT Setup", "Introduction"];
        for (const step of defaultSteps) {
            await ctx.db.insert(onboardingSteps).values({
@@ -180,7 +207,6 @@ export const hrRouter = createTRPCRouter({
            });
        }
 
-       // 5. Notify Admins/Owners
        const admins = await ctx.db.query.organizationMembers.findMany({
           where: and(
              eq(organizationMembers.orgId, ctx.session.orgId),
@@ -223,7 +249,6 @@ export const hrRouter = createTRPCRouter({
          });
        }
 
-       // Soft delete: Set isActive to false
        await ctx.db
          .update(users)
          .set({ isActive: false })
@@ -232,13 +257,11 @@ export const hrRouter = createTRPCRouter({
        return { success: true, message: "Employee deactivated successfully." };
     }),
 
-  // --- ATTENDANCE ---
   getAttendanceStatus: protectedProcedure.query(async ({ ctx }) => {
     const today = format(new Date(), "yyyy-MM-dd");
     const userId = ctx.session.userId;
     const orgId = ctx.session.orgId;
 
-    // Fetch ALL logs for today to calculate totals
     const todayLogs = await ctx.db.query.attendance.findMany({
       where: and(
         eq(attendance.userId, userId),
@@ -247,7 +270,6 @@ export const hrRouter = createTRPCRouter({
       ),
     });
 
-    // Calculate aggregated stats
     let dailyWorkHours = 0;
     let dailyBreakHours = 0;
     let isDailyOvertime = false;
@@ -258,15 +280,12 @@ export const hrRouter = createTRPCRouter({
       dailyBreakHours += Number(log.breakHours || 0);
       
       if (!log.checkOut && log.checkIn) {
-         // Active session: Calculate live work duration
          const start = new Date(log.checkIn);
          const durationMs = now.getTime() - start.getTime();
          const durationHours = durationMs / (1000 * 60 * 60);
-         // Subtract breaks to get net work
          const netWork = durationHours - (Number(log.breakHours) || 0);
          dailyWorkHours += Math.max(0, netWork);
       } else {
-         // Completed session
          dailyWorkHours += Number(log.workHours || 0);
       }
 
@@ -328,7 +347,6 @@ export const hrRouter = createTRPCRouter({
           });
         }
 
-        // Check 2-minute cooldown
         const lastCheckOut = new Date(existing.checkOut);
         const cooldownDiff = new Date().getTime() - lastCheckOut.getTime();
         const diffMinutes = cooldownDiff / (1000 * 60);
@@ -339,7 +357,6 @@ export const hrRouter = createTRPCRouter({
           });
         }
 
-        // RESUME LOGIC: Treat gap as break
         const now = new Date();
         const gapMs = now.getTime() - lastCheckOut.getTime();
         const gapHours = gapMs / (1000 * 60 * 60);
@@ -358,12 +375,10 @@ export const hrRouter = createTRPCRouter({
             checkOut: null,
             breaks: newBreaks,
             breakHours: newBreakHours.toFixed(2),
-            // We don't update workHours here, it acts as previous known, 
-            // but effectively we are in 'live' mode now.
           })
           .where(eq(attendance.id, existing.id));
         
-        return; // Stop here, do not create new row
+        return;
       }
 
       await ctx.db.insert(attendance).values({
@@ -394,7 +409,6 @@ export const hrRouter = createTRPCRouter({
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Missing check-in time" });
     }
 
-    // Calculate session duration
     const now = new Date();
     const checkInTime = new Date(log.checkIn);
     const durationMs = now.getTime() - checkInTime.getTime();
@@ -403,7 +417,6 @@ export const hrRouter = createTRPCRouter({
       durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0)
     );
 
-    // Calculate DAILY total to check Overtime
     const todayLogs = await ctx.db.query.attendance.findMany({
       where: and(
         eq(attendance.userId, ctx.session.userId),
@@ -473,9 +486,8 @@ export const hrRouter = createTRPCRouter({
           .where(eq(attendance.id, log.id));
       }
     }
-  }),
-
-  // --- LEAVES ---
+    }),
+    
   getLeaves: protectedProcedure.query(async ({ ctx }) => {
     const balances = await ctx.db.query.leaveBalances.findMany({
       where: and(
@@ -510,7 +522,6 @@ export const hrRouter = createTRPCRouter({
       });
     }),
 
-  // --- PAYROLLS ---
   getPayrolls: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.query.payrolls.findMany({
       where: and(
@@ -524,7 +535,6 @@ export const hrRouter = createTRPCRouter({
   generatePayroll: protectedProcedure
     .input(generatePayrollInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Get organization members
       const memberships = await ctx.db.query.organizationMembers.findMany({
         where: eq(organizationMembers.orgId, ctx.session.orgId),
       });
@@ -639,7 +649,6 @@ export const hrRouter = createTRPCRouter({
         conditions.push(eq(expenses.userId, input.userId));
       }
       if (input.status) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         conditions.push(eq(expenses.status, input.status as any));
       }
       return await ctx.db.query.expenses.findMany({
@@ -688,7 +697,6 @@ export const hrRouter = createTRPCRouter({
   getEmployeeStats: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
-        // Leaves Balances (Join Types with Balances)
         const balances = await ctx.db
             .select({
                 id: leaveTypes.id,
@@ -704,7 +712,6 @@ export const hrRouter = createTRPCRouter({
             ))
             .where(eq(leaveTypes.orgId, ctx.session.orgId));
 
-        // Recent Leave Requests
         const recentLeaves = await ctx.db.query.leaveRequests.findMany({
             where: eq(leaveRequests.userId, input.userId),
             limit: 5,
@@ -714,7 +721,6 @@ export const hrRouter = createTRPCRouter({
             }
         });
 
-        // Attendance (Current Month)
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0,0,0,0);
@@ -752,7 +758,6 @@ export const hrRouter = createTRPCRouter({
         month: z.number() // 0-11
     }))
     .query(async ({ ctx, input }) => {
-        // Auth check
         if (ctx.session.user.id !== input.userId && ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
             throw new TRPCError({ code: "FORBIDDEN" });
         }
@@ -842,7 +847,6 @@ export const hrRouter = createTRPCRouter({
         conditions.push(eq(documents.userId, input.userId));
       }
       if (input.type) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         conditions.push(eq(documents.type, input.type as any));
       }
       return await ctx.db.query.documents.findMany({
@@ -980,7 +984,6 @@ export const hrRouter = createTRPCRouter({
         conditions.push(eq(helpdeskTickets.userId, input.userId));
       }
       if (input.status) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         conditions.push(eq(helpdeskTickets.status, input.status as any));
       }
       return await ctx.db.query.helpdeskTickets.findMany({
@@ -1014,40 +1017,25 @@ export const hrRouter = createTRPCRouter({
       return ticket;
     }),
 
-  // --- WORK LOGS ---
   getWorkLogs: protectedProcedure
     .input(getWorkLogsInputSchema)
     .query(async ({ ctx, input }) => {
       const { year, quarter, userId } = input;
       const targetUserId = userId || ctx.session.userId;
 
-      // Calculate date range for quarter
-      const startMonth = (quarter - 1) * 3; // 0, 3, 6, 9
+      const startMonth = (quarter - 1) * 3;
       const startDate = new Date(year, startMonth, 1);
-      const endDate = new Date(year, startMonth + 3, 0); // Last day of previous month from next q start
+      const endDate = new Date(year, startMonth + 3, 0);
 
       const startStr = format(startDate, "yyyy-MM-dd");
       const endStr = format(endDate, "yyyy-MM-dd");
-
-      // We use gte/lte if imported, or just raw logic or between
-      // Since date is string 'YYYY-MM-DD' in DB (pg date), string comparison works fine for iso format
-      // But safer to import gte, lte from drizzle-orm if available. 
-      // Existing imports: eq, and, desc, isNull, ne. Need to add gte, lte.
-      // Let's rely on sql or just string comparison.
-      // Actually, drizzle `date` column is string in JS usually.
       
       const logs = await ctx.db.query.timesheets.findMany({
         where: and(
            eq(timesheets.orgId, ctx.session.orgId),
            eq(timesheets.userId, targetUserId),
-           // For simplicity in filter, or add gte/lte imports. 
-           // Let's add gte/lte imports in a separate hunk or reused `and`.
-           // I'll try to use a specialized where clause or just filter in memory if small? 
-           // No, best to query. I'll add imports.
         ),
       });
-      // Filtering in memory for the quarter range to avoid adding imports in this hunk if complicated
-      // Timesheets shouldn't be massive for one user.
       return logs.filter(l => l.date >= startStr && l.date <= endStr);
     }),
 

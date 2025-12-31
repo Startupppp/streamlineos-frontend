@@ -59,7 +59,7 @@ export default function EmployeeDirectoryPage() {
                  // ignore 
              }
         } catch (e) {
-            console.error(e);
+            // Error handling
         } finally {
             setLoading(false);
         }

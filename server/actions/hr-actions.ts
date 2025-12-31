@@ -129,7 +129,6 @@ export async function updateEmployee(data: {
         revalidatePath(`/hr/employees/${data.id}`);
         return { success: true };
     } catch (e) {
-        console.error("Update Employee Error:", e);
         return { error: "Failed to update employee" };
     }
 }
@@ -152,7 +151,6 @@ export async function deleteEmployee(userId: string) {
       revalidatePath("/hr/employees");
       return { success: true };
   } catch (error) {
-      console.error("Delete employee error:", error);
       return { error: "Failed to delete employee" };
   }
 }

@@ -85,13 +85,14 @@ export default function ResetPasswordPage() {
         toast.success("Profile updated successfully!");
         // Force session update to clear forceChangePassword flag
         await update({ forceChangePassword: false });
-        router.push("/dashboard");
-        router.refresh();
+        // Small delay to ensure session cookie is updated before redirect
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Use window.location.href to force full page reload and ensure middleware gets updated session
+        window.location.href = "/dashboard";
       } else {
         toast.error(result.error || "Failed to update profile");
       }
     } catch (error) {
-      console.error(error);
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);

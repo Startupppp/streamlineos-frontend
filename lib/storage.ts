@@ -8,7 +8,6 @@ const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_ENDPOINT = process.env.R2_ENDPOINT;
 
 if (!R2_BUCKET_NAME || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_ENDPOINT) {
-  console.warn("⚠️  R2 configuration is incomplete. File storage operations will fail.");
 }
 
 const S3 = new S3Client({
@@ -30,7 +29,8 @@ export interface UploadResult {
 export async function uploadFile(
   file: File | Buffer,
   folder: string = "uploads",
-  fileName?: string
+  fileName?: string,
+  mimeTypeOverride?: string
 ): Promise<UploadResult> {
   if (!R2_BUCKET_NAME) {
     throw new Error("R2 bucket not configured");
@@ -38,12 +38,10 @@ export async function uploadFile(
 
   const buffer = Buffer.isBuffer(file) ? file : Buffer.from(await file.arrayBuffer());
   const originalName = Buffer.isBuffer(file) ? fileName ?? "file" : file.name;
-  const mimeType = Buffer.isBuffer(file) ? "application/octet-stream" : file.type;
+  const mimeType = mimeTypeOverride || (Buffer.isBuffer(file) ? "application/octet-stream" : file.type);
   
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "-");
   const key = `${folder}/${Date.now()}-${sanitizedName}`;
-  
-  console.log(`[Storage] Uploading to bucket: ${R2_BUCKET_NAME}, Endpoint: ${R2_ENDPOINT}, Key: ${key}`);
   
   try {
     await S3.send(
@@ -55,7 +53,6 @@ export async function uploadFile(
         })
     );
   } catch (error) {
-    console.error(`[Storage] Upload failed:`, error);
     throw error;
   }
 

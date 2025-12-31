@@ -10,7 +10,8 @@ import { Loader2, QrCode as QrCodeIcon, ExternalLink, RefreshCw, FileImage, File
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
-// import { PageHeader } from "@/components/ui/page-header";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -37,11 +38,21 @@ type QRCodeData = {
 };
 
 export default function CEOQRCodePage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const { data: organizations, isLoading: isOrgLoading } = useGetOrganizations();
   const [targetUrl, setTargetUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [qrCodes, setQrCodes] = useState<QRCodeData[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  // Check if user is OWNER
+  useEffect(() => {
+    if (session?.user?.role && session.user.role !== "OWNER") {
+      toast.error("Access Denied: Only organization owners can access QR codes.");
+      router.push("/dashboard");
+    }
+  }, [session, router]);
 
   // Default to first org for now
   const orgId = organizations?.[0]?.id;
@@ -77,9 +88,6 @@ export default function CEOQRCodePage() {
     const formData = new FormData();
     formData.append("targetUrl", targetUrl);
     formData.append("orgId", orgId);
-    if (typeof window !== "undefined") {
-        formData.append("origin", window.location.origin);
-    }
 
     try {
       const result = await generateQRCode(formData);
@@ -89,7 +97,6 @@ export default function CEOQRCodePage() {
         fetchQRCodes();
       } else {
         toast.error(result.error || "Failed to generate QR code");
-        console.error(result.error);
       }
     } catch {
       toast.error("An error occurred");
@@ -98,34 +105,38 @@ export default function CEOQRCodePage() {
     }
   };
 
-  const downloadQRCode = async (slug: string, format: "png" | "jpeg" | "svg") => {
-    const trackingUrl = typeof window !== 'undefined' ? `${window.location.origin}/qr/${slug}` : `/qr/${slug}`;
+  const downloadQRCode = async (imageUrl: string, slug: string, format: "png" | "jpeg" | "svg") => {
     try {
-      let url = "";
       if (format === "svg") {
+        const trackingUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL 
+          ? `${process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL}/qr/${slug}`
+          : typeof window !== 'undefined' 
+            ? `${window.location.origin}/qr/${slug}` 
+            : `/qr/${slug}`;
         const svgString = await QRCode.toString(trackingUrl, { type: "svg", width: 1024, margin: 2 });
         const blob = new Blob([svgString], { type: "image/svg+xml" });
-        url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `qr-code-${slug}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       } else {
-        // png or jpeg
-        url = await QRCode.toDataURL(trackingUrl, { type: "image/jpeg", width: 1024, margin: 2 });
-        // default toDataURL returns png? checking type
-        if (format === "jpeg") {
-           url = await QRCode.toDataURL(trackingUrl, { type: "image/jpeg", width: 1024, margin: 2 });
-        } else {
-           url = await QRCode.toDataURL(trackingUrl, { type: "image/png", width: 1024, margin: 2 });
-        }
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error("Failed to fetch QR code image");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `qr-code-${slug}.${format === "jpeg" ? "jpg" : "png"}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       }
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `qr-code-${slug}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      if (format === "svg") URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
       toast.error("Failed to download QR code");
     }
   };
@@ -145,6 +156,15 @@ export default function CEOQRCodePage() {
       toast.error("An error occurred");
     }
   };
+
+  // Show loading or redirect if not OWNER
+  if (!session?.user || session.user.role !== "OWNER") {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   if (isOrgLoading) {
     return (
@@ -265,14 +285,13 @@ export default function CEOQRCodePage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "png")}>
+                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "png")}>
                                 <FileImage className="mr-2 h-4 w-4" /> PNG
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "jpeg")}>
+                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "jpeg")}>
                                 <FileImage className="mr-2 h-4 w-4" /> JPEG
                             </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.slug, "svg")}>
+                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "svg")}>
                                 <FileType className="mr-2 h-4 w-4" /> SVG
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete(qr.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">

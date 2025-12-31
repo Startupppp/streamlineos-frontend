@@ -111,7 +111,6 @@ export async function createProject(data: {
         revalidatePath("/projects");
         return { success: true };
     } catch (e) {
-        console.error(e);
         return { error: "Failed to create project" };
     }
 }

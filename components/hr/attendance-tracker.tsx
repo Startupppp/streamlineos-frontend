@@ -58,7 +58,6 @@ export function AttendanceTracker({
         },
         (error) => {
           toast.error("Location required for Check-In");
-          console.error(error);
         }
       );
     } else {

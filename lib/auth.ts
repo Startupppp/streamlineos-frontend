@@ -33,7 +33,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // Block inactive users
         if (user.isActive === false) {
            return null;
         }
@@ -74,7 +73,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user, trigger, session }) {
         if (trigger === "update" && session?.forceChangePassword !== undefined) {
-             token.forceChangePassword = session.forceChangePassword;
+             if (token.id) {
+               const dbUser = await db.query.users.findFirst({
+                 where: eq(users.id, token.id as string),
+               });
+               if (dbUser) {
+                 token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
+               } else {
+                 token.forceChangePassword = session.forceChangePassword;
+               }
+             } else {
+               token.forceChangePassword = session.forceChangePassword;
+             }
         }
 
       if (user) {

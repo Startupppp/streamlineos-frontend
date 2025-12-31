@@ -381,12 +381,6 @@ export const projectRouter = createTRPCRouter({
   deleteTicket: protectedProcedure
     .input(z.object({ ticketId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      // Delete related records first (cascade should handle this if set up, but let's be safe or rely on constraints)
-      // Assuming simplified deletion for now or cascade constraints exist. 
-      // If not, we might need to delete from mapping tables.
-      // Based on typical schema, cascade might not be everywhere.
-      // Let's check schema.ts later if this fails, but for now strict delete from tickets.
-      
       await ctx.db
         .delete(tickets)
         .where(
