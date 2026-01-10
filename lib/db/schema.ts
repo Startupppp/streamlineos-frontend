@@ -11,7 +11,7 @@ export const leaveStatusEnum = pgEnum("leave_status", ["PENDING", "APPROVED", "R
 export const payrollStatusEnum = pgEnum("payroll_status", ["DRAFT", "PENDING_APPROVAL", "APPROVED", "PAID"]);
 export const expenseStatusEnum = pgEnum("expense_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
 export const assetStatusEnum = pgEnum("asset_status", ["AVAILABLE", "ASSIGNED", "MAINTENANCE", "RETIRED"]);
-export const documentTypeEnum = pgEnum("document_type", ["CONTRACT", "CERTIFICATE", "ID", "PAYSLIP", "OTHER"]);
+export const documentTypeEnum = pgEnum("document_type", ["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]);
 export const reviewStatusEnum = pgEnum("review_status", ["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]);
 export const notificationTypeEnum = pgEnum("notification_type", ["INFO", "SUCCESS", "WARNING", "ERROR"]);
 export const workflowStatusEnum = pgEnum("workflow_status", ["ACTIVE", "INACTIVE"]);
@@ -260,19 +260,40 @@ export const salaryStructures = pgTable("salary_structures", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const expenseCategories = pgTable("expense_categories", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  budgetLimit: decimal("budget_limit"),
+  budgetPeriod: text("budget_period").default("MONTHLY"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").references(() => expenseCategories.id),
   category: text("category").notNull(),
   amount: decimal("amount").notNull(),
+  currency: text("currency").default("INR"),
   description: text("description"),
   receiptUrl: text("receipt_url"),
+  receiptFileName: text("receipt_file_name"),
+  merchant: text("merchant"),
+  paymentMethod: text("payment_method"),
+  projectId: integer("project_id").references(() => projects.id),
   status: expenseStatusEnum("status").default("PENDING"),
   approverId: text("approver_id").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
   rejectionReason: text("rejection_reason"),
+  paidAt: timestamp("paid_at"),
+  transactionRef: text("transaction_ref"),
   expenseDate: date("expense_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const assets = pgTable("assets", {
@@ -295,14 +316,22 @@ export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id),
+  departmentId: integer("department_id").references(() => departments.id),
   name: text("name").notNull(),
+  description: text("description"),
   type: documentTypeEnum("type").notNull(),
+  category: text("category"),
   fileUrl: text("file_url").notNull(),
+  fileName: text("file_name"),
   fileSize: integer("file_size"),
   mimeType: text("mime_type"),
   version: integer("version").default(1),
   parentDocumentId: integer("parent_document_id"),
+  isPublic: boolean("is_public").default(false),
   isActive: boolean("is_active").default(true),
+  expiryDate: date("expiry_date"),
+  expiryReminderSent: boolean("expiry_reminder_sent").default(false),
+  tags: text("tags").array(),
   metadata: jsonb("metadata"),
   uploadedBy: text("uploaded_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -342,6 +371,17 @@ export const goals = pgTable("goals", {
   status: text("status").default("IN_PROGRESS"),
   progress: integer("progress").default(0),
   parentGoalId: integer("parent_goal_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const holidays = pgTable("holidays", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  date: date("date").notNull(),
+  message: text("message"),
+  notificationSent: boolean("notification_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -507,7 +547,13 @@ export const timesheets = pgTable("timesheets", {
   date: date("date").notNull(),
   hours: decimal("hours").default("0"),
   description: text("description"),
+  status: text("status").default("PENDING"), // PENDING, APPROVED, REJECTED
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  isBillable: boolean("is_billable").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const reports = pgTable("reports", {
@@ -691,6 +737,10 @@ export const salaryStructuresRelations = relations(salaryStructures, ({ one }) =
   }),
 }));
 
+export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
+  expenses: many(expenses),
+}));
+
 export const expensesRelations = relations(expenses, ({ one }) => ({
   user: one(users, {
     fields: [expenses.userId],
@@ -701,6 +751,14 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
     fields: [expenses.approverId],
     references: [users.id],
     relationName: "expenseApprover",
+  }),
+  expenseCategory: one(expenseCategories, {
+    fields: [expenses.categoryId],
+    references: [expenseCategories.id],
+  }),
+  project: one(projects, {
+    fields: [expenses.projectId],
+    references: [projects.id],
   }),
 }));
 
@@ -815,6 +873,13 @@ export const timesheetsRelations = relations(timesheets, ({ one }) => ({
   user: one(users, {
     fields: [timesheets.userId],
     references: [users.id],
+  }),
+}));
+
+export const holidaysRelations = relations(holidays, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [holidays.orgId],
+    references: [organizations.id],
   }),
 }));
 
