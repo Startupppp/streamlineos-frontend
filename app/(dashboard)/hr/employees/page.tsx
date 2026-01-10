@@ -58,8 +58,7 @@ export default function EmployeeDirectoryPage() {
              } catch { 
                  // ignore 
              }
-        } catch (e) {
-            // Error handling
+        } catch {
         } finally {
             setLoading(false);
         }

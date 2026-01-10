@@ -30,6 +30,12 @@ import {
   createLabelInputSchema,
   addTimeEntryInputSchema,
 } from "../../../lib/validations/project";
+import { 
+  sendProjectAssignmentEmail, 
+  sendTicketAssignmentEmail,
+  sendTicketReviewRequestEmail,
+  sendTicketChangesRequestedEmail,
+} from "../../../lib/email";
 
 export const projectRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
@@ -201,6 +207,39 @@ export const projectRouter = createTRPCRouter({
                   role: "CONTRIBUTOR",
               }))
           );
+
+          // Send email notifications to added members
+          console.log(`[PROJECT CREATE] Adding ${input.memberIds.length} members to new project`);
+          
+          const currentUser = await ctx.db.query.users.findFirst({
+            where: eq(users.id, ctx.session.userId),
+          });
+
+          const addedMembers = await ctx.db.query.users.findMany({
+            where: inArray(users.id, input.memberIds),
+          });
+
+          console.log(`[PROJECT CREATE] Found ${addedMembers.length} members to notify`);
+
+          for (const member of addedMembers) {
+            console.log(`[PROJECT CREATE] Processing member: ${member.email}, has email: ${!!member.email}`);
+            if (member.email) {
+              try {
+                console.log(`[PROJECT CREATE] Sending email to ${member.email}...`);
+                await sendProjectAssignmentEmail(
+                  member.email,
+                  member.name || member.firstName || 'Team Member',
+                  input.name,
+                  projectKey,
+                  project.id,
+                  currentUser?.name || currentUser?.firstName || undefined
+                );
+                console.log(`[PROJECT CREATE] Email sent successfully to ${member.email}`);
+              } catch (emailError) {
+                console.error(`[PROJECT CREATE] Failed to send assignment email to ${member.email}:`, emailError);
+              }
+            }
+          }
       }
 
       return project;
@@ -227,6 +266,14 @@ export const projectRouter = createTRPCRouter({
         );
 
       if (input.memberIds) {
+        // Get existing member IDs before deletion
+        const existingMembers = await ctx.db
+          .select({ userId: projectMembers.userId })
+          .from(projectMembers)
+          .where(eq(projectMembers.projectId, input.projectId));
+        
+        const existingMemberIds = new Set(existingMembers.map(m => m.userId));
+
         // Remove existing members
         await ctx.db
           .delete(projectMembers)
@@ -241,6 +288,51 @@ export const projectRouter = createTRPCRouter({
               role: "CONTRIBUTOR",
             }))
           );
+
+          // Send email notifications to newly added members only
+          const newMemberIds = input.memberIds.filter(id => !existingMemberIds.has(id));
+          
+          console.log(`[PROJECT UPDATE] Existing members: ${existingMemberIds.size}, New members to notify: ${newMemberIds.length}`);
+          
+          if (newMemberIds.length > 0) {
+            const [currentUser, project, newMembers] = await Promise.all([
+              ctx.db.query.users.findFirst({
+                where: eq(users.id, ctx.session.userId),
+              }),
+              ctx.db.query.projects.findFirst({
+                where: eq(projects.id, input.projectId),
+              }),
+              ctx.db.query.users.findMany({
+                where: inArray(users.id, newMemberIds),
+              }),
+            ]);
+
+            console.log(`[PROJECT UPDATE] Found ${newMembers.length} new members to email for project: ${project?.name}`);
+
+            if (project) {
+              for (const member of newMembers) {
+                console.log(`[PROJECT UPDATE] Processing member: ${member.email}, has email: ${!!member.email}`);
+                if (member.email) {
+                  try {
+                    console.log(`[PROJECT UPDATE] Sending email to ${member.email}...`);
+                    await sendProjectAssignmentEmail(
+                      member.email,
+                      member.name || member.firstName || 'Team Member',
+                      project.name,
+                      project.key,
+                      project.id,
+                      currentUser?.name || currentUser?.firstName || undefined
+                    );
+                    console.log(`[PROJECT UPDATE] Email sent successfully to ${member.email}`);
+                  } catch (emailError) {
+                    console.error(`[PROJECT UPDATE] Failed to send assignment email to ${member.email}:`, emailError);
+                  }
+                }
+              }
+            }
+          } else {
+            console.log(`[PROJECT UPDATE] No new members to notify (all were already in project)`);
+          }
         }
       }
     }),
@@ -327,6 +419,40 @@ export const projectRouter = createTRPCRouter({
           status: "TODO",
         })
         .returning();
+
+      // Send email notification if ticket is assigned
+      if (input.assigneeId) {
+        try {
+          const [assignee, creator, project] = await Promise.all([
+            ctx.db.query.users.findFirst({
+              where: eq(users.id, input.assigneeId),
+            }),
+            ctx.db.query.users.findFirst({
+              where: eq(users.id, input.reporterId || ctx.session.userId),
+            }),
+            ctx.db.query.projects.findFirst({
+              where: eq(projects.id, input.projectId),
+            }),
+          ]);
+
+          if (assignee?.email && creator && project) {
+            await sendTicketAssignmentEmail(
+              assignee.email,
+              assignee.name || assignee.firstName || 'Team Member',
+              input.title,
+              input.type,
+              input.priority || 'MEDIUM',
+              project.name,
+              input.projectId,
+              ticket.id,
+              creator.name || creator.firstName || 'Team Member'
+            );
+          }
+        } catch (error) {
+          // Don't fail ticket creation if email fails
+        }
+      }
+
       return ticket;
     }),
 
@@ -367,6 +493,18 @@ export const projectRouter = createTRPCRouter({
   updateTicketStatus: protectedProcedure
     .input(updateTicketStatusInputSchema)
     .mutation(async ({ ctx, input }) => {
+      const oldTicket = await ctx.db.query.tickets.findFirst({
+        where: and(
+          eq(tickets.id, input.ticketId),
+          eq(tickets.orgId, ctx.session.orgId)
+        ),
+        with: {
+          assignee: true,
+          reporter: true,
+          project: true,
+        },
+      });
+
       await ctx.db
         .update(tickets)
         .set({ status: input.status, updatedAt: new Date() })
@@ -376,6 +514,46 @@ export const projectRouter = createTRPCRouter({
             eq(tickets.orgId, ctx.session.orgId)
           )
         );
+
+      if (oldTicket && oldTicket.status !== input.status) {
+        try {
+          const currentUser = await ctx.db.query.users.findFirst({
+            where: eq(users.id, ctx.session.userId),
+          });
+
+          if (input.status === 'IN_REVIEW' && oldTicket.reporter?.email) {
+            await sendTicketReviewRequestEmail(
+              oldTicket.reporter.email,
+              oldTicket.reporter.name || oldTicket.reporter.firstName || 'Team Member',
+              oldTicket.title,
+              oldTicket.type || 'TASK',
+              oldTicket.project?.name || 'Project',
+              oldTicket.projectId!,
+              oldTicket.id,
+              currentUser?.name || currentUser?.firstName || 'Team Member',
+              undefined
+            );
+          }
+
+          if (
+            oldTicket.status === 'IN_REVIEW' && 
+            input.status === 'IN_PROGRESS' && 
+            oldTicket.assignee?.email
+          ) {
+            await sendTicketChangesRequestedEmail(
+              oldTicket.assignee.email,
+              oldTicket.assignee.name || oldTicket.assignee.firstName || 'Team Member',
+              oldTicket.title,
+              oldTicket.project?.name || 'Project',
+              oldTicket.projectId!,
+              oldTicket.id,
+              currentUser?.name || currentUser?.firstName || 'Reviewer',
+              undefined
+            );
+          }
+        } catch (error) {
+        }
+      }
     }),
 
   deleteTicket: protectedProcedure
@@ -590,6 +768,202 @@ export const projectRouter = createTRPCRouter({
             }
         }
       });
+    }),
+
+  getAllTeamTimesheets: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string().optional(),
+        projectId: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only owners and admins can view team timesheets",
+        });
+      }
+
+      const conditions = [eq(timesheets.orgId, ctx.session.orgId)];
+
+      if (input.userId) {
+        conditions.push(eq(timesheets.userId, input.userId));
+      }
+
+      if (input.startDate) {
+        conditions.push(gte(timesheets.date, input.startDate));
+      }
+
+      if (input.endDate) {
+        conditions.push(lte(timesheets.date, input.endDate));
+      }
+
+      if (input.status) {
+        conditions.push(eq(timesheets.status, input.status));
+      }
+
+      // Use select with joins to get approver name
+      const entries = await ctx.db
+        .select({
+          id: timesheets.id,
+          userId: timesheets.userId,
+          ticketId: timesheets.ticketId,
+          date: timesheets.date,
+          hours: timesheets.hours,
+          description: timesheets.description,
+          status: timesheets.status,
+          approvedBy: timesheets.approvedBy,
+          approvedAt: timesheets.approvedAt,
+          rejectionReason: timesheets.rejectionReason,
+          createdAt: timesheets.createdAt,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            image: users.image,
+          },
+          approver: sql<{
+            firstName: string | null;
+            lastName: string | null;
+          } | null>`
+            CASE 
+              WHEN ${timesheets.approvedBy} IS NOT NULL THEN
+                json_build_object(
+                  'firstName', (SELECT first_name FROM users WHERE id = ${timesheets.approvedBy}),
+                  'lastName', (SELECT last_name FROM users WHERE id = ${timesheets.approvedBy})
+                )
+              ELSE NULL
+            END
+          `.as('approver'),
+        })
+        .from(timesheets)
+        .leftJoin(users, eq(timesheets.userId, users.id))
+        .where(and(...conditions))
+        .orderBy(desc(timesheets.date));
+
+      // Fetch tickets separately with project info
+      const ticketIds = entries.map(e => e.ticketId).filter(Boolean) as number[];
+      let ticketsMap = new Map();
+
+      if (ticketIds.length > 0) {
+        const ticketsData = await ctx.db.query.tickets.findMany({
+          where: inArray(tickets.id, ticketIds),
+          with: {
+            project: true,
+          },
+        });
+        ticketsData.forEach(t => ticketsMap.set(t.id, t));
+      }
+
+      // Combine the data
+      const result = entries.map(entry => ({
+        ...entry,
+        ticket: entry.ticketId ? ticketsMap.get(entry.ticketId) : null,
+        approverName: entry.approver 
+          ? `${entry.approver.firstName || ''} ${entry.approver.lastName || ''}`.trim()
+          : null,
+      }));
+
+      if (input.projectId) {
+        return result.filter((entry) => entry.ticket?.projectId === input.projectId);
+      }
+
+      return result;
+    }),
+
+  approveTimesheet: protectedProcedure
+    .input(z.object({
+      timesheetId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only owners and admins can approve timesheets",
+        });
+      }
+
+      await ctx.db
+        .update(timesheets)
+        .set({
+          status: "APPROVED",
+          approvedBy: ctx.session.userId,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(timesheets.id, input.timesheetId),
+            eq(timesheets.orgId, ctx.session.orgId)
+          )
+        );
+
+      return { success: true };
+    }),
+
+  rejectTimesheet: protectedProcedure
+    .input(z.object({
+      timesheetId: z.number(),
+      reason: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only owners and admins can reject timesheets",
+        });
+      }
+
+      await ctx.db
+        .update(timesheets)
+        .set({
+          status: "REJECTED",
+          rejectionReason: input.reason,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(timesheets.id, input.timesheetId),
+            eq(timesheets.orgId, ctx.session.orgId)
+          )
+        );
+
+      return { success: true };
+    }),
+
+  bulkApproveTimesheets: protectedProcedure
+    .input(z.object({
+      timesheetIds: z.array(z.number()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only owners and admins can approve timesheets",
+        });
+      }
+
+      await ctx.db
+        .update(timesheets)
+        .set({
+          status: "APPROVED",
+          approvedBy: ctx.session.userId,
+          approvedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            inArray(timesheets.id, input.timesheetIds),
+            eq(timesheets.orgId, ctx.session.orgId)
+          )
+        );
+
+      return { success: true, count: input.timesheetIds.length };
     }),
 
   getBillingSummary: protectedProcedure
