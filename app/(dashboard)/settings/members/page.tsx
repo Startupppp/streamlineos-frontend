@@ -1,11 +1,10 @@
 "use client";
 
-import { useGetOrganizations, useGetInvitations, useInviteUser, useCancelInvitation, useUpdateMemberRole, useRemoveMember } from "../../../../lib/hooks/auth-hooks";
+import { useGetOrganizations, useGetInvitations, useInviteUser, useCancelInvitation } from "../../../../lib/hooks/auth-hooks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
-import { Badge } from "../../../../components/ui/badge";
 import { toast } from "sonner";
 import { useState } from "react";
 import {
@@ -22,8 +21,6 @@ export default function MembersSettingsPage() {
   const { data: invitations } = useGetInvitations(orgId || "");
   const inviteUser = useInviteUser();
   const cancelInvitation = useCancelInvitation();
-  const updateMemberRole = useUpdateMemberRole();
-  const removeMember = useRemoveMember();
   
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"MEMBER" | "ADMIN">("MEMBER");
@@ -118,7 +115,7 @@ export default function MembersSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Pending Invitations</CardTitle>
-          <CardDescription>Invitations that haven't been accepted yet</CardDescription>
+          <CardDescription>Invitations that have not been accepted yet</CardDescription>
         </CardHeader>
         <CardContent>
           {invitations && invitations.length > 0 ? (
