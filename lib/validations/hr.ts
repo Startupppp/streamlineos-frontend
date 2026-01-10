@@ -64,7 +64,7 @@ export const updateAssetInputSchema = z.object({
 export const createDocumentInputSchema = z.object({
   userId: z.string().optional(),
   name: z.string().min(1, "Document name is required"),
-  type: z.enum(["CONTRACT", "CERTIFICATE", "ID", "PAYSLIP", "OTHER"]),
+  type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
   fileUrl: z.string().url(),
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),

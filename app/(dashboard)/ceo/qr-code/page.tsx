@@ -136,7 +136,7 @@ export default function CEOQRCodePage() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to download QR code");
     }
   };

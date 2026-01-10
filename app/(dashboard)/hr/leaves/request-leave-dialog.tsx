@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // Assuming this exists or clear
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { submitLeaveRequest } from "@/server/actions/leave-actions";

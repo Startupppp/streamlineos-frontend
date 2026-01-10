@@ -108,7 +108,7 @@ export async function generateQRCode(formData: FormData) {
         "image/png"
       );
       imageUrl = uploadResult.url;
-    } catch (storageError) {
+    } catch {
       if (process.env.NODE_ENV === "production") {
         return {
           success: false,
@@ -183,7 +183,7 @@ export async function deleteQRCode(id: number) {
       try {
         const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
         await deleteFile(fileKey);
-      } catch (r2Error) {
+      } catch {
       }
     } else if (qrCode.imageUrl?.startsWith("/")) {
       try {
@@ -192,7 +192,7 @@ export async function deleteQRCode(id: number) {
         if (existsSync(localPath)) {
           unlinkSync(localPath);
         }
-      } catch (localError) {
+      } catch {
       }
     }
 

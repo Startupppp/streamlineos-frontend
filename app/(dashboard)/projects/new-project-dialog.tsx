@@ -28,7 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { createProject } from "@/server/actions/project-actions";
-import { Plus, Check, ChevronsUpDown, User } from "lucide-react";
+import { Plus, Check, User } from "lucide-react";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 

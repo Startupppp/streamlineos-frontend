@@ -103,7 +103,7 @@ export default function DashboardPage() {
     },
     {
       label: "Organization",
-      value: stats.orgSlug,
+      value: stats.orgName,
       icon: Building2,
     },
   ];

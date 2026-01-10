@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
 import { Calendar, Target, CheckCircle2 } from "lucide-react";
 import { useSprints } from "../../lib/hooks/trpc-hooks";
 import { format } from "date-fns";

@@ -14,11 +14,26 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 
+interface LeaveRequest {
+  id: number;
+  startDate: Date | string;
+  endDate: Date | string;
+  status: string | null;
+  reason: string | null;
+  leaveType: {
+    name: string;
+  } | null;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+}
+
 interface PendingRequestsListProps {
-    requests: any[]; // Using any to avoid strict type duplication for now
+    requests: LeaveRequest[];
 }
 
 export function PendingRequestsList({ requests }: PendingRequestsListProps) {
@@ -54,7 +69,9 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
                         <div className="flex justify-between items-start">
                             <div>
                                 <CardTitle className="text-base font-semibold">
-                                    {req.user?.name || req.user?.email}
+                                    {req.user?.firstName && req.user?.lastName 
+                                      ? `${req.user.firstName} ${req.user.lastName}` 
+                                      : req.user?.email}
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">{req.leaveType?.name}</p>
                             </div>

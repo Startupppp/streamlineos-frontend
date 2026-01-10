@@ -2,7 +2,6 @@
 
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DailyLog } from "@/components/attendance/daily-log";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function AttendancePage() {
@@ -16,7 +15,6 @@ export default function AttendancePage() {
           </p>
         </div>
         <div>
-           {/* Widget in header area for quick access */}
            <ClockInWidget />
         </div>
       </div>
