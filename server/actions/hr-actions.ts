@@ -5,6 +5,7 @@ import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { sendAccountDeactivationEmail } from "@/lib/email";
 
 export async function getEmployees() {
   const session = await auth();
@@ -143,11 +144,25 @@ export async function deleteEmployee(userId: string) {
   }
 
   try {
+      // Get employee details before deactivation
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
       // Soft delete
       await db.update(users)
         .set({ isActive: false })
         .where(eq(users.id, userId));
       
+      // Send deactivation email
+      if (employee?.email) {
+        await sendAccountDeactivationEmail(
+          employee.email,
+          employee.name || "Employee",
+          session.user.name || "Administrator"
+        );
+      }
+
       revalidatePath("/hr/employees");
       return { success: true };
   } catch (error) {

@@ -64,7 +64,7 @@ export async function uploadOnboardingDocument(formData: FormData) {
   if (!session?.user?.id) return { error: "Unauthorized" };
   
   const file = formData.get("file") as File;
-  const docType = formData.get("type") as "CONTRACT" | "CERTIFICATE" | "ID" | "PAYSLIP" | "OTHER";
+  const docType = formData.get("type") as "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
   
   if (!file) return { error: "No file provided" };
 
