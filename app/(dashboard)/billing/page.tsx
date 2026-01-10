@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/trpc/react";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Loader2, DollarSign, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,8 +30,7 @@ import {
 export default function BillingPage() {
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
-  const [hourlyRate, setHourlyRate] = useState<number>(50); // Default rate
-  const [invoiceProject, setInvoiceProject] = useState<any>(null); // Selected project for invoice
+  const [hourlyRate, setHourlyRate] = useState<number>(50);
 
   const { data: summary, isLoading } = api.project.getBillingSummary.useQuery({
       startDate,
@@ -129,7 +128,7 @@ export default function BillingPage() {
                     <TableCell>
                         <Dialog>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setInvoiceProject(item)}>Generate Invoice</Button>
+                                <Button variant="outline" size="sm">Generate Invoice</Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>

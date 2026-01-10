@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../../../components/ui/button";
@@ -14,7 +13,6 @@ import { vaivammTrpcClient } from "../../../lib/trpc";
 import { ThemeToggle } from "../../../components/theme-toggle";
 
 export default function SignUpPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -53,7 +51,8 @@ export default function SignUpPage() {
       });
 
       toast.success("Account created! Please check your email to verify your account.");
-      router.push("/verify-email?email=" + encodeURIComponent(formData.email));
+      await new Promise(resolve => setTimeout(resolve, 100));
+      window.location.href = "/verify-email?email=" + encodeURIComponent(formData.email);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "An error occurred";
       toast.error(message);

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../lib/trpc";
+import { ThemeToggle } from "../../../components/theme-toggle";
+import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -15,14 +18,9 @@ function VerifyEmailForm() {
   const email = searchParams.get("email");
   const [isVerifying, setIsVerifying] = useState(!!token);
   const [isVerified, setIsVerified] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      verifyEmail();
-    }
-  }, [token]);
-
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -37,21 +35,49 @@ function VerifyEmailForm() {
       toast.error(message);
       setIsVerifying(false);
     }
+  }, [token, router]);
+
+  useEffect(() => {
+    if (token) {
+      verifyEmail();
+    }
+  }, [token, verifyEmail]);
+
+  const handleResend = async () => {
+    if (!email) return;
+    setIsResending(true);
+    try {
+      await vaivammTrpcClient.auth.resendVerificationEmail.mutate({ email });
+      toast.success("Verification email resent!");
+    } catch {
+      toast.error("Failed to resend email");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   if (isVerified) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Email Verified!</CardTitle>
-          <CardDescription>Your email has been successfully verified</CardDescription>
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto bg-green-100 dark:bg-green-900/30 p-4 rounded-full w-fit mb-2">
+            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+          </div>
+          <CardTitle className="text-2xl text-primary">Email Verified!</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Your email has been successfully verified
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            You can now sign in to your account.
-          </p>
-          <Link href="/signin">
-            <Button className="w-full">Go to Sign In</Button>
+        <CardContent className="space-y-4">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <p className="text-sm text-green-700 dark:text-green-300">
+              Redirecting you to sign in page...
+            </p>
+          </div>
+          <Link href="/signin" className="block">
+            <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+              Go to Sign In
+            </Button>
           </Link>
         </CardContent>
       </Card>
@@ -60,14 +86,23 @@ function VerifyEmailForm() {
 
   if (isVerifying) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Verifying Email</CardTitle>
-          <CardDescription>Please wait while we verify your email address</CardDescription>
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          </div>
+          <CardTitle className="text-2xl text-primary">Verifying Email</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Please wait while we verify your email address
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="flex items-center justify-center py-4">
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-pulse text-sm text-muted-foreground">
+                This will only take a moment...
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -75,40 +110,60 @@ function VerifyEmailForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Verify Your Email</CardTitle>
-        <CardDescription>
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+      <CardHeader className="space-y-1 text-center">
+        <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+          <Mail className="w-8 h-8 text-primary" />
+        </div>
+        <CardTitle className="text-2xl text-primary">Verify Your Email</CardTitle>
+        <CardDescription className="text-muted-foreground">
           {email
-            ? `We've sent a verification email to ${email}`
+            ? `We have sent a verification email to`
             : "Please check your email for a verification link"}
         </CardDescription>
+        {email && <p className="font-medium text-foreground">{email}</p>}
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Click the link in the email to verify your account. The link will expire in 24 hours.
-        </p>
+      <CardContent className="space-y-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Click the link in the email to verify your account. The link will expire in 24 hours.
+          </p>
+        </div>
         <div className="space-y-2">
-          <Link href="/signin">
+          <Link href="/signin" className="block">
             <Button variant="outline" className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Sign In
             </Button>
           </Link>
-          <Button
-            variant="ghost"
-            className="w-full"
-            onClick={() => {
-              if (email) {
-                // Resend verification email
-                vaivammTrpcClient.auth.resendVerificationEmail
-                  .mutate({ email })
-                  .then(() => toast.success("Verification email resent!"))
-                  .catch(() => toast.error("Failed to resend email"));
-              }
-            }}
-          >
-            Resend Verification Email
-          </Button>
+          {email && (
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={handleResend}
+              disabled={isResending}
+            >
+              {isResending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Resend Verification Email
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LoadingCard() {
+  return (
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+      <CardContent className="py-12">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </CardContent>
     </Card>
@@ -117,17 +172,24 @@ function VerifyEmailForm() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={
-      <Card>
-        <CardContent className="py-8">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
-    }>
-      <VerifyEmailForm />
-    </Suspense>
+    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
+      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
+      
+      <div className="flex flex-col items-center mb-8">
+        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+          <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+        </div>
+        <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Email Verification</h1>
+        <p className="text-blue-100 dark:text-muted-foreground mt-2">Almost there! Just one more step</p>
+      </div>
+
+      <Suspense fallback={<LoadingCard />}>
+        <VerifyEmailForm />
+      </Suspense>
+      
+      <div className="mt-8 text-white/40 text-sm">
+        &copy; 2025 Vaivamm Capital
+      </div>
+    </div>
   );
 }
-
