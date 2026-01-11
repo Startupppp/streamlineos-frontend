@@ -15,6 +15,8 @@ import {
   Search,
   Wallet,
   TrendingUp,
+  Settings,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +67,8 @@ import {
   getExpenseCategories,
 } from "@/server/actions/expense-actions";
 import { CreateExpenseDialog } from "./create-expense-dialog";
+import { BudgetManagement } from "./budget-management";
+import { ExpenseReports } from "./expense-reports";
 import { useSession } from "next-auth/react";
 
 const EXPENSE_CATEGORIES = [
@@ -334,16 +338,26 @@ export default function ExpensesPage() {
 
       {/* Main Content */}
       <Tabs defaultValue={isAdmin && pendingExpenses.length > 0 ? "pending" : "all"} className="space-y-4">
-        {isAdmin && (
-          <TabsList className="bg-white shadow-sm border">
+        <TabsList className="bg-white shadow-sm border">
+          {isAdmin && (
             <TabsTrigger value="pending" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
               Pending ({pendingExpenses.length})
             </TabsTrigger>
-            <TabsTrigger value="all" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
-              All Expenses
+          )}
+          <TabsTrigger value="all" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+            {isAdmin ? "All Expenses" : "My Expenses"}
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+            <BarChart3 className="h-4 w-4 mr-1.5" />
+            Reports
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="budgets" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+              <Settings className="h-4 w-4 mr-1.5" />
+              Budgets
             </TabsTrigger>
-          </TabsList>
-        )}
+          )}
+        </TabsList>
 
         {/* Pending Tab */}
         {isAdmin && (
@@ -598,6 +612,18 @@ export default function ExpensesPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Reports Tab */}
+        <TabsContent value="reports" className="space-y-4">
+          <ExpenseReports isAdmin={isAdmin} />
+        </TabsContent>
+
+        {/* Budgets Tab (Admin Only) */}
+        {isAdmin && (
+          <TabsContent value="budgets" className="space-y-4">
+            <BudgetManagement />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Create Expense Dialog */}

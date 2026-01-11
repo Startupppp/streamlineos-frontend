@@ -391,3 +391,186 @@ export async function getExpenseStats() {
   };
 }
 
+// Category Spending (for Budget Management)
+export async function getCategorySpending() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+
+  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+    return [];
+  }
+
+  const categories = await db.query.expenseCategories.findMany({
+    where: and(
+      eq(expenseCategories.orgId, member.orgId),
+      eq(expenseCategories.isActive, true)
+    ),
+  });
+
+  const allExpenses = await db.query.expenses.findMany({
+    where: eq(expenses.orgId, member.orgId),
+  });
+
+  return categories.map(cat => {
+    const categoryExpenses = allExpenses.filter(e => e.category === cat.name);
+    const totalSpent = categoryExpenses
+      .filter(e => e.status === "APPROVED" || e.status === "PAID")
+      .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+    const pendingAmount = categoryExpenses
+      .filter(e => e.status === "PENDING")
+      .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+    const approvedAmount = categoryExpenses
+      .filter(e => e.status === "APPROVED")
+      .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+
+    return {
+      categoryId: cat.id,
+      categoryName: cat.name,
+      budgetLimit: parseFloat(cat.budgetLimit || "0"),
+      budgetPeriod: cat.budgetPeriod || "MONTHLY",
+      totalSpent,
+      pendingAmount,
+      approvedAmount,
+    };
+  });
+}
+
+// Expense Report Data
+export async function getExpenseReportData(filters: {
+  startDate: string;
+  endDate: string;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+
+  if (!member) return null;
+
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const conditions = [
+    eq(expenses.orgId, member.orgId),
+    gte(expenses.expenseDate, filters.startDate),
+    lte(expenses.expenseDate, filters.endDate),
+  ];
+
+  if (!isAdmin) {
+    conditions.push(eq(expenses.userId, session.user.id));
+  }
+
+  const allExpenses = await db.query.expenses.findMany({
+    where: and(...conditions),
+    with: {
+      user: true,
+    },
+    orderBy: [desc(expenses.expenseDate)],
+  });
+
+  // Summary
+  const totalAmount = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+  const approvedAmount = allExpenses
+    .filter(e => e.status === "APPROVED" || e.status === "PAID")
+    .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+  const rejectedAmount = allExpenses
+    .filter(e => e.status === "REJECTED")
+    .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+  const pendingAmount = allExpenses
+    .filter(e => e.status === "PENDING")
+    .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
+
+  // By Category
+  const categoryMap = new Map<string, { count: number; amount: number }>();
+  allExpenses.forEach(e => {
+    const existing = categoryMap.get(e.category) || { count: 0, amount: 0 };
+    categoryMap.set(e.category, {
+      count: existing.count + 1,
+      amount: existing.amount + parseFloat(e.amount || "0"),
+    });
+  });
+  const byCategory = Array.from(categoryMap.entries())
+    .map(([category, data]) => ({
+      category,
+      count: data.count,
+      amount: data.amount,
+      percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // By Employee
+  const employeeMap = new Map<string, { name: string; count: number; amount: number }>();
+  allExpenses.forEach(e => {
+    const existing = employeeMap.get(e.userId) || {
+      name: `${e.user?.firstName || ""} ${e.user?.lastName || ""}`.trim() || "Unknown",
+      count: 0,
+      amount: 0,
+    };
+    employeeMap.set(e.userId, {
+      name: existing.name,
+      count: existing.count + 1,
+      amount: existing.amount + parseFloat(e.amount || "0"),
+    });
+  });
+  const byEmployee = Array.from(employeeMap.entries())
+    .map(([userId, data]) => ({
+      userId,
+      userName: data.name,
+      count: data.count,
+      amount: data.amount,
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // By Month
+  const monthMap = new Map<string, { count: number; amount: number }>();
+  allExpenses.forEach(e => {
+    const date = new Date(e.expenseDate);
+    const monthKey = `${date.toLocaleString("default", { month: "short" })} ${date.getFullYear()}`;
+    const existing = monthMap.get(monthKey) || { count: 0, amount: 0 };
+    monthMap.set(monthKey, {
+      count: existing.count + 1,
+      amount: existing.amount + parseFloat(e.amount || "0"),
+    });
+  });
+  const byMonth = Array.from(monthMap.entries())
+    .map(([month, data]) => ({
+      month,
+      count: data.count,
+      amount: data.amount,
+    }))
+    .slice(-6);
+
+  // Top Expenses
+  const topExpenses = allExpenses
+    .filter(e => e.status === "APPROVED" || e.status === "PAID")
+    .sort((a, b) => parseFloat(b.amount || "0") - parseFloat(a.amount || "0"))
+    .slice(0, 10)
+    .map(e => ({
+      id: e.id,
+      category: e.category,
+      amount: parseFloat(e.amount || "0"),
+      description: e.description || "",
+      userName: `${e.user?.firstName || ""} ${e.user?.lastName || ""}`.trim() || "Unknown",
+      expenseDate: e.expenseDate,
+    }));
+
+  return {
+    summary: {
+      totalExpenses: allExpenses.length,
+      totalAmount,
+      approvedAmount,
+      rejectedAmount,
+      pendingAmount,
+      avgExpenseAmount: allExpenses.length > 0 ? totalAmount / allExpenses.length : 0,
+    },
+    byCategory,
+    byEmployee,
+    byMonth,
+    topExpenses,
+  };
+}
+
