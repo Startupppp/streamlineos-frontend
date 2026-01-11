@@ -48,15 +48,14 @@ export default function SetupOrganizationPage() {
 
       if (result.error) {
         toast.error(result.error);
-        setIsLoading(false);
         return;
       }
 
       toast.success("Organization created successfully!");
-      // Redirect to onboarding to complete profile
       router.push("/onboarding");
     } catch {
       toast.error("Something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };

@@ -100,7 +100,7 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     loadData();
-  }, [selectedType]);
+  }, [selectedType, isAdmin, session]);
 
   const loadData = async () => {
     setLoading(true);

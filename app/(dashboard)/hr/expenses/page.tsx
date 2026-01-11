@@ -237,20 +237,20 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6 bg-slate-50/50 min-h-screen">
+    <div className="flex-1 space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Expense Management
           </h1>
-          <p className="text-slate-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             {isAdmin
               ? "Manage and approve expense claims across the organization"
               : "Submit and track your expense reimbursements"}
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700">
+        <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Expense
         </Button>
@@ -258,102 +258,94 @@ export default function ExpensesPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Total Expenses
             </CardTitle>
-            <div className="p-2 bg-violet-100 rounded-lg">
-              <Wallet className="h-4 w-4 text-violet-600" />
-            </div>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold">
               {formatCurrency(stats?.totalAmount || 0)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {stats?.totalCount || 0} claims submitted
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Pending Approval
             </CardTitle>
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <Clock className="h-4 w-4 text-amber-600" />
-            </div>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold">
               {formatCurrency(stats?.pendingAmount || 0)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {stats?.pendingCount || 0} awaiting review
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Approved
             </CardTitle>
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            </div>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold">
               {formatCurrency(stats?.approvedAmount || 0)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Ready for reimbursement
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
               Average Claim
             </CardTitle>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-            </div>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold">
               {formatCurrency(
                 stats?.totalCount
                   ? (stats.totalAmount || 0) / stats.totalCount
                   : 0
               )}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Per expense claim</p>
+            <p className="text-xs text-muted-foreground mt-1">Per expense claim</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
       <Tabs defaultValue={isAdmin && pendingExpenses.length > 0 ? "pending" : "all"} className="space-y-4">
-        <TabsList className="bg-white shadow-sm border">
+        <TabsList>
           {isAdmin && (
-            <TabsTrigger value="pending" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+            <TabsTrigger value="pending">
               Pending ({pendingExpenses.length})
             </TabsTrigger>
           )}
-          <TabsTrigger value="all" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+          <TabsTrigger value="all">
             {isAdmin ? "All Expenses" : "My Expenses"}
           </TabsTrigger>
-          <TabsTrigger value="reports" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+          <TabsTrigger value="reports">
             <BarChart3 className="h-4 w-4 mr-1.5" />
             Reports
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="budgets" className="data-[state=active]:bg-violet-100 data-[state=active]:text-violet-700">
+            <TabsTrigger value="budgets">
               <Settings className="h-4 w-4 mr-1.5" />
               Budgets
             </TabsTrigger>
@@ -363,26 +355,26 @@ export default function ExpensesPage() {
         {/* Pending Tab */}
         {isAdmin && (
           <TabsContent value="pending" className="space-y-4">
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="border-b bg-slate-50/50">
+            <Card>
+              <CardHeader>
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber-500" />
+                  <Clock className="h-5 w-5 text-muted-foreground" />
                   Pending Approval
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {pendingExpenses.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <div className="p-4 bg-emerald-100 rounded-full mb-4">
-                      <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                    <div className="p-4 bg-muted rounded-full mb-4">
+                      <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-slate-900">All caught up!</h3>
-                    <p className="text-slate-500">No pending expense claims to review</p>
+                    <h3 className="text-lg font-medium">All caught up!</h3>
+                    <p className="text-muted-foreground">No pending expense claims to review</p>
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/50">
+                      <TableRow>
                         <TableHead>Employee</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Description</TableHead>
@@ -394,21 +386,21 @@ export default function ExpensesPage() {
                     </TableHeader>
                     <TableBody>
                       {pendingExpenses.map((expense) => (
-                        <TableRow key={expense.id} className="hover:bg-slate-50/50">
+                        <TableRow key={expense.id}>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">
                                 <AvatarImage src={expense.user?.image || undefined} />
-                                <AvatarFallback className="bg-violet-100 text-violet-700 text-xs">
+                                <AvatarFallback className="text-xs">
                                   {expense.user?.firstName?.[0]}
                                   {expense.user?.lastName?.[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="font-medium text-slate-900">
+                                <p className="font-medium">
                                   {expense.user?.firstName} {expense.user?.lastName}
                                 </p>
-                                <p className="text-xs text-slate-500">{expense.user?.email}</p>
+                                <p className="text-xs text-muted-foreground">{expense.user?.email}</p>
                               </div>
                             </div>
                           </TableCell>
@@ -420,10 +412,10 @@ export default function ExpensesPage() {
                           <TableCell className="max-w-[200px] truncate">
                             {expense.description || "-"}
                           </TableCell>
-                          <TableCell className="text-slate-600">
+                          <TableCell className="text-muted-foreground">
                             {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-slate-900">
+                          <TableCell className="text-right font-semibold">
                             {formatCurrency(expense.amount)}
                           </TableCell>
                           <TableCell>
@@ -433,7 +425,6 @@ export default function ExpensesPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => window.open(expense.receiptUrl!, "_blank")}
-                                  className="text-violet-600 hover:text-violet-700"
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View
@@ -464,7 +455,7 @@ export default function ExpensesPage() {
                                 </Button>
                               </div>
                             ) : (
-                              <span className="text-slate-400 text-sm">No receipt</span>
+                              <span className="text-muted-foreground text-sm">No receipt</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -472,7 +463,6 @@ export default function ExpensesPage() {
                               <Button
                                 size="sm"
                                 onClick={() => handleApprove(expense.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700"
                               >
                                 Approve
                               </Button>
@@ -483,7 +473,6 @@ export default function ExpensesPage() {
                                   setSelectedExpense(expense);
                                   setIsRejectDialogOpen(true);
                                 }}
-                                className="border-red-200 text-red-600 hover:bg-red-50"
                               >
                                 Reject
                               </Button>
@@ -504,17 +493,17 @@ export default function ExpensesPage() {
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search expenses..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white"
+                className="pl-9"
               />
             </div>
             {isAdmin && (
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[180px] bg-white">
+                <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -529,15 +518,15 @@ export default function ExpensesPage() {
           </div>
 
           {/* Expenses Table */}
-          <Card className="border-0 shadow-sm">
+          <Card>
             <CardContent className="p-0">
               {filteredExpenses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <div className="p-4 bg-slate-100 rounded-full mb-4">
-                    <Receipt className="h-8 w-8 text-slate-400" />
+                  <div className="p-4 bg-muted rounded-full mb-4">
+                    <Receipt className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-slate-900">No expenses found</h3>
-                  <p className="text-slate-500 mb-4">Submit your first expense claim to get started</p>
+                  <h3 className="text-lg font-medium">No expenses found</h3>
+                  <p className="text-muted-foreground mb-4">Submit your first expense claim to get started</p>
                   <Button onClick={() => setIsCreateOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     New Expense
@@ -546,7 +535,7 @@ export default function ExpensesPage() {
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
+                    <TableRow>
                       {isAdmin && <TableHead>Employee</TableHead>}
                       <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
@@ -559,18 +548,18 @@ export default function ExpensesPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredExpenses.map((expense) => (
-                      <TableRow key={expense.id} className="hover:bg-slate-50/50">
+                      <TableRow key={expense.id}>
                         {isAdmin && (
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">
                                 <AvatarImage src={expense.user?.image || undefined} />
-                                <AvatarFallback className="bg-violet-100 text-violet-700 text-xs">
+                                <AvatarFallback className="text-xs">
                                   {expense.user?.firstName?.[0]}
                                   {expense.user?.lastName?.[0]}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="font-medium text-slate-900">
+                              <span className="font-medium">
                                 {expense.user?.firstName} {expense.user?.lastName}
                               </span>
                             </div>
@@ -581,16 +570,16 @@ export default function ExpensesPage() {
                             {expense.category}
                           </Badge>
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-slate-600">
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground">
                           {expense.description || "-"}
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-muted-foreground">
                           {expense.merchant || "-"}
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-muted-foreground">
                           {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-slate-900">
+                        <TableCell className="text-right font-semibold">
                           {formatCurrency(expense.amount)}
                         </TableCell>
                         <TableCell>{getStatusBadge(expense.status || "PENDING")}</TableCell>
@@ -645,7 +634,7 @@ export default function ExpensesPage() {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={() => handleDelete(expense.id)}
-                                    className="text-red-600"
+                                    className="text-destructive"
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete
@@ -696,7 +685,7 @@ export default function ExpensesPage() {
             <DialogTitle>Reject Expense</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Please provide a reason for rejecting this expense claim.
             </p>
             <Input
@@ -712,7 +701,7 @@ export default function ExpensesPage() {
             <Button
               onClick={handleReject}
               disabled={!rejectionReason}
-              className="bg-red-600 hover:bg-red-700"
+              variant="destructive"
             >
               Reject
             </Button>

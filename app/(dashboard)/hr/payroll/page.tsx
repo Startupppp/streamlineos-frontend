@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -34,6 +35,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { format, subMonths } from "date-fns";
 import { toast } from "sonner";
 import { PayrollListSkeleton } from "@/components/ui/payroll-skeleton";
@@ -46,6 +50,8 @@ import {
   Loader2,
   Download,
   CreditCard,
+  Eye,
+  Calculator,
 } from "lucide-react";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
@@ -67,11 +73,62 @@ export default function PayrollPage() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [showPreview, setShowPreview] = useState(false);
+  
+  // Deduction inputs
+  const [lopDays, setLopDays] = useState<string>("");
+  const [halfDays, setHalfDays] = useState<string>("");
+  const [otherDeductions, setOtherDeductions] = useState<string>("");
+  const [bonus, setBonus] = useState<string>("");
 
   const { data: allPayrolls, isLoading, refetch } = api.hr.getAllPayrolls.useQuery({
     month: selectedMonth,
   });
   const { data: employees } = api.hr.getEmployees.useQuery();
+
+  const selectedEmployeeData = useMemo(() => {
+    if (!selectedEmployee || !employees) return null;
+    return employees.find(e => e.id === selectedEmployee);
+  }, [selectedEmployee, employees]);
+
+  // Calculate payslip preview
+  const payslipPreview = useMemo(() => {
+    if (!selectedEmployeeData) return null;
+    
+    const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
+    const workingDays = 30;
+    const perDaySalary = monthlySalary / workingDays;
+    
+    // Calculate deductions
+    const lopDeduction = (parseFloat(lopDays) || 0) * perDaySalary;
+    const halfDayDeduction = ((parseFloat(halfDays) || 0) * perDaySalary) / 2;
+    
+    // Basic structure: 50% Basic, 50% HRA
+    const basicPay = monthlySalary * 0.5;
+    const hra = monthlySalary * 0.5;
+    const professionalTax = 200;
+    
+    const grossSalary = monthlySalary + (parseFloat(bonus) || 0);
+    const totalDeductions = lopDeduction + halfDayDeduction + professionalTax + (parseFloat(otherDeductions) || 0);
+    const netSalary = grossSalary - totalDeductions;
+    
+    return {
+      basicPay,
+      hra,
+      grossSalary,
+      lopDeduction,
+      halfDayDeduction,
+      professionalTax,
+      otherDeductions: parseFloat(otherDeductions) || 0,
+      bonus: parseFloat(bonus) || 0,
+      totalDeductions,
+      netSalary,
+      lopDays: parseFloat(lopDays) || 0,
+      halfDays: parseFloat(halfDays) || 0,
+      workingDays,
+      effectiveDays: workingDays - (parseFloat(lopDays) || 0) - ((parseFloat(halfDays) || 0) * 0.5),
+    };
+  }, [selectedEmployeeData, lopDays, halfDays, otherDeductions, bonus]);
 
   const generatePayrollMutation = api.hr.generatePayroll.useMutation({
     onSuccess: () => {
@@ -86,8 +143,7 @@ export default function PayrollPage() {
   const generateEmployeePayslipMutation = api.hr.generateEmployeePayslip.useMutation({
     onSuccess: () => {
       toast.success("Payslip generated successfully");
-      setGenerateDialogOpen(false);
-      setSelectedEmployee("");
+      resetDialog();
       refetch();
     },
     onError: (error) => {
@@ -115,8 +171,26 @@ export default function PayrollPage() {
     },
   });
 
+  const resetDialog = () => {
+    setGenerateDialogOpen(false);
+    setSelectedEmployee("");
+    setShowPreview(false);
+    setLopDays("");
+    setHalfDays("");
+    setOtherDeductions("");
+    setBonus("");
+  };
+
   const handleGenerateAll = () => {
     generatePayrollMutation.mutate({ month: selectedMonth });
+  };
+
+  const handleShowPreview = () => {
+    if (!selectedEmployee) {
+      toast.error("Please select an employee");
+      return;
+    }
+    setShowPreview(true);
   };
 
   const handleGenerateForEmployee = () => {
@@ -124,6 +198,10 @@ export default function PayrollPage() {
     generateEmployeePayslipMutation.mutate({
       userId: selectedEmployee,
       month: selectedMonth,
+      lopDays: parseFloat(lopDays) || 0,
+      halfDays: parseFloat(halfDays) || 0,
+      otherDeductions: parseFloat(otherDeductions) || 0,
+      bonus: parseFloat(bonus) || 0,
     });
   };
 
@@ -168,41 +246,247 @@ export default function PayrollPage() {
               </SelectContent>
             </Select>
 
-            <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
+            <Dialog open={generateDialogOpen} onOpenChange={(open) => {
+              if (!open) resetDialog();
+              else setGenerateDialogOpen(true);
+            }}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
                   Generate Individual
-                </Button>
+        </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Generate Payslip for Employee</DialogTitle>
+                  <DialogTitle>
+                    {showPreview ? "Payslip Preview" : "Generate Payslip for Employee"}
+                  </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select employee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees?.map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.firstName} {emp.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    onClick={handleGenerateForEmployee}
-                    disabled={!selectedEmployee || generateEmployeePayslipMutation.isPending}
-                    className="w-full"
-                  >
-                    {generateEmployeePayslipMutation.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                
+                {!showPreview ? (
+                  <div className="space-y-6 pt-4">
+                    {/* Employee Selection */}
+                    <div className="space-y-2">
+                      <Label>Select Employee</Label>
+                      <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select employee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {employees?.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.firstName} {emp.lastName} - ₹{parseFloat(emp.monthlySalary || "0").toLocaleString()}/month
+                          </SelectItem>
+                        ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedEmployeeData && (
+                      <>
+                        <Separator />
+                        
+                        {/* Attendance Adjustments */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-sm text-muted-foreground">Attendance Adjustments</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="lopDays">LOP Days (Loss of Pay)</Label>
+                              <Input
+                                id="lopDays"
+                                type="number"
+                                min="0"
+                                max="30"
+                                value={lopDays}
+                                onChange={(e) => setLopDays(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="halfDays">Half Days</Label>
+                              <Input
+                                id="halfDays"
+                                type="number"
+                                min="0"
+                                max="30"
+                                value={halfDays}
+                                onChange={(e) => setHalfDays(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+      </div>
+
+                        <Separator />
+
+                        {/* Additional Adjustments */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-sm text-muted-foreground">Additional Adjustments</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="bonus">Bonus / Incentive (₹)</Label>
+                              <Input
+                                id="bonus"
+                                type="number"
+                                min="0"
+                                value={bonus}
+                                onChange={(e) => setBonus(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="otherDeductions">Other Deductions (₹)</Label>
+                              <Input
+                                id="otherDeductions"
+                                type="number"
+                                min="0"
+                                value={otherDeductions}
+                                onChange={(e) => setOtherDeductions(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
                     )}
-                    Generate Payslip for {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
-                  </Button>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleShowPreview} disabled={!selectedEmployee}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Preview Payslip
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                ) : (
+                  <div className="space-y-6 pt-4">
+                    {/* Preview Card */}
+                    <Card className="border-2">
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">
+                              {selectedEmployeeData?.firstName} {selectedEmployeeData?.lastName}
+              </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {selectedEmployeeData?.designation || "Employee"}
+                            </p>
+                          </div>
+                          <Badge variant="outline">
+                            {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
+                          </Badge>
+                        </div>
+            </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Earnings */}
+                <div>
+                          <h4 className="font-semibold text-sm mb-2 text-green-700">Earnings</h4>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Basic Pay</span>
+                              <span>₹{payslipPreview?.basicPay.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">HRA</span>
+                              <span>₹{payslipPreview?.hra.toLocaleString()}</span>
+                            </div>
+                            {(payslipPreview?.bonus || 0) > 0 && (
+                              <div className="flex justify-between text-green-600">
+                                <span>Bonus / Incentive</span>
+                                <span>+₹{payslipPreview?.bonus.toLocaleString()}</span>
+                              </div>
+                            )}
+                            <Separator className="my-2" />
+                            <div className="flex justify-between font-medium">
+                              <span>Gross Salary</span>
+                              <span>₹{payslipPreview?.grossSalary.toLocaleString()}</span>
+                            </div>
+                          </div>
                 </div>
+
+                        {/* Deductions */}
+                <div>
+                          <h4 className="font-semibold text-sm mb-2 text-red-700">Deductions</h4>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Professional Tax</span>
+                              <span className="text-red-600">-₹{payslipPreview?.professionalTax.toLocaleString()}</span>
+                            </div>
+                            {(payslipPreview?.lopDays || 0) > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  LOP Deduction ({payslipPreview?.lopDays} days)
+                                </span>
+                                <span className="text-red-600">-₹{Math.round(payslipPreview?.lopDeduction || 0).toLocaleString()}</span>
+                              </div>
+                            )}
+                            {(payslipPreview?.halfDays || 0) > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">
+                                  Half Day Deduction ({payslipPreview?.halfDays} days)
+                                </span>
+                                <span className="text-red-600">-₹{Math.round(payslipPreview?.halfDayDeduction || 0).toLocaleString()}</span>
+                              </div>
+                            )}
+                            {(payslipPreview?.otherDeductions || 0) > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Other Deductions</span>
+                                <span className="text-red-600">-₹{payslipPreview?.otherDeductions.toLocaleString()}</span>
+                              </div>
+                            )}
+                            <Separator className="my-2" />
+                            <div className="flex justify-between font-medium">
+                              <span>Total Deductions</span>
+                              <span className="text-red-600">-₹{Math.round(payslipPreview?.totalDeductions || 0).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator />
+
+                        {/* Net Salary */}
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-lg font-bold">Net Salary</span>
+                          <span className="text-2xl font-bold text-green-600">
+                            ₹{Math.round(payslipPreview?.netSalary || 0).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* Working Days Info */}
+                        <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Working Days</span>
+                            <span>{payslipPreview?.workingDays}</span>
+                </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Effective Days</span>
+                            <span>{payslipPreview?.effectiveDays}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowPreview(false)}>
+                        <Calculator className="mr-2 h-4 w-4" />
+                        Edit Details
+                      </Button>
+                      <Button
+                        onClick={handleGenerateForEmployee}
+                        disabled={generateEmployeePayslipMutation.isPending}
+                      >
+                        {generateEmployeePayslipMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="mr-2 h-4 w-4" />
+                        )}
+                        Confirm & Generate
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
 
