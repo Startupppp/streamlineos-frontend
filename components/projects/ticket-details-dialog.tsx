@@ -13,11 +13,11 @@ import {
 } from "../../lib/hooks/trpc-hooks";
 import { Button } from "../ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet";
 import {
   Form,
   FormControl,
@@ -192,11 +192,14 @@ export function TicketDetailsDialog({
   const currentStatus = ticket?.status as keyof typeof statusConfig || "TODO";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent 
+        side="right" 
+        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-hidden p-0"
+      >
         {/* Header */}
         <div className="border-b bg-gradient-to-r from-primary/5 via-transparent to-transparent px-6 py-4">
-          <DialogHeader>
+          <SheetHeader>
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
@@ -214,9 +217,9 @@ export function TicketDetailsDialog({
                     </>
                   )}
                 </div>
-                <DialogTitle className="text-xl font-semibold leading-tight">
+                <SheetTitle className="text-xl font-semibold leading-tight">
                   {isLoading ? "Loading..." : ticket?.title}
-                </DialogTitle>
+                </SheetTitle>
               </div>
               {ticket && (
                 <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -255,11 +258,11 @@ export function TicketDetailsDialog({
                 </Popover>
               )}
             </div>
-          </DialogHeader>
+          </SheetHeader>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="overflow-y-auto h-[calc(100vh-120px)]">
           {isLoading ? (
             <div className="py-16 text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
@@ -270,7 +273,7 @@ export function TicketDetailsDialog({
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                   {/* Main Content - Left Side */}
-                  <div className="lg:col-span-2 p-6 space-y-6 border-r">
+                  <div className="lg:col-span-2 p-4 sm:p-6 space-y-6 border-r">
                     <FormField
                       control={form.control}
                       name="title"
@@ -410,7 +413,7 @@ export function TicketDetailsDialog({
                   </div>
 
                   {/* Sidebar - Right Side */}
-                  <div className="p-6 bg-muted/20 space-y-5">
+                  <div className="p-4 sm:p-6 bg-muted/20 space-y-5">
                     {/* Quick Status Fields */}
                     <div className="space-y-4">
                       <FormField
@@ -642,7 +645,7 @@ export function TicketDetailsDialog({
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

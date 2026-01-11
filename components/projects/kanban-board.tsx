@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -68,6 +68,7 @@ interface KanbanBoardProps {
 export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   
   const queryClient = useQueryClient();
 
@@ -128,7 +129,12 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
     },
   });
 
+  const onDragStart = () => {
+    dragStartRef.current = null;
+  };
+
   const onDragEnd = (result: DropResult) => {
+    dragStartRef.current = null;
     const { destination, source, draggableId } = result;
 
     if (!destination) {
@@ -239,7 +245,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   if (!isMounted) return null; // Prevent hydration error
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="flex h-full overflow-x-auto pb-4 gap-4 snap-x snap-mandatory px-4 md:px-0">
         {COLUMNS.map((col) => {
             const columnTickets = optimisticTickets
@@ -303,7 +309,21 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                                 "hover:shadow-md hover:border-primary/20",
                                                 snapshot.isDragging && "shadow-xl rotate-1 scale-[1.02] border-primary/30"
                                             )}
-                                            onClick={() => setSelectedTicketId(ticket.id)}
+                                            onMouseDown={(e) => {
+                                              dragStartRef.current = { x: e.clientX, y: e.clientY };
+                                            }}
+                                            onClick={(e) => {
+                                              if (dragStartRef.current) {
+                                                const moved = Math.abs(e.clientX - dragStartRef.current.x) > 5 || 
+                                                              Math.abs(e.clientY - dragStartRef.current.y) > 5;
+                                                if (!moved) {
+                                                  setSelectedTicketId(ticket.id);
+                                                }
+                                                dragStartRef.current = null;
+                                              } else {
+                                                setSelectedTicketId(ticket.id);
+                                              }
+                                            }}
                                             >
                                             <CardContent className="p-3 space-y-2">
                                                 <div className="flex justify-between items-start gap-2">
