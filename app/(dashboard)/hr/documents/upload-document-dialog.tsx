@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -92,6 +92,18 @@ export function UploadDocumentDialog({
   const { data: employees } = api.hr.getEmployees.useQuery(undefined, {
     enabled: isAdmin,
   });
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter((cat) => cat && cat.trim() !== "");
+  }, [categories]);
+
+  const filteredDocumentTypes = useMemo(() => {
+    return documentTypes.filter((type) => type.value && type.value.trim() !== "");
+  }, [documentTypes]);
+
+  const filteredEmployees = useMemo(() => {
+    return employees?.filter((emp) => emp.id && emp.id.trim() !== "") || [];
+  }, [employees]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -308,7 +320,7 @@ export function UploadDocumentDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {documentTypes.map((type) => (
+                        {filteredDocumentTypes.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.label}
                           </SelectItem>
@@ -333,7 +345,7 @@ export function UploadDocumentDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((cat) => (
+                        {filteredCategories.map((cat) => (
                           <SelectItem key={cat} value={cat}>
                             {cat}
                           </SelectItem>
@@ -346,22 +358,25 @@ export function UploadDocumentDialog({
               />
             </div>
 
-            {isAdmin && employees && employees.length > 0 && (
+            {isAdmin && filteredEmployees.length > 0 && (
               <FormField
                 control={form.control}
                 name="userId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Associate with Employee</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                      value={field.value || "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select employee (optional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No specific employee</SelectItem>
-                        {employees.map((emp) => (
+                        <SelectItem value="none">No specific employee</SelectItem>
+                        {filteredEmployees.map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>
                             {emp.firstName} {emp.lastName}
                           </SelectItem>

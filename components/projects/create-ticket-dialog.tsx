@@ -11,12 +11,12 @@ import {
 } from "../../lib/hooks/trpc-hooks";
 import { Button } from "../ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
 import {
   Form,
   FormControl,
@@ -132,19 +132,23 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Create Ticket
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>New Ticket</DialogTitle>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent 
+        side="right" 
+        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-y-auto p-0"
+      >
+        <SheetHeader className="p-6 pb-4 border-b">
+          <SheetTitle>New Ticket</SheetTitle>
+        </SheetHeader>
+        <div className="p-6 pt-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="type"
@@ -234,7 +238,7 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                <FormField
                 control={form.control}
                 name="assigneeId"
@@ -292,42 +296,82 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
             <FormItem className="pt-2">
                 <FormLabel>Attachment</FormLabel>
                 <FormControl>
-                    <div className="flex items-center gap-4 p-4 border border-dashed rounded-lg bg-muted/20">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => document.getElementById('ticket-file-upload')?.click()}
-                            className="w-full sm:w-auto"
-                        >
-                            <Upload className="mr-2 h-4 w-4" />
-                            {file ? "Change Image" : "Upload Image"}
-                        </Button>
-                        <Input 
-                            id="ticket-file-upload"
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={(e) => {
-                                const selected = e.target.files?.[0];
-                                if (selected) setFile(selected);
-                            }}
-                        />
-                         {file && (
-                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className="text-sm text-muted-foreground truncate">{file.name}</span>
-                                <Button 
-                                    type="button" 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    onClick={() => setFile(null)}
-                                    className="text-destructive h-8 w-8 ml-auto"
-                                >
-                                    <span className="sr-only">Remove</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-4 w-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                </Button>
+                    {!file ? (
+                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg p-6 cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors">
+                            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                            <span className="text-sm font-medium text-foreground">
+                                Click or drag to upload
+                            </span>
+                            <span className="text-xs text-muted-foreground mt-1">
+                                Images, PDF, DOC, XLS up to 25MB
+                            </span>
+                            <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                onChange={(e) => {
+                                    const selected = e.target.files?.[0];
+                                    if (selected) {
+                                        if (selected.size > 25 * 1024 * 1024) {
+                                            toast.error("File size must be less than 25MB");
+                                            return;
+                                        }
+                                        setFile(selected);
+                                    }
+                                }}
+                            />
+                        </label>
+                    ) : (
+                        <div className="flex items-center gap-4 p-4 border border-dashed rounded-lg bg-muted/20">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <Upload className="h-5 w-5 text-muted-foreground shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate">
+                                        {file.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {(file.size / 1024).toFixed(1)} KB
+                                    </p>
+                                </div>
                             </div>
-                        )}
-                    </div>
+                            <label className="cursor-pointer">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    className="shrink-0 pointer-events-none"
+                                >
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Change
+                                </Button>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                                    onChange={(e) => {
+                                        const selected = e.target.files?.[0];
+                                        if (selected) {
+                                            if (selected.size > 25 * 1024 * 1024) {
+                                                toast.error("File size must be less than 25MB");
+                                                return;
+                                            }
+                                            setFile(selected);
+                                        }
+                                    }}
+                                />
+                            </label>
+                            <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setFile(null)}
+                                className="text-destructive h-8 w-8 shrink-0"
+                            >
+                                <span className="sr-only">Remove</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-4 w-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </Button>
+                        </div>
+                    )}
                 </FormControl>
             </FormItem>
 
@@ -340,7 +384,8 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
             </Button>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

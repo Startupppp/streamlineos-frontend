@@ -14,6 +14,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }) as Adapter,
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
@@ -34,18 +35,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (user.isActive === false) {
-           return null;
+          return null;
         }
 
-        const isValid = await bcrypt.compare(credentials.password as string, user.password);
+        const isValid = await bcrypt.compare(
+          credentials.password as string,
+          user.password
+        );
 
         if (!isValid) {
           return null;
         }
 
-        const fullName = user.firstName && user.lastName 
-          ? `${user.firstName} ${user.lastName}` 
-          : user.name || user.email;
+        const fullName =
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.name || user.email;
 
         const role = user.role as "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
         const forceChangePassword = user.isPasswordChangeRequired || false;
@@ -72,20 +77,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-        if (trigger === "update" && session?.forceChangePassword !== undefined) {
-             if (token.id) {
-               const dbUser = await db.query.users.findFirst({
-                 where: eq(users.id, token.id as string),
-               });
-               if (dbUser) {
-                 token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
-               } else {
-                 token.forceChangePassword = session.forceChangePassword;
-               }
-             } else {
-               token.forceChangePassword = session.forceChangePassword;
-             }
+      if (trigger === "update" && session?.forceChangePassword !== undefined) {
+        if (token.id) {
+          const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, token.id as string),
+          });
+          if (dbUser) {
+            token.forceChangePassword =
+              dbUser.isPasswordChangeRequired || false;
+          } else {
+            token.forceChangePassword = session.forceChangePassword;
+          }
+        } else {
+          token.forceChangePassword = session.forceChangePassword;
         }
+      }
 
       if (user) {
         token.id = user.id;
@@ -100,7 +106,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
-        session.user.role = token.role as "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
+        session.user.role = token.role as
+          | "OWNER"
+          | "ADMIN"
+          | "MEMBER"
+          | "CLIENT";
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = token.isActive as boolean;
       }
@@ -110,5 +120,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   secret: process.env.NEXTAUTH_SECRET,
 });
-
-
