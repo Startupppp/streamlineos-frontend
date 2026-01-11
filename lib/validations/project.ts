@@ -94,7 +94,11 @@ export const addCommentInputSchema = z.object({
 
 export const addAttachmentInputSchema = z.object({
   ticketId: z.number().int().positive(),
-  fileUrl: z.string().url(),
+  // Accept both full URLs (for cloud storage like R2) and relative paths (for local storage)
+  fileUrl: z.string().min(1).refine(
+    (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+    { message: "File URL must be a valid URL or a relative path starting with /" }
+  ),
   fileName: z.string().min(1),
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),

@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+// Custom refinement for URLs that accepts both full URLs and relative paths (for local storage)
+const fileUrlSchema = z.string().min(1).refine(
+  (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+  { message: "Must be a valid URL or a relative path starting with /" }
+);
+
 export const createDepartmentInputSchema = z.object({
   name: z.string().min(1, "Department name is required"),
 });
@@ -29,7 +35,7 @@ export const createExpenseInputSchema = z.object({
   category: z.string().min(1, "Category is required"),
   amount: z.number().positive(),
   description: z.string().optional(),
-  receiptUrl: z.string().url().optional(),
+  receiptUrl: fileUrlSchema.optional(),
   expenseDate: z.date(),
 });
 
@@ -65,7 +71,7 @@ export const createDocumentInputSchema = z.object({
   userId: z.string().optional(),
   name: z.string().min(1, "Document name is required"),
   type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
-  fileUrl: z.string().url(),
+  fileUrl: fileUrlSchema,
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),
 });

@@ -8,19 +8,16 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RequestLeaveDialog } from "./request-leave-dialog";
-import { RequestWFHDialog } from "./request-wfh-dialog";
 import { PendingRequestsList } from "./pending-requests-list";
-import { WFHRequestsList } from "./wfh-requests-list";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { LeaveErrorState, NoLeaveRequestsState } from "./leaves-empty-states";
-import { CalendarDays, Palmtree, Heart, Briefcase } from "lucide-react";
+import { CalendarDays, Palmtree, Heart } from "lucide-react";
 
 const leaveTypeIcons: Record<string, React.ElementType> = {
   "Annual Leave": Palmtree,
   "Sick Leave": Heart,
   "Personal Leave": CalendarDays,
-  "Work From Home": Briefcase,
 };
 
 export default async function LeavesPage() {
@@ -51,22 +48,19 @@ export default async function LeavesPage() {
         title="Leave Management"
         description="Request time off and track your leave balances."
         actions={
-          <div className="flex gap-2">
-            <RequestWFHDialog approvers={approvers} />
-            <RequestLeaveDialog 
-              leaveTypes={context.types || []} 
-              approvers={approvers} 
-            />
-          </div>
+          <RequestLeaveDialog 
+            leaveTypes={context.types || []} 
+            approvers={approvers} 
+          />
         }
       />
 
       {/* Balance Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {context.balances.map((bal) => {
+        {context.balances.map((bal, index) => {
           const Icon = leaveTypeIcons[bal.typeName || ""] || CalendarDays;
           return (
-            <Card key={bal.leaveTypeId} className="border-border">
+            <Card key={`${bal.leaveTypeId}-${index}`} className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {bal.typeName}
@@ -89,7 +83,6 @@ export default async function LeavesPage() {
       <Tabs defaultValue="my-requests" className="space-y-4">
         <TabsList>
           <TabsTrigger value="my-requests">My Requests</TabsTrigger>
-          <TabsTrigger value="wfh">Work From Home</TabsTrigger>
           {incomingRequests.length > 0 && (
             <TabsTrigger value="approvals" className="relative">
               Approvals
@@ -144,11 +137,6 @@ export default async function LeavesPage() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* WFH Tab */}
-        <TabsContent value="wfh" className="space-y-4">
-          <WFHRequestsList />
         </TabsContent>
 
         {/* Approvals Tab */}
