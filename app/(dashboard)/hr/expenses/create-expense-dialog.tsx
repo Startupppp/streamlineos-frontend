@@ -109,18 +109,22 @@ export function CreateExpenseDialog({
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("folder", "receipts");
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Upload failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
 
       const data = await response.json();
       return data.url;
-    } catch (error) {
-      console.error("Upload error:", error);
+    } catch {
+      toast.error("Failed to upload receipt");
       return null;
     } finally {
       setUploading(false);

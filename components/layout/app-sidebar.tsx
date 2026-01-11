@@ -20,6 +20,8 @@ import {
   QrCode,
   Receipt,
   FileText,
+  Laptop,
+  Wallet,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -61,6 +63,7 @@ const adminNavGroups: NavGroup[] = [
       { label: "Attendance", icon: Clock, href: "/hr/attendance" },
       { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
       { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
+      { label: "Devices", icon: Laptop, href: "/hr/devices" },
       { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
       { label: "Documents", icon: FileText, href: "/hr/documents" },
     ],
@@ -100,6 +103,7 @@ const employeeNavGroups: NavGroup[] = [
     routes: [
       { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
       { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+      { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
       { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
       { label: "My Documents", icon: FileText, href: "/hr/documents" },
     ],

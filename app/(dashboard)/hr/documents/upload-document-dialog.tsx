@@ -148,13 +148,17 @@ export function UploadDocumentDialog({
       setUploading(true);
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("folder", "documents");
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Upload failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
 
       const data = await response.json();
       return {
@@ -162,8 +166,8 @@ export function UploadDocumentDialog({
         size: file.size,
         mimeType: file.type,
       };
-    } catch (error) {
-      console.error("Upload error:", error);
+    } catch {
+      toast.error("Failed to upload file");
       return null;
     } finally {
       setUploading(false);

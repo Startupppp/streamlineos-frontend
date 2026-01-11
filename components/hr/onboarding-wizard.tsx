@@ -104,6 +104,8 @@ export function OnboardingWizard() {
       lastName: "",
       email: "",
       phone: "",
+      whatsappSameAsPhone: true,
+      whatsappNumber: "",
       gender: "MALE",
       password: "", 
       designation: "",
@@ -114,6 +116,7 @@ export function OnboardingWizard() {
       skills: "",
       experienceYears: 0,
       taxId: "",
+      monthlySalary: undefined,
       bankDetails: {
           accountNumber: "",
           bankName: "",
@@ -122,7 +125,7 @@ export function OnboardingWizard() {
           accountHolder: ""
       }
     } as DefaultValues<FormValues>,
-    mode: "onChange", // Validate on change for better UX
+    mode: "onChange",
   });
 
   const { trigger, getValues } = form;
@@ -258,12 +261,44 @@ export function OnboardingWizard() {
                           <FormItem>
                             <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <Input placeholder="+1 234 567 8900" {...field} className="bg-background/50" />
+                              <Input placeholder="+91 9876543210" {...field} className="bg-background/50" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="whatsappSameAsPhone"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center gap-3 space-y-0 pt-4">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal cursor-pointer">WhatsApp number same as phone</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      {!form.watch("whatsappSameAsPhone") && (
+                        <FormField
+                          control={form.control}
+                          name="whatsappNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>WhatsApp Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="+91 9876543210" {...field} className="bg-background/50" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                        <FormField
                         control={form.control}
                         name="gender"
@@ -478,8 +513,8 @@ export function OnboardingWizard() {
                   {currentStep === 3 && (
                     <div className="space-y-6">
                         <div className="mb-2">
-                          <h2 className="text-xl font-semibold">Skills & Experience</h2>
-                          <p className="text-sm text-muted-foreground">Professional background information.</p>
+                          <h2 className="text-xl font-semibold">Skills, Experience & Salary</h2>
+                          <p className="text-sm text-muted-foreground">Professional background and compensation.</p>
                       </div>
 
                       <FormField
@@ -516,14 +551,58 @@ export function OnboardingWizard() {
                             name="taxId"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Tax ID (Optional)</FormLabel>
+                                <FormLabel>PAN Number</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="SSN / PAN / Tax ID" {...field} className="bg-background/50" />
+                                  <Input placeholder="ABCDE1234F" {...field} className="bg-background/50" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <h3 className="text-lg font-medium mb-4">Salary Information</h3>
+                        <FormField
+                          control={form.control}
+                          name="monthlySalary"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Monthly Salary (CTC) <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="25000" 
+                                    {...field} 
+                                    className="bg-background/50 pl-8" 
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormDescription>
+                                Salary breakdown: Basic (50%) + HRA (25%) + Special Allowance (25%) - Professional Tax (₹200)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {form.watch("monthlySalary") && Number(form.watch("monthlySalary")) > 0 && (
+                          <div className="mt-4 p-4 bg-muted/30 rounded-lg border text-sm">
+                            <div className="grid grid-cols-2 gap-2">
+                              <span className="text-muted-foreground">Basic Pay:</span>
+                              <span className="font-medium">₹{(Number(form.watch("monthlySalary")) * 0.5).toLocaleString()}</span>
+                              <span className="text-muted-foreground">HRA:</span>
+                              <span className="font-medium">₹{(Number(form.watch("monthlySalary")) * 0.25).toLocaleString()}</span>
+                              <span className="text-muted-foreground">Special Allowance:</span>
+                              <span className="font-medium">₹{(Number(form.watch("monthlySalary")) * 0.25).toLocaleString()}</span>
+                              <span className="text-muted-foreground">Professional Tax:</span>
+                              <span className="font-medium text-red-600">-₹200</span>
+                              <span className="text-muted-foreground font-semibold border-t pt-2">Net Salary:</span>
+                              <span className="font-bold text-green-600 border-t pt-2">₹{(Number(form.watch("monthlySalary")) - 200).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

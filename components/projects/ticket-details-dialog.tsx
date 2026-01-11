@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -8,6 +8,7 @@ import {
   useUpdateTicket,
   useDeleteTicket,
   useProjectMembers,
+  useAddComment,
   vaivammKeys,
 } from "../../lib/hooks/trpc-hooks";
 import { Button } from "../ui/button";
@@ -34,7 +35,7 @@ import {
 } from "../ui/select";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Trash2, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { Trash2, Link as LinkIcon, ExternalLink, MessageSquare, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updateTicketInputSchema } from "../../lib/validations/project";
 import { z } from "zod";
@@ -46,7 +47,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../ui/popover";
-import { useState } from "react";
 
 const formSchema = updateTicketInputSchema;
 
@@ -69,10 +69,9 @@ export function TicketDetailsDialog({
 }: TicketDetailsDialogProps) {
   const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [commentText, setCommentText] = useState("");
   const { data: ticket, isLoading } = useTicket(ticketId || 0);
   const { data: members } = useProjectMembers();
-
-  // ... (rest of hook calls) ...
 
   const updateTicketMutation = useUpdateTicket({
     onSuccess: () => {
@@ -102,6 +101,27 @@ export function TicketDetailsDialog({
       toast.error(error.message || "Failed to delete ticket");
     },
   });
+
+  const addCommentMutation = useAddComment({
+    onSuccess: () => {
+      setCommentText("");
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.ticket(ticketId!),
+      });
+      toast.success("Comment added");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add comment");
+    },
+  });
+
+  const handleAddComment = () => {
+    if (!commentText.trim() || !ticketId) return;
+    addCommentMutation.mutate({
+      ticketId,
+      content: commentText.trim(),
+    });
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -236,7 +256,6 @@ export function TicketDetailsDialog({
                       </div>
                   )}
 
-                  {/* Attachments Section could go here, but focusing on CRUD fields first as requested */}
                   {ticket.attachments && ticket.attachments.length > 0 && (
                       <div className="space-y-2">
                           <h4 className="text-sm font-medium">Attachments</h4>
@@ -263,6 +282,69 @@ export function TicketDetailsDialog({
                           </div>
                       </div>
                   )}
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="text-sm font-medium">Comments ({ticket.comments?.length || 0})</h4>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Textarea
+                        placeholder="Add a comment..."
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        className="min-h-[80px] resize-none"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                            handleAddComment();
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        size="sm" 
+                        onClick={handleAddComment}
+                        disabled={!commentText.trim() || addCommentMutation.isPending}
+                      >
+                        {addCommentMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Post Comment
+                      </Button>
+                    </div>
+
+                    {ticket.comments && ticket.comments.length > 0 && (
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                        {ticket.comments.map((comment) => (
+                          <div key={comment.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarImage src={comment.user?.image || undefined} />
+                              <AvatarFallback className="text-xs">
+                                {comment.user?.firstName?.[0]}{comment.user?.lastName?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium">
+                                  {comment.user?.firstName} {comment.user?.lastName}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {comment.createdAt ? format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a") : ""}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                                {comment.content}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-4">

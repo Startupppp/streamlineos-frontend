@@ -116,8 +116,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         endDate: format(endDate, "yyyy-MM-dd"),
       });
       setReportData(data);
-    } catch (error) {
-      console.error("Failed to load report data:", error);
+    } catch {
     } finally {
       setLoading(false);
     }
