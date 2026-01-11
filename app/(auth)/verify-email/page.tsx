@@ -8,7 +8,6 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../lib/trpc";
-import { ThemeToggle } from "../../../components/theme-toggle";
 import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 
 function VerifyEmailForm() {
@@ -58,10 +57,10 @@ function VerifyEmailForm() {
 
   if (isVerified) {
     return (
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
         <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto bg-green-100 dark:bg-green-900/30 p-4 rounded-full w-fit mb-2">
-            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+          <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-2">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
           <CardTitle className="text-2xl text-primary">Email Verified!</CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -69,8 +68,8 @@ function VerifyEmailForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <p className="text-sm text-green-700 dark:text-green-300">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm text-green-700">
               Redirecting you to sign in page...
             </p>
           </div>
@@ -86,7 +85,7 @@ function VerifyEmailForm() {
 
   if (isVerifying) {
     return (
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -110,7 +109,7 @@ function VerifyEmailForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
       <CardHeader className="space-y-1 text-center">
         <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
           <Mail className="w-8 h-8 text-primary" />
@@ -124,8 +123,8 @@ function VerifyEmailForm() {
         {email && <p className="font-medium text-foreground">{email}</p>}
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-700">
             Click the link in the email to verify your account. The link will expire in 24 hours.
           </p>
         </div>
@@ -159,7 +158,7 @@ function VerifyEmailForm() {
 
 function LoadingCard() {
   return (
-    <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
       <CardContent className="py-12">
         <div className="flex flex-col items-center justify-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -172,15 +171,13 @@ function LoadingCard() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-      
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
         <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Email Verification</h1>
-        <p className="text-blue-100 dark:text-muted-foreground mt-2">Almost there! Just one more step</p>
+        <h1 className="text-3xl font-bold text-white tracking-tight">Email Verification</h1>
+        <p className="text-blue-100 mt-2">Almost there! Just one more step</p>
       </div>
 
       <Suspense fallback={<LoadingCard />}>

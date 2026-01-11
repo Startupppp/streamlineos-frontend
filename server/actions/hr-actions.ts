@@ -137,10 +137,16 @@ export async function updateEmployee(data: {
 export async function deleteEmployee(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-  const { role } = session.user;
+  const { role, id: currentUserId } = session.user;
 
+  // Only Owners and Admins can delete employees
   if (role !== "OWNER" && role !== "ADMIN") {
       return { error: "Permission denied" };
+  }
+
+  // Prevent self-deletion
+  if (userId === currentUserId) {
+      return { error: "You cannot delete your own account" };
   }
 
   try {
@@ -148,6 +154,20 @@ export async function deleteEmployee(userId: string) {
       const employee = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });
+
+      if (!employee) {
+        return { error: "User not found" };
+      }
+
+      // Admins can only delete MEMBER accounts, not other ADMINs or OWNERs
+      if (role === "ADMIN" && (employee.role === "ADMIN" || employee.role === "OWNER")) {
+        return { error: "Admins can only delete Member accounts" };
+      }
+
+      // Owners cannot delete other Owners
+      if (role === "OWNER" && employee.role === "OWNER") {
+        return { error: "Cannot delete another Owner account" };
+      }
 
       // Soft delete
       await db.update(users)

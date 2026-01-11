@@ -460,34 +460,64 @@ export const projectRouter = createTRPCRouter({
     .input(updateTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { ticketId, ...updateData } = input;
-      await ctx.db
-        .update(tickets)
-        .set({
-          ...(updateData.title && { title: updateData.title }),
-          ...(updateData.description !== undefined && {
-            description: updateData.description,
-          }),
-          ...(updateData.type && {
-            type: updateData.type as "EPIC" | "STORY" | "TASK" | "BUG",
-          }),
-          ...(updateData.status && { status: updateData.status }),
-          ...(updateData.priority && { priority: updateData.priority }),
-          ...(updateData.assigneeId !== undefined && {
-            assigneeId: updateData.assigneeId,
-          }),
-          ...(updateData.sprintId !== undefined && {
-            sprintId: updateData.sprintId,
-          }),
-          ...(updateData.epicId !== undefined && { epicId: updateData.epicId }),
-          ...(updateData.points !== undefined && { points: updateData.points }),
-          ...(updateData.originalEstimate !== undefined && {
-            originalEstimate: updateData.originalEstimate.toString(),
-          }),
-          updatedAt: new Date(),
-        })
-        .where(
-          and(eq(tickets.id, ticketId), eq(tickets.orgId, ctx.session.orgId))
-        );
+      
+      // Build update object conditionally
+      const updateFields: Record<string, unknown> = {
+        updatedAt: new Date(),
+      };
+
+      if (updateData.title) {
+        updateFields.title = updateData.title;
+      }
+      if (updateData.description !== undefined) {
+        updateFields.description = updateData.description;
+      }
+      if (updateData.type) {
+        updateFields.type = updateData.type;
+      }
+      if (updateData.status) {
+        updateFields.status = updateData.status;
+      }
+      if (updateData.priority) {
+        updateFields.priority = updateData.priority;
+      }
+      // Handle assigneeId - allow setting to null for unassigning
+      if (updateData.assigneeId !== undefined) {
+        // Convert empty string or "unassigned" to null
+        updateFields.assigneeId = 
+          updateData.assigneeId === "" || updateData.assigneeId === "unassigned"
+            ? null
+            : updateData.assigneeId;
+      }
+      if (updateData.sprintId !== undefined) {
+        updateFields.sprintId = updateData.sprintId;
+      }
+      if (updateData.epicId !== undefined) {
+        updateFields.epicId = updateData.epicId;
+      }
+      if (updateData.points !== undefined) {
+        updateFields.points = updateData.points;
+      }
+      if (updateData.originalEstimate !== undefined) {
+        updateFields.originalEstimate = updateData.originalEstimate.toString();
+      }
+
+      try {
+        await ctx.db
+          .update(tickets)
+          .set(updateFields)
+          .where(
+            and(eq(tickets.id, ticketId), eq(tickets.orgId, ctx.session.orgId))
+          );
+        
+        return { success: true };
+      } catch (error) {
+        console.error("Update ticket error:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update ticket",
+        });
+      }
     }),
 
   updateTicketStatus: protectedProcedure

@@ -19,8 +19,8 @@ import { toast } from "sonner";
 import { resetPassword } from "@/server/actions/auth-actions";
 import { Loader2, Rocket, Shield, Eye, EyeOff } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const formSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -32,6 +32,7 @@ const formSchema = z.object({
 
 export default function ResetPasswordPage() {
   const { update } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -51,9 +52,13 @@ export default function ResetPasswordPage() {
 
       if (result.success) {
         toast.success("Password updated successfully! Redirecting...");
+        // Update session to clear forceChangePassword flag
         await update({ forceChangePassword: false });
-        await new Promise(resolve => setTimeout(resolve, 500));
-        window.location.href = "/dashboard";
+        // Small delay to ensure session update propagates
+        await new Promise(resolve => setTimeout(resolve, 300));
+        // Use router for navigation with refresh to ensure fresh server state
+        router.push("/dashboard");
+        router.refresh();
       } else {
         toast.error(result.error || "Failed to update password");
       }
@@ -65,18 +70,16 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-      
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
         <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Welcome Aboard!</h1>
-        <p className="text-blue-100 dark:text-muted-foreground mt-2">Complete your account setup</p>
+        <h1 className="text-3xl font-bold text-white tracking-tight">Welcome Aboard!</h1>
+        <p className="text-blue-100 mt-2">Complete your account setup</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
         <CardHeader className="space-y-1 text-center pb-4">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
             <Rocket className="w-8 h-8 text-primary" />
@@ -102,7 +105,7 @@ export default function ResetPasswordPage() {
                           <Input 
                             type={showPassword ? "text" : "password"} 
                             placeholder="Enter your new password" 
-                            className="pl-10 pr-10 focus-visible:ring-primary dark:bg-background"
+                            className="pl-10 pr-10 focus-visible:ring-primary"
                             {...field} 
                           />
                           <button
@@ -130,7 +133,7 @@ export default function ResetPasswordPage() {
                           <Input 
                             type={showConfirmPassword ? "text" : "password"} 
                             placeholder="Confirm your password" 
-                            className="pl-10 pr-10 focus-visible:ring-primary dark:bg-background"
+                            className="pl-10 pr-10 focus-visible:ring-primary"
                             {...field} 
                           />
                           <button

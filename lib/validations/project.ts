@@ -46,7 +46,7 @@ export const createTicketInputSchema = z.object({
   sprintId: z.number().int().positive().optional(),
   epicId: z.number().int().positive().optional(),
   points: z.number().int().min(0).optional(),
-  link: z.string().url().optional().or(z.literal("")),
+  link: z.string().optional(),
   originalEstimate: z.number().positive().optional(),
 });
 

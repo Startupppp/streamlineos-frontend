@@ -10,16 +10,18 @@ import {
 } from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../pre-ui/loading-spinner";
-import { Clock } from "lucide-react";
+import { Clock, Timer } from "lucide-react";
 
 export function ClockInWidget() {
   const [now, setNow] = useState(new Date());
+  const [localCooldown, setLocalCooldown] = useState(0);
 
   const { data: statusData, isLoading } = useHrAttendanceStatus();
 
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {
       toast.success("Clocked in successfully!");
+      setLocalCooldown(0);
     },
     onError: (err) => {
       toast.error(err.message);
@@ -29,11 +31,30 @@ export function ClockInWidget() {
   const checkOutMutation = useHrCheckOut({
     onSuccess: () => {
       toast.success("Clocked out successfully!");
+      // Start local cooldown timer (120 seconds = 2 minutes)
+      setLocalCooldown(120);
     },
     onError: (err) => {
       toast.error(err.message);
     },
   });
+
+  // Initialize cooldown from server data
+  useEffect(() => {
+    if (statusData?.cooldownRemaining && statusData.cooldownRemaining > 0) {
+      setLocalCooldown(statusData.cooldownRemaining);
+    }
+  }, [statusData?.cooldownRemaining]);
+
+  // Countdown timer for cooldown
+  useEffect(() => {
+    if (localCooldown > 0) {
+      const timer = setTimeout(() => {
+        setLocalCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [localCooldown]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,17 +65,24 @@ export function ClockInWidget() {
 
   const isCheckedIn = statusData?.status === "PRESENT";
   const isOnBreak = statusData?.status === "ON_BREAK";
+  const isInCooldown = localCooldown > 0;
 
   const handleClockAction = () => {
     if (isCheckedIn || isOnBreak) {
       checkOutMutation.mutate();
-    } else {
+    } else if (!isInCooldown) {
       checkInMutation.mutate({ location: undefined });
     }
   };
 
   const isPending =
     checkInMutation.isPending || checkOutMutation.isPending || isLoading;
+
+  const formatCooldown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+  };
 
   const sessionTime = useMemo(() => {
     if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) return null;
@@ -97,12 +125,14 @@ export function ClockInWidget() {
       </div>
       
       <Button
-        variant={isCheckedIn || isOnBreak ? "outline" : "destructive"}
-        disabled={isPending}
+        variant={isCheckedIn || isOnBreak ? "outline" : isInCooldown ? "secondary" : "destructive"}
+        disabled={isPending || isInCooldown}
         onClick={handleClockAction}
         className={`font-bold px-6 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
           isCheckedIn || isOnBreak
             ? "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+            : isInCooldown
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
             : "bg-red-600 hover:bg-red-700 text-white shadow-red-900/20"
         }`}
       >
@@ -110,6 +140,11 @@ export function ClockInWidget() {
           <LoadingSpinner size="sm" />
         ) : isCheckedIn || isOnBreak ? (
           "WEB CLOCK-OUT"
+        ) : isInCooldown ? (
+          <span className="flex items-center gap-2">
+            <Timer className="h-3.5 w-3.5" />
+            {formatCooldown(localCooldown)}
+          </span>
         ) : (
           "WEB CLOCK-IN"
         )}

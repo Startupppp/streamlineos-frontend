@@ -711,7 +711,7 @@ export function OnboardingWizard() {
                                 <div><span className="text-muted-foreground">Full Name:</span> <span className="font-medium">{getValues("firstName")} {getValues("lastName")}</span></div>
                                 <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{getValues("email")}</span></div>
                                 <div><span className="text-muted-foreground">Role:</span> <span className="font-medium">{getValues("designation")}</span></div>
-                                <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{departments?.find(d => d.id === getValues("departmentId"))?.name}</span></div>
+                                <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{allDepartmentOptions?.find(d => d.id === getValues("departmentId"))?.name}</span></div>
                                 <div><span className="text-muted-foreground">Joining:</span> <span className="font-medium">{format(getValues("joiningDate"), "PPP")}</span></div>
                             </div>
                         </div>

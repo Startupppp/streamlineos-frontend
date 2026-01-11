@@ -3,11 +3,32 @@
 import { db } from "@/lib/db";
 import { users, documents, onboardingSteps, organizationMembers } from "@/lib/db/schema";
 
-
 import { eq, and } from "drizzle-orm";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile, isStorageConfigured } from "@/lib/storage";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+
+// Local storage fallback when R2 is not configured or fails
+async function uploadFileLocally(file: File, folder: string) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+  const fileName = `${Date.now()}-${sanitizedName}`;
+  
+  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
+  await mkdir(uploadDir, { recursive: true });
+  
+  const filePath = path.join(uploadDir, fileName);
+  await writeFile(filePath, buffer);
+  
+  return {
+    url: `/uploads/${folder}/${fileName}`,
+    key: `${folder}/${fileName}`,
+    size: buffer.length,
+    mimeType: file.type,
+  };
+}
 
 export async function updatePersonalDetails(formData: FormData) {
   const session = await auth();
@@ -70,17 +91,23 @@ export async function uploadOnboardingDocument(formData: FormData) {
 
   try {
     let fileUrl = "";
-    // Mock upload if keys missing or upload fails
-    try {
-      if (process.env.R2_ACCESS_KEY_ID) {
-         const result = await uploadFile(file, "onboarding");
-         fileUrl = result.url;
-      } else {
-         throw new Error("No keys");
+    // Try R2 first, fall back to local storage
+    if (isStorageConfigured()) {
+      try {
+        const result = await uploadFile(file, "onboarding");
+        fileUrl = result.url;
+      } catch (r2Error) {
+        // R2 failed (wrong credentials, access denied, etc.) - fall back to local storage
+        console.warn("[Storage] R2 upload failed, falling back to local storage:", 
+          r2Error instanceof Error ? r2Error.message : "Unknown error"
+        );
+        const localResult = await uploadFileLocally(file, "onboarding");
+        fileUrl = localResult.url;
       }
-    } catch (e) {
-      // In production, storage should be configured - don't use mock URLs
-      throw new Error("Storage not configured. Please set R2_ACCESS_KEY_ID environment variable.");
+    } else {
+      // Use local storage directly
+      const localResult = await uploadFileLocally(file, "onboarding");
+      fileUrl = localResult.url;
     }
 
     // Determine Org ID (fetch from user's org membership or context)

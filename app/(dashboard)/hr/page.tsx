@@ -3,6 +3,7 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from "@/components/ui/avatar";
 import {
   Card,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions";
 import {
   AlertDialog,
@@ -38,17 +40,40 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default function HRDashboardPage() {
+  const { data: session } = useSession();
+  const currentUserRole = session?.user?.role;
+  const currentUserId = session?.user?.id;
+
   interface Employee {
     id: string;
     firstName: string | null;
     lastName: string | null;
     email: string;
     role: "ADMIN" | "MEMBER" | "OWNER" | "CLIENT";
+    image: string | null;
   }
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+
+  // Helper function to determine if current user can delete target employee
+  const canDeleteEmployee = (targetEmployee: Employee) => {
+    // Cannot delete yourself
+    if (targetEmployee.id === currentUserId) return false;
+    
+    // Owners can delete ADMINs and MEMBERs (not other OWNERs)
+    if (currentUserRole === "OWNER") {
+      return targetEmployee.role !== "OWNER";
+    }
+    
+    // Admins can only delete MEMBERs
+    if (currentUserRole === "ADMIN") {
+      return targetEmployee.role === "MEMBER";
+    }
+    
+    return false;
+  };
 
   useEffect(() => {
     async function load() {
@@ -127,6 +152,10 @@ export default function HRDashboardPage() {
               <CardHeader className="flex flex-row items-start justify-between gap-4 relative z-10 pointer-events-none">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-11 w-11 border border-border">
+                    <AvatarImage 
+                      src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || user.email}`} 
+                      alt={`${user.firstName || user.email}'s avatar`} 
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary font-medium">
                       {(user.firstName || user.email)?.charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -160,7 +189,7 @@ export default function HRDashboardPage() {
                           Edit Profile
                         </Link>
                       </DropdownMenuItem>
-                      {(user.role !== "OWNER" && user.role !== "ADMIN") && (
+                      {canDeleteEmployee(user) && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 

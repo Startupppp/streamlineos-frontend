@@ -289,10 +289,48 @@ export const hrRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
+       
+       // Only Owners and Admins can delete employees
        if (user.role !== "OWNER" && user.role !== "ADMIN") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can delete employees.",
+         });
+       }
+
+       // Prevent self-deletion
+       if (input.userId === user.id) {
+         throw new TRPCError({
+           code: "BAD_REQUEST",
+           message: "You cannot delete your own account.",
+         });
+       }
+
+       // Get the target user to check their role
+       const targetUser = await ctx.db.query.users.findFirst({
+         where: eq(users.id, input.userId),
+       });
+
+       if (!targetUser) {
+         throw new TRPCError({
+           code: "NOT_FOUND",
+           message: "User not found.",
+         });
+       }
+
+       // Admins can only delete MEMBER accounts, not other ADMINs or OWNERs
+       if (user.role === "ADMIN" && (targetUser.role === "ADMIN" || targetUser.role === "OWNER")) {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Admins can only delete Member accounts.",
+         });
+       }
+
+       // Owners cannot delete other Owners
+       if (user.role === "OWNER" && targetUser.role === "OWNER") {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Cannot delete another Owner account.",
          });
        }
 
@@ -361,6 +399,17 @@ export const hrRouter = createTRPCRouter({
       limit: 10,
     });
 
+    // Calculate cooldown remaining if just checked out
+    let cooldownRemaining = 0;
+    if (status === "CHECKED_OUT" && todayLog?.checkOut) {
+      const lastCheckOut = new Date(todayLog.checkOut);
+      const diffMs = now.getTime() - lastCheckOut.getTime();
+      const diffMinutes = diffMs / (1000 * 60);
+      if (diffMinutes < 2) {
+        cooldownRemaining = Math.ceil((2 * 60 * 1000 - diffMs) / 1000); // seconds remaining
+      }
+    }
+
     return { 
         status, 
         logs, 
@@ -369,7 +418,8 @@ export const hrRouter = createTRPCRouter({
             workHours: dailyWorkHours.toFixed(2),
             breakHours: dailyBreakHours.toFixed(2),
             isOvertime: isDailyOvertime
-        }
+        },
+        cooldownRemaining,
     };
   }),
 

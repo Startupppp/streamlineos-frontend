@@ -16,3 +16,6 @@ CREATE INDEX IF NOT EXISTS "holidays_date_idx" ON "holidays"("date");
 CREATE INDEX IF NOT EXISTS "holidays_notification_sent_idx" ON "holidays"("notification_sent");
 
 
+
+
+

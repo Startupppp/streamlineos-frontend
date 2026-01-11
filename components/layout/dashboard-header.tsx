@@ -1,9 +1,6 @@
 "use client"
 
-import { ThemeToggle } from "../theme-toggle"
 import { UserNav } from "./user-nav"
-
-// For now, simple header.
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
@@ -31,7 +28,6 @@ export function DashboardHeader() {
         <div className="font-semibold text-foreground">Dashboard</div> 
       </div>
       <div className="flex items-center gap-2">
-         <ThemeToggle />
          <UserNav />
       </div>
 
