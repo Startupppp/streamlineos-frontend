@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { resetPassword } from "@/server/actions/auth-actions";
-import { Loader2, Upload, User, Rocket } from "lucide-react";
+import { Loader2, Rocket, Shield, Eye, EyeOff } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const formSchema = z.object({
@@ -31,11 +31,11 @@ const formSchema = z.object({
 });
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
   const { update } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,54 +45,24 @@ export default function ResetPasswordPage() {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
-      let imageUrl = undefined;
-
-      // 1. Upload Image if present
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        formData.append("folder", "profiles");
-
-        const uploadRes = await fetch("/api/storage/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadRes.ok) throw new Error("Failed to upload image");
-        const data = await uploadRes.json();
-        imageUrl = data.url;
-      }
-
-      // 2. Reset Password & Update Profile
-      const result = await resetPassword(values.password, imageUrl);
+      const result = await resetPassword(values.password);
 
       if (result.success) {
-        toast.success("Profile updated successfully!");
-        // Force session update to clear forceChangePassword flag
+        toast.success("Password updated successfully! Redirecting...");
+        // Update session to clear forceChangePassword flag
         await update({ forceChangePassword: false });
-        // Small delay to ensure session cookie is updated before redirect
-        await new Promise(resolve => setTimeout(resolve, 100));
-        // Use window.location.href to force full page reload and ensure middleware gets updated session
-        window.location.href = "/dashboard";
+        // Small delay to ensure session update propagates
+        await new Promise(resolve => setTimeout(resolve, 300));
+        // Use router for navigation with refresh to ensure fresh server state
+        router.push("/dashboard");
+        router.refresh();
       } else {
-        toast.error(result.error || "Failed to update profile");
+        toast.error(result.error || "Failed to update password");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -100,78 +70,112 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-t-4 border-t-primary">
-        <CardHeader className="text-center">
-             <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <Rocket className="w-8 h-8 text-primary" />
-            </div>
-          <CardTitle className="text-2xl font-bold">Welcome aboard!</CardTitle>
-          <CardDescription>
-            To get started, please set a new password and upload your profile picture.
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+      <div className="flex flex-col items-center mb-8">
+        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+          <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+        </div>
+        <h1 className="text-3xl font-bold text-white tracking-tight">Welcome Aboard!</h1>
+        <p className="text-blue-100 mt-2">Complete your account setup</p>
+      </div>
+
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+        <CardHeader className="space-y-1 text-center pb-4">
+          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+            <Rocket className="w-8 h-8 text-primary" />
+          </div>
+          <CardTitle className="text-2xl text-primary">Set Up Your Password</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Create a secure password for your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              
-              {/* Image Upload Section */}
-              <div className="flex flex-col items-center gap-4 py-4">
-                  <div className="relative group cursor-pointer" onClick={() => document.getElementById('profile-upload')?.click()}>
-                      <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
-                          {imagePreview ? (
-                              <Image src={imagePreview} alt="Preview" width={96} height={96} className="w-full h-full object-cover" />
-                          ) : (
-                              <User className="w-8 h-8 text-gray-400" />
-                          )}
-                      </div>
-                      <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Upload className="w-6 h-6 text-white" />
-                      </div>
-                  </div>
-                  <Input 
-                        id="profile-upload" 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={handleImageChange}
-                 />
-                  <p className="text-xs text-muted-foreground">Click to upload avatar (Optional)</p>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground">New Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder="Enter your new password" 
+                            className="pl-10 pr-10 focus-visible:ring-primary"
+                            {...field} 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground">Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            placeholder="Confirm your password" 
+                            className="pl-10 pr-10 focus-visible:ring-primary"
+                            {...field} 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="******" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <Button 
+                type="submit" 
+                className="w-full h-11 text-base bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="mr-2 h-4 w-4" />
+                    Complete Setup
+                  </>
                 )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="******" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full h-11 text-base" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Complete Setup"}
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
+      
+      <div className="mt-8 text-white/40 text-sm">
+        &copy; 2025 Vaivamm Capital
+      </div>
     </div>
   );
 }

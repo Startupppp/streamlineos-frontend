@@ -121,22 +121,26 @@ export function LogTimeDialog() {
                 <FormItem>
                   <FormLabel>Ticket</FormLabel>
                   <Select
-                    disabled={!selectedProjectId}
+                    disabled={!selectedProjectId || isLoadingTickets}
                     onValueChange={(val) => field.onChange(parseInt(val))}
+                    value={field.value?.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={isLoadingTickets ? "Loading..." : "Select Ticket"} />
+                        <SelectValue placeholder={isLoadingTickets ? "Loading tickets..." : "Select Ticket"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {projectDetails?.tickets?.map((t: any) => (
-                        <SelectItem key={t.id} value={t.id.toString()}>
-                           {t.key}: {t.name}
-                        </SelectItem>
-                      ))}
-                      {projectDetails?.tickets?.length === 0 && (
-                          <div className="p-2 text-sm text-muted-foreground">No tickets found</div>
+                      {projectDetails?.tickets && projectDetails.tickets.length > 0 ? (
+                        projectDetails.tickets.map((t: any) => (
+                          <SelectItem key={t.id} value={t.id.toString()}>
+                            {t.key || `Ticket #${t.id}`}: {t.title || t.name || 'Untitled'}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-muted-foreground">
+                          {isLoadingTickets ? "Loading..." : "No tickets found"}
+                        </div>
                       )}
                     </SelectContent>
                   </Select>
@@ -174,8 +178,11 @@ export function LogTimeDialog() {
                             type="number" 
                             step="0.5" 
                             placeholder="8" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseFloat(e.target.value))}    
+                            value={field.value || ""}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(value === "" ? 0 : parseFloat(value));
+                            }}
                         />
                     </FormControl>
                     <FormMessage />

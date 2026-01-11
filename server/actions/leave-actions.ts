@@ -5,11 +5,13 @@ import {
     leaveRequests, 
     leaveTypes, 
     leaveBalances, 
-    organizationMembers 
+    organizationMembers,
+    users 
 } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 
 // Helper: Ensure leave types exist and get them
 async function ensureLeaveTypes(orgId: string) {
@@ -173,6 +175,24 @@ export async function submitLeaveRequest(data: {
             status: "PENDING"
         });
 
+        // Send Email Notification
+        const [approver, leaveType] = await Promise.all([
+            db.query.users.findFirst({ where: eq(users.id, data.approverId) }),
+            db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, data.leaveTypeId) })
+        ]);
+
+        if (approver?.email) {
+            await sendLeaveRequestEmail(
+                approver.email,
+                approver.name || "Approver",
+                session.user.name || "Employee",
+                leaveType?.name || "Leave",
+                data.startDate.toLocaleDateString(),
+                data.endDate.toLocaleDateString(),
+                data.reason
+            );
+        }
+
         revalidatePath("/hr/leaves");
         return { success: true };
     } catch(e) {
@@ -243,6 +263,26 @@ export async function processLeaveRequest(data: {
              }
         });
         
+        // Send Status Update Email
+        const [employee, leaveType, approver] = await Promise.all([
+            db.query.users.findFirst({ where: eq(users.id, request.userId) }),
+            db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, request.leaveTypeId!) }),
+            db.query.users.findFirst({ where: eq(users.id, session.user.id) })
+        ]);
+
+        if (employee?.email) {
+            await sendLeaveStatusUpdateEmail(
+                employee.email,
+                employee.name || "Employee",
+                leaveType?.name || "Leave",
+                new Date(request.startDate).toLocaleDateString(),
+                new Date(request.endDate).toLocaleDateString(),
+                data.status,
+                approver?.name || "Manager",
+                data.rejectionReason
+            );
+        }
+
         revalidatePath("/hr/leaves");
         return { success: true };
     } catch (e) {

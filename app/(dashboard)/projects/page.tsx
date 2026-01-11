@@ -1,7 +1,7 @@
 import { getProjects } from "@/server/actions/project-actions";
 import { NewProjectDialog } from "./new-project-dialog";
 import Link from "next/link";
-import { Folder, FolderOpen } from "lucide-react";
+import { Folder } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { ProjectsEmptyState } from "./projects-empty-state";
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -77,11 +77,7 @@ export default async function ProjectsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState
-          icon={FolderOpen}
-          title="No projects found"
-          description="Create your first project to start organizing work."
-        />
+        <ProjectsEmptyState />
       )}
     </div>
   );

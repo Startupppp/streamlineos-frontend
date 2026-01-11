@@ -42,3 +42,4 @@ next-env.d.ts
 
 # generated QR codes (local development)
 /public/qr-codes/
+/public/uploads/

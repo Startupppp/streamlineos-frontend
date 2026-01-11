@@ -1,23 +1,32 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const R2_REGION = process.env.R2_REGION || "auto";
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_ENDPOINT = process.env.R2_ENDPOINT;
-
-if (!R2_BUCKET_NAME || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_ENDPOINT) {
+function getR2Config() {
+  return {
+    region: process.env.R2_REGION || "auto",
+    bucketName: process.env.R2_BUCKET_NAME,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    endpoint: process.env.R2_ENDPOINT,
+  };
 }
 
-const S3 = new S3Client({
-  region: R2_REGION,
-  endpoint: R2_ENDPOINT,
-  credentials: R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY ? {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
-  } : undefined,
-});
+export function isStorageConfigured(): boolean {
+  const config = getR2Config();
+  return !!(config.bucketName && config.accessKeyId && config.secretAccessKey && config.endpoint);
+}
+
+function getS3Client() {
+  const config = getR2Config();
+  return new S3Client({
+    region: config.region,
+    endpoint: config.endpoint,
+    credentials: config.accessKeyId && config.secretAccessKey ? {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    } : undefined,
+  });
+}
 
 export interface UploadResult {
   url: string;
@@ -32,7 +41,9 @@ export async function uploadFile(
   fileName?: string,
   mimeTypeOverride?: string
 ): Promise<UploadResult> {
-  if (!R2_BUCKET_NAME) {
+  const config = getR2Config();
+  
+  if (!config.bucketName) {
     throw new Error("R2 bucket not configured");
   }
 
@@ -43,18 +54,15 @@ export async function uploadFile(
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "-");
   const key = `${folder}/${Date.now()}-${sanitizedName}`;
   
-  try {
-    await S3.send(
-        new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: key,
-        Body: buffer,
-        ContentType: mimeType,
-        })
-    );
-  } catch (error) {
-    throw error;
-  }
+  const s3Client = getS3Client();
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    })
+  );
 
   const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL
     ? `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`
@@ -69,40 +77,49 @@ export async function uploadFile(
 }
 
 export async function getFileUrl(key: string, expiresIn: number = 3600): Promise<string> {
-  if (!R2_BUCKET_NAME) {
+  const config = getR2Config();
+  
+  if (!config.bucketName) {
     throw new Error("R2 bucket not configured");
   }
 
   const command = new GetObjectCommand({
-    Bucket: R2_BUCKET_NAME,
+    Bucket: config.bucketName,
     Key: key,
   });
 
-  return await getSignedUrl(S3, command, { expiresIn });
+  const s3Client = getS3Client();
+  return await getSignedUrl(s3Client, command, { expiresIn });
 }
 
 export async function deleteFile(key: string): Promise<void> {
-  if (!R2_BUCKET_NAME) {
+  const config = getR2Config();
+  
+  if (!config.bucketName) {
     throw new Error("R2 bucket not configured");
   }
 
-  await S3.send(
+  const s3Client = getS3Client();
+  await s3Client.send(
     new DeleteObjectCommand({
-      Bucket: R2_BUCKET_NAME,
+      Bucket: config.bucketName,
       Key: key,
     })
   );
 }
 
 export async function fileExists(key: string): Promise<boolean> {
-  if (!R2_BUCKET_NAME) {
+  const config = getR2Config();
+  
+  if (!config.bucketName) {
     return false;
   }
 
   try {
-    await S3.send(
+    const s3Client = getS3Client();
+    await s3Client.send(
       new HeadObjectCommand({
-        Bucket: R2_BUCKET_NAME,
+        Bucket: config.bucketName,
         Key: key,
       })
     );

@@ -11,7 +11,7 @@ export const leaveStatusEnum = pgEnum("leave_status", ["PENDING", "APPROVED", "R
 export const payrollStatusEnum = pgEnum("payroll_status", ["DRAFT", "PENDING_APPROVAL", "APPROVED", "PAID"]);
 export const expenseStatusEnum = pgEnum("expense_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
 export const assetStatusEnum = pgEnum("asset_status", ["AVAILABLE", "ASSIGNED", "MAINTENANCE", "RETIRED"]);
-export const documentTypeEnum = pgEnum("document_type", ["CONTRACT", "CERTIFICATE", "ID", "PAYSLIP", "OTHER"]);
+export const documentTypeEnum = pgEnum("document_type", ["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]);
 export const reviewStatusEnum = pgEnum("review_status", ["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]);
 export const notificationTypeEnum = pgEnum("notification_type", ["INFO", "SUCCESS", "WARNING", "ERROR"]);
 export const workflowStatusEnum = pgEnum("workflow_status", ["ACTIVE", "INACTIVE"]);
@@ -135,13 +135,13 @@ export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
-  name: text("name"), // Required by NextAuth, computed from firstName + lastName
+  name: text("name"),
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified"),
-  password: text("password"), // Hashed password
+  password: text("password"),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  gender: genderEnum("gender"), // Added gender
+  gender: genderEnum("gender"),
   skills: text("skills").array(),
   experienceYears: decimal("experience_years"),
   joiningDate: date("joining_date"),
@@ -159,6 +159,10 @@ export const users = pgTable("users", {
   departmentId: integer("department_id").references(() => departments.id),
   designation: text("designation"),
   phone: text("phone"),
+  whatsappNumber: text("whatsapp_number"),
+  whatsappSameAsPhone: boolean("whatsapp_same_as_phone").default(true),
+  monthlySalary: decimal("monthly_salary"),
+  employeeId: text("employee_id"),
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false), 
   isActive: boolean("is_active").default(true).notNull(),
@@ -260,19 +264,40 @@ export const salaryStructures = pgTable("salary_structures", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const expenseCategories = pgTable("expense_categories", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  budgetLimit: decimal("budget_limit"),
+  budgetPeriod: text("budget_period").default("MONTHLY"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").references(() => expenseCategories.id),
   category: text("category").notNull(),
   amount: decimal("amount").notNull(),
+  currency: text("currency").default("INR"),
   description: text("description"),
   receiptUrl: text("receipt_url"),
+  receiptFileName: text("receipt_file_name"),
+  merchant: text("merchant"),
+  paymentMethod: text("payment_method"),
+  projectId: integer("project_id").references(() => projects.id),
   status: expenseStatusEnum("status").default("PENDING"),
   approverId: text("approver_id").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
   rejectionReason: text("rejection_reason"),
+  paidAt: timestamp("paid_at"),
+  transactionRef: text("transaction_ref"),
   expenseDate: date("expense_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const assets = pgTable("assets", {
@@ -295,14 +320,22 @@ export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id),
+  departmentId: integer("department_id").references(() => departments.id),
   name: text("name").notNull(),
+  description: text("description"),
   type: documentTypeEnum("type").notNull(),
+  category: text("category"),
   fileUrl: text("file_url").notNull(),
+  fileName: text("file_name"),
   fileSize: integer("file_size"),
   mimeType: text("mime_type"),
   version: integer("version").default(1),
   parentDocumentId: integer("parent_document_id"),
+  isPublic: boolean("is_public").default(false),
   isActive: boolean("is_active").default(true),
+  expiryDate: date("expiry_date"),
+  expiryReminderSent: boolean("expiry_reminder_sent").default(false),
+  tags: text("tags").array(),
   metadata: jsonb("metadata"),
   uploadedBy: text("uploaded_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -342,6 +375,17 @@ export const goals = pgTable("goals", {
   status: text("status").default("IN_PROGRESS"),
   progress: integer("progress").default(0),
   parentGoalId: integer("parent_goal_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const holidays = pgTable("holidays", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  date: date("date").notNull(),
+  message: text("message"),
+  notificationSent: boolean("notification_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -507,7 +551,13 @@ export const timesheets = pgTable("timesheets", {
   date: date("date").notNull(),
   hours: decimal("hours").default("0"),
   description: text("description"),
+  status: text("status").default("PENDING"), // PENDING, APPROVED, REJECTED
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  isBillable: boolean("is_billable").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const reports = pgTable("reports", {
@@ -544,6 +594,40 @@ export const qrCodes = pgTable("qr_codes", {
   imageUrl: text("image_url").notNull(),
   scanCount: integer("scan_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const wfhRequestStatusEnum = pgEnum("wfh_request_status", ["PENDING", "APPROVED", "REJECTED"]);
+
+export const wfhRequests = pgTable("wfh_requests", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  date: date("date").notNull(),
+  reason: text("reason"),
+  status: wfhRequestStatusEnum("status").default("PENDING"),
+  approverId: text("approver_id").references(() => users.id),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const deviceStatusEnum = pgEnum("device_status", ["ACTIVE", "INACTIVE", "LOST", "RETURNED"]);
+
+export const employeeDevices = pgTable("employee_devices", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  deviceType: text("device_type").notNull(),
+  deviceName: text("device_name").notNull(),
+  serialNumber: text("serial_number"),
+  brand: text("brand"),
+  model: text("model"),
+  assignedDate: date("assigned_date"),
+  returnDate: date("return_date"),
+  status: deviceStatusEnum("status").default("ACTIVE"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // --- Relations ---
@@ -691,6 +775,27 @@ export const salaryStructuresRelations = relations(salaryStructures, ({ one }) =
   }),
 }));
 
+export const payrollsRelations = relations(payrolls, ({ one }) => ({
+  user: one(users, {
+    fields: [payrolls.userId],
+    references: [users.id],
+  }),
+  generatedByUser: one(users, {
+    fields: [payrolls.generatedBy],
+    references: [users.id],
+    relationName: "payrollGeneratedBy",
+  }),
+  approvedByUser: one(users, {
+    fields: [payrolls.approvedBy],
+    references: [users.id],
+    relationName: "payrollApprovedBy",
+  }),
+}));
+
+export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
+  expenses: many(expenses),
+}));
+
 export const expensesRelations = relations(expenses, ({ one }) => ({
   user: one(users, {
     fields: [expenses.userId],
@@ -701,6 +806,14 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
     fields: [expenses.approverId],
     references: [users.id],
     relationName: "expenseApprover",
+  }),
+  expenseCategory: one(expenseCategories, {
+    fields: [expenses.categoryId],
+    references: [expenseCategories.id],
+  }),
+  project: one(projects, {
+    fields: [expenses.projectId],
+    references: [projects.id],
   }),
 }));
 
@@ -814,6 +927,32 @@ export const timesheetsRelations = relations(timesheets, ({ one }) => ({
   }),
   user: one(users, {
     fields: [timesheets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const holidaysRelations = relations(holidays, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [holidays.orgId],
+    references: [organizations.id],
+  }),
+}));
+
+export const wfhRequestsRelations = relations(wfhRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [wfhRequests.userId],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [wfhRequests.approverId],
+    references: [users.id],
+    relationName: "wfhApprover",
+  }),
+}));
+
+export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => ({
+  user: one(users, {
+    fields: [employeeDevices.userId],
     references: [users.id],
   }),
 }));

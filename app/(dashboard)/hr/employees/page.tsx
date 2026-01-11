@@ -3,6 +3,7 @@
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from "@/components/ui/avatar";
 import {
   Card,
@@ -34,16 +35,38 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function EmployeeDirectoryPage() {
-  const { } = useSession();
+  const { data: session } = useSession();
+  const currentUserRole = session?.user?.role;
+  const currentUserId = session?.user?.id;
+
   interface Employee {
     id: string;
     firstName: string | null;
     lastName: string | null;
     email: string;
     role: "ADMIN" | "MEMBER" | "OWNER" | "CLIENT";
+    image: string | null;
   }
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to determine if current user can delete target employee
+  const canDeleteEmployee = (targetEmployee: Employee) => {
+    // Cannot delete yourself
+    if (targetEmployee.id === currentUserId) return false;
+    
+    // Owners can delete ADMINs and MEMBERs (not other OWNERs)
+    if (currentUserRole === "OWNER") {
+      return targetEmployee.role !== "OWNER";
+    }
+    
+    // Admins can only delete MEMBERs
+    if (currentUserRole === "ADMIN") {
+      return targetEmployee.role === "MEMBER";
+    }
+    
+    return false;
+  };
 
   useEffect(() => {
     async function load() {
@@ -58,8 +81,7 @@ export default function EmployeeDirectoryPage() {
              } catch { 
                  // ignore 
              }
-        } catch (e) {
-            // Error handling
+        } catch {
         } finally {
             setLoading(false);
         }
@@ -111,6 +133,10 @@ export default function EmployeeDirectoryPage() {
                 <Link href={`/hr/employees/${user.id}`} className="absolute inset-0 z-0" aria-label={`View ${user.firstName}'s profile`} />
                 <CardHeader className="flex flex-row items-center gap-4 relative z-10 pointer-events-none">
                 <Avatar className="h-12 w-12">
+                  <AvatarImage 
+                    src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || user.email}`} 
+                    alt={`${user.firstName || user.email}'s avatar`} 
+                  />
                   <AvatarFallback>
                     {(user.firstName || user.email)?.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -135,7 +161,7 @@ export default function EmployeeDirectoryPage() {
                             Edit
                         </Button>
                       </Link>
-                      {(user.role !== "OWNER" && user.role !== "ADMIN") && (
+                      {canDeleteEmployee(user) && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button 

@@ -2,8 +2,7 @@
 
 import { api } from "@/trpc/react";
 import { format } from "date-fns";
-import { Loader2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import {

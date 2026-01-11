@@ -11,14 +11,13 @@ import { RequestLeaveDialog } from "./request-leave-dialog";
 import { PendingRequestsList } from "./pending-requests-list";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
-import { CalendarDays, Palmtree, Heart, Briefcase, FileText } from "lucide-react";
+import { LeaveErrorState, NoLeaveRequestsState } from "./leaves-empty-states";
+import { CalendarDays, Palmtree, Heart } from "lucide-react";
 
 const leaveTypeIcons: Record<string, React.ElementType> = {
   "Annual Leave": Palmtree,
   "Sick Leave": Heart,
   "Personal Leave": CalendarDays,
-  "Work From Home": Briefcase,
 };
 
 export default async function LeavesPage() {
@@ -32,11 +31,7 @@ export default async function LeavesPage() {
   if (!context.success || !context.balances) {
     return (
       <div className="space-y-6">
-        <EmptyState
-          icon={CalendarDays}
-          title="Error loading leave data"
-          description="Please try again or contact support if the issue persists."
-        />
+        <LeaveErrorState />
       </div>
     );
   }
@@ -62,10 +57,10 @@ export default async function LeavesPage() {
 
       {/* Balance Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {context.balances.map((bal) => {
+        {context.balances.map((bal, index) => {
           const Icon = leaveTypeIcons[bal.typeName || ""] || CalendarDays;
           return (
-            <Card key={bal.leaveTypeId} className="border-border">
+            <Card key={`${bal.leaveTypeId}-${index}`} className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {bal.typeName}
@@ -107,11 +102,7 @@ export default async function LeavesPage() {
             </CardHeader>
             <CardContent>
               {myRequests.length === 0 ? (
-                <EmptyState
-                  icon={FileText}
-                  title="No leave requests"
-                  description="You haven't submitted any leave requests yet."
-                />
+                <NoLeaveRequestsState />
               ) : (
                 <div className="space-y-3">
                   {myRequests.map((req) => (

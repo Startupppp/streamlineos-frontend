@@ -18,9 +18,11 @@ import {
   organizationMembers,
   timesheets,
   onboardingSteps,
-  notifications, 
+  notifications,
+  wfhRequests,
+  employeeDevices,
 } from "../../../lib/db/schema";
-import { eq, and, desc, isNull, gte, lte, asc } from "drizzle-orm";
+import { eq, and, desc, isNull, gte, lte, asc, sql } from "drizzle-orm";
 import { format } from "date-fns";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
@@ -41,9 +43,14 @@ import {
   upsertWorkLogInputSchema,
   getWorkLogsInputSchema,
   onboardEmployeeInputSchema,
+  createWfhRequestInputSchema,
+  processWfhRequestInputSchema,
+  createDeviceInputSchema,
+  updateDeviceInputSchema,
+  generateEmployeePayslipInputSchema,
 } from "../../../lib/validations/hr";
 import bcrypt from "bcryptjs";
-import { sendWelcomeEmail } from "../../../lib/email";
+import { sendWelcomeEmail, sendPayslipGeneratedEmail } from "../../../lib/email";
 
 export const hrRouter = createTRPCRouter({
   getDepartments: protectedProcedure.query(async ({ ctx }) => {
@@ -150,6 +157,14 @@ export const hrRouter = createTRPCRouter({
           }
        }
 
+       const employeeIdPrefix = "VC";
+       const yearSuffix = new Date().getFullYear().toString().slice(-2);
+       const existingCount = await ctx.db.select({ count: sql<number>`count(*)` })
+         .from(users)
+         .where(eq(users.isActive, true));
+       const empNumber = (Number(existingCount[0]?.count) || 0) + 1;
+       const generatedEmployeeId = `${employeeIdPrefix}${yearSuffix}${empNumber.toString().padStart(3, "0")}`;
+
        const [newUser] = await ctx.db.insert(users).values({
           id: userId,
           email: input.email,
@@ -158,6 +173,8 @@ export const hrRouter = createTRPCRouter({
           lastName: input.lastName,
           gender: input.gender,
           phone: input.phone,
+          whatsappNumber: input.whatsappSameAsPhone ? input.phone : input.whatsappNumber,
+          whatsappSameAsPhone: input.whatsappSameAsPhone,
           role: input.role,
           designation: input.designation,
           departmentId: finalDepartmentId,
@@ -166,6 +183,8 @@ export const hrRouter = createTRPCRouter({
           skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
           taxId: input.taxId,
           bankDetails: input.bankDetails,
+          monthlySalary: input.monthlySalary?.toString(),
+          employeeId: generatedEmployeeId,
           password: hashedPassword,
           isPasswordChangeRequired: true,
           image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
@@ -189,13 +208,41 @@ export const hrRouter = createTRPCRouter({
           joinedAt: new Date(),
        });
 
+       const monthlySalary = input.monthlySalary || 0;
+       const basicSalary = monthlySalary * 0.5;
+       const hra = monthlySalary * 0.25;
+       const specialAllowance = monthlySalary * 0.25;
+       
         await ctx.db.insert(salaryStructures).values({
             orgId: ctx.session.orgId,
             userId: newUser.id,
-            basicSalary: "0",
+            basicSalary: basicSalary.toString(),
+            hraPercentage: "50",
+            allowances: specialAllowance.toString(),
+            deductions: "200",
             effectiveFrom: format(new Date(), "yyyy-MM-dd"),
             isActive: true,
         });
+
+       if (monthlySalary > 0) {
+         const currentMonth = format(new Date(), "yyyy-MM");
+         const grossSalary = basicSalary + hra + specialAllowance;
+         const netSalary = grossSalary - 200;
+         
+         await ctx.db.insert(payrolls).values({
+           orgId: ctx.session.orgId,
+           userId: newUser.id,
+           month: currentMonth,
+           basicSalary: basicSalary.toString(),
+           hra: hra.toString(),
+           allowances: specialAllowance.toString(),
+           deductions: "200",
+           grossSalary: grossSalary.toString(),
+           netSalary: netSalary.toString(),
+           status: "DRAFT",
+           generatedBy: ctx.session.userId,
+         });
+       }
 
        const defaultSteps = ["Profile Setup", "Document Submission", "IT Setup", "Introduction"];
        for (const step of defaultSteps) {
@@ -242,10 +289,48 @@ export const hrRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
+       
+       // Only Owners and Admins can delete employees
        if (user.role !== "OWNER" && user.role !== "ADMIN") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can delete employees.",
+         });
+       }
+
+       // Prevent self-deletion
+       if (input.userId === user.id) {
+         throw new TRPCError({
+           code: "BAD_REQUEST",
+           message: "You cannot delete your own account.",
+         });
+       }
+
+       // Get the target user to check their role
+       const targetUser = await ctx.db.query.users.findFirst({
+         where: eq(users.id, input.userId),
+       });
+
+       if (!targetUser) {
+         throw new TRPCError({
+           code: "NOT_FOUND",
+           message: "User not found.",
+         });
+       }
+
+       // Admins can only delete MEMBER accounts, not other ADMINs or OWNERs
+       if (user.role === "ADMIN" && (targetUser.role === "ADMIN" || targetUser.role === "OWNER")) {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Admins can only delete Member accounts.",
+         });
+       }
+
+       // Owners cannot delete other Owners
+       if (user.role === "OWNER" && targetUser.role === "OWNER") {
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: "Cannot delete another Owner account.",
          });
        }
 
@@ -314,6 +399,17 @@ export const hrRouter = createTRPCRouter({
       limit: 10,
     });
 
+    // Calculate cooldown remaining if just checked out
+    let cooldownRemaining = 0;
+    if (status === "CHECKED_OUT" && todayLog?.checkOut) {
+      const lastCheckOut = new Date(todayLog.checkOut);
+      const diffMs = now.getTime() - lastCheckOut.getTime();
+      const diffMinutes = diffMs / (1000 * 60);
+      if (diffMinutes < 2) {
+        cooldownRemaining = Math.ceil((2 * 60 * 1000 - diffMs) / 1000); // seconds remaining
+      }
+    }
+
     return { 
         status, 
         logs, 
@@ -322,7 +418,8 @@ export const hrRouter = createTRPCRouter({
             workHours: dailyWorkHours.toFixed(2),
             breakHours: dailyBreakHours.toFixed(2),
             isOvertime: isDailyOvertime
-        }
+        },
+        cooldownRemaining,
     };
   }),
 
@@ -1071,5 +1168,374 @@ export const hrRouter = createTRPCRouter({
              }).returning();
              return created;
         }
+    }),
+
+  getWfhRequests: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.query.wfhRequests.findMany({
+      where: eq(wfhRequests.userId, ctx.session.userId),
+      orderBy: [desc(wfhRequests.createdAt)],
+    });
+  }),
+
+  getPendingWfhRequests: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      return [];
+    }
+    return await ctx.db.query.wfhRequests.findMany({
+      where: and(
+        eq(wfhRequests.orgId, ctx.session.orgId),
+        eq(wfhRequests.status, "PENDING")
+      ),
+      with: {
+        user: true,
+      },
+      orderBy: [desc(wfhRequests.createdAt)],
+    });
+  }),
+
+  createWfhRequest: protectedProcedure
+    .input(createWfhRequestInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const [request] = await ctx.db.insert(wfhRequests).values({
+        orgId: ctx.session.orgId,
+        userId: ctx.session.userId,
+        date: format(input.date, "yyyy-MM-dd"),
+        reason: input.reason,
+        approverId: input.approverId,
+        status: "PENDING",
+      }).returning();
+      return request;
+    }),
+
+  processWfhRequest: protectedProcedure
+    .input(processWfhRequestInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      await ctx.db.update(wfhRequests)
+        .set({
+          status: input.status,
+          rejectionReason: input.rejectionReason,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(wfhRequests.id, input.requestId),
+          eq(wfhRequests.orgId, ctx.session.orgId)
+        ));
+
+      return { success: true };
+    }),
+
+  getDevices: protectedProcedure
+    .input(z.object({ userId: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const conditions = [eq(employeeDevices.orgId, ctx.session.orgId)];
+      if (input.userId) {
+        conditions.push(eq(employeeDevices.userId, input.userId));
+      }
+
+      return await ctx.db.query.employeeDevices.findMany({
+        where: and(...conditions),
+        with: {
+          user: true,
+        },
+        orderBy: [desc(employeeDevices.createdAt)],
+      });
+    }),
+
+  createDevice: protectedProcedure
+    .input(createDeviceInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const [device] = await ctx.db.insert(employeeDevices).values({
+        orgId: ctx.session.orgId,
+        userId: input.userId,
+        deviceType: input.deviceType,
+        deviceName: input.deviceName,
+        serialNumber: input.serialNumber,
+        brand: input.brand,
+        model: input.model,
+        assignedDate: input.assignedDate ? format(input.assignedDate, "yyyy-MM-dd") : undefined,
+        notes: input.notes,
+        status: "ACTIVE",
+      }).returning();
+
+      return device;
+    }),
+
+  updateDevice: protectedProcedure
+    .input(updateDeviceInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const { deviceId, ...updateData } = input;
+      await ctx.db.update(employeeDevices)
+        .set({
+          ...(updateData.deviceType && { deviceType: updateData.deviceType }),
+          ...(updateData.deviceName && { deviceName: updateData.deviceName }),
+          ...(updateData.serialNumber !== undefined && { serialNumber: updateData.serialNumber }),
+          ...(updateData.brand !== undefined && { brand: updateData.brand }),
+          ...(updateData.model !== undefined && { model: updateData.model }),
+          ...(updateData.status && { status: updateData.status }),
+          ...(updateData.returnDate && { returnDate: format(updateData.returnDate, "yyyy-MM-dd") }),
+          ...(updateData.notes !== undefined && { notes: updateData.notes }),
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(employeeDevices.id, deviceId),
+          eq(employeeDevices.orgId, ctx.session.orgId)
+        ));
+
+      return { success: true };
+    }),
+
+  deleteDevice: protectedProcedure
+    .input(z.object({ deviceId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      await ctx.db.delete(employeeDevices)
+        .where(and(
+          eq(employeeDevices.id, input.deviceId),
+          eq(employeeDevices.orgId, ctx.session.orgId)
+        ));
+
+      return { success: true };
+    }),
+
+  generateEmployeePayslip: protectedProcedure
+    .input(generateEmployeePayslipInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, input.userId),
+      });
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      const salaryStructure = await ctx.db.query.salaryStructures.findFirst({
+        where: and(
+          eq(salaryStructures.userId, input.userId),
+          eq(salaryStructures.orgId, ctx.session.orgId),
+          eq(salaryStructures.isActive, true)
+        ),
+      });
+
+      const monthlySalary = user.monthlySalary ? parseFloat(user.monthlySalary) : 0;
+      const workingDays = 30;
+      const perDaySalary = monthlySalary / workingDays;
+      
+      // Calculate attendance-based deductions
+      const lopDeduction = (input.lopDays || 0) * perDaySalary;
+      const halfDayDeduction = ((input.halfDays || 0) * perDaySalary) / 2;
+      
+      // Salary breakdown: 50% Basic, 50% HRA
+      const basicSalary = salaryStructure ? parseFloat(salaryStructure.basicSalary) : monthlySalary * 0.5;
+      const hra = salaryStructure ? (parseFloat(salaryStructure.basicSalary) * parseFloat(salaryStructure.hraPercentage || "40") / 100) : monthlySalary * 0.5;
+      const bonus = input.bonus || 0;
+      
+      // Deductions
+      const professionalTax = 200;
+      const otherDeductions = input.otherDeductions || 0;
+      const totalDeductions = professionalTax + lopDeduction + halfDayDeduction + otherDeductions;
+      
+      const grossSalary = monthlySalary + bonus;
+      const netSalary = grossSalary - totalDeductions;
+
+      const existing = await ctx.db.query.payrolls.findFirst({
+        where: and(
+          eq(payrolls.userId, input.userId),
+          eq(payrolls.month, input.month),
+          eq(payrolls.orgId, ctx.session.orgId)
+        ),
+      });
+
+      const payrollData = {
+        basicSalary: basicSalary.toString(),
+        hra: hra.toString(),
+        allowances: bonus.toString(),
+        deductions: totalDeductions.toString(),
+        grossSalary: grossSalary.toString(),
+        netSalary: netSalary.toString(),
+        status: "DRAFT" as const,
+        generatedBy: ctx.session.userId,
+      };
+
+      if (existing) {
+        await ctx.db.update(payrolls)
+          .set(payrollData)
+          .where(eq(payrolls.id, existing.id));
+        
+        // Send email notification
+        if (user.email) {
+          const monthDate = new Date(input.month + "-01");
+          const monthName = monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+          const employeeName = user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}` 
+            : user.name || "Employee";
+          
+          sendPayslipGeneratedEmail(
+            user.email,
+            employeeName,
+            monthName,
+            netSalary.toLocaleString()
+          ).catch(() => {});
+        }
+        
+        return existing;
+      }
+
+      const [payroll] = await ctx.db.insert(payrolls).values({
+        orgId: ctx.session.orgId,
+        userId: input.userId,
+        month: input.month,
+        ...payrollData,
+      }).returning();
+
+      // Send email notification
+      if (user.email) {
+        const monthDate = new Date(input.month + "-01");
+        const monthName = monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+        const employeeName = user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName}` 
+          : user.name || "Employee";
+        
+        sendPayslipGeneratedEmail(
+          user.email,
+          employeeName,
+          monthName,
+          netSalary.toLocaleString()
+        ).catch(() => {});
+      }
+
+      return payroll;
+    }),
+
+  getEmployeePayslips: protectedProcedure
+    .input(z.object({ userId: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const targetUserId = input.userId || ctx.session.userId;
+      
+      if (targetUserId !== ctx.session.userId && 
+          ctx.session.user.role !== "OWNER" && 
+          ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      return await ctx.db.query.payrolls.findMany({
+        where: and(
+          eq(payrolls.userId, targetUserId),
+          eq(payrolls.orgId, ctx.session.orgId)
+        ),
+        orderBy: [desc(payrolls.month)],
+        with: {
+          user: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              name: true,
+              designation: true,
+              email: true,
+              joiningDate: true,
+              taxId: true,
+              bankDetails: true,
+              employeeId: true,
+            },
+          },
+        },
+      });
+    }),
+
+  approvePayroll: protectedProcedure
+    .input(z.object({ payrollId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      await ctx.db.update(payrolls)
+        .set({
+          status: "APPROVED",
+          approvedBy: ctx.session.userId,
+        })
+        .where(and(
+          eq(payrolls.id, input.payrollId),
+          eq(payrolls.orgId, ctx.session.orgId)
+        ));
+
+      return { success: true };
+    }),
+
+  markPayrollPaid: protectedProcedure
+    .input(z.object({ payrollId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      await ctx.db.update(payrolls)
+        .set({ status: "PAID" })
+        .where(and(
+          eq(payrolls.id, input.payrollId),
+          eq(payrolls.orgId, ctx.session.orgId)
+        ));
+
+      return { success: true };
+    }),
+
+  getAllPayrolls: protectedProcedure
+    .input(z.object({ month: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const conditions = [eq(payrolls.orgId, ctx.session.orgId)];
+      if (input.month) {
+        conditions.push(eq(payrolls.month, input.month));
+      }
+
+      const results = await ctx.db.select({
+        payroll: payrolls,
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          designation: users.designation,
+          employeeId: users.employeeId,
+          bankDetails: users.bankDetails,
+          joiningDate: users.joiningDate,
+          taxId: users.taxId,
+        },
+      })
+      .from(payrolls)
+      .leftJoin(users, eq(payrolls.userId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(payrolls.month));
+
+      return results.map(r => ({
+        ...r.payroll,
+        user: r.user,
+      }));
     }),
 });

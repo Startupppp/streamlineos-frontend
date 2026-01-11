@@ -17,8 +17,7 @@ export default function OrgSelectionPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({ name: "", slug: "" });
 
-  const handleSelectOrg = (orgId: string) => {
-    // Store selected org in session or context
+  const handleSelectOrg = (_orgId: string) => {
     router.push("/dashboard");
   };
 
@@ -120,7 +119,7 @@ export default function OrgSelectionPage() {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
-                    You don't have any organizations yet.
+                    You do not have any organizations yet.
                   </p>
                   <Button onClick={() => setShowCreateForm(true)}>
                     Create Your First Organization

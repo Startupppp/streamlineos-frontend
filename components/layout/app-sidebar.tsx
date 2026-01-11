@@ -18,6 +18,10 @@ import {
   Timer,
   UserPlus,
   QrCode,
+  Receipt,
+  FileText,
+  Laptop,
+  Wallet,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -53,20 +57,23 @@ const adminNavGroups: NavGroup[] = [
   },
   {
     label: "HR Management",
-
     routes: [
       { label: "Employees", icon: Users, href: "/hr", badge: "onboarding" },
       { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding" },
       { label: "Attendance", icon: Clock, href: "/hr/attendance" },
       { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
       { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
+      { label: "Devices", icon: Laptop, href: "/hr/devices" },
+      { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
+      { label: "Documents", icon: FileText, href: "/hr/documents" },
     ],
   },
   {
     label: "Projects",
     routes: [
       { label: "Projects", icon: Briefcase, href: "/projects" },
-      { label: "Timesheets", icon: Timer, href: "/timesheets" },
+      { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+      { label: "Team Timesheets", icon: Clock, href: "/timesheets/team" },
     ],
   },
   {
@@ -96,6 +103,9 @@ const employeeNavGroups: NavGroup[] = [
     routes: [
       { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
       { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+      { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+      { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+      { label: "My Documents", icon: FileText, href: "/hr/documents" },
     ],
   },
 ];
@@ -120,7 +130,7 @@ export function AppSidebar() {
     }));
   }
 
-  const handleOrgChange = (id: string) => {
+  const handleOrgChange = (_id: string) => {
     router.push("/dashboard");
     router.refresh();
   };
@@ -139,8 +149,7 @@ export function AppSidebar() {
             
             setPendingLeaves(leavesCount);
             setUnreadOnboarding(onboardingCount);
-        } catch (e) {
-            // Error fetching counts
+        } catch {
         }
     }
     if (session?.user) {

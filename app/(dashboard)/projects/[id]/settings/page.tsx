@@ -325,7 +325,7 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
                         </div>
                         <div className="space-y-2 max-h-[200px] overflow-y-auto">
                             <h4 className="font-medium leading-none mb-2 text-sm text-muted-foreground p-1">Select Employees</h4>
-                            {filteredEmployees?.map((emp: any) => (
+                            {filteredEmployees?.map((emp) => (
                                 <div key={emp.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-accent cursor-pointer"
                                         onClick={() => {
                                             const current = field.value || [];

@@ -35,11 +35,11 @@ const formSchema = z.object({
   lastName: z.string().min(2, "Last name is required"),
   role: z.enum(["ADMIN", "MEMBER", "OWNER"]),
   designation: z.string().optional(),
-  departmentId: z.coerce.number().optional(),
+  departmentId: z.number().optional(),
   phone: z.string().optional(),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   joiningDate: z.date().optional(),
-  experienceYears: z.coerce.number().optional(),
+  experienceYears: z.number().optional(),
   skills: z.string().optional(),
   taxId: z.string().optional(),
   bankAccount: z.string().optional(),
@@ -83,7 +83,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const { data: departments } = api.hr.getDepartments.useQuery();
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as unknown as any,
+    resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",

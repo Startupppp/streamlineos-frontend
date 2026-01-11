@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../../../components/ui/button";
@@ -11,10 +10,7 @@ import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../lib/trpc";
 
-import { ThemeToggle } from "../../../components/theme-toggle";
-
 export default function SignUpPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -53,7 +49,8 @@ export default function SignUpPage() {
       });
 
       toast.success("Account created! Please check your email to verify your account.");
-      router.push("/verify-email?email=" + encodeURIComponent(formData.email));
+      await new Promise(resolve => setTimeout(resolve, 100));
+      window.location.href = "/verify-email?email=" + encodeURIComponent(formData.email);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "An error occurred";
       toast.error(message);
@@ -63,17 +60,16 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
           <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
              <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
           </div>
-          <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Join Vaivamm CRM</h1>
-          <p className="text-blue-100 dark:text-muted-foreground mt-2">Create your account to get started</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Join Vaivamm CRM</h1>
+          <p className="text-blue-100 mt-2">Create your account to get started</p>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white dark:bg-card h-fit">
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white h-fit">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center text-primary">Create Account</CardTitle>
           <CardDescription className="text-center text-muted-foreground">
@@ -92,7 +88,7 @@ export default function SignUpPage() {
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   disabled={isLoading}
-                  className="focus-visible:ring-primary dark:bg-background"
+                  className="focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -104,7 +100,7 @@ export default function SignUpPage() {
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   disabled={isLoading}
-                   className="focus-visible:ring-primary dark:bg-background"
+                  className="focus-visible:ring-primary"
                 />
               </div>
             </div>
@@ -118,7 +114,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
                 disabled={isLoading}
-                 className="focus-visible:ring-primary dark:bg-background"
+                className="focus-visible:ring-primary"
               />
             </div>
             <div className="space-y-2">
@@ -131,7 +127,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 disabled={isLoading}
-                 className="focus-visible:ring-primary dark:bg-background"
+                className="focus-visible:ring-primary"
               />
               <p className="text-xs text-muted-foreground">
                 Must be at least 8 characters with uppercase, lowercase, number, and special character
@@ -147,7 +143,7 @@ export default function SignUpPage() {
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
                 disabled={isLoading}
-                 className="focus-visible:ring-primary dark:bg-background"
+                className="focus-visible:ring-primary"
               />
             </div>
             <Button 

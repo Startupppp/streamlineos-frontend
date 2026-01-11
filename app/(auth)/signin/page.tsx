@@ -11,8 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 
-import { ThemeToggle } from "../../../components/theme-toggle";
-
 export default function SignInPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +35,7 @@ export default function SignInPage() {
         router.push("/dashboard");
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -45,17 +43,16 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
           <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
              <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
           </div>
-          <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Welcome Back</h1>
-          <p className="text-blue-100 dark:text-muted-foreground mt-2">Sign in to your Vaivamm CRM account</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h1>
+          <p className="text-blue-100 mt-2">Sign in to your Vaivamm CRM account</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card h-fit">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white h-fit">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center text-primary">Sign In</CardTitle>
           <CardDescription className="text-center text-muted-foreground">
@@ -74,7 +71,7 @@ export default function SignInPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="focus-visible:ring-primary dark:bg-background"
+                className="focus-visible:ring-primary"
               />
             </div>
             <div className="space-y-2">
@@ -95,7 +92,7 @@ export default function SignInPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                className="focus-visible:ring-primary dark:bg-background"
+                className="focus-visible:ring-primary"
               />
             </div>
             <Button 

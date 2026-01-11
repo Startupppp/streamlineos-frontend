@@ -63,6 +63,7 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   
   if (args.length < 2) {
+    console.error("Usage: npx tsx scripts/create-organization.ts \"Organization Name\" \"org-slug\" \"owner-email\"");
     process.exit(1);
   }
 
@@ -70,12 +71,24 @@ if (require.main === module) {
   const finalOwnerEmail = ownerEmail || process.env.OWNER_EMAIL;
 
   if (!finalOwnerEmail) {
+    console.error("Owner email is required");
     process.exit(1);
   }
 
+  console.log(`Creating organization: ${name} (${slug}) for ${finalOwnerEmail}...`);
+  
   createOrganization(name, slug, finalOwnerEmail)
-    .then(() => process.exit(0))
+    .then((result) => {
+      console.log("✅ Organization created successfully!");
+      console.log(`   ID: ${result.id}`);
+      console.log(`   Name: ${result.name}`);
+      console.log(`   Slug: ${result.slug}`);
+      console.log(`   Owner: ${finalOwnerEmail}`);
+      process.exit(0);
+    })
     .catch((error) => {
+      console.error("❌ Failed to create organization:");
+      console.error(error.message || error);
       process.exit(1);
     });
 }

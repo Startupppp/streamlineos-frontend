@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/holiday-notifications",
+      "schedule": "0 12 * * *"
+    }
+  ]
+}
+
+
+
+
+

@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+// Custom refinement for URLs that accepts both full URLs and relative paths (for local storage)
+const fileUrlSchema = z.string().min(1).refine(
+  (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+  { message: "Must be a valid URL or a relative path starting with /" }
+);
+
 export const createDepartmentInputSchema = z.object({
   name: z.string().min(1, "Department name is required"),
 });
@@ -29,7 +35,7 @@ export const createExpenseInputSchema = z.object({
   category: z.string().min(1, "Category is required"),
   amount: z.number().positive(),
   description: z.string().optional(),
-  receiptUrl: z.string().url().optional(),
+  receiptUrl: fileUrlSchema.optional(),
   expenseDate: z.date(),
 });
 
@@ -64,8 +70,8 @@ export const updateAssetInputSchema = z.object({
 export const createDocumentInputSchema = z.object({
   userId: z.string().optional(),
   name: z.string().min(1, "Document name is required"),
-  type: z.enum(["CONTRACT", "CERTIFICATE", "ID", "PAYSLIP", "OTHER"]),
-  fileUrl: z.string().url(),
+  type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
+  fileUrl: fileUrlSchema,
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),
 });
@@ -134,17 +140,16 @@ export const getWorkLogsInputSchema = z.object({
 });
 
 export const onboardEmployeeInputSchema = z.object({
-  // Personal Info
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  whatsappSameAsPhone: z.boolean().default(true),
+  whatsappNumber: z.string().optional(),
   password: z.string().refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
-  }).optional(), // Optional if auto-generated
-
-  // Professional Info
+  }).optional(),
   designation: z.string().min(1, "Designation is required"),
   departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
     message: "Department is required",
@@ -153,10 +158,9 @@ export const onboardEmployeeInputSchema = z.object({
   joiningDate: z.date(),
   dateOfBirth: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),
-  skills: z.string().optional(), // Comma separated or JSON string
+  skills: z.string().optional(),
   taxId: z.string().optional(),
-
-  // Banking Info
+  monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
     accountNumber: z.string().min(1, "Account number is required"),
     bankName: z.string().min(1, "Bank name is required"),
@@ -164,4 +168,48 @@ export const onboardEmployeeInputSchema = z.object({
     ifsc: z.string().min(1, "IFSC code is required"),
     accountHolder: z.string().min(1, "Account holder name is required"),
   }),
+});
+
+export const createWfhRequestInputSchema = z.object({
+  date: z.date(),
+  reason: z.string().optional(),
+  approverId: z.string().min(1, "Approver is required"),
+});
+
+export const processWfhRequestInputSchema = z.object({
+  requestId: z.number().int().positive(),
+  status: z.enum(["APPROVED", "REJECTED"]),
+  rejectionReason: z.string().optional(),
+});
+
+export const createDeviceInputSchema = z.object({
+  userId: z.string().min(1, "User is required"),
+  deviceType: z.string().min(1, "Device type is required"),
+  deviceName: z.string().min(1, "Device name is required"),
+  serialNumber: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  assignedDate: z.date().optional(),
+  notes: z.string().optional(),
+});
+
+export const updateDeviceInputSchema = z.object({
+  deviceId: z.number().int().positive(),
+  deviceType: z.string().optional(),
+  deviceName: z.string().optional(),
+  serialNumber: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE", "LOST", "RETURNED"]).optional(),
+  returnDate: z.date().optional(),
+  notes: z.string().optional(),
+});
+
+export const generateEmployeePayslipInputSchema = z.object({
+  userId: z.string().min(1),
+  month: z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format"),
+  lopDays: z.number().int().min(0).max(30).optional().default(0),
+  halfDays: z.number().int().min(0).max(30).optional().default(0),
+  otherDeductions: z.number().min(0).optional().default(0),
+  bonus: z.number().min(0).optional().default(0),
 });
