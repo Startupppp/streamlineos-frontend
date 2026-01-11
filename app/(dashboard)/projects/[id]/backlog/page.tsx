@@ -27,7 +27,6 @@ import {
 import { X, Search, Filter } from "lucide-react";
 import { format, isAfter, isBefore, parseISO } from "date-fns";
 
-
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -38,12 +37,12 @@ export default function BacklogPage({ params }: PageProps) {
   const { data, isLoading } = useProject(projectId);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedAssignee, setSelectedAssignee] = useState<string>("all");
   const [selectedPriority, setSelectedPriority] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
 
   const tickets = useMemo(() => data?.tickets || [], [data?.tickets]);
 
@@ -52,10 +51,12 @@ export default function BacklogPage({ params }: PageProps) {
       .filter((t) => t.assignee)
       .map((t) => ({
         id: t.assignee!.id,
-        name: `${t.assignee!.firstName || ""} ${t.assignee!.lastName || ""}`.trim(),
+        name: `${t.assignee!.firstName || ""} ${
+          t.assignee!.lastName || ""
+        }`.trim(),
       }));
-    
-    const uniqueMap = new Map(assignees.map(a => [a.id, a]));
+
+    const uniqueMap = new Map(assignees.map((a) => [a.id, a]));
     return Array.from(uniqueMap.values());
   }, [tickets]);
 
@@ -74,7 +75,8 @@ export default function BacklogPage({ params }: PageProps) {
         if (selectedAssignee === "unassigned") {
           if (ticket.assignee) return false;
         } else {
-          if (!ticket.assignee || ticket.assignee.id !== selectedAssignee) return false;
+          if (!ticket.assignee || ticket.assignee.id !== selectedAssignee)
+            return false;
         }
       }
 
@@ -108,7 +110,16 @@ export default function BacklogPage({ params }: PageProps) {
 
       return true;
     });
-  }, [tickets, searchQuery, selectedAssignee, selectedPriority, selectedStatus, selectedType, startDate, endDate]);
+  }, [
+    tickets,
+    searchQuery,
+    selectedAssignee,
+    selectedPriority,
+    selectedStatus,
+    selectedType,
+    startDate,
+    endDate,
+  ]);
 
   if (isLoading) {
     return (
@@ -279,66 +290,77 @@ export default function BacklogPage({ params }: PageProps) {
           </TableHeader>
           <TableBody>
             {filteredTickets.length === 0 ? (
-                <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                        {hasActiveFilters 
-                          ? "No tickets match your filters. Try adjusting your search criteria."
-                          : "No tickets found. Create one to get started."
-                        }
-                    </TableCell>
-                </TableRow>
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center h-24 text-muted-foreground"
+                >
+                  {hasActiveFilters
+                    ? "No tickets match your filters. Try adjusting your search criteria."
+                    : "No tickets found. Create one to get started."}
+                </TableCell>
+              </TableRow>
             ) : (
-                filteredTickets.map((ticket) => (
+              filteredTickets.map((ticket) => (
                 <TableRow key={ticket.id}>
-                    <TableCell className="font-medium">#{ticket.id}</TableCell>
-                    <TableCell className="max-w-md">
-                      <div className="truncate">{ticket.title}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{ticket.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={ticket.type === "BUG" ? "destructive" : "secondary"}>
-                          {ticket.type}
+                  <TableCell className="font-medium">#{ticket.id}</TableCell>
+                  <TableCell className="max-w-md">
+                    <div className="truncate">{ticket.title}</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{ticket.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        ticket.type === "BUG" ? "destructive" : "secondary"
+                      }
+                    >
+                      {ticket.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {ticket.priority && (
+                      <Badge
+                        variant={
+                          ticket.priority === "URGENT" ||
+                          ticket.priority === "HIGH"
+                            ? "destructive"
+                            : ticket.priority === "MEDIUM"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
+                        {ticket.priority}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                        {ticket.priority && (
-                             <Badge 
-                               variant={
-                                 ticket.priority === "URGENT" || ticket.priority === "HIGH"
-                                   ? "destructive"
-                                   : ticket.priority === "MEDIUM"
-                                   ? "default"
-                                   : "secondary"
-                               }
-                             >
-                                 {ticket.priority}
-                             </Badge>
-                        )}
-                    </TableCell>
-                    <TableCell>
-                      {ticket.assignee ? (
-                          <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-[10px]">
-                                  {ticket.assignee.firstName?.[0]}
-                                  {ticket.assignee.lastName?.[0]}
-                                  </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">
-                                  {ticket.assignee.firstName} {ticket.assignee.lastName}
-                              </span>
-                          </div>
-                      ) : (
-                          <span className="text-muted-foreground text-sm">Unassigned</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d, yyyy") : "-"}
-                    </TableCell>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {ticket.assignee ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-[10px]">
+                            {ticket.assignee.firstName?.[0]}
+                            {ticket.assignee.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">
+                          {ticket.assignee.firstName} {ticket.assignee.lastName}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        Unassigned
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {ticket.createdAt
+                      ? format(new Date(ticket.createdAt), "MMM d, yyyy")
+                      : "-"}
+                  </TableCell>
                 </TableRow>
-                ))
+              ))
             )}
           </TableBody>
         </Table>
