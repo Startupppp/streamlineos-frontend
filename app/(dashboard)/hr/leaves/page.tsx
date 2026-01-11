@@ -63,10 +63,10 @@ export default async function LeavesPage() {
 
       {/* Balance Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {context.balances.map((bal, index) => {
+        {context.balances.map((bal) => {
           const Icon = leaveTypeIcons[bal.typeName || ""] || CalendarDays;
           return (
-            <Card key={`${bal.leaveTypeId}-${index}`} className="border-border">
+            <Card key={bal.leaveTypeId} className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {bal.typeName}
