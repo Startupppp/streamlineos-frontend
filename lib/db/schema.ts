@@ -135,13 +135,13 @@ export const genderEnum = pgEnum("gender", ["MALE", "FEMALE", "OTHER"]);
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
-  name: text("name"), // Required by NextAuth, computed from firstName + lastName
+  name: text("name"),
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified"),
-  password: text("password"), // Hashed password
+  password: text("password"),
   firstName: text("first_name"),
   lastName: text("last_name"),
-  gender: genderEnum("gender"), // Added gender
+  gender: genderEnum("gender"),
   skills: text("skills").array(),
   experienceYears: decimal("experience_years"),
   joiningDate: date("joining_date"),
@@ -159,6 +159,10 @@ export const users = pgTable("users", {
   departmentId: integer("department_id").references(() => departments.id),
   designation: text("designation"),
   phone: text("phone"),
+  whatsappNumber: text("whatsapp_number"),
+  whatsappSameAsPhone: boolean("whatsapp_same_as_phone").default(true),
+  monthlySalary: decimal("monthly_salary"),
+  employeeId: text("employee_id"),
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false), 
   isActive: boolean("is_active").default(true).notNull(),
@@ -592,6 +596,40 @@ export const qrCodes = pgTable("qr_codes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const wfhRequestStatusEnum = pgEnum("wfh_request_status", ["PENDING", "APPROVED", "REJECTED"]);
+
+export const wfhRequests = pgTable("wfh_requests", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  date: date("date").notNull(),
+  reason: text("reason"),
+  status: wfhRequestStatusEnum("status").default("PENDING"),
+  approverId: text("approver_id").references(() => users.id),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const deviceStatusEnum = pgEnum("device_status", ["ACTIVE", "INACTIVE", "LOST", "RETURNED"]);
+
+export const employeeDevices = pgTable("employee_devices", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  deviceType: text("device_type").notNull(),
+  deviceName: text("device_name").notNull(),
+  serialNumber: text("serial_number"),
+  brand: text("brand"),
+  model: text("model"),
+  assignedDate: date("assigned_date"),
+  returnDate: date("return_date"),
+  status: deviceStatusEnum("status").default("ACTIVE"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // --- Relations ---
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({
@@ -880,6 +918,25 @@ export const holidaysRelations = relations(holidays, ({ one }) => ({
   organization: one(organizations, {
     fields: [holidays.orgId],
     references: [organizations.id],
+  }),
+}));
+
+export const wfhRequestsRelations = relations(wfhRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [wfhRequests.userId],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [wfhRequests.approverId],
+    references: [users.id],
+    relationName: "wfhApprover",
+  }),
+}));
+
+export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => ({
+  user: one(users, {
+    fields: [employeeDevices.userId],
+    references: [users.id],
   }),
 }));
 

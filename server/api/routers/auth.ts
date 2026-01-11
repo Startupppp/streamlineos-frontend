@@ -2,7 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import {
   users,
-  organizations,
   organizationMembers,
   invitations,
   passwordResetTokens,
@@ -96,39 +95,8 @@ export const authRouter = createTRPCRouter({
         emailVerified: null,
       });
 
-      const orgName =
-        fullName || input.email.split("@")[0] || "My Organization";
-      const orgSlugBase = orgName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-
-      let orgSlug = orgSlugBase;
-      let slugAttempts = 0;
-      let existingOrg = await ctx.db.query.organizations.findFirst({
-        where: eq(organizations.slug, orgSlug),
-      });
-
-      while (existingOrg && slugAttempts < 10) {
-        orgSlug = `${orgSlugBase}-${nanoid(4)}`;
-        existingOrg = await ctx.db.query.organizations.findFirst({
-          where: eq(organizations.slug, orgSlug),
-        });
-        slugAttempts++;
-      }
-
-      const orgId = nanoid();
-      await ctx.db.insert(organizations).values({
-        id: orgId,
-        name: orgName,
-        slug: orgSlug,
-      });
-
-      await ctx.db.insert(organizationMembers).values({
-        userId,
-        orgId,
-        role: "OWNER",
-      });
+      // Note: Organization creation is now handled separately in /setup-organization
+      // after the user verifies their email and logs in
 
       await ctx.db.insert(verificationTokens).values({
         identifier: input.email,
@@ -218,7 +186,10 @@ export const authRouter = createTRPCRouter({
 
       await ctx.db
         .update(users)
-        .set({ password: hashedPassword })
+        .set({ 
+          password: hashedPassword,
+          isPasswordChangeRequired: false,
+        })
         .where(eq(users.email, tokenRecord.email));
 
       await ctx.db

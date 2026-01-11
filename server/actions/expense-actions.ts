@@ -48,8 +48,7 @@ export async function createExpense(data: CreateExpenseInput) {
 
     revalidatePath("/hr/expenses");
     return { success: true, expense };
-  } catch (error) {
-    console.error("Failed to create expense:", error);
+  } catch {
     return { error: "Failed to create expense" };
   }
 }
@@ -187,8 +186,7 @@ export async function approveExpense(expenseId: number) {
 
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to approve expense:", error);
+  } catch {
     return { error: "Failed to approve expense" };
   }
 }
@@ -220,8 +218,7 @@ export async function rejectExpense(expenseId: number, reason: string) {
 
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to reject expense:", error);
+  } catch {
     return { error: "Failed to reject expense" };
   }
 }
@@ -254,8 +251,7 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
 
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to mark expense as paid:", error);
+  } catch {
     return { error: "Failed to mark expense as paid" };
   }
 }
@@ -291,8 +287,7 @@ export async function deleteExpense(expenseId: number) {
     await db.delete(expenses).where(eq(expenses.id, expenseId));
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to delete expense:", error);
+  } catch {
     return { error: "Failed to delete expense" };
   }
 }
@@ -345,8 +340,7 @@ export async function createExpenseCategory(data: {
 
     revalidatePath("/hr/expenses");
     return { success: true, category };
-  } catch (error) {
-    console.error("Failed to create expense category:", error);
+  } catch {
     return { error: "Failed to create category" };
   }
 }

@@ -56,8 +56,7 @@ export async function uploadDocument(data: CreateDocumentInput) {
 
     revalidatePath("/hr/documents");
     return { success: true, document };
-  } catch (error) {
-    console.error("Failed to upload document:", error);
+  } catch {
     return { error: "Failed to upload document" };
   }
 }
@@ -262,8 +261,7 @@ export async function updateDocument(documentId: number, data: Partial<CreateDoc
 
     revalidatePath("/hr/documents");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to update document:", error);
+  } catch {
     return { error: "Failed to update document" };
   }
 }
@@ -319,8 +317,7 @@ export async function uploadNewVersion(documentId: number, data: {
 
     revalidatePath("/hr/documents");
     return { success: true, document: newDoc };
-  } catch (error) {
-    console.error("Failed to upload new version:", error);
+  } catch {
     return { error: "Failed to upload new version" };
   }
 }
@@ -358,8 +355,7 @@ export async function deleteDocument(documentId: number) {
 
     revalidatePath("/hr/documents");
     return { success: true };
-  } catch (error) {
-    console.error("Failed to delete document:", error);
+  } catch {
     return { error: "Failed to delete document" };
   }
 }

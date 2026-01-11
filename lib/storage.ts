@@ -7,8 +7,6 @@ const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_ENDPOINT = process.env.R2_ENDPOINT;
 
-if (!R2_BUCKET_NAME || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_ENDPOINT) {
-}
 
 const S3 = new S3Client({
   region: R2_REGION,
@@ -17,6 +15,7 @@ const S3 = new S3Client({
     accessKeyId: R2_ACCESS_KEY_ID,
     secretAccessKey: R2_SECRET_ACCESS_KEY,
   } : undefined,
+  forcePathStyle: true,
 });
 
 export interface UploadResult {
@@ -43,18 +42,14 @@ export async function uploadFile(
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "-");
   const key = `${folder}/${Date.now()}-${sanitizedName}`;
   
-  try {
-    await S3.send(
-        new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: key,
-        Body: buffer,
-        ContentType: mimeType,
-        })
-    );
-  } catch (error) {
-    throw error;
-  }
+  await S3.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    })
+  );
 
   const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL
     ? `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`
