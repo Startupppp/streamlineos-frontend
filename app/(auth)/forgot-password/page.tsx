@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../lib/trpc";
-import { ThemeToggle } from "../../../components/theme-toggle";
 import { Mail, ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -35,21 +34,19 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-        <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-        
+      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
         <div className="flex flex-col items-center mb-8">
           <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
             <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
           </div>
-          <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Check Your Email</h1>
-          <p className="text-blue-100 dark:text-muted-foreground mt-2">Password reset instructions sent</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Check Your Email</h1>
+          <p className="text-blue-100 mt-2">Password reset instructions sent</p>
         </div>
 
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
           <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto bg-green-100 dark:bg-green-900/30 p-4 rounded-full w-fit mb-2">
-              <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+            <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-2">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
             <CardTitle className="text-2xl text-primary">Email Sent!</CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -58,8 +55,8 @@ export default function ForgotPasswordPage() {
             <p className="font-medium text-foreground">{email}</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-700">
                 Click the link in the email to reset your password. The link will expire in 1 hour.
               </p>
             </div>
@@ -80,18 +77,16 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-      
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
         <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Forgot Password?</h1>
-        <p className="text-blue-100 dark:text-muted-foreground mt-2">No worries, we will help you reset it</p>
+        <h1 className="text-3xl font-bold text-white tracking-tight">Forgot Password?</h1>
+        <p className="text-blue-100 mt-2">No worries, we will help you reset it</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
         <CardHeader className="space-y-1">
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <KeyRound className="w-8 h-8 text-primary" />
@@ -115,7 +110,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="pl-10 focus-visible:ring-primary dark:bg-background"
+                  className="pl-10 focus-visible:ring-primary"
                 />
               </div>
             </div>

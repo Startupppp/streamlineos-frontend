@@ -10,7 +10,6 @@ import { Label } from "../../../../components/ui/label";
 import { Badge } from "../../../../components/ui/badge";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../../lib/trpc";
-import { ThemeToggle } from "../../../../components/theme-toggle";
 import { Users, Mail, User, Shield, Loader2, Eye, EyeOff, PartyPopper } from "lucide-react";
 
 export default function InvitationPage() {
@@ -93,18 +92,16 @@ export default function InvitationPage() {
 
   if (!invitation) {
     return (
-      <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-        <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-        
+      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
         <div className="flex flex-col items-center mb-8">
           <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
             <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
           </div>
-          <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">Loading Invitation</h1>
-          <p className="text-blue-100 dark:text-muted-foreground mt-2">Please wait...</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Loading Invitation</h1>
+          <p className="text-blue-100 mt-2">Please wait...</p>
         </div>
 
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white dark:bg-card">
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
           <CardContent className="py-12">
             <div className="flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -121,18 +118,16 @@ export default function InvitationPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-      
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
         <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">You&apos;re Invited!</h1>
-        <p className="text-blue-100 dark:text-muted-foreground mt-2">Join the team and start collaborating</p>
+        <h1 className="text-3xl font-bold text-white tracking-tight">You&apos;re Invited!</h1>
+        <p className="text-blue-100 mt-2">Join the team and start collaborating</p>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white dark:bg-card">
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white">
         <CardHeader className="space-y-1 text-center pb-4">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
             <PartyPopper className="w-8 h-8 text-primary" />
@@ -157,7 +152,7 @@ export default function InvitationPage() {
                 <Input 
                   value={invitation.email} 
                   disabled 
-                  className="pl-10 bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                  className="pl-10 bg-gray-50 cursor-not-allowed"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -178,7 +173,7 @@ export default function InvitationPage() {
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     disabled={isLoading}
-                    className="pl-10 focus-visible:ring-primary dark:bg-background"
+                    className="pl-10 focus-visible:ring-primary"
                   />
                 </div>
               </div>
@@ -193,7 +188,7 @@ export default function InvitationPage() {
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     disabled={isLoading}
-                    className="pl-10 focus-visible:ring-primary dark:bg-background"
+                    className="pl-10 focus-visible:ring-primary"
                   />
                 </div>
               </div>
@@ -212,7 +207,7 @@ export default function InvitationPage() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
                   disabled={isLoading}
-                  className="pl-10 pr-10 focus-visible:ring-primary dark:bg-background"
+                  className="pl-10 pr-10 focus-visible:ring-primary"
                 />
                 <button
                   type="button"
@@ -239,7 +234,7 @@ export default function InvitationPage() {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
                   disabled={isLoading}
-                  className="pl-10 pr-10 focus-visible:ring-primary dark:bg-background"
+                  className="pl-10 pr-10 focus-visible:ring-primary"
                 />
                 <button
                   type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,17 +8,36 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { createOrganization } from "@/server/actions/organization-actions";
+import { createOrganization, checkUserHasOrganization } from "@/server/actions/organization-actions";
 import { Building2, Loader2 } from "lucide-react";
 
 export default function SetupOrganizationPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
   });
+
+  // Check if user already has an organization
+  useEffect(() => {
+    const checkOrg = async () => {
+      try {
+        const result = await checkUserHasOrganization();
+        if (result.hasOrg) {
+          // User already has an organization, redirect to dashboard
+          router.replace("/dashboard");
+          return;
+        }
+      } catch {
+        // If check fails, allow access to setup page
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    checkOrg();
+  }, [router]);
 
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
@@ -60,23 +79,31 @@ export default function SetupOrganizationPage() {
     }
   };
 
+  // Show loading while checking organization membership
+  if (isChecking) {
+    return (
+      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <p className="text-blue-100 mt-4">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] dark:bg-background flex flex-col items-center justify-center p-4 relative transition-colors duration-300">
-      <ThemeToggle className="absolute top-4 right-4 text-white hover:bg-white/10" />
-      
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
         <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white dark:text-foreground tracking-tight">
+        <h1 className="text-3xl font-bold text-white tracking-tight">
           Set Up Your Organization
         </h1>
-        <p className="text-blue-100 dark:text-muted-foreground mt-2 text-center max-w-md">
+        <p className="text-blue-100 mt-2 text-center max-w-md">
           Create your first organization to start managing your team, projects, and HR operations.
         </p>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white dark:bg-card">
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-2">
             <div className="p-3 rounded-full bg-primary/10">
@@ -100,7 +127,7 @@ export default function SetupOrganizationPage() {
                 onChange={(e) => handleNameChange(e.target.value)}
                 required
                 disabled={isLoading}
-                className="focus-visible:ring-primary dark:bg-background"
+                className="focus-visible:ring-primary"
               />
               <p className="text-xs text-muted-foreground">
                 Your company or team name
@@ -119,7 +146,7 @@ export default function SetupOrganizationPage() {
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
                   required
                   disabled={isLoading}
-                  className="focus-visible:ring-primary dark:bg-background flex-1"
+                  className="focus-visible:ring-primary flex-1"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
