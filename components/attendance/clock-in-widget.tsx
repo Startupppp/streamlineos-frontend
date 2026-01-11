@@ -69,28 +69,32 @@ export function ClockInWidget() {
   const dailyStats = statusData?.dailyStats;
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="text-muted-foreground font-bold text-sm tracking-wide">
-        {format(now, "hh:mm a - EEE dd, MMM yyyy").toUpperCase()}
+    <div className="flex items-center gap-6">
+      <div className="flex flex-col items-end">
+        <div className="text-muted-foreground font-bold text-sm tracking-wide">
+          {format(now, "hh:mm a - EEE dd, MMM yyyy").toUpperCase()}
+        </div>
+        
+        <div className="flex items-center gap-4 mt-1">
+          {(isCheckedIn || isOnBreak) && sessionTime && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="font-mono font-bold text-primary">
+                {String(sessionTime.hours).padStart(2, "0")}:
+                {String(sessionTime.minutes).padStart(2, "0")}:
+                {String(sessionTime.seconds).padStart(2, "0")}
+              </span>
+            </div>
+          )}
+          
+          {dailyStats && parseFloat(dailyStats.workHours) > 0 && (
+            <div className="text-xs text-muted-foreground">
+              {parseFloat(dailyStats.workHours).toFixed(1)}h worked
+              {parseFloat(dailyStats.breakHours) > 0 && ` · ${parseFloat(dailyStats.breakHours).toFixed(1)}h break`}
+            </div>
+          )}
+        </div>
       </div>
-      
-      {(isCheckedIn || isOnBreak) && sessionTime && (
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="h-4 w-4 text-primary" />
-          <span className="font-mono font-bold text-primary">
-            {String(sessionTime.hours).padStart(2, "0")}:
-            {String(sessionTime.minutes).padStart(2, "0")}:
-            {String(sessionTime.seconds).padStart(2, "0")}
-          </span>
-        </div>
-      )}
-      
-      {dailyStats && parseFloat(dailyStats.workHours) > 0 && (
-        <div className="text-xs text-muted-foreground">
-          Today: {parseFloat(dailyStats.workHours).toFixed(1)}h worked
-          {parseFloat(dailyStats.breakHours) > 0 && `, ${parseFloat(dailyStats.breakHours).toFixed(1)}h break`}
-        </div>
-      )}
       
       <Button
         variant={isCheckedIn || isOnBreak ? "outline" : "destructive"}

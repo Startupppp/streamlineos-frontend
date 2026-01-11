@@ -540,7 +540,17 @@ export function OnboardingWizard() {
                               <FormItem>
                                 <FormLabel>Years of Experience</FormLabel>
                                 <FormControl>
-                                  <Input type="number" step="0.1" placeholder="5.5" {...field} className="bg-background/50" />
+                                  <Input 
+                                    type="number" 
+                                    step="0.1" 
+                                    placeholder="5.5" 
+                                    value={field.value ?? ""}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    className="bg-background/50" 
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -575,7 +585,11 @@ export function OnboardingWizard() {
                                   <Input 
                                     type="number" 
                                     placeholder="25000" 
-                                    {...field} 
+                                    value={field.value ?? ""}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
                                     className="bg-background/50 pl-8" 
                                   />
                                 </div>

@@ -6,12 +6,10 @@ import {
   Download,
   FileText,
   TrendingUp,
-  TrendingDown,
   Calendar,
   Users,
   PieChart,
   BarChart3,
-  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -173,9 +171,9 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
   if (!reportData) {
     return (
       <div className="text-center py-12">
-        <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-slate-900">No data available</h3>
-        <p className="text-slate-500">Try selecting a different time period</p>
+        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-medium">No data available</h3>
+        <p className="text-muted-foreground">Try selecting a different time period</p>
       </div>
     );
   }
@@ -187,8 +185,8 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Expense Reports</h2>
-          <p className="text-slate-600 mt-1">Analyze expense trends and patterns</p>
+          <h2 className="text-2xl font-bold">Expense Reports</h2>
+          <p className="text-muted-foreground mt-1">Analyze expense trends and patterns</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
@@ -213,23 +211,23 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-violet-500 to-violet-600 text-white">
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-violet-100">Total Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(summary.totalAmount)}</div>
-            <p className="text-xs text-violet-200 mt-1">{summary.totalExpenses} claims</p>
+            <p className="text-xs text-muted-foreground mt-1">{summary.totalExpenses} claims</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-emerald-100">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(summary.approvedAmount)}</div>
-            <p className="text-xs text-emerald-200 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               {summary.totalAmount > 0
                 ? `${((summary.approvedAmount / summary.totalAmount) * 100).toFixed(0)}% of total`
                 : "0%"}
@@ -237,23 +235,23 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-amber-100">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(summary.pendingAmount)}</div>
-            <p className="text-xs text-amber-200 mt-1">Awaiting approval</p>
+            <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-100">Avg. Expense</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Expense</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(summary.avgExpenseAmount)}</div>
-            <p className="text-xs text-blue-200 mt-1">Per claim</p>
+            <p className="text-xs text-muted-foreground mt-1">Per claim</p>
           </CardContent>
         </Card>
       </div>
@@ -261,62 +259,52 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
       {/* Charts Section */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* By Category */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-violet-600" />
+              <PieChart className="h-5 w-5 text-primary" />
               By Category
             </CardTitle>
             <CardDescription>Expense distribution by category</CardDescription>
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-center text-slate-500 py-8">No data available</p>
+              <p className="text-center text-muted-foreground py-8">No data available</p>
             ) : (
               <div className="space-y-4">
-                {byCategory.slice(0, 6).map((cat, index) => {
-                  const colors = [
-                    "bg-violet-500",
-                    "bg-blue-500",
-                    "bg-emerald-500",
-                    "bg-amber-500",
-                    "bg-pink-500",
-                    "bg-cyan-500",
-                  ];
-                  return (
-                    <div key={cat.category} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-700">{cat.category}</span>
-                        <span className="text-slate-500">
-                          {formatCurrency(cat.amount)} ({cat.percentage.toFixed(0)}%)
-                        </span>
-                      </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${colors[index % colors.length]} rounded-full transition-all`}
-                          style={{ width: `${cat.percentage}%` }}
-                        />
-                      </div>
+                {byCategory.slice(0, 6).map((cat) => (
+                  <div key={cat.category} className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{cat.category}</span>
+                      <span className="text-muted-foreground">
+                        {formatCurrency(cat.amount)} ({cat.percentage.toFixed(0)}%)
+                      </span>
                     </div>
-                  );
-                })}
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${cat.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* By Month */}
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-violet-600" />
+              <BarChart3 className="h-5 w-5 text-primary" />
               Monthly Trend
             </CardTitle>
             <CardDescription>Expense trend over time</CardDescription>
           </CardHeader>
           <CardContent>
             {byMonth.length === 0 ? (
-              <p className="text-center text-slate-500 py-8">No data available</p>
+              <p className="text-center text-muted-foreground py-8">No data available</p>
             ) : (
               <div className="space-y-4">
                 {byMonth.map((month) => {
@@ -325,14 +313,14 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
                   return (
                     <div key={month.month} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-slate-700">{month.month}</span>
-                        <span className="text-slate-500">
+                        <span className="font-medium">{month.month}</span>
+                        <span className="text-muted-foreground">
                           {formatCurrency(month.amount)} ({month.count} claims)
                         </span>
                       </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all"
+                          className="h-full bg-primary rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -346,17 +334,17 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
       </div>
 
       {/* Top Expenses Table */}
-      <Card className="border-0 shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-violet-600" />
+            <TrendingUp className="h-5 w-5 text-primary" />
             Top Expenses
           </CardTitle>
           <CardDescription>Highest expense claims in selected period</CardDescription>
         </CardHeader>
         <CardContent>
           {topExpenses.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">No expenses in this period</p>
+            <p className="text-center text-muted-foreground py-8">No expenses in this period</p>
           ) : (
             <Table>
               <TableHeader>
@@ -380,7 +368,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
                     <TableCell className="max-w-[200px] truncate">
                       {expense.description || "-"}
                     </TableCell>
-                    <TableCell className="text-slate-600">
+                    <TableCell className="text-muted-foreground">
                       {format(new Date(expense.expenseDate), "MMM d, yyyy")}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
@@ -396,10 +384,10 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
 
       {/* By Employee (Admin only) */}
       {isAdmin && byEmployee.length > 0 && (
-        <Card className="border-0 shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-violet-600" />
+              <Users className="h-5 w-5 text-primary" />
               By Employee
             </CardTitle>
             <CardDescription>Expense breakdown by team member</CardDescription>
@@ -422,7 +410,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
                     <TableCell className="text-right font-semibold">
                       {formatCurrency(emp.amount)}
                     </TableCell>
-                    <TableCell className="text-right text-slate-600">
+                    <TableCell className="text-right text-muted-foreground">
                       {formatCurrency(emp.count > 0 ? emp.amount / emp.count : 0)}
                     </TableCell>
                   </TableRow>
