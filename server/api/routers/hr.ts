@@ -50,7 +50,7 @@ import {
   generateEmployeePayslipInputSchema,
 } from "../../../lib/validations/hr";
 import bcrypt from "bcryptjs";
-import { sendWelcomeEmail } from "../../../lib/email";
+import { sendWelcomeEmail, sendPayslipGeneratedEmail } from "../../../lib/email";
 
 export const hrRouter = createTRPCRouter({
   getDepartments: protectedProcedure.query(async ({ ctx }) => {
@@ -1290,12 +1290,25 @@ export const hrRouter = createTRPCRouter({
       });
 
       const monthlySalary = user.monthlySalary ? parseFloat(user.monthlySalary) : 0;
+      const workingDays = 30;
+      const perDaySalary = monthlySalary / workingDays;
+      
+      // Calculate attendance-based deductions
+      const lopDeduction = (input.lopDays || 0) * perDaySalary;
+      const halfDayDeduction = ((input.halfDays || 0) * perDaySalary) / 2;
+      
+      // Salary breakdown: 50% Basic, 50% HRA
       const basicSalary = salaryStructure ? parseFloat(salaryStructure.basicSalary) : monthlySalary * 0.5;
-      const hra = basicSalary * 0.5;
-      const specialAllowance = basicSalary * 0.5;
-      const deductions = salaryStructure ? parseFloat(salaryStructure.deductions || "200") : 200;
-      const grossSalary = basicSalary + hra + specialAllowance;
-      const netSalary = grossSalary - deductions;
+      const hra = salaryStructure ? (parseFloat(salaryStructure.basicSalary) * parseFloat(salaryStructure.hraPercentage || "40") / 100) : monthlySalary * 0.5;
+      const bonus = input.bonus || 0;
+      
+      // Deductions
+      const professionalTax = 200;
+      const otherDeductions = input.otherDeductions || 0;
+      const totalDeductions = professionalTax + lopDeduction + halfDayDeduction + otherDeductions;
+      
+      const grossSalary = monthlySalary + bonus;
+      const netSalary = grossSalary - totalDeductions;
 
       const existing = await ctx.db.query.payrolls.findFirst({
         where: and(
@@ -1305,19 +1318,38 @@ export const hrRouter = createTRPCRouter({
         ),
       });
 
+      const payrollData = {
+        basicSalary: basicSalary.toString(),
+        hra: hra.toString(),
+        allowances: bonus.toString(),
+        deductions: totalDeductions.toString(),
+        grossSalary: grossSalary.toString(),
+        netSalary: netSalary.toString(),
+        status: "DRAFT" as const,
+        generatedBy: ctx.session.userId,
+      };
+
       if (existing) {
         await ctx.db.update(payrolls)
-          .set({
-            basicSalary: basicSalary.toString(),
-            hra: hra.toString(),
-            allowances: specialAllowance.toString(),
-            deductions: deductions.toString(),
-            grossSalary: grossSalary.toString(),
-            netSalary: netSalary.toString(),
-            status: "DRAFT",
-            generatedBy: ctx.session.userId,
-          })
+          .set(payrollData)
           .where(eq(payrolls.id, existing.id));
+        
+        // Send email notification
+        if (user.email) {
+          const monthDate = new Date(input.month + "-01");
+          const monthName = monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+          const employeeName = user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}` 
+            : user.name || "Employee";
+          
+          sendPayslipGeneratedEmail(
+            user.email,
+            employeeName,
+            monthName,
+            netSalary.toLocaleString()
+          ).catch(() => {});
+        }
+        
         return existing;
       }
 
@@ -1325,15 +1357,24 @@ export const hrRouter = createTRPCRouter({
         orgId: ctx.session.orgId,
         userId: input.userId,
         month: input.month,
-        basicSalary: basicSalary.toString(),
-        hra: hra.toString(),
-        allowances: specialAllowance.toString(),
-        deductions: deductions.toString(),
-        grossSalary: grossSalary.toString(),
-        netSalary: netSalary.toString(),
-        status: "DRAFT",
-        generatedBy: ctx.session.userId,
+        ...payrollData,
       }).returning();
+
+      // Send email notification
+      if (user.email) {
+        const monthDate = new Date(input.month + "-01");
+        const monthName = monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+        const employeeName = user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName}` 
+          : user.name || "Employee";
+        
+        sendPayslipGeneratedEmail(
+          user.email,
+          employeeName,
+          monthName,
+          netSalary.toLocaleString()
+        ).catch(() => {});
+      }
 
       return payroll;
     }),
@@ -1355,6 +1396,22 @@ export const hrRouter = createTRPCRouter({
           eq(payrolls.orgId, ctx.session.orgId)
         ),
         orderBy: [desc(payrolls.month)],
+        with: {
+          user: {
+            columns: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              name: true,
+              designation: true,
+              email: true,
+              joiningDate: true,
+              taxId: true,
+              bankDetails: true,
+              employeeId: true,
+            },
+          },
+        },
       });
     }),
 

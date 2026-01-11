@@ -775,6 +775,23 @@ export const salaryStructuresRelations = relations(salaryStructures, ({ one }) =
   }),
 }));
 
+export const payrollsRelations = relations(payrolls, ({ one }) => ({
+  user: one(users, {
+    fields: [payrolls.userId],
+    references: [users.id],
+  }),
+  generatedByUser: one(users, {
+    fields: [payrolls.generatedBy],
+    references: [users.id],
+    relationName: "payrollGeneratedBy",
+  }),
+  approvedByUser: one(users, {
+    fields: [payrolls.approvedBy],
+    references: [users.id],
+    relationName: "payrollApprovedBy",
+  }),
+}));
+
 export const expenseCategoriesRelations = relations(expenseCategories, ({ many }) => ({
   expenses: many(expenses),
 }));

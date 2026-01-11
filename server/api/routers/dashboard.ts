@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { projects, attendance, organizations, organizationMembers, users } from "../../../lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { projects, attendance, organizations, organizationMembers, users, projectMembers } from "../../../lib/db/schema";
+import { eq, and, sql, desc, or, inArray } from "drizzle-orm";
 import { format } from "date-fns";
 
 import { TRPCError } from "@trpc/server";
@@ -72,5 +72,96 @@ export const dashboardRouter = createTRPCRouter({
             : "Failed to load dashboard stats",
       });
     }
+  }),
+
+  getRecentProjects: protectedProcedure.query(async ({ ctx }) => {
+    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+
+    let recentProjects;
+
+    if (isOwnerOrAdmin) {
+      recentProjects = await ctx.db.query.projects.findMany({
+        where: eq(projects.orgId, ctx.session.orgId),
+        orderBy: [desc(projects.id)],
+        limit: 5,
+        with: {
+          manager: {
+            columns: {
+              id: true,
+              name: true,
+              firstName: true,
+              lastName: true,
+              image: true,
+            },
+          },
+        },
+      });
+    } else {
+      const memberOf = await ctx.db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, ctx.session.userId));
+
+      const projectIds = memberOf.map((m) => m.projectId);
+
+      recentProjects = await ctx.db.query.projects.findMany({
+        where: and(
+          eq(projects.orgId, ctx.session.orgId),
+          or(
+            eq(projects.managerId, ctx.session.userId),
+            projectIds.length > 0 ? inArray(projects.id, projectIds) : undefined
+          )
+        ),
+        orderBy: [desc(projects.id)],
+        limit: 5,
+        with: {
+          manager: {
+            columns: {
+              id: true,
+              name: true,
+              firstName: true,
+              lastName: true,
+              image: true,
+            },
+          },
+        },
+      });
+    }
+
+    return recentProjects;
+  }),
+
+  getTeamAvailability: protectedProcedure.query(async ({ ctx }) => {
+    const today = format(new Date(), "yyyy-MM-dd");
+
+    const todayAttendance = await ctx.db
+      .select({
+        userId: attendance.userId,
+        checkIn: attendance.checkIn,
+        checkOut: attendance.checkOut,
+        userName: users.name,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        userImage: users.image,
+      })
+      .from(attendance)
+      .innerJoin(users, eq(attendance.userId, users.id))
+      .where(
+        and(
+          eq(attendance.orgId, ctx.session.orgId),
+          eq(attendance.date, today)
+        )
+      );
+
+    return todayAttendance.map((record) => ({
+      userId: record.userId,
+      name: record.firstName && record.lastName 
+        ? `${record.firstName} ${record.lastName}` 
+        : record.userName || "Unknown",
+      image: record.userImage,
+      checkIn: record.checkIn,
+      checkOut: record.checkOut,
+      isOnline: record.checkIn && !record.checkOut,
+    }));
   }),
 });

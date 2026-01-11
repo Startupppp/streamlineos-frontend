@@ -61,6 +61,8 @@ export const vaivammKeys = {
   dashboard: {
     all: dashboardBaseKey,
     stats: () => [...dashboardBaseKey, "stats"] as const,
+    recentProjects: () => [...dashboardBaseKey, "recentProjects"] as const,
+    teamAvailability: () => [...dashboardBaseKey, "teamAvailability"] as const,
   },
 
   rbac: {
@@ -1541,6 +1543,32 @@ export const useDashboardStats = (
   return useQuery<DashboardRouterOutputs["getStats"], Error>({
     queryKey: vaivammKeys.dashboard.stats(),
     queryFn: () => vaivammTrpcClient.dashboard.getStats.query(),
+    ...options,
+  });
+};
+
+export const useRecentProjects = (
+  options?: Omit<
+    UseQueryOptions<DashboardRouterOutputs["getRecentProjects"], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<DashboardRouterOutputs["getRecentProjects"], Error>({
+    queryKey: vaivammKeys.dashboard.recentProjects(),
+    queryFn: () => vaivammTrpcClient.dashboard.getRecentProjects.query(),
+    ...options,
+  });
+};
+
+export const useTeamAvailability = (
+  options?: Omit<
+    UseQueryOptions<DashboardRouterOutputs["getTeamAvailability"], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<DashboardRouterOutputs["getTeamAvailability"], Error>({
+    queryKey: vaivammKeys.dashboard.teamAvailability(),
+    queryFn: () => vaivammTrpcClient.dashboard.getTeamAvailability.query(),
     ...options,
   });
 };

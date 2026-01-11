@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
-import { uploadFile } from "../../../../lib/storage";
+import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +8,13 @@ export async function POST(req: NextRequest) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isStorageConfigured()) {
+      return NextResponse.json(
+        { error: "Storage is not configured. Please contact administrator." },
+        { status: 503 }
+      );
     }
 
     const formData = await req.formData();
@@ -50,6 +57,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Failed to upload file";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    // Log error for debugging in development
+    if (process.env.NODE_ENV === "development") {
+      console.error("Upload error:", errorMessage, errorStack);
+    }
+    
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
