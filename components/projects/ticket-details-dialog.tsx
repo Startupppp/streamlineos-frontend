@@ -174,10 +174,20 @@ export function TicketDetailsDialog({
         type: ticket.type || "TASK",
         priority: ticket.priority || "MEDIUM",
         status: ticket.status || "TODO",
-        assigneeId: ticket.assignee?.id,
+        assigneeId: ticket.assignee?.id || undefined,
+      });
+    } else {
+      form.reset({
+        ticketId: ticketId || 0,
+        title: "",
+        description: "",
+        type: "TASK",
+        priority: "MEDIUM",
+        status: "TODO",
+        assigneeId: undefined,
       });
     }
-  }, [ticket, form]);
+  }, [ticket, ticketId, form]);
 
   const onSubmit = (values: FormValues) => {
     updateTicketMutation.mutate({
@@ -506,14 +516,20 @@ export function TicketDetailsDialog({
                         control={form.control}
                         name="assigneeId"
                         render={({ field }) => {
-                          const selectedMember = members?.find(m => m.id === field.value);
+                          const fieldValue = field.value || undefined;
+                          const selectedMember = fieldValue && fieldValue !== "unassigned" 
+                            ? members?.find(m => m.id === fieldValue)
+                            : null;
                           return (
                             <FormItem>
                               <FormLabel className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Assignee</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select 
+                                onValueChange={(value) => field.onChange(value === "unassigned" ? undefined : value)} 
+                                value={fieldValue || "unassigned"}
+                              >
                                 <FormControl>
                                   <SelectTrigger className="bg-background">
-                                    {field.value && field.value !== "unassigned" && selectedMember ? (
+                                    {selectedMember ? (
                                       <div className="flex items-center gap-2">
                                         <Avatar className="h-5 w-5">
                                           <AvatarImage src={selectedMember.image || undefined} />
