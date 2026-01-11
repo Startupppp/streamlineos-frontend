@@ -8,7 +8,9 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RequestLeaveDialog } from "./request-leave-dialog";
+import { RequestWFHDialog } from "./request-wfh-dialog";
 import { PendingRequestsList } from "./pending-requests-list";
+import { WFHRequestsList } from "./wfh-requests-list";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { LeaveErrorState, NoLeaveRequestsState } from "./leaves-empty-states";
@@ -49,10 +51,13 @@ export default async function LeavesPage() {
         title="Leave Management"
         description="Request time off and track your leave balances."
         actions={
-          <RequestLeaveDialog 
-            leaveTypes={context.types || []} 
-            approvers={approvers} 
-          />
+          <div className="flex gap-2">
+            <RequestWFHDialog approvers={approvers} />
+            <RequestLeaveDialog 
+              leaveTypes={context.types || []} 
+              approvers={approvers} 
+            />
+          </div>
         }
       />
 
@@ -84,6 +89,7 @@ export default async function LeavesPage() {
       <Tabs defaultValue="my-requests" className="space-y-4">
         <TabsList>
           <TabsTrigger value="my-requests">My Requests</TabsTrigger>
+          <TabsTrigger value="wfh">Work From Home</TabsTrigger>
           {incomingRequests.length > 0 && (
             <TabsTrigger value="approvals" className="relative">
               Approvals
@@ -138,6 +144,11 @@ export default async function LeavesPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* WFH Tab */}
+        <TabsContent value="wfh" className="space-y-4">
+          <WFHRequestsList />
         </TabsContent>
 
         {/* Approvals Tab */}

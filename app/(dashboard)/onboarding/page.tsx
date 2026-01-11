@@ -25,7 +25,7 @@ const bankSchema = z.object({
   bankName: z.string().min(2, "Bank Name is required"),
   accountNumber: z.string().min(5, "Account Number is required"),
   ifsc: z.string().min(4, "IFSC Code is required"),
-  taxId: z.string().min(5, "Tax ID / PAN is required"),
+  taxId: z.string().optional(),
 });
 
 export default function OnboardingPage() {
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tax ID (PAN/SSN)</Label>
+                  <Label>Tax ID (PAN/SSN) <span className="text-muted-foreground font-normal ml-1">(Optional)</span></Label>
                   <Input {...bankForm.register("taxId")} placeholder="ABCDE1234F" />
                   {bankForm.formState.errors.taxId && <p className="text-sm text-red-500">{bankForm.formState.errors.taxId.message}</p>}
                 </div>

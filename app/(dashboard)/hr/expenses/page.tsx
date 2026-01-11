@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Settings,
   BarChart3,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -427,15 +428,41 @@ export default function ExpensesPage() {
                           </TableCell>
                           <TableCell>
                             {expense.receiptUrl ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.open(expense.receiptUrl!, "_blank")}
-                                className="text-violet-600 hover:text-violet-700"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(expense.receiptUrl!, "_blank")}
+                                  className="text-violet-600 hover:text-violet-700"
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(expense.receiptUrl!);
+                                      const blob = await response.blob();
+                                      const url = window.URL.createObjectURL(blob);
+                                      const link = document.createElement("a");
+                                      link.href = url;
+                                      link.download = expense.receiptFileName || `receipt-${expense.id}`;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      window.URL.revokeObjectURL(url);
+                                      toast.success("Download started");
+                                    } catch {
+                                      toast.error("Failed to download");
+                                    }
+                                  }}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
                             ) : (
                               <span className="text-slate-400 text-sm">No receipt</span>
                             )}
@@ -576,12 +603,36 @@ export default function ExpensesPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               {expense.receiptUrl && (
-                                <DropdownMenuItem
-                                  onClick={() => window.open(expense.receiptUrl!, "_blank")}
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Receipt
-                                </DropdownMenuItem>
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => window.open(expense.receiptUrl!, "_blank")}
+                                  >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Receipt
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch(expense.receiptUrl!);
+                                        const blob = await response.blob();
+                                        const url = window.URL.createObjectURL(blob);
+                                        const link = document.createElement("a");
+                                        link.href = url;
+                                        link.download = expense.receiptFileName || `receipt-${expense.id}`;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        window.URL.revokeObjectURL(url);
+                                        toast.success("Download started");
+                                      } catch {
+                                        toast.error("Failed to download receipt");
+                                      }
+                                    }}
+                                  >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Receipt
+                                  </DropdownMenuItem>
+                                </>
                               )}
                               {isAdmin && expense.status === "APPROVED" && (
                                 <DropdownMenuItem onClick={() => handleMarkPaid(expense.id)}>

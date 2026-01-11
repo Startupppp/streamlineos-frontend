@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,6 +21,7 @@ import { Loader2, Upload, User, Rocket, Shield, Eye, EyeOff } from "lucide-react
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ImageCropperDialog } from "@/components/ui/image-cropper-dialog";
 
 const formSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -33,10 +34,16 @@ const formSchema = z.object({
 export default function ResetPasswordPage() {
   const { update } = useSession();
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Use ref to immediately track the file (avoids React state batching issues)
+  const imageFileRef = useRef<File | null>(null);
+
+  // Cropper state
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,13 +56,27 @@ export default function ResetPasswordPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setTempImageSrc(reader.result as string);
+        setIsCropperOpen(true);
       };
       reader.readAsDataURL(file);
     }
+    // Reset input so same file can be selected again if needed
+    e.target.value = "";
+  };
+
+  const handleCropComplete = (croppedBlob: Blob) => {
+    // Create a File from the Blob
+    const file = new File([croppedBlob], "profile-pic.jpg", { type: "image/jpeg" });
+    
+    // Use ref to immediately store the file (no async batching)
+    imageFileRef.current = file;
+    
+    // Create preview
+    const previewUrl = URL.createObjectURL(croppedBlob);
+    setImagePreview(previewUrl);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -63,9 +84,12 @@ export default function ResetPasswordPage() {
     try {
       let imageUrl = undefined;
 
-      if (imageFile) {
+      // Use the ref to get the file immediately
+      const currentImageFile = imageFileRef.current;
+
+      if (currentImageFile) {
         const formData = new FormData();
-        formData.append("file", imageFile);
+        formData.append("file", currentImageFile);
         formData.append("folder", "profiles");
 
         const uploadRes = await fetch("/api/storage/upload", {
@@ -232,6 +256,14 @@ export default function ResetPasswordPage() {
       <div className="mt-8 text-white/40 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>
+      
+      <ImageCropperDialog
+        open={isCropperOpen}
+        onOpenChange={setIsCropperOpen}
+        imageSrc={tempImageSrc}
+        onCropComplete={handleCropComplete}
+        aspect={1} // Circular/Square aspect ratio
+      />
     </div>
   );
 }

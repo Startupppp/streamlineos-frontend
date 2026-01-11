@@ -540,11 +540,22 @@ export default function DocumentsPage() {
                                 View
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => {
-                                  const link = document.createElement("a");
-                                  link.href = doc.fileUrl;
-                                  link.download = doc.fileName || doc.name;
-                                  link.click();
+                                onClick={async () => {
+                                  try {
+                                    const response = await fetch(doc.fileUrl);
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.download = doc.fileName || doc.name;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                    toast.success("Download started");
+                                  } catch {
+                                    toast.error("Failed to download file");
+                                  }
                                 }}
                               >
                                 <Download className="mr-2 h-4 w-4" />
