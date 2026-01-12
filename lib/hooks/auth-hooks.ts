@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationOptions,
+} from "@tanstack/react-query";
 import { vaivammTrpcClient } from "../trpc";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -24,7 +29,11 @@ export const useSignUp = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<AuthRouterOutputs["signUp"], AuthRouterInputs["signUp"], unknown>
+    | MutationOnSuccess<
+        AuthRouterOutputs["signUp"],
+        AuthRouterInputs["signUp"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -34,7 +43,9 @@ export const useSignUp = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.auth.signUp.mutate(variables) as Promise<AuthRouterOutputs["signUp"]>,
+      vaivammTrpcClient.auth.signUp.mutate(variables) as Promise<
+        AuthRouterOutputs["signUp"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
       if (userOnSuccess) userOnSuccess(data, variables, context);
@@ -53,7 +64,11 @@ export const useVerifyEmail = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<AuthRouterOutputs["verifyEmail"], AuthRouterInputs["verifyEmail"], unknown>
+    | MutationOnSuccess<
+        AuthRouterOutputs["verifyEmail"],
+        AuthRouterInputs["verifyEmail"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -63,7 +78,9 @@ export const useVerifyEmail = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.auth.verifyEmail.mutate(variables) as Promise<AuthRouterOutputs["verifyEmail"]>,
+      vaivammTrpcClient.auth.verifyEmail.mutate(variables) as Promise<
+        AuthRouterOutputs["verifyEmail"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
       if (userOnSuccess) userOnSuccess(data, variables, context);
@@ -81,7 +98,11 @@ export const useForgotPassword = (
   >
 ) => {
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<AuthRouterOutputs["forgotPassword"], AuthRouterInputs["forgotPassword"], unknown>
+    | MutationOnSuccess<
+        AuthRouterOutputs["forgotPassword"],
+        AuthRouterInputs["forgotPassword"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -91,7 +112,9 @@ export const useForgotPassword = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.auth.forgotPassword.mutate(variables) as Promise<AuthRouterOutputs["forgotPassword"]>,
+      vaivammTrpcClient.auth.forgotPassword.mutate(variables) as Promise<
+        AuthRouterOutputs["forgotPassword"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
       if (userOnSuccess) userOnSuccess(data, variables, context);
@@ -109,7 +132,11 @@ export const useResetPassword = (
   >
 ) => {
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<AuthRouterOutputs["resetPassword"], AuthRouterInputs["resetPassword"], unknown>
+    | MutationOnSuccess<
+        AuthRouterOutputs["resetPassword"],
+        AuthRouterInputs["resetPassword"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -119,7 +146,9 @@ export const useResetPassword = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.auth.resetPassword.mutate(variables) as Promise<AuthRouterOutputs["resetPassword"]>,
+      vaivammTrpcClient.auth.resetPassword.mutate(variables) as Promise<
+        AuthRouterOutputs["resetPassword"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
       if (userOnSuccess) userOnSuccess(data, variables, context);
@@ -138,7 +167,11 @@ export const useAcceptInvitation = (
 ) => {
   const router = useRouter();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<AuthRouterOutputs["acceptInvitation"], AuthRouterInputs["acceptInvitation"], unknown>
+    | MutationOnSuccess<
+        AuthRouterOutputs["acceptInvitation"],
+        AuthRouterInputs["acceptInvitation"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -148,7 +181,9 @@ export const useAcceptInvitation = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.auth.acceptInvitation.mutate(variables) as Promise<AuthRouterOutputs["acceptInvitation"]>,
+      vaivammTrpcClient.auth.acceptInvitation.mutate(variables) as Promise<
+        AuthRouterOutputs["acceptInvitation"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
       if (userOnSuccess) userOnSuccess(data, variables, context);
@@ -166,7 +201,11 @@ export const useResendVerificationEmail = (
   >
 ) => {
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<AuthRouterOutputs["resendVerificationEmail"], AuthRouterInputs["resendVerificationEmail"], unknown>
+    | MutationOnSuccess<
+        AuthRouterOutputs["resendVerificationEmail"],
+        AuthRouterInputs["resendVerificationEmail"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -176,7 +215,9 @@ export const useResendVerificationEmail = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.auth.resendVerificationEmail.mutate(variables) as Promise<AuthRouterOutputs["resendVerificationEmail"]>,
+      vaivammTrpcClient.auth.resendVerificationEmail.mutate(
+        variables
+      ) as Promise<AuthRouterOutputs["resendVerificationEmail"]>,
     ...options,
     onSuccess: (data, variables, context) => {
       if (userOnSuccess) userOnSuccess(data, variables, context);
@@ -186,25 +227,27 @@ export const useResendVerificationEmail = (
 
 // Sign In (using NextAuth)
 export const useSignIn = () => {
-  const router = useRouter();
-  
   return useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
+    mutationFn: async (credentials: {
+      email: string;
+      password: string;
+      callbackUrl?: string;
+    }) => {
       const result = await signIn("credentials", {
         email: credentials.email,
         password: credentials.password,
         redirect: false,
       });
-      
+
       if (result?.error) {
         throw new Error(result.error);
       }
-      
+
       return result;
     },
-    onSuccess: () => {
-      router.push("/dashboard");
-      router.refresh();
+    onSuccess: (_, variables) => {
+      const callbackUrl = variables.callbackUrl || "/dashboard";
+      window.location.href = callbackUrl;
     },
   });
 };
@@ -212,7 +255,7 @@ export const useSignIn = () => {
 // Sign Out (using NextAuth)
 export const useSignOut = () => {
   const router = useRouter();
-  
+
   return useMutation({
     mutationFn: async () => {
       await signOut({ redirect: false });
@@ -248,7 +291,11 @@ export const useCreateOrganization = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<OrgRouterOutputs["createOrganization"], OrgRouterInputs["createOrganization"], unknown>
+    | MutationOnSuccess<
+        OrgRouterOutputs["createOrganization"],
+        OrgRouterInputs["createOrganization"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -258,7 +305,9 @@ export const useCreateOrganization = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.organization.createOrganization.mutate(variables) as Promise<OrgRouterOutputs["createOrganization"]>,
+      vaivammTrpcClient.organization.createOrganization.mutate(
+        variables
+      ) as Promise<OrgRouterOutputs["createOrganization"]>,
     ...options,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
@@ -278,7 +327,11 @@ export const useInviteUser = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<OrgRouterOutputs["inviteUser"], OrgRouterInputs["inviteUser"], unknown>
+    | MutationOnSuccess<
+        OrgRouterOutputs["inviteUser"],
+        OrgRouterInputs["inviteUser"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -288,10 +341,14 @@ export const useInviteUser = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.organization.inviteUser.mutate(variables) as Promise<OrgRouterOutputs["inviteUser"]>,
+      vaivammTrpcClient.organization.inviteUser.mutate(variables) as Promise<
+        OrgRouterOutputs["inviteUser"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ["invitations", variables.orgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["invitations", variables.orgId],
+      });
       if (userOnSuccess) userOnSuccess(data, variables, context);
     },
   });
@@ -302,7 +359,9 @@ export const useGetInvitations = (orgId: string) => {
   return useQuery({
     queryKey: ["invitations", orgId],
     queryFn: async () => {
-      return await vaivammTrpcClient.organization.getInvitations.query({ orgId });
+      return await vaivammTrpcClient.organization.getInvitations.query({
+        orgId,
+      });
     },
     enabled: !!orgId,
   });
@@ -319,7 +378,11 @@ export const useCancelInvitation = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<OrgRouterOutputs["cancelInvitation"], OrgRouterInputs["cancelInvitation"], unknown>
+    | MutationOnSuccess<
+        OrgRouterOutputs["cancelInvitation"],
+        OrgRouterInputs["cancelInvitation"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -329,10 +392,14 @@ export const useCancelInvitation = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.organization.cancelInvitation.mutate(variables) as Promise<OrgRouterOutputs["cancelInvitation"]>,
+      vaivammTrpcClient.organization.cancelInvitation.mutate(
+        variables
+      ) as Promise<OrgRouterOutputs["cancelInvitation"]>,
     ...options,
     onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ["invitations", variables.orgId] });
+      queryClient.invalidateQueries({
+        queryKey: ["invitations", variables.orgId],
+      });
       if (userOnSuccess) userOnSuccess(data, variables, context);
     },
   });
@@ -349,7 +416,11 @@ export const useUpdateMemberRole = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<OrgRouterOutputs["updateMemberRole"], OrgRouterInputs["updateMemberRole"], unknown>
+    | MutationOnSuccess<
+        OrgRouterOutputs["updateMemberRole"],
+        OrgRouterInputs["updateMemberRole"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -359,7 +430,9 @@ export const useUpdateMemberRole = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.organization.updateMemberRole.mutate(variables) as Promise<OrgRouterOutputs["updateMemberRole"]>,
+      vaivammTrpcClient.organization.updateMemberRole.mutate(
+        variables
+      ) as Promise<OrgRouterOutputs["updateMemberRole"]>,
     ...options,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
@@ -379,7 +452,11 @@ export const useRemoveMember = (
 ) => {
   const queryClient = useQueryClient();
   const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<OrgRouterOutputs["removeMember"], OrgRouterInputs["removeMember"], unknown>
+    | MutationOnSuccess<
+        OrgRouterOutputs["removeMember"],
+        OrgRouterInputs["removeMember"],
+        unknown
+      >
     | undefined;
 
   return useMutation<
@@ -389,7 +466,9 @@ export const useRemoveMember = (
     unknown
   >({
     mutationFn: (variables) =>
-      vaivammTrpcClient.organization.removeMember.mutate(variables) as Promise<OrgRouterOutputs["removeMember"]>,
+      vaivammTrpcClient.organization.removeMember.mutate(variables) as Promise<
+        OrgRouterOutputs["removeMember"]
+      >,
     ...options,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
@@ -397,4 +476,3 @@ export const useRemoveMember = (
     },
   });
 };
-
