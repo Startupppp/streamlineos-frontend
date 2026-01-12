@@ -50,13 +50,20 @@ function ProjectSidebarContent({ projectId, projectName, projectKey }: ProjectSi
             </div>
             
             <div className="flex-1 py-4 px-3 space-y-1">
-                 {items.map(item => (
+                 {items.map(item => {
+                     const isExactMatch = pathname === item.href;
+                     const isChildRoute = item.href === baseUrl 
+                       ? false 
+                       : pathname?.startsWith(item.href + "/");
+                     const isActive = isExactMatch || isChildRoute;
+                     
+                     return (
                      <Link 
                         key={item.href} 
                         href={item.href}
                         className={cn(
                             "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                            (item.href === baseUrl ? pathname === baseUrl : pathname?.startsWith(item.href))
+                            isActive
                                 ? "bg-primary/10 text-primary" 
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
@@ -64,7 +71,8 @@ function ProjectSidebarContent({ projectId, projectName, projectKey }: ProjectSi
                          <item.icon className="h-4 w-4 mr-3" />
                          {item.label}
                      </Link>
-                 ))}
+                     );
+                 })}
                  
                  <div className="my-4 border-t border-border/50 mx-2" />
                  
