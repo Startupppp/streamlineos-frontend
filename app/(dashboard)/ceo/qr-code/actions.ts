@@ -6,7 +6,7 @@ import { qrCodes, users } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { generateQRCodeWithLogo } from "@/lib/qr-code";
-import { uploadFile, deleteFile, getFileKeyFromUrl } from "@/lib/storage";
+import { uploadFile, deleteFile, getFileKeyFromUrl, getFileUrl, isStorageConfigured } from "@/lib/storage";
 import { join } from "path";
 import { existsSync, writeFileSync, mkdirSync } from "fs";
 import { auth } from "@/lib/auth";
@@ -40,7 +40,6 @@ export async function generateQRCode(formData: FormData) {
       }
     }
 
-    // Verify user has access to this organization
     const userMembership = await db.query.organizationMembers.findFirst({
       where: (members, { eq: eqFn }) => and(
         eqFn(members.userId, session.user.id),
@@ -70,8 +69,6 @@ export async function generateQRCode(formData: FormData) {
       return { success: false, error: "Failed to generate unique slug" };
     }
 
-    // Get redirect base URL from environment variable
-    // For local development, default to localhost:3000
     const redirectBaseUrl =
       process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL ||
       process.env.NEXTAUTH_URL ||
@@ -86,7 +83,6 @@ export async function generateQRCode(formData: FormData) {
 
     const trackingUrl = `${redirectBaseUrl}/qr/${slug}`;
 
-    // Get logo path
     const logoPath = join(process.cwd(), "public", "logo.svg");
     const logoExists = existsSync(logoPath);
 
@@ -108,22 +104,31 @@ export async function generateQRCode(formData: FormData) {
         "image/png"
       );
       imageUrl = uploadResult.url;
-    } catch {
+    } catch (error) {
       if (process.env.NODE_ENV === "production") {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         return {
           success: false,
-          error: "Storage service unavailable. Please configure R2 for production.",
+          error: `R2 storage unavailable. Please configure R2 for production. Error: ${errorMessage}`,
         };
       }
       
-      const publicQrDir = join(process.cwd(), "public", "qr-codes");
-      if (!existsSync(publicQrDir)) {
-        mkdirSync(publicQrDir, { recursive: true });
+      if (!isStorageConfigured()) {
+        const publicQrDir = join(process.cwd(), "public", "qr-codes");
+        if (!existsSync(publicQrDir)) {
+          mkdirSync(publicQrDir, { recursive: true });
+        }
+        
+        const localPath = join(publicQrDir, `${slug}.png`);
+        writeFileSync(localPath, qrBuffer);
+        imageUrl = `/qr-codes/${slug}.png`;
+      } else {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        return {
+          success: false,
+          error: `Failed to upload to R2 storage: ${errorMessage}`,
+        };
       }
-      
-      const localPath = join(publicQrDir, `${slug}.png`);
-      writeFileSync(localPath, qrBuffer);
-      imageUrl = `/qr-codes/${slug}.png`;
     }
 
     await db.insert(qrCodes).values({
@@ -149,7 +154,6 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "Access Denied: You must be logged in to delete QR codes." };
     }
 
-    // Get QR code to retrieve image URL before deletion
     const qrCode = await db.query.qrCodes.findFirst({
       where: eq(qrCodes.id, id),
     });
@@ -179,20 +183,22 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "Access Denied: You don't have access to this QR code." };
     }
 
-    if (qrCode.imageUrl && !qrCode.imageUrl.startsWith("data:") && !qrCode.imageUrl.startsWith("/")) {
-      try {
-        const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
-        await deleteFile(fileKey);
-      } catch {
-      }
-    } else if (qrCode.imageUrl?.startsWith("/")) {
-      try {
-        const { unlinkSync } = await import("fs");
-        const localPath = join(process.cwd(), "public", qrCode.imageUrl);
-        if (existsSync(localPath)) {
-          unlinkSync(localPath);
+    if (qrCode.imageUrl && !qrCode.imageUrl.startsWith("data:")) {
+      if (!qrCode.imageUrl.startsWith("/")) {
+        try {
+          const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
+          await deleteFile(fileKey);
+        } catch {
         }
-      } catch {
+      } else if (process.env.NODE_ENV !== "production") {
+        try {
+          const { unlinkSync } = await import("fs");
+          const localPath = join(process.cwd(), "public", qrCode.imageUrl);
+          if (existsSync(localPath)) {
+            unlinkSync(localPath);
+          }
+        } catch {
+        }
       }
     }
 
@@ -223,7 +229,6 @@ export async function getQRCodes(orgId: string) {
       }
     }
 
-    // Verify user has access to this organization
     const userMembership = await db.query.organizationMembers.findFirst({
       where: (members, { eq: eqFn }) => and(
         eqFn(members.userId, session.user.id),
@@ -235,8 +240,89 @@ export async function getQRCodes(orgId: string) {
       return [];
     }
 
-    return await db.query.qrCodes.findMany({
+    const codes = await db.query.qrCodes.findMany({
         where: eq(qrCodes.orgId, orgId),
         orderBy: (qrCodes, { desc }) => [desc(qrCodes.createdAt)],
     });
+
+    return codes.map(code => ({
+      ...code,
+      imageUrl: normalizeImageUrl(code.imageUrl),
+    }));
+}
+
+function normalizeImageUrl(imageUrl: string): string {
+  if (!imageUrl || !imageUrl.trim()) {
+    return "/placeholder.png";
+  }
+
+  const trimmed = imageUrl.trim();
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) {
+    return `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${trimmed}`;
+  }
+
+  if (isStorageConfigured()) {
+    return trimmed;
+  }
+
+  return `/${trimmed}`;
+}
+
+export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
+  if (!imageUrl || !imageUrl.trim()) {
+    throw new Error("Image URL is required");
+  }
+
+  const trimmed = imageUrl.trim();
+
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL && trimmed.startsWith(process.env.NEXT_PUBLIC_R2_PUBLIC_URL)) {
+      const key = trimmed.replace(`${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/`, "").replace(/^\/+/, "");
+      if (isStorageConfigured() && key) {
+        try {
+          const signedUrl = await getFileUrl(key, 3600);
+          if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
+            return signedUrl;
+          }
+        } catch {
+        }
+      }
+    }
+    return trimmed;
+  }
+
+  if (isStorageConfigured()) {
+    try {
+      const signedUrl = await getFileUrl(trimmed, 3600);
+      if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
+        return signedUrl;
+      }
+    } catch {
+    }
+
+    if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) {
+      const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${trimmed.replace(/^\/+/, "")}`;
+      if (publicUrl.startsWith("http://") || publicUrl.startsWith("https://")) {
+        return publicUrl;
+      }
+    }
+
+    throw new Error("Unable to generate valid file URL");
+  }
+
+  const localPath = `/${trimmed.replace(/^\/+/, "")}`;
+  return localPath;
 }

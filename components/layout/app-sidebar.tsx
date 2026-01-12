@@ -260,8 +260,15 @@ export function AppSidebar() {
               </div>
               <div className="space-y-0.5">
                 {group.routes.map((route) => {
-                  const isActive = pathname === route.href || 
-                    (route.href !== "/dashboard" && pathname.startsWith(route.href));
+                  const isExactMatch = pathname === route.href;
+                  const hasSiblingRoutes = group.routes.some(r => 
+                    r.href !== route.href && 
+                    (r.href.startsWith(route.href + "/") || route.href.startsWith(r.href + "/"))
+                  );
+                  const isChildRoute = !hasSiblingRoutes && 
+                    route.href !== "/dashboard" && 
+                    pathname.startsWith(route.href + "/");
+                  const isActive = isExactMatch || isChildRoute;
                   const showBadge = 
                     (route.badge === "leaves" && pendingLeaves > 0) || 
                     (route.badge === "onboarding" && unreadOnboarding > 0);

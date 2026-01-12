@@ -97,21 +97,13 @@ export async function uploadOnboardingDocument(formData: FormData) {
         const result = await uploadFile(file, "onboarding");
         fileUrl = result.url;
       } catch (r2Error) {
-        // R2 failed (wrong credentials, access denied, etc.) - fall back to local storage
-        console.warn("[Storage] R2 upload failed, falling back to local storage:", 
-          r2Error instanceof Error ? r2Error.message : "Unknown error"
-        );
         const localResult = await uploadFileLocally(file, "onboarding");
         fileUrl = localResult.url;
       }
     } else {
-      // Use local storage directly
       const localResult = await uploadFileLocally(file, "onboarding");
       fileUrl = localResult.url;
     }
-
-    // Determine Org ID (fetch from user's org membership or context)
-    // For now, fetch the first org the user belongs to
     const userOrg = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id),
     });

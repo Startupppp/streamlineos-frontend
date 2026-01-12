@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { Plus, Loader2 } from "lucide-react";
 import { addTimeEntryInputSchema } from "@/lib/validations/project";
+import type { Project, Ticket } from "@/types/api";
 
 export function LogTimeDialog() {
   const [open, setOpen] = useState(false);
@@ -105,7 +106,7 @@ export function LogTimeDialog() {
                         <SelectValue placeholder="Select Project" />
                     </SelectTrigger>
                     <SelectContent>
-                        {projects?.map((p: any) => (
+                        {projects?.map((p: Project) => (
                             <SelectItem key={p.id} value={p.id.toString()}>
                                 {p.name} ({p.key})
                             </SelectItem>
@@ -132,9 +133,9 @@ export function LogTimeDialog() {
                     </FormControl>
                     <SelectContent>
                       {projectDetails?.tickets && projectDetails.tickets.length > 0 ? (
-                        projectDetails.tickets.map((t: any) => (
+                        projectDetails.tickets.map((t: Ticket) => (
                           <SelectItem key={t.id} value={t.id.toString()}>
-                            {t.key || `Ticket #${t.id}`}: {t.title || t.name || 'Untitled'}
+                            {`Ticket #${t.id}`}: {t.title || 'Untitled'}
                           </SelectItem>
                         ))
                       ) : (

@@ -270,9 +270,6 @@ export default function MyPayslipsPage() {
                   <h1 style={{ fontSize: "28px", fontWeight: "bold", color: "#0f2b7f", letterSpacing: "2px", margin: 0 }}>VAIVAMM</h1>
                   <p style={{ color: "#0f2b7f", fontSize: "12px", letterSpacing: "4px", margin: 0 }}>CAPITAL ADVISORS LLP</p>
                 </div>
-                <div style={{ marginLeft: "auto" }}>
-                  <div style={{ width: "128px", height: "12px", backgroundColor: "#0f2b7f" }}></div>
-                </div>
               </div>
 
               <h2 style={{ textAlign: "center", fontWeight: "bold", fontSize: "18px", marginTop: "32px", marginBottom: "24px", textDecoration: "underline", color: "#111827" }}>
