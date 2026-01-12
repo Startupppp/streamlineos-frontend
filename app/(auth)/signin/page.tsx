@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../../../components/ui/button";
@@ -17,89 +16,43 @@ import {
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 
-function SignInForm() {
-  const searchParams = useSearchParams();
+export const dynamic = "force-dynamic";
+
+export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const getCallbackUrl = () => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const url = params.get("callbackUrl");
+      if (url && url.startsWith("/")) {
+        return url;
+      }
+    }
+    return "/dashboard";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
+      const callbackUrl = getCallbackUrl();
+
+      await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        callbackUrl,
       });
-
-      if (result?.error) {
-        toast.error("Invalid email or password");
-        setIsLoading(false);
-      } else {
-        toast.success("Signed in successfully");
-        const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-        window.location.href = callbackUrl;
-      }
-    } catch {
+    } catch (error) {
+      console.error("Sign in error:", error);
       toast.error("An error occurred. Please try again.");
       setIsLoading(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-foreground">
-          Email
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          disabled={isLoading}
-          className="focus-visible:ring-primary"
-        />
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="text-foreground">
-            Password
-          </Label>
-          <Link
-            href="/forgot-password"
-            className="text-sm font-medium text-secondary hover:text-secondary/80 hover:underline"
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <Input
-          id="password"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          disabled={isLoading}
-          className="focus-visible:ring-primary"
-        />
-      </div>
-      <Button
-        type="submit"
-        className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-        disabled={isLoading}
-      >
-        {isLoading ? "Signing in..." : "Sign In"}
-      </Button>
-    </form>
-  );
-}
-
-export default function SignInPage() {
   return (
     <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
@@ -130,23 +83,53 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Suspense
-            fallback={
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="h-4 w-16 bg-muted animate-pulse rounded" />
-                  <div className="h-10 w-full bg-muted animate-pulse rounded" />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                  <div className="h-10 w-full bg-muted animate-pulse rounded" />
-                </div>
-                <div className="h-10 w-full bg-muted animate-pulse rounded" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="focus-visible:ring-primary"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-foreground">
+                  Password
+                </Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-medium text-secondary hover:text-secondary/80 hover:underline"
+                >
+                  Forgot password?
+                </Link>
               </div>
-            }
-          >
-            <SignInForm />
-          </Suspense>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                className="focus-visible:ring-primary"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link

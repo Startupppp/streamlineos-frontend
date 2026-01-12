@@ -15,6 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verificationTokensTable: verificationTokens,
   }) as Adapter,
   trustHost: true,
+  basePath: "/api/auth",
   providers: [
     Credentials({
       credentials: {
