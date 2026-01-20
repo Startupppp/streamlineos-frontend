@@ -551,7 +551,9 @@ export const timesheets = pgTable("timesheets", {
   date: date("date").notNull(),
   hours: decimal("hours").default("0"),
   description: text("description"),
-  status: text("status").default("PENDING"), // PENDING, APPROVED, REJECTED
+  imageUrl: text("image_url"),
+  workLink: text("work_link"),
+  status: text("status").default("PENDING"),
   approvedBy: text("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
   rejectionReason: text("rejection_reason"),
