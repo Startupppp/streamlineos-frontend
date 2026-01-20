@@ -246,7 +246,13 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="flex h-full overflow-x-auto pb-4 gap-4 snap-x snap-mandatory px-4 md:px-0">
+        <div 
+          className="flex h-full gap-3 sm:gap-4 md:gap-4 snap-x snap-mandatory" 
+          style={{ 
+            minWidth: 'max-content',
+            width: 'max-content'
+          }}
+        >
         {COLUMNS.map((col) => {
             const columnTickets = optimisticTickets
               .filter((t) => t.status === col.id)
@@ -255,20 +261,20 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
             <div
                 key={col.id}
                 className={cn(
-                  "rounded-xl border border-border min-w-[85vw] md:min-w-[280px] w-[85vw] md:w-[280px] flex flex-col bg-muted/30 snap-center md:snap-align-none border-t-2",
+                  "rounded-xl border border-border min-w-[240px] sm:min-w-[260px] md:min-w-[280px] lg:min-w-[300px] w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] flex flex-col bg-muted/30 snap-start border-t-2 flex-shrink-0 h-full",
                   col.borderAccent
                 )}
             >
-                <div className={cn("flex items-center justify-between p-3 rounded-t-xl", col.headerBg)}>
-                  <div className="flex items-center gap-2">
-                      <div className={cn("w-2.5 h-2.5 rounded-full", col.dotColor)} />
-                      <h3 className="font-semibold text-sm text-foreground">
+                <div className={cn("flex items-center justify-between p-2.5 sm:p-3 rounded-t-xl", col.headerBg)}>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className={cn("w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0", col.dotColor)} />
+                      <h3 className="font-semibold text-xs sm:text-sm text-foreground truncate">
                           {col.label}
                       </h3>
                   </div>
                   <Badge 
                     variant="secondary" 
-                    className="bg-background/80 text-muted-foreground text-[10px] px-1.5 py-0 h-5"
+                    className="bg-background/80 text-muted-foreground text-[9px] sm:text-[10px] px-1.5 py-0 h-5 shrink-0"
                   >
                       {columnTickets.length}
                   </Badge>
@@ -280,16 +286,16 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             className={cn(
-                                "flex-1 overflow-y-auto min-h-[120px] p-2 space-y-2 transition-colors duration-200",
+                                "flex-1 overflow-y-auto min-h-[120px] p-2 sm:p-2.5 space-y-2 transition-colors duration-200",
                                 snapshot.isDraggingOver && "bg-primary/5"
                             )}
                         >
                             {columnTickets.length === 0 && !snapshot.isDraggingOver && (
-                              <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center mb-2">
-                                  <Plus className="h-5 w-5 text-muted-foreground/50" />
+                              <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center px-2">
+                                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-muted/50 flex items-center justify-center mb-2">
+                                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground/50" />
                                 </div>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-[10px] sm:text-xs text-muted-foreground">
                                   Drop tickets here
                                 </p>
                               </div>
@@ -325,7 +331,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                               }
                                             }}
                                             >
-                                            <CardContent className="p-3 space-y-2">
+                                            <CardContent className="p-2.5 sm:p-3 space-y-2">
                                                 <div className="flex justify-between items-start gap-2">
                                                 <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-snug flex-1">
                                                     {ticket.title}

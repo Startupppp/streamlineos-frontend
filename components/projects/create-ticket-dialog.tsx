@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useCreateTicket,
   useAddAttachment,
-  useProjectMembers,
+  useProject,
   vaivammKeys,
 } from "../../lib/hooks/trpc-hooks";
 import { Button } from "../ui/button";
@@ -45,13 +45,47 @@ const formSchema = createTicketInputSchema.omit({ projectId: true });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateTicketDialog({ projectId }: { projectId: number }) {
+export function CreateTicketDialog({ 
+  projectId,
+  variant = "default"
+}: { 
+  projectId: number;
+  variant?: "default" | "fab";
+}) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: members } = useProjectMembers();
+  // Get project details which includes members
+  const { data: projectData } = useProject(projectId);
+  
+  // Extract only project members (not all org members)
+  // Include project manager as well
+  const projectMembersList = projectData?.members?.map(m => ({
+    id: m.user.id,
+    name: m.user.name || `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim(),
+    firstName: m.user.firstName || undefined,
+    lastName: m.user.lastName || undefined,
+    image: m.user.image || null,
+    email: m.user.email,
+  })) || [];
+  
+  // Include project manager if not already in members list
+  const manager = (projectData as any)?.manager;
+  const members = manager && !projectMembersList.some(m => m.id === manager.id)
+    ? [
+        {
+          id: manager.id,
+          name: manager.name || `${manager.firstName || ''} ${manager.lastName || ''}`.trim(),
+          firstName: manager.firstName || undefined,
+          lastName: manager.lastName || undefined,
+          image: manager.image || null,
+          email: manager.email || '',
+        },
+        ...projectMembersList
+      ]
+    : projectMembersList;
 
   const addAttachmentMutation = useAddAttachment();
 
@@ -134,9 +168,19 @@ export function CreateTicketDialog({ projectId }: { projectId: number }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Create Ticket
-        </Button>
+        {variant === "fab" ? (
+          <Button
+            size="lg"
+            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <Plus className="h-6 w-6" />
+            <span className="sr-only">Create Ticket</span>
+          </Button>
+        ) : (
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Create Ticket
+          </Button>
+        )}
       </SheetTrigger>
       <SheetContent 
         side="right" 
