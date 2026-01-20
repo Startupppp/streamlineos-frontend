@@ -216,22 +216,19 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
-        <Card className="lg:col-span-3 bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="lg:col-span-3 bg-card border-border flex flex-col" style={{ height: '400px' }}>
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="text-foreground">Team Availability</CardTitle>
-            <Link href="/hr/attendance">
-              <Button variant="ghost" size="sm">View All</Button>
-            </Link>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 overflow-hidden flex flex-col">
             {teamLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto">
                 {[1, 2, 3].map((i) => (
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
             ) : teamAvailability && teamAvailability.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '100%' }}>
                 {teamAvailability.map((member) => (
                   <div key={member.userId} className="flex items-center justify-between p-2 rounded-lg">
                     <div className="flex items-center gap-3">
@@ -270,11 +267,13 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState
-                icon={UserCheck}
-                title="No team members online"
-                description="Team availability will appear here when members clock in."
-              />
+              <div className="flex-1 flex items-center justify-center">
+                <EmptyState
+                  icon={UserCheck}
+                  title="No team members online"
+                  description="Team availability will appear here when members clock in."
+                />
+              </div>
             )}
           </CardContent>
         </Card>

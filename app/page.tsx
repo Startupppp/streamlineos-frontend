@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { auth } from "../lib/auth";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
@@ -6,10 +5,6 @@ import Image from "next/image";
 
 export default async function HomePage() {
   const session = await auth();
-
-  if (session) {
-    redirect("/dashboard");
-  }
 
   return (
     <div className="flex min-h-screen flex-col font-sans bg-background text-foreground">
