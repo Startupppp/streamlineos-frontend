@@ -124,6 +124,10 @@ export const projectRouter = createTRPCRouter({
              }
           },
           tickets: {
+            where: and(
+              eq(tickets.projectId, input.id),
+              eq(tickets.orgId, ctx.session.orgId)
+            ),
             with: {
               assignee: true,
               reporter: true,
@@ -143,7 +147,7 @@ export const projectRouter = createTRPCRouter({
           },
         },
       });
-      return project;
+      return project ?? null;
     }),
 
   createProject: protectedProcedure
@@ -261,7 +265,8 @@ export const projectRouter = createTRPCRouter({
         })
         .where(
           and(
-            eq(projects.orgId, ctx.session.orgId)
+            eq(projects.orgId, ctx.session.orgId),
+            eq(projects.id, input.projectId)
           )
         );
 
@@ -878,7 +883,7 @@ export const projectRouter = createTRPCRouter({
 
       // Fetch tickets separately with project info
       const ticketIds = entries.map(e => e.ticketId).filter(Boolean) as number[];
-      let ticketsMap = new Map();
+      const ticketsMap = new Map();
 
       if (ticketIds.length > 0) {
         const ticketsData = await ctx.db.query.tickets.findMany({
