@@ -179,7 +179,7 @@ export function NewProjectDialog() {
                                         <div className="p-3 border-b bg-muted/40">
                                             <h4 className="font-medium text-sm">Select Team Members</h4>
                                         </div>
-                                        <div className="p-2 space-y-1 max-h-[240px] overflow-y-auto">
+                                        <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
                                             {employees?.map((emp) => {
                                                 const isSelected = field.value?.includes(emp.id);
                                                 return (
