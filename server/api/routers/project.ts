@@ -29,6 +29,8 @@ import {
   addAttachmentInputSchema,
   createLabelInputSchema,
   addTimeEntryInputSchema,
+  updateTimeEntryInputSchema,
+  deleteTimeEntryInputSchema,
 } from "../../../lib/validations/project";
 import { 
   sendProjectAssignmentEmail, 
@@ -41,6 +43,7 @@ export const projectRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
     const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
 
+    // OWNER/ADMIN can see all projects in the list
     if (isOwnerOrAdmin) {
       return await ctx.db.query.projects.findMany({
         where: eq(projects.orgId, ctx.session.orgId),
@@ -48,6 +51,7 @@ export const projectRouter = createTRPCRouter({
       });
     }
 
+    // Regular users can only see projects they are assigned to
     const memberOf = await ctx.db
       .select({ projectId: projectMembers.projectId })
       .from(projectMembers)
@@ -92,8 +96,7 @@ export const projectRouter = createTRPCRouter({
   getProjectDetails: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
-
+      // Everyone must be manager or member to access project details
       const memberOf = await ctx.db
             .select({ projectId: projectMembers.projectId })
             .from(projectMembers)
@@ -101,22 +104,30 @@ export const projectRouter = createTRPCRouter({
 
       const isMember = memberOf.length > 0;
       
-      let whereClause;
-      if (!isOwnerOrAdmin && !isMember) {
-           whereClause = and(
-               eq(projects.id, input.id),
-               eq(projects.orgId, ctx.session.orgId),
-               eq(projects.managerId, ctx.session.userId)
-           );
-      } else {
-           whereClause = and(
-               eq(projects.id, input.id),
-               eq(projects.orgId, ctx.session.orgId)
-           );
+      // Check if user is manager
+      const projectCheck = await ctx.db.query.projects.findFirst({
+        where: and(
+          eq(projects.id, input.id),
+          eq(projects.orgId, ctx.session.orgId)
+        )
+      });
+
+      if (!projectCheck) {
+        return null;
+      }
+
+      const isManager = projectCheck.managerId === ctx.session.userId;
+      
+      // Only allow access if user is manager OR member
+      if (!isManager && !isMember) {
+        return null;
       }
 
       const project = await ctx.db.query.projects.findFirst({
-        where: whereClause,
+        where: and(
+          eq(projects.id, input.id),
+          eq(projects.orgId, ctx.session.orgId)
+        ),
         with: {
           members: {
              with: {
@@ -747,7 +758,9 @@ export const projectRouter = createTRPCRouter({
           ticketId: input.ticketId,
           date: format(input.date, "yyyy-MM-dd"),
           hours: input.hours.toString(),
-          description: input.description,
+          description: input.description || null,
+          imageUrl: (input.imageUrl && input.imageUrl.trim() !== "") ? input.imageUrl.trim() : null,
+          workLink: (input.workLink && input.workLink.trim() !== "") ? input.workLink.trim() : null,
         })
         .returning();
 
@@ -773,6 +786,9 @@ export const projectRouter = createTRPCRouter({
       z.object({
         ticketId: z.number().optional(),
         userId: z.string().optional(),
+        projectId: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -784,6 +800,29 @@ export const projectRouter = createTRPCRouter({
       }
       if (input.userId) {
         conditions.push(eq(timesheets.userId, input.userId));
+      }
+      if (input.projectId) {
+        // Filter by project through ticket relationship
+        const projectTickets = await ctx.db.query.tickets.findMany({
+          where: and(
+            eq(tickets.orgId, ctx.session.orgId),
+            eq(tickets.projectId, input.projectId)
+          ),
+          columns: { id: true }
+        });
+        const ticketIds = projectTickets.map(t => t.id);
+        if (ticketIds.length > 0) {
+          conditions.push(inArray(timesheets.ticketId, ticketIds));
+        } else {
+          // No tickets for this project, return empty result
+          conditions.push(sql`1 = 0`);
+        }
+      }
+      if (input.startDate) {
+        conditions.push(gte(timesheets.date, input.startDate));
+      }
+      if (input.endDate) {
+        conditions.push(lte(timesheets.date, input.endDate));
       }
       
       // If not admin and no specific ticket context, restrict to own timesheets.
@@ -803,6 +842,145 @@ export const projectRouter = createTRPCRouter({
             }
         }
       });
+    }),
+
+  updateTimeEntry: protectedProcedure
+    .input(updateTimeEntryInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const entry = await ctx.db.query.timesheets.findFirst({
+        where: and(
+          eq(timesheets.id, input.entryId),
+          eq(timesheets.orgId, ctx.session.orgId)
+        ),
+        with: {
+          ticket: {
+            with: {
+              project: true
+            }
+          }
+        }
+      });
+
+      if (!entry) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Time entry not found" });
+      }
+
+      // Only allow editing if status is PENDING
+      if (entry.status !== "PENDING") {
+        throw new TRPCError({ 
+          code: "FORBIDDEN", 
+          message: "Cannot edit timesheet entry that has been reviewed" 
+        });
+      }
+
+      // Only allow users to edit their own entries (unless admin/owner)
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (!isOwnerOrAdmin && entry.userId !== ctx.session.userId) {
+        throw new TRPCError({ 
+          code: "FORBIDDEN", 
+          message: "You can only edit your own timesheet entries" 
+        });
+      }
+
+      const updateData: { description?: string; hours?: string; updatedAt?: Date } = {
+        updatedAt: new Date()
+      };
+
+      if (input.description !== undefined) {
+        updateData.description = input.description;
+      }
+      if (input.hours !== undefined) {
+        updateData.hours = input.hours.toString();
+      }
+
+      const [updated] = await ctx.db
+        .update(timesheets)
+        .set(updateData)
+        .where(eq(timesheets.id, input.entryId))
+        .returning();
+
+      // Update ticket time spent if hours changed
+      if (input.hours !== undefined && entry.ticketId) {
+        const totalHours = await ctx.db
+          .select({
+            total: sql<number>`COALESCE(SUM(${timesheets.hours}::numeric), 0)`,
+          })
+          .from(timesheets)
+          .where(eq(timesheets.ticketId, entry.ticketId));
+
+        await ctx.db
+          .update(tickets)
+          .set({
+            timeSpent: totalHours[0]?.total?.toString() || "0",
+          })
+          .where(eq(tickets.id, entry.ticketId));
+      }
+
+      return updated;
+    }),
+
+  deleteTimeEntry: protectedProcedure
+    .input(deleteTimeEntryInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const entry = await ctx.db.query.timesheets.findFirst({
+        where: and(
+          eq(timesheets.id, input.entryId),
+          eq(timesheets.orgId, ctx.session.orgId)
+        ),
+        with: {
+          ticket: {
+            with: {
+              project: true
+            }
+          }
+        }
+      });
+
+      if (!entry) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Time entry not found" });
+      }
+
+      // Only allow deleting if status is PENDING
+      if (entry.status !== "PENDING") {
+        throw new TRPCError({ 
+          code: "FORBIDDEN", 
+          message: "Cannot delete timesheet entry that has been reviewed" 
+        });
+      }
+
+      // Only allow users to delete their own entries (unless admin/owner)
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (!isOwnerOrAdmin && entry.userId !== ctx.session.userId) {
+        throw new TRPCError({ 
+          code: "FORBIDDEN", 
+          message: "You can only delete your own timesheet entries" 
+        });
+      }
+
+      const ticketId = entry.ticketId;
+
+      await ctx.db
+        .delete(timesheets)
+        .where(eq(timesheets.id, input.entryId));
+
+      // Update ticket time spent
+      if (ticketId) {
+        const totalHours = await ctx.db
+          .select({
+            total: sql<number>`COALESCE(SUM(${timesheets.hours}::numeric), 0)`,
+          })
+          .from(timesheets)
+          .where(eq(timesheets.ticketId, ticketId));
+
+        await ctx.db
+          .update(tickets)
+          .set({
+            timeSpent: totalHours[0]?.total?.toString() || "0",
+          })
+          .where(eq(tickets.id, ticketId));
+      }
+
+      return { success: true };
     }),
 
   getAllTeamTimesheets: protectedProcedure
@@ -850,6 +1028,8 @@ export const projectRouter = createTRPCRouter({
           date: timesheets.date,
           hours: timesheets.hours,
           description: timesheets.description,
+          imageUrl: timesheets.imageUrl,
+          workLink: timesheets.workLink,
           status: timesheets.status,
           approvedBy: timesheets.approvedBy,
           approvedAt: timesheets.approvedAt,

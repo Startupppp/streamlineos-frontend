@@ -146,3 +146,79 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Kanban Board Scrollbar Styles */
+.kanban-scroll-container {
+  scrollbar-width: auto !important;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
+  -ms-overflow-style: scrollbar !important;
+}
+
+.kanban-scroll-container::-webkit-scrollbar {
+  height: 10px !important;
+  display: block !important;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 5px;
+  border: 1px solid transparent;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .kanban-scroll-container {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
+}
+
+.dark .kanban-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.dark .kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Ensure Radix ScrollArea allows horizontal scrolling */
+[data-radix-scroll-area-viewport] {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure sticky headers work inside ScrollArea */
+[data-radix-scroll-area-viewport] .sticky {
+  position: sticky !important;
+  z-index: 50 !important;
+}
+
+/* Force horizontal scrollbar visibility for kanban */
+.kanban-scroll-container {
+  scrollbar-width: auto !important;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
+}
+
+.kanban-scroll-container::-webkit-scrollbar:horizontal {
+  height: 10px !important;
+  display: block !important;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-track:horizontal {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:horizontal {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 5px;
+}

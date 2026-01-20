@@ -109,9 +109,24 @@ export const createLabelInputSchema = z.object({
   color: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
 });
 
+export const updateTimeEntryInputSchema = z.object({
+  entryId: z.number().int().positive(),
+  description: z.string().min(1, "Description is required").optional(),
+  hours: z.number().min(0).optional(),
+});
+
+export const deleteTimeEntryInputSchema = z.object({
+  entryId: z.number().int().positive(),
+});
+
 export const addTimeEntryInputSchema = z.object({
   ticketId: z.number().int().positive(),
   date: z.date(),
   hours: z.number().positive(),
   description: z.string().optional(),
+  imageUrl: z.string().optional().or(z.literal("")),
+  workLink: z.string().optional().or(z.literal("")).refine(
+    (val) => !val || val === "" || val.startsWith("http://") || val.startsWith("https://"),
+    { message: "Work link must be a valid URL" }
+  ),
 });

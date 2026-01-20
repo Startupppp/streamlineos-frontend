@@ -79,6 +79,7 @@ export const dashboardRouter = createTRPCRouter({
 
     let recentProjects;
 
+    // OWNER/ADMIN can see all projects in the list
     if (isOwnerOrAdmin) {
       recentProjects = await ctx.db.query.projects.findMany({
         where: eq(projects.orgId, ctx.session.orgId),
@@ -97,6 +98,7 @@ export const dashboardRouter = createTRPCRouter({
         },
       });
     } else {
+      // Regular users can only see projects they are assigned to
       const memberOf = await ctx.db
         .select({ projectId: projectMembers.projectId })
         .from(projectMembers)
