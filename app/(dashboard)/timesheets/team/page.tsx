@@ -3,7 +3,7 @@
 import { api } from "@/trpc/react";
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 import { useState, useMemo } from "react";
-import { Loader2, Download, Users, Clock, FolderOpen, TrendingUp, Calendar, Check, X } from "lucide-react";
+import { Loader2, Download, Users, Clock, FolderOpen, TrendingUp, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,19 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "sonner";
+import { TimeEntryDetailSheet } from "@/components/timesheets/time-entry-detail-sheet";
 
 export default function TeamTimesheetsPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<string>("all");
@@ -45,11 +36,34 @@ export default function TeamTimesheetsPage() {
   const [endDate, setEndDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd")
   );
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [selectedTimesheetId, setSelectedTimesheetId] = useState<number | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-
-  const utils = api.useUtils();
+  const [selectedEntry, setSelectedEntry] = useState<{
+    id: number;
+    userId: string | null;
+    ticketId: number | null;
+    date: string;
+    hours: string;
+    description: string | null;
+    imageUrl: string | null;
+    workLink: string | null;
+    status: string | null;
+    rejectionReason: string | null;
+    user?: {
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string | null;
+      image: string | null;
+    } | null;
+    ticket?: {
+      id: number;
+      projectId: number;
+      project?: {
+        name: string;
+      };
+    } | null;
+    approverName?: string | null;
+  } | null>(null);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   const { data: timesheets, isLoading } = api.project.getAllTeamTimesheets.useQuery({
     userId: selectedEmployee === "all" ? undefined : selectedEmployee,
@@ -62,46 +76,9 @@ export default function TeamTimesheetsPage() {
   const { data: employees } = api.hr.getEmployees.useQuery();
   const { data: projects } = api.project.getProjects.useQuery();
 
-  // Approve mutation
-  const approveMutation = api.project.approveTimesheet.useMutation({
-    onSuccess: () => {
-      toast.success("Timesheet approved successfully");
-      utils.project.getAllTeamTimesheets.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to approve timesheet");
-    },
-  });
-
-  // Reject mutation
-  const rejectMutation = api.project.rejectTimesheet.useMutation({
-    onSuccess: () => {
-      toast.success("Timesheet rejected");
-      utils.project.getAllTeamTimesheets.invalidate();
-      setRejectDialogOpen(false);
-      setRejectionReason("");
-      setSelectedTimesheetId(null);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to reject timesheet");
-    },
-  });
-
-  const handleApprove = (timesheetId: number) => {
-    approveMutation.mutate({ timesheetId });
-  };
-
-  const handleRejectClick = (timesheetId: number) => {
-    setSelectedTimesheetId(timesheetId);
-    setRejectDialogOpen(true);
-  };
-
-  const handleRejectConfirm = () => {
-    if (!selectedTimesheetId) return;
-    rejectMutation.mutate({
-      timesheetId: selectedTimesheetId,
-      reason: rejectionReason,
-    });
+  const handleEntryClick = (entry: typeof timesheets extends (infer U)[] ? U : never) => {
+    setSelectedEntry(entry);
+    setDetailSheetOpen(true);
   };
 
   const statistics = useMemo(() => {
@@ -392,94 +369,89 @@ export default function TeamTimesheetsPage() {
                 </TableHeader>
                 <TableBody>
                   {timesheets && timesheets.length > 0 ? (
-                    timesheets.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={entry.user?.image || undefined} />
-                              <AvatarFallback className="text-[10px]">
-                                {entry.user?.firstName?.[0]}
-                                {entry.user?.lastName?.[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              {entry.user?.firstName} {entry.user?.lastName}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {format(new Date(entry.date), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell>
-                          {entry.ticket?.project?.name ? (
-                            <Badge variant="outline">{entry.ticket.project.name}</Badge>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">N/A</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium text-sm">
-                          {entry.ticketId ? (
-                            <span>#{entry.ticketId}</span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge>{entry.hours}h</Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-md truncate">
-                          {entry.description || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              entry.status === "APPROVED"
-                                ? "default"
-                                : entry.status === "REJECTED"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                          >
-                            {entry.status || "PENDING"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {(!entry.status || entry.status === "PENDING") && (
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleApprove(entry.id)}
-                                disabled={approveMutation.isPending}
-                              >
-                                <Check className="h-4 w-4 text-green-600" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleRejectClick(entry.id)}
-                                disabled={rejectMutation.isPending}
-                              >
-                                <X className="h-4 w-4 text-red-600" />
-                              </Button>
+                    timesheets.map((entry) => {
+                      return (
+                        <TableRow 
+                          key={entry.id}
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleEntryClick(entry)}
+                        >
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={entry.user?.image || undefined} />
+                                <AvatarFallback className="text-[10px]">
+                                  {entry.user?.firstName?.[0]}
+                                  {entry.user?.lastName?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm">
+                                {entry.user?.firstName} {entry.user?.lastName}
+                              </span>
                             </div>
-                          )}
-                          {entry.status === "APPROVED" && (
-                            <span className="text-xs text-muted-foreground">
-                              by {(entry as any).approverName || "Admin"}
-                            </span>
-                          )}
-                          {entry.status === "REJECTED" && (
-                            <span className="text-xs text-red-600">
-                              {entry.rejectionReason || "Rejected"}
-                            </span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {format(new Date(entry.date), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            {entry.ticket?.project?.name ? (
+                              <Badge variant="outline">{entry.ticket.project.name}</Badge>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">N/A</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium text-sm">
+                            {entry.ticketId ? (
+                              <span>#{entry.ticketId}</span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge>{entry.hours}h</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-md truncate">
+                            {entry.description || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                entry.status === "APPROVED"
+                                  ? "default"
+                                  : entry.status === "REJECTED"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
+                              {entry.status || "PENDING"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {entry.status === "APPROVED" && (
+                              <span className="text-xs text-muted-foreground">
+                                by {entry.approverName || "Admin"}
+                              </span>
+                            )}
+                            {entry.status === "REJECTED" && (
+                              <span className="text-xs text-red-600">
+                                {entry.rejectionReason || "Rejected"}
+                              </span>
+                            )}
+                            {(!entry.status || entry.status === "PENDING") && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEntryClick(entry);
+                                }}
+                                className="text-xs text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
+                              >
+                                Click to review
+                              </button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
@@ -496,45 +468,11 @@ export default function TeamTimesheetsPage() {
         </>
       )}
 
-      {/* Reject Dialog */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Timesheet</DialogTitle>
-            <DialogDescription>
-              Please provide a reason for rejecting this timesheet entry.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Textarea
-              placeholder="Enter rejection reason..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              rows={4}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setRejectDialogOpen(false);
-                setRejectionReason("");
-                setSelectedTimesheetId(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleRejectConfirm}
-              disabled={!rejectionReason.trim() || rejectMutation.isPending}
-            >
-              {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reject
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TimeEntryDetailSheet
+        entry={selectedEntry}
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+      />
     </div>
   );
 }

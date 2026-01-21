@@ -22,9 +22,12 @@ import {
   FileText,
   Laptop,
   Wallet,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
+import { useProjects } from "../../lib/hooks/trpc-hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +48,7 @@ interface NavGroup {
     icon: React.ElementType;
     href: string;
     badge?: "leaves" | "onboarding";
+    isProjectsList?: boolean;
   }[];
 }
 
@@ -72,7 +76,7 @@ const adminNavGroups: NavGroup[] = [
   {
     label: "Projects",
     routes: [
-      { label: "Projects", icon: Briefcase, href: "/projects" },
+      { label: "Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
       { label: "My Timesheets", icon: Timer, href: "/timesheets" },
       { label: "Team Timesheets", icon: Clock, href: "/timesheets/team" },
     ],
@@ -95,7 +99,7 @@ const employeeNavGroups: NavGroup[] = [
   {
     label: "My Work",
     routes: [
-      { label: "My Projects", icon: Briefcase, href: "/projects" },
+      { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
       { label: "My Timesheets", icon: Timer, href: "/timesheets" },
     ],
   },
@@ -111,13 +115,22 @@ const employeeNavGroups: NavGroup[] = [
   },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
   
   const role = session?.user?.role;
+  
+  // Extract project ID from pathname if we're in a project route
+  const currentProjectId = pathname?.match(/\/projects\/(\d+)/)?.[1];
 
   // Build nav groups based on role
   // QR Codes is OWNER-only, so we need to filter it
@@ -194,11 +207,11 @@ export function AppSidebar() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
+    <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
       {/* Logo */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 relative">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="relative w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+          <div className="relative w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm shrink-0">
             <Image
               src="/logo.svg"
               alt="Vaivamm Logo"
@@ -207,14 +220,30 @@ export function AppSidebar() {
               className="rounded"
             />
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
-            Vaivamm
-          </h1>
+          {!isCollapsed && (
+            <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent" style={{ fontFamily: 'Times New Roman, serif' }}>
+              Vaivamm
+            </h1>
+          )}
         </Link>
+        {onToggleCollapse && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="absolute top-4 right-2 h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Organization Switcher */}
-      {organizations && organizations.length > 0 && (
+      {organizations && organizations.length > 0 && !isCollapsed && (
         <div className="px-4 mb-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -250,14 +279,16 @@ export function AppSidebar() {
 
       {/* Navigation Groups */}
       <ScrollArea className="flex-1">
-        <nav className="px-3 pb-4">
+        <nav className={cn("pb-4", isCollapsed ? "px-2" : "px-3")}>
           {navGroups.map((group, groupIndex) => (
             <div key={group.label} className={cn(groupIndex > 0 && "mt-6")}>
-              <div className="px-3 mb-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                  {group.label}
-                </span>
-              </div>
+              {!isCollapsed && (
+                <div className="px-3 mb-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                    {group.label}
+                  </span>
+                </div>
+              )}
               <div className="space-y-0.5">
                 {group.routes.map((route) => {
                   const isExactMatch = pathname === route.href;
@@ -268,17 +299,48 @@ export function AppSidebar() {
                   const isChildRoute = !hasSiblingRoutes && 
                     route.href !== "/dashboard" && 
                     pathname.startsWith(route.href + "/");
-                  const isActive = isExactMatch || isChildRoute;
+                  const isActive = isExactMatch || (route.isProjectsList && pathname.startsWith("/projects/"));
                   const showBadge = 
                     (route.badge === "leaves" && pendingLeaves > 0) || 
                     (route.badge === "onboarding" && unreadOnboarding > 0);
+                  const isProjectsRoute = route.isProjectsList;
+                  const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
                   
+                  if (isProjectsRoute) {
+                    // Simple link to projects page (no dropdown)
+                    return (
+                      <Link
+                        key={route.href}
+                        href={route.href}
+                        title={isCollapsed ? route.label : undefined}
+                        className={cn(
+                          "flex items-center rounded-lg transition-colors relative",
+                          isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                          "text-sm font-medium",
+                          isProjectActive || isExactMatch
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        )}
+                      >
+                        <route.icon className={cn(
+                          "h-4 w-4 shrink-0",
+                          (isProjectActive || isExactMatch) ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                        )} />
+                        {!isCollapsed && <span className="flex-1 text-left">{route.label}</span>}
+                      </Link>
+                    );
+                  }
+                  
+                  // Regular route item (not projects)
                   return (
                     <Link
                       key={route.href}
                       href={route.href}
+                      title={isCollapsed ? route.label : undefined}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                        "flex items-center rounded-lg transition-colors relative",
+                        isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                        "text-sm font-medium",
                         isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -288,9 +350,19 @@ export function AppSidebar() {
                         "h-4 w-4 shrink-0",
                         isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60"
                       )} />
-                      <span className="flex-1">{route.label}</span>
-                      {showBadge && (
-                        <span className="relative flex h-2 w-2">
+                      {!isCollapsed && (
+                        <>
+                          <span className="flex-1">{route.label}</span>
+                          {showBadge && (
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {isCollapsed && showBadge && (
+                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
                         </span>
@@ -305,27 +377,32 @@ export function AppSidebar() {
       </ScrollArea>
 
       {/* User Section */}
-      <div className="px-3 py-4 border-t border-sidebar-border">
+      <div className={cn("py-4 border-t border-sidebar-border", isCollapsed ? "px-2" : "px-3")}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 px-3 py-2 h-auto hover:bg-sidebar-accent"
+              className={cn(
+                "w-full h-auto hover:bg-sidebar-accent",
+                isCollapsed ? "justify-center px-2 py-2" : "justify-start gap-3 px-3 py-2"
+              )}
             >
-              <Avatar className="h-9 w-9 border border-sidebar-border">
+              <Avatar className="h-9 w-9 border border-sidebar-border shrink-0">
                 <AvatarImage src={session?.user?.image || undefined} />
                 <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-sm">
                   {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col items-start overflow-hidden">
-                <span className="font-medium text-sm text-sidebar-foreground truncate max-w-[140px]">
-                  {session?.user?.name || "User"}
-                </span>
-                <span className="text-xs text-sidebar-foreground/60 truncate max-w-[140px]">
-                  {session?.user?.email}
-                </span>
-              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col items-start overflow-hidden">
+                  <span className="font-medium text-sm text-sidebar-foreground truncate max-w-[140px]">
+                    {session?.user?.name || "User"}
+                  </span>
+                  <span className="text-xs text-sidebar-foreground/60 truncate max-w-[140px]">
+                    {session?.user?.email}
+                  </span>
+                </div>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

@@ -7,7 +7,7 @@ import {
     projectMembers,
     projectStatuses,
 } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
@@ -20,19 +20,40 @@ export async function getProjects() {
     });
     if (!member) return [];
 
-    // Fetch projects for this org
-    // In Jira, usually everyone in org can see projects or it's per permission.
-    // MVC: Fetch all for org.
-    const allProjects = await db.query.projects.findMany({
-        where: eq(projects.orgId, member.orgId),
-        with: {
+    const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
 
+    // OWNER/ADMIN can see all projects in the list
+    if (isOwnerOrAdmin) {
+        return await db.query.projects.findMany({
+            where: eq(projects.orgId, member.orgId),
+            with: {
+                manager: true
+            },
+            orderBy: [desc(projects.id)]
+        });
+    }
+
+    // Regular users can only see projects they are assigned to
+    const memberOf = await db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, session.user.id));
+
+    const projectIds = memberOf.map((m) => m.projectId);
+
+    return await db.query.projects.findMany({
+        where: and(
+            eq(projects.orgId, member.orgId),
+            or(
+                eq(projects.managerId, session.user.id),
+                projectIds.length > 0 ? inArray(projects.id, projectIds) : undefined
+            )
+        ),
+        with: {
             manager: true
         },
         orderBy: [desc(projects.id)]
     });
-
-    return allProjects;
 }
 
 export async function createProject(data: {
@@ -116,16 +137,37 @@ export async function createProject(data: {
 }
 
 export async function getProjectById(projectId: number) {
-     const session = await auth();
+    const session = await auth();
     if (!session?.user?.id) return null;
 
-    const project = await db.query.projects.findFirst({
-        where: eq(projects.id, projectId),
-        with: {
+    // Check if user is manager or member of this project
+    const member = await db.query.organizationMembers.findFirst({
+        where: eq(organizationMembers.userId, session.user.id)
+    });
+    if (!member) return null;
 
+    const project = await db.query.projects.findFirst({
+        where: and(
+            eq(projects.id, projectId),
+            eq(projects.orgId, member.orgId)
+        ),
+        with: {
             manager: true
         }
     });
 
-    return project;
+    if (!project) return null;
+
+    // Check if user has access: manager or member
+    const isManager = project.managerId === session.user.id;
+    if (isManager) return project;
+
+    const isMember = await db.query.projectMembers.findFirst({
+        where: and(
+            eq(projectMembers.projectId, projectId),
+            eq(projectMembers.userId, session.user.id)
+        )
+    });
+
+    return isMember ? project : null;
 }

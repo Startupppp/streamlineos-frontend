@@ -3,14 +3,26 @@ import { Skeleton } from "./skeleton";
 
 export function KanbanColumnSkeleton() {
   return (
-    <div className="flex flex-col gap-4 min-w-[300px]">
-      <Skeleton className="h-6 w-32" />
-      <div className="space-y-3">
+    <div className="rounded-xl border border-border min-w-[240px] sm:min-w-[260px] md:min-w-[280px] lg:min-w-[300px] w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] flex flex-col bg-muted/30 border-t-2 flex-shrink-0 h-full">
+      {/* Column Header */}
+      <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-t-xl bg-muted/50">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Skeleton className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-5 w-6 rounded-md" />
+      </div>
+      
+      {/* Cards */}
+      <div className="flex-1 overflow-y-auto min-h-[120px] p-2 sm:p-2.5 space-y-2">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="p-4">
+          <Card key={i} className="p-3 shadow-sm">
             <CardContent className="p-0 space-y-2">
+              {/* Title - long bar */}
               <Skeleton className="h-5 w-full" />
+              {/* Description - shorter bar */}
               <Skeleton className="h-4 w-3/4" />
+              {/* Bottom row: circle on left, short bar on right */}
               <div className="flex items-center justify-between mt-3">
                 <Skeleton className="h-6 w-6 rounded-full" />
                 <Skeleton className="h-4 w-12" />
@@ -25,7 +37,7 @@ export function KanbanColumnSkeleton() {
 
 export function KanbanBoardSkeleton() {
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex h-full gap-3 sm:gap-4 md:gap-4" style={{ minWidth: 'max-content' }}>
       {Array.from({ length: 4 }).map((_, i) => (
         <KanbanColumnSkeleton key={i} />
       ))}

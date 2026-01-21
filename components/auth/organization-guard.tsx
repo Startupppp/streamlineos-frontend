@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import { checkUserHasOrganization } from "@/server/actions/organization-actions";
 import { Loader2 } from "lucide-react";
 
@@ -14,20 +13,15 @@ interface OrganizationGuardProps {
  * Redirects to /setup-organization if no org membership found.
  */
 export function OrganizationGuard({ children }: OrganizationGuardProps) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [isChecking, setIsChecking] = useState(true);
   const [hasOrg, setHasOrg] = useState(false);
 
   useEffect(() => {
     const checkOrg = async () => {
       try {
-        const result = await checkUserHasOrganization();
-        if (!result.hasOrg) {
-          router.replace("/setup-organization");
-        } else {
-          setHasOrg(true);
-        }
+        await checkUserHasOrganization();
+        // Always allow access, don't redirect to setup-organization
+        setHasOrg(true);
       } catch {
         // If check fails, allow access (fail open for better UX)
         setHasOrg(true);
@@ -37,7 +31,7 @@ export function OrganizationGuard({ children }: OrganizationGuardProps) {
     };
 
     checkOrg();
-  }, [router, pathname]);
+  }, []);
 
   if (isChecking) {
     return (
