@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/trpc/react";
+import { RouterOutputs } from "@/lib/trpc";
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 import { useState, useMemo } from "react";
 import { Loader2, Download, Users, Clock, FolderOpen, TrendingUp, Calendar } from "lucide-react";
@@ -26,6 +27,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TimeEntryDetailSheet } from "@/components/timesheets/time-entry-detail-sheet";
 
+type TimesheetEntry = RouterOutputs["project"]["getAllTeamTimesheets"][number];
+
 export default function TeamTimesheetsPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<string>("all");
   const [selectedProject, setSelectedProject] = useState<string>("all");
@@ -36,33 +39,7 @@ export default function TeamTimesheetsPage() {
   const [endDate, setEndDate] = useState<string>(
     format(new Date(), "yyyy-MM-dd")
   );
-  const [selectedEntry, setSelectedEntry] = useState<{
-    id: number;
-    userId: string | null;
-    ticketId: number | null;
-    date: string;
-    hours: string;
-    description: string | null;
-    imageUrl: string | null;
-    workLink: string | null;
-    status: string | null;
-    rejectionReason: string | null;
-    user?: {
-      id: string;
-      firstName: string | null;
-      lastName: string | null;
-      email: string | null;
-      image: string | null;
-    } | null;
-    ticket?: {
-      id: number;
-      projectId: number;
-      project?: {
-        name: string;
-      };
-    } | null;
-    approverName?: string | null;
-  } | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<TimesheetEntry | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   const { data: timesheets, isLoading } = api.project.getAllTeamTimesheets.useQuery({
@@ -76,7 +53,7 @@ export default function TeamTimesheetsPage() {
   const { data: employees } = api.hr.getEmployees.useQuery();
   const { data: projects } = api.project.getProjects.useQuery();
 
-  const handleEntryClick = (entry: typeof timesheets extends (infer U)[] ? U : never) => {
+  const handleEntryClick = (entry: TimesheetEntry) => {
     setSelectedEntry(entry);
     setDetailSheetOpen(true);
   };

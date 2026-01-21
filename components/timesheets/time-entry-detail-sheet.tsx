@@ -24,7 +24,7 @@ interface TimeEntry {
   userId: string | null;
   ticketId: number | null;
   date: string;
-  hours: string;
+  hours: string | null;
   description: string | null;
   imageUrl: string | null;
   workLink: string | null;
@@ -151,7 +151,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Hours</label>
-                <p className="mt-1 text-sm font-medium">{entry.hours}h</p>
+                <p className="mt-1 text-sm font-medium">{entry.hours || "0"}h</p>
               </div>
 
               {entry.ticket?.project && (
