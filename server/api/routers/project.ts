@@ -33,6 +33,13 @@ import {
   updateTimeEntryInputSchema,
   deleteTimeEntryInputSchema,
 } from "../../../lib/validations/project";
+import {
+  optionalPaginationInputSchema,
+  createPaginatedResponse,
+  getOffset,
+  DEFAULT_PAGE,
+  DEFAULT_LIMIT,
+} from "../../../lib/pagination";
 import { 
   sendProjectAssignmentEmail, 
   sendTicketAssignmentEmail,
@@ -788,11 +795,18 @@ export const projectRouter = createTRPCRouter({
         projectId: z.number().optional(),
         startDate: z.string().optional(),
         endDate: z.string().optional(),
+        page: z.number().min(1).optional(),
+        limit: z.number().min(1).max(100).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
-      const conditions = [eq(timesheets.orgId, ctx.session.orgId)];
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const page = input.page || DEFAULT_PAGE;
+      const limit = input.limit || 50; // Higher default for time entries
+      const offset = getOffset(page, limit);
+
+      // Build base conditions
+      const conditions = [eq(timesheets.orgId, ctx.session.orgId)];
 
       if (input.ticketId) {
         conditions.push(eq(timesheets.ticketId, input.ticketId));
@@ -800,47 +814,57 @@ export const projectRouter = createTRPCRouter({
       if (input.userId) {
         conditions.push(eq(timesheets.userId, input.userId));
       }
-      if (input.projectId) {
-        // Filter by project through ticket relationship
-        const projectTickets = await ctx.db.query.tickets.findMany({
-          where: and(
-            eq(tickets.orgId, ctx.session.orgId),
-            eq(tickets.projectId, input.projectId)
-          ),
-          columns: { id: true }
-        });
-        const ticketIds = projectTickets.map(t => t.id);
-        if (ticketIds.length > 0) {
-          conditions.push(inArray(timesheets.ticketId, ticketIds));
-        } else {
-          // No tickets for this project, return empty result
-          conditions.push(sql`1 = 0`);
-        }
-      }
       if (input.startDate) {
         conditions.push(gte(timesheets.date, input.startDate));
       }
       if (input.endDate) {
         conditions.push(lte(timesheets.date, input.endDate));
       }
-      
-      // If not admin and no specific ticket context, restrict to own timesheets.
-      // E.g. "My Timesheets" page.
+
+      // If not admin and no specific ticket context, restrict to own timesheets
       if (!isOwnerOrAdmin && !input.ticketId && input.userId !== ctx.session.userId) {
-          conditions.push(eq(timesheets.userId, ctx.session.userId));
+        conditions.push(eq(timesheets.userId, ctx.session.userId));
       }
 
-      return await ctx.db.query.timesheets.findMany({
+      // Use subquery for projectId filter instead of separate query (avoids N+1)
+      if (input.projectId) {
+        conditions.push(
+          sql`${timesheets.ticketId} IN (
+            SELECT id FROM tickets
+            WHERE project_id = ${input.projectId}
+            AND org_id = ${ctx.session.orgId}
+          )`
+        );
+      }
+
+      // Single query with joins for better performance
+      const entries = await ctx.db.query.timesheets.findMany({
         where: and(...conditions),
         orderBy: [desc(timesheets.date)],
+        limit,
+        offset,
         with: {
-            ticket: {
-                with: {
-                    project: true
-                }
-            }
-        }
+          ticket: {
+            columns: {
+              id: true,
+              title: true,
+              ticketNumber: true,
+              projectId: true,
+            },
+            with: {
+              project: {
+                columns: {
+                  id: true,
+                  name: true,
+                  key: true,
+                },
+              },
+            },
+          },
+        },
       });
+
+      return entries;
     }),
 
   updateTimeEntry: protectedProcedure
@@ -1328,18 +1352,20 @@ export const projectRouter = createTRPCRouter({
         statusIds: z.array(z.number()), // Ordered list of IDs
     }))
     .mutation(async ({ ctx, input }) => {
-        // Transaction to update orders
-        await ctx.db.transaction(async (tx) => {
-            for (let i = 0; i < input.statusIds.length; i++) {
-                await tx.update(projectStatuses)
-                    .set({ order: i })
-                    .where(and(
-                        eq(projectStatuses.id, input.statusIds[i]),
-                        eq(projectStatuses.projectId, input.projectId),
-                        eq(projectStatuses.orgId, ctx.session.orgId)
-                    ));
-            }
-        });
+        if (input.statusIds.length === 0) return;
+
+        // Build CASE statement for bulk update (single query instead of N queries)
+        const caseStatements = input.statusIds
+          .map((id, index) => `WHEN id = ${id} THEN ${index}`)
+          .join(' ');
+
+        await ctx.db.execute(sql`
+          UPDATE project_statuses
+          SET "order" = CASE ${sql.raw(caseStatements)} END
+          WHERE id IN ${input.statusIds}
+            AND project_id = ${input.projectId}
+            AND org_id = ${ctx.session.orgId}
+        `);
     }),
   deleteProjectStatus: protectedProcedure
     .input(z.object({
@@ -1388,20 +1414,29 @@ export const projectRouter = createTRPCRouter({
         })),
     }))
     .mutation(async ({ ctx, input }) => {
-        await ctx.db.transaction(async (tx) => {
-            for (const item of input.items) {
-                await tx.update(tickets)
-                    .set({ 
-                        status: item.status, 
-                        order: item.order,
-                        updatedAt: new Date()
-                    })
-                    .where(and(
-                        eq(tickets.id, item.id),
-                        eq(tickets.orgId, ctx.session.orgId)
-                    ));
-            }
-        });
+        if (input.items.length === 0) return;
+
+        // For ticket order updates, we need to update status and order together
+        // Use a transaction with bulk update using CASE statements
+        const ticketIds = input.items.map(item => item.id);
+
+        const statusCases = input.items
+          .map(item => `WHEN id = ${item.id} THEN '${item.status}'`)
+          .join(' ');
+
+        const orderCases = input.items
+          .map(item => `WHEN id = ${item.id} THEN ${item.order}`)
+          .join(' ');
+
+        await ctx.db.execute(sql`
+          UPDATE tickets
+          SET
+            status = CASE ${sql.raw(statusCases)} END,
+            "order" = CASE ${sql.raw(orderCases)} END,
+            updated_at = NOW()
+          WHERE id IN ${ticketIds}
+            AND org_id = ${ctx.session.orgId}
+        `);
     }),
   deleteProject: protectedProcedure
     .input(z.object({ projectId: z.number() }))
@@ -1514,20 +1549,57 @@ export const projectRouter = createTRPCRouter({
     }),
 
   getEmployeeTickets: protectedProcedure
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({
+      userId: z.string(),
+      page: z.number().min(1).optional(),
+      limit: z.number().min(1).max(100).optional(),
+      status: z.string().optional(),
+    }))
     .query(async ({ ctx, input }) => {
-      // Fetch tickets assigned to the user
+      const page = input.page || DEFAULT_PAGE;
+      const limit = input.limit || DEFAULT_LIMIT;
+      const offset = getOffset(page, limit);
+
+      const conditions = [
+        eq(tickets.assigneeId, input.userId),
+        eq(tickets.orgId, ctx.session.orgId),
+      ];
+
+      if (input.status) {
+        conditions.push(eq(tickets.status, input.status));
+      }
+
+      // Get total count for pagination
+      const [countResult] = await ctx.db
+        .select({ count: sql<number>`count(*)` })
+        .from(tickets)
+        .where(and(...conditions));
+
+      const total = Number(countResult?.count || 0);
+
+      // Fetch paginated tickets
       const userTickets = await ctx.db.query.tickets.findMany({
-        where: and(
-            eq(tickets.assigneeId, input.userId),
-            eq(tickets.orgId, ctx.session.orgId)
-        ),
+        where: and(...conditions),
         with: {
-          project: true,
-          sprint: true,
+          project: {
+            columns: {
+              id: true,
+              name: true,
+              key: true,
+            },
+          },
+          sprint: {
+            columns: {
+              id: true,
+              name: true,
+            },
+          },
         },
         orderBy: [desc(tickets.updatedAt)],
+        limit,
+        offset,
       });
-      return userTickets;
+
+      return createPaginatedResponse(userTickets, total, page, limit);
     }),
 });

@@ -52,6 +52,12 @@ import {
 } from "../../../lib/validations/hr";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail, sendPayslipGeneratedEmail } from "../../../lib/email";
+import {
+  createPaginatedResponse,
+  getOffset,
+  DEFAULT_PAGE,
+  DEFAULT_LIMIT,
+} from "../../../lib/pagination";
 
 export const hrRouter = createTRPCRouter({
   getDepartments: protectedProcedure.query(async ({ ctx }) => {
@@ -739,20 +745,50 @@ export const hrRouter = createTRPCRouter({
 
   getExpenses: protectedProcedure
     .input(
-      z.object({ userId: z.string().optional(), status: z.string().optional() })
+      z.object({
+        userId: z.string().optional(),
+        status: z.string().optional(),
+        page: z.number().min(1).optional(),
+        limit: z.number().min(1).max(100).optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      })
     )
     .query(async ({ ctx, input }) => {
+      const page = input.page || DEFAULT_PAGE;
+      const limit = input.limit || DEFAULT_LIMIT;
+      const offset = getOffset(page, limit);
+
       const conditions = [eq(expenses.orgId, ctx.session.orgId)];
       if (input.userId) {
         conditions.push(eq(expenses.userId, input.userId));
       }
       if (input.status) {
-        conditions.push(eq(expenses.status, input.status as any));
+        conditions.push(eq(expenses.status, input.status as "PENDING" | "APPROVED" | "REJECTED" | "PAID"));
       }
-      return await ctx.db.query.expenses.findMany({
+      if (input.startDate) {
+        conditions.push(gte(expenses.expenseDate, input.startDate));
+      }
+      if (input.endDate) {
+        conditions.push(lte(expenses.expenseDate, input.endDate));
+      }
+
+      // Get total count for pagination
+      const [countResult] = await ctx.db
+        .select({ count: sql<number>`count(*)` })
+        .from(expenses)
+        .where(and(...conditions));
+
+      const total = Number(countResult?.count || 0);
+
+      const data = await ctx.db.query.expenses.findMany({
         where: and(...conditions),
         orderBy: [desc(expenses.expenseDate)],
+        limit,
+        offset,
       });
+
+      return createPaginatedResponse(data, total, page, limit);
     }),
 
   createExpense: protectedProcedure

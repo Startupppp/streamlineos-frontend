@@ -48,7 +48,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </TabsContent>
 
                 <TabsContent value="tickets" className="space-y-4">
-                     <EmployeeTicketsList tickets={tickets || []} />
+                     <EmployeeTicketsList tickets={tickets?.data || []} />
                 </TabsContent>
 
                 <TabsContent value="attendance" className="space-y-6">
