@@ -144,8 +144,6 @@ export async function sendHolidayNotifications() {
           .update(holidays)
           .set({ notificationSent: true })
           .where(eq(holidays.id, holiday.id));
-
-        console.log(`✅ Holiday notification sent for: ${holiday.name} to ${emails.length} employees`);
       }
     }
 

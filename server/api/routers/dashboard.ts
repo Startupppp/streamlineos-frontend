@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { projects, attendance, organizations, organizationMembers, users, projectMembers } from "../../../lib/db/schema";
 import { eq, and, sql, desc, or, inArray } from "drizzle-orm";
-import { format } from "date-fns";
+import { getTodayString } from "../../../lib/date-utils";
 
 import { TRPCError } from "@trpc/server";
 
@@ -46,7 +46,7 @@ export const dashboardRouter = createTRPCRouter({
         })
       ).length;
 
-      const today = format(new Date(), "yyyy-MM-dd");
+      const today = getTodayString();
       const presentCount = (
         await ctx.db.query.attendance.findMany({
           where: and(
@@ -134,7 +134,7 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   getTeamAvailability: protectedProcedure.query(async ({ ctx }) => {
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = getTodayString();
 
     const todayAttendance = await ctx.db
       .select({

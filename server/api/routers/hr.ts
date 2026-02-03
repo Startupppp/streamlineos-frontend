@@ -24,6 +24,7 @@ import {
 } from "../../../lib/db/schema";
 import { eq, and, desc, isNull, gte, lte, asc, sql } from "drizzle-orm";
 import { format } from "date-fns";
+import { formatDateOnly, getTodayString } from "../../../lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
 import { requestLeaveInputSchema } from "../../../lib/validations/leave";
@@ -178,7 +179,7 @@ export const hrRouter = createTRPCRouter({
           role: input.role,
           designation: input.designation,
           departmentId: finalDepartmentId,
-          joiningDate: format(input.joiningDate, "yyyy-MM-dd"),
+          joiningDate: formatDateOnly(input.joiningDate),
           experienceYears: input.experienceYears?.toString(),
           skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
           taxId: input.taxId,
@@ -220,7 +221,7 @@ export const hrRouter = createTRPCRouter({
             hraPercentage: "50",
             allowances: specialAllowance.toString(),
             deductions: "200",
-            effectiveFrom: format(new Date(), "yyyy-MM-dd"),
+            effectiveFrom: getTodayString(),
             isActive: true,
         });
 
@@ -343,7 +344,7 @@ export const hrRouter = createTRPCRouter({
     }),
 
   getAttendanceStatus: protectedProcedure.query(async ({ ctx }) => {
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = getTodayString();
     const userId = ctx.session.userId;
     const orgId = ctx.session.orgId;
 
@@ -426,7 +427,7 @@ export const hrRouter = createTRPCRouter({
   checkIn: protectedProcedure
     .input(checkInInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const today = format(new Date(), "yyyy-MM-dd");
+      const today = getTodayString();
       const existing = await ctx.db.query.attendance.findFirst({
         where: and(
           eq(attendance.userId, ctx.session.userId),
@@ -489,7 +490,7 @@ export const hrRouter = createTRPCRouter({
     }),
 
   checkOut: protectedProcedure.mutation(async ({ ctx }) => {
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = getTodayString();
     const log = await ctx.db.query.attendance.findFirst({
       where: and(
         eq(attendance.userId, ctx.session.userId),
@@ -544,7 +545,7 @@ export const hrRouter = createTRPCRouter({
   }),
 
   toggleBreak: protectedProcedure.mutation(async ({ ctx }) => {
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = getTodayString();
     const log = await ctx.db.query.attendance.findFirst({
       where: and(
         eq(attendance.userId, ctx.session.userId),
@@ -612,8 +613,8 @@ export const hrRouter = createTRPCRouter({
         orgId: ctx.session.orgId,
         userId: ctx.session.userId,
         leaveTypeId: input.typeId,
-        startDate: format(input.startDate, "yyyy-MM-dd"),
-        endDate: format(input.endDate, "yyyy-MM-dd"),
+        startDate: formatDateOnly(input.startDate),
+        endDate: formatDateOnly(input.endDate),
         reason: input.reason,
         status: "PENDING",
       });
@@ -726,9 +727,9 @@ export const hrRouter = createTRPCRouter({
           hraPercentage: input.hraPercentage.toString(),
           allowances: input.allowances.toString(),
           deductions: input.deductions.toString(),
-          effectiveFrom: format(input.effectiveFrom, "yyyy-MM-dd"),
+          effectiveFrom: formatDateOnly(input.effectiveFrom),
           effectiveTo: input.effectiveTo
-            ? format(input.effectiveTo, "yyyy-MM-dd")
+            ? formatDateOnly(input.effectiveTo)
             : undefined,
           isActive: true,
         })
@@ -766,7 +767,7 @@ export const hrRouter = createTRPCRouter({
           amount: input.amount.toString(),
           description: input.description,
           receiptUrl: input.receiptUrl,
-          expenseDate: format(input.expenseDate, "yyyy-MM-dd"),
+          expenseDate: formatDateOnly(input.expenseDate),
           status: "PENDING",
         })
         .returning();
@@ -825,7 +826,7 @@ export const hrRouter = createTRPCRouter({
         const attendanceRecords = await ctx.db.query.attendance.findMany({
             where: and(
                 eq(attendance.userId, input.userId),
-                gte(attendance.date, format(startOfMonth, 'yyyy-MM-dd'))
+                gte(attendance.date, formatDateOnly(startOfMonth))
             )
         });
 
@@ -866,8 +867,8 @@ export const hrRouter = createTRPCRouter({
             where: and(
                 eq(attendance.userId, input.userId),
                 eq(attendance.orgId, ctx.session.orgId),
-                gte(attendance.date, format(startDate, "yyyy-MM-dd")),
-                lte(attendance.date, format(endDate, "yyyy-MM-dd"))
+                gte(attendance.date, formatDateOnly(startDate)),
+                lte(attendance.date, formatDateOnly(endDate))
             ),
             orderBy: [asc(attendance.date)]
         });
@@ -892,7 +893,7 @@ export const hrRouter = createTRPCRouter({
           serialNumber: input.serialNumber,
           assignedTo: input.assignedTo,
           purchaseDate: input.purchaseDate
-            ? format(input.purchaseDate, "yyyy-MM-dd")
+            ? formatDateOnly(input.purchaseDate)
             : undefined,
           purchaseCost: input.purchaseCost?.toString(),
           location: input.location,
@@ -994,8 +995,8 @@ export const hrRouter = createTRPCRouter({
           orgId: ctx.session.orgId,
           userId: input.userId,
           reviewerId: input.reviewerId || ctx.session.userId,
-          periodStart: format(input.periodStart, "yyyy-MM-dd"),
-          periodEnd: format(input.periodEnd, "yyyy-MM-dd"),
+          periodStart: formatDateOnly(input.periodStart),
+          periodEnd: formatDateOnly(input.periodEnd),
           ratings: input.ratings,
           strengths: input.strengths,
           improvements: input.improvements,
@@ -1035,8 +1036,8 @@ export const hrRouter = createTRPCRouter({
           targetValue: input.targetValue?.toString(),
           currentValue: input.currentValue.toString(),
           unit: input.unit,
-          startDate: format(input.startDate, "yyyy-MM-dd"),
-          endDate: format(input.endDate, "yyyy-MM-dd"),
+          startDate: formatDateOnly(input.startDate),
+          endDate: formatDateOnly(input.endDate),
           status: "IN_PROGRESS",
           progress: 0,
           parentGoalId: input.parentGoalId,
@@ -1124,8 +1125,8 @@ export const hrRouter = createTRPCRouter({
       const startDate = new Date(year, startMonth, 1);
       const endDate = new Date(year, startMonth + 3, 0);
 
-      const startStr = format(startDate, "yyyy-MM-dd");
-      const endStr = format(endDate, "yyyy-MM-dd");
+      const startStr = formatDateOnly(startDate);
+      const endStr = formatDateOnly(endDate);
       
       const logs = await ctx.db.query.timesheets.findMany({
         where: and(
@@ -1139,7 +1140,7 @@ export const hrRouter = createTRPCRouter({
   upsertWorkLog: protectedProcedure
     .input(upsertWorkLogInputSchema)
     .mutation(async ({ ctx, input }) => {
-        const dateStr = format(input.date, "yyyy-MM-dd");
+        const dateStr = formatDateOnly(input.date);
         
         const existing = await ctx.db.query.timesheets.findFirst({
             where: and(
@@ -1199,7 +1200,7 @@ export const hrRouter = createTRPCRouter({
       const [request] = await ctx.db.insert(wfhRequests).values({
         orgId: ctx.session.orgId,
         userId: ctx.session.userId,
-        date: format(input.date, "yyyy-MM-dd"),
+        date: formatDateOnly(input.date),
         reason: input.reason,
         approverId: input.approverId,
         status: "PENDING",
@@ -1264,7 +1265,7 @@ export const hrRouter = createTRPCRouter({
         serialNumber: input.serialNumber,
         brand: input.brand,
         model: input.model,
-        assignedDate: input.assignedDate ? format(input.assignedDate, "yyyy-MM-dd") : undefined,
+        assignedDate: input.assignedDate ? formatDateOnly(input.assignedDate) : undefined,
         notes: input.notes,
         status: "ACTIVE",
       }).returning();
@@ -1288,7 +1289,7 @@ export const hrRouter = createTRPCRouter({
           ...(updateData.brand !== undefined && { brand: updateData.brand }),
           ...(updateData.model !== undefined && { model: updateData.model }),
           ...(updateData.status && { status: updateData.status }),
-          ...(updateData.returnDate && { returnDate: format(updateData.returnDate, "yyyy-MM-dd") }),
+          ...(updateData.returnDate && { returnDate: formatDateOnly(updateData.returnDate) }),
           ...(updateData.notes !== undefined && { notes: updateData.notes }),
           updatedAt: new Date(),
         })

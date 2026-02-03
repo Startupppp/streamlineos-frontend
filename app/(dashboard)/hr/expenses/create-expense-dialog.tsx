@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
+import { formatDateOnly } from "@/lib/date-utils";
 import { CalendarIcon, Upload, Receipt, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -148,7 +149,7 @@ export function CreateExpenseDialog({
         description: data.description,
         merchant: data.merchant,
         paymentMethod: data.paymentMethod,
-        expenseDate: format(data.expenseDate, "yyyy-MM-dd"),
+        expenseDate: formatDateOnly(data.expenseDate),
         receiptUrl,
         receiptFileName,
       });

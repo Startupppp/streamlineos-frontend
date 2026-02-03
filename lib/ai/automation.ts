@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { tickets, timesheets, attendance, projects } from "../db/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
-import { format } from "date-fns";
+import { formatDateOnly } from "../date-utils";
 
 export interface TaskSuggestion {
   ticketId: number;
@@ -67,7 +67,7 @@ export async function analyzeWorkload(
   const timeEntries = await db.query.timesheets.findMany({
     where: and(
       eq(timesheets.orgId, orgId),
-      sql`${timesheets.date} >= ${format(weekAgo, "yyyy-MM-dd")}`
+      sql`${timesheets.date} >= ${formatDateOnly(weekAgo)}`
     ),
   });
 
@@ -217,7 +217,7 @@ export async function analyzeAttendancePatterns(
     where: and(
       eq(attendance.orgId, orgId),
       eq(attendance.userId, userId),
-      sql`${attendance.date} >= ${format(startDate, "yyyy-MM-dd")}`
+      sql`${attendance.date} >= ${formatDateOnly(startDate)}`
     ),
     orderBy: [desc(attendance.date)],
   });

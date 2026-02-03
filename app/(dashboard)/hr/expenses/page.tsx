@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import { format } from "date-fns";
 import {
   Plus,
@@ -12,12 +12,12 @@ import {
   MoreHorizontal,
   Eye,
   Trash2,
-  Search,
   Wallet,
   TrendingUp,
   Settings,
   BarChart3,
   Download,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,13 +32,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -50,27 +43,39 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+
+// Server Actions
 import {
-  getExpenses,
-  getMyExpenses,
-  getPendingExpenses,
   approveExpense,
   rejectExpense,
   markExpenseAsPaid,
   deleteExpense,
-  getExpenseStats,
-  getExpenseCategories,
 } from "@/server/actions/expense-actions";
+import {
+  getExpensePageData,
+  ExpensePageData,
+  ExpenseFilters,
+  ExpenseWithRelations,
+} from "@/server/actions/expense-query";
+
+// Components
 import { CreateExpenseDialog } from "./create-expense-dialog";
 import { BudgetManagement } from "./budget-management";
 import { ExpenseReports } from "./expense-reports";
+import { ExpenseFilterBar } from "@/components/expenses/expense-filter-bar";
+import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
+import { ReceiptViewer } from "@/components/expenses/receipt-viewer";
+import { ExpensePagination } from "@/components/expenses/expense-pagination";
+
+// Hooks
+import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filters";
 import { useSession } from "next-auth/react";
+import { downloadFile } from "@/hooks/use-file-url";
 
 const EXPENSE_CATEGORIES = [
   "Travel",
@@ -93,100 +98,150 @@ const PAYMENT_METHODS = [
   "Other",
 ];
 
-type Expense = Awaited<ReturnType<typeof getExpenses>>[number];
-
 export default function ExpensesPage() {
   const { data: session } = useSession();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [pendingExpenses, setPendingExpenses] = useState<Expense[]>([]);
-  const [stats, setStats] = useState<Awaited<ReturnType<typeof getExpenseStats>>>(null);
-  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getExpenseCategories>>>([]);
+  const [pageData, setPageData] = useState<ExpensePageData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseWithRelations | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
 
-  useEffect(() => {
-    loadData();
-  }, [selectedStatus]);
+  // Use the filter hook
+  const {
+    filters,
+    setFilter,
+    setFilters,
+    resetFilters,
+    datePreset,
+    setDatePreset,
+    setCustomDateRange,
+    activeFilterCount,
+  } = useExpenseFilters({
+    defaultPageSize: 50,
+    syncToUrl: true,
+  });
 
-  const loadData = async () => {
-    setLoading(true);
+  // Debounce search to avoid too many requests
+  const debouncedSearch = useDebouncedValue(filters.search, 300);
+
+  // Load data function
+  const loadData = useCallback(async (showRefresh = false) => {
+    if (showRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
-      const [expData, pendingData, statsData, catData] = await Promise.all([
-        isAdmin ? getExpenses({ status: selectedStatus }) : getMyExpenses(),
-        isAdmin ? getPendingExpenses() : Promise.resolve([]),
-        getExpenseStats(),
-        getExpenseCategories(),
-      ]);
-      setExpenses(expData);
-      setPendingExpenses(pendingData);
-      setStats(statsData);
-      setCategories(catData);
+      const result = await getExpensePageData({
+        ...filters,
+        search: debouncedSearch,
+      });
+
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+
+      setPageData(result);
     } catch (error) {
       toast.error("Failed to load expenses");
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
+  }, [filters, debouncedSearch]);
+
+  // Initial load and filter changes
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Optimistic update helper
+  const optimisticUpdate = (
+    expenseId: number,
+    updates: Partial<ExpenseWithRelations>
+  ) => {
+    if (!pageData) return;
+
+    setPageData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        expenses: prev.expenses.map((e) =>
+          e.id === expenseId ? { ...e, ...updates } : e
+        ),
+        pendingExpenses: prev.pendingExpenses.filter((e) => e.id !== expenseId),
+      };
+    });
   };
 
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter((expense) => {
-      const matchesSearch =
-        searchTerm === "" ||
-        expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.merchant?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
-    });
-  }, [expenses, searchTerm]);
-
   const handleApprove = async (expenseId: number) => {
+    optimisticUpdate(expenseId, { status: "APPROVED" });
     const result = await approveExpense(expenseId);
     if (result.success) {
       toast.success("Expense approved");
-      loadData();
     } else {
       toast.error(result.error);
+      loadData(); // Rollback on error
     }
   };
 
   const handleReject = async () => {
     if (!selectedExpense || !rejectionReason) return;
+
+    optimisticUpdate(selectedExpense.id, {
+      status: "REJECTED",
+      rejectionReason,
+    });
+    setIsRejectDialogOpen(false);
+
     const result = await rejectExpense(selectedExpense.id, rejectionReason);
     if (result.success) {
       toast.success("Expense rejected");
-      setIsRejectDialogOpen(false);
       setRejectionReason("");
       setSelectedExpense(null);
-      loadData();
     } else {
       toast.error(result.error);
+      loadData(); // Rollback on error
     }
   };
 
   const handleMarkPaid = async (expenseId: number) => {
+    optimisticUpdate(expenseId, { status: "PAID" });
     const result = await markExpenseAsPaid(expenseId);
     if (result.success) {
       toast.success("Expense marked as paid");
-      loadData();
     } else {
       toast.error(result.error);
+      loadData();
     }
   };
 
   const handleDelete = async (expenseId: number) => {
+    if (!pageData) return;
+
+    // Optimistic removal
+    setPageData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        expenses: prev.expenses.filter((e) => e.id !== expenseId),
+        pendingExpenses: prev.pendingExpenses.filter((e) => e.id !== expenseId),
+      };
+    });
+
     const result = await deleteExpense(expenseId);
     if (result.success) {
       toast.success("Expense deleted");
-      loadData();
     } else {
       toast.error(result.error);
+      loadData();
     }
   };
 
@@ -204,7 +259,9 @@ export default function ExpensesPage() {
       PAID: <DollarSign className="h-3 w-3 mr-1" />,
     };
     return (
-      <Badge className={`${styles[status as keyof typeof styles]} flex items-center font-medium`}>
+      <Badge
+        className={`${styles[status as keyof typeof styles]} flex items-center font-medium`}
+      >
         {icons[status as keyof typeof icons]}
         {status}
       </Badge>
@@ -219,7 +276,7 @@ export default function ExpensesPage() {
     }).format(Number(amount));
   };
 
-  if (loading) {
+  if (loading && !pageData) {
     return (
       <div className="flex-1 space-y-6 p-6">
         <div className="flex items-center justify-between">
@@ -236,6 +293,14 @@ export default function ExpensesPage() {
     );
   }
 
+  const { expenses, pendingExpenses, stats, categories, pagination } = pageData || {
+    expenses: [],
+    pendingExpenses: [],
+    stats: null,
+    categories: [],
+    pagination: { page: 1, pageSize: 50, total: 0, totalPages: 0 },
+  };
+
   return (
     <div className="flex-1 space-y-6">
       {/* Header */}
@@ -250,19 +315,28 @@ export default function ExpensesPage() {
               : "Submit and track your expense reimbursements"}
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Expense
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => loadData(true)}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          </Button>
+          <ExpenseExportDialog filters={filters} />
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Expense
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Expenses
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -277,9 +351,7 @@ export default function ExpensesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Approval
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -294,14 +366,12 @@ export default function ExpensesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Approved
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(stats?.approvedAmount || 0)}
+              {formatCurrency((stats?.approvedAmount || 0) + (stats?.paidAmount || 0))}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Ready for reimbursement
@@ -311,18 +381,12 @@ export default function ExpensesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Claim
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Average Claim</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(
-                stats?.totalCount
-                  ? (stats.totalAmount || 0) / stats.totalCount
-                  : 0
-              )}
+              {formatCurrency(stats?.avgExpenseAmount || 0)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Per expense claim</p>
           </CardContent>
@@ -330,7 +394,10 @@ export default function ExpensesPage() {
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue={isAdmin && pendingExpenses.length > 0 ? "pending" : "all"} className="space-y-4">
+      <Tabs
+        defaultValue={isAdmin && pendingExpenses.length > 0 ? "pending" : "all"}
+        className="space-y-4"
+      >
         <TabsList>
           {isAdmin && (
             <TabsTrigger value="pending">
@@ -369,7 +436,9 @@ export default function ExpensesPage() {
                       <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium">All caught up!</h3>
-                    <p className="text-muted-foreground">No pending expense claims to review</p>
+                    <p className="text-muted-foreground">
+                      No pending expense claims to review
+                    </p>
                   </div>
                 ) : (
                   <Table>
@@ -400,7 +469,9 @@ export default function ExpensesPage() {
                                 <p className="font-medium">
                                   {expense.user?.firstName} {expense.user?.lastName}
                                 </p>
-                                <p className="text-xs text-muted-foreground">{expense.user?.email}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {expense.user?.email}
+                                </p>
                               </div>
                             </div>
                           </TableCell>
@@ -420,50 +491,20 @@ export default function ExpensesPage() {
                           </TableCell>
                           <TableCell>
                             {expense.receiptUrl ? (
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => window.open(expense.receiptUrl!, "_blank")}
-                                >
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  View
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={async () => {
-                                    try {
-                                      const response = await fetch(expense.receiptUrl!);
-                                      const blob = await response.blob();
-                                      const url = window.URL.createObjectURL(blob);
-                                      const link = document.createElement("a");
-                                      link.href = url;
-                                      link.download = expense.receiptFileName || `receipt-${expense.id}`;
-                                      document.body.appendChild(link);
-                                      link.click();
-                                      document.body.removeChild(link);
-                                      window.URL.revokeObjectURL(url);
-                                      toast.success("Download started");
-                                    } catch {
-                                      toast.error("Failed to download");
-                                    }
-                                  }}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              <ReceiptViewer
+                                receiptUrl={expense.receiptUrl}
+                                fileName={expense.receiptFileName || undefined}
+                                expenseId={expense.id}
+                              />
                             ) : (
-                              <span className="text-muted-foreground text-sm">No receipt</span>
+                              <span className="text-muted-foreground text-sm">
+                                No receipt
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => handleApprove(expense.id)}
-                              >
+                              <Button size="sm" onClick={() => handleApprove(expense.id)}>
                                 Approve
                               </Button>
                               <Button
@@ -490,164 +531,171 @@ export default function ExpensesPage() {
 
         {/* All Expenses Tab */}
         <TabsContent value="all" className="space-y-4">
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search expenses..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            {isAdmin && (
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="APPROVED">Approved</SelectItem>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                  <SelectItem value="PAID">Paid</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+          {/* Filter Bar */}
+          <ExpenseFilterBar
+            filters={filters}
+            categories={categories}
+            onFilterChange={setFilter}
+            onFiltersChange={setFilters}
+            onReset={resetFilters}
+            datePreset={datePreset}
+            onDatePresetChange={setDatePreset}
+            onCustomDateRange={setCustomDateRange}
+            activeFilterCount={activeFilterCount}
+            isAdmin={isAdmin}
+          />
 
           {/* Expenses Table */}
           <Card>
             <CardContent className="p-0">
-              {filteredExpenses.length === 0 ? (
+              {expenses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="p-4 bg-muted rounded-full mb-4">
                     <Receipt className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium">No expenses found</h3>
-                  <p className="text-muted-foreground mb-4">Submit your first expense claim to get started</p>
-                  <Button onClick={() => setIsCreateOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Expense
-                  </Button>
+                  <p className="text-muted-foreground mb-4">
+                    {activeFilterCount > 0
+                      ? "Try adjusting your filters"
+                      : "Submit your first expense claim to get started"}
+                  </p>
+                  {activeFilterCount > 0 ? (
+                    <Button variant="outline" onClick={resetFilters}>
+                      Clear Filters
+                    </Button>
+                  ) : (
+                    <Button onClick={() => setIsCreateOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      New Expense
+                    </Button>
+                  )}
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {isAdmin && <TableHead>Employee</TableHead>}
-                      <TableHead>Category</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Merchant</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredExpenses.map((expense) => (
-                      <TableRow key={expense.id}>
-                        {isAdmin && (
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={expense.user?.image || undefined} />
-                                <AvatarFallback className="text-xs">
-                                  {expense.user?.firstName?.[0]}
-                                  {expense.user?.lastName?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">
-                                {expense.user?.firstName} {expense.user?.lastName}
-                              </span>
-                            </div>
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <Badge variant="outline" className="font-normal">
-                            {expense.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                          {expense.description || "-"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {expense.merchant || "-"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(expense.expenseDate), "MMM d, yyyy")}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold">
-                          {formatCurrency(expense.amount)}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(expense.status || "PENDING")}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {expense.receiptUrl && (
-                                <>
-                                  <DropdownMenuItem
-                                    onClick={() => window.open(expense.receiptUrl!, "_blank")}
-                                  >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View Receipt
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={async () => {
-                                      try {
-                                        const response = await fetch(expense.receiptUrl!);
-                                        const blob = await response.blob();
-                                        const url = window.URL.createObjectURL(blob);
-                                        const link = document.createElement("a");
-                                        link.href = url;
-                                        link.download = expense.receiptFileName || `receipt-${expense.id}`;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        window.URL.revokeObjectURL(url);
-                                        toast.success("Download started");
-                                      } catch {
-                                        toast.error("Failed to download receipt");
-                                      }
-                                    }}
-                                  >
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download Receipt
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {isAdmin && expense.status === "APPROVED" && (
-                                <DropdownMenuItem onClick={() => handleMarkPaid(expense.id)}>
-                                  <DollarSign className="mr-2 h-4 w-4" />
-                                  Mark as Paid
-                                </DropdownMenuItem>
-                              )}
-                              {(expense.status === "PENDING" || isAdmin) && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => handleDelete(expense.id)}
-                                    className="text-destructive"
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {isAdmin && <TableHead>Employee</TableHead>}
+                        <TableHead>Category</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Merchant</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {expenses.map((expense) => (
+                        <TableRow key={expense.id}>
+                          {isAdmin && (
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage src={expense.user?.image || undefined} />
+                                  <AvatarFallback className="text-xs">
+                                    {expense.user?.firstName?.[0]}
+                                    {expense.user?.lastName?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">
+                                  {expense.user?.firstName} {expense.user?.lastName}
+                                </span>
+                              </div>
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <Badge variant="outline" className="font-normal">
+                              {expense.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                            {expense.description || "-"}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {expense.merchant || "-"}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(expense.expenseDate), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatCurrency(expense.amount)}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(expense.status || "PENDING")}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {expense.receiptUrl && (
+                                  <>
+                                    <DropdownMenuItem asChild>
+                                      <ReceiptViewer
+                                        receiptUrl={expense.receiptUrl}
+                                        fileName={expense.receiptFileName || undefined}
+                                        expenseId={expense.id}
+                                        trigger={
+                                          <div className="flex items-center cursor-pointer px-2 py-1.5 text-sm w-full">
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            View Receipt
+                                          </div>
+                                        }
+                                      />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => downloadFile(
+                                        expense.receiptUrl!,
+                                        expense.receiptFileName || `receipt-${expense.id}`
+                                      )}
+                                    >
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download Receipt
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {isAdmin && expense.status === "APPROVED" && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleMarkPaid(expense.id)}
+                                  >
+                                    <DollarSign className="mr-2 h-4 w-4" />
+                                    Mark as Paid
+                                  </DropdownMenuItem>
+                                )}
+                                {(expense.status === "PENDING" || isAdmin) && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => handleDelete(expense.id)}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {/* Pagination */}
+                  <ExpensePagination
+                    page={pagination.page}
+                    pageSize={pagination.pageSize}
+                    total={pagination.total}
+                    totalPages={pagination.totalPages}
+                    onPageChange={(page) => setFilter("page", page)}
+                    onPageSizeChange={(pageSize) => setFilter("pageSize", pageSize)}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
@@ -711,4 +759,3 @@ export default function ExpensesPage() {
     </div>
   );
 }
-

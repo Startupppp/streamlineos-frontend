@@ -61,6 +61,7 @@ import {
 } from "@/server/actions/document-actions";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
+import { viewFile, downloadFile } from "@/hooks/use-file-url";
 
 type Document = Awaited<ReturnType<typeof getDocuments>>[number];
 
@@ -392,7 +393,7 @@ export default function DocumentsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(doc.fileUrl, "_blank")}
+                            onClick={() => viewFile(doc.fileUrl)}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
@@ -534,29 +535,13 @@ export default function DocumentsPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => window.open(doc.fileUrl, "_blank")}
+                                onClick={() => viewFile(doc.fileUrl)}
                               >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={async () => {
-                                  try {
-                                    const response = await fetch(doc.fileUrl);
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = document.createElement("a");
-                                    link.href = url;
-                                    link.download = doc.fileName || doc.name;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    window.URL.revokeObjectURL(url);
-                                    toast.success("Download started");
-                                  } catch {
-                                    toast.error("Failed to download file");
-                                  }
-                                }}
+                                onClick={() => downloadFile(doc.fileUrl, doc.fileName || doc.name)}
                               >
                                 <Download className="mr-2 h-4 w-4" />
                                 Download
@@ -634,7 +619,7 @@ export default function DocumentsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(policy.fileUrl, "_blank")}
+                        onClick={() => viewFile(policy.fileUrl)}
                         className="shrink-0"
                       >
                         <Eye className="mr-2 h-4 w-4" />

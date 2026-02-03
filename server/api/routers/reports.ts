@@ -11,6 +11,7 @@ import {
 } from "../../../lib/db/schema";
 import { eq, and, sql, gte, lte, desc } from "drizzle-orm";
 import { format } from "date-fns";
+import { formatDateOnly, getTodayString } from "../../../lib/date-utils";
 
 export const reportsRouter = createTRPCRouter({
   getAttendanceReport: protectedProcedure
@@ -26,8 +27,8 @@ export const reportsRouter = createTRPCRouter({
         where: and(
           eq(attendance.orgId, ctx.session.orgId),
           ...(input.userId ? [eq(attendance.userId, input.userId)] : []),
-          gte(attendance.date, format(input.startDate, "yyyy-MM-dd")),
-          lte(attendance.date, format(input.endDate, "yyyy-MM-dd"))
+          gte(attendance.date, formatDateOnly(input.startDate)),
+          lte(attendance.date, formatDateOnly(input.endDate))
         ),
         orderBy: [desc(attendance.date)],
       });
@@ -180,8 +181,8 @@ export const reportsRouter = createTRPCRouter({
       const timeEntries = await ctx.db.query.timesheets.findMany({
         where: and(
           eq(timesheets.orgId, ctx.session.orgId),
-          gte(timesheets.date, format(input.startDate, "yyyy-MM-dd")),
-          lte(timesheets.date, format(input.endDate, "yyyy-MM-dd"))
+          gte(timesheets.date, formatDateOnly(input.startDate)),
+          lte(timesheets.date, formatDateOnly(input.endDate))
         ),
         with: {
           ticket: {
@@ -251,7 +252,7 @@ export const reportsRouter = createTRPCRouter({
     }),
 
   getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
-    const today = format(new Date(), "yyyy-MM-dd");
+    const today = getTodayString();
     const thisMonth = format(new Date(), "yyyy-MM");
 
 

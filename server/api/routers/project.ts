@@ -16,7 +16,8 @@ import {
 } from "../../../lib/db/schema";
 import { eq, and, desc, sql, or, inArray, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { format, differenceInCalendarDays, addDays } from "date-fns";
+import { differenceInCalendarDays, addDays } from "date-fns";
+import { formatDateOnly } from "../../../lib/date-utils";
 import {
   createTicketInputSchema,
   updateTicketInputSchema,
@@ -224,8 +225,6 @@ export const projectRouter = createTRPCRouter({
           );
 
           // Send email notifications to added members
-          console.log(`[PROJECT CREATE] Adding ${input.memberIds.length} members to new project`);
-          
           const currentUser = await ctx.db.query.users.findFirst({
             where: eq(users.id, ctx.session.userId),
           });
@@ -234,13 +233,9 @@ export const projectRouter = createTRPCRouter({
             where: inArray(users.id, input.memberIds),
           });
 
-          console.log(`[PROJECT CREATE] Found ${addedMembers.length} members to notify`);
-
           for (const member of addedMembers) {
-            console.log(`[PROJECT CREATE] Processing member: ${member.email}, has email: ${!!member.email}`);
             if (member.email) {
               try {
-                console.log(`[PROJECT CREATE] Sending email to ${member.email}...`);
                 await sendProjectAssignmentEmail(
                   member.email,
                   member.name || member.firstName || 'Team Member',
@@ -249,7 +244,6 @@ export const projectRouter = createTRPCRouter({
                   project.id,
                   currentUser?.name || currentUser?.firstName || undefined
                 );
-                console.log(`[PROJECT CREATE] Email sent successfully to ${member.email}`);
               } catch (emailError) {
                 console.error(`[PROJECT CREATE] Failed to send assignment email to ${member.email}:`, emailError);
               }
@@ -307,9 +301,7 @@ export const projectRouter = createTRPCRouter({
 
           // Send email notifications to newly added members only
           const newMemberIds = input.memberIds.filter(id => !existingMemberIds.has(id));
-          
-          console.log(`[PROJECT UPDATE] Existing members: ${existingMemberIds.size}, New members to notify: ${newMemberIds.length}`);
-          
+
           if (newMemberIds.length > 0) {
             const [currentUser, project, newMembers] = await Promise.all([
               ctx.db.query.users.findFirst({
@@ -323,14 +315,10 @@ export const projectRouter = createTRPCRouter({
               }),
             ]);
 
-            console.log(`[PROJECT UPDATE] Found ${newMembers.length} new members to email for project: ${project?.name}`);
-
             if (project) {
               for (const member of newMembers) {
-                console.log(`[PROJECT UPDATE] Processing member: ${member.email}, has email: ${!!member.email}`);
                 if (member.email) {
                   try {
-                    console.log(`[PROJECT UPDATE] Sending email to ${member.email}...`);
                     await sendProjectAssignmentEmail(
                       member.email,
                       member.name || member.firstName || 'Team Member',
@@ -339,15 +327,12 @@ export const projectRouter = createTRPCRouter({
                       project.id,
                       currentUser?.name || currentUser?.firstName || undefined
                     );
-                    console.log(`[PROJECT UPDATE] Email sent successfully to ${member.email}`);
                   } catch (emailError) {
                     console.error(`[PROJECT UPDATE] Failed to send assignment email to ${member.email}:`, emailError);
                   }
                 }
               }
             }
-          } else {
-            console.log(`[PROJECT UPDATE] No new members to notify (all were already in project)`);
           }
         }
       }
@@ -412,11 +397,25 @@ export const projectRouter = createTRPCRouter({
   createTicket: protectedProcedure
     .input(createTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
+      // Calculate the next ticket number for this project
+      const maxTicketResult = await ctx.db
+        .select({ maxTicketNumber: sql<number>`COALESCE(MAX(${tickets.ticketNumber}), 0)` })
+        .from(tickets)
+        .where(
+          and(
+            eq(tickets.projectId, input.projectId),
+            eq(tickets.orgId, ctx.session.orgId)
+          )
+        );
+
+      const nextTicketNumber = (maxTicketResult[0]?.maxTicketNumber || 0) + 1;
+
       const [ticket] = await ctx.db
         .insert(tickets)
         .values({
           orgId: ctx.session.orgId,
           projectId: input.projectId,
+          ticketNumber: nextTicketNumber,
           title: input.title,
           description: input.description,
           type: (input.type === "FEATURE" ? "STORY" : input.type) as
@@ -756,7 +755,7 @@ export const projectRouter = createTRPCRouter({
           orgId: ctx.session.orgId,
           userId: ctx.session.userId,
           ticketId: input.ticketId,
-          date: format(input.date, "yyyy-MM-dd"),
+          date: formatDateOnly(input.date),
           hours: input.hours.toString(),
           description: input.description || null,
           imageUrl: (input.imageUrl && input.imageUrl.trim() !== "") ? input.imageUrl.trim() : null,
@@ -1199,8 +1198,8 @@ export const projectRouter = createTRPCRouter({
          .innerJoin(projects, eq(tickets.projectId, projects.id))
          .where(and(
              eq(timesheets.orgId, ctx.session.orgId),
-             gte(timesheets.date, format(input.startDate, "yyyy-MM-dd")),
-             lte(timesheets.date, format(input.endDate, "yyyy-MM-dd"))
+             gte(timesheets.date, formatDateOnly(input.startDate)),
+             lte(timesheets.date, formatDateOnly(input.endDate))
          ))
          .groupBy(projects.id, projects.name);
          
@@ -1265,7 +1264,7 @@ export const projectRouter = createTRPCRouter({
               ? entry
               : latest;
           });
-          const dateKey = format(new Date(lastEntry.date), "yyyy-MM-dd");
+          const dateKey = formatDateOnly(new Date(lastEntry.date));
           const currentPoints = completedPointsByDate.get(dateKey) || 0;
           completedPointsByDate.set(
             dateKey,
@@ -1278,7 +1277,7 @@ export const projectRouter = createTRPCRouter({
 
       let cumulativePoints = 0;
       const actualBurndownCumulative = idealBurndown.map((ideal) => {
-        const dateKey = format(ideal.date, "yyyy-MM-dd");
+        const dateKey = formatDateOnly(ideal.date);
         const dayPoints = completedPointsByDate.get(dateKey) || 0;
         cumulativePoints += dayPoints;
         return {

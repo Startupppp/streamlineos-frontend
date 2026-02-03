@@ -62,10 +62,60 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../ui/popover";
+import { viewFile, getSignedFileUrl } from "@/hooks/use-file-url";
 
 const formSchema = updateTicketInputSchema;
 
 type FormValues = z.infer<typeof formSchema>;
+
+// Component to handle attachment image loading with signed URLs
+function AttachmentImage({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadImage = async () => {
+      try {
+        const signedUrl = await getSignedFileUrl(fileUrl);
+        if (mounted) {
+          setImageSrc(signedUrl);
+        }
+      } catch {
+        // Fallback to original URL (might work for local files)
+        if (mounted) {
+          setImageSrc(fileUrl);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadImage();
+    return () => { mounted = false; };
+  }, [fileUrl]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageSrc || fileUrl}
+      alt={fileName}
+      className="object-cover w-full h-full"
+      onError={(e) => {
+        // Hide broken images
+        (e.target as HTMLImageElement).style.display = 'none';
+      }}
+    />
+  );
+}
 
 interface TicketDetailsDialogProps {
   ticketId: number | null;
@@ -214,7 +264,7 @@ export function TicketDetailsDialog({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   <Badge variant="outline" className="font-mono text-xs shrink-0">
-                    #{ticketId}
+                    #{ticket?.ticketNumber ?? ticketId}
                   </Badge>
                   {ticket && (
                     <>
@@ -322,15 +372,14 @@ export function TicketDetailsDialog({
                         <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-3">Attachments</h4>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                           {ticket.attachments.map((att) => (
-                            <a 
+                            <button
                               key={att.id}
-                              href={att.fileUrl} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              className="group relative aspect-video rounded-lg overflow-hidden bg-muted border hover:border-primary/50 transition-all hover:shadow-md"
+                              type="button"
+                              onClick={() => viewFile(att.fileUrl)}
+                              className="group relative aspect-video rounded-lg overflow-hidden bg-muted border hover:border-primary/50 transition-all hover:shadow-md text-left"
                             >
                               {att.mimeType && att.mimeType.startsWith('image/') ? (
-                                <img src={att.fileUrl} alt={att.fileName} className="object-cover w-full h-full" />
+                                <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
                               ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-2 text-center">
                                   {att.fileName}
@@ -339,7 +388,7 @@ export function TicketDetailsDialog({
                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <ExternalLink className="h-5 w-5 text-white" />
                               </div>
-                            </a>
+                            </button>
                           ))}
                         </div>
                       </div>
