@@ -3,7 +3,8 @@
 import { db } from "@/lib/db";
 import { expenses } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or } from "drizzle-orm";
-import { getAuthenticatedMember, isAuthError } from "@/lib/auth-helpers";
+import { getAuthenticatedMember } from "@/lib/auth-helpers";
+import { isAuthError } from "@/lib/auth-types";
 import { format } from "date-fns";
 import { getTodayString } from "@/lib/date-utils";
 

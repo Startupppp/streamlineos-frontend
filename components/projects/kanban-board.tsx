@@ -59,6 +59,7 @@ interface KanbanBoardProps {
     priority?: string;
     points?: number | null;
     timeSpent?: string | null;
+    ticketNumber?: number;
     assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
     order?: number | null;
   }>;
@@ -369,7 +370,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                                     {ticket.priority && (
                                                         <PriorityIcon priority={ticket.priority} />
                                                     )}
-                                                    <span className="text-[10px] text-muted-foreground font-mono">#{ticket.id}</span>
+                                                    <span className="text-[10px] text-muted-foreground font-mono">#{ticket.ticketNumber}</span>
                                                 </div>
 
                                                 {ticket.assignee ? (

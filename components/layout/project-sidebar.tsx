@@ -4,14 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { 
-    ListTodo, 
-    Settings, 
+import {
+    ListTodo,
+    Settings,
     KanbanSquare,
     ChevronLeft,
     ChevronRight,
     Menu,
-    X
+    X,
+    Layers,
+    Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -35,6 +37,8 @@ function ProjectSidebarContent({
     const items = [
         { label: "Board", icon: KanbanSquare, href: `${baseUrl}` },
         { label: "Backlog", icon: ListTodo, href: `${baseUrl}/backlog` },
+        { label: "Sprints", icon: Calendar, href: `${baseUrl}/sprints` },
+        { label: "Epics", icon: Layers, href: `${baseUrl}/epics` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
     ];
 
