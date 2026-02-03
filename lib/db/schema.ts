@@ -450,6 +450,7 @@ export const tickets = pgTable("tickets", {
   status: text("status").notNull().default("TODO"),
   priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),
+  ticketNumber: integer("ticket_number").notNull(), // Per-project ticket number
   sprintId: integer("sprint_id").references(() => sprints.id),
   epicId: integer("epic_id"),
   assigneeId: text("assignee_id").references(() => users.id),

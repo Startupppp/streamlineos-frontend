@@ -305,7 +305,7 @@ export default function BacklogPage({ params }: PageProps) {
             ) : (
               filteredTickets.map((ticket) => (
                 <TableRow key={ticket.id}>
-                  <TableCell className="font-medium">#{ticket.id}</TableCell>
+                  <TableCell className="font-medium">#{ticket.ticketNumber}</TableCell>
                   <TableCell className="max-w-md">
                     <div className="truncate">{ticket.title}</div>
                   </TableCell>
