@@ -21,7 +21,7 @@ export function DailyLog() {
   const workDuration = dailyStats?.workHours || "0.00";
   const breakDuration = dailyStats?.breakHours || "0.00";
   const overtimeDuration = dailyStats?.isOvertime
-    ? (Number(workDuration) - 9.5).toFixed(2)
+    ? (Number(workDuration) - 8).toFixed(2)
     : "0.00";
 
   return (
