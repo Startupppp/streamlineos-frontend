@@ -46,7 +46,7 @@ export const createTicketInputSchema = z.object({
   sprintId: z.number().int().positive().optional(),
   epicId: z.number().int().positive().optional(),
   points: z.number().int().min(0).optional(),
-  link: z.string().optional(),
+  link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   originalEstimate: z.number().positive().optional(),
 });
 
@@ -75,6 +75,9 @@ export const createSprintInputSchema = z.object({
   startDate: z.date(),
   endDate: z.date(),
   goal: z.string().optional(),
+}).refine((data) => data.endDate > data.startDate, {
+  message: "End date must be after start date",
+  path: ["endDate"],
 });
 
 export const updateSprintInputSchema = z.object({
