@@ -20,7 +20,11 @@ import {
   getExpenseRejectedEmailTemplate,
   getExpensePaidEmailTemplate,
   getDocumentExpiryReminderEmailTemplate,
+  getWeeklyAttendanceReportTemplate,
+  getMonthlyExpenseReportTemplate,
 } from "./email-templates";
+import type { MonthlyExpenseReportRow } from "./email-templates";
+import { generateMonthlyExpenseReportPdf } from "./monthly-expense-report-pdf";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
@@ -28,11 +32,18 @@ if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  type: string;
+}
+
 export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: EmailAttachment[];
 }
 
 async function sendEmail(options: EmailOptions) {
@@ -46,6 +57,13 @@ async function sendEmail(options: EmailOptions) {
     return Promise.resolve();
   }
 
+  const attachments = options.attachments?.map((a) => ({
+    content: Buffer.isBuffer(a.content) ? a.content.toString("base64") : a.content,
+    filename: a.filename,
+    type: a.type,
+    disposition: "attachment" as const,
+  }));
+
   try {
     await sgMail.send({
       to: options.to,
@@ -53,6 +71,7 @@ async function sendEmail(options: EmailOptions) {
       subject: options.subject,
       html: options.html,
       text: options.text || options.html.replace(/<[^>]*>/g, ""),
+      ...(attachments?.length ? { attachments } : {}),
     });
     if (process.env.NODE_ENV === "development") {
       console.log(`[EMAIL SENT] To: ${options.to}, Subject: ${options.subject}`);
@@ -496,6 +515,57 @@ export async function sendPayslipGeneratedEmail(
     subject: `Your Payslip for ${month} is Ready`,
     html,
   });
+}
+
+export async function sendWeeklyAttendanceReportEmail(
+  weekRange: string,
+  orgName: string,
+  rows: { name: string; totalHours: string; autoCheckoutDays: number; overtimeDays: number; daysPresent: number }[],
+  recipientEmails: string[]
+) {
+  if (recipientEmails.length === 0) return;
+
+  const subject = `Weekly Attendance Report - ${weekRange}`;
+  const html = getWeeklyAttendanceReportTemplate(weekRange, orgName, rows);
+
+  for (const email of recipientEmails) {
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+}
+
+export async function sendMonthlyExpenseReportEmail(
+  monthLabel: string,
+  orgName: string,
+  rows: MonthlyExpenseReportRow[],
+  summary: { totalAmount: string; totalCount: number; pendingCount: number; approvedCount: number; paidCount: number; rejectedCount: number },
+  recipientEmails: string[]
+) {
+  if (recipientEmails.length === 0) return;
+
+  const subject = `Monthly Expense Report - ${monthLabel}`;
+  const html = getMonthlyExpenseReportTemplate(monthLabel, orgName, rows, summary);
+  const pdfBuffer = await generateMonthlyExpenseReportPdf(monthLabel, orgName, rows, summary);
+  const safeMonthLabel = monthLabel.replace(/\s+/g, "-");
+  const pdfFilename = `Monthly-Expense-Report-${safeMonthLabel}.pdf`;
+
+  for (const email of recipientEmails) {
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+      attachments: [
+        {
+          filename: pdfFilename,
+          content: pdfBuffer,
+          type: "application/pdf",
+        },
+      ],
+    });
+  }
 }
 
 export { sendEmail };
