@@ -3,6 +3,18 @@
     {
       "path": "/api/cron/holiday-notifications",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/auto-checkout",
+      "schedule": "30 18 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-attendance-report",
+      "schedule": "0 9 * * 6"
+    },
+    {
+      "path": "/api/cron/monthly-expense-report",
+      "schedule": "0 9 1 * *"
     }
   ]
 }
