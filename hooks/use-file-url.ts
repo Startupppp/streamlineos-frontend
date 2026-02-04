@@ -62,32 +62,54 @@ export async function viewFile(fileUrl: string): Promise<void> {
 }
 
 /**
- * Downloads a file, handling both local and R2 files
+ * Downloads a file, handling both local and R2 files.
+ * R2 files are proxied through our API to avoid CORS issues with signed URLs.
  */
 export async function downloadFile(fileUrl: string, fileName?: string): Promise<void> {
   try {
-    const url = await getSignedFileUrl(fileUrl);
+    const downloadFileName = fileName || extractFileName(fileUrl);
 
-    // Fetch the file and trigger download
+    // For R2 files, use our API as a proxy so the browser doesn't hit CORS on the R2 domain
+    if (!isLocalUrl(fileUrl)) {
+      const response = await fetch(
+        `/api/storage/download?url=${encodeURIComponent(fileUrl)}&attachment=1`
+      );
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? "Failed to download file");
+      }
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = downloadFileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Download started");
+      return;
+    }
+
+    // Local files: get URL and fetch same-origin
+    const url = await getSignedFileUrl(fileUrl);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error("Failed to download file");
     }
-
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
-
     const link = document.createElement("a");
     link.href = blobUrl;
-    link.download = fileName || extractFileName(fileUrl);
+    link.download = downloadFileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(blobUrl);
-
     toast.success("Download started");
-  } catch {
-    toast.error("Failed to download file");
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to download file";
+    toast.error(message);
   }
 }
 
