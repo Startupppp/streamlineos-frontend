@@ -537,7 +537,7 @@ export const hrRouter = createTRPCRouter({
     }
     
     const totalDailyWork = previousWorkHours + sessionWorkHours;
-    const isOvertime = totalDailyWork > 9.5;
+    const isOvertime = totalDailyWork > 8;
 
     await ctx.db
       .update(attendance)
@@ -1388,13 +1388,14 @@ export const hrRouter = createTRPCRouter({
       const basicSalary = salaryStructure ? parseFloat(salaryStructure.basicSalary) : monthlySalary * 0.5;
       const hra = salaryStructure ? (parseFloat(salaryStructure.basicSalary) * parseFloat(salaryStructure.hraPercentage || "40") / 100) : monthlySalary * 0.5;
       const bonus = input.bonus || 0;
-      
+      const overtimeAmount = input.overtimeAmount || 0;
+
       // Deductions
       const professionalTax = 200;
       const otherDeductions = input.otherDeductions || 0;
       const totalDeductions = professionalTax + lopDeduction + halfDayDeduction + otherDeductions;
-      
-      const grossSalary = monthlySalary + bonus;
+
+      const grossSalary = monthlySalary + bonus + overtimeAmount;
       const netSalary = grossSalary - totalDeductions;
 
       const existing = await ctx.db.query.payrolls.findFirst({
@@ -1412,6 +1413,10 @@ export const hrRouter = createTRPCRouter({
         deductions: totalDeductions.toString(),
         grossSalary: grossSalary.toString(),
         netSalary: netSalary.toString(),
+        overtimeType: input.overtimeType || null,
+        overtimeDays: (input.overtimeDays || 0).toString(),
+        overtimeHours: (input.overtimeHours || 0).toString(),
+        overtimeAmount: overtimeAmount.toString(),
         status: "DRAFT" as const,
         generatedBy: ctx.session.userId,
       };
