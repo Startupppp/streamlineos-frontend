@@ -81,6 +81,12 @@ export default function PayrollPage() {
   const [otherDeductions, setOtherDeductions] = useState<string>("");
   const [bonus, setBonus] = useState<string>("");
 
+  // Overtime inputs
+  const [overtimeType, setOvertimeType] = useState<string>("");
+  const [overtimeDays, setOvertimeDays] = useState<string>("");
+  const [overtimeHours, setOvertimeHours] = useState<string>("");
+  const [overtimeAmount, setOvertimeAmount] = useState<string>("");
+
   const { data: allPayrolls, isLoading, refetch } = api.hr.getAllPayrolls.useQuery({
     month: selectedMonth,
   });
@@ -108,10 +114,11 @@ export default function PayrollPage() {
     const hra = monthlySalary * 0.5;
     const professionalTax = 200;
     
-    const grossSalary = monthlySalary + (parseFloat(bonus) || 0);
+    const otAmt = parseFloat(overtimeAmount) || 0;
+    const grossSalary = monthlySalary + (parseFloat(bonus) || 0) + otAmt;
     const totalDeductions = lopDeduction + halfDayDeduction + professionalTax + (parseFloat(otherDeductions) || 0);
     const netSalary = grossSalary - totalDeductions;
-    
+
     return {
       basicPay,
       hra,
@@ -121,6 +128,10 @@ export default function PayrollPage() {
       professionalTax,
       otherDeductions: parseFloat(otherDeductions) || 0,
       bonus: parseFloat(bonus) || 0,
+      overtimeAmount: otAmt,
+      overtimeType,
+      overtimeDays: parseFloat(overtimeDays) || 0,
+      overtimeHours: parseFloat(overtimeHours) || 0,
       totalDeductions,
       netSalary,
       lopDays: parseFloat(lopDays) || 0,
@@ -128,7 +139,7 @@ export default function PayrollPage() {
       workingDays,
       effectiveDays: workingDays - (parseFloat(lopDays) || 0) - ((parseFloat(halfDays) || 0) * 0.5),
     };
-  }, [selectedEmployeeData, lopDays, halfDays, otherDeductions, bonus]);
+  }, [selectedEmployeeData, lopDays, halfDays, otherDeductions, bonus, overtimeType, overtimeDays, overtimeHours, overtimeAmount]);
 
   const generatePayrollMutation = api.hr.generatePayroll.useMutation({
     onSuccess: () => {
@@ -179,6 +190,10 @@ export default function PayrollPage() {
     setHalfDays("");
     setOtherDeductions("");
     setBonus("");
+    setOvertimeType("");
+    setOvertimeDays("");
+    setOvertimeHours("");
+    setOvertimeAmount("");
   };
 
   const handleGenerateAll = () => {
@@ -202,6 +217,10 @@ export default function PayrollPage() {
       halfDays: parseFloat(halfDays) || 0,
       otherDeductions: parseFloat(otherDeductions) || 0,
       bonus: parseFloat(bonus) || 0,
+      overtimeType: overtimeType === "days" || overtimeType === "hours" ? overtimeType : undefined,
+      overtimeDays: parseFloat(overtimeDays) || 0,
+      overtimeHours: parseFloat(overtimeHours) || 0,
+      overtimeAmount: parseFloat(overtimeAmount) || 0,
     });
   };
 
@@ -347,6 +366,66 @@ export default function PayrollPage() {
                             </div>
                           </div>
                         </div>
+
+                        <Separator />
+
+                        {/* Overtime */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-sm text-muted-foreground">Overtime</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Overtime Type</Label>
+                              <Select value={overtimeType} onValueChange={setOvertimeType}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="days">Days</SelectItem>
+                                  <SelectItem value="hours">Hours</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {overtimeType === "days" && (
+                              <div className="space-y-2">
+                                <Label htmlFor="overtimeDays">Overtime Days</Label>
+                                <Input
+                                  id="overtimeDays"
+                                  type="number"
+                                  min="0"
+                                  value={overtimeDays}
+                                  onChange={(e) => setOvertimeDays(e.target.value)}
+                                  placeholder="0"
+                                />
+                              </div>
+                            )}
+                            {overtimeType === "hours" && (
+                              <div className="space-y-2">
+                                <Label htmlFor="overtimeHours">Overtime Hours</Label>
+                                <Input
+                                  id="overtimeHours"
+                                  type="number"
+                                  min="0"
+                                  value={overtimeHours}
+                                  onChange={(e) => setOvertimeHours(e.target.value)}
+                                  placeholder="0"
+                                />
+                              </div>
+                            )}
+                          </div>
+                          {overtimeType && (
+                            <div className="space-y-2">
+                              <Label htmlFor="overtimeAmount">Overtime Amount (₹)</Label>
+                              <Input
+                                id="overtimeAmount"
+                                type="number"
+                                min="0"
+                                value={overtimeAmount}
+                                onChange={(e) => setOvertimeAmount(e.target.value)}
+                                placeholder="0"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </>
                     )}
 
@@ -396,6 +475,19 @@ export default function PayrollPage() {
                               <div className="flex justify-between text-green-600">
                                 <span>Bonus / Incentive</span>
                                 <span>+₹{payslipPreview?.bonus.toLocaleString()}</span>
+                              </div>
+                            )}
+                            {(payslipPreview?.overtimeAmount || 0) > 0 && (
+                              <div className="flex justify-between text-green-600">
+                                <span>
+                                  Overtime Pay
+                                  {payslipPreview?.overtimeType === "days"
+                                    ? ` (${payslipPreview.overtimeDays} days)`
+                                    : payslipPreview?.overtimeType === "hours"
+                                    ? ` (${payslipPreview.overtimeHours} hrs)`
+                                    : ""}
+                                </span>
+                                <span>+₹{payslipPreview?.overtimeAmount.toLocaleString()}</span>
                               </div>
                             )}
                             <Separator className="my-2" />
