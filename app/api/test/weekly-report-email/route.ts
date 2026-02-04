@@ -1,0 +1,48 @@
+import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email";
+import { getWeeklyAttendanceReportTemplate } from "@/lib/email-templates";
+
+const TEST_EMAIL = "tarunchintakunta@gmail.com";
+
+/** Sample data matching the real weekly report shape */
+const SAMPLE_ROWS = [
+  { name: "Alice Smith", totalHours: "42.5", autoCheckoutDays: 0, overtimeDays: 2, daysPresent: 5 },
+  { name: "Bob Johnson", totalHours: "38.0", autoCheckoutDays: 1, overtimeDays: 0, daysPresent: 5 },
+  { name: "Carol Williams", totalHours: "45.0", autoCheckoutDays: 0, overtimeDays: 3, daysPresent: 5 },
+];
+
+/**
+ * GET /api/test/weekly-report-email
+ * Sends a sample weekly attendance report to the test email.
+ * Only allowed when NODE_ENV=development or ALLOW_TEST_EMAIL=1.
+ */
+export async function GET() {
+  const allowed =
+    process.env.NODE_ENV === "development" ||
+    process.env.ALLOW_TEST_EMAIL === "1";
+  if (!allowed) {
+    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  }
+
+  const weekRange = "Jan 27 - Feb 02, 2025";
+  const orgName = "Vaivamm Capital";
+
+  try {
+    const html = getWeeklyAttendanceReportTemplate(weekRange, orgName, SAMPLE_ROWS);
+    await sendEmail({
+      to: TEST_EMAIL,
+      subject: `[Test] Weekly Attendance Report - ${weekRange}`,
+      html,
+    });
+    return NextResponse.json({
+      success: true,
+      message: `Test weekly report sent to ${TEST_EMAIL}`,
+    });
+  } catch (error) {
+    console.error("Test weekly report email error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to send test email" },
+      { status: 500 }
+    );
+  }
+}
