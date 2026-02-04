@@ -162,6 +162,10 @@ export default function MyPayslipsPage() {
   const grossSalary = parseFloat(selectedPayslip?.grossSalary || "0");
   const deductions = parseFloat(selectedPayslip?.deductions || "0");
   const netSalary = parseFloat(selectedPayslip?.netSalary || "0");
+  const overtimeAmount = parseFloat(selectedPayslip?.overtimeAmount || "0");
+  const overtimeType = selectedPayslip?.overtimeType;
+  const overtimeDays = parseFloat(selectedPayslip?.overtimeDays || "0");
+  const overtimeHoursVal = parseFloat(selectedPayslip?.overtimeHours || "0");
 
   const getBankName = () => {
     if (!selectedPayslip?.user?.bankDetails) return "-";
@@ -355,6 +359,20 @@ export default function MyPayslipsPage() {
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
                   </tr>
+                  {overtimeAmount > 0 && (
+                    <tr>
+                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>
+                        {overtimeType === "days"
+                          ? `Overtime Pay (${overtimeDays} days)`
+                          : overtimeType === "hours"
+                          ? `Overtime Pay (${overtimeHoursVal} hours)`
+                          : "Overtime Pay"}
+                      </td>
+                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{overtimeAmount.toLocaleString()}/-</td>
+                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
+                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
+                    </tr>
+                  )}
                   <tr style={{ backgroundColor: "#f9fafb" }}>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", fontWeight: 600, color: "#111827" }}>Total Earnings</td>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>₹{grossSalary.toLocaleString()}/-</td>
