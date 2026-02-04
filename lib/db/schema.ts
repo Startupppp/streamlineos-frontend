@@ -186,6 +186,7 @@ export const attendance = pgTable("attendance", {
   breaks: jsonb("breaks").$type<{ start: string; end?: string }[]>().default([]),
   locationData: jsonb("location_data"),
   isOvertime: boolean("is_overtime").default(false),
+  autoCheckedOut: boolean("auto_checked_out").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -245,6 +246,10 @@ export const payrolls = pgTable("payrolls", {
   status: payrollStatusEnum("status").default("DRAFT"),
   generatedBy: text("generated_by").references(() => users.id),
   approvedBy: text("approved_by").references(() => users.id),
+  overtimeType: text("overtime_type"),
+  overtimeDays: decimal("overtime_days").default("0"),
+  overtimeHours: decimal("overtime_hours").default("0"),
+  overtimeAmount: decimal("overtime_amount").default("0"),
   payslipUrl: text("payslip_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
