@@ -117,7 +117,7 @@ export function ExpenseFilterBar({
   };
 
   const categoryOptions = [
-    { value: "", label: "All Categories" },
+    { value: "all", label: "All Categories" },
     ...categories.map((c) => ({ value: c.name, label: c.name })),
   ];
 
@@ -228,8 +228,10 @@ export function ExpenseFilterBar({
 
         {/* Category Filter */}
         <Select
-          value={filters.category || ""}
-          onValueChange={(value) => onFilterChange("category", value || undefined)}
+          value={filters.category || "all"}
+          onValueChange={(value) =>
+            onFilterChange("category", value === "all" ? undefined : value)
+          }
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Category" />
