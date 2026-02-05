@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
 import { getMonthlyExpenseReportTemplate } from "@/lib/email-templates";
-import { generateMonthlyExpenseReportPdf } from "@/lib/monthly-expense-report-pdf";
+import { generateMonthlyExpenseReportXlsx } from "@/lib/monthly-expense-report-xlsx";
 
 const TEST_EMAIL = "tarunchintakunta@gmail.com";
 
@@ -44,7 +44,7 @@ export async function GET() {
       SAMPLE_ROWS,
       SAMPLE_SUMMARY
     );
-    const pdfBuffer = await generateMonthlyExpenseReportPdf(
+    const xlsxBuffer = generateMonthlyExpenseReportXlsx(
       monthLabel,
       orgName,
       SAMPLE_ROWS,
@@ -56,15 +56,15 @@ export async function GET() {
       html,
       attachments: [
         {
-          filename: "Monthly-Expense-Report-January-2025.pdf",
-          content: pdfBuffer,
-          type: "application/pdf",
+          filename: "Monthly-Expense-Report-January-2025.xlsx",
+          content: xlsxBuffer,
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         },
       ],
     });
     return NextResponse.json({
       success: true,
-      message: `Test monthly expense report (with PDF) sent to ${TEST_EMAIL}`,
+      message: `Test monthly expense report (with XLSX) sent to ${TEST_EMAIL}`,
     });
   } catch (error) {
     console.error("Test monthly expense report email error:", error);
