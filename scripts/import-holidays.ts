@@ -19,7 +19,22 @@ interface HolidayEntry {
   message?: string;
 }
 
+// 2026 holidays (format: date as YYYY-MM-DD)
 const YOUR_HOLIDAYS: HolidayEntry[] = [
+  { name: "New Year Eve", date: "2026-01-01" },
+  { name: "Bhogi", date: "2026-01-13" },
+  { name: "Makar Sankranthi", date: "2026-01-14" },
+  { name: "Republic Day", date: "2026-01-26" },
+  { name: "Holi", date: "2026-03-04" },
+  { name: "Ugadi", date: "2026-03-19" },
+  { name: "Eid", date: "2026-03-21" },
+  { name: "Bakrid", date: "2026-05-27" },
+  { name: "Independence Day", date: "2026-08-15" },
+  { name: "Ganesh Chaturthi", date: "2026-09-14" },
+  { name: "Gandhi Jayanthi", date: "2026-10-02" },
+  { name: "Dussehra", date: "2026-10-20" },
+  { name: "Diwali", date: "2026-11-08" },
+  { name: "Christmas Day", date: "2026-12-25" },
 ];
 
 async function importHolidays() {
