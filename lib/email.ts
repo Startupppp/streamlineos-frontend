@@ -24,7 +24,7 @@ import {
   getMonthlyExpenseReportTemplate,
 } from "./email-templates";
 import type { MonthlyExpenseReportRow } from "./email-templates";
-import { generateMonthlyExpenseReportPdf } from "./monthly-expense-report-pdf";
+import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
@@ -548,9 +548,9 @@ export async function sendMonthlyExpenseReportEmail(
 
   const subject = `Monthly Expense Report - ${monthLabel}`;
   const html = getMonthlyExpenseReportTemplate(monthLabel, orgName, rows, summary);
-  const pdfBuffer = await generateMonthlyExpenseReportPdf(monthLabel, orgName, rows, summary);
+  const xlsxBuffer = generateMonthlyExpenseReportXlsx(monthLabel, orgName, rows, summary);
   const safeMonthLabel = monthLabel.replace(/\s+/g, "-");
-  const pdfFilename = `Monthly-Expense-Report-${safeMonthLabel}.pdf`;
+  const xlsxFilename = `Monthly-Expense-Report-${safeMonthLabel}.xlsx`;
 
   for (const email of recipientEmails) {
     await sendEmail({
@@ -559,9 +559,9 @@ export async function sendMonthlyExpenseReportEmail(
       html,
       attachments: [
         {
-          filename: pdfFilename,
-          content: pdfBuffer,
-          type: "application/pdf",
+          filename: xlsxFilename,
+          content: xlsxBuffer,
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         },
       ],
     });
