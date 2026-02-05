@@ -95,6 +95,15 @@ const PAYMENT_METHODS = [
   "Personal Card",
   "Bank Transfer",
   "UPI",
+  "Online",
+  "Offline",
+  "Cheque",
+  "NEFT",
+  "IMPS",
+  "Debit Card",
+  "Credit Card",
+  "Wallet",
+  "Demand Draft",
   "Other",
 ];
 

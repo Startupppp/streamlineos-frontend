@@ -72,6 +72,15 @@ const PAYMENT_METHODS = [
   { value: "Personal Card", label: "Personal Card" },
   { value: "Bank Transfer", label: "Bank Transfer" },
   { value: "UPI", label: "UPI" },
+  { value: "Online", label: "Online" },
+  { value: "Offline", label: "Offline" },
+  { value: "Cheque", label: "Cheque" },
+  { value: "NEFT", label: "NEFT" },
+  { value: "IMPS", label: "IMPS" },
+  { value: "Debit Card", label: "Debit Card" },
+  { value: "Credit Card", label: "Credit Card" },
+  { value: "Wallet", label: "Wallet" },
+  { value: "Demand Draft", label: "Demand Draft" },
   { value: "Other", label: "Other" },
 ];
 
