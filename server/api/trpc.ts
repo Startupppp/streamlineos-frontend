@@ -52,14 +52,13 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
     limit: 1,
   });
 
-  let orgId = userMemberships[0]?.orgId || null;
+  const orgId = userMemberships[0]?.orgId;
 
-  // Fallback: If no membership, try to find ANY organization (Development fallback)
   if (!orgId) {
-    const anyOrg = await ctx.db.query.organizations.findFirst();
-    if (anyOrg) {
-      orgId = anyOrg.id;
-    }
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not a member of any organization.",
+    });
   }
 
   return next({
@@ -68,7 +67,7 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
         ...ctx.session,
         userId: ctx.session.user.id,
         user: ctx.session.user,
-        orgId: orgId || "",
+        orgId,
       },
     },
   });

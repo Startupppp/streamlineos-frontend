@@ -4,10 +4,10 @@ import postgres from 'postgres';
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
+  throw new Error("DATABASE_URL environment variable is required.");
 }
-const safeConnectionString = connectionString || "postgres://user:pass@localhost:5432/db_placeholder";
 
 import * as schema from "./db/schema";
 
-export const client = postgres(safeConnectionString, { prepare: false });
+export const client = postgres(connectionString, { prepare: false });
 export const db = drizzle(client, { schema });

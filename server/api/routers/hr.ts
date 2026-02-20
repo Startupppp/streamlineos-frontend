@@ -88,6 +88,30 @@ export const hrRouter = createTRPCRouter({
   updateProfile: protectedProcedure
     .input(updateProfileInputSchema)
     .mutation(async ({ ctx, input }) => {
+      // Verify the target user belongs to the same organization
+      const targetMember = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, input.userId),
+          eq(organizationMembers.orgId, ctx.session.orgId)
+        ),
+      });
+      if (!targetMember) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "User not found in your organization.",
+        });
+      }
+
+      // Only allow self-update or OWNER/ADMIN
+      const isSelf = ctx.session.userId === input.userId;
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (!isSelf && !isOwnerOrAdmin) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only update your own profile.",
+        });
+      }
+
       await ctx.db
         .update(users)
         .set({

@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { getMonthlyExpenseReportTemplate } from "@/lib/email-templates";
 import { generateMonthlyExpenseReportXlsx } from "@/lib/monthly-expense-report-xlsx";
@@ -32,6 +33,11 @@ export async function GET() {
     process.env.ALLOW_TEST_EMAIL === "1";
   if (!allowed) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  }
+
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const monthLabel = "January 2025";

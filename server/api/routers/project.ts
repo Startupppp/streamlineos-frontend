@@ -274,6 +274,24 @@ export const projectRouter = createTRPCRouter({
   updateProjectSettings: protectedProcedure
     .input(updateProjectSettingsInputSchema)
     .mutation(async ({ ctx, input }) => {
+      // Verify user has permission: OWNER/ADMIN or project manager
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (!isOwnerOrAdmin) {
+        const project = await ctx.db.query.projects.findFirst({
+          where: and(
+            eq(projects.id, input.projectId),
+            eq(projects.orgId, ctx.session.orgId)
+          ),
+          columns: { managerId: true },
+        });
+        if (!project || project.managerId !== ctx.session.userId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only project managers or admins can update project settings.",
+          });
+        }
+      }
+
       await ctx.db
         .update(projects)
         .set({

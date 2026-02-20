@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { getWeeklyAttendanceReportTemplate } from "@/lib/email-templates";
 
@@ -22,6 +23,11 @@ export async function GET() {
     process.env.ALLOW_TEST_EMAIL === "1";
   if (!allowed) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  }
+
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const weekRange = "Jan 27 - Feb 02, 2025";
