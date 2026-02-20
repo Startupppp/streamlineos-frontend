@@ -428,11 +428,10 @@ export const projectRouter = createTRPCRouter({
           ticketNumber: nextTicketNumber,
           title: input.title,
           description: input.description,
-          type: (input.type === "FEATURE" ? "STORY" : input.type) as
-            | "EPIC"
-            | "STORY"
-            | "TASK"
-            | "BUG",
+          type: (() => {
+            const t = input.type.toUpperCase();
+            return (t === "FEATURE" ? "STORY" : t);
+          })(),
           priority: input.priority || "MEDIUM",
           assigneeId: input.assigneeId,
           reporterId: input.reporterId || ctx.session.userId,
@@ -498,7 +497,8 @@ export const projectRouter = createTRPCRouter({
         updateFields.description = updateData.description;
       }
       if (updateData.type) {
-        updateFields.type = updateData.type;
+        const t = updateData.type.toUpperCase();
+        updateFields.type = t === "FEATURE" ? "STORY" : t;
       }
       if (updateData.status) {
         updateFields.status = updateData.status;
@@ -1357,18 +1357,18 @@ export const projectRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
         if (input.statusIds.length === 0) return;
 
-        // Build CASE statement for bulk update (single query instead of N queries)
-        const caseStatements = input.statusIds
-          .map((id, index) => `WHEN id = ${id} THEN ${index}`)
-          .join(' ');
-
-        await ctx.db.execute(sql`
-          UPDATE project_statuses
-          SET "order" = CASE ${sql.raw(caseStatements)} END
-          WHERE id IN ${input.statusIds}
-            AND project_id = ${input.projectId}
-            AND org_id = ${ctx.session.orgId}
-        `);
+        // Use transaction with parameterized updates (safe from SQL injection)
+        await ctx.db.transaction(async (tx) => {
+            for (let i = 0; i < input.statusIds.length; i++) {
+                await tx.update(projectStatuses)
+                    .set({ order: i })
+                    .where(and(
+                        eq(projectStatuses.id, input.statusIds[i]),
+                        eq(projectStatuses.projectId, input.projectId),
+                        eq(projectStatuses.orgId, ctx.session.orgId)
+                    ));
+            }
+        });
     }),
   deleteProjectStatus: protectedProcedure
     .input(z.object({
@@ -1419,27 +1419,21 @@ export const projectRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
         if (input.items.length === 0) return;
 
-        // For ticket order updates, we need to update status and order together
-        // Use a transaction with bulk update using CASE statements
-        const ticketIds = input.items.map(item => item.id);
-
-        const statusCases = input.items
-          .map(item => `WHEN id = ${item.id} THEN '${item.status}'`)
-          .join(' ');
-
-        const orderCases = input.items
-          .map(item => `WHEN id = ${item.id} THEN ${item.order}`)
-          .join(' ');
-
-        await ctx.db.execute(sql`
-          UPDATE tickets
-          SET
-            status = CASE ${sql.raw(statusCases)} END,
-            "order" = CASE ${sql.raw(orderCases)} END,
-            updated_at = NOW()
-          WHERE id IN ${ticketIds}
-            AND org_id = ${ctx.session.orgId}
-        `);
+        // Use transaction with parameterized updates (safe from SQL injection)
+        await ctx.db.transaction(async (tx) => {
+            for (const item of input.items) {
+                await tx.update(tickets)
+                    .set({
+                        status: item.status,
+                        order: item.order,
+                        updatedAt: new Date(),
+                    })
+                    .where(and(
+                        eq(tickets.id, item.id),
+                        eq(tickets.orgId, ctx.session.orgId)
+                    ));
+            }
+        });
     }),
   deleteProject: protectedProcedure
     .input(z.object({ projectId: z.number() }))

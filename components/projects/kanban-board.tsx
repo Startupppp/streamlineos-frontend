@@ -370,7 +370,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                                     {ticket.priority && (
                                                         <PriorityIcon priority={ticket.priority} />
                                                     )}
-                                                    <span className="text-[10px] text-muted-foreground font-mono">#{ticket.ticketNumber}</span>
+                                                    <span className="text-[10px] text-muted-foreground font-mono">#{ticket.ticketNumber ?? ticket.id}</span>
                                                 </div>
 
                                                 {ticket.assignee ? (

@@ -98,6 +98,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 title: t.title,
                 status: t.status ?? "TODO",
                 type: t.type ?? "TASK",
+                priority: t.priority ?? undefined,
+                points: t.points ?? undefined,
+                timeSpent: t.timeSpent ?? undefined,
+                ticketNumber: t.ticketNumber,
+                order: t.order ?? undefined,
                 assignee: t.assignee
                   ? {
                       id: t.assignee.id,
