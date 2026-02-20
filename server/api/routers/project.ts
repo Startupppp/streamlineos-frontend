@@ -14,7 +14,7 @@ import {
   projectStatuses,
   projectMembers,
 } from "../../../lib/db/schema";
-import { eq, and, desc, sql, or, inArray, gte, lte } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, inArray, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { differenceInCalendarDays, addDays } from "date-fns";
 import { formatDateOnly } from "../../../lib/date-utils";
@@ -147,6 +147,9 @@ export const projectRouter = createTRPCRouter({
           eq(projects.orgId, ctx.session.orgId)
         ),
         with: {
+          statuses: {
+            orderBy: [asc(projectStatuses.order)],
+          },
           members: {
              with: {
                  user: true
@@ -462,7 +465,8 @@ export const projectRouter = createTRPCRouter({
           points: input.points,
           link: input.link,
           originalEstimate: input.originalEstimate?.toString(),
-          status: "TODO",
+          parentTicketId: input.parentTicketId,
+          status: input.status || "TODO",
         })
         .returning();
 
@@ -1505,6 +1509,21 @@ export const projectRouter = createTRPCRouter({
       await ctx.db.delete(projects).where(eq(projects.id, input.projectId));
 
       return { success: true };
+    }),
+
+  getSubtasks: protectedProcedure
+    .input(z.object({ parentTicketId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.query.tickets.findMany({
+        where: and(
+          eq(tickets.parentTicketId, input.parentTicketId),
+          eq(tickets.orgId, ctx.session.orgId)
+        ),
+        with: {
+          assignee: true,
+        },
+        orderBy: [desc(tickets.createdAt)],
+      });
     }),
 
   getEmployeeProjects: protectedProcedure

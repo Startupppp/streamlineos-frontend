@@ -8,6 +8,34 @@ import {
   getFileNameFromKey,
   isStorageConfigured,
 } from "../../../../lib/storage";
+import { existsSync } from "fs";
+import { readFile } from "fs/promises";
+import path from "path";
+const MIME_MAP: Record<string, string> = {
+  ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+  ".gif": "image/gif", ".webp": "image/webp", ".pdf": "application/pdf",
+  ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".xls": "application/vnd.ms-excel", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
+
+function getMimeType(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  return MIME_MAP[ext] || "application/octet-stream";
+}
+
+function resolveLocalPath(fileKey: string): string | null {
+  const candidates = [
+    path.join(process.cwd(), "public", "uploads", fileKey),
+    path.join(process.cwd(), "public", fileKey),
+  ];
+  if (fileKey.startsWith("/")) {
+    candidates.push(path.join(process.cwd(), "public", fileKey));
+  }
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -39,21 +67,49 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Stream file through API to avoid CORS when client downloads (R2 signed URLs often block browser fetch)
-    if (attachment && isStorageConfigured()) {
-      const { body, contentType } = await getFileStream(fileKey);
-      const filename = getFileNameFromKey(fileKey);
-      const webStream = Readable.toWeb(body) as ReadableStream;
-      return new NextResponse(webStream, {
-        headers: {
-          "Content-Type": contentType ?? "application/octet-stream",
-          "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "%22")}"`,
-        },
-      });
+    // Try R2 first if configured
+    if (isStorageConfigured()) {
+      try {
+        if (attachment) {
+          const { body, contentType } = await getFileStream(fileKey);
+          const filename = getFileNameFromKey(fileKey);
+          const webStream = Readable.toWeb(body) as ReadableStream;
+          return new NextResponse(webStream, {
+            headers: {
+              "Content-Type": contentType ?? "application/octet-stream",
+              "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "%22")}"`,
+            },
+          });
+        }
+        const signedUrl = await getFileUrl(fileKey, expiresIn);
+        return NextResponse.json({ url: signedUrl });
+      } catch {
+        // R2 failed — fall through to local
+      }
     }
 
-    const signedUrl = await getFileUrl(fileKey, expiresIn);
-    return NextResponse.json({ url: signedUrl });
+    // Fallback: serve from local filesystem
+    const localPath = resolveLocalPath(fileKey);
+    if (localPath) {
+      if (attachment) {
+        const buffer = await readFile(localPath);
+        const filename = getFileNameFromKey(fileKey);
+        const mimeType = getMimeType(localPath);
+        return new NextResponse(buffer, {
+          headers: {
+            "Content-Type": mimeType,
+            "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "%22")}"`,
+          },
+        });
+      }
+      const localUrl = `/uploads/${fileKey}`;
+      return NextResponse.json({ url: localUrl });
+    }
+
+    return NextResponse.json(
+      { error: "File not found" },
+      { status: 404 }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to generate download URL" },

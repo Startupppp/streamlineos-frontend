@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { expenses, expenseCategories, organizationMembers } from "@/lib/db/schema";
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
@@ -28,6 +28,62 @@ export async function createExpense(data: CreateExpenseInput) {
   });
 
   if (!member) return { error: "Not a member of any organization" };
+
+  // Duplicate detection: same user, amount, date, merchant
+  const duplicateCheck = await db.query.expenses.findFirst({
+    where: and(
+      eq(expenses.orgId, member.orgId),
+      eq(expenses.userId, session.user.id),
+      eq(expenses.amount, data.amount.toString()),
+      eq(expenses.expenseDate, data.expenseDate),
+      ...(data.merchant ? [eq(expenses.merchant, data.merchant)] : []),
+    ),
+    columns: { id: true },
+  });
+  if (duplicateCheck) {
+    return {
+      error: "Duplicate expense detected. An expense with the same amount, date, and merchant already exists.",
+      isDuplicate: true,
+    };
+  }
+
+  // Policy limit: check category budget if categoryId is provided
+  if (data.categoryId) {
+    const cat = await db.query.expenseCategories.findFirst({
+      where: eq(expenseCategories.id, data.categoryId),
+    });
+    if (cat?.budgetLimit && parseFloat(cat.budgetLimit) > 0) {
+      const period = (cat.budgetPeriod || "MONTHLY").toUpperCase();
+      const now = new Date();
+      let periodStart: string;
+      if (period === "YEARLY") {
+        periodStart = `${now.getFullYear()}-01-01`;
+      } else {
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        periodStart = `${now.getFullYear()}-${m}-01`;
+      }
+      const [spent] = await db
+        .select({ total: sql<string>`COALESCE(SUM(${expenses.amount}::numeric), 0)` })
+        .from(expenses)
+        .where(
+          and(
+            eq(expenses.orgId, member.orgId),
+            eq(expenses.userId, session.user.id),
+            eq(expenses.categoryId, data.categoryId),
+            gte(expenses.expenseDate, periodStart),
+          )
+        );
+      const totalSpent = parseFloat(spent?.total ?? "0") + data.amount;
+      const limit = parseFloat(cat.budgetLimit);
+      if (totalSpent > limit) {
+        const remaining = Math.max(0, limit - parseFloat(spent?.total ?? "0"));
+        return {
+          error: `This expense would exceed the ${period.toLowerCase()} budget limit of ₹${limit.toLocaleString()} for "${cat.name}". You have ₹${remaining.toLocaleString()} remaining.`,
+          isOverBudget: true,
+        };
+      }
+    }
+  }
 
   try {
     const [expense] = await db.insert(expenses).values({

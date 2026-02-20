@@ -48,6 +48,8 @@ export const createTicketInputSchema = z.object({
   points: z.number().int().min(0).optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   originalEstimate: z.number().positive().optional(),
+  parentTicketId: z.number().int().positive().optional(),
+  status: z.string().optional(),
 });
 
 export const updateTicketInputSchema = z.object({

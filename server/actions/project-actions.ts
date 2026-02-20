@@ -71,28 +71,28 @@ export async function createProject(data: {
     });
     if (!member) return { error: "No organization found" };
 
-    // Validate Key
-    if (!/^[A-Z]+$/.test(data.key)) {
+    // Validate Key: uppercase letters only (optional trailing digits for auto-resolve)
+    const baseKey = data.key.replace(/[^A-Za-z]/g, "").toUpperCase() || "PROJ";
+    if (!/^[A-Z]+$/.test(baseKey)) {
         return { error: "Project Key must be uppercase letters only (e.g. PROJ)" };
     }
 
-    // Check if key exists in org
-    const existing = await db.query.projects.findFirst({
-        where: and(
-            eq(projects.orgId, member.orgId),
-            eq(projects.key, data.key)
-        )
-    });
-
-    if (existing) {
-        return { error: "Project Key already exists" };
+    // Find an available key (key is unique globally in DB)
+    let keyToUse = baseKey;
+    for (let n = 2; n < 1000; n++) {
+        const existing = await db.query.projects.findFirst({
+            where: eq(projects.key, keyToUse),
+            columns: { id: true },
+        });
+        if (!existing) break;
+        keyToUse = `${baseKey}${n}`;
     }
 
     try {
         const [project] = await db.insert(projects).values({
             orgId: member.orgId,
             name: data.name,
-            key: data.key,
+            key: keyToUse,
             description: data.description,
             managerId: data.managerId || session.user.id,
             status: "ACTIVE"
