@@ -687,6 +687,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   manager: one(users, {
     fields: [projects.managerId],
     references: [users.id],
+    relationName: "projectManager"
   }),
   client: one(users, {
     fields: [projects.clientId],
@@ -694,6 +695,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     relationName: "projectClient"
   }),
   members: many(projectMembers),
+  statuses: many(projectStatuses, { relationName: "projectStatuses" }),
 }));
 
 export const sprintsRelations = relations(sprints, ({ one, many }) => ({
@@ -702,7 +704,6 @@ export const sprintsRelations = relations(sprints, ({ one, many }) => ({
     references: [projects.id],
   }),
   tickets: many(tickets),
-  statuses: many(projectStatuses),
 }));
 
 export const projectStatusesRelations = relations(projectStatuses, ({ one }) => ({

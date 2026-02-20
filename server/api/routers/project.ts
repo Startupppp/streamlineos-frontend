@@ -104,15 +104,9 @@ export const projectRouter = createTRPCRouter({
   getProjectDetails: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      // Everyone must be manager or member to access project details
-      const memberOf = await ctx.db
-            .select({ projectId: projectMembers.projectId })
-            .from(projectMembers)
-            .where(and(eq(projectMembers.userId, ctx.session.userId), eq(projectMembers.projectId, input.id)));
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
 
-      const isMember = memberOf.length > 0;
-      
-      // Check if user is manager
+      // Check project exists in this org
       const projectCheck = await ctx.db.query.projects.findFirst({
         where: and(
           eq(projects.id, input.id),
@@ -124,11 +118,20 @@ export const projectRouter = createTRPCRouter({
         return null;
       }
 
-      const isManager = projectCheck.managerId === ctx.session.userId;
-      
-      // Only allow access if user is manager OR member
-      if (!isManager && !isMember) {
-        return null;
+      // OWNER/ADMIN can access any project in their org
+      if (!isOwnerOrAdmin) {
+        const memberOf = await ctx.db
+              .select({ projectId: projectMembers.projectId })
+              .from(projectMembers)
+              .where(and(eq(projectMembers.userId, ctx.session.userId), eq(projectMembers.projectId, input.id)));
+
+        const isMember = memberOf.length > 0;
+        const isManager = projectCheck.managerId === ctx.session.userId;
+
+        // Regular users must be manager or member
+        if (!isManager && !isMember) {
+          return null;
+        }
       }
 
       const project = await ctx.db.query.projects.findFirst({

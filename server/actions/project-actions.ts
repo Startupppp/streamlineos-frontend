@@ -158,6 +158,10 @@ export async function getProjectById(projectId: number) {
 
     if (!project) return null;
 
+    // OWNER/ADMIN can access any project in their org
+    const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
+    if (isOwnerOrAdmin) return project;
+
     // Check if user has access: manager or member
     const isManager = project.managerId === session.user.id;
     if (isManager) return project;
