@@ -4,9 +4,14 @@ import { useProject } from "../../../../lib/hooks/trpc-hooks";
 import { KanbanBoard } from "../../../../components/projects/kanban-board";
 import { notFound } from "next/navigation";
 import { CreateTicketDialog } from "../../../../components/projects/create-ticket-dialog";
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import { KanbanBoardSkeleton } from "../../../../components/ui/kanban-skeleton";
 import { Skeleton } from "../../../../components/ui/skeleton";
+import { Switch } from "../../../../components/ui/switch";
+import { Label } from "../../../../components/ui/label";
+import { CheckCircle2 } from "lucide-react";
+
+const HIDE_COMPLETED_KEY = "kanban-hide-completed";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -16,6 +21,25 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const { id } = use(params);
   const projectId = parseInt(id);
   const { data, isLoading } = useProject(projectId);
+  const [hideCompleted, setHideCompleted] = useState(true);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(HIDE_COMPLETED_KEY);
+      if (stored !== null) setHideCompleted(stored === "true");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const setHideCompletedAndStore = (value: boolean) => {
+    setHideCompleted(value);
+    try {
+      localStorage.setItem(HIDE_COMPLETED_KEY, String(value));
+    } catch {
+      // ignore
+    }
+  };
 
   if (isLoading) {
     return (
@@ -60,6 +84,30 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   if (!data) return notFound();
 
+  const allTickets = (data.tickets || []).map((t) => ({
+    id: t.id,
+    title: t.title,
+    status: t.status ?? "TODO",
+    type: t.type ?? "TASK",
+    priority: t.priority ?? undefined,
+    points: t.points ?? undefined,
+    timeSpent: t.timeSpent ?? undefined,
+    ticketNumber: t.ticketNumber,
+    order: t.order ?? undefined,
+    assignee: t.assignee
+      ? {
+          id: t.assignee.id,
+          firstName: t.assignee.firstName ?? undefined,
+          lastName: t.assignee.lastName ?? undefined,
+          image: t.assignee.image ?? null,
+        }
+      : null,
+  }));
+  const doneCount = allTickets.filter((t) => t.status === "DONE").length;
+  const boardTickets = hideCompleted
+    ? allTickets.filter((t) => t.status !== "DONE")
+    : allTickets;
+
   return (
     <div className="h-full flex flex-col w-full relative">
       <div className="flex-shrink-0 pl-6 pr-3 sm:pl-8 sm:pr-4 md:pl-12 md:pr-8 pt-6 sm:pt-8 md:pt-12 pb-4 mb-4 sm:mb-6 bg-background sticky top-0 z-50 border-b shadow-sm">
@@ -72,6 +120,20 @@ export default function ProjectBoardPage({ params }: PageProps) {
               </div>
             </div>
             <p className="text-sm sm:text-base text-muted-foreground break-words mt-1">{data.description}</p>
+            <div className="flex items-center gap-2 mt-3">
+              <Switch
+                id="hide-completed"
+                checked={hideCompleted}
+                onCheckedChange={setHideCompletedAndStore}
+              />
+              <Label htmlFor="hide-completed" className="text-sm font-normal cursor-pointer flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                Hide completed
+                {hideCompleted && doneCount > 0 && (
+                  <span className="text-muted-foreground">({doneCount} in Done)</span>
+                )}
+              </Label>
+            </div>
           </div>
         </div>
       </div>
@@ -93,24 +155,17 @@ export default function ProjectBoardPage({ params }: PageProps) {
         >
           <div className="inline-flex h-full pb-4 gap-3 sm:gap-4 md:gap-4" style={{ minWidth: 'max-content', paddingLeft: '24px', paddingRight: '12px' }}>
             <KanbanBoard
-              tickets={(data.tickets || []).map((t) => ({
+              tickets={boardTickets.map((t) => ({
                 id: t.id,
                 title: t.title,
-                status: t.status ?? "TODO",
-                type: t.type ?? "TASK",
-                priority: t.priority ?? undefined,
-                points: t.points ?? undefined,
-                timeSpent: t.timeSpent ?? undefined,
+                status: t.status,
+                type: t.type,
+                priority: t.priority,
+                points: t.points,
+                timeSpent: t.timeSpent,
                 ticketNumber: t.ticketNumber,
-                order: t.order ?? undefined,
-                assignee: t.assignee
-                  ? {
-                      id: t.assignee.id,
-                      firstName: t.assignee.firstName ?? undefined,
-                      lastName: t.assignee.lastName ?? undefined,
-                      image: t.assignee.image ?? null,
-                    }
-                  : null,
+                order: t.order,
+                assignee: t.assignee,
               }))}
               projectId={projectId}
             />

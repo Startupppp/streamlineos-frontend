@@ -18,6 +18,7 @@ import {
   BarChart3,
   Download,
   RefreshCw,
+  FileImage,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -590,6 +591,7 @@ export default function ExpensesPage() {
                         <TableHead>Merchant</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Receipt</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -629,6 +631,23 @@ export default function ExpensesPage() {
                           </TableCell>
                           <TableCell className="text-right font-semibold">
                             {formatCurrency(expense.amount)}
+                          </TableCell>
+                          <TableCell>
+                            {expense.receiptUrl ? (
+                              <ReceiptViewer
+                                receiptUrl={expense.receiptUrl}
+                                fileName={expense.receiptFileName || undefined}
+                                expenseId={expense.id}
+                                trigger={
+                                  <div className="flex items-center gap-1.5 text-sm text-primary hover:underline cursor-pointer">
+                                    <FileImage className="h-4 w-4" />
+                                    View
+                                  </div>
+                                }
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             {getStatusBadge(expense.status || "PENDING")}

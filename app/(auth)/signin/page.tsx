@@ -41,11 +41,26 @@ export default function SignInPage() {
     try {
       const callbackUrl = getCallbackUrl();
 
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
         email,
         password,
         callbackUrl,
+        redirect: false,
       });
+
+      if (result?.error) {
+        toast.error("Invalid email or password. Please check your credentials and try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (result?.ok && result?.url) {
+        toast.success("Sign in successful! Redirecting...");
+        window.location.href = result.url;
+        return;
+      }
+
+      setIsLoading(false);
     } catch (error) {
       console.error("Sign in error:", error);
       toast.error("An error occurred. Please try again.");

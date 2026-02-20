@@ -43,15 +43,25 @@ export function ReceiptViewer({
   useEffect(() => {
     if (open && !signedUrl) {
       setLoadingUrl(true);
+      setHasError(false);
       getSignedFileUrl(receiptUrl)
         .then((url) => {
           setSignedUrl(url);
           setLoadingUrl(false);
         })
         .catch(() => {
-          // Fallback to original URL for local files
-          setSignedUrl(receiptUrl);
-          setLoadingUrl(false);
+          // Try the download API as a proxy fallback
+          fetch(`/api/storage/download?url=${encodeURIComponent(receiptUrl)}`)
+            .then((r) => (r.ok ? r.json() : Promise.reject()))
+            .then((data: { url: string }) => {
+              setSignedUrl(data.url);
+              setLoadingUrl(false);
+            })
+            .catch(() => {
+              setSignedUrl(null);
+              setHasError(true);
+              setLoadingUrl(false);
+            });
         });
     }
   }, [open, receiptUrl, signedUrl]);
