@@ -243,19 +243,22 @@ export async function processLeaveRequest(data: {
                  const start = new Date(request.startDate);
                  const end = new Date(request.endDate);
                  const diffTime = Math.abs(end.getTime() - start.getTime());
-                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+                 const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
                  // Get current balance
                  const balanceRecord = await tx.query.leaveBalances.findFirst({
                      where: and(
                          eq(leaveBalances.userId, request.userId),
-                         eq(leaveBalances.leaveTypeId, request.leaveTypeId!), // assuming not null
+                         eq(leaveBalances.leaveTypeId, request.leaveTypeId!),
                          eq(leaveBalances.year, new Date().getFullYear())
                      )
                  });
 
                  if (balanceRecord) {
                       const newBal = Number(balanceRecord.balance) - diffDays;
+                      if (newBal < 0) {
+                        throw new Error(`Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`);
+                      }
                       await tx.update(leaveBalances)
                         .set({ balance: newBal.toString() })
                         .where(eq(leaveBalances.id, balanceRecord.id));

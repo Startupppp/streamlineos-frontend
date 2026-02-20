@@ -23,7 +23,7 @@ export async function processAutoCheckout() {
   let processed = 0;
 
   for (const record of openRecords) {
-    if (!record.checkIn) continue;
+    if (!record.checkIn || record.autoCheckedOut) continue;
 
     const checkInTime = new Date(record.checkIn);
 

@@ -17,8 +17,15 @@ export const updateProfileInputSchema = z.object({
   phone: z.string().optional(),
 });
 
+const monthStringSchema = z.string()
+  .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
+  .refine((val) => {
+    const month = parseInt(val.split("-")[1], 10);
+    return month >= 1 && month <= 12;
+  }, "Month must be between 01 and 12");
+
 export const generatePayrollInputSchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format"),
+  month: monthStringSchema,
 });
 
 export const createSalaryStructureInputSchema = z.object({
@@ -207,7 +214,7 @@ export const updateDeviceInputSchema = z.object({
 
 export const generateEmployeePayslipInputSchema = z.object({
   userId: z.string().min(1),
-  month: z.string().regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format"),
+  month: monthStringSchema,
   lopDays: z.number().int().min(0).max(30).optional().default(0),
   halfDays: z.number().int().min(0).max(30).optional().default(0),
   otherDeductions: z.number().min(0).optional().default(0),
