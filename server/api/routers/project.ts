@@ -40,12 +40,17 @@ import {
   DEFAULT_PAGE,
   DEFAULT_LIMIT,
 } from "../../../lib/pagination";
-import { 
-  sendProjectAssignmentEmail, 
+import {
+  sendProjectAssignmentEmail,
   sendTicketAssignmentEmail,
   sendTicketReviewRequestEmail,
   sendTicketChangesRequestedEmail,
 } from "../../../lib/email";
+
+function normalizeTicketType(type: string): string {
+  const upper = type.toUpperCase();
+  return upper === "FEATURE" ? "STORY" : upper;
+}
 
 export const projectRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
@@ -118,19 +123,21 @@ export const projectRouter = createTRPCRouter({
         return null;
       }
 
-      // OWNER/ADMIN can access any project in their org
+      // OWNER/ADMIN can access any project in their org; others must be manager or member
       if (!isOwnerOrAdmin) {
-        const memberOf = await ctx.db
-              .select({ projectId: projectMembers.projectId })
-              .from(projectMembers)
-              .where(and(eq(projectMembers.userId, ctx.session.userId), eq(projectMembers.projectId, input.id)));
-
-        const isMember = memberOf.length > 0;
         const isManager = projectCheck.managerId === ctx.session.userId;
+        if (!isManager) {
+          const memberOf = await ctx.db
+            .select({ projectId: projectMembers.projectId })
+            .from(projectMembers)
+            .where(and(
+              eq(projectMembers.userId, ctx.session.userId),
+              eq(projectMembers.projectId, input.id)
+            ));
 
-        // Regular users must be manager or member
-        if (!isManager && !isMember) {
-          return null;
+          if (memberOf.length === 0) {
+            return null;
+          }
         }
       }
 
@@ -428,10 +435,7 @@ export const projectRouter = createTRPCRouter({
           ticketNumber: nextTicketNumber,
           title: input.title,
           description: input.description,
-          type: (() => {
-            const t = input.type.toUpperCase();
-            return (t === "FEATURE" ? "STORY" : t);
-          })(),
+          type: normalizeTicketType(input.type),
           priority: input.priority || "MEDIUM",
           assigneeId: input.assigneeId,
           reporterId: input.reporterId || ctx.session.userId,
@@ -497,8 +501,7 @@ export const projectRouter = createTRPCRouter({
         updateFields.description = updateData.description;
       }
       if (updateData.type) {
-        const t = updateData.type.toUpperCase();
-        updateFields.type = t === "FEATURE" ? "STORY" : t;
+        updateFields.type = normalizeTicketType(updateData.type);
       }
       if (updateData.status) {
         updateFields.status = updateData.status;
