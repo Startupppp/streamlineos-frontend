@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { api } from "@/trpc/react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Loader2, DollarSign, FileText } from "lucide-react";
+import { Loader2, DollarSign, FileText, FolderOpen, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,8 +42,19 @@ export default function BillingPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Billing & Invoices</h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Billing & Invoices</h2>
+          <p className="text-muted-foreground mt-1">
+            {summary ? (
+              <>
+                {summary.length} {summary.length === 1 ? "project" : "projects"} billable — ${totalRevenue.toFixed(2)} estimated revenue
+              </>
+            ) : (
+              "Calculate billing from tracked time entries"
+            )}
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -83,6 +95,7 @@ export default function BillingPage() {
                 <div className="text-2xl font-bold">
                     {summary?.reduce((acc, curr) => acc + (curr.totalHours || 0), 0).toFixed(1)}h
                 </div>
+                <p className="text-xs text-muted-foreground">In selected period</p>
             </CardContent>
         </Card>
         <Card>
@@ -94,6 +107,29 @@ export default function BillingPage() {
                 <div className="text-2xl font-bold">
                     ${totalRevenue.toFixed(2)}
                 </div>
+                <p className="text-xs text-muted-foreground">At ${hourlyRate}/h rate</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Projects Billed</CardTitle>
+                <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{summary?.length || 0}</div>
+                <p className="text-xs text-muted-foreground">With billable activity</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg per Project</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">
+                    ${summary && summary.length > 0 ? (totalRevenue / summary.length).toFixed(2) : "0.00"}
+                </div>
+                <p className="text-xs text-muted-foreground">Average billing amount</p>
             </CardContent>
         </Card>
       </div>
@@ -128,7 +164,10 @@ export default function BillingPage() {
                     <TableCell>
                         <Dialog>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="sm">Generate Invoice</Button>
+                                <Button variant="outline" size="sm">
+                                  Generate Invoice
+                                  <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">Preview</Badge>
+                                </Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
