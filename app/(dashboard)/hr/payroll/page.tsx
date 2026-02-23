@@ -602,6 +602,7 @@ export default function PayrollPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{allPayrolls?.length || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">With payroll records</p>
           </CardContent>
         </Card>
         <Card>
@@ -611,6 +612,7 @@ export default function PayrollPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{totalGross.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">Before deductions</p>
           </CardContent>
         </Card>
         <Card>
@@ -622,6 +624,7 @@ export default function PayrollPage() {
             <div className="text-2xl font-bold text-green-600">
               ₹{totalNet.toLocaleString()}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">After all deductions</p>
           </CardContent>
         </Card>
       </div>
