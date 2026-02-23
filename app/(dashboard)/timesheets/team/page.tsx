@@ -165,7 +165,15 @@ export default function TeamTimesheetsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Team Timesheets</h2>
-          <p className="text-muted-foreground">Monitor team productivity and time allocation</p>
+          <p className="text-muted-foreground">
+            {timesheets ? (
+              <>
+                {timesheets.length} {timesheets.length === 1 ? "entry" : "entries"} — {statistics.totalHours.toFixed(1)}h across {statistics.uniqueEmployees} {statistics.uniqueEmployees === 1 ? "member" : "members"}
+              </>
+            ) : (
+              "Monitor team productivity and time allocation"
+            )}
+          </p>
         </div>
         <Button onClick={exportToCSV} disabled={!timesheets || timesheets.length === 0}>
           <Download className="mr-2 h-4 w-4" />
