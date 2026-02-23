@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/trpc/react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
-import { Loader2, Filter, X, Edit, Trash2 } from "lucide-react";
+import { Loader2, Filter, X, Edit, Trash2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
@@ -108,6 +108,11 @@ export default function TimesheetsPage() {
     endDate: end,
   });
 
+  const totalHours = useMemo(() => {
+    if (!entries) return 0;
+    return entries.reduce((sum, e) => sum + parseFloat(e.hours?.toString() || "0"), 0);
+  }, [entries]);
+
   const hasActiveFilters = selectedProject !== "all" || dateRange !== "all";
 
   const clearFilters = () => {
@@ -142,8 +147,20 @@ export default function TimesheetsPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Timesheets</h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Timesheets</h2>
+          <p className="text-muted-foreground mt-1">
+            {entries ? (
+              <>
+                {entries.length} {entries.length === 1 ? "entry" : "entries"} — {totalHours.toFixed(1)}h logged
+                {hasActiveFilters && " (filtered)"}
+              </>
+            ) : (
+              "Track your time across projects"
+            )}
+          </p>
+        </div>
         <div className="flex items-center space-x-2">
           <LogTimeDialog variant="sheet" />
         </div>
