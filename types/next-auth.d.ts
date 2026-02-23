@@ -24,5 +24,6 @@ declare module "next-auth/jwt" {
     role?: "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
     forceChangePassword?: boolean;
     isActive?: boolean;
+    image?: string | null;
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "../../../../components/ui/button";
@@ -10,7 +10,24 @@ import { Label } from "../../../../components/ui/label";
 import { Badge } from "../../../../components/ui/badge";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../../lib/trpc";
-import { Users, Mail, User, Shield, Loader2, Eye, EyeOff, PartyPopper } from "lucide-react";
+import { Users, Mail, User, Shield, Loader2, Eye, EyeOff, PartyPopper, Check, X } from "lucide-react";
+
+function getPasswordStrength(password: string) {
+  const checks = {
+    length: password.length >= 8,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /\d/.test(password),
+    special: /[@$!%*?&]/.test(password),
+  };
+  const passed = Object.values(checks).filter(Boolean).length;
+  let level: "weak" | "fair" | "good" | "strong" = "weak";
+  let color = "bg-red-500";
+  if (passed >= 5) { level = "strong"; color = "bg-green-500"; }
+  else if (passed >= 4) { level = "good"; color = "bg-blue-500"; }
+  else if (passed >= 3) { level = "fair"; color = "bg-yellow-500"; }
+  return { checks, passed, level, color, percentage: (passed / 5) * 100 };
+}
 
 export default function InvitationPage() {
   const router = useRouter();
@@ -30,6 +47,10 @@ export default function InvitationPage() {
     password: "",
     confirmPassword: "",
   });
+
+  const strength = useMemo(() => getPasswordStrength(formData.password), [formData.password]);
+  const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword;
+  const passwordsMismatch = formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword;
 
   const loadInvitation = useCallback(async () => {
     try {
@@ -109,7 +130,7 @@ export default function InvitationPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <div className="mt-8 text-white/40 text-sm">
           &copy; 2025 Vaivamm Capital
         </div>
@@ -149,9 +170,9 @@ export default function InvitationPage() {
               <Label className="text-foreground">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  value={invitation.email} 
-                  disabled 
+                <Input
+                  value={invitation.email}
+                  disabled
                   className="pl-10 bg-gray-50 cursor-not-allowed"
                 />
               </div>
@@ -213,13 +234,50 @@ export default function InvitationPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters with uppercase, lowercase, number, and special character
-              </p>
+              {formData.password.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
+                        style={{ width: `${strength.percentage}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs font-medium capitalize ${
+                      strength.level === "strong" ? "text-green-600" :
+                      strength.level === "good" ? "text-blue-600" :
+                      strength.level === "fair" ? "text-yellow-600" : "text-red-600"
+                    }`}>
+                      {strength.level}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[
+                      { key: "length" as const, label: "8+ characters" },
+                      { key: "uppercase" as const, label: "Uppercase" },
+                      { key: "lowercase" as const, label: "Lowercase" },
+                      { key: "number" as const, label: "Number" },
+                      { key: "special" as const, label: "Special char" },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center gap-1">
+                        {strength.checks[key] ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <X className="h-3 w-3 text-gray-300" />
+                        )}
+                        <span className={`text-xs ${strength.checks[key] ? "text-green-600" : "text-muted-foreground"}`}>
+                          {label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -234,21 +292,33 @@ export default function InvitationPage() {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
                   disabled={isLoading}
-                  className="pl-10 pr-10 focus-visible:ring-primary"
+                  className={`pl-10 pr-10 focus-visible:ring-primary ${
+                    passwordsMatch ? "border-green-500 focus-visible:ring-green-500" :
+                    passwordsMismatch ? "border-red-500 focus-visible:ring-red-500" : ""
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {passwordsMismatch && (
+                <p className="text-xs text-red-500">Passwords do not match</p>
+              )}
+              {passwordsMatch && (
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Passwords match
+                </p>
+              )}
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-11 text-base bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
+            <Button
+              type="submit"
+              className="w-full h-11 text-base bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -263,7 +333,7 @@ export default function InvitationPage() {
           </form>
         </CardContent>
       </Card>
-      
+
       <div className="mt-8 text-white/40 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>

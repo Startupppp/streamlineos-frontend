@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,7 +8,7 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../lib/trpc";
-import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
+import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -18,6 +18,27 @@ function VerifyEmailForm() {
   const [isVerifying, setIsVerifying] = useState(!!token);
   const [isVerified, setIsVerified] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(60);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const verifyEmail = useCallback(async () => {
     if (!token) return;
@@ -43,11 +64,12 @@ function VerifyEmailForm() {
   }, [token, verifyEmail]);
 
   const handleResend = async () => {
-    if (!email) return;
+    if (!email || cooldown > 0) return;
     setIsResending(true);
     try {
       await vaivammTrpcClient.auth.resendVerificationEmail.mutate({ email });
       toast.success("Verification email resent!");
+      startCooldown();
     } catch {
       toast.error("Failed to resend email");
     } finally {
@@ -128,6 +150,12 @@ function VerifyEmailForm() {
             Click the link in the email to verify your account. The link will expire in 24 hours.
           </p>
         </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-amber-700">
+            Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@vaivamm.com.
+          </p>
+        </div>
         <div className="space-y-2">
           <Link href="/signin" className="block">
             <Button variant="outline" className="w-full">
@@ -140,14 +168,16 @@ function VerifyEmailForm() {
               variant="ghost"
               className="w-full"
               onClick={handleResend}
-              disabled={isResending}
+              disabled={isResending || cooldown > 0}
             >
               {isResending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <RefreshCw className="mr-2 h-4 w-4" />
               )}
-              Resend Verification Email
+              {cooldown > 0
+                ? `Resend available in ${cooldown}s`
+                : "Resend Verification Email"}
             </Button>
           )}
         </div>
@@ -183,7 +213,7 @@ export default function VerifyEmailPage() {
       <Suspense fallback={<LoadingCard />}>
         <VerifyEmailForm />
       </Suspense>
-      
+
       <div className="mt-8 text-white/40 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>

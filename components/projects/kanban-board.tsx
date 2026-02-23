@@ -5,23 +5,25 @@ import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { cn } from "../../lib/utils";
 import { MoreHorizontal, Plus } from "lucide-react";
-import { 
-  useUpdateTicketOrder, 
-  vaivammKeys 
+import {
+  useUpdateTicketOrder,
+  useCreateTicket,
+  vaivammKeys
 } from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
 import { TicketDetailsDialog } from "./ticket-details-dialog";
-import { 
-  CheckSquare, 
-  Bug, 
-  Bookmark, 
+import {
+  CheckSquare,
+  Bug,
+  Bookmark,
   Zap,
-  ArrowUp, 
-  ArrowDown, 
+  ArrowUp,
+  ArrowDown,
   AlertCircle,
   ArrowRight
 } from "lucide-react";
@@ -50,59 +52,123 @@ const PriorityIcon = ({ priority }: { priority: string }) => {
   }
 };
 
-interface KanbanBoardProps {
-  tickets: Array<{
-    id: number;
-    title: string;
-    status: string;
-    type: string;
-    priority?: string;
-    points?: number | null;
-    timeSpent?: string | null;
-    ticketNumber?: number;
-    assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
-    order?: number | null;
-  }>;
-  projectId: number;
+const DEFAULT_COLUMNS = [
+  { id: "TODO", label: "To Do", color: "#e2e8f0" },
+  { id: "IN_PROGRESS", label: "In Progress", color: "#3b82f6" },
+  { id: "IN_REVIEW", label: "In Review", color: "#eab308" },
+  { id: "DONE", label: "Done", color: "#22c55e" },
+];
+
+function getColumnStyle(color: string | null | undefined) {
+  const c = color || "#e2e8f0";
+  return {
+    borderTopColor: c,
+    dotColor: c,
+  };
 }
 
-export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
+interface KanbanTicket {
+  id: number;
+  title: string;
+  status: string;
+  type: string;
+  priority?: string;
+  points?: number | null;
+  timeSpent?: string | null;
+  ticketNumber?: number;
+  epicId?: number | null;
+  assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
+  order?: number | null;
+  labels?: Array<{ label: { id: number; name: string; color: string | null } }>;
+}
+
+interface KanbanBoardProps {
+  tickets: KanbanTicket[];
+  projectId: number;
+  statuses?: Array<{ id: number; name: string; color: string | null; order: number }>;
+  epics?: Array<{ id: number; title: string }>;
+}
+
+function QuickAddInput({ columnId, projectId }: { columnId: string; projectId: number }) {
+  const [value, setValue] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const createTicket = useCreateTicket({
+    onSuccess: () => {
+      setValue("");
+      setIsAdding(false);
+      queryClient.invalidateQueries({
+        queryKey: vaivammKeys.project.project(projectId),
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create ticket");
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!value.trim()) return;
+    createTicket.mutate({
+      projectId,
+      title: value.trim(),
+      type: "TASK",
+      status: columnId,
+    });
+  };
+
+  if (!isAdding) {
+    return (
+      <button
+        onClick={() => {
+          setIsAdding(true);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }}
+        className="flex items-center gap-1.5 w-full p-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add ticket
+      </button>
+    );
+  }
+
+  return (
+    <div className="p-1.5">
+      <Input
+        ref={inputRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Ticket title..."
+        className="h-8 text-sm"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSubmit();
+          if (e.key === "Escape") { setIsAdding(false); setValue(""); }
+        }}
+        onBlur={() => {
+          if (!value.trim()) { setIsAdding(false); setValue(""); }
+        }}
+        disabled={createTicket.isPending}
+      />
+    </div>
+  );
+}
+
+export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  
+
   const queryClient = useQueryClient();
 
-  const COLUMNS = [
-    { 
-      id: "TODO", 
-      label: "To Do", 
-      dotColor: "bg-slate-400 dark:bg-slate-500",
-      headerBg: "bg-slate-50 dark:bg-slate-800/50",
-      borderAccent: "border-t-slate-400"
-    },
-    { 
-      id: "IN_PROGRESS", 
-      label: "In Progress", 
-      dotColor: "bg-blue-500 dark:bg-blue-400",
-      headerBg: "bg-blue-50/50 dark:bg-blue-950/30",
-      borderAccent: "border-t-blue-500"
-    },
-    { 
-      id: "IN_REVIEW", 
-      label: "In Review", 
-      dotColor: "bg-amber-500 dark:bg-amber-400",
-      headerBg: "bg-amber-50/50 dark:bg-amber-950/30",
-      borderAccent: "border-t-amber-500"
-    },
-    { 
-      id: "DONE", 
-      label: "Done", 
-      dotColor: "bg-emerald-500 dark:bg-emerald-400",
-      headerBg: "bg-emerald-50/50 dark:bg-emerald-950/30",
-      borderAccent: "border-t-emerald-500"
-    },
-  ];
+  // Build columns from project statuses or use defaults
+  const columns = statuses && statuses.length > 0
+    ? statuses.map(s => ({ id: s.name, label: s.name.replace(/_/g, " "), color: s.color }))
+    : DEFAULT_COLUMNS;
+
+  // Build epic lookup map
+  const epicMap = new Map<number, string>();
+  epics?.forEach(e => epicMap.set(e.id, e.title));
 
   useEffect(() => {
     setOptimisticTickets(tickets);
@@ -138,68 +204,48 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
     dragStartRef.current = null;
     const { destination, source, draggableId } = result;
 
-    if (!destination) {
-      return;
-    }
-
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
     const ticketId = parseInt(draggableId);
     const newStatus = destination.droppableId;
-    
-    // Create new array of tickets
+
     const newTickets = [...optimisticTickets];
-    const movedTicketIndex = newTickets.findIndex(t => t.id === ticketId);
-    const movedTicket = { ...newTickets[movedTicketIndex], status: newStatus };
-    
-    // Remove from old position
-    // We need to simulate the column-based structure to map indices correctly
-    // Filter tickets for source and dest columns
+    const movedTicket = { ...newTickets.find(t => t.id === ticketId)!, status: newStatus };
+
     const sourceTickets = newTickets
         .filter(t => t.status === source.droppableId)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
-        
-    const destTickets = source.droppableId === destination.droppableId 
-        ? sourceTickets 
+
+    const destTickets = source.droppableId === destination.droppableId
+        ? sourceTickets
         : newTickets
             .filter(t => t.status === destination.droppableId)
             .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    // Calculate new order
     if (source.droppableId === destination.droppableId) {
-        // Reordering in same column
         const items = Array.from(sourceTickets);
         const [reorderedItem] = items.splice(source.index, 1);
         items.splice(destination.index, 0, reorderedItem);
-        
-        // Update local state orders
+
         const updates: { id: number; status: string; order: number }[] = [];
         items.forEach((ticket, index) => {
             const tIndex = newTickets.findIndex(t => t.id === ticket.id);
             newTickets[tIndex] = { ...newTickets[tIndex], order: index };
             updates.push({ id: ticket.id, status: ticket.status, order: index });
         });
-        
+
         setOptimisticTickets(newTickets);
         updateOrder.mutate({ projectId, items: updates });
-
     } else {
-        // Moving to different column
         const sourceItems = Array.from(sourceTickets);
         sourceItems.splice(source.index, 1);
-        
+
         const destItems = Array.from(destTickets);
         destItems.splice(destination.index, 0, movedTicket);
-        
-        // Update updates list for both columns
+
         const updates: { id: number; status: string; order: number }[] = [];
-        
-        // Update dest items
+
         destItems.forEach((ticket, index) => {
              const tIndex = newTickets.findIndex(t => t.id === ticket.id);
              if (tIndex !== -1) {
@@ -207,8 +253,7 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                 updates.push({ id: ticket.id, status: newStatus, order: index });
              }
         });
-        
-        // Update source items (fix gaps)
+
         sourceItems.forEach((ticket, index) => {
             const tIndex = newTickets.findIndex(t => t.id === ticket.id);
             newTickets[tIndex] = { ...newTickets[tIndex], order: index };
@@ -221,60 +266,50 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
   };
 
   const moveTicket = (ticketId: number, newStatus: string) => {
-      // Find ticket and get max order in dest column
-      const destTickets = optimisticTickets
-        .filter(t => t.status === newStatus);
+      const destTickets = optimisticTickets.filter(t => t.status === newStatus);
       const maxOrder = Math.max(...destTickets.map(t => t.order || 0), -1);
-      
-      const newTickets = optimisticTickets.map(t => 
+
+      const newTickets = optimisticTickets.map(t =>
         t.id === ticketId ? { ...t, status: newStatus, order: maxOrder + 1 } : t
       );
-      
+
       setOptimisticTickets(newTickets);
-      updateOrder.mutate({ 
-          projectId, 
-          items: [{ id: ticketId, status: newStatus, order: maxOrder + 1 }] 
+      updateOrder.mutate({
+          projectId,
+          items: [{ id: ticketId, status: newStatus, order: maxOrder + 1 }]
       });
   };
 
   const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) return null; // Prevent hydration error
+  useEffect(() => { setIsMounted(true); }, []);
+  if (!isMounted) return null;
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div 
-          className="flex h-full gap-3 sm:gap-4 md:gap-4 snap-x snap-mandatory" 
-          style={{ 
-            minWidth: 'max-content',
-            width: 'max-content'
-          }}
+        <div
+          className="flex h-full gap-3 sm:gap-4 md:gap-4 snap-x snap-mandatory"
+          style={{ minWidth: 'max-content', width: 'max-content' }}
         >
-        {COLUMNS.map((col) => {
+        {columns.map((col) => {
+            const style = getColumnStyle(col.color);
             const columnTickets = optimisticTickets
               .filter((t) => t.status === col.id)
               .sort((a, b) => (a.order || 0) - (b.order || 0));
             return (
             <div
                 key={col.id}
-                className={cn(
-                  "rounded-xl border border-border min-w-[240px] sm:min-w-[260px] md:min-w-[280px] lg:min-w-[300px] w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] flex flex-col bg-muted/30 snap-start border-t-2 flex-shrink-0 h-full",
-                  col.borderAccent
-                )}
+                className="rounded-xl border border-border min-w-[240px] sm:min-w-[260px] md:min-w-[280px] lg:min-w-[300px] w-[240px] sm:w-[260px] md:w-[280px] lg:w-[300px] flex flex-col bg-muted/30 snap-start border-t-2 flex-shrink-0 h-full"
+                style={{ borderTopColor: style.borderTopColor }}
             >
-                <div className={cn("flex items-center justify-between p-2.5 sm:p-3 rounded-t-xl", col.headerBg)}>
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-t-xl bg-muted/50">
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className={cn("w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0", col.dotColor)} />
+                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0" style={{ backgroundColor: style.dotColor }} />
                       <h3 className="font-semibold text-xs sm:text-sm text-foreground truncate">
                           {col.label}
                       </h3>
                   </div>
-                  <Badge 
-                    variant="secondary" 
+                  <Badge
+                    variant="secondary"
                     className="bg-background/80 text-muted-foreground text-[9px] sm:text-[10px] px-1.5 py-0 h-5 shrink-0"
                   >
                       {columnTickets.length}
@@ -321,11 +356,9 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                             }}
                                             onClick={(e) => {
                                               if (dragStartRef.current) {
-                                                const moved = Math.abs(e.clientX - dragStartRef.current.x) > 5 || 
+                                                const moved = Math.abs(e.clientX - dragStartRef.current.x) > 5 ||
                                                               Math.abs(e.clientY - dragStartRef.current.y) > 5;
-                                                if (!moved) {
-                                                  setSelectedTicketId(ticket.id);
-                                                }
+                                                if (!moved) setSelectedTicketId(ticket.id);
                                                 dragStartRef.current = null;
                                               } else {
                                                 setSelectedTicketId(ticket.id);
@@ -333,59 +366,87 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                                             }}
                                             >
                                             <CardContent className="p-2.5 sm:p-3 space-y-2">
+                                                {/* Title */}
                                                 <div className="flex justify-between items-start gap-2">
-                                                <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-snug flex-1">
-                                                    {ticket.title}
-                                                </h4>
-                                                {/* Simplified Move Menu */}
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                    <Button 
-                                                      variant="ghost" 
-                                                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                    {COLUMNS.map((c) => (
-                                                        <DropdownMenuItem
-                                                        key={c.id}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation(); 
-                                                            moveTicket(ticket.id, c.id);
-                                                        }}
-                                                        disabled={c.id === ticket.status}
-                                                        >
-                                                        Move to {c.label}
-                                                        </DropdownMenuItem>
-                                                    ))}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                                </div>
-                                                
-                                                <div className="flex items-center justify-between pt-1">
-                                                <div className="flex items-center gap-1.5">
-                                                    <TicketTypeIcon type={ticket.type} />
-                                                    {ticket.priority && (
-                                                        <PriorityIcon priority={ticket.priority} />
-                                                    )}
-                                                    <span className="text-[10px] text-muted-foreground font-mono">#{ticket.ticketNumber ?? ticket.id}</span>
+                                                  <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-snug flex-1">
+                                                      {ticket.title}
+                                                  </h4>
+                                                  <DropdownMenu>
+                                                      <DropdownMenuTrigger asChild>
+                                                      <Button
+                                                        variant="ghost"
+                                                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                                      >
+                                                          <MoreHorizontal className="h-4 w-4" />
+                                                      </Button>
+                                                      </DropdownMenuTrigger>
+                                                      <DropdownMenuContent align="end">
+                                                      {columns.map((c) => (
+                                                          <DropdownMenuItem
+                                                          key={c.id}
+                                                          onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              moveTicket(ticket.id, c.id);
+                                                          }}
+                                                          disabled={c.id === ticket.status}
+                                                          >
+                                                          Move to {c.label}
+                                                          </DropdownMenuItem>
+                                                      ))}
+                                                      </DropdownMenuContent>
+                                                  </DropdownMenu>
                                                 </div>
 
-                                                {ticket.assignee ? (
-                                                    <Avatar className="h-5 w-5 border border-background ring-2 ring-background">
-                                                    <AvatarImage src={ticket.assignee.image || undefined} />
-                                                    <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">
-                                                        {ticket.assignee.firstName?.[0]}
-                                                        {ticket.assignee.lastName?.[0]}
-                                                    </AvatarFallback>
-                                                    </Avatar>
-                                                ) : (
-                                                    <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center">
-                                                        <span className="text-[8px] text-muted-foreground">?</span>
-                                                    </div>
+                                                {/* Labels + Epic row */}
+                                                {((ticket.labels && ticket.labels.length > 0) || (ticket.epicId && epicMap.has(ticket.epicId))) && (
+                                                  <div className="flex items-center gap-1 flex-wrap">
+                                                    {ticket.epicId && epicMap.has(ticket.epicId) && (
+                                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 truncate max-w-[140px]">
+                                                        {epicMap.get(ticket.epicId)}
+                                                      </span>
+                                                    )}
+                                                    {ticket.labels?.slice(0, 3).map(({ label }) => (
+                                                      <span
+                                                        key={label.id}
+                                                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                                                        style={{ backgroundColor: label.color || "#3b82f6" }}
+                                                        title={label.name}
+                                                      />
+                                                    ))}
+                                                    {(ticket.labels?.length || 0) > 3 && (
+                                                      <span className="text-[9px] text-muted-foreground">+{ticket.labels!.length - 3}</span>
+                                                    )}
+                                                  </div>
                                                 )}
+
+                                                {/* Footer: type + priority + points + assignee */}
+                                                <div className="flex items-center justify-between pt-1">
+                                                  <div className="flex items-center gap-1.5">
+                                                      <TicketTypeIcon type={ticket.type} />
+                                                      {ticket.priority && (
+                                                          <PriorityIcon priority={ticket.priority} />
+                                                      )}
+                                                      <span className="text-[10px] text-muted-foreground font-mono">#{ticket.ticketNumber ?? ticket.id}</span>
+                                                      {ticket.points != null && ticket.points > 0 && (
+                                                        <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 font-mono">
+                                                          {ticket.points}
+                                                        </Badge>
+                                                      )}
+                                                  </div>
+
+                                                  {ticket.assignee ? (
+                                                      <Avatar className="h-5 w-5 border border-background ring-2 ring-background">
+                                                      <AvatarImage src={ticket.assignee.image || undefined} />
+                                                      <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">
+                                                          {ticket.assignee.firstName?.[0]}
+                                                          {ticket.assignee.lastName?.[0]}
+                                                      </AvatarFallback>
+                                                      </Avatar>
+                                                  ) : (
+                                                      <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                                          <span className="text-[8px] text-muted-foreground">?</span>
+                                                      </div>
+                                                  )}
                                                 </div>
                                             </CardContent>
                                             </Card>
@@ -397,18 +458,23 @@ export function KanbanBoard({ tickets, projectId }: KanbanBoardProps) {
                         </div>
                     )}
                 </Droppable>
+
+                {/* Per-column quick add */}
+                <div className="border-t border-border">
+                  <QuickAddInput columnId={col.id} projectId={projectId} />
+                </div>
             </div>
             );
         })}
 
-        <TicketDetailsDialog 
+        <TicketDetailsDialog
             ticketId={selectedTicketId}
             open={!!selectedTicketId}
             onOpenChange={(open) => !open && setSelectedTicketId(null)}
             projectId={projectId}
+            statuses={statuses?.map(s => ({ id: s.id, name: s.name }))}
         />
         </div>
     </DragDropContext>
   );
 }
-

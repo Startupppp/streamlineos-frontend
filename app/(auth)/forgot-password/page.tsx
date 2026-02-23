@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../../../components/ui/button";
@@ -9,12 +9,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "../../../lib/trpc";
-import { Mail, ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, KeyRound, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(60);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,12 +45,28 @@ export default function ForgotPasswordPage() {
     try {
       await vaivammTrpcClient.auth.forgotPassword.mutate({ email });
       setSent(true);
+      startCooldown();
       toast.success("Password reset email sent! Check your inbox.");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "An error occurred";
       toast.error(message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (cooldown > 0) return;
+    setResending(true);
+    try {
+      await vaivammTrpcClient.auth.forgotPassword.mutate({ email });
+      toast.success("Password reset email resent!");
+      startCooldown();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to resend email";
+      toast.error(message);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -60,6 +98,27 @@ export default function ForgotPasswordPage() {
                 Click the link in the email to reset your password. The link will expire in 1 hour.
               </p>
             </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-700">
+                Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@vaivamm.com.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={handleResend}
+              disabled={resending || cooldown > 0}
+            >
+              {resending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {cooldown > 0
+                ? `Resend available in ${cooldown}s`
+                : "Resend Reset Email"}
+            </Button>
             <Link href="/signin" className="block">
               <Button variant="outline" className="w-full">
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -68,7 +127,7 @@ export default function ForgotPasswordPage() {
             </Link>
           </CardContent>
         </Card>
-        
+
         <div className="mt-8 text-white/40 text-sm">
           &copy; 2025 Vaivamm Capital
         </div>
@@ -114,12 +173,19 @@ export default function ForgotPasswordPage() {
                 />
               </div>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
+            <Button
+              type="submit"
+              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
               disabled={isLoading}
             >
-              {isLoading ? "Sending..." : "Send Reset Link"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Reset Link"
+              )}
             </Button>
           </form>
           <div className="mt-6 text-center">
@@ -130,7 +196,7 @@ export default function ForgotPasswordPage() {
           </div>
         </CardContent>
       </Card>
-      
+
       <div className="mt-8 text-white/40 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>

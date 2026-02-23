@@ -78,18 +78,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "update" && session?.forceChangePassword !== undefined) {
+      if (trigger === "update") {
         if (token.id) {
           const dbUser = await db.query.users.findFirst({
             where: eq(users.id, token.id as string),
           });
           if (dbUser) {
-            token.forceChangePassword =
-              dbUser.isPasswordChangeRequired || false;
-          } else {
-            token.forceChangePassword = session.forceChangePassword;
+            token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
+            token.image = dbUser.image || null;
+            if (dbUser.firstName && dbUser.lastName) {
+              token.name = `${dbUser.firstName} ${dbUser.lastName}`;
+            } else if (dbUser.name) {
+              token.name = dbUser.name;
+            }
           }
-        } else {
+        }
+        if (session?.forceChangePassword !== undefined) {
           token.forceChangePassword = session.forceChangePassword;
         }
       }
@@ -98,6 +102,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.role = user.role;
+        token.image = user.image;
         token.forceChangePassword = user.forceChangePassword;
         token.isActive = user.isActive;
       }
@@ -112,6 +117,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           | "ADMIN"
           | "MEMBER"
           | "CLIENT";
+        session.user.image = (token.image as string) || null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = token.isActive as boolean;
       }

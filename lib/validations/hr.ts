@@ -15,6 +15,7 @@ export const updateProfileInputSchema = z.object({
   designation: z.string().optional(),
   departmentId: z.number().int().positive().optional(),
   phone: z.string().optional(),
+  image: z.string().optional(),
 });
 
 const monthStringSchema = z.string()

@@ -63,6 +63,9 @@ export const vaivammKeys = {
     stats: () => [...dashboardBaseKey, "stats"] as const,
     recentProjects: () => [...dashboardBaseKey, "recentProjects"] as const,
     teamAvailability: () => [...dashboardBaseKey, "teamAvailability"] as const,
+    myIssues: (userId: string) => [...dashboardBaseKey, "myIssues", { userId }] as const,
+    activeSprintSummary: () => [...dashboardBaseKey, "activeSprintSummary"] as const,
+    recentActivity: () => [...dashboardBaseKey, "recentActivity"] as const,
   },
 
   rbac: {
@@ -1569,6 +1572,62 @@ export const useTeamAvailability = (
   return useQuery<DashboardRouterOutputs["getTeamAvailability"], Error>({
     queryKey: vaivammKeys.dashboard.teamAvailability(),
     queryFn: () => vaivammTrpcClient.dashboard.getTeamAvailability.query(),
+    ...options,
+  });
+};
+
+export const useEmployeeTickets = (
+  userId: string,
+  options?: Omit<
+    UseQueryOptions<ProjectRouterOutputs["getEmployeeTickets"], Error>,
+    "queryKey" | "queryFn" | "enabled"
+  >
+) => {
+  return useQuery<ProjectRouterOutputs["getEmployeeTickets"], Error>({
+    queryKey: vaivammKeys.dashboard.myIssues(userId),
+    queryFn: () => vaivammTrpcClient.project.getEmployeeTickets.query({ userId, limit: 20 }),
+    enabled: !!userId,
+    ...options,
+  });
+};
+
+export const useSubtasks = (
+  parentTicketId: number,
+  options?: Omit<
+    UseQueryOptions<ProjectRouterOutputs["getSubtasks"], Error>,
+    "queryKey" | "queryFn" | "enabled"
+  >
+) => {
+  return useQuery<ProjectRouterOutputs["getSubtasks"], Error>({
+    queryKey: [...vaivammKeys.project.all, "subtasks", { parentTicketId }],
+    queryFn: () => vaivammTrpcClient.project.getSubtasks.query({ parentTicketId }),
+    enabled: !!parentTicketId,
+    ...options,
+  });
+};
+
+export const useActiveSprintSummary = (
+  options?: Omit<
+    UseQueryOptions<DashboardRouterOutputs["getActiveSprintSummary"], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<DashboardRouterOutputs["getActiveSprintSummary"], Error>({
+    queryKey: vaivammKeys.dashboard.activeSprintSummary(),
+    queryFn: () => vaivammTrpcClient.dashboard.getActiveSprintSummary.query(),
+    ...options,
+  });
+};
+
+export const useRecentActivity = (
+  options?: Omit<
+    UseQueryOptions<DashboardRouterOutputs["getRecentActivity"], Error>,
+    "queryKey" | "queryFn"
+  >
+) => {
+  return useQuery<DashboardRouterOutputs["getRecentActivity"], Error>({
+    queryKey: vaivammKeys.dashboard.recentActivity(),
+    queryFn: () => vaivammTrpcClient.dashboard.getRecentActivity.query(),
     ...options,
   });
 };

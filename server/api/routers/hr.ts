@@ -112,14 +112,20 @@ export const hrRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db
-        .update(users)
-        .set({
-          designation: input.designation,
-          departmentId: input.departmentId,
-          phone: input.phone,
-        })
-        .where(eq(users.id, input.userId));
+      const updateData: Record<string, unknown> = {};
+      if (input.designation !== undefined) updateData.designation = input.designation;
+      if (input.departmentId !== undefined) updateData.departmentId = input.departmentId;
+      if (input.phone !== undefined) updateData.phone = input.phone;
+      if (input.image !== undefined) updateData.image = input.image;
+
+      if (Object.keys(updateData).length > 0) {
+        await ctx.db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, input.userId));
+      }
+
+      return { success: true };
     }),
 
   onboardEmployee: protectedProcedure

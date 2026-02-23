@@ -1,5 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { projects, attendance, organizations, organizationMembers, users, projectMembers } from "../../../lib/db/schema";
+import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets } from "../../../lib/db/schema";
 import { eq, and, sql, desc, or, inArray } from "drizzle-orm";
 import { getTodayString } from "../../../lib/date-utils";
 
@@ -79,7 +79,6 @@ export const dashboardRouter = createTRPCRouter({
 
     let recentProjects;
 
-    // OWNER/ADMIN can see all projects in the list
     if (isOwnerOrAdmin) {
       recentProjects = await ctx.db.query.projects.findMany({
         where: eq(projects.orgId, ctx.session.orgId),
@@ -98,7 +97,6 @@ export const dashboardRouter = createTRPCRouter({
         },
       });
     } else {
-      // Regular users can only see projects they are assigned to
       const memberOf = await ctx.db
         .select({ projectId: projectMembers.projectId })
         .from(projectMembers)
@@ -157,13 +155,138 @@ export const dashboardRouter = createTRPCRouter({
 
     return todayAttendance.map((record) => ({
       userId: record.userId,
-      name: record.firstName && record.lastName 
-        ? `${record.firstName} ${record.lastName}` 
+      name: record.firstName && record.lastName
+        ? `${record.firstName} ${record.lastName}`
         : record.userName || "Unknown",
       image: record.userImage,
       checkIn: record.checkIn,
       checkOut: record.checkOut,
       isOnline: record.checkIn && !record.checkOut,
+    }));
+  }),
+
+  getActiveSprintSummary: protectedProcedure.query(async ({ ctx }) => {
+    // Find active sprints across user's projects
+    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+
+    let projectIds: number[];
+    if (isOwnerOrAdmin) {
+      const allProjects = await ctx.db.query.projects.findMany({
+        where: eq(projects.orgId, ctx.session.orgId),
+        columns: { id: true },
+      });
+      projectIds = allProjects.map(p => p.id);
+    } else {
+      const memberOf = await ctx.db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, ctx.session.userId));
+      projectIds = memberOf.map(m => m.projectId);
+    }
+
+    if (projectIds.length === 0) return null;
+
+    const activeSprint = await ctx.db.query.sprints.findFirst({
+      where: and(
+        eq(sprints.orgId, ctx.session.orgId),
+        eq(sprints.status, "ACTIVE"),
+        inArray(sprints.projectId, projectIds)
+      ),
+      with: {
+        project: {
+          columns: { id: true, name: true },
+        },
+        tickets: {
+          columns: { id: true, status: true, points: true },
+        },
+      },
+    });
+
+    if (!activeSprint) return null;
+
+    const sprintTickets = activeSprint.tickets || [];
+    const totalTickets = sprintTickets.length;
+    const doneTickets = sprintTickets.filter(t => t.status === "DONE").length;
+    const inProgressTickets = sprintTickets.filter(t => t.status === "IN_PROGRESS" || t.status === "IN_REVIEW").length;
+    const todoTickets = totalTickets - doneTickets - inProgressTickets;
+    const totalPoints = sprintTickets.reduce((sum, t) => sum + (t.points || 0), 0);
+    const completedPoints = sprintTickets.filter(t => t.status === "DONE").reduce((sum, t) => sum + (t.points || 0), 0);
+    const progress = totalPoints > 0 ? Math.round((completedPoints / totalPoints) * 100) : (totalTickets > 0 ? Math.round((doneTickets / totalTickets) * 100) : 0);
+
+    const now = new Date();
+    const endDate = new Date(activeSprint.endDate);
+    const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    return {
+      id: activeSprint.id,
+      name: activeSprint.name,
+      projectName: activeSprint.project?.name || "Project",
+      projectId: activeSprint.project?.id,
+      progress,
+      daysRemaining,
+      totalTickets,
+      doneTickets,
+      inProgressTickets,
+      todoTickets,
+      totalPoints,
+      completedPoints,
+    };
+  }),
+
+  getRecentActivity: protectedProcedure.query(async ({ ctx }) => {
+    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+
+    let projectIds: number[];
+    if (isOwnerOrAdmin) {
+      const allProjects = await ctx.db.query.projects.findMany({
+        where: eq(projects.orgId, ctx.session.orgId),
+        columns: { id: true },
+      });
+      projectIds = allProjects.map(p => p.id);
+    } else {
+      const memberOf = await ctx.db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, ctx.session.userId));
+      projectIds = memberOf.map(m => m.projectId);
+    }
+
+    if (projectIds.length === 0) return [];
+
+    const recentTickets = await ctx.db.query.tickets.findMany({
+      where: and(
+        eq(tickets.orgId, ctx.session.orgId),
+        inArray(tickets.projectId, projectIds)
+      ),
+      orderBy: [desc(tickets.updatedAt)],
+      limit: 10,
+      with: {
+        project: {
+          columns: { id: true, name: true, key: true },
+        },
+        assignee: {
+          columns: { id: true, firstName: true, lastName: true, image: true },
+        },
+      },
+    });
+
+    return recentTickets.map(t => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      type: t.type,
+      priority: t.priority,
+      ticketNumber: t.ticketNumber,
+      updatedAt: t.updatedAt,
+      projectName: t.project?.name || "",
+      projectId: t.project?.id,
+      projectKey: t.project?.key || "",
+      assignee: t.assignee ? {
+        id: t.assignee.id,
+        firstName: t.assignee.firstName,
+        lastName: t.assignee.lastName,
+        image: t.assignee.image,
+      } : null,
     }));
   }),
 });
