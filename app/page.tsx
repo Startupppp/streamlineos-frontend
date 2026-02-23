@@ -1,10 +1,17 @@
 import { auth } from "../lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "../components/ui/button";
 import Image from "next/image";
 
 export default async function HomePage() {
   const session = await auth();
+
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="flex min-h-screen flex-col font-sans bg-background text-foreground">
@@ -32,7 +39,7 @@ export default async function HomePage() {
              {/* Decorative background circle */}
              <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[500px] w-[500px] rounded-full bg-white/5 blur-3xl" />
              <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-[300px] w-[300px] rounded-full bg-secondary/20 blur-3xl" />
-            
+
           <div className="container relative mx-auto px-4 text-center">
             <h1 className="mb-6 text-5xl font-extrabold tracking-tight text-white sm:text-6xl">
               Advanced <span className="text-secondary">HR</span> and <span className="text-secondary">Project</span> Management
@@ -62,7 +69,7 @@ export default async function HomePage() {
                  <h2 className="mb-4 text-3xl font-bold text-primary">Everything you need to run your business</h2>
                  <p className="text-muted-foreground max-w-2xl mx-auto">From recruitment to retirement, and every project in between.</p>
               </div>
-              
+
               <div className="grid gap-8 md:grid-cols-3">
                 <div className="group rounded-xl border bg-card text-card-foreground p-8 shadow-sm transition-all hover:shadow-md hover:border-secondary/50">
                   <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
@@ -100,13 +107,17 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="bg-[#0f2b7f] py-12 text-white">
         <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-                <div className="mb-4 md:mb-0 flex items-center gap-2">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-2">
                      <Image src="/logo.svg" alt="Vaivamm Logo" width={32} height={32} className="rounded-lg bg-white p-1" />
                      <span className="font-bold text-xl">Vaivamm CRM</span>
                 </div>
+                <nav className="flex items-center gap-6 text-sm text-gray-300">
+                  <Link href="/signin" className="hover:text-white transition-colors">Sign In</Link>
+                  <Link href="/signup" className="hover:text-white transition-colors">Get Started</Link>
+                </nav>
                 <div className="text-sm text-gray-300">
-                    <p>&copy; 2025 Vaivamm Capital. All rights reserved.</p>
+                    <p>&copy; {currentYear} Vaivamm Capital. All rights reserved.</p>
                 </div>
             </div>
         </div>
