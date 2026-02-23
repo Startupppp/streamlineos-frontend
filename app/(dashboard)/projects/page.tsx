@@ -24,11 +24,14 @@ const statusColors: Record<string, string> = {
 export default async function ProjectsPage() {
   const projects = await getProjects();
 
+  const activeCount = projects.filter(p => p.status === "ACTIVE").length;
+  const completedCount = projects.filter(p => p.status === "COMPLETED").length;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Projects"
-        description="Manage your organization's projects and track progress."
+        description={`${projects.length} project${projects.length !== 1 ? "s" : ""} total — ${activeCount} active, ${completedCount} completed.`}
         actions={<NewProjectDialog />}
       />
 
