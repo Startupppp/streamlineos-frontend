@@ -156,7 +156,12 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto p-4 md:p-6 pt-6 md:pt-10">
-      <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage settings for <span className="font-medium text-foreground">{project.name}</span>
+        </p>
+      </div>
 
       <Card>
         <CardHeader>
