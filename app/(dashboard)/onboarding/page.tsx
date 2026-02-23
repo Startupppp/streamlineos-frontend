@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateBankDetails, updatePersonalDetails, uploadOnboardingDocument } from "@/server/actions/onboarding-actions";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, Upload } from "lucide-react";
+import { Loader2, CheckCircle, Upload, ArrowLeft, ArrowRight, User, Landmark, FileText, ClipboardCheck, Check } from "lucide-react";
 
 // --- Zod Schemas ---
 const personalSchema = z.object({
@@ -28,9 +28,24 @@ const bankSchema = z.object({
   taxId: z.string().optional(),
 });
 
+const steps = [
+  { id: "personal", label: "Personal Info", icon: User },
+  { id: "bank", label: "Bank Details", icon: Landmark },
+  { id: "docs", label: "Documents", icon: FileText },
+  { id: "finish", label: "Review & Sign", icon: ClipboardCheck },
+];
+
 export default function OnboardingPage() {
   const [activeTab, setActiveTab] = useState("personal");
   const [isLoading, setIsLoading] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
+
+  const markStepComplete = (step: string) => {
+    setCompletedSteps((prev) => new Set([...prev, step]));
+  };
+
+  const currentStepIndex = steps.findIndex((s) => s.id === activeTab);
 
   // Forms
   const personalForm = useForm<z.infer<typeof personalSchema>>({
@@ -46,12 +61,13 @@ export default function OnboardingPage() {
     setIsLoading(true);
     const formData = new FormData();
     Object.entries(values).forEach(([k, v]) => formData.append(k, v));
-    
+
     const res = await updatePersonalDetails(formData);
     setIsLoading(false);
-    
+
     if (res.success) {
       toast.success("Personal details saved!");
+      markStepComplete("personal");
       setActiveTab("bank");
     } else {
       toast.error(res.error || "Something went wrong");
@@ -68,6 +84,7 @@ export default function OnboardingPage() {
 
     if (res.success) {
       toast.success("Bank details saved!");
+      markStepComplete("bank");
       setActiveTab("docs");
     } else {
       toast.error(res.error || "Failed to save bank details");
@@ -88,6 +105,7 @@ export default function OnboardingPage() {
 
     if (res.success) {
       toast.success(`${type} uploaded successfully!`);
+      setUploadedFiles((prev) => ({ ...prev, [type]: file.name }));
     } else {
       toast.error(res.error || "Upload failed");
     }
@@ -100,6 +118,57 @@ export default function OnboardingPage() {
         <p className="text-muted-foreground mt-2">
           Complete your profile to get started with Vaivamm Capital.
         </p>
+      </div>
+
+      {/* Step Progress Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => {
+            const StepIcon = step.icon;
+            const isCompleted = completedSteps.has(step.id);
+            const isCurrent = step.id === activeTab;
+            const isPast = index < currentStepIndex;
+
+            return (
+              <div key={step.id} className="flex items-center flex-1 last:flex-initial">
+                <button
+                  onClick={() => setActiveTab(step.id)}
+                  className="flex flex-col items-center gap-1.5 group"
+                >
+                  <div
+                    className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all ${
+                      isCompleted
+                        ? "bg-green-500 border-green-500 text-white"
+                        : isCurrent
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-muted border-border text-muted-foreground group-hover:border-primary/50"
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <Check className="h-5 w-5" />
+                    ) : (
+                      <StepIcon className="h-5 w-5" />
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs font-medium ${
+                      isCurrent ? "text-primary" : isCompleted ? "text-green-600" : "text-muted-foreground"
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                </button>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`flex-1 h-0.5 mx-3 mt-[-1.25rem] ${
+                      isPast || isCompleted ? "bg-green-500" : "bg-border"
+                    }`}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -136,10 +205,13 @@ export default function OnboardingPage() {
                   <Input {...personalForm.register("skills")} placeholder="React, Node.js, TypeScript..." />
                   {personalForm.formState.errors.skills && <p className="text-sm text-red-500">{personalForm.formState.errors.skills.message}</p>}
                 </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save & Continue
-                </Button>
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save & Continue
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>
@@ -181,10 +253,17 @@ export default function OnboardingPage() {
                   <Input {...bankForm.register("taxId")} placeholder="ABCDE1234F" />
                   {bankForm.formState.errors.taxId && <p className="text-sm text-red-500">{bankForm.formState.errors.taxId.message}</p>}
                 </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save & Continue
-                </Button>
+                <div className="flex justify-between">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("personal")}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save & Continue
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>
@@ -199,38 +278,84 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
+
                 {/* ID Proof */}
-                <div className="border border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center text-center space-y-2 hover:bg-gray-50 transition">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
+                <div className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
+                  uploadedFiles["ID"]
+                    ? "border-green-400 bg-green-50"
+                    : "border-gray-300 hover:bg-gray-50"
+                }`}>
+                  {uploadedFiles["ID"] ? (
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  )}
                   <Label htmlFor="id-upload" className="font-semibold cursor-pointer">Upload ID Proof</Label>
                   <span className="text-xs text-muted-foreground">Passport / Aadhar / License</span>
+                  {uploadedFiles["ID"] && (
+                    <span className="text-xs text-green-600 font-medium">{uploadedFiles["ID"]}</span>
+                  )}
                   <Input id="id-upload" type="file" className="hidden" onChange={(e) => onFileUpload(e, "ID")} />
-                  <Button variant="outline" size="sm" onClick={() => document.getElementById("id-upload")?.click()} disabled={isLoading}>Select File</Button>
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById("id-upload")?.click()} disabled={isLoading}>
+                    {uploadedFiles["ID"] ? "Replace File" : "Select File"}
+                  </Button>
                 </div>
 
                 {/* Certificates */}
-                <div className="border border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center text-center space-y-2 hover:bg-gray-50 transition">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
+                <div className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
+                  uploadedFiles["CERTIFICATE"]
+                    ? "border-green-400 bg-green-50"
+                    : "border-gray-300 hover:bg-gray-50"
+                }`}>
+                  {uploadedFiles["CERTIFICATE"] ? (
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  )}
                   <Label htmlFor="cert-upload" className="font-semibold cursor-pointer">Educational Certificates</Label>
                   <span className="text-xs text-muted-foreground">Highest Degree / Diploma</span>
+                  {uploadedFiles["CERTIFICATE"] && (
+                    <span className="text-xs text-green-600 font-medium">{uploadedFiles["CERTIFICATE"]}</span>
+                  )}
                   <Input id="cert-upload" type="file" className="hidden" onChange={(e) => onFileUpload(e, "CERTIFICATE")} />
-                  <Button variant="outline" size="sm" onClick={() => document.getElementById("cert-upload")?.click()} disabled={isLoading}>Select File</Button>
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById("cert-upload")?.click()} disabled={isLoading}>
+                    {uploadedFiles["CERTIFICATE"] ? "Replace File" : "Select File"}
+                  </Button>
                 </div>
 
-                 {/* Contract (If they have one signed offline) */}
-                 <div className="border border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center text-center space-y-2 hover:bg-gray-50 transition">
-                  <Upload className="h-8 w-8 text-muted-foreground" />
+                 {/* Contract */}
+                 <div className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
+                  uploadedFiles["CONTRACT"]
+                    ? "border-green-400 bg-green-50"
+                    : "border-gray-300 hover:bg-gray-50"
+                }`}>
+                  {uploadedFiles["CONTRACT"] ? (
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                  )}
                   <Label htmlFor="contract-upload" className="font-semibold cursor-pointer">Signed Contract</Label>
                   <span className="text-xs text-muted-foreground">If provided offline</span>
+                  {uploadedFiles["CONTRACT"] && (
+                    <span className="text-xs text-green-600 font-medium">{uploadedFiles["CONTRACT"]}</span>
+                  )}
                   <Input id="contract-upload" type="file" className="hidden" onChange={(e) => onFileUpload(e, "CONTRACT")} />
-                  <Button variant="outline" size="sm" onClick={() => document.getElementById("contract-upload")?.click()} disabled={isLoading}>Select File</Button>
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById("contract-upload")?.click()} disabled={isLoading}>
+                    {uploadedFiles["CONTRACT"] ? "Replace File" : "Select File"}
+                  </Button>
                 </div>
 
               </div>
             </CardContent>
-            <CardFooter>
-               <Button onClick={() => setActiveTab("finish")} className="w-full">Continue to Review</Button>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => setActiveTab("bank")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+              <Button onClick={() => { markStepComplete("docs"); setActiveTab("finish"); }}>
+                Continue to Review
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -239,13 +364,52 @@ export default function OnboardingPage() {
         <TabsContent value="finish">
           <Card className="text-center py-10">
             <CardContent className="flex flex-col items-center space-y-4">
-              <CheckCircle className="h-16 w-16 text-green-500" />
+              <div className="bg-green-100 p-4 rounded-full">
+                <CheckCircle className="h-16 w-16 text-green-500" />
+              </div>
               <h2 className="text-2xl font-bold">You&apos;re All Set!</h2>
               <p className="text-muted-foreground max-w-md">
                 Your onboarding information has been submitted. The HR team will verify your documents and approve your profile soon.
               </p>
 
-              <Button onClick={() => window.location.href = "/dashboard"}>Go to Dashboard</Button>
+              {/* Summary of completed steps */}
+              <div className="w-full max-w-sm space-y-2 pt-4">
+                {steps.slice(0, 3).map((step) => {
+                  const isCompleted = completedSteps.has(step.id);
+                  const StepIcon = step.icon;
+                  return (
+                    <div
+                      key={step.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg text-left ${
+                        isCompleted ? "bg-green-50" : "bg-muted/50"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <StepIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <span className={`text-sm font-medium ${isCompleted ? "text-green-700" : "text-muted-foreground"}`}>
+                        {step.label}
+                      </span>
+                      <span className={`ml-auto text-xs ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}>
+                        {isCompleted ? "Completed" : "Pending"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setActiveTab("personal")}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Review Steps
+                </Button>
+                <Button onClick={() => window.location.href = "/dashboard"}>
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
