@@ -232,7 +232,6 @@ export default function DocumentsPage() {
         </div>
         <Button
           onClick={() => setIsUploadOpen(true)}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
         >
           <Upload className="mr-2 h-4 w-4" />
           Upload Document
@@ -547,9 +546,11 @@ export default function DocumentsPage() {
                                 Download
                               </DropdownMenuItem>
                               {(doc.version || 1) > 1 && (
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => toast.info(`Document "${doc.name}" has ${doc.version} versions.`)}
+                                >
                                   <History className="mr-2 h-4 w-4" />
-                                  Version History
+                                  Version History ({doc.version})
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
