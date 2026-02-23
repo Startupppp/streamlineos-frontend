@@ -77,6 +77,7 @@ import { ExpensePagination } from "@/components/expenses/expense-pagination";
 import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filters";
 import { useSession } from "next-auth/react";
 import { downloadFile } from "@/hooks/use-file-url";
+import { PageHeader } from "@/components/ui/page-header";
 
 const EXPENSE_CATEGORIES = [
   "Travel",
@@ -313,34 +314,29 @@ export default function ExpensesPage() {
 
   return (
     <div className="flex-1 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Expense Management
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {isAdmin
-              ? "Manage and approve expense claims across the organization"
-              : "Submit and track your expense reimbursements"}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => loadData(true)}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          </Button>
-          <ExpenseExportDialog filters={filters} />
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Expense
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Expense Management"
+        description={isAdmin
+          ? "Manage and approve expense claims across the organization"
+          : "Submit and track your expense reimbursements"}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => loadData(true)}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            </Button>
+            <ExpenseExportDialog filters={filters} />
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Expense
+            </Button>
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
