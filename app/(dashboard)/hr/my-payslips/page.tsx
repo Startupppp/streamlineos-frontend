@@ -75,25 +75,34 @@ export default function MyPayslipsPage() {
       const jsPDF = (await import("jspdf")).default;
       
       const convertLabColors = (element: HTMLElement) => {
+        const unsupportedColorPattern = /lab\(|oklch\(|oklab\(|lch\(/;
         const allElements = element.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           const computedStyle = window.getComputedStyle(htmlEl);
-          
+
           const color = computedStyle.color;
           const bgColor = computedStyle.backgroundColor;
           const borderColor = computedStyle.borderColor;
-          
-          if (color && (color.includes('lab(') || color.includes('oklch('))) {
+
+          if (color && unsupportedColorPattern.test(color)) {
             htmlEl.style.color = '#1f2937';
           }
-          if (bgColor && (bgColor.includes('lab(') || bgColor.includes('oklch('))) {
-            htmlEl.style.backgroundColor = '#ffffff';
+          if (bgColor && unsupportedColorPattern.test(bgColor)) {
+            htmlEl.style.backgroundColor = 'transparent';
           }
-          if (borderColor && (borderColor.includes('lab(') || borderColor.includes('oklch('))) {
+          if (borderColor && unsupportedColorPattern.test(borderColor)) {
             htmlEl.style.borderColor = '#e5e7eb';
           }
         });
+        // Also fix the root element itself
+        const rootStyle = window.getComputedStyle(element);
+        if (rootStyle.color && unsupportedColorPattern.test(rootStyle.color)) {
+          element.style.color = '#1f2937';
+        }
+        if (rootStyle.backgroundColor && unsupportedColorPattern.test(rootStyle.backgroundColor)) {
+          element.style.backgroundColor = '#ffffff';
+        }
       };
       
       const canvas = await html2canvas(payslipRef.current, {
