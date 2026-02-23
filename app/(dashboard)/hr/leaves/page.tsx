@@ -59,6 +59,7 @@ export default async function LeavesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {context.balances.map((bal, index) => {
           const Icon = leaveTypeIcons[bal.typeName || ""] || CalendarDays;
+          const balanceNum = parseFloat(bal.balance) || 0;
           return (
             <Card key={`${bal.leaveTypeId}-${index}`} className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -74,6 +75,14 @@ export default async function LeavesPage() {
                 <p className="text-xs text-muted-foreground">
                   Days Available
                 </p>
+                <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      balanceNum <= 2 ? "bg-red-500" : balanceNum <= 5 ? "bg-amber-500" : "bg-emerald-500"
+                    }`}
+                    style={{ width: `${Math.min((balanceNum / 20) * 100, 100)}%` }}
+                  />
+                </div>
               </CardContent>
             </Card>
           );
