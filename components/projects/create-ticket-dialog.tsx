@@ -40,6 +40,7 @@ import { createTicketInputSchema } from "../../lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { resolveImageUrl } from "../../lib/utils";
 
 const formSchema = createTicketInputSchema.omit({ projectId: true });
 
@@ -306,7 +307,7 @@ export function CreateTicketDialog({
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-2">
                                <Avatar className="h-5 w-5">
-                                  <AvatarImage src={member.image || undefined} />
+                                  <AvatarImage src={resolveImageUrl(member.image)} />
                                   <AvatarFallback className="text-[10px]">{member.name?.[0] || "U"}</AvatarFallback>
                                </Avatar>
                                <span className="truncate">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>

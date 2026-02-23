@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -465,7 +466,7 @@ export default function ExpensesPage() {
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={expense.user?.image || undefined} />
+                                <AvatarImage src={resolveImageUrl(expense.user?.image)} />
                                 <AvatarFallback className="text-xs">
                                   {expense.user?.firstName?.[0]}
                                   {expense.user?.lastName?.[0]}
@@ -599,7 +600,7 @@ export default function ExpensesPage() {
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarImage src={expense.user?.image || undefined} />
+                                  <AvatarImage src={resolveImageUrl(expense.user?.image)} />
                                   <AvatarFallback className="text-xs">
                                     {expense.user?.firstName?.[0]}
                                     {expense.user?.lastName?.[0]}

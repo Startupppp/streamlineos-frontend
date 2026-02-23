@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, Loader2, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { resolveImageUrl } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
 interface TimeEntry {
@@ -118,7 +119,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
           <div className="mt-6 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b px-6">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={entry.user?.image || undefined} />
+                <AvatarImage src={resolveImageUrl(entry.user?.image)} />
                 <AvatarFallback>
                   {entry.user?.firstName?.[0]}
                   {entry.user?.lastName?.[0]}

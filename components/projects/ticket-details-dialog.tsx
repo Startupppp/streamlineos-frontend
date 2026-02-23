@@ -52,6 +52,7 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { resolveImageUrl } from "../../lib/utils";
 import { format } from "date-fns";
 import {
   Popover,
@@ -420,7 +421,7 @@ export function TicketDetailsDialog({
                         </span>
                         {sub.assignee && (
                           <Avatar className="h-5 w-5">
-                            <AvatarImage src={sub.assignee.image || undefined} />
+                            <AvatarImage src={resolveImageUrl(sub.assignee.image)} />
                             <AvatarFallback className="text-[8px]">
                               {sub.assignee.firstName?.[0]}{sub.assignee.lastName?.[0]}
                             </AvatarFallback>
@@ -513,7 +514,7 @@ export function TicketDetailsDialog({
                       {ticket.comments.map((comment) => (
                         <div key={comment.id} className="flex gap-3 group">
                           <Avatar className="h-8 w-8 shrink-0 ring-2 ring-background">
-                            <AvatarImage src={comment.user?.image || undefined} />
+                            <AvatarImage src={resolveImageUrl(comment.user?.image)} />
                             <AvatarFallback className="text-xs bg-primary/10 text-primary">
                               {comment.user?.firstName?.[0]}{comment.user?.lastName?.[0]}
                             </AvatarFallback>
@@ -611,7 +612,7 @@ export function TicketDetailsDialog({
                       {ticket.assignee ? (
                         <div className="flex items-center gap-2">
                           <Avatar className="h-5 w-5">
-                            <AvatarImage src={ticket.assignee.image || undefined} />
+                            <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
                             <AvatarFallback className="text-[10px]">
                               {ticket.assignee.firstName?.[0]}{ticket.assignee.lastName?.[0]}
                             </AvatarFallback>
@@ -630,7 +631,7 @@ export function TicketDetailsDialog({
                         <SelectItem key={member.id} value={member.id}>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-5 w-5">
-                              <AvatarImage src={member.image || undefined} />
+                              <AvatarImage src={resolveImageUrl(member.image)} />
                               <AvatarFallback className="text-[10px]">
                                 {member.firstName?.[0]}{member.lastName?.[0]}
                               </AvatarFallback>
@@ -752,7 +753,7 @@ export function TicketDetailsDialog({
                   {ticket.reporter ? (
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 ring-2 ring-primary/10">
-                        <AvatarImage src={ticket.reporter.image || undefined} />
+                        <AvatarImage src={resolveImageUrl(ticket.reporter.image)} />
                         <AvatarFallback className="bg-primary/10 text-primary font-medium">
                           {ticket.reporter.firstName?.[0]}{ticket.reporter.lastName?.[0]}
                         </AvatarFallback>

@@ -13,7 +13,7 @@ import { Input } from "../../../../components/ui/input";
 import { Badge } from "../../../../components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
 import { CheckCircle2, Search, X, Bug, Bookmark, Zap, CheckSquare } from "lucide-react";
-import { cn } from "../../../../lib/utils";
+import { cn, resolveImageUrl } from "../../../../lib/utils";
 
 const HIDE_COMPLETED_KEY = "kanban-hide-completed";
 
@@ -240,7 +240,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                   title={`${a.firstName || ""} ${a.lastName || ""}`}
                 >
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src={a.image || undefined} />
+                    <AvatarImage src={resolveImageUrl(a.image)} />
                     <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
                       {a.firstName?.[0]}{a.lastName?.[0]}
                     </AvatarFallback>

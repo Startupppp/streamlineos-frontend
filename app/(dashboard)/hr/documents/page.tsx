@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -373,7 +374,7 @@ export default function DocumentsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-7 w-7">
-                              <AvatarImage src={doc.user?.image || undefined} />
+                              <AvatarImage src={resolveImageUrl(doc.user?.image)} />
                               <AvatarFallback className="text-xs bg-violet-100 text-violet-700">
                                 {doc.user?.firstName?.[0]}{doc.user?.lastName?.[0]}
                               </AvatarFallback>
@@ -495,7 +496,7 @@ export default function DocumentsPage() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Avatar className="h-7 w-7">
-                                <AvatarImage src={doc.user?.image || undefined} />
+                                <AvatarImage src={resolveImageUrl(doc.user?.image)} />
                                 <AvatarFallback className="text-xs bg-violet-100 text-violet-700">
                                   {doc.user?.firstName?.[0]}{doc.user?.lastName?.[0]}
                                 </AvatarFallback>

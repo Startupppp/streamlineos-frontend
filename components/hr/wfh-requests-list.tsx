@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 import {
   Home,
   CheckCircle2,
@@ -162,7 +163,7 @@ export function PendingWfhApprovals() {
               >
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={req.user?.image || undefined} />
+                    <AvatarImage src={resolveImageUrl(req.user?.image)} />
                     <AvatarFallback className="text-xs">
                       {req.user?.firstName?.[0]}
                       {req.user?.lastName?.[0]}

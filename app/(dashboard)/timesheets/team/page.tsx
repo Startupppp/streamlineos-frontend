@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 import { TimeEntryDetailSheet } from "@/components/timesheets/time-entry-detail-sheet";
 
 type TimesheetEntry = RouterOutputs["project"]["getAllTeamTimesheets"][number];
@@ -364,7 +365,7 @@ export default function TeamTimesheetsPage() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={entry.user?.image || undefined} />
+                                <AvatarImage src={resolveImageUrl(entry.user?.image)} />
                                 <AvatarFallback className="text-[10px]">
                                   {entry.user?.firstName?.[0]}
                                   {entry.user?.lastName?.[0]}

@@ -14,6 +14,7 @@ import { PageHeader } from "../../../components/ui/page-header";
 import { StatCard } from "../../../components/ui/stat-card";
 import { EmptyState } from "../../../components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
+import { resolveImageUrl } from "../../../lib/utils";
 import { Badge } from "../../../components/ui/badge";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
@@ -478,7 +479,7 @@ export default function DashboardPage() {
                         </div>
                         {item.assignee && (
                           <Avatar className="h-6 w-6 flex-shrink-0">
-                            <AvatarImage src={item.assignee.image || undefined} />
+                            <AvatarImage src={resolveImageUrl(item.assignee.image)} />
                             <AvatarFallback className="text-[10px]">
                               {getInitials(null, item.assignee.firstName, item.assignee.lastName)}
                             </AvatarFallback>
@@ -518,7 +519,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage src={member.image || undefined} />
+                          <AvatarImage src={resolveImageUrl(member.image)} />
                           <AvatarFallback className="text-xs">
                             {getInitials(member.name)}
                           </AvatarFallback>

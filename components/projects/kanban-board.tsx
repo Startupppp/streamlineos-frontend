@@ -6,7 +6,7 @@ import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { cn } from "../../lib/utils";
+import { cn, resolveImageUrl } from "../../lib/utils";
 import { MoreHorizontal, Plus } from "lucide-react";
 import {
   useUpdateTicketOrder,
@@ -436,7 +436,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
 
                                                   {ticket.assignee ? (
                                                       <Avatar className="h-5 w-5 border border-background ring-2 ring-background">
-                                                      <AvatarImage src={ticket.assignee.image || undefined} />
+                                                      <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
                                                       <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">
                                                           {ticket.assignee.firstName?.[0]}
                                                           {ticket.assignee.lastName?.[0]}

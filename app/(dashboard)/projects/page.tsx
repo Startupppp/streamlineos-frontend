@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProjectsEmptyState } from "./projects-empty-state";
+import { resolveImageUrl } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -59,7 +60,7 @@ export default async function ProjectsPage() {
                 <CardFooter className="justify-between pt-4">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Avatar className="h-6 w-6 mr-2 border border-border">
-                      <AvatarImage src={project.manager?.image || undefined} />
+                      <AvatarImage src={resolveImageUrl(project.manager?.image)} />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {project.manager?.name?.charAt(0) || "M"}
                       </AvatarFallback>
