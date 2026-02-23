@@ -3,24 +3,41 @@
 import { use, useState } from "react";
 import { api } from "@/trpc/react";
 import { CreateEpicDialog } from "@/components/projects/create-epic-dialog";
+import { EditEpicDialog } from "@/components/projects/edit-epic-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Layers,
   ChevronDown,
   ChevronRight,
   CheckCircle2,
-  Clock,
   AlertCircle,
   Loader2,
   BookOpen,
   Bug,
-  Wrench
+  Wrench,
+  Pencil,
+  Trash2,
+  Plus,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -31,6 +48,29 @@ export default function EpicsPage({ params }: PageProps) {
   const projectId = parseInt(id);
 
   const { data: project, isLoading } = api.project.getProjectDetails.useQuery({ id: projectId });
+  const utils = api.useUtils();
+
+  const updateTicket = api.project.updateTicket.useMutation({
+    onSuccess: () => {
+      utils.project.getProjectDetails.invalidate();
+    },
+  });
+
+  const deleteTicket = api.project.deleteTicket.useMutation({
+    onSuccess: () => {
+      utils.project.getProjectDetails.invalidate();
+      toast.success("Epic deleted");
+    },
+    onError: (error) => toast.error(error.message || "Failed to delete epic"),
+  });
+
+  const createTicket = api.project.createTicket.useMutation({
+    onSuccess: () => {
+      utils.project.getProjectDetails.invalidate();
+      toast.success("Story created");
+    },
+    onError: (error) => toast.error(error.message || "Failed to create story"),
+  });
 
   if (isLoading) {
     return (
@@ -47,13 +87,24 @@ export default function EpicsPage({ params }: PageProps) {
   const stories = tickets.filter(t => t.type === "STORY");
   const tasks = tickets.filter(t => t.type === "TASK");
 
+  function handleDeleteEpic(epicId: number) {
+    // Unlink child stories first
+    const children = stories.filter(s => s.epicId === epicId);
+    const unlinkPromises = children.map(s =>
+      updateTicket.mutateAsync({ ticketId: s.id, epicId: undefined })
+    );
+    Promise.all(unlinkPromises).then(() => {
+      deleteTicket.mutate({ ticketId: epicId });
+    });
+  }
+
   return (
     <div className="p-6 md:p-8 lg:p-12 space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Epics</h1>
           <p className="text-muted-foreground mt-1">
-            Organize work into large initiatives and track progress
+            {epics.length} epic{epics.length !== 1 ? "s" : ""} — {stories.length} stories, {tickets.filter(t => t.status === "DONE").length} completed
           </p>
         </div>
         <CreateEpicDialog projectId={projectId} />
@@ -130,12 +181,17 @@ export default function EpicsPage({ params }: PageProps) {
               stories={stories.filter(s => s.epicId === epic.id)}
               allTickets={tickets}
               projectId={projectId}
+              unlinkedStories={stories.filter(s => !s.epicId)}
+              onDeleteEpic={() => handleDeleteEpic(epic.id)}
+              onLinkStory={(storyId) => updateTicket.mutate({ ticketId: storyId, epicId: epic.id })}
+              onCreateStory={(title) => createTicket.mutate({ projectId, title, type: "STORY", epicId: epic.id })}
+              isDeleting={deleteTicket.isPending}
             />
           ))
         )}
       </div>
 
-      {/* Orphan Stories (not linked to any epic) */}
+      {/* Orphan Stories */}
       {stories.filter(s => !s.epicId).length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -153,9 +209,7 @@ export default function EpicsPage({ params }: PageProps) {
                     <div className="flex items-center gap-3">
                       <BookOpen className="h-4 w-4 text-blue-500" />
                       <span className="font-medium">{story.title}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {story.status}
-                      </Badge>
+                      <Badge variant="outline" className="text-xs">{story.status}</Badge>
                     </div>
                     <Link href={`/projects/${projectId}?ticket=${story.id}`}>
                       <Button variant="ghost" size="sm">View</Button>
@@ -196,26 +250,26 @@ interface EpicCardProps {
     points?: number | null;
   }>;
   projectId: number;
+  unlinkedStories: Array<{ id: number; title: string }>;
+  onDeleteEpic: () => void;
+  onLinkStory: (storyId: number) => void;
+  onCreateStory: (title: string) => void;
+  isDeleting?: boolean;
 }
 
-function EpicCard({ epic, stories, allTickets, projectId }: EpicCardProps) {
+function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [newStoryTitle, setNewStoryTitle] = useState("");
+  const [linkOpen, setLinkOpen] = useState(false);
 
   const totalItems = stories.length;
   const completedItems = stories.filter(s => s.status === "DONE").length;
-  const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+  const inProgressItems = stories.filter(s => s.status === "IN_PROGRESS" || s.status === "IN_REVIEW").length;
+  const todoItems = totalItems - completedItems - inProgressItems;
 
   const totalPoints = stories.reduce((sum, s) => sum + (s.points || 0), 0);
-  const completedPoints = stories
-    .filter(s => s.status === "DONE")
-    .reduce((sum, s) => sum + (s.points || 0), 0);
-
-  const statusColors: Record<string, string> = {
-    TODO: "bg-gray-500",
-    IN_PROGRESS: "bg-blue-500",
-    IN_REVIEW: "bg-yellow-500",
-    DONE: "bg-green-500",
-  };
+  const completedPoints = stories.filter(s => s.status === "DONE").reduce((sum, s) => sum + (s.points || 0), 0);
 
   const priorityColors: Record<string, string> = {
     LOW: "text-gray-500",
@@ -233,11 +287,7 @@ function EpicCard({ epic, stories, allTickets, projectId }: EpicCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 mt-0.5">
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
+              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </Button>
             <div className="space-y-1">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -245,27 +295,39 @@ function EpicCard({ epic, stories, allTickets, projectId }: EpicCardProps) {
                 {epic.title}
               </CardTitle>
               {epic.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {epic.description}
-                </p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{epic.description}</p>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <Badge variant="outline" className={cn(priorityColors[epic.priority || "MEDIUM"])}>
               {epic.priority || "MEDIUM"}
             </Badge>
-            <Badge
-              className={cn(
-                "text-white",
-                statusColors[epic.status || "TODO"] || "bg-gray-500"
-              )}
-            >
-              {epic.status || "TODO"}
-            </Badge>
+            <EditEpicDialog epic={epic} projectId={projectId} trigger={
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            } />
+            <Popover open={deleteConfirm} onOpenChange={setDeleteConfirm}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64" align="end">
+                <p className="text-sm mb-3">Delete this epic? Child stories will be unlinked.</p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
+                  <Button variant="destructive" size="sm" onClick={onDeleteEpic} disabled={isDeleting}>
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
+        {/* Segmented progress bar */}
         <div className="ml-9 mt-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
@@ -275,11 +337,35 @@ function EpicCard({ epic, stories, allTickets, projectId }: EpicCardProps) {
               {completedPoints} / {totalPoints} points
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <div className="w-full h-2 bg-secondary rounded-full flex overflow-hidden">
+            {totalItems > 0 && (
+              <>
+                <div
+                  className="bg-green-500 h-full transition-all"
+                  style={{ width: `${(completedItems / totalItems) * 100}%` }}
+                />
+                <div
+                  className="bg-blue-500 h-full transition-all"
+                  style={{ width: `${(inProgressItems / totalItems) * 100}%` }}
+                />
+                <div
+                  className="bg-gray-300 dark:bg-gray-600 h-full transition-all"
+                  style={{ width: `${(todoItems / totalItems) * 100}%` }}
+                />
+              </>
+            )}
+          </div>
+          {totalItems > 0 && (
+            <div className="flex gap-3 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full" /> Done ({completedItems})</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded-full" /> In Progress ({inProgressItems})</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full" /> To Do ({todoItems})</span>
+            </div>
+          )}
         </div>
       </CardHeader>
 
-      {isExpanded && stories.length > 0 && (
+      {isExpanded && (
         <CardContent className="pt-0 pb-4">
           <div className="ml-9 space-y-2 border-l-2 border-muted pl-4">
             {stories.map((story) => (
@@ -290,19 +376,14 @@ function EpicCard({ epic, stories, allTickets, projectId }: EpicCardProps) {
                 <div className="flex items-center gap-3">
                   <BookOpen className="h-4 w-4 text-blue-500" />
                   <span className="font-medium">{story.title}</span>
-                  {story.points && (
-                    <Badge variant="secondary" className="text-xs">
-                      {story.points} pts
-                    </Badge>
+                  {story.points != null && story.points > 0 && (
+                    <Badge variant="secondary" className="text-xs">{story.points} pts</Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
-                    className={cn(
-                      "text-xs",
-                      story.status === "DONE" && "border-green-500 text-green-500"
-                    )}
+                    className={cn("text-xs", story.status === "DONE" && "border-green-500 text-green-500")}
                   >
                     {story.status || "TODO"}
                   </Badge>
@@ -312,16 +393,66 @@ function EpicCard({ epic, stories, allTickets, projectId }: EpicCardProps) {
                 </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      )}
 
-      {isExpanded && stories.length === 0 && (
-        <CardContent className="pt-0 pb-4">
-          <div className="ml-9 p-4 bg-muted/30 rounded-lg text-center">
-            <p className="text-sm text-muted-foreground">
-              No stories linked to this epic yet
-            </p>
+            {stories.length === 0 && (
+              <p className="text-sm text-muted-foreground p-4 text-center">No stories linked yet</p>
+            )}
+
+            {/* Add story / Link existing */}
+            <div className="flex gap-2 pt-2">
+              <Input
+                value={newStoryTitle}
+                onChange={(e) => setNewStoryTitle(e.target.value)}
+                placeholder="New story title..."
+                className="h-8 text-sm flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newStoryTitle.trim()) {
+                    onCreateStory(newStoryTitle.trim());
+                    setNewStoryTitle("");
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                className="h-8"
+                onClick={() => {
+                  if (newStoryTitle.trim()) {
+                    onCreateStory(newStoryTitle.trim());
+                    setNewStoryTitle("");
+                  }
+                }}
+                disabled={!newStoryTitle.trim()}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Add
+              </Button>
+              {unlinkedStories.length > 0 && (
+                <Popover open={linkOpen} onOpenChange={setLinkOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Link2 className="h-3.5 w-3.5 mr-1" />
+                      Link
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2" align="end">
+                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                      {unlinkedStories.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            onLinkStory(s.id);
+                            setLinkOpen(false);
+                          }}
+                          className="w-full text-left p-2 text-sm rounded hover:bg-muted transition-colors truncate"
+                        >
+                          {s.title}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
           </div>
         </CardContent>
       )}
