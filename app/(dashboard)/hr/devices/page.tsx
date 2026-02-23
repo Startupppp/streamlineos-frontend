@@ -42,6 +42,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -73,6 +83,7 @@ const statusColors: Record<string, string> = {
 
 export default function DevicesPage() {
   const [open, setOpen] = useState(false);
+  const [deleteDeviceId, setDeleteDeviceId] = useState<number | null>(null);
 
   const { data: devices, isLoading, refetch } = api.hr.getDevices.useQuery({});
   const { data: employees } = api.hr.getEmployees.useQuery();
@@ -372,7 +383,7 @@ export default function DevicesPage() {
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => deleteDeviceMutation.mutate({ deviceId: device.id })}
+                          onClick={() => setDeleteDeviceId(device.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -391,6 +402,32 @@ export default function DevicesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDeviceId !== null} onOpenChange={(open) => { if (!open) setDeleteDeviceId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Device</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this device? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteDeviceId !== null) {
+                  deleteDeviceMutation.mutate({ deviceId: deleteDeviceId });
+                  setDeleteDeviceId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
