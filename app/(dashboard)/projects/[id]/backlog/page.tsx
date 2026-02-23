@@ -151,12 +151,24 @@ export default function BacklogPage({ params }: PageProps) {
     startDate ||
     endDate;
 
+  const activeFilterCount = [
+    searchQuery,
+    selectedAssignee !== "all" ? selectedAssignee : "",
+    selectedPriority !== "all" ? selectedPriority : "",
+    selectedStatus !== "all" ? selectedStatus : "",
+    selectedType !== "all" ? selectedType : "",
+    startDate,
+    endDate,
+  ].filter(Boolean).length;
+
   return (
     <div className="p-4 md:p-8 h-full flex flex-col">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 pt-4 md:pt-8">
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold text-primary">Backlog</h1>
-          <p className="text-muted-foreground">Manage your project tickets</p>
+          <p className="text-muted-foreground">
+            {tickets.length} ticket{tickets.length !== 1 ? "s" : ""} in backlog
+          </p>
         </div>
         <div className="flex justify-center w-full md:w-auto md:justify-end">
           <CreateTicketDialog projectId={projectId} />
@@ -175,7 +187,7 @@ export default function BacklogPage({ params }: PageProps) {
               className="h-7 px-2 text-xs"
             >
               <X className="h-3 w-3 mr-1" />
-              Clear all
+              Clear all ({activeFilterCount})
             </Button>
           )}
         </div>
