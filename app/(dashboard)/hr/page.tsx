@@ -14,9 +14,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, MoreHorizontal, Pencil, Trash2, Users, Search } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions";
 import {
@@ -56,6 +57,19 @@ export default function HRDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredEmployees = useMemo(() => {
+    if (!searchTerm) return employees;
+    const term = searchTerm.toLowerCase();
+    return employees.filter(
+      (e) =>
+        e.email.toLowerCase().includes(term) ||
+        (e.firstName && e.firstName.toLowerCase().includes(term)) ||
+        (e.lastName && e.lastName.toLowerCase().includes(term)) ||
+        e.role.toLowerCase().includes(term)
+    );
+  }, [employees, searchTerm]);
 
   // Helper function to determine if current user can delete target employee
   const canDeleteEmployee = (targetEmployee: Employee) => {
@@ -126,7 +140,7 @@ export default function HRDashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="Employees"
-        description="Directory of all members in this organization."
+        description={`Directory of all members in this organization (${employees.length}).`}
         actions={
           <Link href="/hr/onboarding">
             <Button>
@@ -137,9 +151,21 @@ export default function HRDashboardPage() {
         }
       />
 
-      {employees && employees.length > 0 ? (
+      {employees.length > 0 && (
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, email, or role..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      )}
+
+      {filteredEmployees.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {employees.map((user) => (
+          {filteredEmployees.map((user) => (
             <Card 
               key={user.id} 
               className="bg-card border-border hover:shadow-md transition-all group relative"
@@ -219,6 +245,12 @@ export default function HRDashboardPage() {
             </Card>
           ))}
         </div>
+      ) : searchTerm ? (
+        <EmptyState
+          icon={Search}
+          title="No results found"
+          description={`No employees match "${searchTerm}". Try a different search.`}
+        />
       ) : (
         <EmptyState
           icon={Users}
