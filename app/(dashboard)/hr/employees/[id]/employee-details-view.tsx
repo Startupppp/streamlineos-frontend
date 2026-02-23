@@ -8,6 +8,10 @@ import { EmployeeLeaveStats, EmployeeAttendanceSummary } from "@/components/hr/e
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
 import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     const { data: stats } = api.hr.getEmployeeStats.useQuery({ userId: employee.id });
@@ -18,10 +22,22 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
     return (
         <div className="space-y-6">
-            <PageHeader
-                title="Employee 360° View"
-                description={`Complete overview for ${employeeName}`}
-            />
+            <div className="flex items-center gap-4">
+                <Link href="/hr">
+                    <Button variant="outline" size="icon" className="h-9 w-9">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                </Link>
+                <div className="flex items-center gap-3 flex-1">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{employeeName}</h2>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>{employee.email}</span>
+                            {employee.role && <Badge variant="secondary" className="text-xs">{employee.role}</Badge>}
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <Tabs defaultValue="overview" className="space-y-6">
                 <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
