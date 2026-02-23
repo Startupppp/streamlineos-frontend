@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
@@ -9,10 +10,99 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/a
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { PageHeader } from "../../../../components/ui/page-header";
 import { Switch } from "../../../../components/ui/switch";
-import { User, Palette, Bell, Shield } from "lucide-react";
+import { User, Palette, Bell, Shield, Camera, Loader2, Trash2 } from "lucide-react";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
+import { resolveImageUrl } from "../../../../lib/utils";
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const updateProfile = api.hr.updateProfile.useMutation({
+    onSuccess: async () => {
+      await updateSession({});
+      toast.success("Profile photo updated successfully");
+      // Keep preview visible briefly while session state propagates
+      setTimeout(() => setPreviewUrl(null), 1000);
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to update profile");
+    },
+  });
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please select an image file (JPEG, PNG, GIF, or WebP)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5MB");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = (ev) => setPreviewUrl(ev.target?.result as string);
+      reader.readAsDataURL(file);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "avatars");
+
+      const res = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Upload failed");
+      }
+
+      const { url, key } = await res.json();
+      const imageValue = url || key;
+
+      await updateProfile.mutateAsync({
+        userId: session!.user.id,
+        image: imageValue,
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload photo");
+      setPreviewUrl(null);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [session, updateProfile]);
+
+  const handleRemovePhoto = useCallback(async () => {
+    if (!session?.user?.id) return;
+    setUploading(true);
+    try {
+      await updateProfile.mutateAsync({
+        userId: session.user.id,
+        image: "",
+      });
+      setPreviewUrl(null);
+    } catch {
+      toast.error("Failed to remove photo");
+    } finally {
+      setUploading(false);
+    }
+  }, [session, updateProfile]);
+
+  const displayImage = previewUrl || resolveImageUrl(session?.user?.image);
+  const isBusy = uploading || updateProfile.isPending;
 
   return (
     <div className="space-y-6">
@@ -50,16 +140,68 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
-                <Avatar className="h-20 w-20 border-2 border-border">
-                  <AvatarImage src={session?.user?.image || undefined} />
-                  <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
-                    {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                  <Avatar className="h-20 w-20 border-2 border-border">
+                    <AvatarImage src={displayImage} />
+                    <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
+                      {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    {isBusy ? (
+                      <Loader2 className="h-6 w-6 text-white animate-spin" />
+                    ) : (
+                      <Camera className="h-6 w-6 text-white" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold text-foreground">{session?.user?.name || "User"}</h3>
                   <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
-                  <Button variant="outline" size="sm">Change Photo</Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isBusy}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {isBusy ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="h-4 w-4 mr-1" />
+                          Change Photo
+                        </>
+                      )}
+                    </Button>
+                    {session?.user?.image && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={isBusy}
+                        onClick={handleRemovePhoto}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -86,7 +228,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end pt-4 border-t border-border">
-                <Button>Save Changes</Button>
+                <Button disabled>Save Changes</Button>
               </div>
             </CardContent>
           </Card>

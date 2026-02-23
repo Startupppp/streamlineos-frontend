@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { cn } from "../../lib/utils";
+import { cn, resolveImageUrl } from "../../lib/utils";
 import {
   LayoutDashboard,
   Users,
@@ -388,7 +388,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
               )}
             >
               <Avatar className="h-9 w-9 border border-sidebar-border shrink-0">
-                <AvatarImage src={session?.user?.image || undefined} />
+                <AvatarImage src={resolveImageUrl(session?.user?.image)} />
                 <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-sm">
                   {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>

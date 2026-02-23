@@ -14,6 +14,7 @@ import {
 import { signOut, useSession } from "next-auth/react";
 import { LogOut, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { resolveImageUrl } from "@/lib/utils";
 
 export function UserNav() {
   const { data: session } = useSession();
@@ -26,7 +27,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={session.user.image || undefined} alt={session.user.name || ""} />
+            <AvatarImage src={resolveImageUrl(session.user.image)} alt={session.user.name || ""} />
             <AvatarFallback>{session.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
         </Button>

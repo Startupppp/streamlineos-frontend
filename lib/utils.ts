@@ -6,6 +6,20 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Resolves a stored image value to a displayable URL.
+ * - null/undefined/empty → undefined (shows fallback)
+ * - Starts with http:// or https:// → external URL, use as-is
+ * - Starts with / → local path, use as-is
+ * - Anything else → storage key, proxy through /api/storage/image
+ */
+export function resolveImageUrl(image: string | null | undefined): string | undefined {
+  if (!image) return undefined;
+  if (image.startsWith("http://") || image.startsWith("https://")) return image;
+  if (image.startsWith("/")) return image;
+  return `/api/storage/image?key=${encodeURIComponent(image)}`;
+}
+
+/**
  * Generates a URL-friendly slug from a string
  * Converts to lowercase, removes special characters, replaces spaces with hyphens
  * 
