@@ -37,7 +37,26 @@ export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
 /**
- * Reusable middleware that enforces users are logged in.
+ * Middleware that only enforces users are logged in (no org required).
+ * Use for procedures that need session but not org, e.g. getOrganizations.
+ */
+const enforceSession = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.session || !ctx.session.user?.id) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({
+    ctx: {
+      session: {
+        ...ctx.session,
+        userId: ctx.session.user.id,
+        user: ctx.session.user,
+      },
+    },
+  });
+});
+
+/**
+ * Reusable middleware that enforces users are logged in and in at least one org.
  * Gets the user's organization and adds orgId to the session context.
  */
 const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
@@ -73,4 +92,6 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   });
 });
 
+/** Procedure that only requires a valid session (e.g. for getOrganizations). */
+export const sessionProcedure = t.procedure.use(enforceSession);
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);

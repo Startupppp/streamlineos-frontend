@@ -1,0 +1,336 @@
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+  Users,
+  ThumbsUp,
+  Star,
+  ShieldCheck,
+  HeadphonesIcon,
+  Clock,
+  Zap,
+  SmilePlus,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MetricCard } from "@/components/crm/metric-card";
+import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
+import { MiniAreaChart } from "@/components/crm/mini-area-chart";
+import { ActivityFeed } from "@/components/crm/activity-feed";
+import {
+  customerStats,
+  clientHealth,
+  upcomingRenewals,
+  keyAccounts,
+  customerInteractions,
+  supportStats,
+  retentionTimeline,
+  csatTimeline,
+  formatCurrency,
+} from "@/lib/data/crm-mock-data";
+import { cn } from "@/lib/utils";
+import { getPersonSlug } from "@/lib/data/crm-people-data";
+
+const healthColors: Record<string, string> = {
+  healthy: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  at_risk: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  critical: "bg-red-500/10 text-red-700 dark:text-red-400",
+};
+
+const healthDot: Record<string, string> = {
+  healthy: "bg-emerald-500",
+  at_risk: "bg-amber-500",
+  critical: "bg-red-500",
+};
+
+export default function CustomerExecutiveDashboardPage() {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Customer Executive Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Client health, retention, and satisfaction overview
+        </p>
+      </div>
+
+      {/* Row 2: Metric Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Total Clients"
+          value={customerStats.totalClients.value}
+          icon={Users}
+          trend={customerStats.totalClients.trend}
+          sparkColor="#3B82F6"
+        />
+        <MetricCard
+          label="NPS Score"
+          value={customerStats.nps.value}
+          icon={ThumbsUp}
+          trend={customerStats.nps.trend}
+          sparkColor="#10B981"
+        />
+        <MetricCard
+          label="CSAT Score"
+          value={`${customerStats.csat.value}/5`}
+          icon={Star}
+          trend={customerStats.csat.trend}
+          sparkData={csatTimeline.map((d) => d.value)}
+          sparkColor="#F59E0B"
+        />
+        <MetricCard
+          label="Retention Rate"
+          value={`${customerStats.retention.value}%`}
+          icon={ShieldCheck}
+          trend={customerStats.retention.trend}
+          sparkData={retentionTimeline.map((d) => d.value)}
+          sparkColor="#8B5CF6"
+        />
+      </div>
+
+      {/* Row 3: Client Health Donut + Upcoming Renewals */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <motion.div
+          className="lg:col-span-5"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Client Health</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center py-4">
+              <MiniDonutChart
+                data={clientHealth}
+                centerValue={clientHealth.reduce((s, d) => s + d.value, 0)}
+                centerLabel="Total"
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          className="lg:col-span-7"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Upcoming Renewals</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left font-medium text-muted-foreground pb-2">Client</th>
+                      <th className="text-left font-medium text-muted-foreground pb-2">Value</th>
+                      <th className="text-left font-medium text-muted-foreground pb-2">Date</th>
+                      <th className="text-left font-medium text-muted-foreground pb-2">Health</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {upcomingRenewals.map((r, i) => (
+                      <motion.tr
+                        key={i}
+                        className="border-b border-border/50 last:border-0"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 + i * 0.05 }}
+                      >
+                        <td className="py-2.5 font-medium text-foreground">{r.client}</td>
+                        <td className="py-2.5 text-foreground">{formatCurrency(r.value)}</td>
+                        <td className="py-2.5 text-muted-foreground">{r.date}</td>
+                        <td className="py-2.5">
+                          <span
+                            className={cn(
+                              "text-xs font-medium px-2 py-0.5 rounded-full capitalize",
+                              healthColors[r.health]
+                            )}
+                          >
+                            {r.health.replace("_", " ")}
+                          </span>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Row 4: Key Accounts + Interactions Timeline */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Key Accounts */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Key Accounts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {keyAccounts.map((account, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0"
+                  >
+                    <div className={cn("w-2 h-2 rounded-full shrink-0", healthDot[account.health])} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{account.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        CSM:{" "}
+                        {getPersonSlug(account.csm) ? (
+                          <Link
+                            href={`/sales/person/${getPersonSlug(account.csm)}`}
+                            className="text-primary hover:underline"
+                          >
+                            {account.csm}
+                          </Link>
+                        ) : (
+                          account.csm
+                        )}
+                        {" "}· Since {account.since}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatCurrency(account.revenue)}
+                      </p>
+                      <span
+                        className={cn(
+                          "text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize",
+                          healthColors[account.health]
+                        )}
+                      >
+                        {account.health.replace("_", " ")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Interactions Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Recent Interactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-y-auto pr-1" style={{ maxHeight: "380px" }}>
+                <ActivityFeed items={customerInteractions} />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Row 5: Support Stats + Retention Trend + CSAT Trend */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Support Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <HeadphonesIcon className="h-4 w-4 text-primary" />
+                Support Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-border p-3 text-center">
+                  <p className="text-2xl font-bold text-foreground">{supportStats.openTickets}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Open Tickets</p>
+                </div>
+                <div className="rounded-xl border border-border p-3 text-center">
+                  <p className="text-2xl font-bold text-foreground">{supportStats.avgResolution}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Avg Resolution</p>
+                </div>
+                <div className="rounded-xl border border-border p-3 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    <p className="text-2xl font-bold text-foreground">{supportStats.firstResponse}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">First Response</p>
+                </div>
+                <div className="rounded-xl border border-border p-3 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <SmilePlus className="h-4 w-4 text-emerald-500" />
+                    <p className="text-2xl font-bold text-foreground">{supportStats.satisfaction}%</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Satisfaction</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Retention Trend */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                Retention Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MiniAreaChart
+                data={retentionTimeline}
+                color="#8B5CF6"
+                height={180}
+                formatValue={(v) => `${v}%`}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* CSAT Trend */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Star className="h-4 w-4 text-amber-500" />
+                CSAT Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MiniAreaChart
+                data={csatTimeline}
+                color="#F59E0B"
+                height={180}
+                formatValue={(v) => v.toFixed(1)}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

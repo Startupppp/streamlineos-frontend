@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure, sessionProcedure } from "../trpc";
 import { organizations, organizationMembers, invitations, users } from "../../../lib/db/schema";
 import { eq, and, gt, desc, inArray, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -53,7 +53,7 @@ export const organizationRouter = createTRPCRouter({
       };
     }),
 
-  getOrganizations: protectedProcedure.query(async ({ ctx }) => {
+  getOrganizations: sessionProcedure.query(async ({ ctx }) => {
     if (!ctx.session?.user?.id) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }

@@ -8,6 +8,9 @@ const PROTECTED_ROUTES = [
   "/settings",
   "/onboarding",
   "/ceo",
+  "/sales",
+  "/customer-executive",
+  "/marketing",
 ];
 
 const AUTH_ROUTES = [
