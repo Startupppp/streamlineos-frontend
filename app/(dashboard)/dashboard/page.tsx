@@ -3,11 +3,18 @@
 import { useSession } from "next-auth/react";
 import { useDashboardStats, useRecentProjects, useTeamAvailability, useEmployeeTickets, useActiveSprintSummary, useRecentActivity } from "../../../lib/hooks/trpc-hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Users, Briefcase, CalendarCheck, Building2, FolderOpen, UserCheck, Folder, Clock, LogOut, ListTodo, Activity, Zap, ArrowUpRight, Bug, BookOpen, CheckCircle2, Plus, UserPlus } from "lucide-react";
+import { Users, Briefcase, CalendarCheck, Building2, Folder, Clock, LogOut, ListTodo, Activity, Zap, ArrowUpRight, Bug, BookOpen, CheckCircle2, Plus, UserPlus } from "lucide-react";
 import { ErrorMessage } from "../../../components/pre-ui/error-message";
 import { Button } from "../../../components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { ClockInWidget } from "../../../components/attendance/clock-in-widget";
+import {
+  EmptyTasksIllustration,
+  EmptyProjectsIllustration,
+  EmptyActivityIllustration,
+  EmptySprintIllustration,
+  EmptyTeamIllustration,
+} from "../../../components/illustrations";
 import { DashboardStatsSkeleton } from "../../../components/ui/dashboard-skeleton";
 import { Skeleton } from "../../../components/ui/skeleton";
 import { PageHeader } from "../../../components/ui/page-header";
@@ -280,7 +287,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <EmptyState
-                icon={ListTodo}
+                illustration={<EmptyTasksIllustration />}
                 title="No assigned issues"
                 description="Issues assigned to you will appear here."
               />
@@ -374,7 +381,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <EmptyState
-                icon={Zap}
+                illustration={<EmptySprintIllustration />}
                 title="No active sprint"
                 description="Start a sprint in your project to see progress here."
               />
@@ -423,7 +430,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <EmptyState
-                icon={FolderOpen}
+                illustration={<EmptyProjectsIllustration />}
                 title="No recent projects"
                 description="Create your first project to start tracking work."
                 action={{
@@ -492,7 +499,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <EmptyState
-                icon={Activity}
+                illustration={<EmptyActivityIllustration />}
                 title="No recent activity"
                 description="Ticket updates will appear here as your team works."
               />
@@ -554,7 +561,7 @@ export default function DashboardPage() {
             ) : (
               <div className="flex-1 flex items-center justify-center">
                 <EmptyState
-                  icon={UserCheck}
+                  illustration={<EmptyTeamIllustration />}
                   title="No team members online"
                   description="Team availability will appear here when members clock in."
                 />

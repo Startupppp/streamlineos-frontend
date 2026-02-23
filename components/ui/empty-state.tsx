@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { LucideIcon, Inbox } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 import { Button } from "./button";
+import { EmptyInboxIllustration } from "../illustrations";
 
 interface EmptyStateProps {
   icon?: LucideIcon;
+  illustration?: React.ReactNode;
   title: string;
   description?: string;
   action?: {
@@ -17,7 +19,8 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon = Inbox,
+  icon: Icon,
+  illustration,
   title,
   description,
   action,
@@ -30,8 +33,14 @@ export function EmptyState({
         className
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
-        <Icon className="h-6 w-6 text-muted-foreground" />
+      <div className="mb-4">
+        {illustration || (Icon ? (
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Icon className="h-6 w-6 text-muted-foreground" />
+          </div>
+        ) : (
+          <EmptyInboxIllustration />
+        ))}
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
       {description && (

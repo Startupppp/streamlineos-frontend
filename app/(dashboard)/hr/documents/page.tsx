@@ -21,6 +21,7 @@ import {
   CalendarClock,
   History,
 } from "lucide-react";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -441,9 +442,7 @@ export default function DocumentsPage() {
             <CardContent className="p-0">
               {filteredDocuments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <div className="p-4 bg-slate-100 rounded-full mb-4">
-                    <Folder className="h-8 w-8 text-slate-400" />
-                  </div>
+                  <EmptyDocumentsIllustration className="mb-3" />
                   <h3 className="text-lg font-medium text-slate-900">No documents found</h3>
                   <p className="text-slate-500 mb-4">Upload your first document to get started</p>
                   <Button onClick={() => setIsUploadOpen(true)}>
@@ -586,9 +585,7 @@ export default function DocumentsPage() {
             <CardContent className="p-0">
               {policies.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <div className="p-4 bg-indigo-100 rounded-full mb-4">
-                    <Building2 className="h-8 w-8 text-indigo-600" />
-                  </div>
+                  <EmptyDocumentsIllustration className="mb-3" />
                   <h3 className="text-lg font-medium text-slate-900">No policies found</h3>
                   <p className="text-slate-500">Company policies will appear here</p>
                 </div>

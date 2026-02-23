@@ -12,6 +12,7 @@ import {
   DollarSign,
   PieChart,
 } from "lucide-react";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -213,13 +214,15 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         <CardContent>
           {spending.length === 0 ? (
             <div className="text-center py-8">
-              <Settings className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900">No categories yet</h3>
-              <p className="text-slate-500 mb-4">Create expense categories to track budgets</p>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Category
-              </Button>
+              <div className="flex flex-col items-center gap-3">
+                <EmptyExpensesIllustration />
+                <h3 className="text-lg font-medium text-slate-900">No categories yet</h3>
+                <p className="text-slate-500 mb-4">Create expense categories to track budgets</p>
+                <Button onClick={() => setIsCreateOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Category
+                </Button>
+              </div>
             </div>
           ) : (
             <Table>

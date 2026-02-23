@@ -5,6 +5,7 @@ import { RouterOutputs } from "@/lib/trpc";
 import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
 import { useState, useMemo } from "react";
 import { Loader2, Download, Users, Clock, FolderOpen, TrendingUp, Calendar } from "lucide-react";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -440,10 +441,13 @@ export default function TeamTimesheetsPage() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        {hasActiveFilters
-                          ? "No time entries match your filters."
-                          : "No time entries found."}
+                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                        <div className="flex flex-col items-center gap-3">
+                          <EmptyTimeIllustration />
+                          <p>{hasActiveFilters
+                            ? "No time entries match your filters."
+                            : "No time entries found."}</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}

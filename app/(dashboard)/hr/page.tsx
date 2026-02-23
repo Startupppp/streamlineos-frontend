@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, MoreHorizontal, Pencil, Trash2, Users, Search } from "lucide-react";
+import { Plus, MoreHorizontal, Pencil, Trash2, Search } from "lucide-react";
+import { EmptySearchIllustration, EmptyTeamIllustration } from "@/components/illustrations";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
@@ -247,13 +248,13 @@ export default function HRDashboardPage() {
         </div>
       ) : searchTerm ? (
         <EmptyState
-          icon={Search}
+          illustration={<EmptySearchIllustration className="mb-3" />}
           title="No results found"
           description={`No employees match "${searchTerm}". Try a different search.`}
         />
       ) : (
         <EmptyState
-          icon={Users}
+          illustration={<EmptyTeamIllustration className="mb-3" />}
           title="No employees found"
           description="Get started by adding your first team member."
           action={{

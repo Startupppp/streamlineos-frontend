@@ -20,6 +20,7 @@ import {
   RefreshCw,
   FileImage,
 } from "lucide-react";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -439,9 +440,7 @@ export default function ExpensesPage() {
               <CardContent className="p-0">
                 {pendingExpenses.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <div className="p-4 bg-muted rounded-full mb-4">
-                      <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
-                    </div>
+                    <EmptyExpensesIllustration className="mb-3" />
                     <h3 className="text-lg font-medium">All caught up!</h3>
                     <p className="text-muted-foreground">
                       No pending expense claims to review
@@ -557,9 +556,7 @@ export default function ExpensesPage() {
             <CardContent className="p-0">
               {expenses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
-                  <div className="p-4 bg-muted rounded-full mb-4">
-                    <Receipt className="h-8 w-8 text-muted-foreground" />
-                  </div>
+                  <EmptyExpensesIllustration className="mb-3" />
                   <h3 className="text-lg font-medium">No expenses found</h3>
                   <p className="text-muted-foreground mb-4">
                     {activeFilterCount > 0

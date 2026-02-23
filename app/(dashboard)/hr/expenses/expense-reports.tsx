@@ -11,6 +11,7 @@ import {
   PieChart,
   BarChart3,
 } from "lucide-react";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -171,9 +172,11 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
   if (!reportData) {
     return (
       <div className="text-center py-12">
-        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-medium">No data available</h3>
-        <p className="text-muted-foreground">Try selecting a different time period</p>
+        <div className="flex flex-col items-center gap-3">
+          <EmptyExpensesIllustration />
+          <h3 className="text-lg font-medium">No data available</h3>
+          <p className="text-muted-foreground">Try selecting a different time period</p>
+        </div>
       </div>
     );
   }
@@ -269,7 +272,10 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
           </CardHeader>
           <CardContent>
             {byCategory.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No data available</p>
+              <div className="flex flex-col items-center gap-3 py-8">
+                <EmptyExpensesIllustration />
+                <p className="text-center text-muted-foreground">No data available</p>
+              </div>
             ) : (
               <div className="space-y-4">
                 {byCategory.slice(0, 6).map((cat) => (
@@ -304,7 +310,10 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
           </CardHeader>
           <CardContent>
             {byMonth.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No data available</p>
+              <div className="flex flex-col items-center gap-3 py-8">
+                <EmptyExpensesIllustration />
+                <p className="text-center text-muted-foreground">No data available</p>
+              </div>
             ) : (
               <div className="space-y-4">
                 {byMonth.map((month) => {
@@ -344,7 +353,10 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </CardHeader>
         <CardContent>
           {topExpenses.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No expenses in this period</p>
+            <div className="flex flex-col items-center gap-3 py-8">
+              <EmptyExpensesIllustration />
+              <p className="text-center text-muted-foreground">No expenses in this period</p>
+            </div>
           ) : (
             <Table>
               <TableHeader>

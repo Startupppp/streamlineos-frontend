@@ -23,6 +23,7 @@ import {
   Plus,
   Link2,
 } from "lucide-react";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -165,7 +166,7 @@ export default function EpicsPage({ params }: PageProps) {
         {epics.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Layers className="h-12 w-12 text-muted-foreground mb-4" />
+              <EmptyTasksIllustration className="mb-4" />
               <h3 className="text-lg font-semibold mb-2">No epics yet</h3>
               <p className="text-muted-foreground text-center mb-4">
                 Create your first epic to organize related stories and tasks

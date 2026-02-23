@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Check, X, Home, Loader2 } from "lucide-react";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -115,7 +116,7 @@ export function WFHRequestsList() {
         <CardContent>
           {!myRequests || myRequests.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <EmptyCalendarIllustration className="mb-3 mx-auto" />
               <p>No WFH requests yet</p>
             </div>
           ) : (

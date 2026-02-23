@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "@/trpc/react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Loader2, DollarSign, FileText, FolderOpen, TrendingUp } from "lucide-react";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -204,8 +205,11 @@ export default function BillingPage() {
                 ))}
                  {!summary?.length && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No billable activity in this period.
+                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                      <div className="flex flex-col items-center gap-3">
+                        <EmptyExpensesIllustration />
+                        <p>No billable activity in this period.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}

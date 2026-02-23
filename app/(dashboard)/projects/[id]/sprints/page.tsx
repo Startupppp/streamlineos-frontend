@@ -21,6 +21,7 @@ import {
   ArrowLeftRight,
   AlertTriangle,
 } from "lucide-react";
+import { EmptySprintIllustration } from "@/components/illustrations";
 import { format, differenceInDays } from "date-fns";
 import {
   DropdownMenu,
@@ -340,7 +341,7 @@ export default function SprintsPage({ params }: PageProps) {
       {sprints?.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+            <EmptySprintIllustration className="mb-4" />
             <h3 className="text-lg font-semibold mb-2">No sprints yet</h3>
             <p className="text-muted-foreground text-center mb-4">
               Create your first sprint to start organizing your work

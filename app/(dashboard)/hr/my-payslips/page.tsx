@@ -20,6 +20,7 @@ import {
 import { PageHeader } from "@/components/ui/page-header";
 import { format, parseISO } from "date-fns";
 import { Download, FileText, Loader2, ArrowLeft } from "lucide-react";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 
 const numberToWords = (num: number): string => {
@@ -224,7 +225,7 @@ export default function MyPayslipsPage() {
       {!selectedMonth ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <EmptyDocumentsIllustration className="mb-3 mx-auto" />
             <p className="text-muted-foreground">Select a month to view your payslip</p>
           </CardContent>
         </Card>
@@ -443,7 +444,7 @@ export default function MyPayslipsPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <EmptyDocumentsIllustration className="mb-3 mx-auto" />
             <p className="text-muted-foreground">No payslip found for this month</p>
           </CardContent>
         </Card>

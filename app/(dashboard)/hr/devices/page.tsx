@@ -53,6 +53,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2 } from "lucide-react";
+import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 
 const deviceSchema = z.object({
@@ -395,7 +396,7 @@ export default function DevicesPage() {
             </Table>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              <Laptop className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <EmptyDevicesIllustration className="mb-3 mx-auto" />
               <p>No devices assigned yet</p>
               <p className="text-sm">Click &quot;Add Device&quot; to assign devices to employees</p>
             </div>

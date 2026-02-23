@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { api } from "@/trpc/react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { Loader2, Filter, X, Edit, Trash2, Clock } from "lucide-react";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
@@ -319,10 +320,13 @@ export default function TimesheetsPage() {
                   })}
                   {!entries?.length && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        {hasActiveFilters 
-                          ? "No time entries found matching your filters." 
-                          : "No time entries found. Log your first work item!"}
+                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                        <div className="flex flex-col items-center gap-3">
+                          <EmptyTimeIllustration />
+                          <p>{hasActiveFilters
+                            ? "No time entries found matching your filters."
+                            : "No time entries found. Log your first work item!"}</p>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}
