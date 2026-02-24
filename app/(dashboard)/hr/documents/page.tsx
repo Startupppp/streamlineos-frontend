@@ -219,7 +219,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6 bg-slate-50/50 min-h-screen">
+    <div className="flex-1 space-y-6 p-6 bg-background min-h-screen">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -242,7 +242,7 @@ export default function DocumentsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-0 shadow-sm bg-white">
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">
               Total Documents
@@ -261,7 +261,7 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-white">
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">
               Expiring Soon
@@ -280,7 +280,7 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-white">
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">
               Expired
@@ -299,7 +299,7 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-white">
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">
               Company Policies
@@ -321,7 +321,7 @@ export default function DocumentsPage() {
 
       {/* Main Content */}
       <Tabs defaultValue={isAdmin && expiringDocs.length > 0 ? "expiring" : "all"} className="space-y-4">
-        <TabsList className="bg-white shadow-sm border">
+        <TabsList className="shadow-sm border">
           {isAdmin && expiringDocs.length > 0 && (
             <TabsTrigger value="expiring" className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700">
               <AlertTriangle className="h-4 w-4 mr-2" />
@@ -349,7 +349,7 @@ export default function DocumentsPage() {
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
+                    <TableRow className="bg-muted/30">
                       <TableHead>Document</TableHead>
                       <TableHead>Employee</TableHead>
                       <TableHead>Type</TableHead>
@@ -360,7 +360,7 @@ export default function DocumentsPage() {
                   </TableHeader>
                   <TableBody>
                     {expiringDocs.map((doc) => (
-                      <TableRow key={doc.id} className="hover:bg-slate-50/50">
+                      <TableRow key={doc.id} className="hover:bg-muted/30">
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-slate-100 rounded-lg">
@@ -453,7 +453,7 @@ export default function DocumentsPage() {
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50/50">
+                    <TableRow className="bg-muted/30">
                       <TableHead>Document</TableHead>
                       {isAdmin && <TableHead>Employee</TableHead>}
                       <TableHead>Type</TableHead>
@@ -465,7 +465,7 @@ export default function DocumentsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredDocuments.map((doc) => (
-                      <TableRow key={doc.id} className="hover:bg-slate-50/50">
+                      <TableRow key={doc.id} className="hover:bg-muted/30">
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-slate-100 rounded-lg">
@@ -594,7 +594,7 @@ export default function DocumentsPage() {
                   {policies.map((policy) => (
                     <div
                       key={policy.id}
-                      className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-colors"
+                      className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-indigo-100 rounded-lg">

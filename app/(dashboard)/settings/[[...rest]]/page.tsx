@@ -14,11 +14,14 @@ import { User, Palette, Bell, Shield, Camera, Loader2, Trash2 } from "lucide-rea
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { resolveImageUrl } from "../../../../lib/utils";
+import { AvatarCropDialog } from "../../../../components/ui/avatar-crop-dialog";
 
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateProfile = api.hr.updateProfile.useMutation({
@@ -33,7 +36,7 @@ export default function SettingsPage() {
     },
   });
 
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -48,12 +51,23 @@ export default function SettingsPage() {
       return;
     }
 
-    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCropImageSrc(ev.target?.result as string);
+      setCropDialogOpen(true);
+    };
+    reader.readAsDataURL(file);
 
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, []);
+
+  const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
+    if (!session?.user?.id) return;
+
+    setUploading(true);
     try {
-      const reader = new FileReader();
-      reader.onload = (ev) => setPreviewUrl(ev.target?.result as string);
-      reader.readAsDataURL(file);
+      const file = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
+      setPreviewUrl(URL.createObjectURL(croppedBlob));
 
       const formData = new FormData();
       formData.append("file", file);
@@ -73,15 +87,17 @@ export default function SettingsPage() {
       const imageValue = url || key;
 
       await updateProfile.mutateAsync({
-        userId: session!.user.id,
+        userId: session.user.id,
         image: imageValue,
       });
+
+      setCropDialogOpen(false);
+      setCropImageSrc(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to upload photo");
       setPreviewUrl(null);
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }, [session, updateProfile]);
 
@@ -337,6 +353,19 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {cropImageSrc && (
+        <AvatarCropDialog
+          open={cropDialogOpen}
+          onOpenChange={(open) => {
+            setCropDialogOpen(open);
+            if (!open) setCropImageSrc(null);
+          }}
+          imageSrc={cropImageSrc}
+          onCropComplete={handleCropComplete}
+          loading={uploading}
+        />
+      )}
     </div>
   );
 }
