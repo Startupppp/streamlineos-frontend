@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getProjectById } from "@/server/actions/project-actions";
 import { notFound } from "next/navigation";
 import { ProjectSidebar } from "@/components/layout/project-sidebar";
@@ -6,7 +7,7 @@ import { db } from "@/lib/db";
 import { organizationMembers, projects } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Lock } from "lucide-react";
+import { Lock, ArrowLeft } from "lucide-react";
 
 export default async function ProjectLayout({
     children,
@@ -74,7 +75,16 @@ export default async function ProjectLayout({
                     projectKey={project.key} 
                 />
             </div>
-            <div className="flex-1 bg-background min-w-0 w-full overflow-y-auto" style={{ overflowX: 'visible' }}>
+            <div className="flex-1 bg-background min-w-0 w-full overflow-y-auto flex flex-col" style={{ overflowX: 'visible' }}>
+                <div className="flex-shrink-0 px-4 md:px-6 pt-3 pb-1 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <Link
+                        href="/projects"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Projects
+                    </Link>
+                </div>
                 {children}
             </div>
         </div>
