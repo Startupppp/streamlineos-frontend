@@ -82,28 +82,28 @@ export default function SetupOrganizationPage() {
   // Show loading while checking organization membership
   if (isChecking) {
     return (
-      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
-        <p className="text-blue-100 mt-4">Loading...</p>
+      <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4">
+        <Loader2 className="h-8 w-8 animate-spin text-foreground" />
+        <p className="text-muted-foreground mt-4">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
-        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+        <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Set Up Your Organization
         </h1>
-        <p className="text-blue-100 mt-2 text-center max-w-md">
+        <p className="text-muted-foreground mt-2 text-center max-w-md">
           Create your first organization to start managing your team, projects, and HR operations.
         </p>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white">
+      <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-2">
             <div className="p-3 rounded-full bg-primary/10">
@@ -156,7 +156,7 @@ export default function SetupOrganizationPage() {
 
             <Button 
               type="submit" 
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground mt-6" 
+              className="w-full mt-6" 
               disabled={isLoading || !formData.name || !formData.slug}
             >
               {isLoading ? (
@@ -172,7 +172,7 @@ export default function SetupOrganizationPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 text-white/40 text-sm">
+      <div className="mt-8 text-muted-foreground/60 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>
     </div>

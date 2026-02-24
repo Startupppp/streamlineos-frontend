@@ -74,9 +74,9 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
-        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+        <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
           <Image
             src="/logo.svg"
             alt="Vaivamm Logo"
@@ -85,15 +85,15 @@ export default function SignInPage() {
             className="rounded-lg"
           />
         </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Welcome Back
         </h1>
-        <p className="text-blue-100 mt-2">
+        <p className="text-muted-foreground mt-2">
           Sign in to your Vaivamm CRM account
         </p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white h-fit">
+      <Card className="w-full max-w-md shadow-2xl h-fit">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center text-primary">
             Sign In
@@ -126,7 +126,7 @@ export default function SignInPage() {
                 </Label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-secondary hover:text-secondary/80 hover:underline"
+                  className="text-sm font-medium text-primary hover:text-primary/80 hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -165,7 +165,7 @@ export default function SignInPage() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -190,7 +190,7 @@ export default function SignInPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 text-white/40 text-sm">
+      <div className="mt-8 text-muted-foreground/60 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>
     </div>

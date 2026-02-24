@@ -113,16 +113,16 @@ export default function InvitationPage() {
 
   if (!invitation) {
     return (
-      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+      <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+          <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
             <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Loading Invitation</h1>
-          <p className="text-blue-100 mt-2">Please wait...</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Loading Invitation</h1>
+          <p className="text-muted-foreground mt-2">Please wait...</p>
         </div>
 
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+        <Card className="w-full max-w-md shadow-2xl">
           <CardContent className="py-12">
             <div className="flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -131,7 +131,7 @@ export default function InvitationPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-white/40 text-sm">
+        <div className="mt-8 text-muted-foreground/60 text-sm">
           &copy; 2025 Vaivamm Capital
         </div>
       </div>
@@ -139,16 +139,16 @@ export default function InvitationPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
-        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+        <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">You&apos;re Invited!</h1>
-        <p className="text-blue-100 mt-2">Join the team and start collaborating</p>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">You&apos;re Invited!</h1>
+        <p className="text-muted-foreground mt-2">Join the team and start collaborating</p>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white">
+      <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader className="space-y-1 text-center pb-4">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
             <PartyPopper className="w-8 h-8 text-primary" />
@@ -318,7 +318,7 @@ export default function InvitationPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 text-base bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              className="w-full h-11 text-base"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -334,7 +334,7 @@ export default function InvitationPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 text-white/40 text-sm">
+      <div className="mt-8 text-muted-foreground/60 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>
     </div>

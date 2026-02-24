@@ -79,7 +79,7 @@ function VerifyEmailForm() {
 
   if (isVerified) {
     return (
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+      <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-2">
             <CheckCircle2 className="w-10 h-10 text-green-600" />
@@ -96,7 +96,7 @@ function VerifyEmailForm() {
             </p>
           </div>
           <Link href="/signin" className="block">
-            <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+            <Button className="w-full">
               Go to Sign In
             </Button>
           </Link>
@@ -107,7 +107,7 @@ function VerifyEmailForm() {
 
   if (isVerifying) {
     return (
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+      <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -131,7 +131,7 @@ function VerifyEmailForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+    <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="space-y-1 text-center">
         <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
           <Mail className="w-8 h-8 text-primary" />
@@ -188,7 +188,7 @@ function VerifyEmailForm() {
 
 function LoadingCard() {
   return (
-    <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+    <Card className="w-full max-w-md shadow-2xl">
       <CardContent className="py-12">
         <div className="flex flex-col items-center justify-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -201,20 +201,20 @@ function LoadingCard() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
       <div className="flex flex-col items-center mb-8">
-        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+        <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
           <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
         </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Email Verification</h1>
-        <p className="text-blue-100 mt-2">Almost there! Just one more step</p>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Email Verification</h1>
+        <p className="text-muted-foreground mt-2">Almost there! Just one more step</p>
       </div>
 
       <Suspense fallback={<LoadingCard />}>
         <VerifyEmailForm />
       </Suspense>
 
-      <div className="mt-8 text-white/40 text-sm">
+      <div className="mt-8 text-muted-foreground/60 text-sm">
         &copy; 2025 Vaivamm Capital
       </div>
     </div>
