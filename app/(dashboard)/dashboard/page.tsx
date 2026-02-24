@@ -44,10 +44,10 @@ const getGreeting = (): string => {
 };
 
 const priorityColors: Record<string, string> = {
-  URGENT: "bg-red-500/10 text-red-700 dark:text-red-400",
-  HIGH: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
-  MEDIUM: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
-  LOW: "bg-slate-500/10 text-slate-700 dark:text-slate-400",
+  URGENT: "bg-red-500/10 text-red-700",
+  HIGH: "bg-orange-500/10 text-orange-700",
+  MEDIUM: "bg-yellow-500/10 text-yellow-700",
+  LOW: "bg-slate-500/10 text-slate-700",
 };
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -164,10 +164,10 @@ export default function DashboardPage() {
   ];
 
   const statusColors: Record<string, string> = {
-    ACTIVE: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-    PLANNING: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-    COMPLETED: "bg-slate-500/10 text-slate-700 dark:text-slate-400",
-    ON_HOLD: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    ACTIVE: "bg-emerald-500/10 text-emerald-700",
+    PLANNING: "bg-blue-500/10 text-blue-700",
+    COMPLETED: "bg-slate-500/10 text-slate-700",
+    ON_HOLD: "bg-amber-500/10 text-amber-700",
   };
 
   const getInitials = (name: string | null | undefined, firstName?: string | null, lastName?: string | null) => {
@@ -217,13 +217,14 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
+        {statCards.map((stat, i) => (
           <StatCard
             key={stat.label}
             label={stat.label}
             value={stat.value}
             icon={stat.icon}
             href={stat.href}
+            index={i}
           />
         ))}
       </div>

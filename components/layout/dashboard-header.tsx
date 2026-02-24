@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 export function DashboardHeader() {
   return (
-    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background transition-colors duration-300">
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-4 glass transition-colors duration-300">
       <div className="flex items-center gap-2 px-4">
         {/* Mobile Sidebar Trigger */}
         <div className="md:hidden">

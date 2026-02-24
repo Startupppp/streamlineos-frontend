@@ -230,7 +230,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
       {/* Logo */}
       <div className="px-4 py-4 relative">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="relative w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+          <div className="relative w-8 h-8 bg-card rounded-lg border border-gold/20 flex items-center justify-center overflow-hidden shadow-noir shrink-0">
             <Image
               src="/logo.svg"
               alt="Vaivamm Logo"
@@ -240,7 +240,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
             />
           </div>
           {!isCollapsed && (
-            <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent" style={{ fontFamily: 'Times New Roman, serif' }}>
+            <h1 className="text-xl font-bold font-serif gold-text">
               Vaivamm
             </h1>
           )}
@@ -296,9 +296,12 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
         </div>
       )}
 
+      {/* Decorative gold separator */}
+      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+
       {/* Navigation Groups */}
       <ScrollArea className="flex-1">
-        <nav className={cn("pb-4", isCollapsed ? "px-2" : "px-3")}>
+        <nav className={cn("pb-4 pt-2", isCollapsed ? "px-2" : "px-3")}>
           {navGroups.map((group, groupIndex) => (
             <div key={group.label} className={cn(groupIndex > 0 && "mt-6")}>
               {!isCollapsed && (
@@ -337,7 +340,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                           isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                           "text-sm font-medium",
                           isProjectActive || isExactMatch
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-gold"
                             : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                         )}
                       >
@@ -361,7 +364,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                         isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                         "text-sm font-medium",
                         isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-gold"
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                       )}
                     >
