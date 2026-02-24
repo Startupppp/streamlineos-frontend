@@ -3,13 +3,13 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Label } from "../../../components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { vaivammTrpcClient } from "../../../lib/trpc";
-import { Loader2, Eye, EyeOff, Check, X } from "lucide-react";
+import { vaivammTrpcClient } from "@/lib/trpc";
+import { Loader2, Eye, EyeOff, Check, X, BarChart3, Plug, ArrowRight, ShieldCheck, Quote } from "lucide-react";
 
 function getPasswordStrength(password: string) {
   const checks = {
@@ -56,9 +56,7 @@ export default function SignUpPage() {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(formData.password)) {
-      toast.error(
-        "Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-      );
+      toast.error("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
       setIsLoading(false);
       return;
     }
@@ -83,25 +81,80 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
-      <div className="flex flex-col items-center mb-8">
-          <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
-             <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+    <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-0 min-h-[600px]">
+      <div className="hidden lg:flex flex-col justify-between bg-secondary rounded-l-2xl p-10 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,_rgba(189,136,44,0.1)_0%,_transparent_60%)]" />
+        <div className="relative space-y-8">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Image src="/logo.svg" alt="Vaivamm" width={24} height={24} className="rounded bg-white/90 p-0.5" />
+              <span className="text-sm font-semibold text-white/70">Vaivamm CRM</span>
+            </div>
+            <p className="text-xs text-white/40 tracking-wide uppercase">B2B Relationship Management</p>
           </div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">Join Vaivamm CRM</h1>
-          <p className="text-muted-foreground mt-2">Create your account to get started</p>
+
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight leading-tight mb-3">
+              Elevate your sales pipeline strategy.
+            </h2>
+            <p className="text-white/50 leading-relaxed">
+              Join thousands of professional teams using Vaivamm to close deals faster and build lasting business relationships.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 bg-white/[0.06] rounded-xl p-4 border border-white/[0.08]">
+              <div className="h-9 w-9 rounded-lg bg-gold/20 flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="h-4 w-4 text-gold" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white/90">Advanced Analytics</p>
+                <p className="text-xs text-white/40 mt-0.5">Real-time data visualization for your entire sales cycle.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 bg-white/[0.06] rounded-xl p-4 border border-white/[0.08]">
+              <div className="h-9 w-9 rounded-lg bg-gold/20 flex items-center justify-center flex-shrink-0">
+                <Plug className="h-4 w-4 text-gold" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white/90">Omnichannel Sync</p>
+                <p className="text-xs text-white/40 mt-0.5">Integrate seamlessly with your existing enterprise tech stack.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative mt-8">
+          <div className="bg-white/[0.06] rounded-xl p-5 border border-white/[0.08]">
+            <Quote className="h-4 w-4 text-gold/50 mb-2" />
+            <p className="text-sm text-white/70 italic leading-relaxed">
+              &ldquo;Vaivamm transformed how our global sales team operates.&rdquo;
+            </p>
+            <div className="flex items-center gap-2 mt-3">
+              <div className="h-7 w-7 rounded-full bg-gold/30" />
+              <div>
+                <p className="text-xs font-semibold text-white/80">Sarah J.</p>
+                <p className="text-xs text-white/40">Head of Growth</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl h-fit">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center text-primary">Create Account</CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
-            Start managing your HR and Projects today
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Card className="shadow-noir border-border rounded-l-none lg:rounded-r-2xl lg:rounded-l-none rounded-2xl">
+        <CardContent className="p-8 lg:p-10 flex flex-col justify-center">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Get started today</h1>
+              <p className="text-sm text-muted-foreground mt-1">Create your professional account</p>
+            </div>
+            <Link href="/signin" className="text-sm text-primary hover:underline font-medium">
+              Log in
+            </Link>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground">First Name</Label>
                 <Input
@@ -127,12 +180,13 @@ export default function SignUpPage() {
                 />
               </div>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email</Label>
+              <Label htmlFor="email" className="text-foreground">Work Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="you@company.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
@@ -140,13 +194,14 @@ export default function SignUpPage() {
                 className="focus-visible:ring-primary"
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password" className="text-foreground">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Create a strong password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
@@ -202,13 +257,14 @@ export default function SignUpPage() {
                 </div>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
@@ -227,42 +283,37 @@ export default function SignUpPage() {
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {passwordsMismatch && (
-                <p className="text-xs text-red-500">Passwords do not match</p>
-              )}
+              {passwordsMismatch && <p className="text-xs text-red-500">Passwords do not match</p>}
               {passwordsMatch && (
                 <p className="text-xs text-green-600 flex items-center gap-1">
                   <Check className="h-3 w-3" /> Passwords match
                 </p>
               )}
             </div>
-            <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-            >
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating account...
                 </>
               ) : (
-                "Sign Up"
+                <>
+                  Create Account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
               )}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/signin" className="font-semibold text-primary hover:underline">
-              Sign in
-            </Link>
+
+          <div className="mt-4 flex items-center gap-2 bg-muted/50 rounded-lg p-3 border border-border">
+            <ShieldCheck className="h-4 w-4 text-gold flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Your data is secured with enterprise-grade SSL encryption and compliant with GDPR/SOC2 standards.
+            </p>
           </div>
         </CardContent>
       </Card>
-
-      <div className="mt-8 text-muted-foreground/60 text-sm">
-        &copy; 2025 Vaivamm Capital
-      </div>
     </div>
   );
 }
