@@ -6,8 +6,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Times New Roman', 'Times', serif;
+  --font-serif: 'Times New Roman', 'Times', serif;
+  --font-mono: var(--font-jetbrains);
+  --color-gold: var(--gold);
+  --color-blue: var(--blue);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -45,97 +48,52 @@
 
 :root {
   --radius: 0.625rem;
-  /* Light Mode */
-  --background: #ffffff;
-  --foreground: #0f2b7f; /* Brand Navy used as default text for strong branding, or maybe slate-950 for standard text? sticking to brand logic from request */
-  /* Actually standard text should probably be slate-950 for readability, using navy for headers/primary */
-  --foreground: #020617;
-  --card: #ffffff;
-  --card-foreground: #020617;
-  --popover: #ffffff;
-  --popover-foreground: #020617;
-  --primary: #0f2b7f; /* Brand Navy */
-  --primary-foreground: #ffffff;
-  --secondary: #ba931e; /* Brand Gold */
-  --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f2b7f;
-  --destructive: #ef4444;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #0f2b7f;
-  --chart-1: #0f2b7f;
-  --chart-2: #ba931e;
-  --chart-3: #1e293b;
-  --chart-4: #475569;
-  --chart-5: #94a3b8;
-  --sidebar: #0f2b7f; /* Light mode sidebar is Brand Navy */
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ba931e;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e3a8a; /* Slightly lighter navy for hover */
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1e3a8a;
-  --sidebar-ring: #ba931e;
-}
 
-.dark {
-  /* Dark Mode */
-  --background: #020617; /* Deep Navy/Black */
-  --foreground: #f8fafc;
-  --card: #0f172a; /* Slate 900 */
-  --card-foreground: #f8fafc;
-  --popover: #0f172a;
-  --popover-foreground: #f8fafc;
-  --primary: #ba931e; /* Gold primary in dark mode for visibility */
-  --primary-foreground: #ffffff;
-  --secondary: #ba931e; /* Gold for Secondary in Dark Mode too, for buttons/highlights */
-  --secondary-foreground: #ffffff;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #ba931e;
-  --destructive: #7f1d1d;
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #ba931e;
-  --chart-1: #ba931e;
-  --chart-2: #0f2b7f;
-  --chart-3: #334155;
-  --chart-4: #64748b;
-  --chart-5: #94a3b8;
-  --sidebar: #020617; /* Deepest Navy/Black */
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #ba931e;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b; /* Sidebar accents like hover items */
-  --sidebar-accent-foreground: #ba931e;
-  --sidebar-border: #1e293b;
-  --sidebar-ring: #ba931e;
+  /* Surfaces */
+  --background: oklch(0.99 0.002 258);
+  --foreground: oklch(0.15 0.02 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 260);
 
-  /* Dark Mode Semantic & Surface Tokens */
-  --status-success: #10b981;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
-  --status-info: #3b82f6;
-  --surface-elevated: rgba(255, 255, 255, 0.04);
-  --surface-sunken: rgba(0, 0, 0, 0.08);
-  --interactive-hover: rgba(186, 147, 30, 0.12);
-  --interactive-active: rgba(186, 147, 30, 0.18);
-}
+  /* Brand & semantic */
+  --primary: #bd882c;
+  --primary-foreground: oklch(0.99 0.002 258);
+  --secondary: #0f2b7f;
+  --secondary-foreground: oklch(0.99 0.002 258);
+  --muted: oklch(0.97 0.005 250);
+  --muted-foreground: oklch(0.5 0.03 257);
+  --accent: #bd882c;
+  --accent-foreground: oklch(0.99 0.002 258);
+  --destructive: oklch(0.64 0.21 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.93 0.01 255);
+  --input: oklch(0.93 0.01 255);
+  --ring: #bd882c;
 
-/* Semantic & Surface Tokens - Light Mode Defaults */
-:root {
-  --status-success: #10b981;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
-  --status-info: #3b82f6;
-  --surface-elevated: rgba(255, 255, 255, 0.8);
-  --surface-sunken: rgba(0, 0, 0, 0.02);
-  --interactive-hover: rgba(15, 43, 127, 0.08);
-  --interactive-active: rgba(15, 43, 127, 0.12);
+  /* Charts */
+  --chart-1: #bd882c;
+  --chart-2: #bd882c;
+  --chart-3: oklch(0.62 0.19 260);
+  --chart-4: oklch(0.61 0.22 293);
+  --chart-5: oklch(0.66 0.21 354);
+
+  /* Sidebar */
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.15 0.02 260);
+  --sidebar-primary: #bd882c;
+  --sidebar-primary-foreground: oklch(0.99 0.002 258);
+  --sidebar-accent: #bd882c;
+  --sidebar-accent-foreground: oklch(0.99 0.002 258);
+  --sidebar-border: oklch(0.93 0.01 255);
+  --sidebar-ring: #bd882c;
+
+  /* Brand aliases */
+  --gold: #bd882c;
+  --gold-rgb: 189 136 44;
+  --blue: #0f2b7f;
+  --blue-rgb: 15 43 127;
 }
 
 @layer base {
@@ -145,12 +103,131 @@
   body {
     @apply bg-background text-foreground;
   }
+  h1, h2, h3 {
+    font-family: 'Times New Roman', 'Times', serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ─── Utility Classes ─── */
+
+/* Subtle grain texture */
+.noir-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.012;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(189, 136, 44, 0.08);
+}
+
+/* Gold gradient (buttons, accent bars) */
+.gold-gradient {
+  background: linear-gradient(135deg, #bd882c 0%, #d4a23a 50%, #bd882c 100%);
+}
+
+/* Gold text */
+.gold-text {
+  background: linear-gradient(135deg, #d4a23a 0%, #bd882c 50%, #d4a23a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Art deco decorative line */
+.deco-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(189, 136, 44, 0.2), transparent);
+}
+
+/* Refined shadow */
+.shadow-noir {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(189, 136, 44, 0.05);
+}
+
+/* Gold hover glow */
+.glow-gold {
+  transition: box-shadow 0.3s ease;
+}
+.glow-gold:hover {
+  box-shadow: 0 0 20px rgba(189, 136, 44, 0.1), 0 4px 24px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Press scale for buttons */
+.press-scale {
+  transition: transform 0.15s ease;
+}
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+/* Warm mesh background */
+.noir-mesh {
+  background: radial-gradient(ellipse at 20% 50%, rgba(189, 136, 44, 0.05) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(15, 43, 127, 0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(189, 136, 44, 0.03) 0%, transparent 50%),
+              oklch(0.97 0.005 250);
+}
+
+/* ─── Keyframes ─── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes gold-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Scrollbar Styles ─── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(189, 136, 44, 0.15) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(189, 136, 44, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(189, 136, 44, 0.3);
 }
 
 /* Kanban Board Scrollbar Styles */
 .kanban-scroll-container {
   scrollbar-width: auto !important;
-  scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
+  scrollbar-color: rgba(189, 136, 44, 0.2) transparent !important;
   -ms-overflow-style: scrollbar !important;
 }
 
@@ -160,34 +237,18 @@
 }
 
 .kanban-scroll-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(189, 136, 44, 0.03);
   border-radius: 5px;
 }
 
 .kanban-scroll-container::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3) !important;
+  background: rgba(189, 136, 44, 0.2) !important;
   border-radius: 5px;
   border: 1px solid transparent;
 }
 
 .kanban-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5) !important;
-}
-
-.dark .kanban-scroll-container {
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
-}
-
-.dark .kanban-scroll-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.dark .kanban-scroll-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3) !important;
-}
-
-.dark .kanban-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(189, 136, 44, 0.35) !important;
 }
 
 /* Ensure Radix ScrollArea allows horizontal scrolling */
@@ -203,22 +264,17 @@
 }
 
 /* Force horizontal scrollbar visibility for kanban */
-.kanban-scroll-container {
-  scrollbar-width: auto !important;
-  scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
-}
-
 .kanban-scroll-container::-webkit-scrollbar:horizontal {
   height: 10px !important;
   display: block !important;
 }
 
 .kanban-scroll-container::-webkit-scrollbar-track:horizontal {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(189, 136, 44, 0.03);
   border-radius: 5px;
 }
 
 .kanban-scroll-container::-webkit-scrollbar-thumb:horizontal {
-  background: rgba(0, 0, 0, 0.3) !important;
+  background: rgba(189, 136, 44, 0.2) !important;
   border-radius: 5px;
 }
