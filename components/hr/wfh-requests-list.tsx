@@ -162,7 +162,7 @@ export function PendingWfhApprovals() {
                 className="flex items-center justify-between p-4 rounded-lg border bg-muted/20"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={resolveImageUrl(req.user?.image)} />
                     <AvatarFallback className="text-xs">
                       {req.user?.firstName?.[0]}
