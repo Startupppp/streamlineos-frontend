@@ -306,7 +306,7 @@ export function CreateTicketDialog({
                         {members?.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-2">
-                               <Avatar className="h-5 w-5">
+                               <Avatar className="h-7 w-7">
                                   <AvatarImage src={resolveImageUrl(member.image)} />
                                   <AvatarFallback className="text-[10px]">{member.name?.[0] || "U"}</AvatarFallback>
                                </Avatar>

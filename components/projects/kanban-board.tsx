@@ -435,7 +435,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                   </div>
 
                                                   {ticket.assignee ? (
-                                                      <Avatar className="h-5 w-5 border border-background ring-2 ring-background">
+                                                      <Avatar className="h-7 w-7 border border-background ring-2 ring-background">
                                                       <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
                                                       <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">
                                                           {ticket.assignee.firstName?.[0]}
@@ -443,7 +443,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                       </AvatarFallback>
                                                       </Avatar>
                                                   ) : (
-                                                      <div className="h-5 w-5 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center">
+                                                      <div className="h-7 w-7 rounded-full bg-muted border border-dashed border-muted-foreground/30 flex items-center justify-center">
                                                           <span className="text-[8px] text-muted-foreground">?</span>
                                                       </div>
                                                   )}

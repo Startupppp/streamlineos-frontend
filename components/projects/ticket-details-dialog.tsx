@@ -420,9 +420,9 @@ export function TicketDetailsDialog({
                           {sub.title}
                         </span>
                         {sub.assignee && (
-                          <Avatar className="h-5 w-5">
+                          <Avatar className="h-7 w-7">
                             <AvatarImage src={resolveImageUrl(sub.assignee.image)} />
-                            <AvatarFallback className="text-[8px]">
+                            <AvatarFallback className="text-[10px]">
                               {sub.assignee.firstName?.[0]}{sub.assignee.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
@@ -513,7 +513,7 @@ export function TicketDetailsDialog({
                     <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
                       {ticket.comments.map((comment) => (
                         <div key={comment.id} className="flex gap-3 group">
-                          <Avatar className="h-8 w-8 shrink-0 ring-2 ring-background">
+                          <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background">
                             <AvatarImage src={resolveImageUrl(comment.user?.image)} />
                             <AvatarFallback className="text-xs bg-primary/10 text-primary">
                               {comment.user?.firstName?.[0]}{comment.user?.lastName?.[0]}
@@ -611,7 +611,7 @@ export function TicketDetailsDialog({
                     <SelectTrigger className="bg-background">
                       {ticket.assignee ? (
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-5 w-5">
+                          <Avatar className="h-7 w-7">
                             <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
                             <AvatarFallback className="text-[10px]">
                               {ticket.assignee.firstName?.[0]}{ticket.assignee.lastName?.[0]}
@@ -630,7 +630,7 @@ export function TicketDetailsDialog({
                       {members?.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-5 w-5">
+                            <Avatar className="h-7 w-7">
                               <AvatarImage src={resolveImageUrl(member.image)} />
                               <AvatarFallback className="text-[10px]">
                                 {member.firstName?.[0]}{member.lastName?.[0]}
