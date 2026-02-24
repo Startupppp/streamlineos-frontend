@@ -365,7 +365,7 @@ export default function TeamTimesheetsPage() {
                         >
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
+                              <Avatar className="h-8 w-8">
                                 <AvatarImage src={resolveImageUrl(entry.user?.image)} />
                                 <AvatarFallback className="text-[10px]">
                                   {entry.user?.firstName?.[0]}

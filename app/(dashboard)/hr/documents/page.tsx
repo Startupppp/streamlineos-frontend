@@ -374,7 +374,7 @@ export default function DocumentsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-7 w-7">
+                            <Avatar className="h-9 w-9">
                               <AvatarImage src={resolveImageUrl(doc.user?.image)} />
                               <AvatarFallback className="text-xs bg-violet-100 text-violet-700">
                                 {doc.user?.firstName?.[0]}{doc.user?.lastName?.[0]}
@@ -494,7 +494,7 @@ export default function DocumentsPage() {
                         {isAdmin && (
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Avatar className="h-7 w-7">
+                              <Avatar className="h-9 w-9">
                                 <AvatarImage src={resolveImageUrl(doc.user?.image)} />
                                 <AvatarFallback className="text-xs bg-violet-100 text-violet-700">
                                   {doc.user?.firstName?.[0]}{doc.user?.lastName?.[0]}

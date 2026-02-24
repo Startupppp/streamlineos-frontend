@@ -59,7 +59,7 @@ export default async function ProjectsPage() {
                 </CardContent>
                 <CardFooter className="justify-between pt-4">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Avatar className="h-6 w-6 mr-2 border border-border">
+                    <Avatar className="h-8 w-8 mr-2 border border-border">
                       <AvatarImage src={resolveImageUrl(project.manager?.image)} />
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {project.manager?.name?.charAt(0) || "M"}

@@ -352,7 +352,7 @@ export default function BacklogPage({ params }: PageProps) {
                   <TableCell>
                     {ticket.assignee ? (
                       <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
+                        <Avatar className="h-8 w-8">
                           <AvatarFallback className="text-[10px]">
                             {ticket.assignee.firstName?.[0]}
                             {ticket.assignee.lastName?.[0]}

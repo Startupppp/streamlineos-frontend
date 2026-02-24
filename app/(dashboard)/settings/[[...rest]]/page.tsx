@@ -332,21 +332,13 @@ export default function SettingsPage() {
                   <div className="space-y-1">
                     <p className="font-medium text-foreground">Password</p>
                     <p className="text-sm text-muted-foreground">
-                      Last changed 30 days ago
+                      Last changed on {new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} (30 days ago)
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      We recommend changing your password every 90 days for better security.
                     </p>
                   </div>
                   <Button variant="outline">Change Password</Button>
-                </div>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">Two-Factor Authentication</p>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security to your account.
-                    </p>
-                  </div>
-                  <Button variant="outline">Enable</Button>
                 </div>
               </div>
             </CardContent>

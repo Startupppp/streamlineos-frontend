@@ -239,7 +239,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                   )}
                   title={`${a.firstName || ""} ${a.lastName || ""}`}
                 >
-                  <Avatar className="h-6 w-6">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage src={resolveImageUrl(a.image)} />
                     <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
                       {a.firstName?.[0]}{a.lastName?.[0]}

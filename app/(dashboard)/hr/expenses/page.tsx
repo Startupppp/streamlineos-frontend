@@ -464,7 +464,7 @@ export default function ExpensesPage() {
                         <TableRow key={expense.id}>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
+                              <Avatar className="h-10 w-10">
                                 <AvatarImage src={resolveImageUrl(expense.user?.image)} />
                                 <AvatarFallback className="text-xs">
                                   {expense.user?.firstName?.[0]}
@@ -596,7 +596,7 @@ export default function ExpensesPage() {
                           {isAdmin && (
                             <TableCell>
                               <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
+                                <Avatar className="h-10 w-10">
                                   <AvatarImage src={resolveImageUrl(expense.user?.image)} />
                                   <AvatarFallback className="text-xs">
                                     {expense.user?.firstName?.[0]}
