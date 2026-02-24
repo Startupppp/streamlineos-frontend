@@ -3,20 +3,13 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Label } from "../../../components/ui/label";
-import { Checkbox } from "../../../components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +24,7 @@ export default function SignInPage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const url = params.get("callbackUrl");
-      if (url && url.startsWith("/")) {
-        return url;
-      }
+      if (url && url.startsWith("/")) return url;
     }
     return "/dashboard";
   };
@@ -44,7 +35,6 @@ export default function SignInPage() {
 
     try {
       const callbackUrl = getCallbackUrl();
-
       const result = await signIn("credentials", {
         email,
         password,
@@ -74,56 +64,35 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
-      <div className="flex flex-col items-center mb-8">
-        <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
-          <Image
-            src="/logo.svg"
-            alt="Vaivamm Logo"
-            width={64}
-            height={64}
-            className="rounded-lg"
-          />
-        </div>
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">
-          Welcome Back
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Sign in to your Vaivamm CRM account
-        </p>
+    <div className="w-full max-w-md">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Welcome back</h1>
+        <p className="text-muted-foreground mt-2">Enter your details to access your account</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl h-fit">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center text-primary">
-            Sign In
-          </CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Card className="shadow-noir border-border">
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-                className="focus-visible:ring-primary"
-              />
+              <Label htmlFor="email" className="text-foreground">Email address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="pl-10 focus-visible:ring-primary"
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-foreground">
-                  Password
-                </Label>
+                <Label htmlFor="password" className="text-foreground">Password</Label>
                 <Link
                   href="/forgot-password"
                   className="text-sm font-medium text-primary hover:text-primary/80 hover:underline"
@@ -132,15 +101,16 @@ export default function SignInPage() {
                 </Link>
               </div>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="pr-10 focus-visible:ring-primary"
+                  className="pl-10 pr-10 focus-visible:ring-primary"
                 />
                 <button
                   type="button"
@@ -152,6 +122,7 @@ export default function SignInPage() {
                 </button>
               </div>
             </div>
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="rememberMe"
@@ -163,36 +134,27 @@ export default function SignInPage() {
                 Remember me for 30 days
               </Label>
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...
                 </>
               ) : (
-                "Sign In"
+                "Sign in"
               )}
             </Button>
           </form>
+
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign up
+            <Link href="/signup" className="font-semibold text-primary hover:underline">
+              Sign Up
             </Link>
           </div>
         </CardContent>
       </Card>
-
-      <div className="mt-8 text-muted-foreground/60 text-sm">
-        &copy; 2025 Vaivamm Capital
-      </div>
     </div>
   );
 }

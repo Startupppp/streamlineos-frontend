@@ -3,14 +3,13 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Label } from "../../../components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { vaivammTrpcClient } from "../../../lib/trpc";
-import { Shield, Loader2, KeyRound, ArrowLeft, Eye, EyeOff, CheckCircle2, Check, X } from "lucide-react";
+import { vaivammTrpcClient } from "@/lib/trpc";
+import { Loader2, KeyRound, ArrowLeft, Eye, EyeOff, CheckCircle2, Check, X, Lock, ArrowRight } from "lucide-react";
 
 function getPasswordStrength(password: string) {
   const checks = {
@@ -63,9 +62,7 @@ function ResetPasswordForm() {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(formData.password)) {
-      toast.error(
-        "Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-      );
+      toast.error("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
       return;
     }
 
@@ -96,206 +93,190 @@ function ResetPasswordForm() {
     }
   };
 
-  if (!token) {
-    return null;
-  }
+  if (!token) return null;
 
   if (isSuccess) {
     return (
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-2">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-4">
+            <CheckCircle2 className="w-8 h-8 text-green-600" />
           </div>
-          <CardTitle className="text-2xl text-primary">Password Reset!</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Your password has been successfully reset
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-700">
-              Redirecting you to sign in page...
-            </p>
-          </div>
-          <Link href="/signin" className="block">
-            <Button className="w-full">
-              Go to Sign In
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">Password Reset!</h1>
+          <p className="text-muted-foreground mt-2">Your password has been successfully reset</p>
+        </div>
+
+        <Card className="shadow-noir border-border">
+          <CardContent className="pt-6 space-y-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-700">Redirecting you to sign in page...</p>
+            </div>
+            <Link href="/signin" className="block">
+              <Button className="w-full">Go to Sign In</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full max-w-md shadow-2xl">
-      <CardHeader className="space-y-1">
-        <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+    <div className="w-full max-w-md">
+      <div className="text-center mb-8">
+        <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
           <KeyRound className="w-8 h-8 text-primary" />
         </div>
-        <CardTitle className="text-2xl text-center text-primary">Create New Password</CardTitle>
-        <CardDescription className="text-center text-muted-foreground">
-          Enter a strong password for your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-foreground">New Password</Label>
-            <div className="relative">
-              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter new password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                disabled={isLoading}
-                className="pl-10 pr-10 focus-visible:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            {formData.password.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
-                      style={{ width: `${strength.percentage}%` }}
-                    />
-                  </div>
-                  <span className={`text-xs font-medium capitalize ${
-                    strength.level === "strong" ? "text-green-600" :
-                    strength.level === "good" ? "text-blue-600" :
-                    strength.level === "fair" ? "text-yellow-600" : "text-red-600"
-                  }`}>
-                    {strength.level}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  {[
-                    { key: "length" as const, label: "8+ characters" },
-                    { key: "uppercase" as const, label: "Uppercase" },
-                    { key: "lowercase" as const, label: "Lowercase" },
-                    { key: "number" as const, label: "Number" },
-                    { key: "special" as const, label: "Special char" },
-                  ].map(({ key, label }) => (
-                    <div key={key} className="flex items-center gap-1">
-                      {strength.checks[key] ? (
-                        <Check className="h-3 w-3 text-green-500" />
-                      ) : (
-                        <X className="h-3 w-3 text-gray-300" />
-                      )}
-                      <span className={`text-xs ${strength.checks[key] ? "text-green-600" : "text-muted-foreground"}`}>
-                        {label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Reset Password</h1>
+        <p className="text-muted-foreground mt-2">Please enter your new password below to secure your account.</p>
+      </div>
+
+      <Card className="shadow-noir border-border">
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-foreground">New Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  className="pl-10 pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
-            <div className="relative">
-              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                required
-                disabled={isLoading}
-                className={`pl-10 pr-10 focus-visible:ring-primary ${
-                  passwordsMatch ? "border-green-500 focus-visible:ring-green-500" :
-                  passwordsMismatch ? "border-red-500 focus-visible:ring-red-500" : ""
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
-              >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              {formData.password.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
+                        style={{ width: `${strength.percentage}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs font-medium capitalize ${
+                      strength.level === "strong" ? "text-green-600" :
+                      strength.level === "good" ? "text-blue-600" :
+                      strength.level === "fair" ? "text-yellow-600" : "text-red-600"
+                    }`}>
+                      {strength.level}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[
+                      { key: "length" as const, label: "8+ characters" },
+                      { key: "uppercase" as const, label: "Uppercase" },
+                      { key: "lowercase" as const, label: "Lowercase" },
+                      { key: "number" as const, label: "Number" },
+                      { key: "special" as const, label: "Special char" },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center gap-1">
+                        {strength.checks[key] ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <X className="h-3 w-3 text-gray-300" />
+                        )}
+                        <span className={`text-xs ${strength.checks[key] ? "text-green-600" : "text-muted-foreground"}`}>
+                          {label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            {passwordsMismatch && (
-              <p className="text-xs text-red-500">Passwords do not match</p>
-            )}
-            {passwordsMatch && (
-              <p className="text-xs text-green-600 flex items-center gap-1">
-                <Check className="h-3 w-3" /> Passwords match
-              </p>
-            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  className={`pl-10 pr-10 focus-visible:ring-primary ${
+                    passwordsMatch ? "border-green-500 focus-visible:ring-green-500" :
+                    passwordsMismatch ? "border-red-500 focus-visible:ring-red-500" : ""
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {passwordsMismatch && <p className="text-xs text-red-500">Passwords do not match</p>}
+              {passwordsMatch && (
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Passwords match
+                </p>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  Update Password
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link href="/signin" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Sign In
+            </Link>
           </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Resetting...
-              </>
-            ) : (
-              "Reset Password"
-            )}
-          </Button>
-        </form>
-        <div className="mt-6 text-center">
-          <Link href="/signin" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Sign In
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
 function LoadingCard() {
   return (
-    <Card className="w-full max-w-md shadow-2xl">
-      <CardContent className="py-12">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="w-full max-w-md">
+      <Card className="shadow-noir border-border">
+        <CardContent className="py-12">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen w-full noir-mesh flex flex-col items-center justify-center p-4 relative">
-      <div className="flex flex-col items-center mb-8">
-        <div className="bg-card border border-gold/20 p-2 rounded-xl mb-4 shadow-noir">
-          <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
-        </div>
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">Reset Password</h1>
-        <p className="text-muted-foreground mt-2">Create a new secure password</p>
-      </div>
-
-      <Suspense fallback={<LoadingCard />}>
-        <ResetPasswordForm />
-      </Suspense>
-
-      <div className="mt-8 text-muted-foreground/60 text-sm">
-        &copy; 2025 Vaivamm Capital
-      </div>
-    </div>
+    <Suspense fallback={<LoadingCard />}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
