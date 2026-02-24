@@ -346,7 +346,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                       >
                         <route.icon className={cn(
                           "h-4 w-4 shrink-0",
-                          (isProjectActive || isExactMatch) ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                          (isProjectActive || isExactMatch) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60"
                         )} />
                         {!isCollapsed && <span className="flex-1 text-left">{route.label}</span>}
                       </Link>
@@ -370,7 +370,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                     >
                       <route.icon className={cn(
                         "h-4 w-4 shrink-0",
-                        isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                        isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60"
                       )} />
                       {!isCollapsed && (
                         <>
