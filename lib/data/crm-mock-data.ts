@@ -207,3 +207,54 @@ export const upcomingEvents = [
   { name: "Customer Advisory Board", date: "Apr 15", type: "Meeting", status: "confirmed" as const },
   { name: "Digital Marketing Workshop", date: "May 1", type: "Workshop", status: "planning" as const },
 ];
+
+// ─── Support Dashboard Data ─────────────────────────────────────────────────
+
+export const supportDashboardStats = {
+  openTickets: { value: 142, trend: { value: 5.2, isPositive: false } },
+  avgResolution: { value: "4h 12m", trend: { value: 12.5, isPositive: true } },
+  csatScore: { value: "4.8/5", trend: { value: 0.8, isPositive: true } },
+  responseRate: { value: "98.2%", trend: { value: 2.1, isPositive: true } },
+};
+
+export const ticketStatusBreakdown = [
+  { label: "New", value: 438, color: "#3B82F6" },
+  { label: "In Progress", value: 312, color: "#F59E0B" },
+  { label: "Resolved", value: 250, color: "#10B981" },
+  { label: "Closed", value: 250, color: "#6366F1" },
+];
+
+export const ticketVolumeTimeline = [
+  { month: "Aug", value: 68 },
+  { month: "Sep", value: 75 },
+  { month: "Oct", value: 84 },
+  { month: "Nov", value: 72 },
+  { month: "Dec", value: 65 },
+  { month: "Jan", value: 78 },
+  { month: "Feb", value: 82 },
+];
+
+export const supportActivityFeed = [
+  { type: "ticket" as const, message: "Ticket #2094 created — High Priority", time: "24m ago", person: "System" },
+  { type: "email" as const, message: "Agent replied to Ticket #2091", time: "1h ago", person: "Jane D." },
+  { type: "deal_won" as const, message: "Ticket #2088 resolved via automation", time: "2h ago", person: "System" },
+  { type: "call" as const, message: "Customer callback for Ticket #2085", time: "3h ago", person: "John S." },
+  { type: "escalation" as const, message: "Ticket #2080 escalated to Level 2", time: "5h ago", person: "Robert F." },
+  { type: "email" as const, message: "SLA breach warning for Ticket #2076", time: "6h ago", person: "System" },
+  { type: "ticket" as const, message: "Ticket #2074 reopened by customer", time: "8h ago", person: "Emily C." },
+];
+
+export const supportTeamMembers = [
+  { name: "Jane Doe", role: "Admin", access: "Full", avatar: "JD", status: "online" as const },
+  { name: "John Smith", role: "Manager", access: "Edit", avatar: "JS", status: "online" as const },
+  { name: "Robert Fox", role: "Agent", access: "View", avatar: "RF", status: "away" as const },
+  { name: "Emily Chen", role: "Agent", access: "View", avatar: "EC", status: "online" as const },
+  { name: "Michael Brown", role: "Lead", access: "Edit", avatar: "MB", status: "offline" as const },
+];
+
+export const ticketsByPriority = [
+  { label: "Critical", value: 18, color: "#EF4444" },
+  { label: "High", value: 42, color: "#F59E0B" },
+  { label: "Medium", value: 56, color: "#3B82F6" },
+  { label: "Low", value: 26, color: "#10B981" },
+];

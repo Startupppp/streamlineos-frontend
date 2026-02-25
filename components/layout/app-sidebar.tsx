@@ -27,6 +27,7 @@ import {
   DollarSign,
   Handshake,
   Megaphone,
+  HeadphonesIcon,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -90,6 +91,7 @@ const adminNavGroups: NavGroup[] = [
       { label: "Sales", icon: DollarSign, href: "/sales" },
       { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
       { label: "Marketing", icon: Megaphone, href: "/marketing" },
+      { label: "Support", icon: HeadphonesIcon, href: "/support" },
     ],
   },
   {
@@ -130,6 +132,7 @@ const employeeNavGroups: NavGroup[] = [
       { label: "Sales", icon: DollarSign, href: "/sales" },
       { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
       { label: "Marketing", icon: Megaphone, href: "/marketing" },
+      { label: "Support", icon: HeadphonesIcon, href: "/support" },
     ],
   },
 ];

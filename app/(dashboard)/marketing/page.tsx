@@ -16,6 +16,7 @@ import { MetricCard } from "@/components/crm/metric-card";
 import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { FunnelChart } from "@/components/crm/funnel-chart";
 import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   marketingStats,
   mqlTimeline,
@@ -28,6 +29,7 @@ import {
   formatNumber,
 } from "@/lib/data/crm-mock-data";
 import { cn } from "@/lib/utils";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 
 const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   active: { icon: Play, color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10" },
@@ -42,17 +44,20 @@ const eventStatusColors: Record<string, string> = {
 
 export default function MarketingDashboardPage() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Marketing Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Campaign performance, lead generation, and marketing ROI
-        </p>
-      </div>
+    <motion.div
+      className="space-y-6"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp}>
+        <PageHeader
+          title="Marketing Dashboard"
+          description="Campaign performance, lead generation, and marketing ROI"
+        />
+      </motion.div>
 
-      {/* Row 2: Metric Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Active Campaigns"
           value={marketingStats.campaigns.value}
@@ -82,20 +87,14 @@ export default function MarketingDashboardPage() {
           trend={marketingStats.roi.trend}
           sparkColor="#F59E0B"
         />
-      </div>
+      </motion.div>
 
-      {/* Row 3: MQL Trend + Lead Funnel */}
       <div className="grid gap-6 lg:grid-cols-12">
-        <motion.div
-          className="lg:col-span-7"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <Card className="h-full">
+        <motion.div className="lg:col-span-7" variants={fadeUp}>
+          <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
+                <TrendingUp className="h-4 w-4 text-gold" />
                 MQL Trend
               </CardTitle>
             </CardHeader>
@@ -110,16 +109,11 @@ export default function MarketingDashboardPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          className="lg:col-span-5"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-        >
-          <Card className="h-full">
+        <motion.div className="lg:col-span-5" variants={fadeUp}>
+          <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
+                <Target className="h-4 w-4 text-gold" />
                 Lead Gen Funnel
               </CardTitle>
             </CardHeader>
@@ -130,16 +124,9 @@ export default function MarketingDashboardPage() {
         </motion.div>
       </div>
 
-      {/* Row 4: Campaign List + Channel Breakdown */}
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Campaign List */}
-        <motion.div
-          className="lg:col-span-7"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <Card className="h-full">
+        <motion.div className="lg:col-span-7" variants={fadeUp}>
+          <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base">Campaigns</CardTitle>
             </CardHeader>
@@ -208,14 +195,8 @@ export default function MarketingDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Channel Breakdown */}
-        <motion.div
-          className="lg:col-span-5"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.25 }}
-        >
-          <Card className="h-full">
+        <motion.div className="lg:col-span-5" variants={fadeUp}>
+          <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base">Channel Breakdown</CardTitle>
             </CardHeader>
@@ -230,15 +211,9 @@ export default function MarketingDashboardPage() {
         </motion.div>
       </div>
 
-      {/* Row 5: Content Performance + Upcoming Events */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Content Performance */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <Card className="h-full">
+        <motion.div variants={fadeUp}>
+          <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base">Content Performance</CardTitle>
             </CardHeader>
@@ -296,16 +271,11 @@ export default function MarketingDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Upcoming Events */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.35 }}
-        >
-          <Card className="h-full">
+        <motion.div variants={fadeUp}>
+          <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
+                <Calendar className="h-4 w-4 text-gold" />
                 Upcoming Events
               </CardTitle>
             </CardHeader>
@@ -319,8 +289,8 @@ export default function MarketingDashboardPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.4 + i * 0.06 }}
                   >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Calendar className="h-4 w-4 text-primary" />
+                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
+                      <Calendar className="h-4 w-4 text-gold" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{event.name}</p>
@@ -345,6 +315,6 @@ export default function MarketingDashboardPage() {
           </Card>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

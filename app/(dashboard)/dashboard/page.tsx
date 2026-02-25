@@ -1,40 +1,52 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useDashboardStats, useRecentProjects, useTeamAvailability, useEmployeeTickets, useActiveSprintSummary, useRecentActivity } from "../../../lib/hooks/trpc-hooks";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Users, Briefcase, CalendarCheck, Building2, Folder, Clock, LogOut, ListTodo, Activity, Zap, ArrowUpRight, Bug, BookOpen, CheckCircle2, Plus, UserPlus } from "lucide-react";
-import { ErrorMessage } from "../../../components/pre-ui/error-message";
-import { Button } from "../../../components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { ClockInWidget } from "../../../components/attendance/clock-in-widget";
+import {
+  useDashboardStats,
+  useRecentProjects,
+  useTeamAvailability,
+  useEmployeeTickets,
+  useActiveSprintSummary,
+  useRecentActivity,
+} from "@/lib/hooks/trpc-hooks";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Users,
+  Briefcase,
+  CalendarCheck,
+  Building2,
+  Folder,
+  ListTodo,
+  Activity,
+  Bug,
+  BookOpen,
+  CheckCircle2,
+  RefreshCw,
+} from "lucide-react";
+import { ErrorMessage } from "@/components/pre-ui/error-message";
+import { Button } from "@/components/ui/button";
+import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import {
   EmptyTasksIllustration,
   EmptyProjectsIllustration,
   EmptyActivityIllustration,
-  EmptySprintIllustration,
-  EmptyTeamIllustration,
-} from "../../../components/illustrations";
-import { DashboardStatsSkeleton } from "../../../components/ui/dashboard-skeleton";
-import { Skeleton } from "../../../components/ui/skeleton";
-import { PageHeader } from "../../../components/ui/page-header";
-import { StatCard } from "../../../components/ui/stat-card";
-import { EmptyState } from "../../../components/ui/empty-state";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
-import { resolveImageUrl } from "../../../lib/utils";
-import { Badge } from "../../../components/ui/badge";
+} from "@/components/illustrations";
+import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
-
-const formatTime = (time: string | Date | null | undefined): string => {
-  if (!time) return "";
-  try {
-    const date = typeof time === "string" ? new Date(`1970-01-01T${time}`) : time;
-    return format(date, "hh:mm a");
-  } catch {
-    return String(time);
-  }
-};
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { getInitials } from "@/lib/format-utils";
+import { QuickActions } from "./_components/quick-actions";
+import { SprintCard } from "./_components/sprint-card";
+import { TeamCard } from "./_components/team-card";
 
 const getGreeting = (): string => {
   const hour = new Date().getHours();
@@ -54,7 +66,25 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   BUG: Bug,
   STORY: BookOpen,
   TASK: CheckCircle2,
-  EPIC: Zap,
+  EPIC: Activity,
+};
+
+const statusColors: Record<string, string> = {
+  ACTIVE: "bg-emerald-500/10 text-emerald-700",
+  PLANNING: "bg-blue-500/10 text-blue-700",
+  COMPLETED: "bg-slate-500/10 text-slate-700",
+  ON_HOLD: "bg-amber-500/10 text-amber-700",
+};
+
+interface TicketProject {
+  key?: string;
+  name?: string;
+  id?: number;
+}
+
+const getTicketProject = (ticket: unknown): TicketProject => {
+  const t = ticket as { project?: TicketProject };
+  return t.project || {};
 };
 
 export default function DashboardPage() {
@@ -87,20 +117,12 @@ export default function DashboardPage() {
         <DashboardStatsSkeleton />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           <Card className="col-span-4 bg-card border-border">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
+            <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+            <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
           <Card className="col-span-3 bg-card border-border">
-            <CardHeader>
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-20 w-full" />
-            </CardContent>
+            <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+            <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
         </div>
       </div>
@@ -130,7 +152,7 @@ export default function DashboardPage() {
           description="Please select an organization to view dashboard statistics."
           action={{
             label: "Select Organization",
-            onClick: () => window.location.href = "/org-selection"
+            onClick: () => (window.location.href = "/org-selection"),
           }}
         />
       </div>
@@ -138,85 +160,38 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    {
-      label: "Total Employees",
-      value: stats.totalEmployees,
-      icon: Users,
-      href: "/hr",
-    },
-    {
-      label: "Active Projects",
-      value: stats.activeProjects,
-      icon: Briefcase,
-      href: "/projects",
-    },
-    {
-      label: "Present Today",
-      value: stats.presentToday,
-      icon: CalendarCheck,
-      href: "/hr/attendance",
-    },
-    {
-      label: "Organization",
-      value: stats.orgName,
-      icon: Building2,
-    },
+    { label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
+    { label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
+    { label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
+    { label: "Organization", value: stats.orgName, icon: Building2 },
   ];
 
-  const statusColors: Record<string, string> = {
-    ACTIVE: "bg-emerald-500/10 text-emerald-700",
-    PLANNING: "bg-blue-500/10 text-blue-700",
-    COMPLETED: "bg-slate-500/10 text-slate-700",
-    ON_HOLD: "bg-amber-500/10 text-amber-700",
-  };
-
-  const getInitials = (name: string | null | undefined, firstName?: string | null, lastName?: string | null) => {
-    if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase();
-    }
-    if (name) {
-      const parts = name.split(" ");
-      return parts.length > 1
-        ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-        : name.substring(0, 2).toUpperCase();
-    }
-    return "??";
-  };
-
   const myTickets = myTicketsData?.data || [];
-  const inProgressTickets = myTickets.filter(t => t.status === "IN_PROGRESS" || t.status === "IN_REVIEW");
-  const todoTickets = myTickets.filter(t => t.status === "TODO" || t.status === "BACKLOG");
+  const inProgressTickets = myTickets.filter((t) => t.status === "IN_PROGRESS" || t.status === "IN_REVIEW");
+  const todoTickets = myTickets.filter((t) => t.status === "TODO" || t.status === "BACKLOG");
   const sortedMyTickets = [...inProgressTickets, ...todoTickets];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <motion.div
+      className="space-y-8"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <PageHeader
             title={`${getGreeting()}, ${firstName}`}
             description={`Overview for ${stats.orgName}`}
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            {format(new Date(), "EEEE, MMMM do, yyyy")}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2">
-            <Link href="/projects">
-              <Button variant="outline" size="sm">
-                <Plus className="mr-1.5 h-3.5 w-3.5" />
-                New Project
-              </Button>
-            </Link>
-            <Link href="/hr">
-              <Button variant="outline" size="sm">
-                <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-                Add Employee
-              </Button>
-            </Link>
-          </div>
-          <ClockInWidget />
-        </div>
-      </div>
+        <ClockInWidget />
+      </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
           <StatCard
             key={stat.label}
@@ -227,18 +202,22 @@ export default function DashboardPage() {
             index={i}
           />
         ))}
-      </div>
+      </motion.div>
 
-      {/* Sprint Progress + My Issues row */}
-      <div className="grid gap-6 lg:grid-cols-7">
-        {/* My Issues */}
-        <Card className="lg:col-span-4 bg-card border-border flex flex-col" style={{ maxHeight: "420px" }}>
+      <motion.div variants={fadeUp}>
+        <QuickActions />
+      </motion.div>
+
+      <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-7">
+        <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col" style={{ maxHeight: "420px" }}>
           <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
             <CardTitle className="text-foreground flex items-center gap-2">
-              <ListTodo className="h-5 w-5 text-primary" />
+              <ListTodo className="h-5 w-5 text-gold" />
               My Issues
             </CardTitle>
-            <Badge variant="secondary">{sortedMyTickets.length} open</Badge>
+            <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">
+              {sortedMyTickets.length} open
+            </Badge>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden">
             {ticketsLoading ? (
@@ -251,27 +230,19 @@ export default function DashboardPage() {
               <div className="space-y-2 overflow-y-auto pr-2" style={{ maxHeight: "100%" }}>
                 {sortedMyTickets.slice(0, 10).map((ticket) => {
                   const TypeIcon = typeIcons[ticket.type || "TASK"] || CheckCircle2;
-                  const projectKey = (ticket as Record<string, unknown>).project
-                    ? ((ticket as Record<string, unknown>).project as { key?: string }).key
-                    : "";
-                  const projectName = (ticket as Record<string, unknown>).project
-                    ? ((ticket as Record<string, unknown>).project as { name?: string }).name
-                    : "";
-                  const projectId = (ticket as Record<string, unknown>).project
-                    ? ((ticket as Record<string, unknown>).project as { id?: number }).id
-                    : undefined;
+                  const project = getTicketProject(ticket);
                   return (
-                    <Link key={ticket.id} href={projectId ? `/projects/${projectId}` : "#"}>
-                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                    <Link key={ticket.id} href={project.id ? `/projects/${project.id}` : "#"}>
+                      <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 hover:border-gold/30 transition-colors cursor-pointer">
                         <TypeIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground font-mono">
-                              {projectKey}-{ticket.ticketNumber}
+                              {project.key}-{ticket.ticketNumber}
                             </span>
                             <span className="font-medium text-sm text-foreground truncate">{ticket.title}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground">{projectName}</p>
+                          <p className="text-xs text-muted-foreground">{project.name}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge variant="outline" className={priorityColors[ticket.priority || "MEDIUM"]}>
@@ -296,109 +267,18 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Active Sprint Progress */}
-        <Card className="lg:col-span-3 bg-card border-border">
+        <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
+      </motion.div>
+
+      <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-12">
+        <Card className="lg:col-span-4 bg-card border-border shadow-noir">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-foreground flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Active Sprint
+              <Folder className="h-5 w-5 text-gold" />
+              Recent Projects
             </CardTitle>
-            {sprintSummary?.projectId && (
-              <Link href={`/projects/${sprintSummary.projectId}`}>
-                <Button variant="ghost" size="sm">
-                  <ArrowUpRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
-          </CardHeader>
-          <CardContent>
-            {sprintLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : sprintSummary ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-foreground">{sprintSummary.name}</h3>
-                  <p className="text-sm text-muted-foreground">{sprintSummary.projectName}</p>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium">{sprintSummary.progress}%</span>
-                  </div>
-                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${sprintSummary.progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Stats grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-2.5 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Days Left</p>
-                    <p className={`text-lg font-bold ${sprintSummary.daysRemaining <= 2 ? "text-red-500" : "text-foreground"}`}>
-                      {sprintSummary.daysRemaining}
-                    </p>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Points</p>
-                    <p className="text-lg font-bold text-foreground">
-                      {sprintSummary.completedPoints}/{sprintSummary.totalPoints}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Ticket breakdown */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                      Done
-                    </span>
-                    <span className="font-medium">{sprintSummary.doneTickets}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                      In Progress
-                    </span>
-                    <span className="font-medium">{sprintSummary.inProgressTickets}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
-                      To Do
-                    </span>
-                    <span className="font-medium">{sprintSummary.todoTickets}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <EmptyState
-                illustration={<EmptySprintIllustration />}
-                title="No active sprint"
-                description="Start a sprint in your project to see progress here."
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Projects + Activity + Team Availability row */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Recent Projects */}
-        <Card className="lg:col-span-4 bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-foreground">Recent Projects</CardTitle>
             <Link href="/projects">
-              <Button variant="ghost" size="sm">View All</Button>
+              <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold">View All</Button>
             </Link>
           </CardHeader>
           <CardContent>
@@ -412,10 +292,10 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {recentProjects.map((project) => (
                   <Link key={project.id} href={`/projects/${project.id}`}>
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-gold/30 transition-colors cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Folder className="h-5 w-5 text-primary" />
+                        <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center">
+                          <Folder className="h-5 w-5 text-gold" />
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{project.name}</p>
@@ -436,18 +316,17 @@ export default function DashboardPage() {
                 description="Create your first project to start tracking work."
                 action={{
                   label: "Create Project",
-                  onClick: () => window.location.href = "/projects"
+                  onClick: () => (window.location.href = "/projects"),
                 }}
               />
             )}
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
-        <Card className="lg:col-span-4 bg-card border-border flex flex-col" style={{ maxHeight: "420px" }}>
+        <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col" style={{ maxHeight: "420px" }}>
           <CardHeader className="flex-shrink-0">
             <CardTitle className="text-foreground flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+              <Activity className="h-5 w-5 text-gold" />
               Recent Activity
             </CardTitle>
           </CardHeader>
@@ -508,69 +387,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Team Availability */}
-        <Card className="lg:col-span-4 bg-card border-border flex flex-col" style={{ maxHeight: "420px" }}>
-          <CardHeader className="flex-shrink-0">
-            <CardTitle className="text-foreground">Team Availability</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden flex flex-col">
-            {teamLoading ? (
-              <div className="space-y-3 overflow-y-auto">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : teamAvailability && teamAvailability.length > 0 ? (
-              <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '100%' }}>
-                {teamAvailability.map((member) => (
-                  <div key={member.userId} className="flex items-center justify-between p-2 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={resolveImageUrl(member.image)} />
-                          <AvatarFallback className="text-xs">
-                            {getInitials(member.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${member.isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm text-foreground">{member.name}</p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          {member.isOnline ? (
-                            <>
-                              <Clock className="h-3 w-3" />
-                              Checked in at {formatTime(member.checkIn)}
-                            </>
-                          ) : member.checkOut ? (
-                            <>
-                              <LogOut className="h-3 w-3" />
-                              Checked out at {formatTime(member.checkOut)}
-                            </>
-                          ) : (
-                            "Offline"
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant={member.isOnline ? "default" : "secondary"} className={member.isOnline ? "bg-emerald-500" : ""}>
-                      {member.isOnline ? "Online" : "Offline"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <EmptyState
-                  illustration={<EmptyTeamIllustration />}
-                  title="No team members online"
-                  description="Team availability will appear here when members clock in."
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+        <TeamCard members={teamAvailability} isLoading={teamLoading} />
+      </motion.div>
+    </motion.div>
   );
 }
