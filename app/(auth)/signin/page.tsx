@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { signIn } from "next-auth/react";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +17,19 @@ import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+const signinSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export default function SignInPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const form = useForm<z.infer<typeof signinSchema>>({
+    resolver: zodResolver(signinSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
   const getCallbackUrl = () => {
     if (typeof window !== "undefined") {
@@ -29,38 +40,34 @@ export default function SignInPage() {
     return "/dashboard";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
+  const signInMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof signinSchema>) => {
       const callbackUrl = getCallbackUrl();
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         rememberMe: rememberMe ? "true" : "false",
         callbackUrl,
         redirect: false,
       });
-
       if (result?.error) {
-        toast.error("Invalid email or password. Please check your credentials and try again.");
-        setIsLoading(false);
-        return;
+        throw new Error("Invalid email or password. Please check your credentials and try again.");
       }
-
+      return result;
+    },
+    onSuccess: (result) => {
+      toast.success("Sign in successful! Redirecting...");
       if (result?.ok && result?.url) {
-        toast.success("Sign in successful! Redirecting...");
         window.location.href = result.url;
-        return;
       }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Sign in error:", error);
-      toast.error("An error occurred. Please try again.");
-      setIsLoading(false);
-    }
+  const onSubmit = (values: z.infer<typeof signinSchema>) => {
+    signInMutation.mutate(values);
   };
 
   return (
@@ -72,7 +79,7 @@ export default function SignInPage() {
 
       <Card className="shadow-noir border-border">
         <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground">Email address</Label>
               <div className="relative">
@@ -81,13 +88,14 @@ export default function SignInPage() {
                   id="email"
                   type="email"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
+                  {...form.register("email")}
+                  disabled={signInMutation.isPending}
                   className="pl-10 focus-visible:ring-primary"
                 />
               </div>
+              {form.formState.errors.email && (
+                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -106,21 +114,23 @@ export default function SignInPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
+                  {...form.register("password")}
+                  disabled={signInMutation.isPending}
                   className="pl-10 pr-10 focus-visible:ring-primary"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {form.formState.errors.password && (
+                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+              )}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -128,15 +138,15 @@ export default function SignInPage() {
                 id="rememberMe"
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked === true)}
-                disabled={isLoading}
+                disabled={signInMutation.isPending}
               />
               <Label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
                 Remember me for 30 days
               </Label>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={signInMutation.isPending}>
+              {signInMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,76 +11,57 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { vaivammTrpcClient } from "@/lib/trpc";
-import { Loader2, Eye, EyeOff, Check, X, BarChart3, Plug, ArrowRight, ShieldCheck, Quote } from "lucide-react";
+import { useSignUp } from "@/lib/hooks/auth-hooks";
+import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
+import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
+import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
+import { Loader2, Eye, EyeOff, BarChart3, Plug, ArrowRight, ShieldCheck, Quote } from "lucide-react";
 
-function getPasswordStrength(password: string) {
-  const checks = {
-    length: password.length >= 8,
-    lowercase: /[a-z]/.test(password),
-    uppercase: /[A-Z]/.test(password),
-    number: /\d/.test(password),
-    special: /[@$!%*?&]/.test(password),
-  };
-  const passed = Object.values(checks).filter(Boolean).length;
-  let level: "weak" | "fair" | "good" | "strong" = "weak";
-  let color = "bg-red-500";
-  if (passed >= 5) { level = "strong"; color = "bg-green-500"; }
-  else if (passed >= 4) { level = "good"; color = "bg-blue-500"; }
-  else if (passed >= 3) { level = "fair"; color = "bg-yellow-500"; }
-  return { checks, passed, level, color, percentage: (passed / 5) * 100 };
-}
+const signupSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email("Please enter a valid email"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignUpPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    firstName: "",
-    lastName: "",
+
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "" },
   });
 
-  const strength = useMemo(() => getPasswordStrength(formData.password), [formData.password]);
-  const passwordsMatch = formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword;
-  const passwordsMismatch = formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword;
+  const password = form.watch("password");
+  const confirmPassword = form.watch("confirmPassword");
+  const strength = useMemo(() => getPasswordStrength(password), [password]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
-
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(formData.password)) {
-      toast.error("Password must be at least 8 characters with uppercase, lowercase, number, and special character");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      await vaivammTrpcClient.auth.signUp.mutate({
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName || undefined,
-        lastName: formData.lastName || undefined,
-      });
-
+  const signUp = useSignUp({
+    onSuccess: () => {
       toast.success("Account created! Please check your email to verify your account.");
-      await new Promise(resolve => setTimeout(resolve, 100));
-      window.location.href = "/verify-email?email=" + encodeURIComponent(formData.email);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "An error occurred";
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
-    }
+      const email = form.getValues("email");
+      window.location.href = "/verify-email?email=" + encodeURIComponent(email);
+    },
+    onError: (error) => {
+      toast.error(error.message || "An error occurred");
+    },
+  });
+
+  const onSubmit = (values: SignupFormValues) => {
+    signUp.mutate({
+      email: values.email,
+      password: values.password,
+      firstName: values.firstName || undefined,
+      lastName: values.lastName || undefined,
+    });
   };
 
   return (
@@ -153,7 +137,7 @@ export default function SignUpPage() {
             </Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground">First Name</Label>
@@ -161,9 +145,8 @@ export default function SignUpPage() {
                   id="firstName"
                   type="text"
                   placeholder="John"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  disabled={isLoading}
+                  {...form.register("firstName")}
+                  disabled={signUp.isPending}
                   className="focus-visible:ring-primary"
                 />
               </div>
@@ -173,9 +156,8 @@ export default function SignUpPage() {
                   id="lastName"
                   type="text"
                   placeholder="Doe"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  disabled={isLoading}
+                  {...form.register("lastName")}
+                  disabled={signUp.isPending}
                   className="focus-visible:ring-primary"
                 />
               </div>
@@ -187,12 +169,13 @@ export default function SignUpPage() {
                 id="email"
                 type="email"
                 placeholder="you@company.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                disabled={isLoading}
+                {...form.register("email")}
+                disabled={signUp.isPending}
                 className="focus-visible:ring-primary"
               />
+              {form.formState.errors.email && (
+                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -202,97 +185,35 @@ export default function SignUpPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a strong password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  disabled={isLoading}
+                  {...form.register("password")}
+                  disabled={signUp.isPending}
                   className="pr-10 focus-visible:ring-primary"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {formData.password.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
-                        style={{ width: `${strength.percentage}%` }}
-                      />
-                    </div>
-                    <span className={`text-xs font-medium capitalize ${
-                      strength.level === "strong" ? "text-green-600" :
-                      strength.level === "good" ? "text-blue-600" :
-                      strength.level === "fair" ? "text-yellow-600" : "text-red-600"
-                    }`}>
-                      {strength.level}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {[
-                      { key: "length" as const, label: "8+ characters" },
-                      { key: "uppercase" as const, label: "Uppercase" },
-                      { key: "lowercase" as const, label: "Lowercase" },
-                      { key: "number" as const, label: "Number" },
-                      { key: "special" as const, label: "Special char" },
-                    ].map(({ key, label }) => (
-                      <div key={key} className="flex items-center gap-1">
-                        {strength.checks[key] ? (
-                          <Check className="h-3 w-3 text-green-500" />
-                        ) : (
-                          <X className="h-3 w-3 text-gray-300" />
-                        )}
-                        <span className={`text-xs ${strength.checks[key] ? "text-green-600" : "text-muted-foreground"}`}>
-                          {label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {form.formState.errors.password && (
+                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
+              {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  required
-                  disabled={isLoading}
-                  className={`pr-10 focus-visible:ring-primary ${
-                    passwordsMatch ? "border-green-500 focus-visible:ring-green-500" :
-                    passwordsMismatch ? "border-red-500 focus-visible:ring-red-500" : ""
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  tabIndex={-1}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {passwordsMismatch && <p className="text-xs text-red-500">Passwords do not match</p>}
-              {passwordsMatch && (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <Check className="h-3 w-3" /> Passwords match
-                </p>
-              )}
-            </div>
+            <PasswordConfirmField
+              value={confirmPassword}
+              onChange={(val) => form.setValue("confirmPassword", val, { shouldDirty: true })}
+              password={password}
+              disabled={signUp.isPending}
+            />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={signUp.isPending}>
+              {signUp.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating account...

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback, useRef } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { vaivammTrpcClient } from "@/lib/trpc";
+import { useVerifyEmail, useResendVerificationEmail } from "@/lib/hooks/auth-hooks";
 import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 
 function VerifyEmailForm() {
@@ -14,11 +14,10 @@ function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
-  const [isVerifying, setIsVerifying] = useState(!!token);
   const [isVerified, setIsVerified] = useState(false);
-  const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<NodeJS.Timeout | null>(null);
+  const hasVerified = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -39,46 +38,44 @@ function VerifyEmailForm() {
     }, 1000);
   };
 
-  const verifyEmail = useCallback(async () => {
-    if (!token) return;
-
-    try {
-      await vaivammTrpcClient.auth.verifyEmail.mutate({ token });
+  const verifyEmail = useVerifyEmail({
+    onSuccess: () => {
       setIsVerified(true);
       toast.success("Email verified successfully!");
-      setTimeout(() => {
-        router.push("/signin");
-      }, 2000);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Verification failed";
-      toast.error(message);
-      setIsVerifying(false);
-    }
-  }, [token, router]);
+      setTimeout(() => router.push("/signin"), 2000);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Verification failed");
+    },
+  });
 
-  useEffect(() => {
-    if (token) verifyEmail();
-  }, [token, verifyEmail]);
-
-  const handleResend = async () => {
-    if (!email || cooldown > 0) return;
-    setIsResending(true);
-    try {
-      await vaivammTrpcClient.auth.resendVerificationEmail.mutate({ email });
+  const resendVerification = useResendVerificationEmail({
+    onSuccess: () => {
       toast.success("Verification email resent!");
       startCooldown();
-    } catch {
+    },
+    onError: () => {
       toast.error("Failed to resend email");
-    } finally {
-      setIsResending(false);
+    },
+  });
+
+  useEffect(() => {
+    if (token && !hasVerified.current) {
+      hasVerified.current = true;
+      verifyEmail.mutate({ token });
     }
+  }, [token]);
+
+  const handleResend = () => {
+    if (!email || cooldown > 0) return;
+    resendVerification.mutate({ email });
   };
 
   if (isVerified) {
     return (
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-4">
+          <div className="mx-auto bg-green-500/15 p-4 rounded-full w-fit mb-4">
             <CheckCircle2 className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">Email Verified!</h1>
@@ -87,8 +84,8 @@ function VerifyEmailForm() {
 
         <Card className="shadow-noir border-border">
           <CardContent className="pt-6 space-y-4">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-green-700">Redirecting you to sign in page...</p>
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <p className="text-sm text-green-600">Redirecting you to sign in page...</p>
             </div>
             <Link href="/signin" className="block">
               <Button className="w-full">Go to Sign In</Button>
@@ -99,7 +96,7 @@ function VerifyEmailForm() {
     );
   }
 
-  if (isVerifying) {
+  if (verifyEmail.isPending) {
     return (
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -142,15 +139,15 @@ function VerifyEmailForm() {
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-700">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <p className="text-sm text-blue-600">
               Click the link in the email to verify your account. The link will expire in 24 hours.
             </p>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
             <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-amber-600">
               Didn&apos;t receive an email? Check your spam folder or contact support.
             </p>
           </div>
@@ -160,9 +157,9 @@ function VerifyEmailForm() {
               variant="ghost"
               className="w-full"
               onClick={handleResend}
-              disabled={isResending || cooldown > 0}
+              disabled={resendVerification.isPending || cooldown > 0}
             >
-              {isResending ? (
+              {resendVerification.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <RefreshCw className="mr-2 h-4 w-4" />
