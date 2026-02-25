@@ -5,6 +5,7 @@ import { Toaster } from "../components/ui/sonner";
 import { TRPCReactProvider } from "../trpc/react";
 import { SessionProvider } from "../components/providers/session-provider";
 import { ThemeProvider } from "../components/theme-provider";
+import { MotionProvider } from "../components/providers/motion-provider";
 
 import { JetBrains_Mono } from "next/font/google";
 
@@ -34,7 +35,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
           <SessionProvider>
-            <TRPCReactProvider>{children}</TRPCReactProvider>
+            <MotionProvider>
+              <TRPCReactProvider>{children}</TRPCReactProvider>
+            </MotionProvider>
             <Toaster position="top-right" />
           </SessionProvider>
         </ThemeProvider>

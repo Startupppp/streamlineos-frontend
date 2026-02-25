@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { fadeUp } from "@/lib/motion-variants";
 import {
   Plus,
   UserPlus,
@@ -21,20 +21,15 @@ const quickActions = [
 
 export function QuickActions() {
   return (
-    <motion.div
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
       {quickActions.map((action) => {
         const ActionIcon = action.icon;
         return (
           <motion.div key={action.label} variants={fadeUp}>
-            <Link href={action.href}>
+            <Link href={action.href} aria-label={action.label}>
               <div className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 shadow-noir transition-all duration-200 hover:border-gold/40 hover:shadow-md hover:bg-gold/5 cursor-pointer">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gold/10 transition-colors group-hover:bg-gold/20">
-                  <ActionIcon className="h-5 w-5 text-gold" />
+                  <ActionIcon className="h-5 w-5 text-gold" aria-hidden="true" />
                 </div>
                 <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                   {action.label}
@@ -44,6 +39,6 @@ export function QuickActions() {
           </motion.div>
         );
       })}
-    </motion.div>
+    </div>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, ArrowUpRight } from "lucide-react";
+import { Zap, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySprintIllustration } from "@/components/illustrations";
+
+const SPRINT_DANGER_DAYS = 2;
 
 interface SprintSummary {
   projectId?: number;
@@ -28,15 +30,15 @@ interface SprintCardProps {
 
 export function SprintCard({ summary, isLoading }: SprintCardProps) {
   return (
-    <Card className="lg:col-span-3 bg-card border-border shadow-noir">
+    <Card className="bg-card border-border shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-foreground flex items-center gap-2">
-          <Zap className="h-5 w-5 text-gold" />
+          <Zap className="h-5 w-5 text-gold" aria-hidden="true" />
           Active Sprint
         </CardTitle>
         {summary?.projectId && (
           <Link href={`/projects/${summary.projectId}`}>
-            <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold">
+            <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold" aria-label="View sprint project">
               <ArrowUpRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -64,16 +66,24 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
               <div className="h-2.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={summary.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sprint progress">
                 <div
                   className="h-full rounded-full transition-all gold-gradient"
-                  style={{ width: `${summary.progress}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, summary.progress))}%` }}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
-                <p className="text-xs text-muted-foreground">Days Left</p>
-                <p className={`text-lg font-bold ${summary.daysRemaining <= 2 ? "text-red-500" : "text-foreground"}`}>
+              <div className={`p-2.5 rounded-lg border ${summary.daysRemaining <= SPRINT_DANGER_DAYS ? "bg-red-500/10 border-red-500/30" : "bg-muted/50 border-border"}`}>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  Days Left
+                  {summary.daysRemaining <= SPRINT_DANGER_DAYS && (
+                    <AlertTriangle className="h-3 w-3 text-red-500" aria-hidden="true" />
+                  )}
+                </p>
+                <p className={`text-lg font-bold ${summary.daysRemaining <= SPRINT_DANGER_DAYS ? "text-red-500" : "text-foreground"}`}>
                   {summary.daysRemaining}
+                  {summary.daysRemaining <= SPRINT_DANGER_DAYS && (
+                    <span className="text-xs font-medium ml-1">Urgent</span>
+                  )}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-muted/50 border border-border">

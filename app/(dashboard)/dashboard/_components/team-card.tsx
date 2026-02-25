@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials, formatTime } from "@/lib/format-utils";
+import { onlineStatusColors } from "@/lib/theme-constants";
 
 interface TeamMember {
   userId: string;
@@ -26,7 +27,7 @@ interface TeamCardProps {
 
 export function TeamCard({ members, isLoading }: TeamCardProps) {
   return (
-    <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
+    <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Users className="h-5 w-5 text-gold" />
@@ -41,7 +42,7 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
             ))}
           </div>
         ) : members && members.length > 0 ? (
-          <div className="space-y-3 overflow-y-auto pr-2" style={{ maxHeight: "100%" }}>
+          <div className="space-y-3 overflow-y-auto pr-2 max-h-full">
             {members.map((member) => (
               <div key={member.userId} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
@@ -52,7 +53,7 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
                         {getInitials(member.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${member.isOnline ? "bg-emerald-500" : "bg-slate-400"}`} aria-hidden="true" />
+                    <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${onlineStatusColors[member.isOnline ? "online" : "offline"]}`} aria-hidden="true" />
                   </div>
                   <div>
                     <p className="font-medium text-sm text-foreground">{member.name}</p>
@@ -73,7 +74,7 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
                     </p>
                   </div>
                 </div>
-                <Badge variant={member.isOnline ? "default" : "secondary"} className={member.isOnline ? "bg-emerald-500" : ""}>
+                <Badge variant={member.isOnline ? "default" : "secondary"} className={member.isOnline ? onlineStatusColors.online : ""}>
                   {member.isOnline ? "Online" : "Offline"}
                 </Badge>
               </div>
