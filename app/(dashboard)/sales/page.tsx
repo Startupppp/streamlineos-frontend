@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getPersonSlug } from "@/lib/data/crm-people-data";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { safeMax } from "@/lib/format-utils";
 
 const stageColors: Record<string, string> = {
   Negotiation: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
@@ -63,10 +64,8 @@ const rankStyles = [
 ];
 
 export default function SalesDashboardPage() {
-  const maxLeaderboardRevenue = Math.max(
-    ...salesLeaderboard.map((r) => r.revenue)
-  );
-  const maxDealsByStageCount = Math.max(...dealsByStage.map((d) => d.count));
+  const maxLeaderboardRevenue = safeMax(salesLeaderboard.map((r) => r.revenue));
+  const maxDealsByStageCount = safeMax(dealsByStage.map((d) => d.count));
 
   return (
     <motion.div

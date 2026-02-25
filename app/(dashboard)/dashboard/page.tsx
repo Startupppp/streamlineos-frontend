@@ -56,10 +56,10 @@ const getGreeting = (): string => {
 };
 
 const priorityColors: Record<string, string> = {
-  URGENT: "bg-red-500/10 text-red-700",
-  HIGH: "bg-orange-500/10 text-orange-700",
-  MEDIUM: "bg-yellow-500/10 text-yellow-700",
-  LOW: "bg-slate-500/10 text-slate-700",
+  URGENT: "bg-red-500/10 text-red-700 dark:text-red-400",
+  HIGH: "bg-orange-500/10 text-orange-700 dark:text-orange-400",
+  MEDIUM: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+  LOW: "bg-slate-500/10 text-slate-700 dark:text-slate-400",
 };
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -70,10 +70,10 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const statusColors: Record<string, string> = {
-  ACTIVE: "bg-emerald-500/10 text-emerald-700",
-  PLANNING: "bg-blue-500/10 text-blue-700",
-  COMPLETED: "bg-slate-500/10 text-slate-700",
-  ON_HOLD: "bg-amber-500/10 text-amber-700",
+  ACTIVE: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  PLANNING: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  COMPLETED: "bg-slate-500/10 text-slate-700 dark:text-slate-400",
+  ON_HOLD: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
 };
 
 interface TicketProject {
@@ -90,8 +90,8 @@ const getTicketProject = (ticket: unknown): TicketProject => {
 export default function DashboardPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "";
-  const firstName = userName.split(" ")[0];
+  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
+  const firstName = userName.split(" ")[0] || "User";
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
@@ -209,7 +209,7 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-7">
-        <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col" style={{ maxHeight: "420px" }}>
+        <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
           <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
             <CardTitle className="text-foreground flex items-center gap-2">
               <ListTodo className="h-5 w-5 text-gold" />
@@ -323,7 +323,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col" style={{ maxHeight: "420px" }}>
+        <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
           <CardHeader className="flex-shrink-0">
             <CardTitle className="text-foreground flex items-center gap-2">
               <Activity className="h-5 w-5 text-gold" />

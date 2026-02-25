@@ -17,6 +17,8 @@ import { useAcceptInvitation } from "@/lib/hooks/auth-hooks";
 import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { Users, Mail, User, Lock, Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 const invitationSchema = z.object({
@@ -96,17 +98,23 @@ export default function InvitationPage() {
   }
 
   return (
-    <div className="w-full max-w-lg">
-      <div className="text-center mb-8">
+    <motion.div
+      className="w-full max-w-lg"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="text-center mb-8">
         <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
           <Users className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">Join Organization</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Join Organization</h1>
         <p className="text-muted-foreground mt-2">
           You&apos;ve been invited to join <span className="font-semibold text-foreground">{invitation.organizationName}</span>
         </p>
-      </div>
+      </motion.div>
 
+      <motion.div variants={fadeUp}>
       <Card className="shadow-noir border-border">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border mb-6">
@@ -131,7 +139,7 @@ export default function InvitationPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground">First Name</Label>
                 <Input
@@ -212,6 +220,7 @@ export default function InvitationPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

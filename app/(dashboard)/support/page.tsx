@@ -24,6 +24,7 @@ import {
   ticketsByPriority,
 } from "@/lib/data/crm-mock-data";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { safeMax } from "@/lib/format-utils";
 
 const statusIndicator: Record<string, string> = {
   online: "bg-emerald-500",
@@ -34,7 +35,7 @@ const statusIndicator: Record<string, string> = {
 export default function SupportDashboardPage() {
   const totalTickets = ticketStatusBreakdown.reduce((sum, s) => sum + s.value, 0);
   const totalPriority = ticketsByPriority.reduce((sum, p) => sum + p.value, 0);
-  const maxPriorityValue = Math.max(...ticketsByPriority.map((p) => p.value));
+  const maxPriorityValue = safeMax(ticketsByPriority.map((p) => p.value));
 
   return (
     <motion.div
@@ -144,10 +145,10 @@ export default function SupportDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left font-medium text-muted-foreground pb-2">Name</th>
-                      <th className="text-left font-medium text-muted-foreground pb-2">Role</th>
-                      <th className="text-left font-medium text-muted-foreground pb-2">Access</th>
-                      <th className="text-left font-medium text-muted-foreground pb-2">Status</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Name</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Role</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Access</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Status</th>
                     </tr>
                   </thead>
                   <tbody>

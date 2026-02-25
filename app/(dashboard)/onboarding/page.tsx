@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { User, Landmark, FileText, ClipboardCheck, Check } from "lucide-react";
 import { PersonalInfoTab } from "./_components/personal-info-tab";
 import { BankDetailsTab } from "./_components/bank-details-tab";
@@ -27,28 +29,33 @@ export default function OnboardingPage() {
   const progressPercentage = Math.round((completedSteps.size / (steps.length - 1)) * 100);
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Employee Onboarding</h1>
+    <motion.div
+      className="max-w-4xl mx-auto py-4 md:py-10"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Employee Onboarding</h1>
         <p className="text-muted-foreground mt-2">Complete your profile to get started with Vaivamm Capital.</p>
-      </div>
+      </motion.div>
 
-      <div className="mb-8">
+      <motion.div variants={fadeUp} className="mb-8">
         <div className="flex items-center justify-between text-sm mb-2">
           <span className="font-medium text-foreground">
             Step {currentStepIndex + 1} of {steps.length}
           </span>
           <span className="text-muted-foreground">{progressPercentage}% Completed</span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={progressPercentage} aria-valuemin={0} aria-valuemax={100} aria-label="Onboarding progress">
           <div
             className="h-full gold-gradient rounded-full transition-all duration-500"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
-      </div>
+      </motion.div>
 
-      <div className="mb-8">
+      <motion.div variants={fadeUp} className="mb-8">
         <div className="flex items-center justify-between">
           {steps.map((step, index) => {
             const StepIcon = step.icon;
@@ -68,9 +75,12 @@ export default function OnboardingPage() {
                   }`}>
                     {isCompleted ? <Check className="h-5 w-5" /> : <StepIcon className="h-5 w-5" />}
                   </div>
-                  <span className={`text-xs font-medium ${
-                    isCurrent ? "text-primary" : isCompleted ? "text-green-600" : "text-muted-foreground"
-                  }`}>
+                  <span
+                    className={`text-xs font-medium hidden sm:block ${
+                      isCurrent ? "text-primary" : isCompleted ? "text-green-600" : "text-muted-foreground"
+                    }`}
+                    aria-current={isCurrent ? "step" : undefined}
+                  >
                     {step.label}
                   </span>
                 </button>
@@ -81,10 +91,11 @@ export default function OnboardingPage() {
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
+      <motion.div variants={fadeUp}>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 h-14">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto sm:h-14 gap-1">
           {steps.map((step, i) => (
             <TabsTrigger
               key={step.id}
@@ -122,6 +133,7 @@ export default function OnboardingPage() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -135,11 +135,11 @@ export default function MarketingDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left font-medium text-muted-foreground pb-2">Campaign</th>
-                      <th className="text-left font-medium text-muted-foreground pb-2">Status</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">Leads</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">Spend</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">ROI</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Campaign</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Status</th>
+                      <th scope="col" className="text-right font-medium text-muted-foreground pb-2">Leads</th>
+                      <th scope="col" className="text-right font-medium text-muted-foreground pb-2">Spend</th>
+                      <th scope="col" className="text-right font-medium text-muted-foreground pb-2">ROI</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -222,11 +222,11 @@ export default function MarketingDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left font-medium text-muted-foreground pb-2">Content</th>
-                      <th className="text-left font-medium text-muted-foreground pb-2">Type</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">Views</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">Leads</th>
-                      <th className="text-right font-medium text-muted-foreground pb-2">Conv%</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Content</th>
+                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Type</th>
+                      <th scope="col" className="text-right font-medium text-muted-foreground pb-2">Views</th>
+                      <th scope="col" className="text-right font-medium text-muted-foreground pb-2">Leads</th>
+                      <th scope="col" className="text-right font-medium text-muted-foreground pb-2">Conv%</th>
                     </tr>
                   </thead>
                   <tbody>

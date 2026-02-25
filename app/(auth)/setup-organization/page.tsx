@@ -12,6 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { createOrganization, checkUserHasOrganization } from "@/server/actions/organization-actions";
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { Building2, Loader2, ArrowRight } from "lucide-react";
 
 const setupOrgSchema = z.object({
@@ -86,27 +88,33 @@ export default function SetupOrganizationPage() {
   }
 
   return (
-    <div className="w-full max-w-lg">
-      <div className="text-center mb-8">
+    <motion.div
+      className="w-full max-w-lg"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="text-center mb-8">
         <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
           <Building2 className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground tracking-tight">Setup Organization</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Setup Organization</h1>
         <p className="text-muted-foreground mt-2">
           Tell us a bit about your business to customize your CRM experience.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="mb-6">
+      <motion.div variants={fadeUp} className="mb-6">
         <div className="flex items-center justify-between text-sm mb-2">
           <span className="font-medium text-foreground">Step 1 of 3</span>
           <span className="text-muted-foreground">33% Completed</span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={33} aria-valuemin={0} aria-valuemax={100} aria-label="Setup progress">
           <div className="h-full w-1/3 gold-gradient rounded-full transition-all duration-500" />
         </div>
-      </div>
+      </motion.div>
 
+      <motion.div variants={fadeUp}>
       <Card className="shadow-noir border-border">
         <CardContent className="pt-6">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -172,6 +180,7 @@ export default function SetupOrganizationPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
