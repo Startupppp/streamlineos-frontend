@@ -5,14 +5,15 @@ export const getInitials = (
   firstName?: string | null,
   lastName?: string | null,
 ): string => {
-  if (firstName && lastName) {
-    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  if (firstName?.trim() && lastName?.trim()) {
+    return `${firstName.trim()[0]}${lastName.trim()[0]}`.toUpperCase();
   }
-  if (name) {
-    const parts = name.split(" ");
+  const trimmed = name?.trim();
+  if (trimmed) {
+    const parts = trimmed.split(/\s+/);
     return parts.length > 1
       ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-      : name.substring(0, 2).toUpperCase();
+      : trimmed.substring(0, 2).toUpperCase();
   }
   return "??";
 };
@@ -29,5 +30,11 @@ export const formatTime = (time: string | Date | null | undefined): string => {
 
 export const safeMax = (values: number[], fallback = 1): number => {
   if (values.length === 0) return fallback;
-  return Math.max(...values);
+  const max = values.reduce((a, b) => Math.max(a, b), -Infinity);
+  return max > 0 ? max : fallback;
+};
+
+export const calcPercent = (value: number, total: number, decimals = 1): string => {
+  if (total <= 0) return "0";
+  return ((value / total) * 100).toFixed(decimals);
 };

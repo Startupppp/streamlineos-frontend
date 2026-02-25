@@ -52,6 +52,7 @@ import {
 } from "../../../lib/validations/hr";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail, sendPayslipGeneratedEmail } from "../../../lib/email";
+import { initializeLeaveBalances } from "../../actions/leave-actions";
 import {
   createPaginatedResponse,
   getOffset,
@@ -290,6 +291,14 @@ export const hrRouter = createTRPCRouter({
                status: "PENDING",
            });
        }
+
+       // Initialize leave balances based on joining date
+       // Casual Leave: pro-rated (1 per remaining month), Sick Leave: flat 6
+       await initializeLeaveBalances(
+         ctx.session.orgId,
+         newUser.id,
+         input.joiningDate,
+       );
 
        const admins = await ctx.db.query.organizationMembers.findMany({
           where: and(

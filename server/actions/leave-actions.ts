@@ -1,343 +1,550 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { 
-    leaveRequests, 
-    leaveTypes, 
-    leaveBalances, 
-    organizationMembers,
-    users 
+import {
+  leaveRequests,
+  leaveTypes,
+  leaveBalances,
+  organizationMembers,
+  users,
 } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
+import {
+  DEFAULT_LEAVE_TYPES,
+  LEAVE_POLICY,
+  resolveInitialBalance,
+} from "@/lib/leave-policy";
 
-// Helper: Ensure leave types exist and get them
+// ────────────────────────────────────────────
+// Internal helpers
+// ────────────────────────────────────────────
+
+/** Ensure the org has leave types seeded (idempotent). */
 async function ensureLeaveTypes(orgId: string) {
-    let types = await db.query.leaveTypes.findMany({
-        where: eq(leaveTypes.orgId, orgId)
-    });
+  let types = await db.query.leaveTypes.findMany({
+    where: eq(leaveTypes.orgId, orgId),
+  });
 
-    if (types.length === 0) {
-        // Create defaults
-        const defaults = [
-            { name: "Casual Leave", daysPerYear: 12, carryForward: false },
-            { name: "Sick Leave", daysPerYear: 6, carryForward: false },
-             { name: "Privilege Leave", daysPerYear: 15, carryForward: true },
-        ];
-        
-        for (const t of defaults) {
-            await db.insert(leaveTypes).values({
-                orgId,
-                name: t.name,
-                daysPerYear: t.daysPerYear,
-                carryForward: t.carryForward
-            });
-        }
-        
-        types = await db.query.leaveTypes.findMany({
-            where: eq(leaveTypes.orgId, orgId)
-        });
+  if (types.length === 0) {
+    for (const t of DEFAULT_LEAVE_TYPES) {
+      await db.insert(leaveTypes).values({
+        orgId,
+        name: t.name,
+        daysPerYear: t.daysPerYear,
+        carryForward: t.carryForward,
+      });
     }
-    return types;
+
+    types = await db.query.leaveTypes.findMany({
+      where: eq(leaveTypes.orgId, orgId),
+    });
+  }
+
+  return types;
 }
 
-// Helper: Ensure user has balances for current year
-async function ensureUserBalances(orgId: string, userId: string, types: any[]) {
-    const year = new Date().getFullYear();
-    
-    // Check existing
+/**
+ * Lazy-init balances for an existing user when they first access the leave system.
+ * Uses the user's joining date for pro-rating casual leaves.
+ */
+async function ensureUserBalances(
+  orgId: string,
+  userId: string,
+  types: { id: number; name: string; daysPerYear: number }[],
+) {
+  const year = new Date().getFullYear();
+
+  const existing = await db.query.leaveBalances.findMany({
+    where: and(
+      eq(leaveBalances.userId, userId),
+      eq(leaveBalances.orgId, orgId),
+      eq(leaveBalances.year, year),
+    ),
+  });
+
+  const existingTypeIds = new Set(existing.map((b) => b.leaveTypeId));
+
+  // Fetch the user's joining date for pro-rating
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { joiningDate: true },
+  });
+  const joiningDate = user?.joiningDate ? new Date(user.joiningDate) : new Date();
+
+  for (const t of types) {
+    if (existingTypeIds.has(t.id)) continue;
+
+    const balance = resolveInitialBalance(t.name, t.daysPerYear, joiningDate, year);
+
+    await db.insert(leaveBalances).values({
+      orgId,
+      userId,
+      leaveTypeId: t.id,
+      year,
+      balance: balance.toString(),
+    });
+  }
+}
+
+// ────────────────────────────────────────────
+// Public: Leave balance initialization (called during onboarding)
+// ────────────────────────────────────────────
+
+/**
+ * Initialize leave balances for a newly onboarded employee.
+ *
+ * Called from the `onboardEmployee` tRPC mutation so balances are ready
+ * from day one instead of being lazy-loaded.
+ *
+ * Rules applied:
+ *   - Casual Leave → pro-rated by remaining months (1 per month from joining month)
+ *   - Sick Leave   → flat 6 regardless of joining date
+ *   - Privilege    → pro-rated proportionally
+ */
+export async function initializeLeaveBalances(
+  orgId: string,
+  userId: string,
+  joiningDate: Date | string,
+) {
+  const types = await ensureLeaveTypes(orgId);
+  const joinDate = typeof joiningDate === "string" ? new Date(joiningDate) : joiningDate;
+  const currentYear = new Date().getFullYear();
+  const targetYear = Math.max(joinDate.getFullYear(), currentYear);
+
+  for (const type of types) {
+    // Skip if balance already exists
+    const existing = await db.query.leaveBalances.findFirst({
+      where: and(
+        eq(leaveBalances.userId, userId),
+        eq(leaveBalances.orgId, orgId),
+        eq(leaveBalances.leaveTypeId, type.id),
+        eq(leaveBalances.year, targetYear),
+      ),
+    });
+
+    if (existing) continue;
+
+    const balance = resolveInitialBalance(
+      type.name,
+      type.daysPerYear,
+      joinDate,
+      targetYear,
+    );
+
+    await db.insert(leaveBalances).values({
+      orgId,
+      userId,
+      leaveTypeId: type.id,
+      year: targetYear,
+      balance: balance.toString(),
+    });
+  }
+}
+
+// ────────────────────────────────────────────
+// Public: Monthly casual-leave expiry (called from cron)
+// ────────────────────────────────────────────
+
+/**
+ * Expire unused casual leave for the previous month.
+ *
+ * For each active employee, if they did NOT use a casual leave in the
+ * previous calendar month, deduct 1 from their casual-leave balance
+ * (the unused monthly allocation "expires").
+ *
+ * Should be called via cron on the 1st of each month.
+ */
+export async function expireUnusedMonthlyCasualLeaves() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  // Calculate previous month's date range
+  const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+  const prevMonthYear = now.getMonth() === 0 ? currentYear - 1 : currentYear;
+  const monthStart = new Date(prevMonthYear, prevMonth, 1);
+  const monthEnd = new Date(prevMonthYear, prevMonth + 1, 0); // last day of prev month
+
+  const monthStartStr = monthStart.toISOString().split("T")[0];
+  const monthEndStr = monthEnd.toISOString().split("T")[0];
+
+  // Get all orgs
+  const orgs = await db
+    .selectDistinct({ orgId: leaveBalances.orgId })
+    .from(leaveBalances)
+    .where(eq(leaveBalances.year, prevMonthYear));
+
+  let expiredCount = 0;
+
+  for (const { orgId } of orgs) {
+    // Get the casual leave type for this org
+    const casualType = await db.query.leaveTypes.findFirst({
+      where: and(
+        eq(leaveTypes.orgId, orgId),
+        eq(leaveTypes.name, LEAVE_POLICY.CASUAL.name),
+      ),
+    });
+
+    if (!casualType) continue;
+
+    // Get all casual leave balances for this org + year
     const balances = await db.query.leaveBalances.findMany({
-        where: and(
-            eq(leaveBalances.userId, userId),
-            eq(leaveBalances.orgId, orgId),
-            eq(leaveBalances.year, year)
-        ),
-        with: {
-
-            // leaveType: true 
-        }
+      where: and(
+        eq(leaveBalances.orgId, orgId),
+        eq(leaveBalances.leaveTypeId, casualType.id),
+        eq(leaveBalances.year, prevMonthYear),
+      ),
     });
 
-    // Simple map of existing types
-    const existingTypeIds = new Set(balances.map(b => b.leaveTypeId));
+    for (const bal of balances) {
+      if (Number(bal.balance) <= 0) continue;
 
-    for (const t of types) {
-        if (!existingTypeIds.has(t.id)) {
-            await db.insert(leaveBalances).values({
-                orgId,
-                userId,
-                leaveTypeId: t.id,
-                year,
-                balance: t.daysPerYear.toString()
-            });
-        }
+      // Check if this user used a casual leave in the previous month
+      const usedLeaves = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(leaveRequests)
+        .where(
+          and(
+            eq(leaveRequests.userId, bal.userId),
+            eq(leaveRequests.leaveTypeId, casualType.id),
+            eq(leaveRequests.status, "APPROVED"),
+            gte(leaveRequests.startDate, monthStartStr),
+            lte(leaveRequests.endDate, monthEndStr),
+          ),
+        );
+
+      const count = Number(usedLeaves[0]?.count ?? 0);
+
+      if (count === 0) {
+        // No casual leave used — expire 1 day
+        const newBalance = Math.max(0, Number(bal.balance) - LEAVE_POLICY.CASUAL.perMonth);
+        await db
+          .update(leaveBalances)
+          .set({ balance: newBalance.toString() })
+          .where(eq(leaveBalances.id, bal.id));
+        expiredCount++;
+      }
     }
+  }
+
+  return { expiredCount };
 }
 
+// ────────────────────────────────────────────
+// Public: Yearly leave reset (called from cron on Jan 1)
+// ────────────────────────────────────────────
+
+/**
+ * Reset leave balances for a new calendar year.
+ *
+ * No carry-forward — both Casual and Sick get fresh allocations:
+ *   - Casual: full 12 (existing employees get the full year)
+ *   - Sick: flat 6
+ */
+export async function resetYearlyLeaveBalances() {
+  const newYear = new Date().getFullYear();
+
+  const orgs = await db
+    .selectDistinct({ orgId: leaveTypes.orgId })
+    .from(leaveTypes);
+
+  let resetCount = 0;
+
+  for (const { orgId } of orgs) {
+    const types = await ensureLeaveTypes(orgId);
+
+    // Get all active members
+    const members = await db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: { user: { columns: { id: true, joiningDate: true, isActive: true } } },
+    });
+
+    for (const member of members) {
+      if (!member.user?.isActive) continue;
+
+      const joiningDate = member.user.joiningDate
+        ? new Date(member.user.joiningDate)
+        : new Date();
+
+      for (const type of types) {
+        // Check if balance already exists for new year
+        const existing = await db.query.leaveBalances.findFirst({
+          where: and(
+            eq(leaveBalances.userId, member.userId),
+            eq(leaveBalances.orgId, orgId),
+            eq(leaveBalances.leaveTypeId, type.id),
+            eq(leaveBalances.year, newYear),
+          ),
+        });
+
+        if (existing) continue;
+
+        // Fresh allocation — no carry-forward for any type
+        const balance = resolveInitialBalance(type.name, type.daysPerYear, joiningDate, newYear);
+
+        await db.insert(leaveBalances).values({
+          orgId,
+          userId: member.userId,
+          leaveTypeId: type.id,
+          year: newYear,
+          balance: balance.toString(),
+        });
+        resetCount++;
+      }
+    }
+  }
+
+  return { resetCount };
+}
+
+// ────────────────────────────────────────────
+// Public: Context & requests (existing logic, cleaned up)
+// ────────────────────────────────────────────
 
 export async function getLeaveContext() {
-     const session = await auth();
-     if (!session?.user?.id) return { error: "Unauthorized" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
-     // Get Org
-     const member = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, session.user.id)
-     });
-     if (!member) return { error: "No organization found" };
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return { error: "No organization found" };
 
-     const types = await ensureLeaveTypes(member.orgId);
-     await ensureUserBalances(member.orgId, session.user.id, types);
+  const types = await ensureLeaveTypes(member.orgId);
+  await ensureUserBalances(member.orgId, session.user.id, types);
 
-     // Fetch balances
-     const balances = await db.select({
-         id: leaveBalances.id,
-         leaveTypeId: leaveBalances.leaveTypeId,
-         balance: leaveBalances.balance,
-         typeName: leaveTypes.name
-     })
-     .from(leaveBalances)
-     .leftJoin(leaveTypes, eq(leaveBalances.leaveTypeId, leaveTypes.id))
-     .where(and(
-         eq(leaveBalances.userId, session.user.id),
-         eq(leaveBalances.year, new Date().getFullYear())
-     ));
+  const balances = await db
+    .select({
+      id: leaveBalances.id,
+      leaveTypeId: leaveBalances.leaveTypeId,
+      balance: leaveBalances.balance,
+      typeName: leaveTypes.name,
+    })
+    .from(leaveBalances)
+    .leftJoin(leaveTypes, eq(leaveBalances.leaveTypeId, leaveTypes.id))
+    .where(
+      and(
+        eq(leaveBalances.userId, session.user.id),
+        eq(leaveBalances.year, new Date().getFullYear()),
+      ),
+    );
 
-     return { success: true, balances, types };
+  return { success: true, balances, types };
 }
 
-
 export async function getApprovers() {
-    const session = await auth();
-    if (!session?.user?.id) return [];
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-    const member = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, session.user.id)
-    });
-    if (!member) return [];
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return [];
 
-    // Logic: 
-    // If user is MEMBER -> Approvers are ADMIN + OWNER
-    // If user is ADMIN -> Approvers are OWNER
-    // If user is OWNER -> Approvers are ... self? (Usually CEO doesn't apply, but for logic sake, maybe other Owners)
-    
-    let targetRoles = ["ADMIN", "OWNER"];
-    if (member.role === "ADMIN") {
-        targetRoles = ["OWNER"];
-    }
+  let targetRoles = ["ADMIN", "OWNER"];
+  if (member.role === "ADMIN") {
+    targetRoles = ["OWNER"];
+  }
 
-    const approvers = await db.query.organizationMembers.findMany({
-        where: and(
-            eq(organizationMembers.orgId, member.orgId),
-            // Check roles
-            // Using raw SQL or multiple ORs. Drizzle 'inArray' needs explicit types sometimes
-             sql`${organizationMembers.role} IN ${targetRoles}`
-        ),
-        with: {
-            user: true
-        }
-    });
+  const approvers = await db.query.organizationMembers.findMany({
+    where: and(
+      eq(organizationMembers.orgId, member.orgId),
+      sql`${organizationMembers.role} IN ${targetRoles}`,
+    ),
+    with: { user: true },
+  });
 
-    // Filter out self
-    return approvers
-        .filter(m => m.userId !== session.user.id)
-        .map(m => m.user);
+  return approvers
+    .filter((m) => m.userId !== session.user.id)
+    .map((m) => m.user);
 }
 
 export async function submitLeaveRequest(data: {
-    leaveTypeId: number;
-    startDate: Date;
-    endDate: Date;
-    reason: string;
-    approverId: string;
+  leaveTypeId: number;
+  startDate: Date;
+  endDate: Date;
+  reason: string;
+  approverId: string;
 }) {
-    const session = await auth();
-    if (!session?.user?.id) return { error: "Unauthorized" };
-    
-    const member = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, session.user.id)
-     });
-     if (!member) return { error: "No organization found" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
-    // Validate dates
-    if (data.startDate > data.endDate) return { error: "Invalid date range" };
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return { error: "No organization found" };
 
-    try {
-        await db.insert(leaveRequests).values({
-            orgId: member.orgId,
-            userId: session.user.id,
-            leaveTypeId: data.leaveTypeId,
-            startDate: data.startDate.toISOString(), // Assuming string date in DB based on Schema 'date'
-            endDate: data.endDate.toISOString(),
-            reason: data.reason,
-            approverId: data.approverId, // User selected approver
-            status: "PENDING"
-        });
+  if (data.startDate > data.endDate) return { error: "Invalid date range" };
 
-        // Send Email Notification
-        const [approver, leaveType] = await Promise.all([
-            db.query.users.findFirst({ where: eq(users.id, data.approverId) }),
-            db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, data.leaveTypeId) })
-        ]);
+  try {
+    await db.insert(leaveRequests).values({
+      orgId: member.orgId,
+      userId: session.user.id,
+      leaveTypeId: data.leaveTypeId,
+      startDate: data.startDate.toISOString(),
+      endDate: data.endDate.toISOString(),
+      reason: data.reason,
+      approverId: data.approverId,
+      status: "PENDING",
+    });
 
-        if (approver?.email) {
-            await sendLeaveRequestEmail(
-                approver.email,
-                approver.name || "Approver",
-                session.user.name || "Employee",
-                leaveType?.name || "Leave",
-                data.startDate.toLocaleDateString(),
-                data.endDate.toLocaleDateString(),
-                data.reason
-            );
-        }
+    const [approver, leaveType] = await Promise.all([
+      db.query.users.findFirst({ where: eq(users.id, data.approverId) }),
+      db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, data.leaveTypeId) }),
+    ]);
 
-        revalidatePath("/hr/leaves");
-        return { success: true };
-    } catch(e) {
-        return { error: "Failed to submit request" };
+    if (approver?.email) {
+      await sendLeaveRequestEmail(
+        approver.email,
+        approver.name || "Approver",
+        session.user.name || "Employee",
+        leaveType?.name || "Leave",
+        data.startDate.toLocaleDateString(),
+        data.endDate.toLocaleDateString(),
+        data.reason,
+      );
     }
+
+    revalidatePath("/hr/leaves");
+    return { success: true };
+  } catch {
+    return { error: "Failed to submit request" };
+  }
 }
 
 export async function processLeaveRequest(data: {
-    requestId: number;
-    status: "APPROVED" | "REJECTED";
-    rejectionReason?: string;
+  requestId: number;
+  status: "APPROVED" | "REJECTED";
+  rejectionReason?: string;
 }) {
-    const session = await auth();
-    if (!session?.user?.id) return { error: "Unauthorized" };
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
-    const request = await db.query.leaveRequests.findFirst({
-        where: eq(leaveRequests.id, data.requestId)
+  const request = await db.query.leaveRequests.findFirst({
+    where: eq(leaveRequests.id, data.requestId),
+  });
+  if (!request) return { error: "Request not found" };
+
+  if (request.approverId !== session.user.id) {
+    const member = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, session.user.id),
+    });
+    if (request.orgId !== member?.orgId || member.role !== "OWNER") {
+      return { error: "Not authorized to process this request" };
+    }
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(leaveRequests)
+        .set({
+          status: data.status,
+          rejectionReason: data.rejectionReason,
+        })
+        .where(eq(leaveRequests.id, data.requestId));
+
+      if (data.status === "APPROVED") {
+        const start = new Date(request.startDate);
+        const end = new Date(request.endDate);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+        const balanceRecord = await tx.query.leaveBalances.findFirst({
+          where: and(
+            eq(leaveBalances.userId, request.userId),
+            eq(leaveBalances.leaveTypeId, request.leaveTypeId!),
+            eq(leaveBalances.year, new Date().getFullYear()),
+          ),
+        });
+
+        if (balanceRecord) {
+          const newBal = Number(balanceRecord.balance) - diffDays;
+          if (newBal < 0) {
+            throw new Error(
+              `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`,
+            );
+          }
+          await tx
+            .update(leaveBalances)
+            .set({ balance: newBal.toString() })
+            .where(eq(leaveBalances.id, balanceRecord.id));
+        }
+      }
     });
 
-    if (!request) return { error: "Request not found" };
+    const [employee, leaveType, approver] = await Promise.all([
+      db.query.users.findFirst({ where: eq(users.id, request.userId) }),
+      db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, request.leaveTypeId!) }),
+      db.query.users.findFirst({ where: eq(users.id, session.user.id) }),
+    ]);
 
-    // Verify approver is current user (or Owner)
-    if (request.approverId !== session.user.id) {
-         // Optionally allow OWNER to override any request
-         const member = await db.query.organizationMembers.findFirst({
-             where: eq(organizationMembers.userId, session.user.id)
-         });
-         if (request.orgId !== member?.orgId || member.role !== "OWNER") {
-             // For Strictness: Only designated approver or Owner
-             return { error: "Not authorized to process this request" };
-         }
+    if (employee?.email) {
+      await sendLeaveStatusUpdateEmail(
+        employee.email,
+        employee.name || "Employee",
+        leaveType?.name || "Leave",
+        new Date(request.startDate).toLocaleDateString(),
+        new Date(request.endDate).toLocaleDateString(),
+        data.status,
+        approver?.name || "Manager",
+        data.rejectionReason,
+      );
     }
 
-    try {
-        await db.transaction(async (tx) => {
-             // Update status
-             await tx.update(leaveRequests)
-                .set({
-                    status: data.status,
-                    rejectionReason: data.rejectionReason
-                })
-                .where(eq(leaveRequests.id, data.requestId));
-
-             // If Approved, deduct balance
-             if (data.status === "APPROVED") {
-                 // Calculate days
-                 // Note: Ideally we exclude weekends/holidays. For this MVP, simple date diff.
-                 const start = new Date(request.startDate);
-                 const end = new Date(request.endDate);
-                 const diffTime = Math.abs(end.getTime() - start.getTime());
-                 const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-                 // Get current balance
-                 const balanceRecord = await tx.query.leaveBalances.findFirst({
-                     where: and(
-                         eq(leaveBalances.userId, request.userId),
-                         eq(leaveBalances.leaveTypeId, request.leaveTypeId!),
-                         eq(leaveBalances.year, new Date().getFullYear())
-                     )
-                 });
-
-                 if (balanceRecord) {
-                      const newBal = Number(balanceRecord.balance) - diffDays;
-                      if (newBal < 0) {
-                        throw new Error(`Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`);
-                      }
-                      await tx.update(leaveBalances)
-                        .set({ balance: newBal.toString() })
-                        .where(eq(leaveBalances.id, balanceRecord.id));
-                 }
-             }
-        });
-        
-        // Send Status Update Email
-        const [employee, leaveType, approver] = await Promise.all([
-            db.query.users.findFirst({ where: eq(users.id, request.userId) }),
-            db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, request.leaveTypeId!) }),
-            db.query.users.findFirst({ where: eq(users.id, session.user.id) })
-        ]);
-
-        if (employee?.email) {
-            await sendLeaveStatusUpdateEmail(
-                employee.email,
-                employee.name || "Employee",
-                leaveType?.name || "Leave",
-                new Date(request.startDate).toLocaleDateString(),
-                new Date(request.endDate).toLocaleDateString(),
-                data.status,
-                approver?.name || "Manager",
-                data.rejectionReason
-            );
-        }
-
-        revalidatePath("/hr/leaves");
-        return { success: true };
-    } catch (e) {
-        return { error: "Failed to process request" };
-    }
+    revalidatePath("/hr/leaves");
+    return { success: true };
+  } catch {
+    return { error: "Failed to process request" };
+  }
 }
 
-
 export async function getMyRequests() {
-    const session = await auth();
-    if (!session?.user?.id) return [];
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-    return await db.query.leaveRequests.findMany({
-        where: eq(leaveRequests.userId, session.user.id),
-        with: {
-
-            leaveType: true, // Need to verify if relation exists in schema
-
-             approver: true
-        },
-        orderBy: [desc(leaveRequests.createdAt)]
-    });
+  return await db.query.leaveRequests.findMany({
+    where: eq(leaveRequests.userId, session.user.id),
+    with: {
+      leaveType: true,
+      approver: true,
+    },
+    orderBy: [desc(leaveRequests.createdAt)],
+  });
 }
 
 export async function getIncomingRequests() {
-    const session = await auth();
-    if (!session?.user?.id) return [];
+  const session = await auth();
+  if (!session?.user?.id) return [];
 
-    return await db.query.leaveRequests.findMany({
-        where: and(
-             eq(leaveRequests.approverId, session.user.id),
-             eq(leaveRequests.status, "PENDING")
-        ),
-        with: {
-            user: true,
-
-             leaveType: true
-        },
-        orderBy: [desc(leaveRequests.createdAt)]
-    });
+  return await db.query.leaveRequests.findMany({
+    where: and(
+      eq(leaveRequests.approverId, session.user.id),
+      eq(leaveRequests.status, "PENDING"),
+    ),
+    with: {
+      user: true,
+      leaveType: true,
+    },
+    orderBy: [desc(leaveRequests.createdAt)],
+  });
 }
 
 export async function getPendingApprovalCount() {
-    const session = await auth();
-    if (!session?.user?.id) return 0;
+  const session = await auth();
+  if (!session?.user?.id) return 0;
 
-    const count = await db.select({ count: sql<number>`count(*)` })
-        .from(leaveRequests)
-        .where(and(
-             eq(leaveRequests.approverId, session.user.id),
-             eq(leaveRequests.status, "PENDING")
-        ));
-    
-    return Number(count[0]?.count || 0);
+  const count = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(leaveRequests)
+    .where(
+      and(
+        eq(leaveRequests.approverId, session.user.id),
+        eq(leaveRequests.status, "PENDING"),
+      ),
+    );
+
+  return Number(count[0]?.count || 0);
 }
