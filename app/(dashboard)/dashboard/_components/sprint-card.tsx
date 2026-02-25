@@ -61,7 +61,7 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
                 <span className="text-muted-foreground">Progress</span>
                 <span className="font-medium text-gold">{summary.progress}%</span>
               </div>
-              <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-2.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={summary.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sprint progress">
                 <div
                   className="h-full rounded-full transition-all gold-gradient"
                   style={{ width: `${summary.progress}%` }}
@@ -87,21 +87,21 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
                   Done
                 </span>
                 <span className="font-medium">{summary.doneTickets}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
                   In Progress
                 </span>
                 <span className="font-medium">{summary.inProgressTickets}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-slate-400" aria-hidden="true" />
                   To Do
                 </span>
                 <span className="font-medium">{summary.todoTickets}</span>

@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { updateBankDetails } from "@/server/actions/onboarding-actions";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 
 const bankSchema = z.object({
@@ -48,49 +50,51 @@ export function BankDetailsTab({ onComplete, onBack }: BankDetailsTabProps) {
   return (
     <Card className="shadow-noir border-border">
       <CardContent className="pt-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground">Bank & Tax Details</h2>
-          <p className="text-sm text-muted-foreground mt-1">Required for payroll processing.</p>
-        </div>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Account Holder Name</Label>
-              <Input {...form.register("accountHolder")} placeholder="Your Name" className="focus-visible:ring-primary" />
-              {form.formState.errors.accountHolder && <p className="text-sm text-destructive">{form.formState.errors.accountHolder.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Bank Name</Label>
-              <Input {...form.register("bankName")} placeholder="HDFC, SBI, etc." className="focus-visible:ring-primary" />
-              {form.formState.errors.bankName && <p className="text-sm text-destructive">{form.formState.errors.bankName.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>Account Number</Label>
-              <Input {...form.register("accountNumber")} placeholder="0000 0000 0000" className="focus-visible:ring-primary" />
-              {form.formState.errors.accountNumber && <p className="text-sm text-destructive">{form.formState.errors.accountNumber.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label>IFSC Code</Label>
-              <Input {...form.register("ifsc")} placeholder="HDFC000123" className="focus-visible:ring-primary" />
-              {form.formState.errors.ifsc && <p className="text-sm text-destructive">{form.formState.errors.ifsc.message}</p>}
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Tax ID (PAN/SSN) <span className="text-muted-foreground font-normal ml-1">(Optional)</span></Label>
-            <Input {...form.register("taxId")} placeholder="ABCDE1234F" className="focus-visible:ring-primary" />
-          </div>
-          <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={onBack}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save & Continue
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </form>
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+          <motion.div variants={fadeUp} className="mb-6">
+            <h2 className="text-xl font-bold text-foreground">Bank & Tax Details</h2>
+            <p className="text-sm text-muted-foreground mt-1">Required for payroll processing.</p>
+          </motion.div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Account Holder Name</Label>
+                <Input {...form.register("accountHolder")} placeholder="Your Name" className="focus-visible:ring-primary" />
+                {form.formState.errors.accountHolder && <p className="text-sm text-destructive">{form.formState.errors.accountHolder.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Bank Name</Label>
+                <Input {...form.register("bankName")} placeholder="HDFC, SBI, etc." className="focus-visible:ring-primary" />
+                {form.formState.errors.bankName && <p className="text-sm text-destructive">{form.formState.errors.bankName.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Account Number</Label>
+                <Input {...form.register("accountNumber")} placeholder="0000 0000 0000" className="focus-visible:ring-primary" />
+                {form.formState.errors.accountNumber && <p className="text-sm text-destructive">{form.formState.errors.accountNumber.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>IFSC Code</Label>
+                <Input {...form.register("ifsc")} placeholder="HDFC000123" className="focus-visible:ring-primary" />
+                {form.formState.errors.ifsc && <p className="text-sm text-destructive">{form.formState.errors.ifsc.message}</p>}
+              </div>
+            </motion.div>
+            <motion.div variants={fadeUp} className="space-y-2">
+              <Label>Tax ID (PAN/SSN) <span className="text-muted-foreground font-normal ml-1">(Optional)</span></Label>
+              <Input {...form.register("taxId")} placeholder="ABCDE1234F" className="focus-visible:ring-primary" />
+            </motion.div>
+            <motion.div variants={fadeUp} className="flex justify-between">
+              <Button type="button" variant="outline" onClick={onBack}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save & Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </motion.div>
+          </form>
+        </motion.div>
       </CardContent>
     </Card>
   );

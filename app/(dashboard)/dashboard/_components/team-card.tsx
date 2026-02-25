@@ -8,18 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
-import { format } from "date-fns";
-import { getInitials } from "@/lib/format-utils";
-
-const formatTime = (time: string | Date | null | undefined): string => {
-  if (!time) return "";
-  try {
-    const date = typeof time === "string" ? new Date(`1970-01-01T${time}`) : time;
-    return format(date, "hh:mm a");
-  } catch {
-    return String(time);
-  }
-};
+import { getInitials, formatTime } from "@/lib/format-utils";
 
 interface TeamMember {
   userId: string;
@@ -37,7 +26,7 @@ interface TeamCardProps {
 
 export function TeamCard({ members, isLoading }: TeamCardProps) {
   return (
-    <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col" style={{ maxHeight: "420px" }}>
+    <Card className="lg:col-span-4 bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Users className="h-5 w-5 text-gold" />
@@ -63,7 +52,7 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
                         {getInitials(member.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${member.isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
+                    <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${member.isOnline ? "bg-emerald-500" : "bg-slate-400"}`} aria-hidden="true" />
                   </div>
                   <div>
                     <p className="font-medium text-sm text-foreground">{member.name}</p>
