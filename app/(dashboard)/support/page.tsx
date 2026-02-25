@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Ticket,
@@ -23,19 +24,25 @@ import {
   supportTeamMembers,
   ticketsByPriority,
 } from "@/lib/data/crm-mock-data";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { safeMax } from "@/lib/format-utils";
+import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
+import { safeMax, calcPercent } from "@/lib/format-utils";
+import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
 
-const statusIndicator: Record<string, string> = {
-  online: "bg-emerald-500",
-  away: "bg-amber-500",
-  offline: "bg-slate-400 dark:bg-slate-600",
-};
+const formatTicketValue = (v: number) => v.toLocaleString();
 
 export default function SupportDashboardPage() {
-  const totalTickets = ticketStatusBreakdown.reduce((sum, s) => sum + s.value, 0);
-  const totalPriority = ticketsByPriority.reduce((sum, p) => sum + p.value, 0);
-  const maxPriorityValue = safeMax(ticketsByPriority.map((p) => p.value));
+  const totalTickets = useMemo(
+    () => ticketStatusBreakdown.reduce((sum, s) => sum + s.value, 0),
+    [],
+  );
+  const totalPriority = useMemo(
+    () => ticketsByPriority.reduce((sum, p) => sum + p.value, 0),
+    [],
+  );
+  const maxPriorityValue = useMemo(
+    () => safeMax(ticketsByPriority.map((p) => p.value)),
+    [],
+  );
 
   return (
     <motion.div
@@ -57,32 +64,32 @@ export default function SupportDashboardPage() {
           value={supportDashboardStats.openTickets.value}
           icon={Ticket}
           trend={supportDashboardStats.openTickets.trend}
-          sparkColor="#3B82F6"
+          sparkColor={sparkColors.blue}
         />
         <MetricCard
           label="Avg Resolution Time"
           value={supportDashboardStats.avgResolution.value}
           icon={Clock}
           trend={supportDashboardStats.avgResolution.trend}
-          sparkColor="#F59E0B"
+          sparkColor={sparkColors.amber}
         />
         <MetricCard
           label="CSAT Score"
           value={supportDashboardStats.csatScore.value}
           icon={Star}
           trend={supportDashboardStats.csatScore.trend}
-          sparkColor="#10B981"
+          sparkColor={sparkColors.green}
         />
         <MetricCard
           label="Response Rate"
           value={supportDashboardStats.responseRate.value}
           icon={Zap}
           trend={supportDashboardStats.responseRate.trend}
-          sparkColor="#8B5CF6"
+          sparkColor={sparkColors.purple}
         />
       </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-5" variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -112,23 +119,23 @@ export default function SupportDashboardPage() {
             <CardContent>
               <MiniAreaChart
                 data={ticketVolumeTimeline}
-                color="#3B82F6"
+                color={sparkColors.blue}
                 height={240}
-                formatValue={(v) => v.toLocaleString()}
+                formatValue={formatTicketValue}
               />
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <motion.div variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-y-auto pr-1" style={{ maxHeight: "380px" }}>
+              <div className="overflow-y-auto pr-1 max-h-[380px]">
                 <ActivityFeed items={supportActivityFeed} />
               </div>
             </CardContent>
@@ -152,13 +159,11 @@ export default function SupportDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {supportTeamMembers.map((member, i) => (
+                    {supportTeamMembers.map((member) => (
                       <motion.tr
-                        key={i}
+                        key={member.name}
                         className="border-b border-border/50 last:border-0"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 + i * 0.04 }}
+                        variants={fadeUp}
                       >
                         <td className="py-2.5">
                           <div className="flex items-center gap-2.5">
@@ -181,7 +186,7 @@ export default function SupportDashboardPage() {
                             <div
                               className={cn(
                                 "w-2 h-2 rounded-full",
-                                statusIndicator[member.status] || "bg-slate-400"
+                                getColorSafe(onlineStatusColors, member.status)
                               )}
                             />
                             <span className="text-xs capitalize text-muted-foreground">
@@ -209,18 +214,14 @@ export default function SupportDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {ticketsByPriority.map((priority, i) => {
-                const percentage = totalPriority > 0
-                  ? ((priority.value / totalPriority) * 100).toFixed(1)
-                  : "0";
+              {ticketsByPriority.map((priority) => {
+                const percentage = calcPercent(priority.value, totalPriority);
 
                 return (
                   <motion.div
                     key={priority.label}
                     className="relative overflow-hidden rounded-xl border border-border p-4"
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.35 + i * 0.06 }}
+                    variants={slideInLeft}
                   >
                     <div
                       className="absolute inset-0 opacity-[0.04]"
@@ -254,7 +255,7 @@ export default function SupportDashboardPage() {
                           animate={{
                             width: `${(priority.value / maxPriorityValue) * 100}%`,
                           }}
-                          transition={{ duration: 0.6, delay: 0.4 + i * 0.08 }}
+                          transition={{ duration: 0.6, delay: 0.4 }}
                         />
                       </div>
                     </div>

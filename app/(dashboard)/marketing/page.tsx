@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Megaphone,
@@ -29,20 +30,30 @@ import {
   formatNumber,
 } from "@/lib/data/crm-mock-data";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
+import {
+  campaignStatusConfig,
+  getColorSafe,
+  eventStatusColors,
+  sparkColors,
+  type CampaignStatus,
+} from "@/lib/theme-constants";
 
-const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-  active: { icon: Play, color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-  paused: { icon: Pause, color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10" },
-  completed: { icon: CheckCircle2, color: "text-slate-700 dark:text-slate-400", bg: "bg-slate-500/10" },
+const ROI_HIGH_THRESHOLD = 4;
+const ROI_MED_THRESHOLD = 2.5;
+const CONV_HIGH_THRESHOLD = 5;
+
+const statusIcons: Record<CampaignStatus, React.ElementType> = {
+  active: Play,
+  paused: Pause,
+  completed: CheckCircle2,
 };
 
-const eventStatusColors: Record<string, string> = {
-  confirmed: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  planning: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-};
+const formatMqlValue = (v: number) => v.toLocaleString();
 
 export default function MarketingDashboardPage() {
+  const mqlSparkData = useMemo(() => mqlTimeline.map((d) => d.value), []);
+
   return (
     <motion.div
       className="space-y-6"
@@ -63,33 +74,33 @@ export default function MarketingDashboardPage() {
           value={marketingStats.campaigns.value}
           icon={Megaphone}
           trend={marketingStats.campaigns.trend}
-          sparkColor="#3B82F6"
+          sparkColor={sparkColors.blue}
         />
         <MetricCard
           label="Total Leads"
           value={formatNumber(marketingStats.leads.value)}
           icon={UserPlus}
           trend={marketingStats.leads.trend}
-          sparkColor="#10B981"
+          sparkColor={sparkColors.green}
         />
         <MetricCard
           label="MQLs"
           value={formatNumber(marketingStats.mqls.value)}
           icon={Target}
           trend={marketingStats.mqls.trend}
-          sparkData={mqlTimeline.map((d) => d.value)}
-          sparkColor="#8B5CF6"
+          sparkData={mqlSparkData}
+          sparkColor={sparkColors.purple}
         />
         <MetricCard
           label="Overall ROI"
           value={`${marketingStats.roi.value}%`}
           icon={TrendingUp}
           trend={marketingStats.roi.trend}
-          sparkColor="#F59E0B"
+          sparkColor={sparkColors.amber}
         />
       </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-7" variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -101,9 +112,9 @@ export default function MarketingDashboardPage() {
             <CardContent>
               <MiniAreaChart
                 data={mqlTimeline}
-                color="#8B5CF6"
+                color={sparkColors.purple}
                 height={240}
-                formatValue={(v) => v.toLocaleString()}
+                formatValue={formatMqlValue}
               />
             </CardContent>
           </Card>
@@ -124,7 +135,7 @@ export default function MarketingDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-7" variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -143,16 +154,14 @@ export default function MarketingDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {campaigns.map((c, i) => {
-                      const config = statusConfig[c.status];
-                      const StatusIcon = config.icon;
+                    {campaigns.map((c) => {
+                      const config = campaignStatusConfig[c.status as CampaignStatus] ?? campaignStatusConfig.active;
+                      const StatusIcon = statusIcons[c.status as CampaignStatus] ?? Play;
                       return (
                         <motion.tr
-                          key={i}
+                          key={c.name}
                           className="border-b border-border/50 last:border-0"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.25 + i * 0.04 }}
+                          variants={fadeUp}
                         >
                           <td className="py-2.5 font-medium text-foreground">{c.name}</td>
                           <td className="py-2.5">
@@ -175,9 +184,9 @@ export default function MarketingDashboardPage() {
                             <span
                               className={cn(
                                 "font-semibold",
-                                c.roi >= 4
+                                c.roi >= ROI_HIGH_THRESHOLD
                                   ? "text-emerald-600 dark:text-emerald-400"
-                                  : c.roi >= 2.5
+                                  : c.roi >= ROI_MED_THRESHOLD
                                   ? "text-foreground"
                                   : "text-amber-600 dark:text-amber-400"
                               )}
@@ -211,7 +220,7 @@ export default function MarketingDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
         <motion.div variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -230,15 +239,13 @@ export default function MarketingDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {contentPerformance.map((c, i) => (
+                    {contentPerformance.map((c) => (
                       <motion.tr
-                        key={i}
+                        key={c.title}
                         className="border-b border-border/50 last:border-0"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.35 + i * 0.04 }}
+                        variants={fadeUp}
                       >
-                        <td className="py-2.5 font-medium text-foreground max-w-[180px] truncate">
+                        <td className="py-2.5 font-medium text-foreground max-w-[180px] truncate" title={c.title}>
                           {c.title}
                         </td>
                         <td className="py-2.5">
@@ -254,7 +261,7 @@ export default function MarketingDashboardPage() {
                           <span
                             className={cn(
                               "font-semibold",
-                              c.convRate >= 5
+                              c.convRate >= CONV_HIGH_THRESHOLD
                                 ? "text-emerald-600 dark:text-emerald-400"
                                 : "text-foreground"
                             )}
@@ -281,29 +288,27 @@ export default function MarketingDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {upcomingEvents.map((event, i) => (
+                {upcomingEvents.map((event) => (
                   <motion.div
-                    key={i}
+                    key={event.name}
                     className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0"
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 + i * 0.06 }}
+                    variants={slideInLeft}
                   >
                     <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                      <Calendar className="h-4 w-4 text-gold" />
+                      <Calendar className="h-4 w-4 text-gold" aria-hidden="true" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{event.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground">{event.date}</span>
-                        <span className="text-xs text-muted-foreground/50">·</span>
+                        <span className="text-xs text-muted-foreground/50">&middot;</span>
                         <span className="text-xs text-muted-foreground">{event.type}</span>
                       </div>
                     </div>
                     <span
                       className={cn(
                         "text-xs font-medium px-2 py-0.5 rounded-full capitalize shrink-0",
-                        eventStatusColors[event.status]
+                        getColorSafe(eventStatusColors, event.status)
                       )}
                     >
                       {event.status}

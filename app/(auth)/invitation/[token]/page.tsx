@@ -68,7 +68,7 @@ export default function InvitationPage() {
   const acceptInvitation = useAcceptInvitation({
     onSuccess: () => {
       toast.success("Account created! Redirecting to dashboard...");
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     },
     onError: (error) => {
       toast.error(error.message || "An error occurred");
@@ -174,6 +174,9 @@ export default function InvitationPage() {
                   placeholder="Create a strong password"
                   {...form.register("password")}
                   disabled={acceptInvitation.isPending}
+                  aria-required="true"
+                  aria-invalid={!!form.formState.errors.password}
+                  aria-describedby={form.formState.errors.password ? "password-error" : undefined}
                   className="pl-10 pr-10 focus-visible:ring-primary"
                 />
                 <button
@@ -181,13 +184,12 @@ export default function InvitationPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                <p id="password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
               {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
             </div>

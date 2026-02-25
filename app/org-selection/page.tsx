@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useGetOrganizations, useCreateOrganization } from "@/lib/hooks/auth-hooks";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { Loader2, ChevronRight, Plus, Building2, ArrowRight, Search } from "lucide-react";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export default function OrgSelectionPage() {
   const router = useRouter();
   const { data: organizations, isLoading } = useGetOrganizations();
@@ -22,51 +24,83 @@ export default function OrgSelectionPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({ name: "", slug: "" });
 
-  const handleSelectOrg = () => {
-    router.push("/dashboard");
-  };
-
-  const handleCreateOrg = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      let slug = formData.slug.trim();
-      if (!slug) {
-        slug = generateSlug(formData.name);
-      } else {
-        slug = generateSlug(slug);
-      }
-
-      if (!slug) {
-        toast.error("Unable to generate a valid slug from the organization name. Please provide a slug manually.");
-        return;
-      }
-
-      await createOrg.mutateAsync({ name: formData.name, slug });
-      toast.success("Organization created!");
-      setShowCreateForm(false);
-      router.push("/dashboard");
-    } catch (error: unknown) {
-      let message = "Failed to create organization";
-      if (error && typeof error === "object" && "data" in error) {
-        const trpcError = error as { data?: { zodError?: { fieldErrors?: Record<string, string[]> } } };
-        if (trpcError.data?.zodError?.fieldErrors) {
-          const fieldErrors = trpcError.data.zodError.fieldErrors;
-          if (fieldErrors.slug) {
-            message = `Invalid slug: ${fieldErrors.slug[0] || "Slug must contain only lowercase letters, numbers, and hyphens"}`;
-          } else if (fieldErrors.name) {
-            message = `Invalid name: ${fieldErrors.name[0] || "Name is required"}`;
-          }
-        }
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-      toast.error(message);
-    }
-  };
-
-  const filteredOrgs = organizations?.filter((org) =>
-    org.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleSelectOrg = useCallback(
+    (orgId: string) => {
+      router.push(`/dashboard?org=${orgId}`);
+    },
+    [router],
   );
+
+  const handleCreateOrg = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        let slug = formData.slug.trim();
+        if (!slug) {
+          slug = generateSlug(formData.name);
+        } else {
+          slug = generateSlug(slug);
+        }
+
+        if (!slug) {
+          toast.error("Unable to generate a valid slug from the organization name. Please provide a slug manually.");
+          return;
+        }
+
+        await createOrg.mutateAsync({ name: formData.name, slug });
+        toast.success("Organization created!");
+        setShowCreateForm(false);
+        router.push("/dashboard");
+      } catch (error: unknown) {
+        let message = "Failed to create organization";
+        if (error && typeof error === "object" && "data" in error) {
+          const trpcError = error as { data?: { zodError?: { fieldErrors?: Record<string, string[]> } } };
+          if (trpcError.data?.zodError?.fieldErrors) {
+            const fieldErrors = trpcError.data.zodError.fieldErrors;
+            if (fieldErrors.slug) {
+              message = `Invalid slug: ${fieldErrors.slug[0] || "Slug must contain only lowercase letters, numbers, and hyphens"}`;
+            } else if (fieldErrors.name) {
+              message = `Invalid name: ${fieldErrors.name[0] || "Name is required"}`;
+            }
+          }
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+        toast.error(message);
+      }
+    },
+    [formData, createOrg, router],
+  );
+
+  const filteredOrgs = useMemo(
+    () =>
+      organizations?.filter((org) =>
+        org.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [organizations, searchQuery],
+  );
+
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value),
+    [],
+  );
+
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setFormData((prev) => ({ ...prev, name: e.target.value })),
+    [],
+  );
+
+  const handleSlugChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = generateSlug(e.target.value);
+      setFormData((prev) => ({ ...prev, slug: value }));
+    },
+    [],
+  );
+
+  const handleShowCreate = useCallback(() => setShowCreateForm(true), []);
+  const handleCancelCreate = useCallback(() => setShowCreateForm(false), []);
 
   if (isLoading) {
     return (
@@ -98,11 +132,11 @@ export default function OrgSelectionPage() {
                 <CardContent className="pt-6 space-y-4">
                   {organizations && organizations.length > 0 && (
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                       <Input
                         placeholder="Search organizations..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={handleSearchChange}
                         className="pl-10 focus-visible:ring-primary"
                         aria-label="Search organizations"
                       />
@@ -114,19 +148,19 @@ export default function OrgSelectionPage() {
                       {filteredOrgs.map((org) => (
                         <button
                           key={org.id}
-                          onClick={handleSelectOrg}
+                          onClick={() => handleSelectOrg(org.id)}
                           className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-gold/30 hover:shadow-sm transition-all group"
                         >
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Building2 className="h-5 w-5 text-primary" />
+                              <Building2 className="h-5 w-5 text-primary" aria-hidden="true" />
                             </div>
                             <div className="text-left">
                               <p className="font-semibold text-foreground group-hover:text-primary transition-colors">{org.name}</p>
                               <p className="text-xs text-muted-foreground">{org.slug}</p>
                             </div>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" aria-hidden="true" />
                         </button>
                       ))}
                     </div>
@@ -141,7 +175,7 @@ export default function OrgSelectionPage() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => setShowCreateForm(true)}
+                    onClick={handleShowCreate}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Create New Organization
@@ -155,7 +189,7 @@ export default function OrgSelectionPage() {
                 <CardContent className="pt-6">
                   <div className="text-center mb-6">
                     <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-3">
-                      <Building2 className="h-6 w-6 text-primary" />
+                      <Building2 className="h-6 w-6 text-primary" aria-hidden="true" />
                     </div>
                     <h2 className="text-xl font-bold text-foreground">Create Organization</h2>
                     <p className="text-sm text-muted-foreground mt-1">Set up a new workspace for your team</p>
@@ -163,25 +197,23 @@ export default function OrgSelectionPage() {
 
                   <form onSubmit={handleCreateOrg} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name" className="text-foreground">Organization Name</Label>
+                      <Label htmlFor="org-name" className="text-foreground">Organization Name</Label>
                       <Input
-                        id="name"
+                        id="org-name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={handleNameChange}
                         placeholder="Acme Inc."
                         required
+                        autoComplete="organization"
                         className="focus-visible:ring-primary"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="slug" className="text-foreground">Slug (optional)</Label>
+                      <Label htmlFor="org-slug" className="text-foreground">Slug (optional)</Label>
                       <Input
-                        id="slug"
+                        id="org-slug"
                         value={formData.slug}
-                        onChange={(e) => {
-                          const value = generateSlug(e.target.value);
-                          setFormData({ ...formData, slug: value });
-                        }}
+                        onChange={handleSlugChange}
                         placeholder="acme-inc"
                         pattern="^[a-z0-9-]+$"
                         className="focus-visible:ring-primary"
@@ -204,7 +236,7 @@ export default function OrgSelectionPage() {
                           </>
                         )}
                       </Button>
-                      <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+                      <Button type="button" variant="outline" onClick={handleCancelCreate}>
                         Cancel
                       </Button>
                     </div>
@@ -217,7 +249,7 @@ export default function OrgSelectionPage() {
       </main>
 
       <footer className="w-full py-4 text-center text-muted-foreground/50 text-xs">
-        &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
+        &copy; {CURRENT_YEAR} Vaivamm Capital. All rights reserved.
       </footer>
     </div>
   );

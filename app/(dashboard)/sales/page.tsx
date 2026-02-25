@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -28,44 +29,26 @@ import {
 } from "@/lib/data/crm-mock-data";
 import { cn } from "@/lib/utils";
 import { getPersonSlug } from "@/lib/data/crm-people-data";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { safeMax } from "@/lib/format-utils";
+import { staggerContainer, fadeUp, slideInLeft, scaleIn } from "@/lib/motion-variants";
+import { safeMax, calcPercent } from "@/lib/format-utils";
+import { getColorSafe, stageColors, rankStyles, sparkColors } from "@/lib/theme-constants";
 
-const stageColors: Record<string, string> = {
-  Negotiation: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
-  Proposal: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
-  "Closed Won": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  Qualified: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  Discovery: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
-};
-
-const rankStyles = [
-  {
-    bg: "bg-gold/15 dark:bg-gold/20",
-    text: "text-gold",
-    border: "border-gold/30",
-    ring: "ring-gold/20",
-    label: "1st",
-  },
-  {
-    bg: "bg-slate-400/15 dark:bg-slate-400/20",
-    text: "text-slate-500 dark:text-slate-300",
-    border: "border-slate-400/30",
-    ring: "ring-slate-400/20",
-    label: "2nd",
-  },
-  {
-    bg: "bg-amber-700/15 dark:bg-amber-700/20",
-    text: "text-amber-700 dark:text-amber-600",
-    border: "border-amber-700/30",
-    ring: "ring-amber-700/20",
-    label: "3rd",
-  },
-];
+const DEFAULT_BAR_COLOR = "bg-muted-foreground/40";
+const formatRevenueValue = (v: number) => `$${(v / 1000).toFixed(0)}K`;
 
 export default function SalesDashboardPage() {
-  const maxLeaderboardRevenue = safeMax(salesLeaderboard.map((r) => r.revenue));
-  const maxDealsByStageCount = safeMax(dealsByStage.map((d) => d.count));
+  const maxLeaderboardRevenue = useMemo(
+    () => safeMax(salesLeaderboard.map((r) => r.revenue)),
+    [],
+  );
+  const maxDealsByStageCount = useMemo(
+    () => safeMax(dealsByStage.map((d) => d.count)),
+    [],
+  );
+  const revenueSparkData = useMemo(
+    () => revenueTimeline.map((d) => d.value),
+    [],
+  );
 
   return (
     <motion.div
@@ -87,33 +70,33 @@ export default function SalesDashboardPage() {
           value={formatCurrency(salesStats.pipeline.value)}
           icon={DollarSign}
           trend={salesStats.pipeline.trend}
-          sparkData={revenueTimeline.map((d) => d.value)}
-          sparkColor="#3B82F6"
+          sparkData={revenueSparkData}
+          sparkColor={sparkColors.blue}
         />
         <MetricCard
           label="Deals Won"
           value={salesStats.dealsWon.value}
           icon={Trophy}
           trend={salesStats.dealsWon.trend}
-          sparkColor="#10B981"
+          sparkColor={sparkColors.green}
         />
         <MetricCard
           label="Conversion Rate"
           value={`${salesStats.conversionRate.value}%`}
           icon={TrendingUp}
           trend={salesStats.conversionRate.trend}
-          sparkColor="#8B5CF6"
+          sparkColor={sparkColors.purple}
         />
         <MetricCard
           label="Avg Deal Size"
           value={formatCurrency(salesStats.avgDealSize.value)}
           icon={Target}
           trend={salesStats.avgDealSize.trend}
-          sparkColor="#F59E0B"
+          sparkColor={sparkColors.amber}
         />
       </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-7" variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -125,9 +108,9 @@ export default function SalesDashboardPage() {
             <CardContent>
               <MiniAreaChart
                 data={revenueTimeline}
-                color="#3B82F6"
+                color={sparkColors.blue}
                 height={240}
-                formatValue={(v) => `$${(v / 1000).toFixed(0)}K`}
+                formatValue={formatRevenueValue}
               />
             </CardContent>
           </Card>
@@ -148,7 +131,7 @@ export default function SalesDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <motion.div variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -159,9 +142,9 @@ export default function SalesDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {topDeals.map((deal, i) => (
+                {topDeals.map((deal) => (
                   <div
-                    key={i}
+                    key={`${deal.company}-${deal.stage}`}
                     className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
                   >
                     <div className="min-w-0 flex-1">
@@ -172,8 +155,7 @@ export default function SalesDashboardPage() {
                         <span
                           className={cn(
                             "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                            stageColors[deal.stage] ||
-                              "bg-slate-500/10 text-slate-600"
+                            getColorSafe(stageColors, deal.stage)
                           )}
                         >
                           {deal.stage}
@@ -219,13 +201,12 @@ export default function SalesDashboardPage() {
               <div className="space-y-2">
                 {salesLeaderboard.map((rep, i) => {
                   const isTop3 = i < 3;
-                  const style = isTop3 ? rankStyles[i] : null;
-                  const revenuePercent =
-                    (rep.revenue / maxLeaderboardRevenue) * 100;
+                  const style = isTop3 && i < rankStyles.length ? rankStyles[i] : null;
+                  const revenuePercent = Number(calcPercent(rep.revenue, maxLeaderboardRevenue, 0));
 
                   return (
                     <motion.div
-                      key={i}
+                      key={rep.name}
                       className={cn(
                         "relative rounded-xl p-3 transition-colors",
                         isTop3
@@ -238,9 +219,7 @@ export default function SalesDashboardPage() {
                             )
                           : "border border-border/50 bg-muted/30"
                       )}
-                      initial={{ opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.35, delay: 0.3 + i * 0.06 }}
+                      variants={slideInLeft}
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -257,11 +236,7 @@ export default function SalesDashboardPage() {
                               <span
                                 className={cn(
                                   "absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
-                                  i === 0
-                                    ? "bg-gold text-white"
-                                    : i === 1
-                                    ? "bg-slate-400 text-white"
-                                    : "bg-amber-700 text-white"
+                                  style?.badgeColor
                                 )}
                               >
                                 {i + 1}
@@ -319,13 +294,7 @@ export default function SalesDashboardPage() {
                             <motion.div
                               className={cn(
                                 "h-full rounded-full",
-                                i === 0
-                                  ? "bg-gold"
-                                  : i === 1
-                                  ? "bg-slate-400"
-                                  : i === 2
-                                  ? "bg-amber-700"
-                                  : "bg-muted-foreground/40"
+                                style?.barColor ?? DEFAULT_BAR_COLOR
                               )}
                               initial={{ width: 0 }}
                               animate={{
@@ -353,7 +322,7 @@ export default function SalesDashboardPage() {
               <CardTitle className="text-base">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-y-auto pr-1" style={{ maxHeight: "380px" }}>
+              <div className="overflow-y-auto pr-1 max-h-[380px]">
                 <ActivityFeed items={salesActivity} />
               </div>
             </CardContent>
@@ -367,14 +336,12 @@ export default function SalesDashboardPage() {
             <CardTitle className="text-base">Deals by Stage</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {dealsByStage.map((stage, i) => (
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              {dealsByStage.map((stage) => (
                 <motion.div
                   key={stage.stage}
                   className="relative overflow-hidden rounded-xl border border-border p-4"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.4 + i * 0.06 }}
+                  variants={scaleIn}
                 >
                   <div
                     className="absolute inset-0 opacity-[0.04]"
@@ -406,7 +373,7 @@ export default function SalesDashboardPage() {
                         }}
                         transition={{
                           duration: 0.6,
-                          delay: 0.5 + i * 0.08,
+                          delay: 0.5,
                         }}
                       />
                     </div>

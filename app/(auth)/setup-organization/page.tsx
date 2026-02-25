@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,10 @@ import { createOrganization, checkUserHasOrganization } from "@/server/actions/o
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { Building2, Loader2, ArrowRight } from "lucide-react";
+import { generateSlug } from "@/lib/utils";
+import { ProgressBar } from "@/components/ui/progress-bar";
+
+const STEP_PROGRESS = Math.round((1 / 3) * 100);
 
 const setupOrgSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
@@ -31,28 +35,25 @@ export default function SetupOrganizationPage() {
     defaultValues: { name: "", slug: "" },
   });
 
-  const { isLoading: isChecking } = useQuery({
+  const { data: orgCheck, isLoading: isChecking } = useQuery({
     queryKey: ["checkUserHasOrganization"],
-    queryFn: async () => {
-      const result = await checkUserHasOrganization();
-      if (result.hasOrg) {
-        router.replace("/dashboard");
-      }
-      return result;
-    },
+    queryFn: () => checkUserHasOrganization(),
     retry: false,
   });
 
-  const handleNameChange = (value: string) => {
-    const autoSlug = value
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .slice(0, 50);
-    form.setValue("name", value);
-    form.setValue("slug", autoSlug);
-  };
+  useEffect(() => {
+    if (orgCheck?.hasOrg) {
+      router.replace("/dashboard");
+    }
+  }, [orgCheck, router]);
+
+  const handleNameChange = useCallback(
+    (value: string) => {
+      form.setValue("name", value);
+      form.setValue("slug", generateSlug(value));
+    },
+    [form],
+  );
 
   const createOrgMutation = useMutation({
     mutationFn: async (values: SetupOrgFormValues) => {
@@ -96,7 +97,7 @@ export default function SetupOrganizationPage() {
     >
       <motion.div variants={fadeUp} className="text-center mb-8">
         <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
-          <Building2 className="w-8 h-8 text-primary" />
+          <Building2 className="w-8 h-8 text-primary" aria-hidden="true" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Setup Organization</h1>
         <p className="text-muted-foreground mt-2">
@@ -105,13 +106,7 @@ export default function SetupOrganizationPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="mb-6">
-        <div className="flex items-center justify-between text-sm mb-2">
-          <span className="font-medium text-foreground">Step 1 of 3</span>
-          <span className="text-muted-foreground">33% Completed</span>
-        </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={33} aria-valuemin={0} aria-valuemax={100} aria-label="Setup progress">
-          <div className="h-full w-1/3 gold-gradient rounded-full transition-all duration-500" />
-        </div>
+        <ProgressBar value={STEP_PROGRESS} ariaLabel="Setup progress" stepText="Step 1 of 3" />
       </motion.div>
 
       <motion.div variants={fadeUp}>
@@ -124,15 +119,19 @@ export default function SetupOrganizationPage() {
                 id="name"
                 type="text"
                 placeholder="Acme Corporation"
-                value={form.watch("name")}
-                onChange={(e) => handleNameChange(e.target.value)}
+                {...form.register("name", {
+                  onChange: (e) => handleNameChange(e.target.value),
+                })}
                 disabled={createOrgMutation.isPending}
+                aria-required="true"
+                aria-invalid={!!form.formState.errors.name}
+                aria-describedby={form.formState.errors.name ? "name-error" : "name-hint"}
                 className="focus-visible:ring-primary"
               />
               {form.formState.errors.name && (
-                <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+                <p id="name-error" role="alert" className="text-sm text-destructive">{form.formState.errors.name.message}</p>
               )}
-              <p className="text-xs text-muted-foreground">Your company or team name</p>
+              <p id="name-hint" className="text-xs text-muted-foreground">Your company or team name</p>
             </div>
 
             <div className="space-y-2">
@@ -145,13 +144,16 @@ export default function SetupOrganizationPage() {
                   placeholder="acme-corp"
                   {...form.register("slug")}
                   disabled={createOrgMutation.isPending}
+                  aria-required="true"
+                  aria-invalid={!!form.formState.errors.slug}
+                  aria-describedby={form.formState.errors.slug ? "slug-error" : "slug-hint"}
                   className="focus-visible:ring-primary flex-1"
                 />
               </div>
               {form.formState.errors.slug && (
-                <p className="text-sm text-destructive">{form.formState.errors.slug.message}</p>
+                <p id="slug-error" role="alert" className="text-sm text-destructive">{form.formState.errors.slug.message}</p>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p id="slug-hint" className="text-xs text-muted-foreground">
                 URL-friendly identifier (lowercase letters, numbers, hyphens)
               </p>
             </div>
