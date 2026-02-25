@@ -1,26 +1,34 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { updateBankDetails } from "@/server/actions/onboarding-actions";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { Loader2, ArrowLeft, ArrowRight } from "lucide-react";
+import { useOnboardingSubmit } from "@/lib/hooks/use-onboarding-submit";
+import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 
 const bankSchema = z.object({
   accountHolder: z.string().min(2, "Account Holder Name is required"),
   bankName: z.string().min(2, "Bank Name is required"),
-  accountNumber: z.string().min(5, "Account Number is required"),
-  ifsc: z.string().min(4, "IFSC Code is required"),
+  accountNumber: z
+    .string()
+    .min(8, "Account Number must be at least 8 digits")
+    .max(18, "Account Number must be at most 18 digits")
+    .regex(/^\d+$/, "Account Number must contain only digits"),
+  ifsc: z
+    .string()
+    .min(11, "IFSC Code must be 11 characters")
+    .max(11, "IFSC Code must be 11 characters")
+    .regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Enter a valid IFSC Code (e.g. HDFC0001234)"),
   taxId: z.string().optional(),
 });
+
+type BankFormValues = z.infer<typeof bankSchema>;
 
 interface BankDetailsTabProps {
   onComplete: () => void;
@@ -28,24 +36,17 @@ interface BankDetailsTabProps {
 }
 
 export function BankDetailsTab({ onComplete, onBack }: BankDetailsTabProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const form = useForm<z.infer<typeof bankSchema>>({
+  const { isLoading, handleSubmit } = useOnboardingSubmit(updateBankDetails, {
+    successMessage: "Bank details saved!",
+    onSuccess: onComplete,
+  });
+  const form = useForm<BankFormValues>({
     resolver: zodResolver(bankSchema),
+    defaultValues: { accountHolder: "", bankName: "", accountNumber: "", ifsc: "", taxId: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof bankSchema>) => {
-    setIsLoading(true);
-    const formData = new FormData();
-    Object.entries(values).forEach(([k, v]) => formData.append(k, v));
-    const res = await updateBankDetails(formData);
-    setIsLoading(false);
-    if (res.success) {
-      toast.success("Bank details saved!");
-      onComplete();
-    } else {
-      toast.error(res.error || "Failed to save bank details");
-    }
-  };
+  const ifscField = form.register("ifsc");
+  const { errors } = form.formState;
 
   return (
     <Card className="shadow-noir border-border">
@@ -55,43 +56,78 @@ export function BankDetailsTab({ onComplete, onBack }: BankDetailsTabProps) {
             <h2 className="text-xl font-bold text-foreground">Bank & Tax Details</h2>
             <p className="text-sm text-muted-foreground mt-1">Required for payroll processing.</p>
           </motion.div>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Account Holder Name</Label>
-                <Input {...form.register("accountHolder")} placeholder="Your Name" className="focus-visible:ring-primary" />
-                {form.formState.errors.accountHolder && <p className="text-sm text-destructive">{form.formState.errors.accountHolder.message}</p>}
+                <Label htmlFor="accountHolder">Account Holder Name</Label>
+                <Input
+                  id="accountHolder"
+                  {...form.register("accountHolder")}
+                  placeholder="Your Name"
+                  autoComplete="name"
+                  aria-required="true"
+                  aria-invalid={!!errors.accountHolder}
+                  aria-describedby={errors.accountHolder ? "accountHolder-error" : undefined}
+                  className="text-base sm:text-sm focus-visible:ring-primary"
+                />
+                {errors.accountHolder && <p id="accountHolder-error" role="alert" className="text-sm text-destructive">{errors.accountHolder.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Bank Name</Label>
-                <Input {...form.register("bankName")} placeholder="HDFC, SBI, etc." className="focus-visible:ring-primary" />
-                {form.formState.errors.bankName && <p className="text-sm text-destructive">{form.formState.errors.bankName.message}</p>}
+                <Label htmlFor="bankName">Bank Name</Label>
+                <Input
+                  id="bankName"
+                  {...form.register("bankName")}
+                  placeholder="HDFC, SBI, etc."
+                  aria-required="true"
+                  aria-invalid={!!errors.bankName}
+                  aria-describedby={errors.bankName ? "bankName-error" : undefined}
+                  className="text-base sm:text-sm focus-visible:ring-primary"
+                />
+                {errors.bankName && <p id="bankName-error" role="alert" className="text-sm text-destructive">{errors.bankName.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Account Number</Label>
-                <Input {...form.register("accountNumber")} placeholder="0000 0000 0000" className="focus-visible:ring-primary" />
-                {form.formState.errors.accountNumber && <p className="text-sm text-destructive">{form.formState.errors.accountNumber.message}</p>}
+                <Label htmlFor="accountNumber">Account Number</Label>
+                <Input
+                  id="accountNumber"
+                  type="text"
+                  {...form.register("accountNumber")}
+                  placeholder="00000000000"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-required="true"
+                  aria-invalid={!!errors.accountNumber}
+                  aria-describedby={errors.accountNumber ? "accountNumber-error" : undefined}
+                  className="text-base sm:text-sm focus-visible:ring-primary"
+                />
+                {errors.accountNumber && <p id="accountNumber-error" role="alert" className="text-sm text-destructive">{errors.accountNumber.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label>IFSC Code</Label>
-                <Input {...form.register("ifsc")} placeholder="HDFC000123" className="focus-visible:ring-primary" />
-                {form.formState.errors.ifsc && <p className="text-sm text-destructive">{form.formState.errors.ifsc.message}</p>}
+                <Label htmlFor="ifsc">IFSC Code</Label>
+                <Input
+                  id="ifsc"
+                  ref={ifscField.ref}
+                  name={ifscField.name}
+                  onBlur={ifscField.onBlur}
+                  onChange={(e) => {
+                    e.target.value = e.target.value.toUpperCase();
+                    ifscField.onChange(e);
+                  }}
+                  placeholder="HDFC0001234"
+                  aria-required="true"
+                  aria-invalid={!!errors.ifsc}
+                  aria-describedby={errors.ifsc ? "ifsc-error" : undefined}
+                  className="text-base sm:text-sm focus-visible:ring-primary uppercase"
+                />
+                {errors.ifsc && <p id="ifsc-error" role="alert" className="text-sm text-destructive">{errors.ifsc.message}</p>}
               </div>
             </motion.div>
             <motion.div variants={fadeUp} className="space-y-2">
-              <Label>Tax ID (PAN/SSN) <span className="text-muted-foreground font-normal ml-1">(Optional)</span></Label>
-              <Input {...form.register("taxId")} placeholder="ABCDE1234F" className="focus-visible:ring-primary" />
+              <Label htmlFor="taxId">Tax ID (PAN/SSN) <span className="text-muted-foreground font-normal ml-1">(Optional)</span></Label>
+              <Input id="taxId" {...form.register("taxId")} placeholder="ABCDE1234F" aria-describedby="taxId-hint" className="text-base sm:text-sm focus-visible:ring-primary" />
+              <p id="taxId-hint" className="sr-only">Optional tax identification number</p>
             </motion.div>
-            <motion.div variants={fadeUp} className="flex justify-between">
-              <Button type="button" variant="outline" onClick={onBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save & Continue
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+            <motion.div variants={fadeUp}>
+              <FormNavButtons onBack={onBack} isLoading={isLoading} />
             </motion.div>
           </form>
         </motion.div>

@@ -1,21 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useRef, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { uploadOnboardingDocument } from "@/server/actions/onboarding-actions";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { CheckCircle, Upload, ArrowLeft, ArrowRight } from "lucide-react";
+import { CheckCircle, Upload, Loader2 } from "lucide-react";
+import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
+import { Button } from "@/components/ui/button";
 
 const DOCUMENT_TYPES = [
   { type: "ID", label: "Upload ID Proof", hint: "Passport / Aadhar / License" },
   { type: "CERTIFICATE", label: "Educational Certificates", hint: "Highest Degree / Diploma" },
   { type: "CONTRACT", label: "Signed Contract", hint: "If provided offline" },
-];
+] as const;
+
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+const MAX_FILE_SIZE_MB = 5;
+const ALLOWED_EXTENSIONS = ".pdf,.jpg,.jpeg,.png,.webp";
+const FILE_HINT = "PDF, JPEG, PNG, WebP";
 
 interface DocumentsTabProps {
   onComplete: () => void;
@@ -23,25 +28,48 @@ interface DocumentsTabProps {
 }
 
 export function DocumentsTab({ onComplete, onBack }: DocumentsTabProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const onFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+  const onFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("type", type);
-    const res = await uploadOnboardingDocument(formData);
-    setIsLoading(false);
-    if (res.success) {
-      toast.success(`${type} uploaded successfully!`);
-      setUploadedFiles((prev) => ({ ...prev, [type]: file.name }));
-    } else {
-      toast.error(res.error || "Upload failed");
+
+    // Reset input so re-selecting the same file triggers onChange
+    e.target.value = "";
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error(`Only ${FILE_HINT} files are allowed.`);
+      return;
     }
-  };
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`File size must be under ${MAX_FILE_SIZE_MB}MB.`);
+      return;
+    }
+
+    setLoadingDoc(type);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", type);
+      const res = await uploadOnboardingDocument(formData);
+      if (res.success) {
+        toast.success(`${type} uploaded successfully!`);
+        setUploadedFiles((prev) => ({ ...prev, [type]: file.name }));
+      } else {
+        toast.error(res.error || "Upload failed");
+      }
+    } catch {
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setLoadingDoc(null);
+    }
+  }, []);
+
+  const handleSelectFile = useCallback((type: string) => {
+    fileInputRefs.current[type]?.click();
+  }, []);
 
   return (
     <Card className="shadow-noir border-border">
@@ -51,49 +79,57 @@ export function DocumentsTab({ onComplete, onBack }: DocumentsTabProps) {
             <h2 className="text-xl font-bold text-foreground">Documents</h2>
             <p className="text-sm text-muted-foreground mt-1">Please upload the necessary documents.</p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {DOCUMENT_TYPES.map((doc) => (
-              <motion.div
-                key={doc.type}
-                variants={fadeUp}
-                className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
-                  uploadedFiles[doc.type] ? "border-green-500/50 bg-green-500/10" : "border-border hover:bg-muted/50"
-                }`}
-              >
-                {uploadedFiles[doc.type] ? (
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-                ) : (
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                )}
-                <Label htmlFor={`${doc.type}-upload`} className="font-semibold cursor-pointer">{doc.label}</Label>
-                <span className="text-xs text-muted-foreground">{doc.hint}</span>
-                {uploadedFiles[doc.type] && (
-                  <span className="text-xs text-green-600 font-medium">{uploadedFiles[doc.type]}</span>
-                )}
-                <Input id={`${doc.type}-upload`} type="file" className="hidden" onChange={(e) => onFileUpload(e, doc.type)} />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => document.getElementById(`${doc.type}-upload`)?.click()}
-                  disabled={isLoading}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {DOCUMENT_TYPES.map((doc) => {
+              const isUploaded = !!uploadedFiles[doc.type];
+              const isThisLoading = loadingDoc === doc.type;
+              return (
+                <motion.div
+                  key={doc.type}
+                  variants={fadeUp}
+                  className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
+                    isUploaded ? "border-green-500/50 bg-green-500/10" : "border-border hover:bg-muted/50"
+                  }`}
                 >
-                  {uploadedFiles[doc.type] ? "Replace File" : "Select File"}
-                </Button>
-              </motion.div>
-            ))}
+                  {isUploaded ? (
+                    <CheckCircle className="h-8 w-8 text-green-500" aria-hidden="true" />
+                  ) : isThisLoading ? (
+                    <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                  )}
+                  <Label htmlFor={`${doc.type}-upload`} className="font-semibold cursor-pointer">{doc.label}</Label>
+                  <span className="text-xs text-muted-foreground">{doc.hint}</span>
+                  <span className="text-xs text-muted-foreground/70">Max {MAX_FILE_SIZE_MB}MB &middot; {FILE_HINT}</span>
+                  {uploadedFiles[doc.type] && (
+                    <span className="text-xs text-green-600 font-medium">{uploadedFiles[doc.type]}</span>
+                  )}
+                  <input
+                    ref={(el) => { fileInputRefs.current[doc.type] = el; }}
+                    id={`${doc.type}-upload`}
+                    type="file"
+                    accept={ALLOWED_EXTENSIONS}
+                    className="sr-only"
+                    aria-label={`${doc.label} — ${doc.hint}`}
+                    onChange={(e) => onFileUpload(e, doc.type)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSelectFile(doc.type)}
+                    disabled={isThisLoading}
+                  >
+                    {isUploaded ? "Replace File" : "Select File"}
+                  </Button>
+                </motion.div>
+              );
+            })}
           </div>
+          <motion.div variants={fadeUp} className="mt-6">
+            <FormNavButtons onBack={onBack} isLoading={loadingDoc !== null} submitLabel="Continue to Review" />
+          </motion.div>
         </motion.div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <Button onClick={onComplete}>
-          Continue to Review
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
