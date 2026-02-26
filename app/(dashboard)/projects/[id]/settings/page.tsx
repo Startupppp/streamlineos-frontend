@@ -7,17 +7,18 @@ import {
   useProject,
   useUpdateProjectSettings,
   useDeleteProject,
-} from "../../../../../lib/hooks/trpc-hooks";
+  vaivammKeys,
+} from "@/lib/hooks/trpc-hooks";
 import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../../../../components/ui/card";
-import { Input } from "../../../../../components/ui/input";
-import { Textarea } from "../../../../../components/ui/textarea";
-import { Button } from "../../../../../components/ui/button";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -25,24 +26,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../../../../components/ui/form";
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../../components/ui/select";
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { updateProjectSettingsInputSchema } from "../../../../../lib/validations/project";
+import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { vaivammKeys } from "../../../../../lib/hooks/trpc-hooks";
-import { Skeleton } from "../../../../../components/ui/skeleton";
-import { Checkbox } from "../../../../../components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../../../components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, User, AlertTriangle } from "lucide-react";
-import { api } from "../../../../../trpc/react";
+import { api } from "@/trpc/react";
 import { useSession } from "next-auth/react";
 import {
   AlertDialog,
@@ -54,7 +54,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../../../../../components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 
 interface PageProps {
   params: Promise<{ id: string }>;

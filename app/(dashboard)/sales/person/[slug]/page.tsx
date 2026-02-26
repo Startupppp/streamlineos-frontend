@@ -28,32 +28,14 @@ import { ActivityFeed } from "@/components/crm/activity-feed";
 import { getPersonBySlug } from "@/lib/data/crm-people-data";
 import { formatCurrency } from "@/lib/data/crm-mock-data";
 import { cn } from "@/lib/utils";
-
-const stageColors: Record<string, string> = {
-  Discovery: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
-  Qualified: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  Proposal: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
-  Negotiation: "bg-purple-500/10 text-purple-700 dark:text-purple-400",
-  "Closed Won": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-};
-
-const healthColors: Record<string, string> = {
-  healthy: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  at_risk: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  critical: "bg-red-500/10 text-red-700 dark:text-red-400",
-};
-
-const healthDot: Record<string, string> = {
-  healthy: "bg-emerald-500",
-  at_risk: "bg-amber-500",
-  critical: "bg-red-500",
-};
-
-const roleBadge: Record<string, { label: string; color: string }> = {
-  sales_rep: { label: "Sales", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400" },
-  csm: { label: "Customer Success", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
-  marketing: { label: "Marketing", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400" },
-};
+import { EmptyPersonIllustration } from "@/components/illustrations";
+import {
+  getColorSafe,
+  stageColors,
+  healthStatusColors,
+  healthDotColors,
+  roleBadgeConfig,
+} from "@/lib/theme-constants";
 
 export default function PersonDetailPage() {
   const params = useParams();
@@ -70,17 +52,20 @@ export default function PersonDetailPage() {
         </Link>
         <Card>
           <CardContent className="py-16 text-center">
-            <p className="text-lg font-medium text-foreground">Person not found</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              The person you&apos;re looking for doesn&apos;t exist.
-            </p>
+            <div className="flex flex-col items-center gap-3">
+              <EmptyPersonIllustration />
+              <p className="text-lg font-medium text-foreground">Person not found</p>
+              <p className="text-sm text-muted-foreground">
+                The person you&apos;re looking for doesn&apos;t exist.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const badge = roleBadge[person.role];
+  const badge = roleBadgeConfig[person.role as keyof typeof roleBadgeConfig];
   const isSalesRep = person.role === "sales_rep";
   const isCSM = person.role === "csm";
 
@@ -99,7 +84,7 @@ export default function PersonDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back link */}
-      <Link href={backHref}>
+      <Link href={backHref} aria-label={`Back to ${backLabel}`}>
         <Button variant="outline" size="sm" className="gap-2">
           <ArrowLeft className="h-4 w-4" /> {backLabel}
         </Button>
@@ -288,7 +273,7 @@ export default function PersonDetailPage() {
                               <span
                                 className={cn(
                                   "text-xs font-medium px-2 py-0.5 rounded-full",
-                                  stageColors[stage] || "bg-muted text-muted-foreground"
+                                  getColorSafe(stageColors, stage)
                                 )}
                               >
                                 {stage}
@@ -361,7 +346,7 @@ export default function PersonDetailPage() {
                               <span
                                 className={cn(
                                   "text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 inline-block",
-                                  stageColors[deal.stage] || "bg-muted text-muted-foreground"
+                                  getColorSafe(stageColors, deal.stage)
                                 )}
                               >
                                 {deal.stage}
@@ -376,7 +361,14 @@ export default function PersonDetailPage() {
                             <span>{deal.probability}% probability</span>
                           </div>
                           {/* Probability bar */}
-                          <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden"
+                            role="progressbar"
+                            aria-valuenow={deal.probability}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`${deal.company} deal probability`}
+                          >
                             <motion.div
                               className="h-full rounded-full bg-primary"
                               initial={{ width: 0 }}
@@ -415,13 +407,13 @@ export default function PersonDetailPage() {
                         <CardContent className="p-5">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <div className={cn("w-2.5 h-2.5 rounded-full", healthDot[account.health])} />
+                              <div className={cn("w-2.5 h-2.5 rounded-full", getColorSafe(healthDotColors, account.health))} />
                               <div>
                                 <p className="font-semibold text-foreground">{account.name}</p>
                                 <span
                                   className={cn(
                                     "text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 inline-block capitalize",
-                                    healthColors[account.health]
+                                    getColorSafe(healthStatusColors, account.health)
                                   )}
                                 >
                                   {account.health.replace("_", " ")}

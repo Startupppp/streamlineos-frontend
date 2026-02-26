@@ -96,19 +96,23 @@ export default function SprintsPage({ params }: PageProps) {
     const nextSprint = sprints?.find(s => s.status === "PLANNED");
 
     // Move incomplete tickets
-    const promises = incompleteTickets.map(ticket => {
-      const sprintId = moveToOption === "backlog" ? undefined :
-        moveToOption === "next" && nextSprint ? nextSprint.id : undefined;
-      return updateTicket.mutateAsync({
+    const targetSprintId = moveToOption === "backlog" ? undefined :
+      moveToOption === "next" && nextSprint ? nextSprint.id : undefined;
+    const promises = incompleteTickets.map(ticket =>
+      updateTicket.mutateAsync({
         ticketId: ticket.id,
-        sprintId: sprintId as number | undefined,
-      });
-    });
+        sprintId: targetSprintId,
+      })
+    );
 
-    Promise.all(promises).then(() => {
-      updateSprint.mutate({ sprintId: completionSprintId, status: "COMPLETED" });
-      setCompletionSprintId(null);
-    });
+    Promise.all(promises)
+      .then(() => {
+        updateSprint.mutate({ sprintId: completionSprintId, status: "COMPLETED" });
+        setCompletionSprintId(null);
+      })
+      .catch(() => {
+        toast.error("Failed to move some tickets");
+      });
   }
 
   // Sprint planning drag handler
@@ -121,7 +125,7 @@ export default function SprintsPage({ params }: PageProps) {
 
     updateTicket.mutate({
       ticketId,
-      sprintId: newSprintId as number | undefined,
+      ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}),
     });
   }
 
@@ -151,7 +155,7 @@ export default function SprintsPage({ params }: PageProps) {
   const nextPlannedSprint = sprints?.find(s => s.status === "PLANNED");
 
   return (
-    <div className="p-6 md:p-8 lg:p-12 space-y-8">
+    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Sprints</h1>
@@ -456,7 +460,7 @@ function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Sprint actions for ${sprint.name}`}>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -535,7 +539,14 @@ function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating
             <span>Progress: {completedPoints} / {totalPoints} points</span>
             <span>{tickets.filter(t => t.status === "DONE").length} / {tickets.length} tickets</span>
           </div>
-          <div className="w-full bg-secondary rounded-full h-2">
+          <div
+            className="w-full bg-secondary rounded-full h-2"
+            role="progressbar"
+            aria-valuenow={Math.round(progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
+          >
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}

@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { X, Search, Filter } from "lucide-react";
+import { EmptyTasksIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format, isAfter, isBefore, parseISO } from "date-fns";
 
 interface PageProps {
@@ -200,6 +201,7 @@ export default function BacklogPage({ params }: PageProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
+              aria-label="Search tickets"
             />
           </div>
 
@@ -289,8 +291,9 @@ export default function BacklogPage({ params }: PageProps) {
         )}
       </div>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md" aria-live="polite">
         <Table>
+          <caption className="sr-only">Backlog tickets for this project</caption>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">ID</TableHead>
@@ -307,11 +310,14 @@ export default function BacklogPage({ params }: PageProps) {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="text-center h-24 text-muted-foreground"
+                  className="text-center py-12 text-muted-foreground"
                 >
-                  {hasActiveFilters
-                    ? "No tickets match your filters. Try adjusting your search criteria."
-                    : "No tickets found. Create one to get started."}
+                  <div className="flex flex-col items-center gap-3">
+                    {hasActiveFilters ? <EmptySearchIllustration /> : <EmptyTasksIllustration />}
+                    <p>{hasActiveFilters
+                      ? "No tickets match your filters. Try adjusting your search criteria."
+                      : "No tickets found. Create one to get started."}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (

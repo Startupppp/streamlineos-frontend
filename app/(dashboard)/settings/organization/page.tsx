@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useGetOrganizations } from "../../../../lib/hooks/auth-hooks";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
-import { Button } from "../../../../components/ui/button";
-import { Skeleton } from "../../../../components/ui/skeleton";
-import { Building2, Plus } from "lucide-react";
+import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus } from "lucide-react";
+import { EmptyProjectsIllustration } from "@/components/illustrations";
 
 export default function OrganizationSettingsPage() {
   const router = useRouter();
@@ -37,9 +38,7 @@ export default function OrganizationSettingsPage() {
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="p-4 rounded-full bg-muted">
-                <Building2 className="h-8 w-8 text-muted-foreground" />
-              </div>
+              <EmptyProjectsIllustration />
             </div>
             <CardTitle>No Organization Found</CardTitle>
             <CardDescription>
@@ -67,15 +66,15 @@ export default function OrganizationSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Organization Name</Label>
-            <Input id="name" value={org.name} disabled className="bg-muted" />
+            <Input id="name" value={org.name} disabled className="bg-muted" aria-label="Organization name" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="slug">Slug</Label>
-            <Input id="slug" value={org.slug} disabled className="bg-muted" />
+            <Input id="slug" value={org.slug} disabled className="bg-muted" aria-label="Organization slug" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Your Role</Label>
-            <Input id="role" value={org.role} disabled className="bg-muted" />
+            <Input id="role" value={org.role} disabled className="bg-muted" aria-label="Your role" />
           </div>
           <div className="pt-4">
             <Button variant="outline" disabled>

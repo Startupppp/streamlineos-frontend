@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import Link from "next/link";
 import {
   Popover,
@@ -94,13 +95,17 @@ export default function EpicsPage({ params }: PageProps) {
     const unlinkPromises = children.map(s =>
       updateTicket.mutateAsync({ ticketId: s.id, epicId: undefined })
     );
-    Promise.all(unlinkPromises).then(() => {
-      deleteTicket.mutate({ ticketId: epicId });
-    });
+    Promise.all(unlinkPromises)
+      .then(() => {
+        deleteTicket.mutate({ ticketId: epicId });
+      })
+      .catch(() => {
+        toast.error("Failed to unlink stories from epic");
+      });
   }
 
   return (
-    <div className="p-6 md:p-8 lg:p-12 space-y-8">
+    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Epics</h1>
@@ -272,18 +277,18 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
   const totalPoints = stories.reduce((sum, s) => sum + (s.points || 0), 0);
   const completedPoints = stories.filter(s => s.status === "DONE").reduce((sum, s) => sum + (s.points || 0), 0);
 
-  const priorityColors: Record<string, string> = {
-    LOW: "text-gray-500",
-    MEDIUM: "text-blue-500",
-    HIGH: "text-orange-500",
-    URGENT: "text-red-500",
-  };
+  const epicCardId = `epic-stories-${epic.id}`;
 
   return (
     <Card className="overflow-hidden">
       <CardHeader
         className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
+        role="button"
+        aria-expanded={isExpanded}
+        aria-controls={epicCardId}
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsExpanded(!isExpanded); } }}
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
@@ -301,17 +306,17 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
             </div>
           </div>
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Badge variant="outline" className={cn(priorityColors[epic.priority || "MEDIUM"])}>
+            <Badge variant="outline" className={getColorSafe(priorityColors, epic.priority || "MEDIUM")}>
               {epic.priority || "MEDIUM"}
             </Badge>
             <EditEpicDialog epic={epic} projectId={projectId} trigger={
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={`Edit ${epic.title}`}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
             } />
             <Popover open={deleteConfirm} onOpenChange={setDeleteConfirm}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label={`Delete ${epic.title}`}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </PopoverTrigger>
@@ -338,7 +343,14 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               {completedPoints} / {totalPoints} points
             </span>
           </div>
-          <div className="w-full h-2 bg-secondary rounded-full flex overflow-hidden">
+          <div
+            className="w-full h-2 bg-secondary rounded-full flex overflow-hidden"
+            role="progressbar"
+            aria-valuenow={totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Epic progress: ${completedItems} of ${totalItems} stories completed`}
+          >
             {totalItems > 0 && (
               <>
                 <div
@@ -367,7 +379,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="pt-0 pb-4">
+        <CardContent className="pt-0 pb-4" id={epicCardId} role="region" aria-label={`Stories for ${epic.title}`}>
           <div className="ml-9 space-y-2 border-l-2 border-muted pl-4">
             {stories.map((story) => (
               <div
@@ -405,6 +417,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
                 value={newStoryTitle}
                 onChange={(e) => setNewStoryTitle(e.target.value)}
                 placeholder="New story title..."
+                aria-label={`Add new story to ${epic.title}`}
                 className="h-8 text-sm flex-1"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && newStoryTitle.trim()) {

@@ -290,7 +290,14 @@ export default function SalesDashboardPage() {
                               </p>
                             </div>
                           </div>
-                          <div className="mt-2 h-1.5 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
+                          <div
+                            className="mt-2 h-1.5 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden"
+                            role="progressbar"
+                            aria-valuenow={revenuePercent}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`${rep.name} revenue progress`}
+                          >
                             <motion.div
                               className={cn(
                                 "h-full rounded-full",
@@ -363,7 +370,14 @@ export default function SalesDashboardPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {formatCurrency(stage.value)} value
                     </p>
-                    <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={stage.count}
+                      aria-valuemin={0}
+                      aria-valuemax={maxDealsByStageCount}
+                      aria-label={`${stage.stage} deal count`}
+                    >
                       <motion.div
                         className="h-full rounded-full"
                         style={{ backgroundColor: stage.color }}

@@ -2,19 +2,19 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useRef, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
-import { Button } from "../../../../components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
-import { PageHeader } from "../../../../components/ui/page-header";
-import { Switch } from "../../../../components/ui/switch";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/ui/page-header";
+import { Switch } from "@/components/ui/switch";
 import { User, Palette, Bell, Shield, Camera, Loader2, Trash2 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
-import { resolveImageUrl } from "../../../../lib/utils";
-import { AvatarCropDialog } from "../../../../components/ui/avatar-crop-dialog";
+import { resolveImageUrl } from "@/lib/utils";
+import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
 
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
@@ -167,6 +167,7 @@ export default function SettingsPage() {
                     type="button"
                     disabled={isBusy}
                     onClick={() => fileInputRef.current?.click()}
+                    aria-label="Change profile photo"
                     className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
                   >
                     {isBusy ? (
@@ -265,7 +266,7 @@ export default function SettingsPage() {
                     Switch between light and dark themes.
                   </p>
                 </div>
-                <Switch />
+                <Switch id="dark-mode" aria-label="Toggle dark mode" />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -274,7 +275,7 @@ export default function SettingsPage() {
                     Use a more compact layout for lists and tables.
                   </p>
                 </div>
-                <Switch />
+                <Switch id="compact-view" aria-label="Toggle compact view" />
               </div>
             </CardContent>
           </Card>
@@ -295,7 +296,7 @@ export default function SettingsPage() {
                     Receive updates about your projects via email.
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch id="email-notifications" aria-label="Toggle email notifications" defaultChecked />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -304,7 +305,7 @@ export default function SettingsPage() {
                     Get reminded about pending leave approvals.
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch id="leave-reminders" aria-label="Toggle leave reminders" defaultChecked />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -313,7 +314,7 @@ export default function SettingsPage() {
                     Notifications when tickets are assigned or updated.
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch id="project-updates" aria-label="Toggle project updates" defaultChecked />
               </div>
             </CardContent>
           </Card>
