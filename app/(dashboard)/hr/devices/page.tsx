@@ -75,12 +75,7 @@ const deviceIcons: Record<string, React.ElementType> = {
   Keyboard: Keyboard,
 };
 
-const statusColors: Record<string, string> = {
-  ACTIVE: "bg-green-500/10 text-green-700 border-green-200",
-  INACTIVE: "bg-gray-500/10 text-gray-700 border-gray-200",
-  LOST: "bg-red-500/10 text-red-700 border-red-200",
-  RETURNED: "bg-blue-500/10 text-blue-700 border-blue-200",
-};
+import { getColorSafe, deviceStatusColors, isDeviceStatus } from "@/lib/theme-constants";
 
 export default function DevicesPage() {
   const [open, setOpen] = useState(false);
@@ -141,11 +136,12 @@ export default function DevicesPage() {
     });
   };
 
-  const handleStatusChange = (deviceId: number, status: "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED") => {
+  const handleStatusChange = (deviceId: number, value: string) => {
+    if (!isDeviceStatus(value)) return;
     updateDeviceMutation.mutate({
       deviceId,
-      status,
-      ...(status === "RETURNED" ? { returnDate: new Date() } : {}),
+      status: value,
+      ...(value === "RETURNED" ? { returnDate: new Date() } : {}),
     });
   };
 
@@ -317,9 +313,10 @@ export default function DevicesPage() {
         <CardHeader>
           <CardTitle>All Devices ({devices?.length || 0})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent aria-live="polite">
           {devices && devices.length > 0 ? (
             <Table>
+              <caption className="sr-only">Company devices assigned to employees</caption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Device</TableHead>
@@ -364,10 +361,10 @@ export default function DevicesPage() {
                       <TableCell>
                         <Select
                           value={device.status || "ACTIVE"}
-                          onValueChange={(val) => handleStatusChange(device.id, val as "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED")}
+                          onValueChange={(val) => handleStatusChange(device.id, val)}
                         >
                           <SelectTrigger className="w-[120px]">
-                            <Badge variant="outline" className={statusColors[device.status || "ACTIVE"]}>
+                            <Badge variant="outline" className={getColorSafe(deviceStatusColors, device.status ?? "ACTIVE")}>
                               {device.status || "ACTIVE"}
                             </Badge>
                           </SelectTrigger>
@@ -385,8 +382,9 @@ export default function DevicesPage() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => setDeleteDeviceId(device.id)}
+                          aria-label={`Remove ${device.deviceName}`}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </TableCell>
                     </TableRow>

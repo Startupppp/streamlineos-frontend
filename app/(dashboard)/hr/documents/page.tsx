@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { format, differenceInDays } from "date-fns";
 import {
   FileText,
@@ -61,9 +61,11 @@ import {
   deleteDocument,
   getDocumentStats,
 } from "@/server/actions/document-actions";
+import { isDocumentType, getColorSafe, documentTypeColors } from "@/lib/theme-constants";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
+import { PageHeader } from "@/components/ui/page-header";
 
 type Document = Awaited<ReturnType<typeof getDocuments>>[number];
 
@@ -100,31 +102,34 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
+  const isAdminRef = useRef(isAdmin);
+  isAdminRef.current = isAdmin;
 
-  useEffect(() => {
-    loadData();
-  }, [selectedType, isAdmin, session]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const type = selectedType === "all" ? undefined : selectedType as any;
+      const type = isDocumentType(selectedType) ? selectedType : undefined;
+      const admin = isAdminRef.current;
       const [docsData, policiesData, expiringData, statsData] = await Promise.all([
-        isAdmin ? getDocuments({ type }) : getMyDocuments(),
+        admin ? getDocuments({ type }) : getMyDocuments(),
         getCompanyPolicies(),
-        isAdmin ? getExpiringDocuments(30) : Promise.resolve([]),
+        admin ? getExpiringDocuments(30) : Promise.resolve([]),
         getDocumentStats(),
       ]);
       setDocuments(docsData);
       setPolicies(policiesData);
       setExpiringDocs(expiringData);
       setStats(statsData);
-    } catch (error) {
+    } catch {
       toast.error("Failed to load documents");
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedType]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData, isAdmin]);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
@@ -154,20 +159,10 @@ export default function DocumentsPage() {
   };
 
   const getDocTypeBadge = (type: string) => {
-    const styles: Record<string, string> = {
-      CONTRACT: "bg-blue-100 text-blue-800 border-blue-200",
-      CERTIFICATE: "bg-purple-100 text-purple-800 border-purple-200",
-      ID_PROOF: "bg-emerald-100 text-emerald-800 border-emerald-200",
-      PAYSLIP: "bg-amber-100 text-amber-800 border-amber-200",
-      POLICY: "bg-indigo-100 text-indigo-800 border-indigo-200",
-      OFFER_LETTER: "bg-teal-100 text-teal-800 border-teal-200",
-      RESUME: "bg-pink-100 text-pink-800 border-pink-200",
-      OTHER: "bg-slate-100 text-slate-800 border-slate-200",
-    };
     return (
-      <Badge className={`${styles[type] || styles.OTHER} flex items-center gap-1 font-medium`}>
+      <Badge className={`${getColorSafe(documentTypeColors, type)} flex items-center gap-1 font-medium`}>
         {getDocTypeIcon(type)}
-        {DOCUMENT_TYPES.find((t) => t.value === type)?.label || type}
+        {DOCUMENT_TYPES.find((t) => t.value === type)?.label ?? type}
       </Badge>
     );
   };
@@ -219,32 +214,27 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6 bg-background min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Document Management
-          </h1>
-          <p className="text-slate-600 mt-1">
-            {isAdmin
-              ? "Manage employee documents, policies, and compliance records"
-              : "View and manage your personal documents"}
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsUploadOpen(true)}
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Document
-        </Button>
-      </div>
+    <div className="flex-1 space-y-6">
+      <PageHeader
+        title="Document Management"
+        description={
+          isAdmin
+            ? "Manage employee documents, policies, and compliance records"
+            : "View and manage your personal documents"
+        }
+        actions={
+          <Button onClick={() => setIsUploadOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
+            Upload Document
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Documents
             </CardTitle>
             <div className="p-2 bg-violet-100 rounded-lg">
@@ -252,10 +242,10 @@ export default function DocumentsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-foreground">
               {stats?.totalCount || 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Across all categories
             </p>
           </CardContent>
@@ -263,7 +253,7 @@ export default function DocumentsPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Expiring Soon
             </CardTitle>
             <div className="p-2 bg-amber-100 rounded-lg">
@@ -271,10 +261,10 @@ export default function DocumentsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-foreground">
               {stats?.expiringCount || 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Within next 30 days
             </p>
           </CardContent>
@@ -282,7 +272,7 @@ export default function DocumentsPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Expired
             </CardTitle>
             <div className="p-2 bg-red-100 rounded-lg">
@@ -290,10 +280,10 @@ export default function DocumentsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-foreground">
               {stats?.expiredCount || 0}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Need immediate attention
             </p>
           </CardContent>
@@ -301,7 +291,7 @@ export default function DocumentsPage() {
 
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Company Policies
             </CardTitle>
             <div className="p-2 bg-indigo-100 rounded-lg">
@@ -309,10 +299,10 @@ export default function DocumentsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-foreground">
               {policies.length}
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Active policy documents
             </p>
           </CardContent>
@@ -346,8 +336,9 @@ export default function DocumentsPage() {
                   Documents Expiring Soon
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="p-0" aria-live="polite">
                 <Table>
+                  <caption className="sr-only">Documents expiring within 30 days</caption>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
                       <TableHead>Document</TableHead>
@@ -363,12 +354,12 @@ export default function DocumentsPage() {
                       <TableRow key={doc.id} className="hover:bg-muted/30">
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-100 rounded-lg">
+                            <div className="p-2 bg-muted rounded-lg">
                               {getDocTypeIcon(doc.type)}
                             </div>
                             <div>
-                              <p className="font-medium text-slate-900">{doc.name}</p>
-                              <p className="text-xs text-slate-500">{doc.fileName}</p>
+                              <p className="font-medium text-foreground">{doc.name}</p>
+                              <p className="text-xs text-muted-foreground">{doc.fileName}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -380,13 +371,13 @@ export default function DocumentsPage() {
                                 {doc.user?.firstName?.[0]}{doc.user?.lastName?.[0]}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-slate-600">
+                            <span className="text-muted-foreground">
                               {doc.user?.firstName} {doc.user?.lastName}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>{getDocTypeBadge(doc.type)}</TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-muted-foreground">
                           {doc.expiryDate ? format(new Date(doc.expiryDate), "MMM d, yyyy") : "-"}
                         </TableCell>
                         <TableCell>{getExpiryBadge(doc.expiryDate)}</TableCell>
@@ -414,16 +405,17 @@ export default function DocumentsPage() {
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Search documents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white"
+                className="pl-9"
+                aria-label="Search documents"
               />
             </div>
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="w-[180px] bg-white">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
@@ -439,12 +431,12 @@ export default function DocumentsPage() {
 
           {/* Documents Table */}
           <Card className="border-0 shadow-sm">
-            <CardContent className="p-0">
+            <CardContent className="p-0" aria-live="polite">
               {filteredDocuments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <EmptyDocumentsIllustration className="mb-3" />
-                  <h3 className="text-lg font-medium text-slate-900">No documents found</h3>
-                  <p className="text-slate-500 mb-4">Upload your first document to get started</p>
+                  <h3 className="text-lg font-medium text-foreground">No documents found</h3>
+                  <p className="text-muted-foreground mb-4">Upload your first document to get started</p>
                   <Button onClick={() => setIsUploadOpen(true)}>
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Document
@@ -452,6 +444,7 @@ export default function DocumentsPage() {
                 </div>
               ) : (
                 <Table>
+                  <caption className="sr-only">All documents</caption>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
                       <TableHead>Document</TableHead>
@@ -468,12 +461,12 @@ export default function DocumentsPage() {
                       <TableRow key={doc.id} className="hover:bg-muted/30">
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-slate-100 rounded-lg">
+                            <div className="p-2 bg-muted rounded-lg">
                               {getDocTypeIcon(doc.type)}
                             </div>
                             <div>
-                              <p className="font-medium text-slate-900">{doc.name}</p>
-                              <p className="text-xs text-slate-500">{doc.fileName}</p>
+                              <p className="font-medium text-foreground">{doc.name}</p>
+                              <p className="text-xs text-muted-foreground">{doc.fileName}</p>
                               {doc.tags && doc.tags.length > 0 && (
                                 <div className="flex gap-1 mt-1">
                                   {doc.tags.slice(0, 2).map((tag) => (
@@ -500,29 +493,29 @@ export default function DocumentsPage() {
                                   {doc.user?.firstName?.[0]}{doc.user?.lastName?.[0]}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-slate-600 text-sm">
+                              <span className="text-muted-foreground text-sm">
                                 {doc.user?.firstName} {doc.user?.lastName}
                               </span>
                             </div>
                           </TableCell>
                         )}
                         <TableCell>{getDocTypeBadge(doc.type)}</TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-muted-foreground">
                           {formatFileSize(doc.fileSize)}
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-muted-foreground">
                           {doc.createdAt ? format(new Date(doc.createdAt), "MMM d, yyyy") : "-"}
                         </TableCell>
                         <TableCell>
                           {doc.expiryDate ? (
                             <div className="flex flex-col gap-1">
-                              <span className="text-slate-600 text-sm">
+                              <span className="text-muted-foreground text-sm">
                                 {format(new Date(doc.expiryDate), "MMM d, yyyy")}
                               </span>
                               {getExpiryBadge(doc.expiryDate)}
                             </div>
                           ) : (
-                            <span className="text-slate-400">-</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
@@ -582,12 +575,12 @@ export default function DocumentsPage() {
                 Company Policies & Guidelines
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="p-0" aria-live="polite">
               {policies.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <EmptyDocumentsIllustration className="mb-3" />
-                  <h3 className="text-lg font-medium text-slate-900">No policies found</h3>
-                  <p className="text-slate-500">Company policies will appear here</p>
+                  <h3 className="text-lg font-medium text-foreground">No policies found</h3>
+                  <p className="text-muted-foreground">Company policies will appear here</p>
                 </div>
               ) : (
                 <div className="divide-y">
@@ -601,11 +594,11 @@ export default function DocumentsPage() {
                           <FileText className="h-6 w-6 text-indigo-600" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-slate-900">{policy.name}</h4>
+                          <h4 className="font-medium text-foreground">{policy.name}</h4>
                           {policy.description && (
-                            <p className="text-sm text-slate-500 mt-0.5">{policy.description}</p>
+                            <p className="text-sm text-muted-foreground mt-0.5">{policy.description}</p>
                           )}
-                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                             <span>
                               Updated {policy.updatedAt ? format(new Date(policy.updatedAt), "MMM d, yyyy") : "-"}
                             </span>

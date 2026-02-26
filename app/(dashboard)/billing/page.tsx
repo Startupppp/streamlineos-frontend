@@ -61,25 +61,28 @@ export default function BillingPage() {
       <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="grid gap-2">
             <Label>Start Date</Label>
-            <Input 
-                type="date" 
-                value={format(startDate, "yyyy-MM-dd")} 
+            <Input
+                type="date"
+                aria-label="Billing start date"
+                value={format(startDate, "yyyy-MM-dd")}
                 onChange={(e) => setStartDate(new Date(e.target.value))}
             />
           </div>
           <div className="grid gap-2">
             <Label>End Date</Label>
-            <Input 
-                type="date" 
-                value={format(endDate, "yyyy-MM-dd")} 
+            <Input
+                type="date"
+                aria-label="Billing end date"
+                value={format(endDate, "yyyy-MM-dd")}
                 onChange={(e) => setEndDate(new Date(e.target.value))}
             />
           </div>
           <div className="grid gap-2">
             <Label>Hourly Rate ($)</Label>
-            <Input 
-                type="number" 
-                value={hourlyRate} 
+            <Input
+                type="number"
+                aria-label="Hourly billing rate in dollars"
+                value={hourlyRate}
                 onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
                 className="w-[150px]"
             />
@@ -139,13 +142,14 @@ export default function BillingPage() {
         <CardHeader>
           <CardTitle>Project Summary</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent aria-live="polite">
           {isLoading ? (
-            <div className="flex justify-center p-8">
+            <div className="flex justify-center p-8" role="status" aria-label="Loading billing data">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <Table>
+              <caption className="sr-only">Project billing summary</caption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Project</TableHead>

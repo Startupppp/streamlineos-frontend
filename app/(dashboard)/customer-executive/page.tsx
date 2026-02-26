@@ -30,18 +30,7 @@ import {
 } from "@/lib/data/crm-mock-data";
 import { cn } from "@/lib/utils";
 import { getPersonSlug } from "@/lib/data/crm-people-data";
-
-const healthColors: Record<string, string> = {
-  healthy: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  at_risk: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  critical: "bg-red-500/10 text-red-700 dark:text-red-400",
-};
-
-const healthDot: Record<string, string> = {
-  healthy: "bg-emerald-500",
-  at_risk: "bg-amber-500",
-  critical: "bg-red-500",
-};
+import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-constants";
 
 export default function CustomerExecutiveDashboardPage() {
   return (
@@ -123,6 +112,7 @@ export default function CustomerExecutiveDashboardPage() {
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
+                  <caption className="sr-only">Upcoming client renewals</caption>
                   <thead>
                     <tr className="border-b border-border">
                       <th className="text-left font-medium text-muted-foreground pb-2">Client</th>
@@ -147,7 +137,7 @@ export default function CustomerExecutiveDashboardPage() {
                           <span
                             className={cn(
                               "text-xs font-medium px-2 py-0.5 rounded-full capitalize",
-                              healthColors[r.health]
+                              getColorSafe(healthStatusColors, r.health)
                             )}
                           >
                             {r.health.replace("_", " ")}
@@ -182,7 +172,7 @@ export default function CustomerExecutiveDashboardPage() {
                     key={i}
                     className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0"
                   >
-                    <div className={cn("w-2 h-2 rounded-full shrink-0", healthDot[account.health])} />
+                    <div className={cn("w-2 h-2 rounded-full shrink-0", getColorSafe(healthDotColors, account.health))} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{account.name}</p>
                       <p className="text-xs text-muted-foreground">
@@ -207,7 +197,7 @@ export default function CustomerExecutiveDashboardPage() {
                       <span
                         className={cn(
                           "text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize",
-                          healthColors[account.health]
+                          getColorSafe(healthStatusColors, account.health)
                         )}
                       >
                         {account.health.replace("_", " ")}
