@@ -1,19 +1,19 @@
 "use client";
 
-import { useProject } from "../../../../lib/hooks/trpc-hooks";
-import { KanbanBoard } from "../../../../components/projects/kanban-board";
+import { useProject } from "@/lib/hooks/trpc-hooks";
+import { KanbanBoard } from "@/components/projects/kanban-board";
 import { notFound } from "next/navigation";
-import { CreateTicketDialog } from "../../../../components/projects/create-ticket-dialog";
+import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { use, useState, useEffect, useMemo } from "react";
-import { KanbanBoardSkeleton } from "../../../../components/ui/kanban-skeleton";
-import { Skeleton } from "../../../../components/ui/skeleton";
-import { Switch } from "../../../../components/ui/switch";
-import { Label } from "../../../../components/ui/label";
-import { Input } from "../../../../components/ui/input";
-import { Badge } from "../../../../components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../../components/ui/avatar";
+import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, Search, X, Bug, Bookmark, Zap, CheckSquare } from "lucide-react";
-import { cn, resolveImageUrl } from "../../../../lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 
 const HIDE_COMPLETED_KEY = "kanban-hide-completed";
 
@@ -132,7 +132,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const epics = allTickets.filter(t => t.type === "EPIC").map(t => ({ id: t.id, title: t.title }));
 
   // Statuses from project
-  const statuses = (data as Record<string, unknown>).statuses as Array<{ id: number; name: string; color: string | null; order: number }> | undefined;
+  const statuses = "statuses" in data
+    ? (data.statuses as Array<{ id: number; name: string; color: string | null; order: number }>)
+    : undefined;
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
@@ -204,6 +206,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
               className="h-8 w-40 pl-8 text-sm"
+              aria-label="Search tickets"
             />
           </div>
 
@@ -213,6 +216,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
               <button
                 key={type}
                 onClick={() => setFilterType(filterType === type ? null : type)}
+                aria-pressed={filterType === type}
+                aria-label={`Filter by ${label}`}
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors border",
                   filterType === type
@@ -233,6 +238,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 <button
                   key={a.id}
                   onClick={() => toggleAssignee(a.id)}
+                  aria-pressed={filterAssignees.has(a.id)}
+                  aria-label={`Filter by ${a.firstName || ""} ${a.lastName || ""}`.trim()}
                   className={cn(
                     "rounded-full transition-all",
                     filterAssignees.has(a.id) ? "ring-2 ring-primary ring-offset-1" : "opacity-70 hover:opacity-100"

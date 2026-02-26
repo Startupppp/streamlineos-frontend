@@ -14,13 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProjectsEmptyState } from "./projects-empty-state";
 import { resolveImageUrl } from "@/lib/utils";
-
-const statusColors: Record<string, string> = {
-  ACTIVE: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  PLANNING: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  ON_HOLD: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
-  COMPLETED: "bg-slate-500/10 text-slate-700 dark:text-slate-400",
-};
+import { getColorSafe, projectStatusColors } from "@/lib/theme-constants";
 
 export default async function ProjectsPage() {
   const projects = await getProjects();
@@ -37,10 +31,10 @@ export default async function ProjectsPage() {
       />
 
       {projects.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" role="list">
           {projects.map((project) => (
-            <Link key={project.id} href={`/projects/${project.id}`}>
-              <Card className="hover:shadow-md transition-all cursor-pointer h-full flex flex-col group border-border">
+            <Link key={project.id} href={`/projects/${project.id}`} aria-label={`${project.name} — ${project.status}`}>
+              <Card className="hover:shadow-md transition-all cursor-pointer h-full flex flex-col group border-border" role="listitem">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     {project.key}
@@ -69,9 +63,9 @@ export default async function ProjectsPage() {
                       {project.manager?.name || "Manager"}
                     </span>
                   </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs ${project.status ? statusColors[project.status] || "" : ""}`}
+                  <Badge
+                    variant="secondary"
+                    className={`text-xs ${project.status ? getColorSafe(projectStatusColors, project.status) : ""}`}
                   >
                     {project.status}
                   </Badge>

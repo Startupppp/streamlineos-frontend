@@ -22,35 +22,7 @@ import { format, parseISO } from "date-fns";
 import { Download, FileText, Loader2, ArrowLeft } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
-
-const numberToWords = (num: number): string => {
-  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
-    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-  
-  if (num === 0) return "Zero";
-  
-  const convertLessThanThousand = (n: number): string => {
-    if (n < 20) return ones[n];
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
-    return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " and " + convertLessThanThousand(n % 100) : "");
-  };
-
-  if (num < 1000) return convertLessThanThousand(num);
-  if (num < 100000) {
-    const thousands = Math.floor(num / 1000);
-    const remainder = num % 1000;
-    return convertLessThanThousand(thousands) + " Thousand" + (remainder ? " " + convertLessThanThousand(remainder) : "");
-  }
-  if (num < 10000000) {
-    const lakhs = Math.floor(num / 100000);
-    const remainder = num % 100000;
-    return convertLessThanThousand(lakhs) + " Lakh" + (remainder ? " " + numberToWords(remainder) : "");
-  }
-  const crores = Math.floor(num / 10000000);
-  const remainder = num % 10000000;
-  return convertLessThanThousand(crores) + " Crore" + (remainder ? " " + numberToWords(remainder) : "");
-};
+import { numberToWords } from "@/lib/format-utils";
 
 export default function MyPayslipsPage() {
   const router = useRouter();
@@ -116,8 +88,8 @@ export default function MyPayslipsPage() {
           clonedElement.style.transform = 'none';
           convertLabColors(clonedElement);
           const watermark = clonedElement.querySelector('[data-watermark]');
-          if (watermark) {
-            (watermark as HTMLElement).style.display = 'none';
+          if (watermark instanceof HTMLElement) {
+            watermark.style.display = 'none';
           }
         },
       });
@@ -177,16 +149,12 @@ export default function MyPayslipsPage() {
   const overtimeDays = parseFloat(selectedPayslip?.overtimeDays || "0");
   const overtimeHoursVal = parseFloat(selectedPayslip?.overtimeHours || "0");
 
-  const getBankName = () => {
-    if (!selectedPayslip?.user?.bankDetails) return "-";
-    const details = selectedPayslip.user.bankDetails as { bankName?: string };
-    return details.bankName || "-";
-  };
-
-  const getAccountNumber = () => {
-    if (!selectedPayslip?.user?.bankDetails) return "-";
-    const details = selectedPayslip.user.bankDetails as { accountNumber?: string };
-    return details.accountNumber || "-";
+  const getBankDetail = (key: string): string => {
+    const details = selectedPayslip?.user?.bankDetails;
+    if (!details || typeof details !== "object" || Array.isArray(details)) return "-";
+    const record = details as Record<string, unknown>;
+    const value = record[key];
+    return typeof value === "string" && value ? value : "-";
   };
 
   return (
@@ -197,8 +165,9 @@ export default function MyPayslipsPage() {
           size="icon"
           onClick={() => router.back()}
           className="h-9 w-9"
+          aria-label="Go back"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
         <div className="flex-1">
           <PageHeader
@@ -329,7 +298,7 @@ export default function MyPayslipsPage() {
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Bank Name:</span>
-                  <span style={{ fontWeight: 500, color: "#111827" }}>{getBankName()}</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>{getBankDetail("bankName")}</span>
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>LOP:</span>
@@ -337,11 +306,12 @@ export default function MyPayslipsPage() {
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Bank Acc Number:</span>
-                  <span style={{ fontWeight: 500, color: "#111827" }}>{getAccountNumber()}</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>{getBankDetail("accountNumber")}</span>
                 </div>
               </div>
 
               <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px", fontSize: "14px" }}>
+                <caption className="sr-only">Payslip earnings and deductions breakdown</caption>
                 <thead>
                   <tr style={{ backgroundColor: "#f3f4f6" }}>
                     <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
@@ -461,7 +431,16 @@ export default function MyPayslipsPage() {
                 <div
                   key={payslip.id}
                   className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View payslip for ${format(parseISO(payslip.month + "-01"), "MMMM yyyy")}`}
                   onClick={() => setSelectedMonth(payslip.month)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedMonth(payslip.month);
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">

@@ -80,6 +80,8 @@ import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filter
 import { useSession } from "next-auth/react";
 import { downloadFile } from "@/hooks/use-file-url";
 import { PageHeader } from "@/components/ui/page-header";
+import { getColorSafe, expenseStatusColors } from "@/lib/theme-constants";
+import { formatINR } from "@/lib/format-utils";
 
 const EXPENSE_CATEGORIES = [
   "Travel",
@@ -162,7 +164,7 @@ export default function ExpensesPage() {
       }
 
       setPageData(result);
-    } catch (error) {
+    } catch {
       toast.error("Failed to load expenses");
     } finally {
       setLoading(false);
@@ -258,36 +260,26 @@ export default function ExpensesPage() {
     }
   };
 
+  const expenseStatusIcons: Record<string, React.ReactNode> = {
+    PENDING: <Clock className="h-3 w-3 mr-1" aria-hidden="true" />,
+    APPROVED: <CheckCircle2 className="h-3 w-3 mr-1" aria-hidden="true" />,
+    REJECTED: <XCircle className="h-3 w-3 mr-1" aria-hidden="true" />,
+    PAID: <DollarSign className="h-3 w-3 mr-1" aria-hidden="true" />,
+  };
+
   const getStatusBadge = (status: string) => {
-    const styles = {
-      PENDING: "bg-amber-100 text-amber-800 border-amber-200",
-      APPROVED: "bg-emerald-100 text-emerald-800 border-emerald-200",
-      REJECTED: "bg-red-100 text-red-800 border-red-200",
-      PAID: "bg-blue-100 text-blue-800 border-blue-200",
-    };
-    const icons = {
-      PENDING: <Clock className="h-3 w-3 mr-1" />,
-      APPROVED: <CheckCircle2 className="h-3 w-3 mr-1" />,
-      REJECTED: <XCircle className="h-3 w-3 mr-1" />,
-      PAID: <DollarSign className="h-3 w-3 mr-1" />,
-    };
     return (
       <Badge
-        className={`${styles[status as keyof typeof styles]} flex items-center font-medium`}
+        className={`${getColorSafe(expenseStatusColors, status)} flex items-center font-medium`}
       >
-        {icons[status as keyof typeof icons]}
+        {expenseStatusIcons[status]}
         {status}
       </Badge>
     );
   };
 
-  const formatCurrency = (amount: string | number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(Number(amount));
-  };
+  // Use shared formatINR from format-utils
+  const formatCurrency = formatINR;
 
   if (loading && !pageData) {
     return (
@@ -437,7 +429,7 @@ export default function ExpensesPage() {
                   Pending Approval
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="p-0" aria-live="polite">
                 {pendingExpenses.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <EmptyExpensesIllustration className="mb-3" />
@@ -448,6 +440,7 @@ export default function ExpensesPage() {
                   </div>
                 ) : (
                   <Table>
+                    <caption className="sr-only">Pending expense claims awaiting approval</caption>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Employee</TableHead>
@@ -553,7 +546,7 @@ export default function ExpensesPage() {
 
           {/* Expenses Table */}
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0" aria-live="polite">
               {expenses.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <EmptyExpensesIllustration className="mb-3" />
@@ -577,6 +570,7 @@ export default function ExpensesPage() {
               ) : (
                 <>
                   <Table>
+                    <caption className="sr-only">All expense claims</caption>
                     <TableHeader>
                       <TableRow>
                         {isAdmin && <TableHead>Employee</TableHead>}
@@ -762,6 +756,8 @@ export default function ExpensesPage() {
               placeholder="Enter rejection reason..."
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
+              aria-label="Rejection reason"
+              aria-required="true"
             />
           </div>
           <div className="flex justify-end gap-2">

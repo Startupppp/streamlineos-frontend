@@ -1,6 +1,6 @@
 "use client";
 
-import { OnboardingWizard } from "../../../../components/hr/onboarding-wizard";
+import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 import { PageHeader } from "@/components/ui/page-header";
 
 export default function OnboardingPage() {

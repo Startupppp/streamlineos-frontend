@@ -62,12 +62,7 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => {
   };
 });
 
-const statusColors: Record<string, string> = {
-  DRAFT: "bg-gray-500/10 text-gray-700 border-gray-200",
-  PENDING_APPROVAL: "bg-yellow-500/10 text-yellow-700 border-yellow-200",
-  APPROVED: "bg-blue-500/10 text-blue-700 border-blue-200",
-  PAID: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-};
+import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 
 export default function PayrollPage() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
@@ -282,6 +277,9 @@ export default function PayrollPage() {
                   </DialogTitle>
                 </DialogHeader>
                 
+                <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+                  {showPreview ? `Payslip preview for ${selectedEmployeeData?.firstName ?? "employee"}` : ""}
+                </div>
                 {!showPreview ? (
                   <div className="space-y-6 pt-4">
                     {/* Employee Selection */}
@@ -374,9 +372,9 @@ export default function PayrollPage() {
                           <h4 className="font-medium text-sm text-muted-foreground">Overtime</h4>
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label>Overtime Type</Label>
+                              <Label id="overtime-type-label">Overtime Type</Label>
                               <Select value={overtimeType} onValueChange={setOvertimeType}>
-                                <SelectTrigger>
+                                <SelectTrigger aria-labelledby="overtime-type-label">
                                   <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -636,9 +634,10 @@ export default function PayrollPage() {
             Manage payroll status and generate payslips
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent aria-live="polite">
           {allPayrolls && allPayrolls.length > 0 ? (
             <Table>
+              <caption className="sr-only">Payroll records for selected month</caption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
@@ -670,7 +669,7 @@ export default function PayrollPage() {
                       ₹{parseFloat(payroll.netSalary || "0").toLocaleString()}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusColors[payroll.status || "DRAFT"]}>
+                      <Badge variant="outline" className={getColorSafe(payrollStatusColors, payroll.status ?? "DRAFT")}>
                         {payroll.status}
                       </Badge>
                     </TableCell>

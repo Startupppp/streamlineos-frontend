@@ -1,10 +1,10 @@
 "use client";
 
-import { useGetOrganizations, useGetInvitations, useInviteUser, useCancelInvitation } from "../../../../lib/hooks/auth-hooks";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
-import { Button } from "../../../../components/ui/button";
-import { Input } from "../../../../components/ui/input";
-import { Label } from "../../../../components/ui/label";
+import { useGetOrganizations, useGetInvitations, useInviteUser, useCancelInvitation } from "@/lib/hooks/auth-hooks";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useState } from "react";
 import {
@@ -13,7 +13,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../components/ui/select";
+} from "@/components/ui/select";
+import { EmptyMailIllustration } from "@/components/illustrations";
 
 export default function MembersSettingsPage() {
   const { data: organizations } = useGetOrganizations();
@@ -94,7 +95,7 @@ export default function MembersSettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as typeof inviteRole)}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Select role">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -119,9 +120,9 @@ export default function MembersSettingsPage() {
         </CardHeader>
         <CardContent>
           {invitations && invitations.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-2" role="list" aria-label="Pending invitations">
               {invitations.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={inv.id} role="listitem" className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">{inv.email}</p>
                     <p className="text-sm text-muted-foreground">Role: {inv.role}</p>
@@ -129,6 +130,7 @@ export default function MembersSettingsPage() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label={`Cancel invitation for ${inv.email}`}
                     onClick={() => {
                       if (orgId) {
                         cancelInvitation.mutate({ invitationId: inv.id, orgId });
@@ -141,7 +143,10 @@ export default function MembersSettingsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">No pending invitations</p>
+            <div className="flex flex-col items-center gap-3 py-6">
+              <EmptyMailIllustration />
+              <p className="text-muted-foreground">No pending invitations</p>
+            </div>
           )}
         </CardContent>
       </Card>
