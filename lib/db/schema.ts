@@ -967,5 +967,255 @@ export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => 
 }));
 
 
+// --- CRM Module ---
 
+export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
+export const crmHealthEnum = pgEnum("crm_health", ["healthy", "at_risk", "critical"]);
+export const crmDealStageEnum = pgEnum("crm_deal_stage", ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]);
+export const crmCampaignStatusEnum = pgEnum("crm_campaign_status", ["active", "paused", "completed"]);
+export const crmLeadStatusEnum = pgEnum("crm_lead_status", ["visitor", "lead", "mql", "sql", "opportunity"]);
+export const crmSupportTicketStatusEnum = pgEnum("crm_support_ticket_status", ["new", "in_progress", "resolved", "closed"]);
+export const crmSupportTicketPriorityEnum = pgEnum("crm_support_ticket_priority", ["critical", "high", "medium", "low"]);
+export const crmActivityTypeEnum = pgEnum("crm_activity_type", ["deal_won", "meeting", "proposal", "call", "email", "ticket", "escalation"]);
+export const crmEventStatusEnum = pgEnum("crm_event_status", ["planning", "confirmed", "completed"]);
 
+// CRM People — sales reps, CSMs, marketing staff profiles
+export const crmPeople = pgTable("crm_people", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  slug: text("slug").notNull(),
+  name: text("name").notNull(),
+  initials: text("initials").notNull(),
+  role: crmPersonRoleEnum("role").notNull(),
+  title: text("title").notNull(),
+  department: text("department").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  location: text("location"),
+  joinDate: text("join_date"),
+  bio: text("bio"),
+  skills: text("skills").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Companies / Client Accounts
+export const crmCompanies = pgTable("crm_companies", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  health: crmHealthEnum("health").default("healthy"),
+  revenue: decimal("revenue").default("0"),
+  renewalDate: date("renewal_date"),
+  renewalValue: decimal("renewal_value").default("0"),
+  customerSince: text("customer_since"),
+  csmId: integer("csm_id").references(() => crmPeople.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Deals
+export const crmDeals = pgTable("crm_deals", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  companyName: text("company_name").notNull(),
+  value: decimal("value").notNull(),
+  stage: crmDealStageEnum("stage").notNull(),
+  probability: integer("probability").default(0),
+  closeDate: date("close_date"),
+  salesRepId: integer("sales_rep_id").references(() => crmPeople.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// CRM Campaigns
+export const crmCampaigns = pgTable("crm_campaigns", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  status: crmCampaignStatusEnum("status").default("active"),
+  leads: integer("leads").default(0),
+  spend: decimal("spend").default("0"),
+  roi: decimal("roi").default("0"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Leads
+export const crmLeads = pgTable("crm_leads", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  campaignId: integer("campaign_id").references(() => crmCampaigns.id),
+  email: text("email"),
+  name: text("name"),
+  status: crmLeadStatusEnum("status").default("lead"),
+  channel: text("channel"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Content pieces (marketing)
+export const crmContent = pgTable("crm_content", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  type: text("type").notNull(),
+  views: integer("views").default(0),
+  leads: integer("leads").default(0),
+  convRate: decimal("conv_rate").default("0"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Events
+export const crmEvents = pgTable("crm_events", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  date: text("date").notNull(),
+  type: text("type").notNull(),
+  status: crmEventStatusEnum("status").default("planning"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Activities — unified activity feed
+export const crmActivities = pgTable("crm_activities", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  type: crmActivityTypeEnum("type").notNull(),
+  message: text("message").notNull(),
+  time: text("time").notNull(),
+  person: text("person"),
+  personId: integer("person_id").references(() => crmPeople.id),
+  category: text("category").notNull().default("sales"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Support Tickets (separate from helpdesk — these are customer-facing)
+export const crmSupportTickets = pgTable("crm_support_tickets", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title"),
+  priority: crmSupportTicketPriorityEnum("priority").default("medium"),
+  status: crmSupportTicketStatusEnum("status").default("new"),
+  assigneeId: integer("assignee_id").references(() => crmPeople.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+// CRM Monthly Metrics — pre-aggregated time series for charts
+export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  month: text("month").notNull(),
+  revenue: decimal("revenue").default("0"),
+  mqls: integer("mqls").default(0),
+  retention: decimal("retention").default("0"),
+  csat: decimal("csat").default("0"),
+  ticketVolume: integer("ticket_volume").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Team Performance — per-person monthly
+export const crmTeamPerformance = pgTable("crm_team_performance", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  personId: integer("person_id").references(() => crmPeople.id).notNull(),
+  month: text("month").notNull(),
+  value: decimal("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Support Team Members
+export const crmSupportTeamMembers = pgTable("crm_support_team_members", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  role: text("role").notNull(),
+  access: text("access").notNull(),
+  avatar: text("avatar").notNull(),
+  status: text("status").default("online"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// --- CRM Relations ---
+
+export const crmPeopleRelations = relations(crmPeople, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [crmPeople.orgId],
+    references: [organizations.id],
+  }),
+  deals: many(crmDeals),
+  managedCompanies: many(crmCompanies),
+  activities: many(crmActivities),
+  performance: many(crmTeamPerformance),
+}));
+
+export const crmCompaniesRelations = relations(crmCompanies, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [crmCompanies.orgId],
+    references: [organizations.id],
+  }),
+  csm: one(crmPeople, {
+    fields: [crmCompanies.csmId],
+    references: [crmPeople.id],
+  }),
+}));
+
+export const crmDealsRelations = relations(crmDeals, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [crmDeals.orgId],
+    references: [organizations.id],
+  }),
+  salesRep: one(crmPeople, {
+    fields: [crmDeals.salesRepId],
+    references: [crmPeople.id],
+  }),
+}));
+
+export const crmCampaignsRelations = relations(crmCampaigns, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [crmCampaigns.orgId],
+    references: [organizations.id],
+  }),
+  leads: many(crmLeads),
+}));
+
+export const crmLeadsRelations = relations(crmLeads, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [crmLeads.orgId],
+    references: [organizations.id],
+  }),
+  campaign: one(crmCampaigns, {
+    fields: [crmLeads.campaignId],
+    references: [crmCampaigns.id],
+  }),
+}));
+
+export const crmActivitiesRelations = relations(crmActivities, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [crmActivities.orgId],
+    references: [organizations.id],
+  }),
+  crmPerson: one(crmPeople, {
+    fields: [crmActivities.personId],
+    references: [crmPeople.id],
+  }),
+}));
+
+export const crmSupportTicketsRelations = relations(crmSupportTickets, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [crmSupportTickets.orgId],
+    references: [organizations.id],
+  }),
+  assignee: one(crmPeople, {
+    fields: [crmSupportTickets.assigneeId],
+    references: [crmPeople.id],
+  }),
+}));
+
+export const crmTeamPerformanceRelations = relations(crmTeamPerformance, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [crmTeamPerformance.orgId],
+    references: [organizations.id],
+  }),
+  person: one(crmPeople, {
+    fields: [crmTeamPerformance.personId],
+    references: [crmPeople.id],
+  }),
+}));
