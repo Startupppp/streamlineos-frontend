@@ -33,17 +33,17 @@ import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import {
   campaignStatusConfig,
+  isCampaignStatus,
   getColorSafe,
   eventStatusColors,
   sparkColors,
-  type CampaignStatus,
 } from "@/lib/theme-constants";
 
 const ROI_HIGH_THRESHOLD = 4;
 const ROI_MED_THRESHOLD = 2.5;
 const CONV_HIGH_THRESHOLD = 5;
 
-const statusIcons: Record<CampaignStatus, React.ElementType> = {
+const statusIcons: Record<string, React.ElementType> = {
   active: Play,
   paused: Pause,
   completed: CheckCircle2,
@@ -144,6 +144,7 @@ export default function MarketingDashboardPage() {
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
+                  <caption className="sr-only">Marketing campaigns with status, leads, spend, and ROI</caption>
                   <thead>
                     <tr className="border-b border-border">
                       <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Campaign</th>
@@ -154,12 +155,14 @@ export default function MarketingDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {campaigns.map((c) => {
-                      const config = campaignStatusConfig[c.status as CampaignStatus] ?? campaignStatusConfig.active;
-                      const StatusIcon = statusIcons[c.status as CampaignStatus] ?? Play;
+                    {campaigns.map((c, idx) => {
+                      const config = isCampaignStatus(c.status)
+                        ? campaignStatusConfig[c.status]
+                        : campaignStatusConfig.active;
+                      const StatusIcon = statusIcons[c.status] ?? Play;
                       return (
                         <motion.tr
-                          key={c.name}
+                          key={`campaign-${idx}`}
                           className="border-b border-border/50 last:border-0"
                           variants={fadeUp}
                         >
@@ -229,6 +232,7 @@ export default function MarketingDashboardPage() {
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
+                  <caption className="sr-only">Content performance with views, leads, and conversion rates</caption>
                   <thead>
                     <tr className="border-b border-border">
                       <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Content</th>
@@ -239,9 +243,9 @@ export default function MarketingDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {contentPerformance.map((c) => (
+                    {contentPerformance.map((c, idx) => (
                       <motion.tr
-                        key={c.title}
+                        key={`content-${idx}`}
                         className="border-b border-border/50 last:border-0"
                         variants={fadeUp}
                       >
@@ -288,9 +292,9 @@ export default function MarketingDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {upcomingEvents.map((event) => (
+                {upcomingEvents.map((event, idx) => (
                   <motion.div
-                    key={event.name}
+                    key={`event-${idx}`}
                     className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0"
                     variants={slideInLeft}
                   >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -11,29 +11,59 @@ import { BankDetailsTab } from "./_components/bank-details-tab";
 import { DocumentsTab } from "./_components/documents-tab";
 import { ReviewTab } from "./_components/review-tab";
 
+export const STEP_IDS = {
+  PERSONAL: "personal",
+  BANK: "bank",
+  DOCS: "docs",
+  REVIEW: "finish",
+} as const;
+
+export type StepId = (typeof STEP_IDS)[keyof typeof STEP_IDS];
+
+const VALID_STEP_IDS: ReadonlySet<string> = new Set(Object.values(STEP_IDS));
+
+function isStepId(value: string): value is StepId {
+  return VALID_STEP_IDS.has(value);
+}
+
+const NEXT_STEP: Partial<Record<StepId, StepId>> = {
+  [STEP_IDS.PERSONAL]: STEP_IDS.BANK,
+  [STEP_IDS.BANK]: STEP_IDS.DOCS,
+  [STEP_IDS.DOCS]: STEP_IDS.REVIEW,
+};
+
 const DATA_STEPS = [
-  { id: "personal", label: "Personal Info", icon: User },
-  { id: "bank", label: "Bank Details", icon: Landmark },
-  { id: "docs", label: "Documents", icon: FileText },
+  { id: STEP_IDS.PERSONAL, label: "Personal Info", icon: User },
+  { id: STEP_IDS.BANK, label: "Bank Details", icon: Landmark },
+  { id: STEP_IDS.DOCS, label: "Documents", icon: FileText },
 ] as const;
 
-const REVIEW_STEP = { id: "finish", label: "Review & Sign", icon: ClipboardCheck } as const;
+const REVIEW_STEP = { id: STEP_IDS.REVIEW, label: "Review & Sign", icon: ClipboardCheck } as const;
 
-const steps = [...DATA_STEPS, REVIEW_STEP];
+export const ONBOARDING_STEPS = [...DATA_STEPS, REVIEW_STEP];
+
+type FormValues = Record<string, string | undefined>;
 
 export default function OnboardingPage() {
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState<StepId>(STEP_IDS.PERSONAL);
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const [savedFormData, setSavedFormData] = useState<Record<string, FormValues>>({});
+  const tabContentRef = useRef<HTMLDivElement>(null);
 
-  const markStepComplete = useCallback((step: string) => {
-    setCompletedSteps((prev) => {
-      const next = new Set(prev);
-      next.add(step);
-      return next;
-    });
-  }, []);
+  // Focus first focusable input when tab changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const container = tabContentRef.current;
+      if (!container) return;
+      const firstInput = container.querySelector<HTMLElement>(
+        'input:not([type="hidden"]):not([type="file"]), select, textarea',
+      );
+      firstInput?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
 
-  const currentStepIndex = steps.findIndex((s) => s.id === activeTab);
+  const currentStepIndex = Math.max(0, ONBOARDING_STEPS.findIndex((s) => s.id === activeTab));
   const progressPercentage = useMemo(
     () => DATA_STEPS.length > 0
       ? Math.round((completedSteps.size / DATA_STEPS.length) * 100)
@@ -41,24 +71,36 @@ export default function OnboardingPage() {
     [completedSteps.size],
   );
 
-  const handlePersonalComplete = useCallback(() => {
-    markStepComplete("personal");
-    setActiveTab("bank");
-  }, [markStepComplete]);
+  // Pre-compute stable handlers to avoid creating new closures on every render
+  const completeHandlers = useMemo(() => {
+    const makeHandler = (stepId: StepId) => (values?: FormValues) => {
+      if (values) {
+        setSavedFormData((prev) => ({ ...prev, [stepId]: values }));
+      }
+      setCompletedSteps((prev) => {
+        const next = new Set(prev);
+        next.add(stepId);
+        return next;
+      });
+      const next = NEXT_STEP[stepId];
+      if (next) setActiveTab(next);
+    };
+    return {
+      [STEP_IDS.PERSONAL]: makeHandler(STEP_IDS.PERSONAL),
+      [STEP_IDS.BANK]: makeHandler(STEP_IDS.BANK),
+      [STEP_IDS.DOCS]: makeHandler(STEP_IDS.DOCS),
+    } as const;
+  }, []);
 
-  const handleBankComplete = useCallback(() => {
-    markStepComplete("bank");
-    setActiveTab("docs");
-  }, [markStepComplete]);
+  const goToHandlers = useMemo(() => ({
+    [STEP_IDS.PERSONAL]: () => setActiveTab(STEP_IDS.PERSONAL),
+    [STEP_IDS.BANK]: () => setActiveTab(STEP_IDS.BANK),
+    [STEP_IDS.DOCS]: () => setActiveTab(STEP_IDS.DOCS),
+  }), []);
 
-  const handleDocsComplete = useCallback(() => {
-    markStepComplete("docs");
-    setActiveTab("finish");
-  }, [markStepComplete]);
-
-  const handleGoToPersonal = useCallback(() => setActiveTab("personal"), []);
-  const handleGoToBank = useCallback(() => setActiveTab("bank"), []);
-  const handleGoToDocs = useCallback(() => setActiveTab("docs"), []);
+  const handleTabChange = useMemo(() => {
+    return (v: string) => { if (isStepId(v)) setActiveTab(v); };
+  }, []);
 
   return (
     <motion.div
@@ -67,19 +109,24 @@ export default function OnboardingPage() {
       initial="hidden"
       animate="visible"
     >
+      {/* Screen reader announcement for step changes */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {`Step ${currentStepIndex + 1} of ${ONBOARDING_STEPS.length}: ${ONBOARDING_STEPS[currentStepIndex]?.label}`}
+      </div>
+
       <motion.div variants={fadeUp} className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Employee Onboarding</h1>
         <p className="text-muted-foreground mt-2">Complete your profile to get started with Vaivamm Capital.</p>
       </motion.div>
 
       <motion.div variants={fadeUp} className="mb-8">
-        <ProgressBar value={progressPercentage} ariaLabel="Onboarding progress" stepText={`Step ${currentStepIndex + 1} of ${steps.length}`} />
+        <ProgressBar value={progressPercentage} ariaLabel="Onboarding progress" stepText={`Step ${currentStepIndex + 1} of ${ONBOARDING_STEPS.length}`} />
       </motion.div>
 
       <motion.div variants={fadeUp} className="mb-8">
         <nav aria-label="Onboarding steps">
           <ol className="flex items-center justify-between">
-            {steps.map((step, index) => {
+            {ONBOARDING_STEPS.map((step, index) => {
               const StepIcon = step.icon;
               const isCompleted = completedSteps.has(step.id);
               const isCurrent = step.id === activeTab;
@@ -111,7 +158,7 @@ export default function OnboardingPage() {
                       {step.label}
                     </span>
                   </button>
-                  {index < steps.length - 1 && (
+                  {index < ONBOARDING_STEPS.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-3 mt-[-1.25rem] ${isPast || isCompleted ? "bg-green-500" : "bg-border"}`} aria-hidden="true" />
                   )}
                 </li>
@@ -122,33 +169,41 @@ export default function OnboardingPage() {
       </motion.div>
 
       <motion.div variants={fadeUp}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsContent value="personal">
-          <PersonalInfoTab onComplete={handlePersonalComplete} />
+      <div ref={tabContentRef}>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <TabsContent value={STEP_IDS.PERSONAL}>
+          <PersonalInfoTab
+            onComplete={completeHandlers[STEP_IDS.PERSONAL]}
+            defaultValues={savedFormData[STEP_IDS.PERSONAL]}
+          />
         </TabsContent>
 
-        <TabsContent value="bank">
+        <TabsContent value={STEP_IDS.BANK}>
           <BankDetailsTab
-            onComplete={handleBankComplete}
-            onBack={handleGoToPersonal}
+            onComplete={completeHandlers[STEP_IDS.BANK]}
+            onBack={goToHandlers[STEP_IDS.PERSONAL]}
+            defaultValues={savedFormData[STEP_IDS.BANK]}
           />
         </TabsContent>
 
-        <TabsContent value="docs">
+        <TabsContent value={STEP_IDS.DOCS}>
           <DocumentsTab
-            onComplete={handleDocsComplete}
-            onBack={handleGoToBank}
+            onComplete={completeHandlers[STEP_IDS.DOCS]}
+            onBack={goToHandlers[STEP_IDS.BANK]}
+            savedUploads={savedFormData[STEP_IDS.DOCS]}
           />
         </TabsContent>
 
-        <TabsContent value="finish">
+        <TabsContent value={STEP_IDS.REVIEW}>
           <ReviewTab
             completedSteps={completedSteps}
-            steps={steps}
-            onBack={handleGoToDocs}
+            steps={ONBOARDING_STEPS}
+            reviewStepId={STEP_IDS.REVIEW}
+            onBack={goToHandlers[STEP_IDS.DOCS]}
           />
         </TabsContent>
       </Tabs>
+      </div>
       </motion.div>
     </motion.div>
   );

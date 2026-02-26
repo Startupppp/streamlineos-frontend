@@ -206,7 +206,7 @@ export default function SalesDashboardPage() {
 
                   return (
                     <motion.div
-                      key={rep.name}
+                      key={`rep-${i}`}
                       className={cn(
                         "relative rounded-xl p-3 transition-colors",
                         isTop3

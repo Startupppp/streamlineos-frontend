@@ -30,6 +30,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "./_components/quick-actions";
 import { SprintCard } from "./_components/sprint-card";
 import { TeamCard } from "./_components/team-card";
@@ -37,19 +38,11 @@ import { MyIssuesCard, type DashboardTicket } from "./_components/my-issues-card
 import { RecentProjectsCard } from "./_components/recent-projects-card";
 import { RecentActivityCard } from "./_components/recent-activity-card";
 
-const getGreeting = (): string => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-};
-
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  const userName = session?.user?.name || session?.user?.email?.split("@")[0] || "User";
-  const firstName = userName.split(" ")[0] || "User";
+  const firstName = getFirstName(session);
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
@@ -58,7 +51,7 @@ export default function DashboardPage() {
 
   const { data: recentProjects, isLoading: projectsLoading, error: projectsError } = useRecentProjects();
   const { data: teamAvailability, isLoading: teamLoading } = useTeamAvailability();
-  const { data: myTicketsData, isLoading: ticketsLoading, error: ticketsError } = useEmployeeTickets(currentUserId || "");
+  const { data: myTicketsData, isLoading: ticketsLoading, error: ticketsError } = useEmployeeTickets(currentUserId ?? "");
   const { data: sprintSummary, isLoading: sprintLoading } = useActiveSprintSummary();
   const { data: recentActivity, isLoading: activityLoading, error: activityError } = useRecentActivity();
 
@@ -71,18 +64,27 @@ export default function DashboardPage() {
   const statCards = useMemo(() => {
     if (!stats) return [];
     return [
-      { label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
-      { label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
-      { label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
-      { label: "Organization", value: stats.orgName, icon: Building2 },
+      { id: "employees", label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
+      { id: "projects", label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
+      { id: "present", label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
+      { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
     ];
   }, [stats]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
-    const raw = myTicketsData?.data || [];
+    const raw = myTicketsData?.data ?? [];
+    const toDashboardTicket = (t: (typeof raw)[number]): DashboardTicket => ({
+      id: t.id,
+      type: t.type,
+      status: t.status,
+      ticketNumber: t.ticketNumber,
+      title: t.title,
+      priority: t.priority,
+      project: t.project ?? null,
+    });
     const inProgress = raw.filter((t) => t.status === "IN_PROGRESS" || t.status === "IN_REVIEW");
     const todo = raw.filter((t) => t.status === "TODO" || t.status === "BACKLOG");
-    return [...inProgress, ...todo] as DashboardTicket[];
+    return [...inProgress, ...todo].map(toDashboardTicket);
   }, [myTicketsData]);
 
   if (isLoading) {
@@ -114,7 +116,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8">
         <div className="space-y-4">
-          <ErrorMessage message={error.message || "Failed to load dashboard stats"} />
+          <ErrorMessage message={error instanceof Error ? error.message : "Failed to load dashboard stats"} />
           <Button onClick={() => refetch()} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" />
             Retry
@@ -163,7 +165,7 @@ export default function DashboardPage() {
       <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
           <StatCard
-            key={stat.label}
+            key={stat.id}
             label={stat.label}
             value={stat.value}
             icon={stat.icon}
@@ -177,7 +179,7 @@ export default function DashboardPage() {
         <QuickActions />
       </motion.div>
 
-      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7" aria-live="polite" aria-atomic="false">
+      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <div className="lg:col-span-4">
           <MyIssuesCard
             tickets={sortedMyTickets}
@@ -190,7 +192,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-12" aria-live="polite" aria-atomic="false">
+      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <RecentProjectsCard
             projects={recentProjects}

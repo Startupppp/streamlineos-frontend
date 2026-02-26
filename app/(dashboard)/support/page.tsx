@@ -150,6 +150,7 @@ export default function SupportDashboardPage() {
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
+                  <caption className="sr-only">Support team members with roles, access levels, and online status</caption>
                   <thead>
                     <tr className="border-b border-border">
                       <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Name</th>
@@ -159,9 +160,9 @@ export default function SupportDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {supportTeamMembers.map((member) => (
+                    {supportTeamMembers.map((member, idx) => (
                       <motion.tr
-                        key={member.name}
+                        key={`member-${idx}`}
                         className="border-b border-border/50 last:border-0"
                         variants={fadeUp}
                       >
