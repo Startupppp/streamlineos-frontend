@@ -1,7 +1,8 @@
 "use client";
 
-import { CalendarDays, FileText } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyLeaveIllustration } from "@/components/illustrations";
 
 export function LeaveErrorState() {
   return (
@@ -16,7 +17,7 @@ export function LeaveErrorState() {
 export function NoLeaveRequestsState() {
   return (
     <EmptyState
-      icon={FileText}
+      illustration={<EmptyLeaveIllustration />}
       title="No leave requests"
       description="You haven't submitted any leave requests yet."
     />

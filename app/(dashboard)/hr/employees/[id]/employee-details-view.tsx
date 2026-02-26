@@ -23,9 +23,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
-                <Link href="/hr">
-                    <Button variant="outline" size="icon" className="h-9 w-9">
-                        <ArrowLeft className="h-4 w-4" />
+                <Link href="/hr" aria-label="Back to employees">
+                    <Button variant="outline" size="icon" className="h-9 w-9" tabIndex={-1}>
+                        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     </Button>
                 </Link>
                 <div className="flex items-center gap-3 flex-1">
