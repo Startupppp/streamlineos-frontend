@@ -49,8 +49,6 @@ export default function OnboardingPage() {
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [savedFormData, setSavedFormData] = useState<Record<string, FormValues>>({});
   const tabContentRef = useRef<HTMLDivElement>(null);
-
-  // Focus first focusable input when tab changes
   useEffect(() => {
     const timer = setTimeout(() => {
       const container = tabContentRef.current;
@@ -70,8 +68,6 @@ export default function OnboardingPage() {
       : 0,
     [completedSteps.size],
   );
-
-  // Pre-compute stable handlers to avoid creating new closures on every render
   const completeHandlers = useMemo(() => {
     const makeHandler = (stepId: StepId) => (values?: FormValues) => {
       if (values) {
@@ -109,7 +105,7 @@ export default function OnboardingPage() {
       initial="hidden"
       animate="visible"
     >
-      {/* Screen reader announcement for step changes */}
+      
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {`Step ${currentStepIndex + 1} of ${ONBOARDING_STEPS.length}: ${ONBOARDING_STEPS[currentStepIndex]?.label}`}
       </div>

@@ -51,8 +51,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-
-// Server Actions
 import {
   approveExpense,
   rejectExpense,
@@ -65,8 +63,6 @@ import {
   ExpenseFilters,
   ExpenseWithRelations,
 } from "@/server/actions/expense-query";
-
-// Components
 import { CreateExpenseDialog } from "./create-expense-dialog";
 import { BudgetManagement } from "./budget-management";
 import { ExpenseReports } from "./expense-reports";
@@ -74,8 +70,6 @@ import { ExpenseFilterBar } from "@/components/expenses/expense-filter-bar";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { ReceiptViewer } from "@/components/expenses/receipt-viewer";
 import { ExpensePagination } from "@/components/expenses/expense-pagination";
-
-// Hooks
 import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filters";
 import { useSession } from "next-auth/react";
 import { downloadFile } from "@/hooks/use-file-url";
@@ -125,8 +119,6 @@ export default function ExpensesPage() {
   const [isPending, startTransition] = useTransition();
 
   const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
-
-  // Use the filter hook
   const {
     filters,
     setFilter,
@@ -140,11 +132,7 @@ export default function ExpensesPage() {
     defaultPageSize: 50,
     syncToUrl: true,
   });
-
-  // Debounce search to avoid too many requests
   const debouncedSearch = useDebouncedValue(filters.search, 300);
-
-  // Load data function
   const loadData = useCallback(async (showRefresh = false) => {
     if (showRefresh) {
       setIsRefreshing(true);
@@ -171,13 +159,9 @@ export default function ExpensesPage() {
       setIsRefreshing(false);
     }
   }, [filters, debouncedSearch]);
-
-  // Initial load and filter changes
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // Optimistic update helper
   const optimisticUpdate = (
     expenseId: number,
     updates: Partial<ExpenseWithRelations>
@@ -203,7 +187,7 @@ export default function ExpensesPage() {
       toast.success("Expense approved");
     } else {
       toast.error(result.error);
-      loadData(); // Rollback on error
+      loadData();
     }
   };
 
@@ -223,7 +207,7 @@ export default function ExpensesPage() {
       setSelectedExpense(null);
     } else {
       toast.error(result.error);
-      loadData(); // Rollback on error
+      loadData();
     }
   };
 
@@ -240,8 +224,6 @@ export default function ExpensesPage() {
 
   const handleDelete = async (expenseId: number) => {
     if (!pageData) return;
-
-    // Optimistic removal
     setPageData((prev) => {
       if (!prev) return prev;
       return {
@@ -277,8 +259,6 @@ export default function ExpensesPage() {
       </Badge>
     );
   };
-
-  // Use shared formatINR from format-utils
   const formatCurrency = formatINR;
 
   if (loading && !pageData) {
@@ -332,7 +312,7 @@ export default function ExpensesPage() {
         }
       />
 
-      {/* Stats Cards */}
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -393,7 +373,7 @@ export default function ExpensesPage() {
         </Card>
       </div>
 
-      {/* Main Content */}
+      
       <Tabs
         defaultValue={isAdmin && pendingExpenses.length > 0 ? "pending" : "all"}
         className="space-y-4"
@@ -419,7 +399,7 @@ export default function ExpensesPage() {
           )}
         </TabsList>
 
-        {/* Pending Tab */}
+        
         {isAdmin && (
           <TabsContent value="pending" className="space-y-4">
             <Card>
@@ -528,9 +508,9 @@ export default function ExpensesPage() {
           </TabsContent>
         )}
 
-        {/* All Expenses Tab */}
+        
         <TabsContent value="all" className="space-y-4">
-          {/* Filter Bar */}
+          
           <ExpenseFilterBar
             filters={filters}
             categories={categories}
@@ -544,7 +524,7 @@ export default function ExpensesPage() {
             isAdmin={isAdmin}
           />
 
-          {/* Expenses Table */}
+          
           <Card>
             <CardContent className="p-0" aria-live="polite">
               {expenses.length === 0 ? (
@@ -702,7 +682,7 @@ export default function ExpensesPage() {
                     </TableBody>
                   </Table>
 
-                  {/* Pagination */}
+                  
                   <ExpensePagination
                     page={pagination.page}
                     pageSize={pagination.pageSize}
@@ -717,12 +697,12 @@ export default function ExpensesPage() {
           </Card>
         </TabsContent>
 
-        {/* Reports Tab */}
+        
         <TabsContent value="reports" className="space-y-4">
           <ExpenseReports isAdmin={isAdmin} />
         </TabsContent>
 
-        {/* Budgets Tab (Admin Only) */}
+        
         {isAdmin && (
           <TabsContent value="budgets" className="space-y-4">
             <BudgetManagement />
@@ -730,7 +710,7 @@ export default function ExpensesPage() {
         )}
       </Tabs>
 
-      {/* Create Expense Dialog */}
+      
       <CreateExpenseDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
@@ -742,7 +722,7 @@ export default function ExpensesPage() {
         paymentMethods={PAYMENT_METHODS}
       />
 
-      {/* Rejection Dialog */}
+      
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

@@ -167,7 +167,7 @@ export function ProjectSidebar(props: ProjectSidebarProps) {
 
     return (
         <>
-            {/* Desktop Sidebar */}
+            
             <div className="hidden md:flex h-full flex-col">
                 <ProjectSidebarContent 
                     {...props} 
@@ -176,7 +176,7 @@ export function ProjectSidebar(props: ProjectSidebarProps) {
                 />
             </div>
 
-            {/* Mobile Sidebar Trigger */}
+            
             <div className="md:hidden fixed top-[4.5rem] left-4 z-40">
                 <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
                     <SheetTrigger asChild>

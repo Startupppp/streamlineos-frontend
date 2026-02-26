@@ -230,7 +230,7 @@ export default function DocumentsPage() {
         }
       />
 
-      {/* Stats Cards */}
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -309,7 +309,7 @@ export default function DocumentsPage() {
         </Card>
       </div>
 
-      {/* Main Content */}
+      
       <Tabs defaultValue={isAdmin && expiringDocs.length > 0 ? "expiring" : "all"} className="space-y-4">
         <TabsList className="shadow-sm border">
           {isAdmin && expiringDocs.length > 0 && (
@@ -326,7 +326,7 @@ export default function DocumentsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Expiring Documents Tab */}
+        
         {isAdmin && expiringDocs.length > 0 && (
           <TabsContent value="expiring" className="space-y-4">
             <Card className="border-0 shadow-sm">
@@ -400,9 +400,9 @@ export default function DocumentsPage() {
           </TabsContent>
         )}
 
-        {/* All Documents Tab */}
+        
         <TabsContent value="all" className="space-y-4">
-          {/* Filters */}
+          
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -429,7 +429,7 @@ export default function DocumentsPage() {
             </Select>
           </div>
 
-          {/* Documents Table */}
+          
           <Card className="border-0 shadow-sm">
             <CardContent className="p-0" aria-live="polite">
               {filteredDocuments.length === 0 ? (
@@ -566,7 +566,7 @@ export default function DocumentsPage() {
           </Card>
         </TabsContent>
 
-        {/* Company Policies Tab */}
+        
         <TabsContent value="policies" className="space-y-4">
           <Card className="border-0 shadow-sm">
             <CardHeader className="border-b bg-indigo-50/50">
@@ -626,7 +626,7 @@ export default function DocumentsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Upload Document Dialog */}
+      
       <UploadDocumentDialog
         open={isUploadOpen}
         onOpenChange={setIsUploadOpen}

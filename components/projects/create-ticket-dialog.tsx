@@ -57,12 +57,7 @@ export function CreateTicketDialog({
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
-
-  // Get project details which includes members
   const { data: projectData } = useProject(projectId);
-  
-  // Extract only project members (not all org members)
-  // Include project manager as well
   const projectMembersList = projectData?.members?.map(m => ({
     id: m.user.id,
     name: m.user.name || `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim(),
@@ -71,8 +66,6 @@ export function CreateTicketDialog({
     image: m.user.image || null,
     email: m.user.email,
   })) || [];
-  
-  // Include project manager if not already in members list
   const manager = projectData && "manager" in projectData
     ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
     : undefined;
@@ -94,8 +87,6 @@ export function CreateTicketDialog({
 
   const createTicketMutation = useCreateTicket({
     onSuccess: async (data) => {
-      
-      // Upload file if selected
       if (file) {
         try {
           setIsUploading(true);
@@ -154,7 +145,7 @@ export function CreateTicketDialog({
       description: "",
       priority: "MEDIUM",
       link: "",
-      assigneeId: undefined, // "undefined" string or standard undefined? Schema expects string optional.
+      assigneeId: undefined,
     },
   });
 

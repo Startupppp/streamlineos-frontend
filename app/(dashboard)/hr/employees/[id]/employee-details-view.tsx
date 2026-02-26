@@ -49,10 +49,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
-                    {/* Attendance Summary */}
+                    
                     <EmployeeAttendanceSummary attendance={stats?.attendance} />
 
-                    {/* Stats Row - stacked on mobile, side by side on larger screens */}
+                    
                     <div className="grid gap-6 lg:grid-cols-2">
                         <EmployeeLeaveStats stats={stats} />
                         <EmployeeProjectsList projects={projects || []} />

@@ -127,7 +127,7 @@ export function EmployeeAttendanceSummary({ attendance }: { attendance?: Attenda
                 <CardTitle className="text-sm font-medium text-foreground">Attendance (Current Month)</CardTitle>
             </CardHeader>
             <CardContent>
-                {/* 2 columns on mobile, 4 on sm and up */}
+                
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="flex flex-col items-center p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
                         <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{attendance.present}</span>

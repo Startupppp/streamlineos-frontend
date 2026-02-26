@@ -21,12 +21,6 @@ const SAMPLE_SUMMARY = {
   paidCount: 2,
   rejectedCount: 0,
 };
-
-/**
- * GET /api/test/monthly-expense-report-email
- * Sends a sample monthly expense report (with PDF attachment) to the test email.
- * Only allowed when NODE_ENV=development or ALLOW_TEST_EMAIL=1.
- */
 export async function GET() {
   const allowed =
     process.env.NODE_ENV === "development" ||

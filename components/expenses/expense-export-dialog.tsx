@@ -102,8 +102,6 @@ export function ExpenseExportDialog({
         toast.error(result.error);
         return;
       }
-
-      // Handle different export formats
       switch (result.format) {
         case "csv":
           downloadCSV(result.data, result.filename);
@@ -118,8 +116,6 @@ export function ExpenseExportDialog({
 
       setExportComplete(true);
       toast.success("Export downloaded successfully!");
-
-      // Close dialog after a short delay
       setTimeout(() => {
         setOpen(false);
         setExportComplete(false);
@@ -149,12 +145,8 @@ export function ExpenseExportDialog({
     filename: string
   ) => {
     const workbook = XLSX.utils.book_new();
-
-    // Add each sheet
     data.sheets.forEach((sheet) => {
       const worksheet = XLSX.utils.aoa_to_sheet(sheet.data);
-
-      // Auto-size columns
       const colWidths = sheet.data[0]?.map((_, colIndex) => {
         const maxLength = Math.max(
           ...sheet.data.map((row) => String(row[colIndex] || "").length)
@@ -165,8 +157,6 @@ export function ExpenseExportDialog({
 
       XLSX.utils.book_append_sheet(workbook, worksheet, sheet.name);
     });
-
-    // Write and download
     XLSX.writeFile(workbook, filename);
   };
 
@@ -174,7 +164,6 @@ export function ExpenseExportDialog({
     data: NonNullable<Extract<ExportResult, { format: "pdf" }>["data"]>,
     filename: string
   ) => {
-    // Generate PDF content as HTML for printing
     const formatCurrency = (amount: number) =>
       new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -410,15 +399,11 @@ export function ExpenseExportDialog({
       </body>
       </html>
     `;
-
-    // Open in new window for printing
     const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.focus();
-
-      // Trigger print after content loads
       printWindow.onload = () => {
         printWindow.print();
       };
@@ -444,7 +429,7 @@ export function ExpenseExportDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Format Selection */}
+          
           <div className="space-y-3">
             <Label>Export Format</Label>
             <RadioGroup
@@ -476,7 +461,7 @@ export function ExpenseExportDialog({
             </RadioGroup>
           </div>
 
-          {/* Options */}
+          
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -504,7 +489,7 @@ export function ExpenseExportDialog({
             </div>
           </div>
 
-          {/* Applied Filters Info */}
+          
           {Object.values(exportFilters).some((v) => v !== undefined && v !== "") && (
             <div className="p-3 bg-muted/50 rounded-lg text-sm">
               <p className="font-medium mb-1">Applied Filters:</p>

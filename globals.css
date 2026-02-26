@@ -49,7 +49,6 @@
 :root {
   --radius: 0.625rem;
 
-  /* Surfaces */
   --background: oklch(0.99 0.002 258);
   --foreground: oklch(0.15 0.02 260);
   --card: oklch(1 0 0);
@@ -57,7 +56,6 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.02 260);
 
-  /* Brand & semantic */
   --primary: #bd882c;
   --primary-foreground: oklch(0.99 0.002 258);
   --secondary: #0f2b7f;
@@ -72,14 +70,12 @@
   --input: oklch(0.93 0.01 255);
   --ring: #bd882c;
 
-  /* Charts */
   --chart-1: #bd882c;
   --chart-2: #bd882c;
   --chart-3: oklch(0.62 0.19 260);
   --chart-4: oklch(0.61 0.22 293);
   --chart-5: oklch(0.66 0.21 354);
 
-  /* Sidebar */
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.15 0.02 260);
   --sidebar-primary: #bd882c;
@@ -89,7 +85,6 @@
   --sidebar-border: oklch(0.93 0.01 255);
   --sidebar-ring: #bd882c;
 
-  /* Brand aliases */
   --gold: #bd882c;
   --gold-rgb: 189 136 44;
   --blue: #0f2b7f;
@@ -109,9 +104,6 @@
   }
 }
 
-/* ─── Utility Classes ─── */
-
-/* Subtle grain texture */
 .noir-grain::after {
   content: "";
   position: fixed;
@@ -122,7 +114,6 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-/* Glass morphism */
 .glass {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
@@ -130,12 +121,10 @@
   border: 1px solid rgba(189, 136, 44, 0.08);
 }
 
-/* Gold gradient (buttons, accent bars) */
 .gold-gradient {
   background: linear-gradient(135deg, #bd882c 0%, #d4a23a 50%, #bd882c 100%);
 }
 
-/* Gold text */
 .gold-text {
   background: linear-gradient(135deg, #d4a23a 0%, #bd882c 50%, #d4a23a 100%);
   -webkit-background-clip: text;
@@ -143,18 +132,15 @@
   background-clip: text;
 }
 
-/* Art deco decorative line */
 .deco-line {
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(189, 136, 44, 0.2), transparent);
 }
 
-/* Refined shadow */
 .shadow-noir {
   box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(189, 136, 44, 0.05);
 }
 
-/* Gold hover glow */
 .glow-gold {
   transition: box-shadow 0.3s ease;
 }
@@ -162,7 +148,6 @@
   box-shadow: 0 0 20px rgba(189, 136, 44, 0.1), 0 4px 24px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* Press scale for buttons */
 .press-scale {
   transition: transform 0.15s ease;
 }
@@ -170,7 +155,6 @@
   transform: scale(0.97);
 }
 
-/* Warm mesh background */
 .noir-mesh {
   background: radial-gradient(ellipse at 20% 50%, rgba(189, 136, 44, 0.05) 0%, transparent 50%),
               radial-gradient(ellipse at 80% 20%, rgba(15, 43, 127, 0.04) 0%, transparent 50%),
@@ -178,7 +162,6 @@
               oklch(0.97 0.005 250);
 }
 
-/* ─── Keyframes ─── */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -200,7 +183,6 @@
   }
 }
 
-/* ─── Scrollbar Styles ─── */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(189, 136, 44, 0.15) transparent;
@@ -224,7 +206,6 @@
   background: rgba(189, 136, 44, 0.3);
 }
 
-/* Kanban Board Scrollbar Styles */
 .kanban-scroll-container {
   scrollbar-width: auto !important;
   scrollbar-color: rgba(189, 136, 44, 0.2) transparent !important;
@@ -251,19 +232,16 @@
   background: rgba(189, 136, 44, 0.35) !important;
 }
 
-/* Ensure Radix ScrollArea allows horizontal scrolling */
 [data-radix-scroll-area-viewport] {
   overflow-x: auto !important;
   overflow-y: auto !important;
 }
 
-/* Ensure sticky headers work inside ScrollArea */
 [data-radix-scroll-area-viewport] .sticky {
   position: sticky !important;
   z-index: 50 !important;
 }
 
-/* Force horizontal scrollbar visibility for kanban */
 .kanban-scroll-container::-webkit-scrollbar:horizontal {
   height: 10px !important;
   display: block !important;

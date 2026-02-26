@@ -49,8 +49,6 @@ export function RequestWfhDialog() {
   const utils = api.useUtils();
 
   const { data: members } = api.project.getProjectMembers.useQuery();
-
-  // Filter to only ADMIN and OWNER for approvers
   const approvers = (members || []).filter(
     (m) => m.role === "ADMIN" || m.role === "OWNER"
   );

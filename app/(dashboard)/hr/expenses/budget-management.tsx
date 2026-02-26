@@ -152,7 +152,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Budget Management</h2>
@@ -164,7 +164,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </Button>
       </div>
 
-      {/* Summary Cards */}
+      
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -202,7 +202,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </Card>
       </div>
 
-      {/* Category Budget Table */}
+      
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </CardContent>
       </Card>
 
-      {/* Create Category Dialog */}
+      
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>

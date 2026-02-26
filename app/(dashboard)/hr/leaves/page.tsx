@@ -52,7 +52,7 @@ export default async function LeavesPage() {
         }
       />
 
-      {/* Balance Cards */}
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" role="list" aria-label="Leave balances">
         {context.balances.map((bal, index) => {
           const Icon = leaveTypeIcons[bal.typeName ?? ""] ?? CalendarDays;

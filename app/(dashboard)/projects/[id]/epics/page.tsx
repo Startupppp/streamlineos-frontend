@@ -90,7 +90,6 @@ export default function EpicsPage({ params }: PageProps) {
   const tasks = tickets.filter(t => t.type === "TASK");
 
   function handleDeleteEpic(epicId: number) {
-    // Unlink child stories first
     const children = stories.filter(s => s.epicId === epicId);
     const unlinkPromises = children.map(s =>
       updateTicket.mutateAsync({ ticketId: s.id, epicId: undefined })
@@ -116,7 +115,6 @@ export default function EpicsPage({ params }: PageProps) {
         <CreateEpicDialog projectId={projectId} />
       </div>
 
-      {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -166,7 +164,6 @@ export default function EpicsPage({ params }: PageProps) {
         </Card>
       </div>
 
-      {/* Epics List */}
       <div className="space-y-4">
         {epics.length === 0 ? (
           <Card className="border-dashed">
@@ -197,7 +194,6 @@ export default function EpicsPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Orphan Stories */}
       {stories.filter(s => !s.epicId).length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -333,7 +329,6 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
           </div>
         </div>
 
-        {/* Segmented progress bar */}
         <div className="ml-9 mt-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
@@ -411,7 +406,6 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
               <p className="text-sm text-muted-foreground p-4 text-center">No stories linked yet</p>
             )}
 
-            {/* Add story / Link existing */}
             <div className="flex gap-2 pt-2">
               <Input
                 value={newStoryTitle}

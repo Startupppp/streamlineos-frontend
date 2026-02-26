@@ -54,7 +54,6 @@ export default function CustomerExecutiveDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Customer Executive Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -62,7 +61,6 @@ export default function CustomerExecutiveDashboardPage() {
         </p>
       </div>
 
-      {/* Row 2: Metric Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Total Clients"
@@ -96,7 +94,6 @@ export default function CustomerExecutiveDashboardPage() {
         />
       </div>
 
-      {/* Row 3: Client Health Donut + Upcoming Renewals */}
       <div className="grid gap-6 lg:grid-cols-12">
         <motion.div
           className="lg:col-span-5"
@@ -172,9 +169,7 @@ export default function CustomerExecutiveDashboardPage() {
         </motion.div>
       </div>
 
-      {/* Row 4: Key Accounts + Interactions Timeline */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Key Accounts */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -229,7 +224,6 @@ export default function CustomerExecutiveDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Interactions Timeline */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -248,9 +242,7 @@ export default function CustomerExecutiveDashboardPage() {
         </motion.div>
       </div>
 
-      {/* Row 5: Support Stats + Retention Trend + CSAT Trend */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Support Stats */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -292,7 +284,6 @@ export default function CustomerExecutiveDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* Retention Trend */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -316,7 +307,6 @@ export default function CustomerExecutiveDashboardPage() {
           </Card>
         </motion.div>
 
-        {/* CSAT Trend */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

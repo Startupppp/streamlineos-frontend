@@ -27,7 +27,6 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-
 import { api } from "@/trpc/react";
 
 const formSchema = z.object({
@@ -106,8 +105,6 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
-    
-    // Parse skills
     const skillsArray = values.skills ? values.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
 
     const result = await updateEmployee({
@@ -152,7 +149,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
-                {/* Personal Information */}
+                
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Personal Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -220,12 +217,12 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                     </div>
                 </div>
 
-                {/* Professional Information */}
+                
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Professional Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          
-                         {/* Other fields ... */}
+                         
                          
                           <FormField
                             control={form.control}
@@ -279,7 +276,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                             </FormItem>
                             )}
                         />
-                        {/* Designation, etc. */}
+                        
                          <FormField
                             control={form.control}
                             name="designation"

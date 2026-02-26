@@ -81,7 +81,6 @@ export default function PersonDetailPage() {
   const backHref = isCSM ? "/customer-executive" : "/sales";
   const backLabel = isCSM ? "Customer Executive" : "Sales Dashboard";
 
-  // Compute health distribution for CSM donut chart
   const healthDistribution = isCSM
     ? [
         { label: "Healthy", value: person.accounts.filter((a) => a.health === "healthy").length, color: "#10B981" },
@@ -92,14 +91,12 @@ export default function PersonDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back link */}
       <Link href={backHref} aria-label={`Back to ${backLabel}`}>
         <Button variant="outline" size="sm" className="gap-2">
           <ArrowLeft className="h-4 w-4" /> {backLabel}
         </Button>
       </Link>
 
-      {/* Profile Header */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -108,12 +105,10 @@ export default function PersonDetailPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-6">
-              {/* Avatar */}
               <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-2xl font-bold text-primary">{person.initials}</span>
               </div>
 
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold text-foreground">{person.name}</h1>
@@ -124,7 +119,6 @@ export default function PersonDetailPage() {
                 <p className="text-sm text-muted-foreground">{person.title}</p>
                 <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{person.bio}</p>
 
-                {/* Contact chips */}
                 <div className="flex flex-wrap gap-3 mt-4">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Mail className="h-3.5 w-3.5" /> {person.email}
@@ -140,7 +134,6 @@ export default function PersonDetailPage() {
                   </div>
                 </div>
 
-                {/* Skills */}
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {person.skills.map((skill) => (
                     <Badge key={skill} variant="secondary" className="text-[10px] font-normal">
@@ -154,7 +147,6 @@ export default function PersonDetailPage() {
         </Card>
       </motion.div>
 
-      {/* Stats Row */}
       <motion.div
         className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
         initial={{ opacity: 0, y: 16 }}
@@ -182,7 +174,6 @@ export default function PersonDetailPage() {
         ))}
       </motion.div>
 
-      {/* Tabs */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -196,10 +187,8 @@ export default function PersonDetailPage() {
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
-          {/* ── Overview Tab ──────────────────────────────────────────── */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-12">
-              {/* Performance Trend */}
               <div className="lg:col-span-7">
                 <Card className="h-full">
                   <CardHeader>
@@ -223,7 +212,6 @@ export default function PersonDetailPage() {
                 </Card>
               </div>
 
-              {/* Right side: quick summary or donut */}
               <div className="lg:col-span-5">
                 {isSalesRep && (
                   <Card className="h-full">
@@ -265,7 +253,6 @@ export default function PersonDetailPage() {
                             <p className="text-xs text-muted-foreground">Avg Probability</p>
                           </div>
                         </div>
-                        {/* Stage breakdown */}
                         <div className="space-y-2 pt-2">
                           {Object.entries(
                             person.deals
@@ -318,7 +305,6 @@ export default function PersonDetailPage() {
               </div>
             </div>
 
-            {/* Recent Activity preview */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Recent Activity</CardTitle>
@@ -329,7 +315,6 @@ export default function PersonDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* ── Deals Tab (Sales Reps only) ───────────────────────────── */}
           {isSalesRep && (
             <TabsContent value="deals" className="space-y-4">
               {person.deals.length === 0 ? (
@@ -369,7 +354,6 @@ export default function PersonDetailPage() {
                             <span>Close: {deal.closeDate}</span>
                             <span>{deal.probability}% probability</span>
                           </div>
-                          {/* Probability bar */}
                           <div
                             className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden"
                             role="progressbar"
@@ -394,7 +378,6 @@ export default function PersonDetailPage() {
             </TabsContent>
           )}
 
-          {/* ── Accounts Tab (CSMs only) ──────────────────────────────── */}
           {isCSM && (
             <TabsContent value="accounts" className="space-y-4">
               {person.accounts.length === 0 ? (
@@ -446,7 +429,6 @@ export default function PersonDetailPage() {
             </TabsContent>
           )}
 
-          {/* ── Activity Tab ──────────────────────────────────────────── */}
           <TabsContent value="activity">
             <Card>
               <CardHeader>

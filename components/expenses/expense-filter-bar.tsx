@@ -132,9 +132,9 @@ export function ExpenseFilterBar({
 
   return (
     <div className="space-y-3">
-      {/* Main Filter Row */}
+      
       <div className="flex flex-wrap items-center gap-3">
-        {/* Search */}
+        
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -155,7 +155,7 @@ export function ExpenseFilterBar({
           )}
         </div>
 
-        {/* Date Preset */}
+        
         <Select
           value={datePreset}
           onValueChange={(value) => onDatePresetChange(value as DatePreset)}
@@ -173,7 +173,7 @@ export function ExpenseFilterBar({
           </SelectContent>
         </Select>
 
-        {/* Custom Date Range Popover */}
+        
         {datePreset === "custom" && (
           <Popover>
             <PopoverTrigger asChild>
@@ -216,7 +216,7 @@ export function ExpenseFilterBar({
           </Popover>
         )}
 
-        {/* Status Filter (Admin Only) */}
+        
         {isAdmin && (
           <Select
             value={filters.status as string || "all"}
@@ -235,7 +235,7 @@ export function ExpenseFilterBar({
           </Select>
         )}
 
-        {/* Category Filter */}
+        
         <Select
           value={filters.category || "all"}
           onValueChange={(value) =>
@@ -254,7 +254,7 @@ export function ExpenseFilterBar({
           </SelectContent>
         </Select>
 
-        {/* Advanced Filters Sheet */}
+        
         <Sheet open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" className="gap-2">
@@ -276,7 +276,7 @@ export function ExpenseFilterBar({
             </SheetHeader>
 
             <div className="py-6 space-y-6">
-              {/* Payment Method */}
+              
               <div className="space-y-2">
                 <Label>Payment Method</Label>
                 <Select
@@ -298,7 +298,7 @@ export function ExpenseFilterBar({
                 </Select>
               </div>
 
-              {/* Amount Range */}
+              
               <div className="space-y-2">
                 <Label>Amount Range (INR)</Label>
                 <div className="flex items-center gap-2">
@@ -330,7 +330,7 @@ export function ExpenseFilterBar({
                 </div>
               </div>
 
-              {/* Sort Options */}
+              
               <div className="space-y-2">
                 <Label>Sort By</Label>
                 <div className="flex gap-2">
@@ -367,7 +367,7 @@ export function ExpenseFilterBar({
                 </div>
               </div>
 
-              {/* Page Size */}
+              
               <div className="space-y-2">
                 <Label>Results per page</Label>
                 <Select
@@ -399,7 +399,7 @@ export function ExpenseFilterBar({
           </SheetContent>
         </Sheet>
 
-        {/* Reset Button */}
+        
         {activeFilterCount > 0 && (
           <Button
             variant="ghost"
@@ -413,7 +413,7 @@ export function ExpenseFilterBar({
         )}
       </div>
 
-      {/* Active Filters Display */}
+      
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-muted-foreground">Active filters:</span>

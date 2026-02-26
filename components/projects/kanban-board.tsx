@@ -160,13 +160,9 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const queryClient = useQueryClient();
-
-  // Build columns from project statuses or use defaults
   const columns = statuses && statuses.length > 0
     ? statuses.map(s => ({ id: s.name, label: s.name.replace(/_/g, " "), color: s.color }))
     : DEFAULT_COLUMNS;
-
-  // Build epic lookup map
   const epicMap = new Map<number, string>();
   epics?.forEach(e => epicMap.set(e.id, e.title));
 
@@ -366,7 +362,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                             }}
                                             >
                                             <CardContent className="p-2.5 sm:p-3 space-y-2">
-                                                {/* Title */}
+                                                
                                                 <div className="flex justify-between items-start gap-2">
                                                   <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-snug flex-1">
                                                       {ticket.title}
@@ -398,7 +394,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                   </DropdownMenu>
                                                 </div>
 
-                                                {/* Labels + Epic row */}
+                                                
                                                 {((ticket.labels && ticket.labels.length > 0) || (ticket.epicId && epicMap.has(ticket.epicId))) && (
                                                   <div className="flex items-center gap-1 flex-wrap">
                                                     {ticket.epicId && epicMap.has(ticket.epicId) && (
@@ -420,7 +416,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                   </div>
                                                 )}
 
-                                                {/* Footer: type + priority + points + assignee */}
+                                                
                                                 <div className="flex items-center justify-between pt-1">
                                                   <div className="flex items-center gap-1.5">
                                                       <TicketTypeIcon type={ticket.type} />
@@ -460,7 +456,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                     )}
                 </Droppable>
 
-                {/* Per-column quick add */}
+                
                 <div className="border-t border-border">
                   <QuickAddInput columnId={col.id} projectId={projectId} />
                 </div>

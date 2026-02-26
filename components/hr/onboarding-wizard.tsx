@@ -32,12 +32,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "../../lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon, CheckCircle2, ChevronRight, ChevronLeft, Loader2, User, Briefcase, CreditCard, CheckSquare } from "lucide-react";
-
-// Hook needed
-import { api } from "../../trpc/react"; // Assuming we can use direct api or hooks
+import { api } from "../../trpc/react";
 import { useRouter } from "next/navigation";
-
-// Steps definition
 const STEPS = [
   { id: 1, title: "Personal Details", icon: User },
   { id: 2, title: "Role & Department", icon: Briefcase },
@@ -45,8 +41,6 @@ const STEPS = [
   { id: 4, title: "Banking Info", icon: CreditCard },
   { id: 5, title: "Review & Submit", icon: CheckCircle2 },
 ];
-
-// Common role-based departments that should always be available
 const COMMON_ROLE_DEPARTMENTS = [
   "Admin",
   "HR",
@@ -66,12 +60,7 @@ const COMMON_ROLE_DEPARTMENTS = [
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
-
-  // Fetch departments for dropdown
   const { data: departments } = api.hr.getDepartments.useQuery();
-  
-  // Combine database departments with common roles
-  // If a department from DB matches a common role, use DB one; otherwise add common roles
   const allDepartmentOptions = useMemo(() => {
     const dbDeptNames = new Set(departments?.map(d => d.name.toLowerCase()) || []);
     const commonRoles = COMMON_ROLE_DEPARTMENTS
@@ -83,8 +72,6 @@ export function OnboardingWizard() {
       ...commonRoles
     ];
   }, [departments]);
-
-  // Mutation
   const onboardEmployee = api.hr.onboardEmployee.useMutation({
     onSuccess: () => {
       toast.success("Employee onboarding initiated successfully!");
@@ -156,7 +143,7 @@ export function OnboardingWizard() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
-      {/* Progress Header */}
+      
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
              Onboard New Talent
@@ -385,7 +372,6 @@ export function OnboardingWizard() {
                                       const numVal = parseInt(val, 10);
                                       if (!isNaN(numVal)) {
                                         field.onChange(numVal);
-                                        // Trigger validation to clear error immediately
                                         form.trigger("departmentId");
                                       }
                                     } else {
@@ -399,15 +385,15 @@ export function OnboardingWizard() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {/* Database departments */}
+                                  
                                   {departments?.map((dept) => (
                                       <SelectItem key={dept.id} value={dept.id.toString()}>
                                           {dept.name}
                                       </SelectItem>
                                   ))}
-                                  {/* Common role-based departments */}
+                                  
                                   {allDepartmentOptions
-                                    .filter(dept => dept.id < 0) // Only show common roles (negative IDs)
+                                    .filter(dept => dept.id < 0)
                                     .map((dept) => (
                                       <SelectItem key={dept.id} value={dept.id.toString()}>
                                           {dept.name}
@@ -725,7 +711,7 @@ export function OnboardingWizard() {
                 </motion.div>
               </AnimatePresence>
 
-               {/* Navigation Buttons */}
+               
               <div className="flex justify-between pt-6 border-t mt-8">
                 <Button
                   type="button"

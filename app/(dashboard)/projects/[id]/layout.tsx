@@ -22,8 +22,6 @@ export default async function ProjectLayout({
     if (!session?.user?.id) {
         return notFound();
     }
-
-    // First check if project exists
     const projectCheck = await db.query.projects.findFirst({
         where: eq(projects.id, Number(id)),
         columns: { id: true, name: true, key: true, orgId: true, managerId: true }
@@ -32,8 +30,6 @@ export default async function ProjectLayout({
     if (!projectCheck) {
         return notFound();
     }
-
-    // Check user access
     const member = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id)
     });
@@ -43,15 +39,8 @@ export default async function ProjectLayout({
     }
 
     const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
-
-    // OWNER/ADMIN can see projects in list but need access to view details
-    // Get full project details only if user has access
     const project = await getProjectById(Number(id));
-
-    // If no access, show access denied message (for OWNER/ADMIN who can see it in list)
     if (!project) {
-        // Only show access denied if they're OWNER/ADMIN (they can see it in list)
-        // Regular users just get notFound
         if (isOwnerOrAdmin) {
             return (
                 <div className="flex items-center justify-center h-full w-full p-8">

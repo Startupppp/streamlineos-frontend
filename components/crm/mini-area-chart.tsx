@@ -43,8 +43,6 @@ export function MiniAreaChart({
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${paddingTop + plotHeight} L ${points[0].x} ${paddingTop + plotHeight} Z`;
 
   const gradientId = `area-grad-${color.replace("#", "")}`;
-
-  // Y-axis ticks (4 ticks)
   const yTicks = Array.from({ length: 4 }, (_, i) => {
     const val = minVal + (range * i) / 3;
     return { val, y: paddingTop + ((maxVal - val) / range) * plotHeight };
@@ -59,7 +57,7 @@ export function MiniAreaChart({
         </linearGradient>
       </defs>
 
-      {/* Grid lines */}
+      
       {yTicks.map((tick, i) => (
         <g key={i}>
           <line
@@ -85,7 +83,7 @@ export function MiniAreaChart({
         </g>
       ))}
 
-      {/* Area fill */}
+      
       <motion.path
         d={areaPath}
         fill={`url(#${gradientId})`}
@@ -94,7 +92,7 @@ export function MiniAreaChart({
         transition={{ duration: 0.8 }}
       />
 
-      {/* Line */}
+      
       <motion.path
         d={linePath}
         fill="none"
@@ -108,7 +106,7 @@ export function MiniAreaChart({
         transition={{ duration: 1, ease: "easeInOut" }}
       />
 
-      {/* Data points */}
+      
       {points.map((p, i) => (
         <motion.circle
           key={i}
@@ -124,7 +122,7 @@ export function MiniAreaChart({
         />
       ))}
 
-      {/* X-axis labels */}
+      
       {points.map((p, i) => (
         <text
           key={`label-${i}`}

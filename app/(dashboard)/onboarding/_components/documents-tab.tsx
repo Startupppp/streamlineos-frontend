@@ -46,8 +46,6 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
   const onFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Reset input so re-selecting the same file triggers onChange
     e.target.value = "";
 
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {

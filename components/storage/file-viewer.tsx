@@ -35,7 +35,6 @@ export function FileViewer({
         window.open(data.url, "_blank");
       }
     } catch (error) {
-      // Error downloading file
     }
   };
 

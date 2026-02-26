@@ -52,7 +52,7 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.06 }}
           >
-            {/* Timeline line + icon */}
+            
             <div className="flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center shrink-0`}>
                 <Icon className={`h-3.5 w-3.5 ${config.color}`} />
@@ -62,7 +62,7 @@ export function ActivityFeed({ items }: ActivityFeedProps) {
               )}
             </div>
 
-            {/* Content */}
+            
             <div className="flex-1 min-w-0 pb-1">
               <p className="text-sm text-foreground leading-snug">{item.message}</p>
               {item.person && (

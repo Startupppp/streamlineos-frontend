@@ -66,8 +66,6 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Try R2 first if configured
     if (isStorageConfigured()) {
       try {
         if (attachment) {
@@ -84,11 +82,8 @@ export async function GET(req: NextRequest) {
         const signedUrl = await getFileUrl(fileKey, expiresIn);
         return NextResponse.json({ url: signedUrl });
       } catch {
-        // R2 failed — fall through to local
       }
     }
-
-    // Fallback: serve from local filesystem
     const localPath = resolveLocalPath(fileKey);
     if (localPath) {
       if (attachment) {

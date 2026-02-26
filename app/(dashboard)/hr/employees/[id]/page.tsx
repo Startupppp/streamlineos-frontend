@@ -1,4 +1,4 @@
-import { EmployeeDetailsView } from "./employee-details-view"; // Client component wrapper
+import { EmployeeDetailsView } from "./employee-details-view";
 import { getEmployeeById } from "@/server/actions/hr-actions";
 import { notFound } from "next/navigation";
 

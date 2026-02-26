@@ -185,7 +185,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Expense Reports</h2>
@@ -212,7 +212,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
@@ -259,9 +259,9 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </Card>
       </div>
 
-      {/* Charts Section */}
+      
       <div className="grid gap-6 md:grid-cols-2">
-        {/* By Category */}
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -299,7 +299,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
           </CardContent>
         </Card>
 
-        {/* By Month */}
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -342,7 +342,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </Card>
       </div>
 
-      {/* Top Expenses Table */}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -394,7 +394,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </CardContent>
       </Card>
 
-      {/* By Employee (Admin only) */}
+      
       {isAdmin && byEmployee.length > 0 && (
         <Card>
           <CardHeader>

@@ -108,7 +108,7 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
                              Reject
                          </Button>
                          <Button 
-                            variant="default" // green-ish usually better but default is black/primary
+                            variant="default"
                             className="bg-green-600 hover:bg-green-700"
                             size="sm"
                             disabled={processingId === req.id}

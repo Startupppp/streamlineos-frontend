@@ -28,7 +28,6 @@ export default function SettingsPage() {
     onSuccess: async () => {
       await updateSession({});
       toast.success("Profile photo updated successfully");
-      // Keep preview visible briefly while session state propagates
       setTimeout(() => setPreviewUrl(null), 1000);
     },
     onError: (err) => {
@@ -147,7 +146,6 @@ export default function SettingsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Profile Tab */}
         <TabsContent value="profile">
           <Card className="border-border">
             <CardHeader>
@@ -251,7 +249,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Appearance Tab */}
         <TabsContent value="appearance">
           <Card className="border-border">
             <CardHeader>
@@ -281,7 +278,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
         <TabsContent value="notifications">
           <Card className="border-border">
             <CardHeader>
@@ -320,7 +316,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Security Tab */}
         <TabsContent value="security">
           <Card className="border-border">
             <CardHeader>

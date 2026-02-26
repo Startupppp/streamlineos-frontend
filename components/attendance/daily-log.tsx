@@ -16,8 +16,6 @@ export function DailyLog() {
   const log = data?.todayLog;
   const breaks = (log?.breaks as { start: string; end?: string }[]) || [];
   const dailyStats = data?.dailyStats;
-
-  // Calculate durations for display (Using Daily Totals)
   const workDuration = dailyStats?.workHours || "0.00";
   const breakDuration = dailyStats?.breakHours || "0.00";
   const overtimeDuration = dailyStats?.isOvertime
@@ -26,7 +24,7 @@ export function DailyLog() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-card border-border">
           <CardHeader className="pb-2">
@@ -72,7 +70,7 @@ export function DailyLog() {
         </Card>
       </div>
 
-      {/* Detailed Timeline / Logs */}
+      
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="text-foreground text-lg">
@@ -80,10 +78,10 @@ export function DailyLog() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Visual Timeline Bar (Simulated) */}
+          
           <div className="relative h-4 bg-muted rounded-full mb-8 overflow-hidden">
-            {/* Just a progress bar for now representing current time progress in a 12h shift? */}
-            {/* This is complex to do accurately without proper start/end scales. omitting dependent on complexity pref */}
+            
+            
           </div>
 
           <div className="space-y-4">

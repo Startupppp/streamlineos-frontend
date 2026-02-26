@@ -43,8 +43,6 @@ export function BurndownChart({ sprintId }: BurndownChartProps) {
   const paddingTop = 10;
   const paddingBottom = 30;
   const plotHeight = chartHeight - paddingTop - paddingBottom;
-
-  // Y-axis labels (deduplicated to avoid duplicate React keys when maxPoints is small)
   const yTicks = [...new Set([0, Math.round(maxPoints / 4), Math.round(maxPoints / 2), Math.round(3 * maxPoints / 4), maxPoints])];
 
   return (
@@ -70,7 +68,7 @@ export function BurndownChart({ sprintId }: BurndownChartProps) {
               </linearGradient>
             </defs>
 
-            {/* Grid lines */}
+            
             {yTicks.map((tick) => {
               const y = paddingTop + ((maxPoints - tick) / maxPoints) * plotHeight;
               return (
@@ -97,7 +95,7 @@ export function BurndownChart({ sprintId }: BurndownChartProps) {
               );
             })}
 
-            {/* Ideal burndown line */}
+            
             {idealBurndown.map((point, index) => {
               const len = idealBurndown.length - 1;
               if (index >= len) return null;
@@ -121,7 +119,7 @@ export function BurndownChart({ sprintId }: BurndownChartProps) {
               );
             })}
 
-            {/* Actual burndown */}
+            
             {actualBurndown.length > 0 && actualBurndown.map((point, index) => {
               const dateIndex = idealBurndown.findIndex(
                 (d) => format(d.date, "yyyy-MM-dd") === format(new Date(point.date), "yyyy-MM-dd")
@@ -181,7 +179,7 @@ export function BurndownChart({ sprintId }: BurndownChartProps) {
             })}
           </svg>
 
-          {/* Tooltip */}
+          
           {hoveredPoint && (
             <div
               className="fixed z-50 bg-popover border shadow-md rounded-md px-3 py-2 text-xs pointer-events-none"
@@ -192,7 +190,7 @@ export function BurndownChart({ sprintId }: BurndownChartProps) {
             </div>
           )}
 
-          {/* X-axis dates */}
+          
           <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-muted-foreground" style={{ paddingLeft: `${paddingLeft}px`, paddingRight: `${paddingRight}px` }}>
             {idealBurndown.map((point, index) => {
               if (index % Math.ceil(idealBurndown.length / 6) !== 0 && index !== idealBurndown.length - 1) return null;

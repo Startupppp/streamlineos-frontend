@@ -30,7 +30,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterAssignees, setFilterAssignees] = useState<Set<string>>(new Set());
 
-  // All hooks must be called before any conditional returns
   const allTickets = useMemo(() => {
     if (!data) return [];
     return (data.tickets || []).map((t) => ({
@@ -74,18 +73,14 @@ export default function ProjectBoardPage({ params }: PageProps) {
     try {
       const stored = localStorage.getItem(HIDE_COMPLETED_KEY);
       if (stored !== null) setHideCompleted(stored === "true");
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, []);
 
   const setHideCompletedAndStore = (value: boolean) => {
     setHideCompleted(value);
     try {
       localStorage.setItem(HIDE_COMPLETED_KEY, String(value));
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
 
   if (isLoading) {
@@ -128,17 +123,14 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   if (!data) return notFound();
 
-  // Get epics for card display
   const epics = allTickets.filter(t => t.type === "EPIC").map(t => ({ id: t.id, title: t.title }));
 
-  // Statuses from project
   const statuses = "statuses" in data
     ? (data.statuses as Array<{ id: number; name: string; color: string | null; order: number }>)
     : undefined;
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
-  // Apply filters
   let boardTickets = hideCompleted
     ? allTickets.filter((t) => t.status !== "DONE")
     : allTickets;
@@ -196,9 +188,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Filter bar */}
         <div className="flex items-center gap-2 mt-3 flex-wrap">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -210,7 +200,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
             />
           </div>
 
-          {/* Type filter buttons */}
           <div className="flex items-center gap-1">
             {typeButtons.map(({ type, icon: Icon, label, color }) => (
               <button
@@ -231,7 +220,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
             ))}
           </div>
 
-          {/* Assignee avatars */}
           {uniqueAssignees.length > 0 && (
             <div className="flex items-center gap-1 ml-1">
               {uniqueAssignees.slice(0, 8).map((a) => (
@@ -257,7 +245,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
             </div>
           )}
 
-          {/* Hide completed toggle */}
           <div className="flex items-center gap-2 ml-auto">
             {hasActiveFilters && (
               <button

@@ -47,7 +47,7 @@ export function ExpensePagination({
       </div>
 
       <div className="flex items-center gap-6">
-        {/* Page size selector */}
+        
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Rows per page:</span>
           <Select
@@ -66,12 +66,12 @@ export function ExpensePagination({
           </Select>
         </div>
 
-        {/* Page indicator */}
+        
         <div className="text-sm text-muted-foreground">
           Page {page} of {totalPages || 1}
         </div>
 
-        {/* Navigation buttons */}
+        
         <div className="flex items-center gap-1">
           <Button
             variant="outline"

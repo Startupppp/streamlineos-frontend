@@ -68,7 +68,6 @@ export default function MyPayslipsPage() {
             htmlEl.style.borderColor = '#e5e7eb';
           }
         });
-        // Also fix the root element itself
         const rootStyle = window.getComputedStyle(element);
         if (rootStyle.color && unsupportedColorPattern.test(rootStyle.color)) {
           element.style.color = '#1f2937';
@@ -213,7 +212,7 @@ export default function MyPayslipsPage() {
             className="bg-white p-8 rounded-lg shadow-lg max-w-3xl mx-auto relative overflow-hidden"
             style={{ fontFamily: "Arial, sans-serif" }}
           >
-            {/* Watermark */}
+            
             <div 
               data-watermark
               className="absolute pointer-events-none"
@@ -233,7 +232,7 @@ export default function MyPayslipsPage() {
             </div>
 
             <div className="relative" style={{ zIndex: 1 }}>
-              {/* Header */}
+              
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "8px" }}>
                 <div style={{ 
                   width: "64px", 

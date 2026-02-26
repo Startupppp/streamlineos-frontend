@@ -7,11 +7,6 @@ import { Loader2 } from "lucide-react";
 interface OrganizationGuardProps {
   children: React.ReactNode;
 }
-
-/**
- * Client-side guard that checks if user has an organization.
- * Redirects to /setup-organization if no org membership found.
- */
 export function OrganizationGuard({ children }: OrganizationGuardProps) {
   const [isChecking, setIsChecking] = useState(true);
   const [hasOrg, setHasOrg] = useState(false);
@@ -20,10 +15,8 @@ export function OrganizationGuard({ children }: OrganizationGuardProps) {
     const checkOrg = async () => {
       try {
         await checkUserHasOrganization();
-        // Always allow access, don't redirect to setup-organization
         setHasOrg(true);
       } catch {
-        // If check fails, allow access (fail open for better UX)
         setHasOrg(true);
       } finally {
         setIsChecking(false);

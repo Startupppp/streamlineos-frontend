@@ -31,22 +31,17 @@ export function ClockInWidget() {
   const checkOutMutation = useHrCheckOut({
     onSuccess: () => {
       toast.success("Clocked out successfully!");
-      // Start local cooldown timer (120 seconds = 2 minutes)
       setLocalCooldown(120);
     },
     onError: (err) => {
       toast.error(err.message);
     },
   });
-
-  // Initialize cooldown from server data
   useEffect(() => {
     if (statusData?.cooldownRemaining && statusData.cooldownRemaining > 0) {
       setLocalCooldown(statusData.cooldownRemaining);
     }
   }, [statusData?.cooldownRemaining]);
-
-  // Countdown timer for cooldown
   useEffect(() => {
     if (localCooldown > 0) {
       const timer = setTimeout(() => {

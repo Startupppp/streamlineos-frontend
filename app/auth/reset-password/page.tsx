@@ -52,11 +52,8 @@ export default function ResetPasswordPage() {
 
       if (result.success) {
         toast.success("Password updated successfully! Redirecting...");
-        // Update session to clear forceChangePassword flag
         await update({ forceChangePassword: false });
-        // Small delay to ensure session update propagates
         await new Promise(resolve => setTimeout(resolve, 300));
-        // Use router for navigation with refresh to ensure fresh server state
         router.push("/dashboard");
         router.refresh();
       } else {

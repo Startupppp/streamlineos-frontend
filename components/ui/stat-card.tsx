@@ -39,7 +39,7 @@ export function StatCard({
         animation: `fade-up 0.4s ease-out ${index * 0.1}s both`,
       }}
     >
-      {/* Gold accent bar */}
+      
       <div className="absolute left-0 top-0 bottom-0 w-[3px] gold-gradient" />
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">

@@ -76,12 +76,9 @@ export function NewProjectDialog() {
       toast.error(res.error || "Failed to create project");
     }
   }
-
-  // Auto-generate key from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const name = e.target.value;
       form.setValue("name", name);
-      // Generate key: First 3-4 letters of name, uppercase
       if (name) {
           const key = name.replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase();
           form.setValue("key", key);
@@ -127,7 +124,7 @@ export function NewProjectDialog() {
                     )}
                 />
                 
-                {/* Key is hidden but auto-generated */}
+                
                 <FormField
                     control={form.control}
                     name="key"

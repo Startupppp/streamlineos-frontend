@@ -38,8 +38,6 @@ export function ReceiptViewer({
     receiptUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) ||
     receiptUrl.includes("image");
   const isPDF = receiptUrl.match(/\.pdf$/i) || receiptUrl.includes("pdf");
-
-  // Fetch signed URL when dialog opens
   useEffect(() => {
     if (open && !signedUrl) {
       setLoadingUrl(true);
@@ -50,7 +48,6 @@ export function ReceiptViewer({
           setLoadingUrl(false);
         })
         .catch(() => {
-          // Try the download API as a proxy fallback
           fetch(`/api/storage/download?url=${encodeURIComponent(receiptUrl)}`)
             .then((r) => (r.ok ? r.json() : Promise.reject()))
             .then((data: { url: string }) => {

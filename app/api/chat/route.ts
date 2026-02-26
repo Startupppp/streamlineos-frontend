@@ -11,8 +11,6 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return new Response("Unauthorized", { status: 401 });
     }
-
-    // Get orgId from session or context - for now using userId as fallback
     const orgId = (session as { orgId?: string }).orgId || session.user.id;
     const result = await processChatWithGraph(messages, session.user.id, orgId);
     return result.toTextStreamResponse();

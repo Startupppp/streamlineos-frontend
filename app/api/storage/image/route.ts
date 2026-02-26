@@ -47,8 +47,6 @@ export async function GET(req: NextRequest) {
     if (!key) {
       return new NextResponse("Missing key parameter", { status: 400 });
     }
-
-    // Try R2 first
     if (isStorageConfigured()) {
       try {
         const { body, contentType } = await getFileStream(key);
@@ -60,11 +58,8 @@ export async function GET(req: NextRequest) {
           },
         });
       } catch {
-        // R2 failed — fall through to local
       }
     }
-
-    // Fallback: local filesystem
     const localPath = resolveLocalPath(key);
     if (localPath) {
       const buffer = await readFile(localPath);

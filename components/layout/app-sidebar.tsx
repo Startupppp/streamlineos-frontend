@@ -150,15 +150,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
   const { data: projects = [], isLoading: projectsLoading } = useProjects();
   
   const role = session?.user?.role;
-  
-  // Extract project ID from pathname if we're in a project route
   const currentProjectId = pathname?.match(/\/projects\/(\d+)/)?.[1];
-
-  // Build nav groups based on role
-  // QR Codes is OWNER-only, so we need to filter it
   let navGroups = role === "OWNER" || role === "ADMIN" ? adminNavGroups : employeeNavGroups;
-  
-  // If user is ADMIN (not OWNER), remove QR Codes from nav
   if (role === "ADMIN") {
     navGroups = adminNavGroups.map(group => ({
       ...group,
@@ -230,7 +223,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
 
   return (
     <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
-      {/* Logo */}
+      
       <div className="px-4 py-4 relative">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="relative w-8 h-8 bg-card rounded-lg border border-gold/20 flex items-center justify-center overflow-hidden shadow-noir shrink-0">
@@ -264,7 +257,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
         )}
       </div>
 
-      {/* Organization Switcher */}
+      
       {organizations && organizations.length > 0 && !isCollapsed && (
         <div className="px-4 mb-4">
           <DropdownMenu>
@@ -299,10 +292,10 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
         </div>
       )}
 
-      {/* Decorative gold separator */}
+      
       <div className="mx-4 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
 
-      {/* Navigation Groups */}
+      
       <ScrollArea className="flex-1">
         <nav className={cn("pb-4 pt-2", isCollapsed ? "px-2" : "px-3")}>
           {navGroups.map((group, groupIndex) => (
@@ -332,7 +325,6 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                   const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
                   
                   if (isProjectsRoute) {
-                    // Simple link to projects page (no dropdown)
                     return (
                       <Link
                         key={route.href}
@@ -355,8 +347,6 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                       </Link>
                     );
                   }
-                  
-                  // Regular route item (not projects)
                   return (
                     <Link
                       key={route.href}
@@ -401,7 +391,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
         </nav>
       </ScrollArea>
 
-      {/* User Section */}
+      
       <div className={cn("py-4 border-t border-sidebar-border", isCollapsed ? "px-2" : "px-3")}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

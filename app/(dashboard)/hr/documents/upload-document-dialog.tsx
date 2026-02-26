@@ -252,7 +252,7 @@ export function UploadDocumentDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/* File Upload */}
+            
             {!file ? (
               <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg p-8 cursor-pointer hover:border-violet-400 hover:bg-violet-50/50 transition-colors">
                 <Upload className="h-10 w-10 text-slate-400 mb-3" />
@@ -453,7 +453,7 @@ export function UploadDocumentDialog({
               )}
             />
 
-            {/* Tags */}
+            
             <div className="space-y-2">
               <label className="text-sm font-medium">Tags</label>
               <div className="flex gap-2">
@@ -490,7 +490,7 @@ export function UploadDocumentDialog({
               )}
             </div>
 
-            {/* Public/Private Toggle */}
+            
             <FormField
               control={form.control}
               name="isPublic"

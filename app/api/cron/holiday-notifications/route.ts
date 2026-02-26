@@ -1,26 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendHolidayNotifications } from "@/server/actions/holiday-actions";
-
-/**
- * Cron endpoint to send holiday notifications
- * Should be triggered daily at 12:00 PM
- * 
- * Setup in Vercel:
- * - Add this to vercel.json:
- * {
- *   "crons": [{
- *     "path": "/api/cron/holiday-notifications",
- *     "schedule": "0 12 * * *"
- *   }]
- * }
- * 
- * Or use external cron service (like cron-job.org or EasyCron):
- * - URL: https://your-domain.com/api/cron/holiday-notifications
- * - Schedule: Every day at 12:00 PM
- * - Add CRON_SECRET to .env and send as Authorization header
- */
 export async function GET(request: NextRequest) {
-  // Verify cron secret (security)
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
@@ -51,13 +31,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-// Allow POST for manual triggering
 export async function POST(request: NextRequest) {
   return GET(request);
 }
-
-
-
-
 

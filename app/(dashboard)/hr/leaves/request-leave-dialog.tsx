@@ -28,7 +28,7 @@ import { useState } from "react";
 import { Loader2, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar"; // Assuming shadcn calendar
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -42,7 +42,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 
 const formSchema = z.object({
   leaveTypeId: z.string().min(1, "Leave type is required"),
@@ -62,7 +61,6 @@ interface RequestLeaveDialogProps {
 export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialogProps) {
     const [open, setOpen] = useState(false);
     const router = useRouter();
-
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),

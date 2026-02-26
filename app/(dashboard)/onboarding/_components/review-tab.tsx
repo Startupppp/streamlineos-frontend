@@ -22,8 +22,6 @@ interface ReviewTabProps {
 
 export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: ReviewTabProps) {
   const router = useRouter();
-
-  // Show all steps except the review step itself
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
 

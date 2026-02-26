@@ -135,8 +135,6 @@ export function TicketDetailsDialog({
   const [commentText, setCommentText] = useState("");
   const [saving, setSaving] = useState(false);
   const [subtaskTitle, setSubtaskTitle] = useState("");
-
-  // Local editable state for debounced fields
   const [localTitle, setLocalTitle] = useState("");
   const [localDescription, setLocalDescription] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -213,15 +211,11 @@ export function TicketDetailsDialog({
     },
     onError: (error) => toast.error(error.message || "Failed to create subtask"),
   });
-
-  // Auto-save helper: immediately save a field
   const autoSave = useCallback((field: Record<string, unknown>) => {
     if (!ticketId) return;
     setSaving(true);
     updateTicketMutation.mutate({ ticketId, ...field });
   }, [ticketId, updateTicketMutation]);
-
-  // Debounced save for text fields
   const debouncedSave = useCallback((field: Record<string, unknown>) => {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     setSaving(true);
@@ -230,16 +224,12 @@ export function TicketDetailsDialog({
       updateTicketMutation.mutate({ ticketId, ...field });
     }, 500);
   }, [ticketId, updateTicketMutation]);
-
-  // Sync local state when ticket data loads
   useEffect(() => {
     if (ticket) {
       setLocalTitle(ticket.title);
       setLocalDescription(ticket.description || "");
     }
   }, [ticket]);
-
-  // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -264,7 +254,6 @@ export function TicketDetailsDialog({
   const handleToggleSubtask = (subtaskId: number, currentStatus: string | null) => {
     const newStatus = currentStatus === "DONE" ? "TODO" : "DONE";
     updateTicketMutation.mutate({ ticketId: subtaskId, status: newStatus });
-    // Also refresh subtasks list
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: [...vaivammKeys.project.all, "subtasks", { parentTicketId: ticketId }] });
     }, 300);
@@ -273,14 +262,10 @@ export function TicketDetailsDialog({
   const currentPriority = (ticket?.priority as keyof typeof priorityConfig) || "MEDIUM";
   const currentStatus = ticket?.status || "TODO";
   const statusDisplay = statusConfig[currentStatus] || { label: currentStatus, color: "bg-slate-100 text-slate-700" };
-
-  // Subtask progress
   const subtaskList = subtasks || [];
   const subtasksDone = subtaskList.filter((s) => s.status === "DONE").length;
   const subtasksTotal = subtaskList.length;
   const subtaskProgress = subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
-
-  // Time tracking display
   const timeSpent = ticket?.timeSpent ? parseFloat(ticket.timeSpent) : 0;
   const originalEstimate = ticket?.originalEstimate ? parseFloat(ticket.originalEstimate) : 0;
   const timeProgress = originalEstimate > 0 ? Math.min((timeSpent / originalEstimate) * 100, 100) : 0;
@@ -291,7 +276,7 @@ export function TicketDetailsDialog({
         side="right"
         className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-hidden p-0"
       >
-        {/* Header */}
+        
         <div className="border-b bg-gradient-to-r from-primary/5 via-transparent to-transparent px-6 py-4">
           <SheetHeader>
             <div className="flex items-start justify-between gap-4">
@@ -361,7 +346,7 @@ export function TicketDetailsDialog({
           </SheetHeader>
         </div>
 
-        {/* Content */}
+        
         <div className="overflow-y-auto h-[calc(100vh-120px)]">
           {isLoading ? (
             <div className="py-16 text-center">
@@ -370,9 +355,9 @@ export function TicketDetailsDialog({
             </div>
           ) : ticket ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-              {/* Main Content - Left Side */}
+              
               <div className="lg:col-span-2 p-4 sm:p-6 space-y-6 border-r">
-                {/* Title - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Title</label>
                   <Input
@@ -385,7 +370,7 @@ export function TicketDetailsDialog({
                   />
                 </div>
 
-                {/* Description - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Description</label>
                   <Textarea
@@ -399,7 +384,7 @@ export function TicketDetailsDialog({
                   />
                 </div>
 
-                {/* Subtasks section */}
+                
                 <div className="pt-2">
                   <div className="flex items-center gap-2 mb-3">
                     <ListChecks className="h-4 w-4 text-primary" />
@@ -446,7 +431,7 @@ export function TicketDetailsDialog({
                   </div>
                 </div>
 
-                {/* Attachments */}
+                
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div>
                     <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-3">Attachments</h4>
@@ -474,7 +459,7 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                {/* Comments Section */}
+                
                 <div className="pt-6 border-t">
                   <div className="flex items-center gap-2 mb-4">
                     <MessageSquare className="h-4 w-4 text-primary" />
@@ -547,9 +532,9 @@ export function TicketDetailsDialog({
                 </div>
               </div>
 
-              {/* Sidebar - Right Side */}
+              
               <div className="p-4 sm:p-6 bg-muted/20 space-y-4">
-                {/* Status - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Status</label>
                   <Select value={ticket.status || "TODO"} onValueChange={(value) => autoSave({ status: value })}>
@@ -571,7 +556,7 @@ export function TicketDetailsDialog({
                   </Select>
                 </div>
 
-                {/* Priority - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Priority</label>
                   <Select value={ticket.priority || "MEDIUM"} onValueChange={(value) => autoSave({ priority: value })}>
@@ -587,7 +572,7 @@ export function TicketDetailsDialog({
                   </Select>
                 </div>
 
-                {/* Type - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Type</label>
                   <Select value={ticket.type || "TASK"} onValueChange={(value) => autoSave({ type: value })}>
@@ -603,7 +588,7 @@ export function TicketDetailsDialog({
                   </Select>
                 </div>
 
-                {/* Assignee - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Assignee</label>
                   <Select
@@ -646,7 +631,7 @@ export function TicketDetailsDialog({
                   </Select>
                 </div>
 
-                {/* Sprint - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5 flex items-center gap-1">
                     <Target className="h-3 w-3" /> Sprint
@@ -669,7 +654,7 @@ export function TicketDetailsDialog({
                   </Select>
                 </div>
 
-                {/* Epic - auto-save (epics are tickets with type=EPIC in same project) */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5 flex items-center gap-1">
                     <Zap className="h-3 w-3" /> Epic
@@ -683,12 +668,12 @@ export function TicketDetailsDialog({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">No epic</SelectItem>
-                      {/* We'll use ticket's own project data to find epics - passed through via query */}
+                      
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Story Points - auto-save */}
+                
                 <div>
                   <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Story Points</label>
                   <Input
@@ -704,7 +689,7 @@ export function TicketDetailsDialog({
                   />
                 </div>
 
-                {/* Time Tracking (read-only) */}
+                
                 {(timeSpent > 0 || originalEstimate > 0) && (
                   <div className="rounded-lg border bg-background p-4 space-y-2">
                     <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -721,13 +706,13 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                {/* Labels */}
+                
                 <LabelPicker
                   ticketId={ticketId!}
                   currentLabels={ticket.labels || []}
                 />
 
-                {/* Link Card */}
+                
                 {ticket.link && (
                   <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 p-4">
                     <div className="flex items-center gap-2 text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-2">
@@ -746,7 +731,7 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                {/* Created By Card */}
+                
                 <div className="rounded-lg border bg-background p-4">
                   <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                     <User className="h-3.5 w-3.5" />
@@ -774,7 +759,7 @@ export function TicketDetailsDialog({
                   )}
                 </div>
 
-                {/* Timestamps */}
+                
                 <div className="rounded-lg border bg-background p-4 space-y-2">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />

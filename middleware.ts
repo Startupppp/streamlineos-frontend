@@ -33,13 +33,9 @@ function startsWithAny(pathname: string, routes: string[]): boolean {
 
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
-
-  // Skip API routes
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
-
-  // Get token - NextAuth v5 uses authjs prefix
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -50,16 +46,12 @@ export default async function middleware(req: NextRequest) {
   });
 
   const isAuthenticated = !!token;
-
-  // Unauthenticated users cannot access protected routes
   if (!isAuthenticated && startsWithAny(pathname, PROTECTED_ROUTES)) {
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
-
-  // Authenticated users should not see auth pages (except allowed ones)
   if (
     isAuthenticated &&
     startsWithAny(pathname, AUTH_ROUTES) &&
@@ -72,8 +64,6 @@ export default async function middleware(req: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-
-  // Inactive users get signed out
   if (
     isAuthenticated &&
     token?.isActive === false &&
@@ -84,8 +74,6 @@ export default async function middleware(req: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-
-  // Force password change
   if (
     isAuthenticated &&
     token?.forceChangePassword &&
@@ -98,8 +86,6 @@ export default async function middleware(req: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-
-  // Already on reset-password but don't need to change password
   if (
     isAuthenticated &&
     pathname.startsWith("/auth/reset-password") &&

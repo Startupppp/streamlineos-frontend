@@ -12,8 +12,6 @@ export async function GET(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // Get orgId from session or context - for now using userId as fallback
     const orgId = (session as { orgId?: string }).orgId || session.user.id;
 
     const searchParams = req.nextUrl.searchParams;

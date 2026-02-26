@@ -9,8 +9,7 @@ interface RouteErrorBoundaryProps {
   reset: () => void;
   title?: string;
   fallbackMessage?: string;
-  /** "fullscreen" for standalone pages, "centered" for dashboard sub-pages, "inline" (default) for standard routes */
-  layout?: "centered" | "inline" | "fullscreen";
+layout?: "centered" | "inline" | "fullscreen";
 }
 
 export function RouteErrorBoundary({
@@ -23,8 +22,6 @@ export function RouteErrorBoundary({
   useEffect(() => {
     console.error(error);
   }, [error]);
-
-  // In production, server errors include a digest — never expose raw messages for those.
   const displayMessage = error.digest
     ? fallbackMessage
     : (typeof error.message === "string" && error.message.length > 0 ? error.message : fallbackMessage);

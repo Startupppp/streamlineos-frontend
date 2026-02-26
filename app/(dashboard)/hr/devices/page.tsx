@@ -402,7 +402,7 @@ export default function DevicesPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
+      
       <AlertDialog open={deleteDeviceId !== null} onOpenChange={(open) => { if (!open) setDeleteDeviceId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

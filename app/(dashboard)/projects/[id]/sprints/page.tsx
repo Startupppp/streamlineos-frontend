@@ -95,7 +95,6 @@ export default function SprintsPage({ params }: PageProps) {
     const incompleteTickets = (sprint.tickets || []).filter(t => t.status !== "DONE");
     const nextSprint = sprints?.find(s => s.status === "PLANNED");
 
-    // Move incomplete tickets
     const targetSprintId = moveToOption === "backlog" ? undefined :
       moveToOption === "next" && nextSprint ? nextSprint.id : undefined;
     const promises = incompleteTickets.map(ticket =>
@@ -115,7 +114,6 @@ export default function SprintsPage({ params }: PageProps) {
       });
   }
 
-  // Sprint planning drag handler
   function handlePlanningDragEnd(result: DropResult) {
     const { destination, source, draggableId } = result;
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) return;
@@ -143,7 +141,6 @@ export default function SprintsPage({ params }: PageProps) {
   const plannedSprints = sprints?.filter(s => s.status === "PLANNED") || [];
   const completedSprints = sprints?.filter(s => s.status === "COMPLETED") || [];
 
-  // Backlog tickets (not in any sprint)
   const allTickets = project?.tickets || [];
   const backlogTickets = allTickets.filter(t => !t.sprintId && t.type !== "EPIC");
 
@@ -171,7 +168,6 @@ export default function SprintsPage({ params }: PageProps) {
         <CreateSprintDialog projectId={projectId} />
       </div>
 
-      {/* Sprint Planning Mode */}
       {planningSprintId && planningSprint && (
         <Card className="border-primary/50">
           <CardHeader className="pb-2">
@@ -188,7 +184,6 @@ export default function SprintsPage({ params }: PageProps) {
           <CardContent>
             <DragDropContext onDragEnd={handlePlanningDragEnd}>
               <div className="grid grid-cols-2 gap-4">
-                {/* Backlog */}
                 <div>
                   <h4 className="text-sm font-semibold mb-2">Backlog ({backlogTickets.length})</h4>
                   <Droppable droppableId="backlog">
@@ -226,7 +221,6 @@ export default function SprintsPage({ params }: PageProps) {
                     )}
                   </Droppable>
                 </div>
-                {/* Sprint */}
                 <div>
                   <h4 className="text-sm font-semibold mb-2">{planningSprint.name} ({(planningSprint.tickets || []).length})</h4>
                   <Droppable droppableId={planningSprint.id.toString()}>
@@ -270,7 +264,6 @@ export default function SprintsPage({ params }: PageProps) {
         </Card>
       )}
 
-      {/* Active Sprints */}
       {activeSprints.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -294,7 +287,6 @@ export default function SprintsPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Planned Sprints */}
       {plannedSprints.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -316,12 +308,10 @@ export default function SprintsPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Velocity Chart */}
       {completedSprints.length > 0 && (
         <VelocityChart sprints={completedSprints} />
       )}
 
-      {/* Completed Sprints */}
       {completedSprints.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -341,7 +331,6 @@ export default function SprintsPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Empty State */}
       {sprints?.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -355,7 +344,6 @@ export default function SprintsPage({ params }: PageProps) {
         </Card>
       )}
 
-      {/* Sprint Completion Dialog */}
       <Dialog open={!!completionSprintId} onOpenChange={(open) => !open && setCompletionSprintId(null)}>
         <DialogContent>
           <DialogHeader>

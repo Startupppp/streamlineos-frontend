@@ -69,14 +69,10 @@ export default function PayrollPage() {
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
-  
-  // Deduction inputs
   const [lopDays, setLopDays] = useState<string>("");
   const [halfDays, setHalfDays] = useState<string>("");
   const [otherDeductions, setOtherDeductions] = useState<string>("");
   const [bonus, setBonus] = useState<string>("");
-
-  // Overtime inputs
   const [overtimeType, setOvertimeType] = useState<string>("");
   const [overtimeDays, setOvertimeDays] = useState<string>("");
   const [overtimeHours, setOvertimeHours] = useState<string>("");
@@ -91,20 +87,14 @@ export default function PayrollPage() {
     if (!selectedEmployee || !employees) return null;
     return employees.find(e => e.id === selectedEmployee);
   }, [selectedEmployee, employees]);
-
-  // Calculate payslip preview
   const payslipPreview = useMemo(() => {
     if (!selectedEmployeeData) return null;
     
     const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
     const workingDays = 30;
     const perDaySalary = monthlySalary / workingDays;
-    
-    // Calculate deductions
     const lopDeduction = (parseFloat(lopDays) || 0) * perDaySalary;
     const halfDayDeduction = ((parseFloat(halfDays) || 0) * perDaySalary) / 2;
-    
-    // Basic structure: 50% Basic, 50% HRA
     const basicPay = monthlySalary * 0.5;
     const hra = monthlySalary * 0.5;
     const professionalTax = 200;
@@ -282,7 +272,7 @@ export default function PayrollPage() {
                 </div>
                 {!showPreview ? (
                   <div className="space-y-6 pt-4">
-                    {/* Employee Selection */}
+                    
                     <div className="space-y-2">
                       <Label>Select Employee</Label>
                       <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
@@ -303,7 +293,7 @@ export default function PayrollPage() {
                       <>
                         <Separator />
                         
-                        {/* Attendance Adjustments */}
+                        
                         <div className="space-y-4">
                           <h4 className="font-medium text-sm text-muted-foreground">Attendance Adjustments</h4>
                           <div className="grid grid-cols-2 gap-4">
@@ -336,7 +326,7 @@ export default function PayrollPage() {
 
                         <Separator />
 
-                        {/* Additional Adjustments */}
+                        
                         <div className="space-y-4">
                           <h4 className="font-medium text-sm text-muted-foreground">Additional Adjustments</h4>
                           <div className="grid grid-cols-2 gap-4">
@@ -367,7 +357,7 @@ export default function PayrollPage() {
 
                         <Separator />
 
-                        {/* Overtime */}
+                        
                         <div className="space-y-4">
                           <h4 className="font-medium text-sm text-muted-foreground">Overtime</h4>
                           <div className="grid grid-cols-2 gap-4">
@@ -439,7 +429,7 @@ export default function PayrollPage() {
                   </div>
                 ) : (
                   <div className="space-y-6 pt-4">
-                    {/* Preview Card */}
+                    
                     <Card className="border-2">
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
@@ -457,7 +447,7 @@ export default function PayrollPage() {
                         </div>
             </CardHeader>
                       <CardContent className="space-y-4">
-                        {/* Earnings */}
+                        
                 <div>
                           <h4 className="font-semibold text-sm mb-2 text-green-700">Earnings</h4>
                           <div className="space-y-1 text-sm">
@@ -496,7 +486,7 @@ export default function PayrollPage() {
                           </div>
                 </div>
 
-                        {/* Deductions */}
+                        
                 <div>
                           <h4 className="font-semibold text-sm mb-2 text-red-700">Deductions</h4>
                           <div className="space-y-1 text-sm">
@@ -536,7 +526,7 @@ export default function PayrollPage() {
 
                         <Separator />
 
-                        {/* Net Salary */}
+                        
                         <div className="flex justify-between items-center pt-2">
                           <span className="text-lg font-bold">Net Salary</span>
                           <span className="text-2xl font-bold text-green-600">
@@ -544,7 +534,7 @@ export default function PayrollPage() {
                           </span>
                         </div>
 
-                        {/* Working Days Info */}
+                        
                         <div className="bg-muted/50 rounded-lg p-3 text-sm">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Working Days</span>
