@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { cn, resolveImageUrl } from "../../lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { MoreHorizontal, Plus } from "lucide-react";
 import {
   useUpdateTicketOrder,
   useCreateTicket,
   vaivammKeys
-} from "../../lib/hooks/trpc-hooks";
+} from "@/lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,7 +32,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 
 const TicketTypeIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -376,6 +376,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                       <Button
                                                         variant="ghost"
                                                         className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                                        aria-label={`Actions for ${ticket.title}`}
                                                       >
                                                           <MoreHorizontal className="h-4 w-4" />
                                                       </Button>

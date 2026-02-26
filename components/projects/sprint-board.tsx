@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Calendar, Target, CheckCircle2 } from "lucide-react";
-import { useSprints } from "../../lib/hooks/trpc-hooks";
+import { useSprints } from "@/lib/hooks/trpc-hooks";
 import { format } from "date-fns";
 import { KanbanBoard } from "./kanban-board";
 import { motion } from "framer-motion";

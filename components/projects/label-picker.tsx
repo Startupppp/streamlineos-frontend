@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "../ui/popover";
+} from "@/components/ui/popover";
 import { Plus, X, Tag } from "lucide-react";
 import {
   useLabels,
@@ -16,7 +16,7 @@ import {
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
   vaivammKeys,
-} from "../../lib/hooks/trpc-hooks";
+} from "@/lib/hooks/trpc-hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 

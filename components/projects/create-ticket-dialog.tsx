@@ -8,15 +8,15 @@ import {
   useAddAttachment,
   useProject,
   vaivammKeys,
-} from "../../lib/hooks/trpc-hooks";
-import { Button } from "../ui/button";
+} from "@/lib/hooks/trpc-hooks";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -24,23 +24,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form";
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, Upload, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
-import { createTicketInputSchema } from "../../lib/validations/project";
+import { createTicketInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { resolveImageUrl } from "../../lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 
 const formSchema = createTicketInputSchema.omit({ projectId: true });
 
@@ -73,7 +73,9 @@ export function CreateTicketDialog({
   })) || [];
   
   // Include project manager if not already in members list
-  const manager = (projectData as any)?.manager;
+  const manager = projectData && "manager" in projectData
+    ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
+    : undefined;
   const members = manager && !projectMembersList.some(m => m.id === manager.id)
     ? [
         {

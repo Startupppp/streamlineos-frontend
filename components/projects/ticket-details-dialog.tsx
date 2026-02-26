@@ -11,25 +11,25 @@ import {
   useSubtasks,
   useCreateTicket,
   vaivammKeys,
-} from "../../lib/hooks/trpc-hooks";
-import { Button } from "../ui/button";
+} from "@/lib/hooks/trpc-hooks";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "../ui/sheet";
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Badge } from "../ui/badge";
-import { Checkbox } from "../ui/checkbox";
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Trash2,
   Link as LinkIcon,
@@ -51,17 +51,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { resolveImageUrl } from "../../lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "../ui/popover";
+} from "@/components/ui/popover";
 import { viewFile, getSignedFileUrl } from "@/hooks/use-file-url";
 import { LabelPicker } from "./label-picker";
-import { Progress } from "../ui/progress";
+import { Progress } from "@/components/ui/progress";
 
 function AttachmentImage({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -96,7 +96,7 @@ function AttachmentImage({ fileUrl, fileName }: { fileUrl: string; fileName: str
       src={imageSrc || fileUrl}
       alt={fileName}
       className="object-cover w-full h-full"
-      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+      onError={(e) => { if (e.target instanceof HTMLImageElement) e.target.style.display = 'none'; }}
     />
   );
 }
@@ -147,7 +147,7 @@ export function TicketDetailsDialog({
 
   const members = (() => {
     if (!projectData?.members) return [];
-    const list = projectData.members.map((m: any) => ({
+    const list = projectData.members.map((m) => ({
       id: m.user.id,
       name: m.user.name || `${m.user.firstName || ""} ${m.user.lastName || ""}`.trim(),
       firstName: m.user.firstName || undefined,
@@ -155,15 +155,17 @@ export function TicketDetailsDialog({
       image: m.user.image || null,
       email: m.user.email,
     }));
-    const manager = (projectData as any)?.manager;
-    if (manager && !list.some((m: any) => m.id === manager.id)) {
+    const mgr = "manager" in projectData
+      ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
+      : undefined;
+    if (mgr && !list.some((m) => m.id === mgr.id)) {
       list.unshift({
-        id: manager.id,
-        name: manager.name || `${manager.firstName || ""} ${manager.lastName || ""}`.trim(),
-        firstName: manager.firstName || undefined,
-        lastName: manager.lastName || undefined,
-        image: manager.image || null,
-        email: manager.email || "",
+        id: mgr.id,
+        name: mgr.name || `${mgr.firstName || ""} ${mgr.lastName || ""}`.trim(),
+        firstName: mgr.firstName || undefined,
+        lastName: mgr.lastName || undefined,
+        image: mgr.image || null,
+        email: mgr.email || "",
       });
     }
     return list;

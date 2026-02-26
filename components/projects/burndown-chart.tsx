@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { useSprintBurndown } from "../../lib/hooks/trpc-hooks";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSprintBurndown } from "@/lib/hooks/trpc-hooks";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { TrendingDown } from "lucide-react";
