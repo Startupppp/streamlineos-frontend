@@ -49,6 +49,55 @@ export const calcPercent = (value: number, total: number, decimals = 1): string 
   return ((value / total) * 100).toFixed(decimals);
 };
 
+/**
+ * Format a number as Indian Rupees (₹).
+ * Handles string | number input; returns "₹0" for NaN.
+ */
+export function formatINR(amount: string | number): string {
+  const num = Number(amount);
+  if (Number.isNaN(num)) return "₹0";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+/**
+ * Convert a number to Indian-English words (supports up to Crores).
+ */
+export function numberToWords(num: number): string {
+  const ones = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen",
+  ];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+  if (num === 0) return "Zero";
+
+  const convertLessThanThousand = (n: number): string => {
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+    return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " and " + convertLessThanThousand(n % 100) : "");
+  };
+
+  if (num < 1000) return convertLessThanThousand(num);
+  if (num < 100000) {
+    const thousands = Math.floor(num / 1000);
+    const remainder = num % 1000;
+    return convertLessThanThousand(thousands) + " Thousand" + (remainder ? " " + convertLessThanThousand(remainder) : "");
+  }
+  if (num < 10000000) {
+    const lakhs = Math.floor(num / 100000);
+    const remainder = num % 100000;
+    return convertLessThanThousand(lakhs) + " Lakh" + (remainder ? " " + numberToWords(remainder) : "");
+  }
+  const crores = Math.floor(num / 10000000);
+  const remainder = num % 10000000;
+  return convertLessThanThousand(crores) + " Crore" + (remainder ? " " + numberToWords(remainder) : "");
+}
+
 const GREETING_AFTERNOON_HOUR = 12;
 const GREETING_EVENING_HOUR = 17;
 

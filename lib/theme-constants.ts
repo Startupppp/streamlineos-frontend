@@ -99,6 +99,91 @@ export const sparkColors = {
   amber: "#F59E0B",
 } as const;
 
+// ─── HR Module Shared Color Maps ────────────────────────────────────────────
+
+export type LeaveStatus = "APPROVED" | "REJECTED" | "PENDING";
+export type PayrollStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "PAID";
+export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
+export type DeviceStatus = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
+
+export const leaveStatusColors: Record<LeaveStatus, string> = {
+  APPROVED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  REJECTED: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800",
+  PENDING: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+};
+
+export const payrollStatusColors: Record<PayrollStatus, string> = {
+  DRAFT: "bg-gray-500/10 text-gray-700 border-gray-200",
+  PENDING_APPROVAL: "bg-yellow-500/10 text-yellow-700 border-yellow-200",
+  APPROVED: "bg-blue-500/10 text-blue-700 border-blue-200",
+  PAID: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+};
+
+export const expenseStatusColors: Record<ExpenseStatus, string> = {
+  PENDING: "bg-amber-100 text-amber-800 border-amber-200",
+  APPROVED: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  REJECTED: "bg-red-100 text-red-800 border-red-200",
+  PAID: "bg-blue-100 text-blue-800 border-blue-200",
+};
+
+export const deviceStatusColors: Record<DeviceStatus, string> = {
+  ACTIVE: "bg-green-500/10 text-green-700 border-green-200",
+  INACTIVE: "bg-gray-500/10 text-gray-700 border-gray-200",
+  LOST: "bg-red-500/10 text-red-700 border-red-200",
+  RETURNED: "bg-blue-500/10 text-blue-700 border-blue-200",
+};
+
+export type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
+
+const VALID_DOCUMENT_TYPES: ReadonlySet<string> = new Set([
+  "CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER",
+]);
+
+export function isDocumentType(value: unknown): value is DocumentType {
+  return typeof value === "string" && VALID_DOCUMENT_TYPES.has(value);
+}
+
+const VALID_DEVICE_STATUSES: ReadonlySet<string> = new Set(["ACTIVE", "INACTIVE", "LOST", "RETURNED"]);
+
+export function isDeviceStatus(value: unknown): value is DeviceStatus {
+  return typeof value === "string" && VALID_DEVICE_STATUSES.has(value);
+}
+
+export const documentTypeColors: Record<string, string> = {
+  CONTRACT: "bg-blue-100 text-blue-800 border-blue-200",
+  CERTIFICATE: "bg-purple-100 text-purple-800 border-purple-200",
+  ID_PROOF: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  PAYSLIP: "bg-amber-100 text-amber-800 border-amber-200",
+  POLICY: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  OFFER_LETTER: "bg-teal-100 text-teal-800 border-teal-200",
+  RESUME: "bg-pink-100 text-pink-800 border-pink-200",
+  OTHER: "bg-slate-100 text-slate-800 border-slate-200",
+};
+
+// ─── CRM Shared Color Maps ─────────────────────────────────────────────────
+
+export type HealthStatus = "healthy" | "at_risk" | "critical";
+
+export const healthStatusColors: Record<HealthStatus, string> = {
+  healthy: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  at_risk: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  critical: "bg-red-500/10 text-red-700 dark:text-red-400",
+};
+
+export const healthDotColors: Record<HealthStatus, string> = {
+  healthy: "bg-emerald-500",
+  at_risk: "bg-amber-500",
+  critical: "bg-red-500",
+};
+
+export type CrmRole = "sales_rep" | "csm" | "marketing";
+
+export const roleBadgeConfig: Record<CrmRole, { label: string; color: string }> = {
+  sales_rep: { label: "Sales", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400" },
+  csm: { label: "Customer Success", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
+  marketing: { label: "Marketing", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400" },
+};
+
 /** Safe lookup with fallback for any color map */
 export function getColorSafe<K extends string>(map: Record<K, string>, key: string): string {
   return (map as Record<string, string>)[key] ?? FALLBACK_COLOR;
