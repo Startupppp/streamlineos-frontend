@@ -9,14 +9,9 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Briefcase,
   TrendingUp,
-  DollarSign,
-  Users,
   Target,
   ShieldCheck,
-  Star,
-  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,10 +20,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
 import { ActivityFeed } from "@/components/crm/activity-feed";
-import { getPersonBySlug } from "@/lib/data/crm-people-data";
-import { formatCurrency } from "@/lib/data/crm-mock-data";
+import { useCrmPerson } from "@/lib/hooks/trpc-hooks";
+import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getColorSafe,
   stageColors,
@@ -40,7 +36,20 @@ import {
 export default function PersonDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const person = getPersonBySlug(slug);
+  const { data: person, isLoading } = useCrmPerson(slug);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-32" />
+        <Skeleton className="h-48" />
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-20" />)}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
 
   if (!person) {
     return (
@@ -108,8 +117,8 @@ export default function PersonDetailPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-2xl font-bold text-foreground">{person.name}</h1>
-                  <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", badge.color)}>
-                    {badge.label}
+                  <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", badge?.color)}>
+                    {badge?.label}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">{person.title}</p>

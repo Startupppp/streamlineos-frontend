@@ -18,17 +18,8 @@ import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { FunnelChart } from "@/components/crm/funnel-chart";
 import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
 import { PageHeader } from "@/components/ui/page-header";
-import {
-  marketingStats,
-  mqlTimeline,
-  leadFunnel,
-  campaigns,
-  channelBreakdown,
-  contentPerformance,
-  upcomingEvents,
-  formatCurrency,
-  formatNumber,
-} from "@/lib/data/crm-mock-data";
+import { useMarketingDashboard } from "@/lib/hooks/trpc-hooks";
+import { formatCurrency, formatNumber } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import {
@@ -38,6 +29,7 @@ import {
   eventStatusColors,
   sparkColors,
 } from "@/lib/theme-constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ROI_HIGH_THRESHOLD = 4;
 const ROI_MED_THRESHOLD = 2.5;
@@ -52,7 +44,29 @@ const statusIcons: Record<string, React.ElementType> = {
 const formatMqlValue = (v: number) => v.toLocaleString();
 
 export default function MarketingDashboardPage() {
-  const mqlSparkData = useMemo(() => mqlTimeline.map((d) => d.value), []);
+  const { data, isLoading } = useMarketingDashboard();
+
+  const marketingStats = data?.marketingStats;
+  const mqlTimeline = data?.mqlTimeline ?? [];
+  const leadFunnel = data?.leadFunnel ?? [];
+  const campaigns = data?.campaigns ?? [];
+  const channelBreakdown = data?.channelBreakdown ?? [];
+  const contentPerformance = data?.contentPerformance ?? [];
+  const upcomingEvents = data?.upcomingEvents ?? [];
+
+  const mqlSparkData = useMemo(() => mqlTimeline.map((d) => d.value), [mqlTimeline]);
+
+  if (isLoading || !marketingStats) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
 
   return (
     <motion.div

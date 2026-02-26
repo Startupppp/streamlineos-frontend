@@ -16,33 +16,49 @@ import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
 import { ActivityFeed } from "@/components/crm/activity-feed";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
-import {
-  supportDashboardStats,
-  ticketStatusBreakdown,
-  ticketVolumeTimeline,
-  supportActivityFeed,
-  supportTeamMembers,
-  ticketsByPriority,
-} from "@/lib/data/crm-mock-data";
+import { useSupportDashboard } from "@/lib/hooks/trpc-hooks";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatTicketValue = (v: number) => v.toLocaleString();
 
 export default function SupportDashboardPage() {
+  const { data, isLoading } = useSupportDashboard();
+
+  const ticketStatusBreakdown = data?.ticketStatusBreakdown ?? [];
+  const ticketVolumeTimeline = data?.ticketVolumeTimeline ?? [];
+  const supportActivityFeed = data?.supportActivityFeed ?? [];
+  const supportTeamMembers = data?.supportTeamMembers ?? [];
+  const ticketsByPriority = data?.ticketsByPriority ?? [];
+
   const totalTickets = useMemo(
     () => ticketStatusBreakdown.reduce((sum, s) => sum + s.value, 0),
-    [],
+    [ticketStatusBreakdown],
   );
   const totalPriority = useMemo(
     () => ticketsByPriority.reduce((sum, p) => sum + p.value, 0),
-    [],
+    [ticketsByPriority],
   );
   const maxPriorityValue = useMemo(
     () => safeMax(ticketsByPriority.map((p) => p.value)),
-    [],
+    [ticketsByPriority],
   );
+
+  if (isLoading || !data) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
+
+  const { supportDashboardStats } = data;
 
   return (
     <motion.div

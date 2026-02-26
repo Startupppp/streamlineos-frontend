@@ -17,38 +17,55 @@ import { MetricCard } from "@/components/crm/metric-card";
 import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { FunnelChart } from "@/components/crm/funnel-chart";
 import { ActivityFeed } from "@/components/crm/activity-feed";
-import {
-  salesStats,
-  revenueTimeline,
-  salesFunnel,
-  topDeals,
-  salesLeaderboard,
-  salesActivity,
-  dealsByStage,
-  formatCurrency,
-} from "@/lib/data/crm-mock-data";
+import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
-import { getPersonSlug } from "@/lib/data/crm-people-data";
+import { useSalesDashboard, useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
 import { staggerContainer, fadeUp, slideInLeft, scaleIn } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, stageColors, rankStyles, sparkColors } from "@/lib/theme-constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DEFAULT_BAR_COLOR = "bg-muted-foreground/40";
 const formatRevenueValue = (v: number) => `$${(v / 1000).toFixed(0)}K`;
 
 export default function SalesDashboardPage() {
+  const { data, isLoading } = useSalesDashboard();
+  const { data: slugMap } = useCrmPeopleSlugs();
+
+  const salesStats = data?.salesStats;
+  const revenueTimeline = data?.revenueTimeline ?? [];
+  const salesFunnel = data?.salesFunnel ?? [];
+  const topDeals = data?.topDeals ?? [];
+  const salesLeaderboard = data?.salesLeaderboard ?? [];
+  const salesActivity = data?.salesActivity ?? [];
+  const dealsByStage = data?.dealsByStage ?? [];
+
   const maxLeaderboardRevenue = useMemo(
     () => safeMax(salesLeaderboard.map((r) => r.revenue)),
-    [],
+    [salesLeaderboard],
   );
   const maxDealsByStageCount = useMemo(
     () => safeMax(dealsByStage.map((d) => d.count)),
-    [],
+    [dealsByStage],
   );
   const revenueSparkData = useMemo(
     () => revenueTimeline.map((d) => d.value),
-    [],
+    [revenueTimeline],
   );
+
+  const getPersonSlug = (name: string) => slugMap?.[name] ?? null;
+
+  if (isLoading || !salesStats) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
 
   return (
     <motion.div

@@ -17,22 +17,41 @@ import { MetricCard } from "@/components/crm/metric-card";
 import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
 import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { ActivityFeed } from "@/components/crm/activity-feed";
-import {
-  customerStats,
-  clientHealth,
-  upcomingRenewals,
-  keyAccounts,
-  customerInteractions,
-  supportStats,
-  retentionTimeline,
-  csatTimeline,
-  formatCurrency,
-} from "@/lib/data/crm-mock-data";
+import { useCustomerExecutiveDashboard, useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
+import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
-import { getPersonSlug } from "@/lib/data/crm-people-data";
 import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CustomerExecutiveDashboardPage() {
+  const { data, isLoading } = useCustomerExecutiveDashboard();
+  const { data: slugMap } = useCrmPeopleSlugs();
+
+  const getPersonSlug = (name: string) => slugMap?.[name] ?? null;
+
+  if (isLoading || !data) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-80" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}
+        </div>
+        <Skeleton className="h-80" />
+      </div>
+    );
+  }
+
+  const {
+    customerStats,
+    clientHealth,
+    upcomingRenewals,
+    keyAccounts,
+    customerInteractions,
+    supportStats,
+    retentionTimeline,
+    csatTimeline,
+  } = data;
+
   return (
     <div className="space-y-6">
       {/* Header */}
