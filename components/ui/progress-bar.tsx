@@ -19,6 +19,7 @@ export function ProgressBar({ value, ariaLabel, stepText }: ProgressBarProps) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={ariaLabel}
+        aria-valuetext={stepText ? `${stepText} — ${clamped}% completed` : `${clamped}% completed`}
       >
         <div
           className="h-full gold-gradient rounded-full transition-all duration-500"

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Clock, LogOut, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials, formatTime } from "@/lib/format-utils";
-import { onlineStatusColors } from "@/lib/theme-constants";
+import { getColorSafe, onlineStatusColors } from "@/lib/theme-constants";
 
 interface TeamMember {
   userId: string;
@@ -25,16 +26,16 @@ interface TeamCardProps {
   isLoading: boolean;
 }
 
-export function TeamCard({ members, isLoading }: TeamCardProps) {
+export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
-          <Users className="h-5 w-5 text-gold" />
+          <Users className="h-5 w-5 text-gold" aria-hidden="true" />
           Team Availability
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden flex flex-col">
+      <CardContent className="flex-1 overflow-hidden flex flex-col" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3 overflow-y-auto">
             {[1, 2, 3].map((i) => (
@@ -53,7 +54,7 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
                         {getInitials(member.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${onlineStatusColors[member.isOnline ? "online" : "offline"]}`} aria-hidden="true" />
+                    <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${getColorSafe(onlineStatusColors, member.isOnline ? "online" : "offline")}`} aria-hidden="true" />
                   </div>
                   <div>
                     <p className="font-medium text-sm text-foreground">{member.name}</p>
@@ -74,7 +75,7 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
                     </p>
                   </div>
                 </div>
-                <Badge variant={member.isOnline ? "default" : "secondary"} className={member.isOnline ? onlineStatusColors.online : ""}>
+                <Badge variant={member.isOnline ? "default" : "secondary"} className={member.isOnline ? getColorSafe(onlineStatusColors, "online") : ""}>
                   {member.isOnline ? "Online" : "Offline"}
                 </Badge>
               </div>
@@ -92,4 +93,4 @@ export function TeamCard({ members, isLoading }: TeamCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

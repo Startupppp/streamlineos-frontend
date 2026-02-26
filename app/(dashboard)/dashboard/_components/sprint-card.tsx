@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Zap, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptySprintIllustration } from "@/components/illustrations";
+import { sprintStatusColors } from "@/lib/theme-constants";
 
 const SPRINT_DANGER_DAYS = 2;
 
@@ -28,7 +30,7 @@ interface SprintCardProps {
   isLoading: boolean;
 }
 
-export function SprintCard({ summary, isLoading }: SprintCardProps) {
+export const SprintCard = memo(function SprintCard({ summary, isLoading }: SprintCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -44,7 +46,7 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
           </Link>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-6 w-48" />
@@ -63,7 +65,7 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
                 <span className="text-muted-foreground">Progress</span>
                 <span className="font-medium text-gold">{summary.progress}%</span>
               </div>
-              <div className="h-2.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={summary.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sprint progress">
+              <div className="h-2.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={summary.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sprint progress" aria-valuetext={`${summary.progress}% complete — ${summary.completedPoints} of ${summary.totalPoints} points`}>
                 <div
                   className="h-full rounded-full transition-all gold-gradient"
                   style={{ width: `${Math.min(100, Math.max(0, summary.progress))}%` }}
@@ -97,21 +99,21 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
             <div className="space-y-2">
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                  <span className={`h-2.5 w-2.5 rounded-full ${sprintStatusColors.done}`} aria-hidden="true" />
                   Done
                 </span>
                 <span className="font-medium">{summary.doneTickets}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
+                  <span className={`h-2.5 w-2.5 rounded-full ${sprintStatusColors.inProgress}`} aria-hidden="true" />
                   In Progress
                 </span>
                 <span className="font-medium">{summary.inProgressTickets}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-slate-400" aria-hidden="true" />
+                  <span className={`h-2.5 w-2.5 rounded-full ${sprintStatusColors.todo}`} aria-hidden="true" />
                   To Do
                 </span>
                 <span className="font-medium">{summary.todoTickets}</span>
@@ -128,4 +130,4 @@ export function SprintCard({ summary, isLoading }: SprintCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

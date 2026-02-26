@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Folder } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,7 @@ interface RecentProjectsCardProps {
   onCreateProject: () => void;
 }
 
-export function RecentProjectsCard({ projects, isLoading, error, onCreateProject }: RecentProjectsCardProps) {
+export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, isLoading, error, onCreateProject }: RecentProjectsCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -33,10 +34,10 @@ export function RecentProjectsCard({ projects, isLoading, error, onCreateProject
           Recent Projects
         </CardTitle>
         <Link href="/projects">
-          <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold">View All</Button>
+          <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold" aria-label="View all projects">View All</Button>
         </Link>
       </CardHeader>
-      <CardContent>
+      <CardContent aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -44,7 +45,7 @@ export function RecentProjectsCard({ projects, isLoading, error, onCreateProject
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">Failed to load projects.</p>
+          <p role="alert" className="text-sm text-destructive">Failed to load projects.</p>
         ) : projects && projects.length > 0 ? (
           <div className="space-y-3">
             {projects.map((project) => (
@@ -80,4 +81,4 @@ export function RecentProjectsCard({ projects, isLoading, error, onCreateProject
       </CardContent>
     </Card>
   );
-}
+});

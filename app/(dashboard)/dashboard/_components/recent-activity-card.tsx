@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,7 @@ interface RecentActivityCardProps {
   error: unknown;
 }
 
-export function RecentActivityCard({ items, isLoading, error }: RecentActivityCardProps) {
+export const RecentActivityCard = memo(function RecentActivityCard({ items, isLoading, error }: RecentActivityCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
       <CardHeader className="flex-shrink-0">
@@ -45,7 +46,7 @@ export function RecentActivityCard({ items, isLoading, error }: RecentActivityCa
           Recent Activity
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
+      <CardContent className="flex-1 overflow-hidden" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -53,7 +54,7 @@ export function RecentActivityCard({ items, isLoading, error }: RecentActivityCa
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">Failed to load activity.</p>
+          <p role="alert" className="text-sm text-destructive">Failed to load activity.</p>
         ) : items && items.length > 0 ? (
           <div className="space-y-2 overflow-y-auto pr-2 max-h-full">
             {items.map((item) => {
@@ -65,7 +66,7 @@ export function RecentActivityCard({ items, isLoading, error }: RecentActivityCa
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground font-mono">
-                          {item.projectKey}-{item.ticketNumber}
+                          {item.projectKey ?? "???"}-{item.ticketNumber ?? "?"}
                         </span>
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                           {item.status?.replaceAll("_", " ")}
@@ -104,4 +105,4 @@ export function RecentActivityCard({ items, isLoading, error }: RecentActivityCa
       </CardContent>
     </Card>
   );
-}
+});

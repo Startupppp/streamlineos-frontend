@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
@@ -19,7 +20,7 @@ const quickActions = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-export function QuickActions() {
+export const QuickActions = memo(function QuickActions() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
       {quickActions.map((action) => {
@@ -41,4 +42,4 @@ export function QuickActions() {
       })}
     </div>
   );
-}
+});

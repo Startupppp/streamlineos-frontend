@@ -31,21 +31,21 @@ const bankSchema = z.object({
 type BankFormValues = z.infer<typeof bankSchema>;
 
 interface BankDetailsTabProps {
-  onComplete: () => void;
+  onComplete: (values: Record<string, string | undefined>) => void;
   onBack: () => void;
+  defaultValues?: Record<string, string | undefined>;
 }
 
-export function BankDetailsTab({ onComplete, onBack }: BankDetailsTabProps) {
+export function BankDetailsTab({ onComplete, onBack, defaultValues }: BankDetailsTabProps) {
   const { isLoading, handleSubmit } = useOnboardingSubmit(updateBankDetails, {
     successMessage: "Bank details saved!",
     onSuccess: onComplete,
   });
   const form = useForm<BankFormValues>({
     resolver: zodResolver(bankSchema),
-    defaultValues: { accountHolder: "", bankName: "", accountNumber: "", ifsc: "", taxId: "" },
+    defaultValues: { accountHolder: "", bankName: "", accountNumber: "", ifsc: "", taxId: "", ...defaultValues },
   });
 
-  const ifscField = form.register("ifsc");
   const { errors } = form.formState;
 
   return (
@@ -105,13 +105,11 @@ export function BankDetailsTab({ onComplete, onBack }: BankDetailsTabProps) {
                 <Label htmlFor="ifsc">IFSC Code</Label>
                 <Input
                   id="ifsc"
-                  ref={ifscField.ref}
-                  name={ifscField.name}
-                  onBlur={ifscField.onBlur}
-                  onChange={(e) => {
-                    e.target.value = e.target.value.toUpperCase();
-                    ifscField.onChange(e);
-                  }}
+                  {...form.register("ifsc", {
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                      form.setValue("ifsc", e.target.value.toUpperCase(), { shouldDirty: true });
+                    },
+                  })}
                   placeholder="HDFC0001234"
                   aria-required="true"
                   aria-invalid={!!errors.ifsc}

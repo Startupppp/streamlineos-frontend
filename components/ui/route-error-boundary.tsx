@@ -25,10 +25,12 @@ export function RouteErrorBoundary({
   }, [error]);
 
   // In production, server errors include a digest — never expose raw messages for those.
-  const displayMessage = error.digest ? fallbackMessage : (error.message || fallbackMessage);
+  const displayMessage = error.digest
+    ? fallbackMessage
+    : (typeof error.message === "string" && error.message.length > 0 ? error.message : fallbackMessage);
 
   const content = (
-    <div className="flex flex-col items-center justify-center gap-4 text-center">
+    <div role="alert" className="flex flex-col items-center justify-center gap-4 text-center">
       <div className="bg-destructive/10 p-4 rounded-full">
         <AlertTriangle className="h-8 w-8 text-destructive" aria-hidden="true" />
       </div>

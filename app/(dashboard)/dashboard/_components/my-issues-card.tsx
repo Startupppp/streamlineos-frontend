@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import { ListTodo } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +33,7 @@ interface MyIssuesCardProps {
   error: unknown;
 }
 
-export function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
+export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
       <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
@@ -44,7 +45,7 @@ export function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
           {tickets.length} open
         </Badge>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
+      <CardContent className="flex-1 overflow-hidden" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -52,7 +53,7 @@ export function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">Failed to load issues.</p>
+          <p role="alert" className="text-sm text-destructive">Failed to load issues.</p>
         ) : tickets.length > 0 ? (
           <div className="space-y-2 overflow-y-auto pr-2 max-h-full">
             {tickets.slice(0, MAX_VISIBLE_TICKETS).map((ticket) => {
@@ -65,7 +66,7 @@ export function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground font-mono">
-                          {project?.key}-{ticket.ticketNumber}
+                          {project?.key ?? "???"}-{ticket.ticketNumber ?? "?"}
                         </span>
                         <span className="font-medium text-sm text-foreground truncate">{ticket.title}</span>
                       </div>
@@ -94,4 +95,4 @@ export function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
