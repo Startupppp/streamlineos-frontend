@@ -16,14 +16,15 @@ interface Step {
 interface ReviewTabProps {
   completedSteps: Set<string>;
   steps: Step[];
+  reviewStepId: string;
   onBack: () => void;
 }
 
-export function ReviewTab({ completedSteps, steps, onBack }: ReviewTabProps) {
+export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: ReviewTabProps) {
   const router = useRouter();
 
   // Show all steps except the review step itself
-  const dataSteps = steps.filter((s) => s.id !== "finish");
+  const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
 
   return (
@@ -73,10 +74,15 @@ export function ReviewTab({ completedSteps, steps, onBack }: ReviewTabProps) {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <Button onClick={() => router.push("/dashboard")} disabled={!allDataStepsComplete}>
-              Go to Dashboard
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <span title={!allDataStepsComplete ? "Complete all steps before proceeding" : undefined}>
+              <Button onClick={() => router.push("/dashboard")} disabled={!allDataStepsComplete} aria-describedby={!allDataStepsComplete ? "review-hint" : undefined}>
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </span>
+            {!allDataStepsComplete && (
+              <p id="review-hint" className="sr-only">Complete all previous steps to enable this button</p>
+            )}
           </motion.div>
         </motion.div>
       </CardContent>

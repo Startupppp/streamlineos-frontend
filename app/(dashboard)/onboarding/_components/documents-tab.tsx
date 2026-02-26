@@ -22,14 +22,25 @@ const MAX_FILE_SIZE_MB = 5;
 const ALLOWED_EXTENSIONS = ".pdf,.jpg,.jpeg,.png,.webp";
 const FILE_HINT = "PDF, JPEG, PNG, WebP";
 
+const REQUIRED_DOC_TYPES = new Set(["ID"]);
+
 interface DocumentsTabProps {
-  onComplete: () => void;
+  onComplete: (values?: Record<string, string | undefined>) => void;
   onBack: () => void;
+  savedUploads?: Record<string, string | undefined>;
 }
 
-export function DocumentsTab({ onComplete, onBack }: DocumentsTabProps) {
+export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabProps) {
   const [loadingDoc, setLoadingDoc] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, string>>(() => {
+    if (!savedUploads) return {};
+    const restored: Record<string, string> = {};
+    for (const [k, v] of Object.entries(savedUploads)) {
+      if (v) restored[k] = v;
+    }
+    return restored;
+  });
+  const [validationError, setValidationError] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const onFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
@@ -71,6 +82,24 @@ export function DocumentsTab({ onComplete, onBack }: DocumentsTabProps) {
     fileInputRefs.current[type]?.click();
   }, []);
 
+  const handleFormSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const missingRequired = DOCUMENT_TYPES.filter(
+        (doc) => REQUIRED_DOC_TYPES.has(doc.type) && !uploadedFiles[doc.type],
+      );
+      if (missingRequired.length > 0) {
+        setValidationError(
+          `Please upload required document${missingRequired.length > 1 ? "s" : ""}: ${missingRequired.map((d) => d.label).join(", ")}`,
+        );
+        return;
+      }
+      setValidationError(null);
+      onComplete({ ...uploadedFiles });
+    },
+    [uploadedFiles, onComplete],
+  );
+
   return (
     <Card className="shadow-noir border-border">
       <CardContent className="pt-6">
@@ -79,55 +108,68 @@ export function DocumentsTab({ onComplete, onBack }: DocumentsTabProps) {
             <h2 className="text-xl font-bold text-foreground">Documents</h2>
             <p className="text-sm text-muted-foreground mt-1">Please upload the necessary documents.</p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {DOCUMENT_TYPES.map((doc) => {
-              const isUploaded = !!uploadedFiles[doc.type];
-              const isThisLoading = loadingDoc === doc.type;
-              return (
-                <motion.div
-                  key={doc.type}
-                  variants={fadeUp}
-                  className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
-                    isUploaded ? "border-green-500/50 bg-green-500/10" : "border-border hover:bg-muted/50"
-                  }`}
-                >
-                  {isUploaded ? (
-                    <CheckCircle className="h-8 w-8 text-green-500" aria-hidden="true" />
-                  ) : isThisLoading ? (
-                    <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Upload className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
-                  )}
-                  <Label htmlFor={`${doc.type}-upload`} className="font-semibold cursor-pointer">{doc.label}</Label>
-                  <span className="text-xs text-muted-foreground">{doc.hint}</span>
-                  <span className="text-xs text-muted-foreground/70">Max {MAX_FILE_SIZE_MB}MB &middot; {FILE_HINT}</span>
-                  {uploadedFiles[doc.type] && (
-                    <span className="text-xs text-green-600 font-medium">{uploadedFiles[doc.type]}</span>
-                  )}
-                  <input
-                    ref={(el) => { fileInputRefs.current[doc.type] = el; }}
-                    id={`${doc.type}-upload`}
-                    type="file"
-                    accept={ALLOWED_EXTENSIONS}
-                    className="sr-only"
-                    aria-label={`${doc.label} — ${doc.hint}`}
-                    onChange={(e) => onFileUpload(e, doc.type)}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSelectFile(doc.type)}
-                    disabled={isThisLoading}
+          <form onSubmit={handleFormSubmit}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" aria-live="polite">
+              {DOCUMENT_TYPES.map((doc) => {
+                const isUploaded = !!uploadedFiles[doc.type];
+                const isThisLoading = loadingDoc === doc.type;
+                const isRequired = REQUIRED_DOC_TYPES.has(doc.type);
+                return (
+                  <motion.div
+                    key={doc.type}
+                    variants={fadeUp}
+                    className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
+                      isUploaded ? "border-green-500/50 bg-green-500/10" : "border-border hover:bg-muted/50"
+                    }`}
                   >
-                    {isUploaded ? "Replace File" : "Select File"}
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </div>
-          <motion.div variants={fadeUp} className="mt-6">
-            <FormNavButtons onBack={onBack} isLoading={loadingDoc !== null} submitLabel="Continue to Review" />
-          </motion.div>
+                    {isUploaded ? (
+                      <CheckCircle className="h-8 w-8 text-green-500" aria-hidden="true" />
+                    ) : isThisLoading ? (
+                      <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Upload className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                    )}
+                    <Label htmlFor={`${doc.type}-upload`} className="font-semibold cursor-pointer">
+                      {doc.label}
+                      {isRequired && <span className="text-destructive ml-1">*</span>}
+                    </Label>
+                    <span className="text-xs text-muted-foreground">{doc.hint}</span>
+                    <span className="text-xs text-muted-foreground/70">Max {MAX_FILE_SIZE_MB}MB &middot; {FILE_HINT}</span>
+                    {uploadedFiles[doc.type] && (
+                      <span className="text-xs text-green-600 font-medium">{uploadedFiles[doc.type]}</span>
+                    )}
+                    <input
+                      ref={(el) => { fileInputRefs.current[doc.type] = el; }}
+                      id={`${doc.type}-upload`}
+                      type="file"
+                      accept={ALLOWED_EXTENSIONS}
+                      className="sr-only"
+                      aria-label={`${doc.label}, ${doc.hint}`}
+                      aria-required={isRequired}
+                      onChange={(e) => onFileUpload(e, doc.type)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSelectFile(doc.type)}
+                      disabled={isThisLoading}
+                    >
+                      {isUploaded ? "Replace File" : "Select File"}
+                    </Button>
+                  </motion.div>
+                );
+              })}
+            </div>
+            {validationError && (
+              <motion.p variants={fadeUp} role="alert" className="text-sm text-destructive mt-4">
+                {validationError}
+              </motion.p>
+            )}
+            <motion.div variants={fadeUp} className="mt-6">
+              <FormNavButtons onBack={onBack} isLoading={loadingDoc !== null} submitLabel="Continue to Review" />
+            </motion.div>
+          </form>
         </motion.div>
       </CardContent>
     </Card>

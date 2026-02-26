@@ -34,17 +34,18 @@ const personalSchema = z.object({
 type PersonalFormValues = z.infer<typeof personalSchema>;
 
 interface PersonalInfoTabProps {
-  onComplete: () => void;
+  onComplete: (values: Record<string, string | undefined>) => void;
+  defaultValues?: Record<string, string | undefined>;
 }
 
-export function PersonalInfoTab({ onComplete }: PersonalInfoTabProps) {
+export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabProps) {
   const { isLoading, handleSubmit } = useOnboardingSubmit(updatePersonalDetails, {
     successMessage: "Personal details saved!",
     onSuccess: onComplete,
   });
   const form = useForm<PersonalFormValues>({
     resolver: zodResolver(personalSchema),
-    defaultValues: { phone: "", skills: "", experienceYears: "" },
+    defaultValues: { phone: "", skills: "", experienceYears: "", ...defaultValues },
   });
 
   return (
