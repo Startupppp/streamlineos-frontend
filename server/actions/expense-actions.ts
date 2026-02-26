@@ -28,8 +28,6 @@ export async function createExpense(data: CreateExpenseInput) {
   });
 
   if (!member) return { error: "Not a member of any organization" };
-
-  // Duplicate detection: same user, amount, date, merchant
   const duplicateCheck = await db.query.expenses.findFirst({
     where: and(
       eq(expenses.orgId, member.orgId),
@@ -46,8 +44,6 @@ export async function createExpense(data: CreateExpenseInput) {
       isDuplicate: true,
     };
   }
-
-  // Policy limit: check category budget if categoryId is provided
   if (data.categoryId) {
     const cat = await db.query.expenseCategories.findFirst({
       where: eq(expenseCategories.id, data.categoryId),
@@ -347,8 +343,6 @@ export async function deleteExpense(expenseId: number) {
     return { error: "Failed to delete expense" };
   }
 }
-
-// Expense Categories
 export async function getExpenseCategories() {
   const session = await auth();
   if (!session?.user?.id) return [];
@@ -400,8 +394,6 @@ export async function createExpenseCategory(data: {
     return { error: "Failed to create category" };
   }
 }
-
-// Statistics
 export async function getExpenseStats() {
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -440,8 +432,6 @@ export async function getExpenseStats() {
     totalCount: allExpenses.length,
   };
 }
-
-// Category Spending (for Budget Management)
 export async function getCategorySpending() {
   const session = await auth();
   if (!session?.user?.id) return [];
@@ -488,8 +478,6 @@ export async function getCategorySpending() {
     };
   });
 }
-
-// Expense Report Data
 export async function getExpenseReportData(filters: {
   startDate: string;
   endDate: string;
@@ -521,8 +509,6 @@ export async function getExpenseReportData(filters: {
     },
     orderBy: [desc(expenses.expenseDate)],
   });
-
-  // Summary
   const totalAmount = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
   const approvedAmount = allExpenses
     .filter(e => e.status === "APPROVED" || e.status === "PAID")
@@ -533,8 +519,6 @@ export async function getExpenseReportData(filters: {
   const pendingAmount = allExpenses
     .filter(e => e.status === "PENDING")
     .reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0);
-
-  // By Category
   const categoryMap = new Map<string, { count: number; amount: number }>();
   allExpenses.forEach(e => {
     const existing = categoryMap.get(e.category) || { count: 0, amount: 0 };
@@ -551,8 +535,6 @@ export async function getExpenseReportData(filters: {
       percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
     }))
     .sort((a, b) => b.amount - a.amount);
-
-  // By Employee
   const employeeMap = new Map<string, { name: string; count: number; amount: number }>();
   allExpenses.forEach(e => {
     const existing = employeeMap.get(e.userId) || {
@@ -574,8 +556,6 @@ export async function getExpenseReportData(filters: {
       amount: data.amount,
     }))
     .sort((a, b) => b.amount - a.amount);
-
-  // By Month
   const monthMap = new Map<string, { count: number; amount: number }>();
   allExpenses.forEach(e => {
     const date = new Date(e.expenseDate);
@@ -593,8 +573,6 @@ export async function getExpenseReportData(filters: {
       amount: data.amount,
     }))
     .slice(-6);
-
-  // Top Expenses
   const topExpenses = allExpenses
     .filter(e => e.status === "APPROVED" || e.status === "PAID")
     .sort((a, b) => parseFloat(b.amount || "0") - parseFloat(a.amount || "0"))

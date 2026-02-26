@@ -16,8 +16,6 @@ import { checkPermission } from "../../../lib/rbac/middleware";
 export const rbacRouter = createTRPCRouter({
   getUserPermissions: protectedProcedure.query(async ({ ctx }) => {
     const { userId, orgId } = ctx.session;
-
-    // Get user role from database
     const user = await ctx.db.query.users.findFirst({
       where: (users, { eq }) => eq(users.id, userId),
     });

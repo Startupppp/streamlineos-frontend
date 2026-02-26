@@ -1,11 +1,3 @@
-/**
- * CRM Seed Script — populates CRM tables with initial data.
- *
- * Usage: npx tsx scripts/seed-crm.ts
- *
- * Requires DATABASE_URL in .env
- */
-
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -22,7 +14,6 @@ const client = postgres(connectionString, { prepare: false });
 const db = drizzle(client, { schema });
 
 async function seed() {
-  // Get first org
   const orgs = await db.query.organizations.findMany({ limit: 1 });
   if (orgs.length === 0) {
     console.error("No organizations found. Run the app and create one first.");
@@ -30,8 +21,6 @@ async function seed() {
   }
   const orgId = orgs[0].id;
   console.log(`Seeding CRM data for org: ${orgs[0].name} (${orgId})`);
-
-  // Check if already seeded
   const existingPeople = await db.query.crmPeople.findMany({
     where: eq(schema.crmPeople.orgId, orgId),
     limit: 1,
@@ -41,8 +30,6 @@ async function seed() {
     await client.end();
     return;
   }
-
-  // ─── 1. CRM People ─────────────────────────────────────────────
   const peopleData = [
     { slug: "sarah-mitchell", name: "Sarah Mitchell", initials: "SM", role: "sales_rep" as const, title: "Senior Account Executive", department: "Sales", email: "sarah.mitchell@vaivamm.com", phone: "+1 (415) 555-0142", location: "San Francisco, CA", joinDate: "Mar 2022", bio: "Top-performing AE with expertise in enterprise SaaS sales.", skills: ["Enterprise Sales", "Consultative Selling", "SaaS", "Contract Negotiation", "C-Suite Engagement"] },
     { slug: "jason-lee", name: "Jason Lee", initials: "JL", role: "sales_rep" as const, title: "Account Executive", department: "Sales", email: "jason.lee@vaivamm.com", phone: "+1 (415) 555-0198", location: "San Francisco, CA", joinDate: "Jun 2022", bio: "Strategic seller with deep expertise in the financial services vertical.", skills: ["Technical Sales", "Financial Services", "Solution Architecture", "Multi-threading", "POC Management"] },
@@ -60,8 +47,6 @@ async function seed() {
 
   const personBySlug = new Map(insertedPeople.map((p) => [p.slug, p]));
   console.log(`  Inserted ${insertedPeople.length} CRM people`);
-
-  // ─── 2. CRM Companies ──────────────────────────────────────────
   const emma = personBySlug.get("emma-watson")!;
   const ryan = personBySlug.get("ryan-torres")!;
   const lisa = personBySlug.get("lisa-huang")!;
@@ -88,8 +73,6 @@ async function seed() {
     companiesData.map((c) => ({ ...c, orgId }))
   );
   console.log(`  Inserted ${companiesData.length} CRM companies`);
-
-  // ─── 3. CRM Deals ──────────────────────────────────────────────
   const sarah = personBySlug.get("sarah-mitchell")!;
   const jason = personBySlug.get("jason-lee")!;
   const maria = personBySlug.get("maria-kim")!;
@@ -112,7 +95,6 @@ async function seed() {
     { companyName: "LogiPrime", value: "145000", stage: "Proposal" as const, probability: 65, closeDate: "2026-03-20", salesRepId: daniel.id },
     { companyName: "FleetOps Inc", value: "88000", stage: "Negotiation" as const, probability: 70, closeDate: "2026-03-12", salesRepId: daniel.id },
     { companyName: "Vertex Labs Deal", value: "42000", stage: "Discovery" as const, probability: 20, closeDate: "2026-05-05", salesRepId: daniel.id },
-    // Extra closed won deals for leaderboard accuracy
     { companyName: "Metro Systems", value: "92000", stage: "Closed Won" as const, probability: 100, closeDate: "2026-02-10", salesRepId: jason.id },
     { companyName: "Vertex Labs Renew", value: "145000", stage: "Closed Won" as const, probability: 100, closeDate: "2026-02-15", salesRepId: daniel.id },
     { companyName: "BioGen", value: "120000", stage: "Closed Won" as const, probability: 100, closeDate: "2026-01-20", salesRepId: maria.id },
@@ -124,8 +106,6 @@ async function seed() {
     dealsData.map((d) => ({ ...d, orgId }))
   );
   console.log(`  Inserted ${dealsData.length} CRM deals`);
-
-  // ─── 4. CRM Campaigns ──────────────────────────────────────────
   const campaignsData = [
     { name: "Spring Product Launch", status: "active" as const, leads: 620, spend: "45000", roi: "4.2" },
     { name: "LinkedIn ABM Campaign", status: "active" as const, leads: 340, spend: "28000", roi: "3.8" },
@@ -141,8 +121,6 @@ async function seed() {
     campaignsData.map((c) => ({ ...c, orgId }))
   );
   console.log(`  Inserted ${campaignsData.length} CRM campaigns`);
-
-  // ─── 5. CRM Leads (for funnel + channel breakdown) ─────────────
   const leadChannels = [
     { channel: "Organic Search", count: 17000 },
     { channel: "Paid Ads", count: 13500 },
@@ -158,8 +136,6 @@ async function seed() {
     { status: "sql" as const, fraction: 0.03 },
     { status: "opportunity" as const, fraction: 0.02 },
   ];
-
-  // Insert leads in batches for each channel
   for (const ch of leadChannels) {
     const leadsToInsert = [];
     for (const ls of leadStatuses) {
@@ -174,7 +150,6 @@ async function seed() {
         });
       }
     }
-    // Insert in smaller batches to avoid query size limits
     const batchSize = 500;
     for (let i = 0; i < leadsToInsert.length; i += batchSize) {
       const batch = leadsToInsert.slice(i, i + batchSize);
@@ -182,8 +157,6 @@ async function seed() {
     }
   }
   console.log(`  Inserted CRM leads across 5 channels`);
-
-  // ─── 6. CRM Content ────────────────────────────────────────────
   const contentData = [
     { title: "2026 CRM Trends Report", type: "Whitepaper", views: 4200, leads: 180, convRate: "4.3" },
     { title: "ROI Calculator Tool", type: "Interactive", views: 3800, leads: 320, convRate: "8.4" },
@@ -196,8 +169,6 @@ async function seed() {
     contentData.map((c) => ({ ...c, orgId }))
   );
   console.log(`  Inserted ${contentData.length} CRM content pieces`);
-
-  // ─── 7. CRM Events ─────────────────────────────────────────────
   const eventsData = [
     { name: "CRM Summit 2026", date: "Mar 12-14", type: "Conference", status: "confirmed" as const },
     { name: "Product Webinar: AI Features", date: "Mar 20", type: "Webinar", status: "confirmed" as const },
@@ -210,10 +181,7 @@ async function seed() {
     eventsData.map((e) => ({ ...e, orgId }))
   );
   console.log(`  Inserted ${eventsData.length} CRM events`);
-
-  // ─── 8. CRM Activities ─────────────────────────────────────────
   const activitiesData = [
-    // Sales activities
     { type: "deal_won" as const, message: "Closed $285K deal with Global Dynamics", time: "2h ago", person: "Maria K.", personId: maria.id, category: "sales" },
     { type: "meeting" as const, message: "Demo scheduled with Nexus Systems", time: "3h ago", person: "Alex P.", personId: alex.id, category: "sales" },
     { type: "proposal" as const, message: "Sent proposal to TechFlow Inc", time: "5h ago", person: "Jason L.", personId: jason.id, category: "sales" },
@@ -221,16 +189,12 @@ async function seed() {
     { type: "email" as const, message: "Follow-up sent to Acme Corp", time: "8h ago", person: "Sarah M.", personId: sarah.id, category: "sales" },
     { type: "deal_won" as const, message: "Closed $145K deal with Vertex Labs", time: "1d ago", person: "Daniel C.", personId: daniel.id, category: "sales" },
     { type: "meeting" as const, message: "QBR meeting with top accounts", time: "1d ago", person: "Jason L.", personId: jason.id, category: "sales" },
-
-    // Customer success activities
     { type: "call" as const, message: "QBR call with Acme Corp — discussed expansion", time: "1h ago", person: "Emma W.", personId: emma.id, category: "customer_success" },
     { type: "ticket" as const, message: "Resolved P1 ticket for TechFlow Inc", time: "3h ago", person: "Support", personId: null, category: "customer_success" },
     { type: "meeting" as const, message: "Onboarding session with new client DataPrime", time: "5h ago", person: "Lisa H.", personId: lisa.id, category: "customer_success" },
     { type: "email" as const, message: "Renewal proposal sent to Global Dynamics", time: "6h ago", person: "Ryan T.", personId: ryan.id, category: "customer_success" },
     { type: "escalation" as const, message: "Escalation from CloudNine — API latency issues", time: "8h ago", person: "Ryan T.", personId: ryan.id, category: "customer_success" },
     { type: "call" as const, message: "Check-in call with Blue Horizon", time: "1d ago", person: "Emma W.", personId: emma.id, category: "customer_success" },
-
-    // Support activities
     { type: "ticket" as const, message: "Ticket #2094 created — High Priority", time: "24m ago", person: "System", personId: null, category: "support" },
     { type: "email" as const, message: "Agent replied to Ticket #2091", time: "1h ago", person: "Jane D.", personId: null, category: "support" },
     { type: "deal_won" as const, message: "Ticket #2088 resolved via automation", time: "2h ago", person: "System", personId: null, category: "support" },
@@ -238,40 +202,28 @@ async function seed() {
     { type: "escalation" as const, message: "Ticket #2080 escalated to Level 2", time: "5h ago", person: "Robert F.", personId: null, category: "support" },
     { type: "email" as const, message: "SLA breach warning for Ticket #2076", time: "6h ago", person: "System", personId: null, category: "support" },
     { type: "ticket" as const, message: "Ticket #2074 reopened by customer", time: "8h ago", person: "Emily C.", personId: null, category: "support" },
-
-    // Person-specific activities (Sarah)
     { type: "call" as const, message: "Discovery call with Blue Horizon — identified $178K opportunity", time: "6h ago", person: "Sarah M.", personId: sarah.id, category: "person" },
     { type: "email" as const, message: "Follow-up sent to Acme Corp with updated pricing", time: "8h ago", person: "Sarah M.", personId: sarah.id, category: "person" },
     { type: "meeting" as const, message: "Demo presentation to Pinnacle Tech (5 stakeholders)", time: "1d ago", person: "Sarah M.", personId: sarah.id, category: "person" },
     { type: "proposal" as const, message: "Sent revised proposal to Redwood Analytics", time: "2d ago", person: "Sarah M.", personId: sarah.id, category: "person" },
     { type: "deal_won" as const, message: "Closed $145K deal with Vertex Labs", time: "3d ago", person: "Sarah M.", personId: sarah.id, category: "person" },
-
-    // Person-specific activities (Jason)
     { type: "proposal" as const, message: "Sent proposal to TechFlow Inc — $310K opportunity", time: "5h ago", person: "Jason L.", personId: jason.id, category: "person" },
     { type: "meeting" as const, message: "QBR meeting with top accounts", time: "1d ago", person: "Jason L.", personId: jason.id, category: "person" },
     { type: "call" as const, message: "Technical deep-dive with FinServe Global IT team", time: "2d ago", person: "Jason L.", personId: jason.id, category: "person" },
     { type: "email" as const, message: "Sent case study to Atlas Digital", time: "3d ago", person: "Jason L.", personId: jason.id, category: "person" },
     { type: "deal_won" as const, message: "Closed $92K deal with Metro Systems", time: "5d ago", person: "Jason L.", personId: jason.id, category: "person" },
-
-    // Person-specific activities (Maria)
     { type: "deal_won" as const, message: "Closed $285K deal with Global Dynamics", time: "2h ago", person: "Maria K.", personId: maria.id, category: "person" },
     { type: "meeting" as const, message: "Negotiation meeting with MedCore Systems", time: "1d ago", person: "Maria K.", personId: maria.id, category: "person" },
     { type: "call" as const, message: "Expansion discussion with existing client BioGen", time: "2d ago", person: "Maria K.", personId: maria.id, category: "person" },
-
-    // Person-specific activities (Emma)
     { type: "call" as const, message: "QBR call with Acme Corp — discussed expansion plans", time: "1h ago", person: "Emma W.", personId: emma.id, category: "person" },
     { type: "call" as const, message: "Check-in call with Blue Horizon", time: "1d ago", person: "Emma W.", personId: emma.id, category: "person" },
     { type: "meeting" as const, message: "Executive business review with TechFlow Inc", time: "2d ago", person: "Emma W.", personId: emma.id, category: "person" },
     { type: "email" as const, message: "Sent adoption playbook to Summit Corp", time: "3d ago", person: "Emma W.", personId: emma.id, category: "person" },
     { type: "escalation" as const, message: "Managed escalation for TechFlow Inc — API migration", time: "4d ago", person: "Emma W.", personId: emma.id, category: "person" },
-
-    // Person-specific activities (Ryan)
     { type: "email" as const, message: "Renewal proposal sent to Global Dynamics", time: "6h ago", person: "Ryan T.", personId: ryan.id, category: "person" },
     { type: "escalation" as const, message: "Escalation from CloudNine — API latency issues", time: "8h ago", person: "Ryan T.", personId: ryan.id, category: "person" },
     { type: "call" as const, message: "Technical review with Vertex Labs engineering team", time: "1d ago", person: "Ryan T.", personId: ryan.id, category: "person" },
     { type: "meeting" as const, message: "Product roadmap review with DataStream", time: "2d ago", person: "Ryan T.", personId: ryan.id, category: "person" },
-
-    // Person-specific activities (Lisa)
     { type: "meeting" as const, message: "Onboarding session with new client DataPrime", time: "5h ago", person: "Lisa H.", personId: lisa.id, category: "person" },
     { type: "call" as const, message: "30-day check-in with Skyline Corp", time: "1d ago", person: "Lisa H.", personId: lisa.id, category: "person" },
     { type: "email" as const, message: "Sent training resources to BrightPath team", time: "2d ago", person: "Lisa H.", personId: lisa.id, category: "person" },
@@ -282,11 +234,7 @@ async function seed() {
     activitiesData.map((a) => ({ ...a, orgId }))
   );
   console.log(`  Inserted ${activitiesData.length} CRM activities`);
-
-  // ─── 9. CRM Support Tickets ────────────────────────────────────
   const supportTicketsData: { title: string; priority: "critical" | "high" | "medium" | "low"; status: "new" | "in_progress" | "resolved" | "closed" }[] = [];
-
-  // Create tickets matching the mock distribution
   const ticketDistribution = [
     { status: "new" as const, count: 438 },
     { status: "in_progress" as const, count: 312 },
@@ -302,7 +250,6 @@ async function seed() {
 
   for (const td of ticketDistribution) {
     for (let i = 0; i < td.count; i++) {
-      // Assign priority based on distribution
       const rand = Math.random();
       let cumulative = 0;
       let priority: "critical" | "high" | "medium" | "low" = "medium";
@@ -320,8 +267,6 @@ async function seed() {
       });
     }
   }
-
-  // Insert in batches
   const ticketBatchSize = 500;
   for (let i = 0; i < supportTicketsData.length; i += ticketBatchSize) {
     const batch = supportTicketsData.slice(i, i + ticketBatchSize);
@@ -330,8 +275,6 @@ async function seed() {
     );
   }
   console.log(`  Inserted ${supportTicketsData.length} CRM support tickets`);
-
-  // ─── 10. CRM Monthly Metrics ───────────────────────────────────
   const monthlyMetricsData = [
     { month: "Aug", revenue: "320000", mqls: 520, retention: "91.2", csat: "4.2", ticketVolume: 68 },
     { month: "Sep", revenue: "410000", mqls: 610, retention: "92.0", csat: "4.3", ticketVolume: 75 },
@@ -346,10 +289,7 @@ async function seed() {
     monthlyMetricsData.map((m) => ({ ...m, orgId }))
   );
   console.log(`  Inserted ${monthlyMetricsData.length} monthly metrics`);
-
-  // ─── 11. CRM Team Performance (monthly per person) ─────────────
   const teamPerformanceData = [
-    // Sarah Mitchell
     { personId: sarah.id, month: "Aug", value: "120000" },
     { personId: sarah.id, month: "Sep", value: "185000" },
     { personId: sarah.id, month: "Oct", value: "145000" },
@@ -357,7 +297,6 @@ async function seed() {
     { personId: sarah.id, month: "Dec", value: "195000" },
     { personId: sarah.id, month: "Jan", value: "220000" },
     { personId: sarah.id, month: "Feb", value: "205000" },
-    // Jason Lee
     { personId: jason.id, month: "Aug", value: "95000" },
     { personId: jason.id, month: "Sep", value: "140000" },
     { personId: jason.id, month: "Oct", value: "130000" },
@@ -365,7 +304,6 @@ async function seed() {
     { personId: jason.id, month: "Dec", value: "150000" },
     { personId: jason.id, month: "Jan", value: "170000" },
     { personId: jason.id, month: "Feb", value: "130000" },
-    // Maria Kim
     { personId: maria.id, month: "Aug", value: "75000" },
     { personId: maria.id, month: "Sep", value: "110000" },
     { personId: maria.id, month: "Oct", value: "125000" },
@@ -373,7 +311,6 @@ async function seed() {
     { personId: maria.id, month: "Dec", value: "120000" },
     { personId: maria.id, month: "Jan", value: "155000" },
     { personId: maria.id, month: "Feb", value: "145000" },
-    // Alex Park
     { personId: alex.id, month: "Aug", value: "55000" },
     { personId: alex.id, month: "Sep", value: "78000" },
     { personId: alex.id, month: "Oct", value: "82000" },
@@ -381,7 +318,6 @@ async function seed() {
     { personId: alex.id, month: "Dec", value: "90000" },
     { personId: alex.id, month: "Jan", value: "110000" },
     { personId: alex.id, month: "Feb", value: "100000" },
-    // Daniel Chen
     { personId: daniel.id, month: "Aug", value: "45000" },
     { personId: daniel.id, month: "Sep", value: "62000" },
     { personId: daniel.id, month: "Oct", value: "70000" },
@@ -389,7 +325,6 @@ async function seed() {
     { personId: daniel.id, month: "Dec", value: "78000" },
     { personId: daniel.id, month: "Jan", value: "95000" },
     { personId: daniel.id, month: "Feb", value: "105000" },
-    // Emma Watson (CSM — ARR values)
     { personId: emma.id, month: "Aug", value: "3200000" },
     { personId: emma.id, month: "Sep", value: "3350000" },
     { personId: emma.id, month: "Oct", value: "3400000" },
@@ -397,7 +332,6 @@ async function seed() {
     { personId: emma.id, month: "Dec", value: "3600000" },
     { personId: emma.id, month: "Jan", value: "3700000" },
     { personId: emma.id, month: "Feb", value: "3800000" },
-    // Ryan Torres
     { personId: ryan.id, month: "Aug", value: "2100000" },
     { personId: ryan.id, month: "Sep", value: "2200000" },
     { personId: ryan.id, month: "Oct", value: "2280000" },
@@ -405,7 +339,6 @@ async function seed() {
     { personId: ryan.id, month: "Dec", value: "2420000" },
     { personId: ryan.id, month: "Jan", value: "2510000" },
     { personId: ryan.id, month: "Feb", value: "2600000" },
-    // Lisa Huang
     { personId: lisa.id, month: "Aug", value: "1400000" },
     { personId: lisa.id, month: "Sep", value: "1480000" },
     { personId: lisa.id, month: "Oct", value: "1550000" },
@@ -419,8 +352,6 @@ async function seed() {
     teamPerformanceData.map((t) => ({ ...t, orgId }))
   );
   console.log(`  Inserted ${teamPerformanceData.length} team performance records`);
-
-  // ─── 12. CRM Support Team Members ──────────────────────────────
   const teamMembersData = [
     { name: "Jane Doe", role: "Admin", access: "Full", avatar: "JD", status: "online" },
     { name: "John Smith", role: "Manager", access: "Edit", avatar: "JS", status: "online" },

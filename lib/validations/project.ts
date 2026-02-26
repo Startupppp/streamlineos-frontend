@@ -34,7 +34,6 @@ export const createProjectInputSchema = z.object({
   }).optional(),
 });
 
-
 export const createTicketInputSchema = z.object({
   projectId: z.number().int().positive(),
   title: z.string().min(1, "Title is required"),
@@ -99,7 +98,6 @@ export const addCommentInputSchema = z.object({
 
 export const addAttachmentInputSchema = z.object({
   ticketId: z.number().int().positive(),
-  // Accept full URLs, relative paths, and R2 storage keys
   fileUrl: z.string().min(1),
   fileName: z.string().min(1),
   fileSize: z.number().int().positive().optional(),

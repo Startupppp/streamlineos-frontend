@@ -55,16 +55,12 @@ function normalizeTicketType(type: string): string {
 export const projectRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
     const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
-
-    // OWNER/ADMIN can see all projects in the list
     if (isOwnerOrAdmin) {
       return await ctx.db.query.projects.findMany({
         where: eq(projects.orgId, ctx.session.orgId),
         orderBy: [desc(projects.id)],
       });
     }
-
-    // Regular users can only see projects they are assigned to
     const memberOf = await ctx.db
       .select({ projectId: projectMembers.projectId })
       .from(projectMembers)
@@ -110,8 +106,6 @@ export const projectRouter = createTRPCRouter({
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
-
-      // Check project exists in this org
       const projectCheck = await ctx.db.query.projects.findFirst({
         where: and(
           eq(projects.id, input.id),
@@ -122,8 +116,6 @@ export const projectRouter = createTRPCRouter({
       if (!projectCheck) {
         return null;
       }
-
-      // OWNER/ADMIN can access any project in their org; others must be manager or member
       if (!isOwnerOrAdmin) {
         const isManager = projectCheck.managerId === ctx.session.userId;
         if (!isManager) {
@@ -185,7 +177,6 @@ export const projectRouter = createTRPCRouter({
   createProject: protectedProcedure
     .input(createProjectInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Generate key if not provided: Uppercase first 3 chars or random
       let projectKey = input.key;
       if (!projectKey) {
           const namePart = input.name.replace(/[^a-zA-Z]/g, "").substring(0, 3).toUpperCase();
@@ -197,7 +188,7 @@ export const projectRouter = createTRPCRouter({
         .insert(projects)
         .values({
           orgId: ctx.session.orgId,
-          key: projectKey, // Added key
+          key: projectKey,
           name: input.name,
           description: input.description,
           managerId: input.managerId,
@@ -215,8 +206,6 @@ export const projectRouter = createTRPCRouter({
           }
         })
         .returning();
-
-      // Seed default statuses
       const defaultStatuses = [
           { name: "TODO", order: 0, color: "#e2e8f0" },
           { name: "IN_PROGRESS", order: 1, color: "#3b82f6" },
@@ -233,8 +222,6 @@ export const projectRouter = createTRPCRouter({
               color: s.color,
           }))
       );
-
-      // Add members if provided
       if (input.memberIds && input.memberIds.length > 0) {
           await ctx.db.insert(projectMembers).values(
               input.memberIds.map(userId => ({
@@ -243,8 +230,6 @@ export const projectRouter = createTRPCRouter({
                   role: "CONTRIBUTOR",
               }))
           );
-
-          // Send email notifications to added members
           const currentUser = await ctx.db.query.users.findFirst({
             where: eq(users.id, ctx.session.userId),
           });
@@ -277,7 +262,6 @@ export const projectRouter = createTRPCRouter({
   updateProjectSettings: protectedProcedure
     .input(updateProjectSettingsInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Verify user has permission: OWNER/ADMIN or project manager
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       if (!isOwnerOrAdmin) {
         const project = await ctx.db.query.projects.findFirst({
@@ -314,20 +298,15 @@ export const projectRouter = createTRPCRouter({
         );
 
       if (input.memberIds) {
-        // Get existing member IDs before deletion
         const existingMembers = await ctx.db
           .select({ userId: projectMembers.userId })
           .from(projectMembers)
           .where(eq(projectMembers.projectId, input.projectId));
         
         const existingMemberIds = new Set(existingMembers.map(m => m.userId));
-
-        // Remove existing members
         await ctx.db
           .delete(projectMembers)
           .where(eq(projectMembers.projectId, input.projectId));
-
-        // Add new members
         if (input.memberIds.length > 0) {
           await ctx.db.insert(projectMembers).values(
             input.memberIds.map((userId) => ({
@@ -336,8 +315,6 @@ export const projectRouter = createTRPCRouter({
               role: "CONTRIBUTOR",
             }))
           );
-
-          // Send email notifications to newly added members only
           const newMemberIds = input.memberIds.filter(id => !existingMemberIds.has(id));
 
           if (newMemberIds.length > 0) {
@@ -435,7 +412,6 @@ export const projectRouter = createTRPCRouter({
   createTicket: protectedProcedure
     .input(createTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Calculate the next ticket number for this project
       const maxTicketResult = await ctx.db
         .select({ maxTicketNumber: sql<number>`COALESCE(MAX(${tickets.ticketNumber}), 0)` })
         .from(tickets)
@@ -469,8 +445,6 @@ export const projectRouter = createTRPCRouter({
           status: input.status || "TODO",
         })
         .returning();
-
-      // Send email notification if ticket is assigned
       if (input.assigneeId) {
         try {
           const [assignee, creator, project] = await Promise.all([
@@ -499,7 +473,6 @@ export const projectRouter = createTRPCRouter({
             );
           }
         } catch (error) {
-          // Don't fail ticket creation if email fails
         }
       }
 
@@ -510,8 +483,6 @@ export const projectRouter = createTRPCRouter({
     .input(updateTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { ticketId, ...updateData } = input;
-      
-      // Build update object conditionally
       const updateFields: Record<string, unknown> = {
         updatedAt: new Date(),
       };
@@ -531,9 +502,7 @@ export const projectRouter = createTRPCRouter({
       if (updateData.priority) {
         updateFields.priority = updateData.priority;
       }
-      // Handle assigneeId - allow setting to null for unassigning
       if (updateData.assigneeId !== undefined) {
-        // Convert empty string or "unassigned" to null
         updateFields.assigneeId = 
           updateData.assigneeId === "" || updateData.assigneeId === "unassigned"
             ? null
@@ -760,7 +729,6 @@ export const projectRouter = createTRPCRouter({
   addTimeEntry: protectedProcedure
     .input(addTimeEntryInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // PERMISSION CHECK
       const ticket = await ctx.db.query.tickets.findFirst({
           where: eq(tickets.id, input.ticketId),
           columns: { projectId: true },
@@ -830,10 +798,8 @@ export const projectRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       const page = input.page || DEFAULT_PAGE;
-      const limit = input.limit || 50; // Higher default for time entries
+      const limit = input.limit || 50;
       const offset = getOffset(page, limit);
-
-      // Build base conditions
       const conditions = [eq(timesheets.orgId, ctx.session.orgId)];
 
       if (input.ticketId) {
@@ -848,13 +814,9 @@ export const projectRouter = createTRPCRouter({
       if (input.endDate) {
         conditions.push(lte(timesheets.date, input.endDate));
       }
-
-      // If not admin and no specific ticket context, restrict to own timesheets
       if (!isOwnerOrAdmin && !input.ticketId && input.userId !== ctx.session.userId) {
         conditions.push(eq(timesheets.userId, ctx.session.userId));
       }
-
-      // Use subquery for projectId filter instead of separate query (avoids N+1)
       if (input.projectId) {
         conditions.push(
           sql`${timesheets.ticketId} IN (
@@ -864,8 +826,6 @@ export const projectRouter = createTRPCRouter({
           )`
         );
       }
-
-      // Single query with joins for better performance
       const entries = await ctx.db.query.timesheets.findMany({
         where: and(...conditions),
         orderBy: [desc(timesheets.date)],
@@ -915,16 +875,12 @@ export const projectRouter = createTRPCRouter({
       if (!entry) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Time entry not found" });
       }
-
-      // Only allow editing if status is PENDING
       if (entry.status !== "PENDING") {
         throw new TRPCError({ 
           code: "FORBIDDEN", 
           message: "Cannot edit timesheet entry that has been reviewed" 
         });
       }
-
-      // Only allow users to edit their own entries (unless admin/owner)
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       if (!isOwnerOrAdmin && entry.userId !== ctx.session.userId) {
         throw new TRPCError({ 
@@ -949,8 +905,6 @@ export const projectRouter = createTRPCRouter({
         .set(updateData)
         .where(eq(timesheets.id, input.entryId))
         .returning();
-
-      // Update ticket time spent if hours changed
       if (input.hours !== undefined && entry.ticketId) {
         const totalHours = await ctx.db
           .select({
@@ -990,16 +944,12 @@ export const projectRouter = createTRPCRouter({
       if (!entry) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Time entry not found" });
       }
-
-      // Only allow deleting if status is PENDING
       if (entry.status !== "PENDING") {
         throw new TRPCError({ 
           code: "FORBIDDEN", 
           message: "Cannot delete timesheet entry that has been reviewed" 
         });
       }
-
-      // Only allow users to delete their own entries (unless admin/owner)
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       if (!isOwnerOrAdmin && entry.userId !== ctx.session.userId) {
         throw new TRPCError({ 
@@ -1013,8 +963,6 @@ export const projectRouter = createTRPCRouter({
       await ctx.db
         .delete(timesheets)
         .where(eq(timesheets.id, input.entryId));
-
-      // Update ticket time spent
       if (ticketId) {
         const totalHours = await ctx.db
           .select({
@@ -1069,8 +1017,6 @@ export const projectRouter = createTRPCRouter({
       if (input.status) {
         conditions.push(eq(timesheets.status, input.status));
       }
-
-      // Use select with joins to get approver name
       const entries = await ctx.db
         .select({
           id: timesheets.id,
@@ -1111,8 +1057,6 @@ export const projectRouter = createTRPCRouter({
         .leftJoin(users, eq(timesheets.userId, users.id))
         .where(and(...conditions))
         .orderBy(desc(timesheets.date));
-
-      // Fetch tickets separately with project info
       const ticketIds = entries.map(e => e.ticketId).filter(Boolean) as number[];
       const ticketsMap = new Map();
 
@@ -1125,8 +1069,6 @@ export const projectRouter = createTRPCRouter({
         });
         ticketsData.forEach(t => ticketsMap.set(t.id, t));
       }
-
-      // Combine the data
       const result = entries.map(entry => ({
         ...entry,
         ticket: entry.ticketId ? ticketsMap.get(entry.ticketId) : null,
@@ -1325,8 +1267,6 @@ export const projectRouter = createTRPCRouter({
         }
       });
 
-
-
       let cumulativePoints = 0;
       const actualBurndownCumulative = idealBurndown.map((ideal) => {
         const dateKey = formatDateOnly(ideal.date);
@@ -1353,7 +1293,6 @@ export const projectRouter = createTRPCRouter({
         color: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-        // Get max order
         const existingStatuses = await ctx.db.query.projectStatuses.findMany({
             where: and(
                 eq(projectStatuses.projectId, input.projectId),
@@ -1377,12 +1316,10 @@ export const projectRouter = createTRPCRouter({
   updateProjectStatusOrder: protectedProcedure
     .input(z.object({
         projectId: z.number(),
-        statusIds: z.array(z.number()), // Ordered list of IDs
+        statusIds: z.array(z.number()),
     }))
     .mutation(async ({ ctx, input }) => {
         if (input.statusIds.length === 0) return;
-
-        // Use transaction with parameterized updates (safe from SQL injection)
         await ctx.db.transaction(async (tx) => {
             for (let i = 0; i < input.statusIds.length; i++) {
                 await tx.update(projectStatuses)
@@ -1401,15 +1338,11 @@ export const projectRouter = createTRPCRouter({
         projectId: z.number(),
     }))
     .mutation(async ({ ctx, input }) => {
-        // Check if there are tickets with this status name
-        // We need the name first
         const status = await ctx.db.query.projectStatuses.findFirst({
             where: eq(projectStatuses.id, input.statusId),
         });
 
         if (!status) return;
-
-        // Check tickets
         const conflictTickets = await ctx.db.query.tickets.findMany({
             where: and(
                 eq(tickets.projectId, input.projectId),
@@ -1443,8 +1376,6 @@ export const projectRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
         if (input.items.length === 0) return;
-
-        // Use transaction with parameterized updates (safe from SQL injection)
         await ctx.db.transaction(async (tx) => {
             for (const item of input.items) {
                 await tx.update(tickets)
@@ -1478,34 +1409,22 @@ export const projectRouter = createTRPCRouter({
       });
 
       if (!project) return;
-
-      // 1. Get all ticket IDs in the project
       const projectTickets = await ctx.db
         .select({ id: tickets.id })
         .from(tickets)
         .where(eq(tickets.projectId, input.projectId));
       
       const ticketIds = projectTickets.map((t) => t.id);
-
-      // 2. Delete ticket-related data
       if (ticketIds.length > 0) {
         await ctx.db.delete(ticketComments).where(inArray(ticketComments.ticketId, ticketIds));
         await ctx.db.delete(ticketAttachments).where(inArray(ticketAttachments.ticketId, ticketIds));
         await ctx.db.delete(ticketLabelMappings).where(inArray(ticketLabelMappings.ticketId, ticketIds));
         await ctx.db.delete(timesheets).where(inArray(timesheets.ticketId, ticketIds));
-        
-        // Delete tickets (self-references might need care, but single batch delete usually works on Postgres if not strict on order within table unless CASCADE is set. 
-        // If parentTicketId checks exist, we might need multiple passes or set null first. 
-        // For now, try simple delete.)
         await ctx.db.delete(tickets).where(inArray(tickets.id, ticketIds));
       }
-
-      // 3. Delete other project children
       await ctx.db.delete(sprints).where(eq(sprints.projectId, input.projectId));
       await ctx.db.delete(projectMembers).where(eq(projectMembers.projectId, input.projectId));
       await ctx.db.delete(projectStatuses).where(eq(projectStatuses.projectId, input.projectId));
-
-      // 4. Delete project
       await ctx.db.delete(projects).where(eq(projects.id, input.projectId));
 
       return { success: true };
@@ -1529,8 +1448,6 @@ export const projectRouter = createTRPCRouter({
   getEmployeeProjects: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // 1. Get projects user is part of
-      // 1. Get projects user is part of
       const userProjects = await ctx.db
         .select({
             project: {
@@ -1546,8 +1463,6 @@ export const projectRouter = createTRPCRouter({
         .where(eq(projectMembers.userId, input.userId));
 
       if (userProjects.length === 0) return [];
-
-      // 2. Get ticket stats for user per project
       const projectIds = userProjects.map(p => p.project.id);
       
       const ticketStats = await ctx.db
@@ -1562,14 +1477,11 @@ export const projectRouter = createTRPCRouter({
             inArray(tickets.projectId, projectIds)
         ))
         .groupBy(tickets.projectId, tickets.status);
-
-      // 3. Merge data
       return userProjects.map(({ project, role }) => {
           const stats = ticketStats.filter(s => s.projectId === project.id);
           const todo = stats.find(s => s.status === 'TODO')?.count || 0;
           const inProgress = stats.find(s => s.status === 'IN_PROGRESS')?.count || 0;
           const done = stats.find(s => s.status === 'DONE')?.count || 0;
-          // Sum up others or just count active
           const total = stats.reduce((acc, curr) => acc + curr.count, 0);
           
           return {
@@ -1605,16 +1517,12 @@ export const projectRouter = createTRPCRouter({
       if (input.status) {
         conditions.push(eq(tickets.status, input.status));
       }
-
-      // Get total count for pagination
       const [countResult] = await ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(tickets)
         .where(and(...conditions));
 
       const total = Number(countResult?.count || 0);
-
-      // Fetch paginated tickets
       const userTickets = await ctx.db.query.tickets.findMany({
         where: and(...conditions),
         with: {

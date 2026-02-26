@@ -88,8 +88,6 @@ export const organizationRouter = createTRPCRouter({
       if (!ctx.session?.user?.id) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-
-      // Check if slug is taken
       const existing = await ctx.db.query.organizations.findFirst({
         where: eq(organizations.slug, input.slug),
       });
@@ -100,16 +98,12 @@ export const organizationRouter = createTRPCRouter({
           message: "Organization slug already exists",
         });
       }
-
-      // Create organization
       const orgId = nanoid();
       await ctx.db.insert(organizations).values({
         id: orgId,
         name: input.name,
         slug: input.slug,
       });
-
-      // Add creator as owner
       await ctx.db.insert(organizationMembers).values({
         userId: ctx.session.user.id,
         orgId,
@@ -125,8 +119,6 @@ export const organizationRouter = createTRPCRouter({
       if (!ctx.session?.user?.id) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-
-      // Verify user has permission to invite (ADMIN or OWNER)
       const membership = await ctx.db.query.organizationMembers.findFirst({
         where: and(
           eq(organizationMembers.userId, ctx.session.user.id),
@@ -140,8 +132,6 @@ export const organizationRouter = createTRPCRouter({
           message: "You don't have permission to invite users",
         });
       }
-
-      // Check if user already exists and is already a member
       const existingUser = await ctx.db.query.users.findFirst({
         where: eq(users.email, input.email),
       });
@@ -161,8 +151,6 @@ export const organizationRouter = createTRPCRouter({
           });
         }
       }
-
-      // Check for existing pending invitation
       const existingInvitation = await ctx.db.query.invitations.findFirst({
         where: and(
           eq(invitations.email, input.email),
@@ -178,11 +166,9 @@ export const organizationRouter = createTRPCRouter({
           message: "An invitation has already been sent to this email",
         });
       }
-
-      // Create invitation
       const invitationToken = nanoid(32);
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+      expiresAt.setDate(expiresAt.getDate() + 7);
 
       const invitationId = nanoid();
       await ctx.db.insert(invitations).values({
@@ -194,15 +180,9 @@ export const organizationRouter = createTRPCRouter({
         invitedBy: ctx.session.user.id,
         expiresAt,
       });
-
-      // Get organization and inviter details
       const org = await ctx.db.query.organizations.findFirst({
         where: eq(organizations.id, input.orgId),
       });
-
-
-
-      // Send invitation email
       await sendInvitationEmail(
         input.email,
         invitationToken,
@@ -219,8 +199,6 @@ export const organizationRouter = createTRPCRouter({
       if (!ctx.session?.user?.id) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-
-      // Verify user has permission
       const membership = await ctx.db.query.organizationMembers.findFirst({
         where: and(
           eq(organizationMembers.userId, ctx.session.user.id),
@@ -258,8 +236,6 @@ export const organizationRouter = createTRPCRouter({
       if (!ctx.session?.user?.id) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-
-      // Verify user has permission
       const membership = await ctx.db.query.organizationMembers.findFirst({
         where: and(
           eq(organizationMembers.userId, ctx.session.user.id),
@@ -285,8 +261,6 @@ export const organizationRouter = createTRPCRouter({
       if (!ctx.session?.user?.id) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-
-      // Verify user has permission (only OWNER can change roles)
       const membership = await ctx.db.query.organizationMembers.findFirst({
         where: and(
           eq(organizationMembers.userId, ctx.session.user.id),
@@ -320,8 +294,6 @@ export const organizationRouter = createTRPCRouter({
       if (!ctx.session?.user?.id) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-
-      // Verify user has permission (ADMIN or OWNER, but can't remove themselves)
       if (input.userId === ctx.session.user.id) {
         throw new TRPCError({
           code: "BAD_REQUEST",

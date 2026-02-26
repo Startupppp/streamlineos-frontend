@@ -47,7 +47,6 @@ export interface EmailOptions {
 }
 
 async function sendEmail(options: EmailOptions) {
-  // Priority: EMAIL_FROM_ADDRESS > SENDGRID_FROM_EMAIL > default
   const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SENDGRID_FROM_EMAIL || "noreply@vaivammcapital.com";
   
   if (!process.env.SENDGRID_API_KEY) {

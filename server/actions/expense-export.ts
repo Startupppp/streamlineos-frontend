@@ -8,10 +8,6 @@ import { isAuthError } from "@/lib/auth-types";
 import { format } from "date-fns";
 import { getTodayString } from "@/lib/date-utils";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface ExportFilters {
   startDate?: string;
   endDate?: string;
@@ -51,10 +47,6 @@ interface ExportExpense {
   paidAt: Date | null;
   transactionRef: string | null;
 }
-
-// ============================================================================
-// FILTER BUILDER (Same logic as expense-query.ts)
-// ============================================================================
 
 function buildExportConditions(
   filters: ExportFilters,
@@ -126,10 +118,6 @@ function buildExportConditions(
   return conditions;
 }
 
-// ============================================================================
-// DATA FETCHING
-// ============================================================================
-
 async function fetchExpensesForExport(
   conditions: ReturnType<typeof buildExportConditions>
 ): Promise<ExportExpense[]> {
@@ -181,10 +169,6 @@ async function fetchExportStats(
   return result[0];
 }
 
-// ============================================================================
-// CSV EXPORT
-// ============================================================================
-
 function generateCSVContent(
   expenseList: ExportExpense[],
   options: ExportOptions,
@@ -223,8 +207,6 @@ function generateCSVContent(
   ]);
 
   let csvContent = "";
-
-  // Header section
   if (options.includeHeader !== false) {
     csvContent += `${options.title || "Expense Report"}\n`;
     csvContent += `Generated: ${format(new Date(), "yyyy-MM-dd HH:mm:ss")}\n`;
@@ -240,18 +222,12 @@ function generateCSVContent(
     csvContent += `Total Records: ${expenseList.length}\n`;
     csvContent += "\n";
   }
-
-  // Data headers
   csvContent += headers.join(",") + "\n";
-
-  // Data rows
   csvContent += rows
     .map((row) =>
       row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
     )
     .join("\n");
-
-  // Totals section
   if (options.includeTotals !== false && stats) {
     csvContent += "\n\n";
     csvContent += "SUMMARY\n";
@@ -264,10 +240,6 @@ function generateCSVContent(
 
   return csvContent;
 }
-
-// ============================================================================
-// XLSX EXPORT (JSON format for client-side xlsx generation)
-// ============================================================================
 
 interface XLSXExportData {
   sheets: {
@@ -326,11 +298,7 @@ function generateXLSXData(
     e.paidAt ? format(new Date(e.paidAt), "yyyy-MM-dd HH:mm") : "",
     e.transactionRef || "",
   ]);
-
-  // Main expenses sheet
   const expensesSheet = [headers, ...rows];
-
-  // Summary sheet
   const summarySheet = [
     ["Expense Report Summary"],
     [""],
@@ -348,8 +316,6 @@ function generateXLSXData(
     ["Paid", Number(stats?.paidAmount) || 0],
     ["Rejected", Number(stats?.rejectedAmount) || 0],
   ];
-
-  // By Category sheet
   const categoryMap = new Map<string, { count: number; amount: number }>();
   expenseList.forEach((e) => {
     const existing = categoryMap.get(e.category) || { count: 0, amount: 0 };
@@ -367,8 +333,6 @@ function generateXLSXData(
       data.amount,
     ]),
   ];
-
-  // By Status sheet
   const statusMap = new Map<string, { count: number; amount: number }>();
   expenseList.forEach((e) => {
     const status = e.status || "PENDING";
@@ -412,10 +376,6 @@ function generateXLSXData(
   };
 }
 
-// ============================================================================
-// PDF EXPORT (JSON format for client-side PDF generation)
-// ============================================================================
-
 interface PDFExportData {
   title: string;
   generatedAt: string;
@@ -457,8 +417,6 @@ function generatePDFData(
   stats: Awaited<ReturnType<typeof fetchExportStats>>
 ): PDFExportData {
   const totalAmount = Number(stats?.totalAmount) || 1;
-
-  // By Category breakdown
   const categoryMap = new Map<string, { count: number; amount: number }>();
   expenseList.forEach((e) => {
     const existing = categoryMap.get(e.category) || { count: 0, amount: 0 };
@@ -514,10 +472,6 @@ function generatePDFData(
     byCategory,
   };
 }
-
-// ============================================================================
-// MAIN EXPORT FUNCTION
-// ============================================================================
 
 export type ExportResult =
   | {

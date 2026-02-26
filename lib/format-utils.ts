@@ -48,11 +48,6 @@ export const calcPercent = (value: number, total: number, decimals = 1): string 
   if (total <= 0) return "0";
   return ((value / total) * 100).toFixed(decimals);
 };
-
-/**
- * Format a number as Indian Rupees (₹).
- * Handles string | number input; returns "₹0" for NaN.
- */
 export function formatINR(amount: string | number): string {
   const num = Number(amount);
   if (Number.isNaN(num)) return "₹0";

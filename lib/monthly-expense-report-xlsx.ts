@@ -1,11 +1,6 @@
 import * as XLSX from "xlsx";
 import type { MonthlyExpenseReportRow } from "./email-templates";
 import type { MonthlyExpenseReportSummary } from "./monthly-expense-report-pdf";
-
-/**
- * Generates the monthly expense report as an XLSX buffer (for email attachment or download).
- * Safe to run on the server.
- */
 export function generateMonthlyExpenseReportXlsx(
   monthLabel: string,
   orgName: string,

@@ -1,4 +1,3 @@
-// CRM People — Detailed profiles for all CRM personnel (sales reps, CSMs, marketing)
 
 export type PersonRole = "sales_rep" | "csm" | "marketing";
 
@@ -36,33 +35,17 @@ export interface CrmPerson {
   location: string;
   joinDate: string;
   bio: string;
-
-  // Performance metrics
   stats: {
     label: string;
     value: string | number;
     trend?: { value: number; isPositive: boolean };
   }[];
-
-  // Monthly performance (for sparkline/area chart)
   monthlyPerformance: { month: string; value: number }[];
-
-  // Deals (for sales reps)
   deals: PersonDeal[];
-
-  // Accounts (for CSMs)
   accounts: PersonAccount[];
-
-  // Activity timeline
   activities: PersonActivity[];
-
-  // Skills / specialties
   skills: string[];
 }
-
-// ─── Slug lookup helpers ──────────────────────────────────────────────────────
-
-// Maps abbreviated names (used in dashboard data) → slug
 const abbreviationMap: Record<string, string> = {
   "Sarah M.": "sarah-mitchell",
   "Jason L.": "jason-lee",
@@ -93,10 +76,7 @@ export function getPersonBySlug(slug: string): CrmPerson | undefined {
   return crmPeople.find((p) => p.slug === slug);
 }
 
-// ─── People Profiles ──────────────────────────────────────────────────────────
-
 export const crmPeople: CrmPerson[] = [
-  // ── Sales Reps ──────────────────────────────────────────────────────────
   {
     slug: "sarah-mitchell",
     name: "Sarah Mitchell",
@@ -319,8 +299,6 @@ export const crmPeople: CrmPerson[] = [
     ],
     skills: ["Manufacturing", "Logistics", "ROI Analysis", "Data-Driven Selling", "Business Case Development"],
   },
-
-  // ── Customer Success Managers ───────────────────────────────────────────
   {
     slug: "emma-watson",
     name: "Emma Watson",

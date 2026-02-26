@@ -110,8 +110,6 @@ export function useExpenseFilters(
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-
-  // Initialize filters from URL if syncToUrl is enabled
   const initialFilters = useMemo(() => {
     const filters = { ...DEFAULT_FILTERS, pageSize: defaultPageSize };
 
@@ -142,8 +140,6 @@ export function useExpenseFilters(
 
   const [filters, setFiltersState] = useState<ExpenseFilters>(initialFilters);
   const [datePreset, setDatePresetState] = useState<DatePreset>("all");
-
-  // Sync filters to URL
   const syncFiltersToUrl = useCallback(
     (newFilters: ExpenseFilters) => {
       if (!syncToUrl) return;
@@ -187,13 +183,10 @@ export function useExpenseFilters(
     },
     [syncToUrl, pathname, router]
   );
-
-  // Set single filter
   const setFilter = useCallback(
     <K extends keyof ExpenseFilters>(key: K, value: ExpenseFilters[K]) => {
       setFiltersState((prev) => {
         const newFilters = { ...prev, [key]: value };
-        // Reset to page 1 when filters change (except for page itself)
         if (key !== "page") {
           newFilters.page = 1;
         }
@@ -204,13 +197,10 @@ export function useExpenseFilters(
     },
     [syncFiltersToUrl, onFiltersChange]
   );
-
-  // Set multiple filters at once
   const setFilters = useCallback(
     (newFilters: Partial<ExpenseFilters>) => {
       setFiltersState((prev) => {
         const updated = { ...prev, ...newFilters };
-        // Reset to page 1 when filters change (unless page is being set)
         if (!("page" in newFilters)) {
           updated.page = 1;
         }
@@ -221,8 +211,6 @@ export function useExpenseFilters(
     },
     [syncFiltersToUrl, onFiltersChange]
   );
-
-  // Reset all filters
   const resetFilters = useCallback(() => {
     const resetState = { ...DEFAULT_FILTERS, pageSize: defaultPageSize };
     setFiltersState(resetState);
@@ -230,8 +218,6 @@ export function useExpenseFilters(
     syncFiltersToUrl(resetState);
     onFiltersChange?.(resetState);
   }, [defaultPageSize, syncFiltersToUrl, onFiltersChange]);
-
-  // Set date preset
   const setDatePreset = useCallback(
     (preset: DatePreset) => {
       setDatePresetState(preset);
@@ -243,8 +229,6 @@ export function useExpenseFilters(
     },
     [setFilters]
   );
-
-  // Set custom date range
   const setCustomDateRange = useCallback(
     (startDate: string, endDate: string) => {
       setDatePresetState("custom");
@@ -252,8 +236,6 @@ export function useExpenseFilters(
     },
     [setFilters]
   );
-
-  // Calculate active filter count
   const { hasActiveFilters, activeFilterCount } = useMemo(() => {
     let count = 0;
 
@@ -284,8 +266,6 @@ export function useExpenseFilters(
     isPending,
   };
 }
-
-// Utility hook for debounced search
 export function useDebouncedValue<T>(value: T, delay: number = 300): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
 

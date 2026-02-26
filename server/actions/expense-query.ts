@@ -6,43 +6,24 @@ import { eq, and, desc, gte, lte, sql, inArray, like, or, asc, count } from "dri
 import { getAuthenticatedMember } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface ExpenseFilters {
-  // Time-based
   startDate?: string;
   endDate?: string;
-  month?: string; // "2024-01" format
-
-  // Category-based
+  month?: string;
   categoryId?: number;
   categoryIds?: number[];
   category?: string;
-
-  // Amount-based
   minAmount?: number;
   maxAmount?: number;
-
-  // Metadata-based
   status?: string | string[];
   userId?: string;
   paymentMethod?: string;
   projectId?: number;
-
-  // Search
   search?: string;
-
-  // Pagination
   page?: number;
   pageSize?: number;
-
-  // Sorting
   sortBy?: "date" | "amount" | "category" | "status" | "created";
   sortOrder?: "asc" | "desc";
-
-  // Include flags
   includeStats?: boolean;
   includePending?: boolean;
   includeCategories?: boolean;
@@ -129,10 +110,6 @@ export interface ExpensePageData {
   isAdmin: boolean;
 }
 
-// ============================================================================
-// FILTER BUILDER
-// ============================================================================
-
 function buildFilterConditions(
   filters: ExpenseFilters,
   orgId: string,
@@ -140,15 +117,11 @@ function buildFilterConditions(
   userId: string
 ) {
   const conditions = [eq(expenses.orgId, orgId)];
-
-  // Role-based access (non-admin sees only their expenses)
   if (!isAdmin) {
     conditions.push(eq(expenses.userId, userId));
   } else if (filters.userId) {
     conditions.push(eq(expenses.userId, filters.userId));
   }
-
-  // Time-based filters
   if (filters.startDate) {
     conditions.push(gte(expenses.expenseDate, filters.startDate));
   }
@@ -163,8 +136,6 @@ function buildFilterConditions(
     conditions.push(gte(expenses.expenseDate, startDate));
     conditions.push(lte(expenses.expenseDate, endDate));
   }
-
-  // Category filters
   if (filters.categoryId) {
     conditions.push(eq(expenses.categoryId, filters.categoryId));
   }
@@ -174,8 +145,6 @@ function buildFilterConditions(
   if (filters.categoryIds?.length) {
     conditions.push(inArray(expenses.categoryId, filters.categoryIds));
   }
-
-  // Status filter (supports single or multiple)
   if (filters.status) {
     if (Array.isArray(filters.status)) {
       if (filters.status.length > 0 && !filters.status.includes("all")) {
@@ -185,26 +154,18 @@ function buildFilterConditions(
       conditions.push(eq(expenses.status, filters.status as any));
     }
   }
-
-  // Amount range
   if (filters.minAmount !== undefined && filters.minAmount > 0) {
     conditions.push(gte(sql`CAST(${expenses.amount} AS DECIMAL)`, filters.minAmount));
   }
   if (filters.maxAmount !== undefined && filters.maxAmount > 0) {
     conditions.push(lte(sql`CAST(${expenses.amount} AS DECIMAL)`, filters.maxAmount));
   }
-
-  // Payment method
   if (filters.paymentMethod && filters.paymentMethod !== "all") {
     conditions.push(eq(expenses.paymentMethod, filters.paymentMethod));
   }
-
-  // Project
   if (filters.projectId) {
     conditions.push(eq(expenses.projectId, filters.projectId));
   }
-
-  // Search (searches description, category, merchant)
   if (filters.search && filters.search.trim()) {
     const searchTerm = `%${filters.search.trim().toLowerCase()}%`;
     conditions.push(
@@ -219,10 +180,6 @@ function buildFilterConditions(
   return conditions;
 }
 
-// ============================================================================
-// QUERY FUNCTIONS
-// ============================================================================
-
 async function fetchExpensesWithPagination(
   conditions: ReturnType<typeof buildFilterConditions>,
   page: number,
@@ -231,8 +188,6 @@ async function fetchExpensesWithPagination(
   sortOrder: string = "desc"
 ) {
   const offset = (page - 1) * pageSize;
-
-  // Determine sort column
   const sortColumn = {
     date: expenses.expenseDate,
     amount: expenses.amount,
@@ -329,10 +284,6 @@ async function fetchCategories(orgId: string): Promise<ExpenseCategory[]> {
   }) as ExpenseCategory[];
 }
 
-// ============================================================================
-// MAIN UNIFIED QUERY FUNCTION
-// ============================================================================
-
 export async function getExpensePageData(
   filters: ExpenseFilters = {}
 ): Promise<ExpensePageData | { error: string }> {
@@ -344,13 +295,8 @@ export async function getExpensePageData(
   const { isAdmin, userId, orgId } = authResult;
   const page = filters.page || 1;
   const pageSize = filters.pageSize || 50;
-
-  // Build conditions
   const conditions = buildFilterConditions(filters, orgId, isAdmin, userId);
-
-  // Parallel queries with single auth context
   const [expenseData, statsData, categoriesData, pendingData] = await Promise.all([
-    // Main expenses with pagination
     fetchExpensesWithPagination(
       conditions,
       page,
@@ -358,16 +304,10 @@ export async function getExpensePageData(
       filters.sortBy,
       filters.sortOrder
     ),
-
-    // Stats (always fetch for dashboard cards)
     filters.includeStats !== false
       ? fetchAggregatedStats(buildFilterConditions({}, orgId, isAdmin, userId))
       : null,
-
-    // Categories (always fetch for filter dropdown)
     filters.includeCategories !== false ? fetchCategories(orgId) : [],
-
-    // Pending (only for admins)
     isAdmin && filters.includePending !== false
       ? fetchPendingExpenses(orgId)
       : [],
@@ -388,10 +328,6 @@ export async function getExpensePageData(
     isAdmin,
   };
 }
-
-// ============================================================================
-// EXPORT QUERY (For generating exports with same filters)
-// ============================================================================
 
 export async function getExpensesForExport(
   filters: ExpenseFilters = {}
@@ -424,10 +360,6 @@ export async function getExpensesForExport(
   };
 }
 
-// ============================================================================
-// CATEGORY SPENDING OPTIMIZED
-// ============================================================================
-
 export interface CategorySpending {
   categoryId: number;
   categoryName: string;
@@ -451,8 +383,6 @@ export async function getCategorySpendingOptimized(): Promise<CategorySpending[]
   }
 
   const { orgId } = authResult;
-
-  // Get categories with aggregated spending in a single query
   const categories = await db.query.expenseCategories.findMany({
     where: and(
       eq(expenseCategories.orgId, orgId),
@@ -463,8 +393,6 @@ export async function getCategorySpendingOptimized(): Promise<CategorySpending[]
   if (categories.length === 0) {
     return [];
   }
-
-  // Get spending aggregated by category
   const spendingData = await db
     .select({
       category: expenses.category,
@@ -477,8 +405,6 @@ export async function getCategorySpendingOptimized(): Promise<CategorySpending[]
     .from(expenses)
     .where(eq(expenses.orgId, orgId))
     .groupBy(expenses.category);
-
-  // Map categories to spending
   const spendingMap = new Map(spendingData.map((s) => [s.category, s]));
 
   return categories.map((cat) => {
@@ -496,10 +422,6 @@ export async function getCategorySpendingOptimized(): Promise<CategorySpending[]
     };
   });
 }
-
-// ============================================================================
-// REPORT DATA OPTIMIZED
-// ============================================================================
 
 export interface ReportData {
   summary: ExpenseStats;
@@ -555,13 +477,8 @@ export async function getExpenseReportDataOptimized(
   if (!isAdmin) {
     conditions.push(eq(expenses.userId, userId));
   }
-
-  // Parallel aggregation queries
   const [summary, byCategory, byEmployee, byMonth, byStatus, topExpenses] = await Promise.all([
-    // Summary stats
     fetchAggregatedStats(conditions),
-
-    // By Category
     db
       .select({
         category: expenses.category,
@@ -572,8 +489,6 @@ export async function getExpenseReportDataOptimized(
       .where(and(...conditions))
       .groupBy(expenses.category)
       .orderBy(desc(sql`SUM(CAST(${expenses.amount} AS DECIMAL))`)),
-
-    // By Employee (only for admins)
     isAdmin
       ? db
           .select({
@@ -589,8 +504,6 @@ export async function getExpenseReportDataOptimized(
           .groupBy(expenses.userId, users.firstName, users.lastName)
           .orderBy(desc(sql`SUM(CAST(${expenses.amount} AS DECIMAL))`))
       : [],
-
-    // By Month
     db
       .select({
         month: sql<string>`TO_CHAR(${expenses.expenseDate}::date, 'Mon YYYY')`,
@@ -605,8 +518,6 @@ export async function getExpenseReportDataOptimized(
         sql`TO_CHAR(${expenses.expenseDate}::date, 'YYYY-MM')`
       )
       .orderBy(asc(sql`TO_CHAR(${expenses.expenseDate}::date, 'YYYY-MM')`)),
-
-    // By Status
     db
       .select({
         status: expenses.status,
@@ -616,8 +527,6 @@ export async function getExpenseReportDataOptimized(
       .from(expenses)
       .where(and(...conditions))
       .groupBy(expenses.status),
-
-    // Top Expenses
     db.query.expenses.findMany({
       where: and(
         ...conditions,

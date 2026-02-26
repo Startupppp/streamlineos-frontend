@@ -166,7 +166,6 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   getActiveSprintSummary: protectedProcedure.query(async ({ ctx }) => {
-    // Find active sprints across user's projects
     const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
 
     let projectIds: number[];

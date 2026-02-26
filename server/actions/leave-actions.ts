@@ -17,12 +17,6 @@ import {
   LEAVE_POLICY,
   resolveInitialBalance,
 } from "@/lib/leave-policy";
-
-// ────────────────────────────────────────────
-// Internal helpers
-// ────────────────────────────────────────────
-
-/** Ensure the org has leave types seeded (idempotent). */
 async function ensureLeaveTypes(orgId: string) {
   let types = await db.query.leaveTypes.findMany({
     where: eq(leaveTypes.orgId, orgId),
@@ -66,8 +60,6 @@ async function ensureUserBalances(
   });
 
   const existingTypeIds = new Set(existing.map((b) => b.leaveTypeId));
-
-  // Fetch the user's joining date for pro-rating
   const user = await db.query.users.findFirst({
     where: eq(users.id, userId),
     columns: { joiningDate: true },
@@ -88,10 +80,6 @@ async function ensureUserBalances(
     });
   }
 }
-
-// ────────────────────────────────────────────
-// Public: Leave balance initialization (called during onboarding)
-// ────────────────────────────────────────────
 
 /**
  * Initialize leave balances for a newly onboarded employee.
@@ -115,7 +103,6 @@ export async function initializeLeaveBalances(
   const targetYear = Math.max(joinDate.getFullYear(), currentYear);
 
   for (const type of types) {
-    // Skip if balance already exists
     const existing = await db.query.leaveBalances.findFirst({
       where: and(
         eq(leaveBalances.userId, userId),
@@ -144,10 +131,6 @@ export async function initializeLeaveBalances(
   }
 }
 
-// ────────────────────────────────────────────
-// Public: Monthly casual-leave expiry (called from cron)
-// ────────────────────────────────────────────
-
 /**
  * Expire unused casual leave for the previous month.
  *
@@ -160,17 +143,13 @@ export async function initializeLeaveBalances(
 export async function expireUnusedMonthlyCasualLeaves() {
   const now = new Date();
   const currentYear = now.getFullYear();
-
-  // Calculate previous month's date range
   const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
   const prevMonthYear = now.getMonth() === 0 ? currentYear - 1 : currentYear;
   const monthStart = new Date(prevMonthYear, prevMonth, 1);
-  const monthEnd = new Date(prevMonthYear, prevMonth + 1, 0); // last day of prev month
+  const monthEnd = new Date(prevMonthYear, prevMonth + 1, 0);
 
   const monthStartStr = monthStart.toISOString().split("T")[0];
   const monthEndStr = monthEnd.toISOString().split("T")[0];
-
-  // Get all orgs
   const orgs = await db
     .selectDistinct({ orgId: leaveBalances.orgId })
     .from(leaveBalances)
@@ -179,7 +158,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
   let expiredCount = 0;
 
   for (const { orgId } of orgs) {
-    // Get the casual leave type for this org
     const casualType = await db.query.leaveTypes.findFirst({
       where: and(
         eq(leaveTypes.orgId, orgId),
@@ -188,8 +166,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
     });
 
     if (!casualType) continue;
-
-    // Get all casual leave balances for this org + year
     const balances = await db.query.leaveBalances.findMany({
       where: and(
         eq(leaveBalances.orgId, orgId),
@@ -200,8 +176,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
 
     for (const bal of balances) {
       if (Number(bal.balance) <= 0) continue;
-
-      // Check if this user used a casual leave in the previous month
       const usedLeaves = await db
         .select({ count: sql<number>`count(*)` })
         .from(leaveRequests)
@@ -218,7 +192,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
       const count = Number(usedLeaves[0]?.count ?? 0);
 
       if (count === 0) {
-        // No casual leave used — expire 1 day
         const newBalance = Math.max(0, Number(bal.balance) - LEAVE_POLICY.CASUAL.perMonth);
         await db
           .update(leaveBalances)
@@ -231,10 +204,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
 
   return { expiredCount };
 }
-
-// ────────────────────────────────────────────
-// Public: Yearly leave reset (called from cron on Jan 1)
-// ────────────────────────────────────────────
 
 /**
  * Reset leave balances for a new calendar year.
@@ -254,8 +223,6 @@ export async function resetYearlyLeaveBalances() {
 
   for (const { orgId } of orgs) {
     const types = await ensureLeaveTypes(orgId);
-
-    // Get all active members
     const members = await db.query.organizationMembers.findMany({
       where: eq(organizationMembers.orgId, orgId),
       with: { user: { columns: { id: true, joiningDate: true, isActive: true } } },
@@ -269,7 +236,6 @@ export async function resetYearlyLeaveBalances() {
         : new Date();
 
       for (const type of types) {
-        // Check if balance already exists for new year
         const existing = await db.query.leaveBalances.findFirst({
           where: and(
             eq(leaveBalances.userId, member.userId),
@@ -280,8 +246,6 @@ export async function resetYearlyLeaveBalances() {
         });
 
         if (existing) continue;
-
-        // Fresh allocation — no carry-forward for any type
         const balance = resolveInitialBalance(type.name, type.daysPerYear, joiningDate, newYear);
 
         await db.insert(leaveBalances).values({
@@ -298,10 +262,6 @@ export async function resetYearlyLeaveBalances() {
 
   return { resetCount };
 }
-
-// ────────────────────────────────────────────
-// Public: Context & requests (existing logic, cleaned up)
-// ────────────────────────────────────────────
 
 export async function getLeaveContext() {
   const session = await auth();

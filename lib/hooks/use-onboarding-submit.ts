@@ -16,8 +16,6 @@ export function useOnboardingSubmit(
   options: OnboardingSubmitOptions,
 ) {
   const [isLoading, setIsLoading] = useState(false);
-
-  // Stable ref so the callback never re-creates when options change
   const optionsRef = useRef(options);
   optionsRef.current = options;
 

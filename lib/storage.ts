@@ -135,8 +135,6 @@ export function getFileKeyFromUrl(url: string): string {
   }
   return url;
 }
-
-/** Extract download filename from storage key (e.g. "uploads/123-foo.pdf" -> "foo.pdf") */
 export function getFileNameFromKey(key: string): string {
   const parts = key.split("/");
   const last = parts[parts.length - 1] ?? "download";

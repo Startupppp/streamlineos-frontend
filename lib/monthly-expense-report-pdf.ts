@@ -15,8 +15,6 @@ const ROW_HEIGHT = 9;
 const HEADER_ROW_HEIGHT = 11;
 const TABLE_LEFT = MARGIN;
 const TABLE_RIGHT = PAGE_WIDTH - MARGIN;
-
-// Column layout: Date | Employee | Category | Amount (right-aligned) | Status
 const COLS = {
   date: { x: TABLE_LEFT, w: 26 },
   employee: { x: TABLE_LEFT + 26, w: 48 },
@@ -24,8 +22,6 @@ const COLS = {
   amount: { x: TABLE_LEFT + 112, w: 36 },
   status: { x: TABLE_LEFT + 148, w: TABLE_RIGHT - (TABLE_LEFT + 148) },
 };
-
-/** Format amount with 2 decimals and thousand separators; add ₹ for INR. */
 function formatAmount(amountStr: string, currency: string): string {
   const num = Number.parseFloat(amountStr.replace(/,/g, ""));
   const formatted = Number.isNaN(num)
@@ -58,8 +54,6 @@ export async function generateMonthlyExpenseReportPdf(
     doc.line(TABLE_LEFT, y, TABLE_RIGHT, y);
     y += 3;
   };
-
-  // Title
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(30, 30, 30);
@@ -73,8 +67,6 @@ export async function generateMonthlyExpenseReportPdf(
   y += 14;
 
   drawLine();
-
-  // Table header
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(30, 30, 30);
@@ -108,8 +100,6 @@ export async function generateMonthlyExpenseReportPdf(
 
   y += 10;
   drawLine();
-
-  // Summary
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(30, 30, 30);

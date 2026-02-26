@@ -11,8 +11,6 @@ async function getOrgId(userId: string) {
         limit: 1,
     });
     let orgId = userMemberships[0]?.orgId || null;
-    
-    // Fallback logic matching tRPC
     if (!orgId) {
          const anyOrg = await db.query.organizations.findFirst();
          if (anyOrg) orgId = anyOrg.id;

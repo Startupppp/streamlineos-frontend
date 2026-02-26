@@ -95,9 +95,6 @@ export const authRouter = createTRPCRouter({
         emailVerified: null,
       });
 
-      // Note: Organization creation is now handled separately in /setup-organization
-      // after the user verifies their email and logs in
-
       await ctx.db.insert(verificationTokens).values({
         identifier: input.email,
         token: verificationToken,

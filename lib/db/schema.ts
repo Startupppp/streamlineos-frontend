@@ -1,7 +1,5 @@
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-
-// Enums
 export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER"]);
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
@@ -16,9 +14,6 @@ export const reviewStatusEnum = pgEnum("review_status", ["DRAFT", "IN_PROGRESS",
 export const notificationTypeEnum = pgEnum("notification_type", ["INFO", "SUCCESS", "WARNING", "ERROR"]);
 export const workflowStatusEnum = pgEnum("workflow_status", ["ACTIVE", "INACTIVE"]);
 export const onboardingStatusEnum = pgEnum("onboarding_status", ["PENDING", "IN_PROGRESS", "COMPLETED", "REJECTED"]);
-
-
-// --- RBAC Tables ---
 
 export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
@@ -45,10 +40,6 @@ export const userPermissions = pgTable("user_permissions", {
   granted: boolean("granted").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// --- Core Tables ---
-
-// Organizations table
 export const organizations = pgTable("organizations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -56,8 +47,6 @@ export const organizations = pgTable("organizations", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-// Organization members join table
 export const organizationMembers = pgTable("organization_members", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id).notNull(),
@@ -65,8 +54,6 @@ export const organizationMembers = pgTable("organization_members", {
   role: roleEnum("role").default("MEMBER").notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
 });
-
-// NextAuth tables
 export const accounts = pgTable("accounts", {
   userId: text("user_id").references(() => users.id).notNull(),
   type: text("type").notNull(),
@@ -100,8 +87,6 @@ export const verificationTokens = pgTable("verification_tokens", {
     primaryKey: [table.identifier, table.token],
   },
 }));
-
-// Invitations table
 export const invitations = pgTable("invitations", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
@@ -113,8 +98,6 @@ export const invitations = pgTable("invitations", {
   acceptedAt: timestamp("accepted_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// Password reset tokens
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
@@ -127,7 +110,7 @@ export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
-  managerId: text("manager_id"), // Relation defined below
+  managerId: text("manager_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -169,9 +152,6 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-
-// --- HR Module ---
 
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
@@ -411,14 +391,12 @@ export const helpdeskTickets = pgTable("helpdesk_tickets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// --- CRM / Project Management ---
-
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  key: text("key").notNull().unique(), // e.g. PROJ-1
+  key: text("key").notNull().unique(),
   clientId: text("client_id").references(() => users.id),
   managerId: text("manager_id").references(() => users.id),
   startDate: timestamp("start_date"),
@@ -451,20 +429,20 @@ export const tickets = pgTable("tickets", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  type: text("type").notNull().default("TASK"), // Changed from enum to text
+  type: text("type").notNull().default("TASK"),
   status: text("status").notNull().default("TODO"),
   priority: ticketPriorityEnum("priority").default("MEDIUM"),
   projectId: integer("project_id").references(() => projects.id),
-  ticketNumber: integer("ticket_number").notNull(), // Per-project ticket number
+  ticketNumber: integer("ticket_number").notNull(),
   sprintId: integer("sprint_id").references(() => sprints.id),
   epicId: integer("epic_id"),
   assigneeId: text("assignee_id").references(() => users.id),
   reporterId: text("reporter_id").references(() => users.id),
-  points: integer("points"), // Story points
+  points: integer("points"),
   storyPoints: integer("story_points"), 
   link: text("link"),
-  order: integer("order").default(0), // For Kanban ordering
-  parentTicketId: integer("parent_ticket_id"), // For subtasks
+  order: integer("order").default(0),
+  parentTicketId: integer("parent_ticket_id"),
   originalEstimate: decimal("original_estimate"), 
   timeSpent: decimal("time_spent").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -495,11 +473,9 @@ export const projectMembers = pgTable("project_members", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
-  role: text("role").default("CONTRIBUTOR"), // VIEWER, CONTRIBUTOR, MANAGER
+  role: text("role").default("CONTRIBUTOR"),
   joinedAt: timestamp("joined_at").defaultNow(),
 });
-
-// Fix self-referencing tables by removing inline references - they're handled in relations
 export const ticketComments = pgTable("ticket_comments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -638,8 +614,6 @@ export const employeeDevices = pgTable("employee_devices", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// --- Relations ---
-
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   departments: many(departments),
@@ -724,7 +698,6 @@ export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
     references: [users.id],
   }),
 }));
-
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   project: one(projects, {
@@ -966,9 +939,6 @@ export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => 
   }),
 }));
 
-
-// --- CRM Module ---
-
 export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
 export const crmHealthEnum = pgEnum("crm_health", ["healthy", "at_risk", "critical"]);
 export const crmDealStageEnum = pgEnum("crm_deal_stage", ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]);
@@ -978,8 +948,6 @@ export const crmSupportTicketStatusEnum = pgEnum("crm_support_ticket_status", ["
 export const crmSupportTicketPriorityEnum = pgEnum("crm_support_ticket_priority", ["critical", "high", "medium", "low"]);
 export const crmActivityTypeEnum = pgEnum("crm_activity_type", ["deal_won", "meeting", "proposal", "call", "email", "ticket", "escalation"]);
 export const crmEventStatusEnum = pgEnum("crm_event_status", ["planning", "confirmed", "completed"]);
-
-// CRM People — sales reps, CSMs, marketing staff profiles
 export const crmPeople = pgTable("crm_people", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -997,8 +965,6 @@ export const crmPeople = pgTable("crm_people", {
   skills: text("skills").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Companies / Client Accounts
 export const crmCompanies = pgTable("crm_companies", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1011,8 +977,6 @@ export const crmCompanies = pgTable("crm_companies", {
   csmId: integer("csm_id").references(() => crmPeople.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Deals
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1025,8 +989,6 @@ export const crmDeals = pgTable("crm_deals", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
-
-// CRM Campaigns
 export const crmCampaigns = pgTable("crm_campaigns", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1037,8 +999,6 @@ export const crmCampaigns = pgTable("crm_campaigns", {
   roi: decimal("roi").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Leads
 export const crmLeads = pgTable("crm_leads", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1049,8 +1009,6 @@ export const crmLeads = pgTable("crm_leads", {
   channel: text("channel"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Content pieces (marketing)
 export const crmContent = pgTable("crm_content", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1061,8 +1019,6 @@ export const crmContent = pgTable("crm_content", {
   convRate: decimal("conv_rate").default("0"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Events
 export const crmEvents = pgTable("crm_events", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1072,8 +1028,6 @@ export const crmEvents = pgTable("crm_events", {
   status: crmEventStatusEnum("status").default("planning"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Activities — unified activity feed
 export const crmActivities = pgTable("crm_activities", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1085,8 +1039,6 @@ export const crmActivities = pgTable("crm_activities", {
   category: text("category").notNull().default("sales"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Support Tickets (separate from helpdesk — these are customer-facing)
 export const crmSupportTickets = pgTable("crm_support_tickets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1097,8 +1049,6 @@ export const crmSupportTickets = pgTable("crm_support_tickets", {
   createdAt: timestamp("created_at").defaultNow(),
   resolvedAt: timestamp("resolved_at"),
 });
-
-// CRM Monthly Metrics — pre-aggregated time series for charts
 export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1110,8 +1060,6 @@ export const crmMonthlyMetrics = pgTable("crm_monthly_metrics", {
   ticketVolume: integer("ticket_volume").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Team Performance — per-person monthly
 export const crmTeamPerformance = pgTable("crm_team_performance", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1120,8 +1068,6 @@ export const crmTeamPerformance = pgTable("crm_team_performance", {
   value: decimal("value").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// CRM Support Team Members
 export const crmSupportTeamMembers = pgTable("crm_support_team_members", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1132,8 +1078,6 @@ export const crmSupportTeamMembers = pgTable("crm_support_team_members", {
   status: text("status").default("online"),
   createdAt: timestamp("created_at").defaultNow(),
 });
-
-// --- CRM Relations ---
 
 export const crmPeopleRelations = relations(crmPeople, ({ one, many }) => ({
   organization: one(organizations, {

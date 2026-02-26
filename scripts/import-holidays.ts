@@ -1,25 +1,11 @@
-/**
- * Script to import holidays for your organization
- * Run this once to populate the holidays table
- * 
- * Usage: npx tsx scripts/import-holidays.ts
- */
-
 import { db } from "@/lib/db";
 import { holidays, organizations } from "@/lib/db/schema";
-
-// ============================================
-// 🎯 ADD YOUR HOLIDAYS HERE
-// ============================================
-// Format: { name: "Holiday Name", date: "YYYY-MM-DD", message: "Optional message" }
 
 interface HolidayEntry {
   name: string;
   date: string;
   message?: string;
 }
-
-// 2026 holidays (format: date as YYYY-MM-DD)
 const YOUR_HOLIDAYS: HolidayEntry[] = [
   { name: "New Year Eve", date: "2026-01-01" },
   { name: "Bhogi", date: "2026-01-13" },
@@ -39,7 +25,6 @@ const YOUR_HOLIDAYS: HolidayEntry[] = [
 
 async function importHolidays() {
   try {
-    // Check if holidays are provided
     if (YOUR_HOLIDAYS.length === 0) {
       console.error("❌ No holidays found!");
       console.log("\n📝 Please edit scripts/import-holidays.ts and add your holidays to the YOUR_HOLIDAYS array.");
@@ -49,8 +34,6 @@ async function importHolidays() {
     }
 
     console.log("🔍 Finding organizations...");
-    
-    // Get all organizations
     const orgs = await db.query.organizations.findMany();
     
     if (orgs.length === 0) {

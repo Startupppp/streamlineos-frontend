@@ -89,7 +89,6 @@ export const hrRouter = createTRPCRouter({
   updateProfile: protectedProcedure
     .input(updateProfileInputSchema)
     .mutation(async ({ ctx, input }) => {
-      // Verify the target user belongs to the same organization
       const targetMember = await ctx.db.query.organizationMembers.findFirst({
         where: and(
           eq(organizationMembers.userId, input.userId),
@@ -102,8 +101,6 @@ export const hrRouter = createTRPCRouter({
           message: "User not found in your organization.",
         });
       }
-
-      // Only allow self-update or OWNER/ADMIN
       const isSelf = ctx.session.userId === input.userId;
       const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       if (!isSelf && !isOwnerOrAdmin) {
@@ -291,9 +288,6 @@ export const hrRouter = createTRPCRouter({
                status: "PENDING",
            });
        }
-
-       // Initialize leave balances based on joining date
-       // Casual Leave: pro-rated (1 per remaining month), Sick Leave: flat 6
        await initializeLeaveBalances(
          ctx.session.orgId,
          newUser.id,
@@ -335,24 +329,18 @@ export const hrRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
-       
-       // Only Owners and Admins can delete employees
        if (user.role !== "OWNER" && user.role !== "ADMIN") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can delete employees.",
          });
        }
-
-       // Prevent self-deletion
        if (input.userId === user.id) {
          throw new TRPCError({
            code: "BAD_REQUEST",
            message: "You cannot delete your own account.",
          });
        }
-
-       // Get the target user to check their role
        const targetUser = await ctx.db.query.users.findFirst({
          where: eq(users.id, input.userId),
        });
@@ -363,16 +351,12 @@ export const hrRouter = createTRPCRouter({
            message: "User not found.",
          });
        }
-
-       // Admins can only delete MEMBER accounts, not other ADMINs or OWNERs
        if (user.role === "ADMIN" && (targetUser.role === "ADMIN" || targetUser.role === "OWNER")) {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Admins can only delete Member accounts.",
          });
        }
-
-       // Owners cannot delete other Owners
        if (user.role === "OWNER" && targetUser.role === "OWNER") {
          throw new TRPCError({
            code: "FORBIDDEN",
@@ -434,7 +418,7 @@ export const hrRouter = createTRPCRouter({
 
     let status = "OFFLINE";
     if (todayLog) {
-      if (todayLog.checkOut) status = "CHECKED_OUT"; // Latest is checked out
+      if (todayLog.checkOut) status = "CHECKED_OUT";
       else if (todayLog.status === "ON_BREAK") status = "ON_BREAK";
       else status = "PRESENT";
     }
@@ -444,15 +428,13 @@ export const hrRouter = createTRPCRouter({
       orderBy: [desc(attendance.createdAt)],
       limit: 10,
     });
-
-    // Calculate cooldown remaining if just checked out
     let cooldownRemaining = 0;
     if (status === "CHECKED_OUT" && todayLog?.checkOut) {
       const lastCheckOut = new Date(todayLog.checkOut);
       const diffMs = now.getTime() - lastCheckOut.getTime();
       const diffMinutes = diffMs / (1000 * 60);
       if (diffMinutes < 2) {
-        cooldownRemaining = Math.ceil((2 * 60 * 1000 - diffMs) / 1000); // seconds remaining
+        cooldownRemaining = Math.ceil((2 * 60 * 1000 - diffMs) / 1000);
       }
     }
 
@@ -615,7 +597,7 @@ export const hrRouter = createTRPCRouter({
     } else {
       const lastBreak = breaks[breaks.length - 1];
       if (lastBreak && !lastBreak.end) {
-        lastBreak.end = now.toISOString(); // Mutating the copy/reference
+        lastBreak.end = now.toISOString();
         const start = new Date(lastBreak.start);
         const duration = (now.getTime() - start.getTime()) / (1000 * 60 * 60);
         const totalBreak = (Number(log.breakHours) || 0) + duration;
@@ -811,8 +793,6 @@ export const hrRouter = createTRPCRouter({
       if (input.endDate) {
         conditions.push(lte(expenses.expenseDate, input.endDate));
       }
-
-      // Get total count for pagination
       const [countResult] = await ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(expenses)
@@ -917,7 +897,7 @@ export const hrRouter = createTRPCRouter({
                 id: b.id,
                 name: b.name,
                 total: b.daysPerYear,
-                remaining: b.balance ? Number(b.balance) : b.daysPerYear // Default to total if no record (assuming fresh slate)
+                remaining: b.balance ? Number(b.balance) : b.daysPerYear
             })),
             recentLeaves,
             attendance: summary
@@ -928,7 +908,7 @@ export const hrRouter = createTRPCRouter({
     .input(z.object({
         userId: z.string(),
         year: z.number(),
-        month: z.number() // 0-11
+        month: z.number()
     }))
     .query(async ({ ctx, input }) => {
         if (ctx.session.user.id !== input.userId && ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
@@ -936,7 +916,7 @@ export const hrRouter = createTRPCRouter({
         }
 
         const startDate = new Date(input.year, input.month, 1);
-        const endDate = new Date(input.year, input.month + 1, 0); // Last day of month
+        const endDate = new Date(input.year, input.month + 1, 0);
 
         return await ctx.db.query.attendance.findMany({
             where: and(
@@ -1418,18 +1398,12 @@ export const hrRouter = createTRPCRouter({
       const monthlySalary = user.monthlySalary ? parseFloat(user.monthlySalary) : 0;
       const workingDays = 30;
       const perDaySalary = monthlySalary / workingDays;
-      
-      // Calculate attendance-based deductions
       const lopDeduction = (input.lopDays || 0) * perDaySalary;
       const halfDayDeduction = ((input.halfDays || 0) * perDaySalary) / 2;
-      
-      // Salary breakdown: 50% Basic, 50% HRA
       const basicSalary = salaryStructure ? parseFloat(salaryStructure.basicSalary) : monthlySalary * 0.5;
       const hra = salaryStructure ? (parseFloat(salaryStructure.basicSalary) * parseFloat(salaryStructure.hraPercentage || "40") / 100) : monthlySalary * 0.5;
       const bonus = input.bonus || 0;
       const overtimeAmount = input.overtimeAmount || 0;
-
-      // Deductions
       const professionalTax = 200;
       const otherDeductions = input.otherDeductions || 0;
       const totalDeductions = professionalTax + lopDeduction + halfDayDeduction + otherDeductions;
@@ -1464,8 +1438,6 @@ export const hrRouter = createTRPCRouter({
         await ctx.db.update(payrolls)
           .set(payrollData)
           .where(eq(payrolls.id, existing.id));
-        
-        // Send email notification
         if (user.email) {
           const monthDate = new Date(input.month + "-01");
           const monthName = monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
@@ -1490,8 +1462,6 @@ export const hrRouter = createTRPCRouter({
         month: input.month,
         ...payrollData,
       }).returning();
-
-      // Send email notification
       if (user.email) {
         const monthDate = new Date(input.month + "-01");
         const monthName = monthDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });

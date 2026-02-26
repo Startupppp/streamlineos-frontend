@@ -1,8 +1,3 @@
-/**
- * Test script to send a holiday email
- * Usage: npx tsx scripts/test-holiday-email.ts
- */
-
 import { sendHolidayAnnouncementEmail } from "@/lib/email";
 
 async function sendTestEmail() {
@@ -30,8 +25,4 @@ async function sendTestEmail() {
 }
 
 sendTestEmail();
-
-
-
-
 

@@ -1,22 +1,3 @@
-/**
- * Leave Policy — Vaivamm Capital
- *
- * Cycle:   January → December (calendar year)
- *
- * Casual Leave
- *   - 12 per year (1 per month)
- *   - No carry-forward; unused monthly allocation expires at month-end
- *   - Pro-rated on joining: employee gets 1 leave per remaining month
- *     (e.g. joins March → 10 casual leaves for that year)
- *
- * Sick Leave
- *   - 6 per year (flat — not pro-rated regardless of joining date)
- *   - No carry-forward
- */
-
-// ────────────────────────────────────────────
-// Constants
-// ────────────────────────────────────────────
 
 export const LEAVE_POLICY = {
   CASUAL: {
@@ -41,10 +22,6 @@ export const DEFAULT_LEAVE_TYPES = [
   { name: LEAVE_POLICY.SICK.name, daysPerYear: LEAVE_POLICY.SICK.daysPerYear, carryForward: LEAVE_POLICY.SICK.carryForward },
 ] as const;
 
-// ────────────────────────────────────────────
-// Calculations
-// ────────────────────────────────────────────
-
 /**
  * Pro-rated casual-leave balance for a given calendar year.
  *
@@ -68,9 +45,7 @@ export function calculateProratedCasualLeaves(
 
   if (joinYear > year) return 0;
   if (joinYear < year) return LEAVE_POLICY.CASUAL.daysPerYear;
-
-  // Same year — remaining months including the joining month
-  const joiningMonth = d.getMonth(); // 0-based (Jan=0)
+  const joiningMonth = d.getMonth();
   return LEAVE_POLICY.CASUAL.daysPerYear - joiningMonth;
 }
 

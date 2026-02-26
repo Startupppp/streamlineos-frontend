@@ -1,8 +1,3 @@
-/**
- * Test script to send holiday emails to multiple addresses
- * Usage: npx tsx scripts/test-holiday-email-multi.ts
- */
-
 import { sendHolidayAnnouncementEmail } from "@/lib/email";
 
 const TEST_EMAILS = [
@@ -50,8 +45,4 @@ async function sendTestEmails() {
 }
 
 sendTestEmails();
-
-
-
-
 

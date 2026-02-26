@@ -8,7 +8,6 @@ import { format, subDays, startOfWeek } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
 
 export async function generateAndSendWeeklyReport() {
-  // Calculate last week's date range (Mon–Sun)
   const today = new Date();
   const lastMonday = startOfWeek(subDays(today, 7), { weekStartsOn: 1 });
   const lastSunday = new Date(lastMonday);
@@ -17,14 +16,11 @@ export async function generateAndSendWeeklyReport() {
   const startDate = formatDateOnly(lastMonday);
   const endDate = formatDateOnly(lastSunday);
   const weekRange = `${format(lastMonday, "MMM dd")} - ${format(lastSunday, "MMM dd, yyyy")}`;
-
-  // Get all organizations
   const allOrgs = await db.query.organizations.findMany();
 
   let totalReportsSent = 0;
 
   for (const org of allOrgs) {
-    // Get all org members (for attendance rows)
     const members = await db.query.organizationMembers.findMany({
       where: eq(organizationMembers.orgId, org.id),
       with: {
@@ -34,8 +30,6 @@ export async function generateAndSendWeeklyReport() {
 
     const activeMembers = members.filter((m) => m.user?.isActive !== false);
     if (activeMembers.length === 0) continue;
-
-    // Recipients: org members with role OWNER or ADMIN (each gets the report)
     const ownerAndAdminMembers = members.filter(
       (m) => m.role === "OWNER" || m.role === "ADMIN"
     );
@@ -60,8 +54,6 @@ export async function generateAndSendWeeklyReport() {
     for (const member of activeMembers) {
       const user = member.user;
       if (!user) continue;
-
-      // Get attendance records for the week
       const records = await db.query.attendance.findMany({
         where: and(
           eq(attendance.userId, user.id),

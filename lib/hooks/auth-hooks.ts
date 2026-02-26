@@ -17,8 +17,6 @@ type MutationOnSuccess<TData, TVariables, TContext> = (
   variables: TVariables,
   context: TContext
 ) => void | Promise<void>;
-
-// Sign Up
 export const useSignUp = (
   options?: UseMutationOptions<
     AuthRouterOutputs["signUp"],
@@ -52,8 +50,6 @@ export const useSignUp = (
     },
   });
 };
-
-// Verify Email
 export const useVerifyEmail = (
   options?: UseMutationOptions<
     AuthRouterOutputs["verifyEmail"],
@@ -87,8 +83,6 @@ export const useVerifyEmail = (
     },
   });
 };
-
-// Forgot Password
 export const useForgotPassword = (
   options?: UseMutationOptions<
     AuthRouterOutputs["forgotPassword"],
@@ -121,8 +115,6 @@ export const useForgotPassword = (
     },
   });
 };
-
-// Reset Password
 export const useResetPassword = (
   options?: UseMutationOptions<
     AuthRouterOutputs["resetPassword"],
@@ -155,8 +147,6 @@ export const useResetPassword = (
     },
   });
 };
-
-// Accept Invitation
 export const useAcceptInvitation = (
   options?: UseMutationOptions<
     AuthRouterOutputs["acceptInvitation"],
@@ -190,8 +180,6 @@ export const useAcceptInvitation = (
     },
   });
 };
-
-// Resend Verification Email
 export const useResendVerificationEmail = (
   options?: UseMutationOptions<
     AuthRouterOutputs["resendVerificationEmail"],
@@ -224,8 +212,6 @@ export const useResendVerificationEmail = (
     },
   });
 };
-
-// Sign In (using NextAuth)
 export const useSignIn = () => {
   return useMutation({
     mutationFn: async (credentials: {
@@ -251,8 +237,6 @@ export const useSignIn = () => {
     },
   });
 };
-
-// Sign Out (using NextAuth)
 export const useSignOut = () => {
   const router = useRouter();
 
@@ -266,8 +250,6 @@ export const useSignOut = () => {
     },
   });
 };
-
-// Get Organizations
 type OrgRouterInputs = RouterInputs["organization"];
 type OrgRouterOutputs = RouterOutputs["organization"];
 
@@ -279,8 +261,6 @@ export const useGetOrganizations = () => {
     },
   });
 };
-
-// Create Organization
 export const useCreateOrganization = (
   options?: UseMutationOptions<
     OrgRouterOutputs["createOrganization"],
@@ -315,8 +295,6 @@ export const useCreateOrganization = (
     },
   });
 };
-
-// Invite User
 export const useInviteUser = (
   options?: UseMutationOptions<
     OrgRouterOutputs["inviteUser"],
@@ -353,8 +331,6 @@ export const useInviteUser = (
     },
   });
 };
-
-// Get Invitations
 export const useGetInvitations = (orgId: string) => {
   return useQuery({
     queryKey: ["invitations", orgId],
@@ -366,8 +342,6 @@ export const useGetInvitations = (orgId: string) => {
     enabled: !!orgId,
   });
 };
-
-// Cancel Invitation
 export const useCancelInvitation = (
   options?: UseMutationOptions<
     OrgRouterOutputs["cancelInvitation"],
@@ -404,8 +378,6 @@ export const useCancelInvitation = (
     },
   });
 };
-
-// Update Member Role
 export const useUpdateMemberRole = (
   options?: UseMutationOptions<
     OrgRouterOutputs["updateMemberRole"],
@@ -440,8 +412,6 @@ export const useUpdateMemberRole = (
     },
   });
 };
-
-// Remove Member
 export const useRemoveMember = (
   options?: UseMutationOptions<
     OrgRouterOutputs["removeMember"],

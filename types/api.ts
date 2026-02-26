@@ -1,6 +1,4 @@
 import { type RouterOutputs } from "../server/api/root";
-
-// HR Types
 export type AttendanceStatus =
   RouterOutputs["hr"]["getAttendanceStatus"]["status"];
 export type AttendanceLog =
@@ -13,11 +11,7 @@ export type LeaveRequest = RouterOutputs["hr"]["getLeaves"]["requests"][number];
 
 export type Payroll = RouterOutputs["hr"]["getPayrolls"][number];
 export type Department = RouterOutputs["hr"]["getDepartments"][number];
-
-// Project Types
 export type Project = RouterOutputs["project"]["getProjects"][number];
 export type ProjectDetails = RouterOutputs["project"]["getProjectDetails"];
 export type Ticket = NonNullable<ProjectDetails>["tickets"][number];
-
-// Dashboard Types
 export type DashboardStats = RouterOutputs["dashboard"]["getStats"];

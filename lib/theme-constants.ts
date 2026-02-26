@@ -1,5 +1,3 @@
-/** Centralized color/style mappings shared across dashboard pages */
-
 export type Priority = "URGENT" | "HIGH" | "MEDIUM" | "LOW";
 export type ProjectStatus = "ACTIVE" | "PLANNING" | "COMPLETED" | "ON_HOLD";
 export type DealStage = "Negotiation" | "Proposal" | "Closed Won" | "Qualified" | "Discovery";
@@ -99,8 +97,6 @@ export const sparkColors = {
   amber: "#F59E0B",
 } as const;
 
-// ─── HR Module Shared Color Maps ────────────────────────────────────────────
-
 export type LeaveStatus = "APPROVED" | "REJECTED" | "PENDING";
 export type PayrollStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "PAID";
 export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID";
@@ -159,8 +155,6 @@ export const documentTypeColors: Record<string, string> = {
   RESUME: "bg-pink-100 text-pink-800 border-pink-200",
   OTHER: "bg-slate-100 text-slate-800 border-slate-200",
 };
-
-// ─── CRM Shared Color Maps ─────────────────────────────────────────────────
 
 export type HealthStatus = "healthy" | "at_risk" | "critical";
 

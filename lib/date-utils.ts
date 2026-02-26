@@ -1,14 +1,4 @@
 /**
- * Date utility functions for handling timezone-safe date formatting.
- *
- * PROBLEM: When using `format(date, "yyyy-MM-dd")` from date-fns, the date can shift
- * by one day due to timezone conversion. For example, if a user in IST selects Jan 7,
- * the Date object in UTC might represent Jan 6 18:30, causing format() to output Jan 6.
- *
- * SOLUTION: Use these utility functions to safely format dates without timezone issues.
- */
-
-/**
  * Formats a Date object to "YYYY-MM-DD" string without timezone conversion.
  * This extracts the local date components directly from the Date object.
  *
@@ -17,18 +7,12 @@
  */
 export function formatDateOnly(date: Date | string | null | undefined): string {
   if (!date) return "";
-
-  // If already a string in YYYY-MM-DD format, return it directly
   if (typeof date === "string") {
-    // Check if it's already in YYYY-MM-DD format
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return date;
     }
-    // Try to parse the string as a date
     date = new Date(date);
   }
-
-  // For Date objects, extract local date components
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");

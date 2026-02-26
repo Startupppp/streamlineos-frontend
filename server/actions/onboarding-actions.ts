@@ -9,8 +9,6 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-
-// Local storage fallback when R2 is not configured or fails
 async function uploadFileLocally(file: File, folder: string) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
@@ -91,7 +89,6 @@ export async function uploadOnboardingDocument(formData: FormData) {
 
   try {
     let fileUrl = "";
-    // Try R2 first, fall back to local storage
     if (isStorageConfigured()) {
       try {
         const result = await uploadFile(file, "onboarding");
@@ -120,8 +117,6 @@ export async function uploadOnboardingDocument(formData: FormData) {
       mimeType: file.type,
       uploadedBy: session.user.id,
     });
-    
-    // Mark step as completed if it exists, or create it
     await updateOnboardingStep(session.user.id, `Upload ${docType}`, "COMPLETED", userOrg.orgId);
 
     revalidatePath("/onboarding");
@@ -130,10 +125,7 @@ export async function uploadOnboardingDocument(formData: FormData) {
     return { error: "Failed to upload document" };
   }
 }
-
-// Helper to update or insert step status
 async function updateOnboardingStep(userId: string, stepName: string, status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED", orgId?: string) {
-    // If orgId is not provided, fetch it
     let targetOrgId = orgId;
     if (!targetOrgId) {
          const userOrg = await db.query.organizationMembers.findFirst({
@@ -142,9 +134,7 @@ async function updateOnboardingStep(userId: string, stepName: string, status: "P
         targetOrgId = userOrg?.orgId;
     }
     
-    if (!targetOrgId) return; // Should handle error
-    
-    // Check if step exists
+    if (!targetOrgId) return;
     const existing = await db.query.onboardingSteps.findFirst({
         where: and(
             eq(onboardingSteps.userId, userId),

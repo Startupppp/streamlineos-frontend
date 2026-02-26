@@ -10,8 +10,6 @@ import { sendAccountDeactivationEmail } from "@/lib/email";
 export async function getEmployees() {
   const session = await auth();
   if (!session?.user?.id) return [];
-  
-  // Get org context
   const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id)
   });
@@ -24,25 +22,17 @@ export async function getEmployees() {
         user: true
     }
   });
-
-  // Filter out inactive users
   return orgMembers.map(m => m.user).filter(u => u.isActive !== false);
 }
 
 export async function getEmployeeById(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return null;
-
-  // We need to verify the requester has access to this user's org.
-  // 1. Get requester's org
   const requesterOrgMember = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id)
   });
 
   if (!requesterOrgMember) return null;
-
-  // 2. Fetch target user if they are in the same org
-  // 2. Fetch target user if they are in the same org
   const rows = await db.select({
       user: users
   })
@@ -57,8 +47,6 @@ export async function getEmployeeById(userId: string) {
   if (rows.length === 0) return null;
 
   return rows[0].user;
-
-
 
 }
 
@@ -84,7 +72,6 @@ export async function updateEmployee(data: {
     };
 }) {
     const session = await auth();
-    // RBAC: Only OWNER or ADMIN can edit
     if (!session?.user?.id || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
         return { error: "Unauthorized" };
     }
@@ -102,17 +89,11 @@ export async function updateEmployee(data: {
                 gender: data.gender,
                 joiningDate: data.joiningDate ? data.joiningDate.toISOString().split('T')[0] : undefined,
                 skills: data.skills,
-                experienceYears: data.experienceYears ? String(data.experienceYears) : undefined, // Schema uses decimal/string
+                experienceYears: data.experienceYears ? String(data.experienceYears) : undefined,
                 taxId: data.taxId,
                 bankDetails: data.bankDetails,
             })
             .where(eq(users.id, data.id));
-        
-        // Also update role in organizationMembers
-        // Find the record for this user in the current org context
-        // (Assuming 1 org for now, but safer to lookup)
-        
-        // We need the orgId context. 
         const requesterOrgMember = await db.query.organizationMembers.findFirst({
             where: eq(organizationMembers.userId, session.user.id)
         });
@@ -138,19 +119,14 @@ export async function deleteEmployee(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   const { role, id: currentUserId } = session.user;
-
-  // Only Owners and Admins can delete employees
   if (role !== "OWNER" && role !== "ADMIN") {
       return { error: "Permission denied" };
   }
-
-  // Prevent self-deletion
   if (userId === currentUserId) {
       return { error: "You cannot delete your own account" };
   }
 
   try {
-      // Get employee details before deactivation
       const employee = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });
@@ -158,23 +134,15 @@ export async function deleteEmployee(userId: string) {
       if (!employee) {
         return { error: "User not found" };
       }
-
-      // Admins can only delete MEMBER accounts, not other ADMINs or OWNERs
       if (role === "ADMIN" && (employee.role === "ADMIN" || employee.role === "OWNER")) {
         return { error: "Admins can only delete Member accounts" };
       }
-
-      // Owners cannot delete other Owners
       if (role === "OWNER" && employee.role === "OWNER") {
         return { error: "Cannot delete another Owner account" };
       }
-
-      // Soft delete
       await db.update(users)
         .set({ isActive: false })
         .where(eq(users.id, userId));
-      
-      // Send deactivation email
       if (employee?.email) {
         await sendAccountDeactivationEmail(
           employee.email,

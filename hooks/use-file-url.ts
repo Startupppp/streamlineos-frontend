@@ -2,17 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-
-/**
- * Determines if a URL is a local/public URL or needs signed URL generation
- */
 function isLocalUrl(url: string): boolean {
   if (!url) return false;
-  // Local uploads start with /uploads/ or are relative paths
   if (url.startsWith("/uploads/") || url.startsWith("/")) return true;
-  // Full URLs to our own domain with /uploads/
   if (url.includes("/uploads/")) return true;
-  // Dicebear avatars and other public CDNs
   if (url.includes("dicebear.com") || url.includes("avataaars")) return true;
   return false;
 }
@@ -26,13 +19,9 @@ export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   if (!fileUrl) {
     throw new Error("No file URL provided");
   }
-
-  // Local files can be accessed directly
   if (isLocalUrl(fileUrl)) {
     return fileUrl;
   }
-
-  // For R2 files, get a signed URL
   try {
     const response = await fetch(`/api/storage/download?url=${encodeURIComponent(fileUrl)}`);
 
@@ -68,8 +57,6 @@ export async function viewFile(fileUrl: string): Promise<void> {
 export async function downloadFile(fileUrl: string, fileName?: string): Promise<void> {
   try {
     const downloadFileName = fileName || extractFileName(fileUrl);
-
-    // For R2 files, use our API as a proxy so the browser doesn't hit CORS on the R2 domain
     if (!isLocalUrl(fileUrl)) {
       const response = await fetch(
         `/api/storage/download?url=${encodeURIComponent(fileUrl)}&attachment=1`
@@ -90,8 +77,6 @@ export async function downloadFile(fileUrl: string, fileName?: string): Promise<
       toast.success("Download started");
       return;
     }
-
-    // Local files: get URL and fetch same-origin
     const url = await getSignedFileUrl(fileUrl);
     const response = await fetch(url);
     if (!response.ok) {
@@ -119,7 +104,6 @@ export async function downloadFile(fileUrl: string, fileName?: string): Promise<
 function extractFileName(url: string): string {
   const parts = url.split("/");
   const lastPart = parts[parts.length - 1];
-  // Remove timestamp prefix if present (e.g., "1234567890-filename.pdf")
   const match = lastPart.match(/^\d+-(.+)$/);
   return match ? match[1] : lastPart;
 }

@@ -17,17 +17,14 @@ import {
 } from "../../../lib/db/schema";
 
 export const crmRouter = createTRPCRouter({
-  // ─── Sales Dashboard ─────────────────────────────────────────────────
   getSalesDashboard: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
 
-    // Get all deals for this org
     const deals = await ctx.db.query.crmDeals.findMany({
       where: eq(crmDeals.orgId, orgId),
       with: { salesRep: true },
     });
 
-    // Compute sales stats
     const closedWonDeals = deals.filter((d) => d.stage === "Closed Won");
     const pipelineValue = deals.reduce((s, d) => s + Number(d.value), 0);
     const dealsWon = closedWonDeals.length;
@@ -42,7 +39,6 @@ export const crmRouter = createTRPCRouter({
       avgDealSize: { value: Math.round(avgDealSize), trend: { value: 5.4, isPositive: false } },
     };
 
-    // Revenue timeline from monthly metrics
     const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
       where: eq(crmMonthlyMetrics.orgId, orgId),
       orderBy: [desc(crmMonthlyMetrics.id)],
@@ -51,7 +47,6 @@ export const crmRouter = createTRPCRouter({
       .map((m) => ({ month: m.month, value: Number(m.revenue) }))
       .reverse();
 
-    // Sales funnel — group deals by stage
     const stageOrder = ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"];
     const stageColors: Record<string, string> = {
       Discovery: "#3B82F6",
@@ -69,7 +64,6 @@ export const crmRouter = createTRPCRouter({
       };
     });
 
-    // Top deals
     const topDeals = deals
       .filter((d) => d.stage !== "Closed Won")
       .sort((a, b) => Number(b.value) - Number(a.value))
@@ -82,7 +76,6 @@ export const crmRouter = createTRPCRouter({
         probability: d.probability ?? 0,
       }));
 
-    // Sales leaderboard — group deals by rep
     const repMap = new Map<number, { name: string; deals: number; revenue: number; avatar: string }>();
     for (const deal of closedWonDeals) {
       if (!deal.salesRep) continue;
@@ -100,7 +93,6 @@ export const crmRouter = createTRPCRouter({
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
 
-    // Sales activity
     const salesActivities = await ctx.db.query.crmActivities.findMany({
       where: and(eq(crmActivities.orgId, orgId), eq(crmActivities.category, "sales")),
       orderBy: [desc(crmActivities.createdAt)],
@@ -113,7 +105,6 @@ export const crmRouter = createTRPCRouter({
       person: a.person ?? "",
     }));
 
-    // Deals by stage
     const dealsByStage = stageOrder.map((stage) => {
       const stageDeals = deals.filter((d) => d.stage === stage);
       return {
@@ -135,7 +126,6 @@ export const crmRouter = createTRPCRouter({
     };
   }),
 
-  // ─── Customer Executive Dashboard ────────────────────────────────────
   getCustomerExecutiveDashboard: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
 
@@ -200,7 +190,6 @@ export const crmRouter = createTRPCRouter({
       person: a.person ?? "",
     }));
 
-    // Support stats from CRM support tickets
     const supportTickets = await ctx.db.query.crmSupportTickets.findMany({
       where: eq(crmSupportTickets.orgId, orgId),
     });
@@ -212,7 +201,6 @@ export const crmRouter = createTRPCRouter({
       satisfaction: 94.2,
     };
 
-    // Timeline metrics
     const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
       where: eq(crmMonthlyMetrics.orgId, orgId),
       orderBy: [desc(crmMonthlyMetrics.id)],
@@ -236,7 +224,6 @@ export const crmRouter = createTRPCRouter({
     };
   }),
 
-  // ─── Marketing Dashboard ─────────────────────────────────────────────
   getMarketingDashboard: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
 
@@ -266,7 +253,6 @@ export const crmRouter = createTRPCRouter({
       .map((m) => ({ month: m.month, value: m.mqls ?? 0 }))
       .reverse();
 
-    // Lead funnel from leads table
     const leads = await ctx.db.query.crmLeads.findMany({
       where: eq(crmLeads.orgId, orgId),
     });
@@ -299,7 +285,6 @@ export const crmRouter = createTRPCRouter({
       roi: Number(c.roi),
     }));
 
-    // Channel breakdown from leads
     const channelMap = new Map<string, number>();
     for (const lead of leads) {
       const ch = lead.channel ?? "Other";
@@ -321,7 +306,6 @@ export const crmRouter = createTRPCRouter({
         color: channelColorMap[label] || "#6B7280",
       }));
 
-    // Content performance
     const contentList = await ctx.db.query.crmContent.findMany({
       where: eq(crmContent.orgId, orgId),
       orderBy: [desc(crmContent.views)],
@@ -335,7 +319,6 @@ export const crmRouter = createTRPCRouter({
       convRate: Number(c.convRate),
     }));
 
-    // Events
     const events = await ctx.db.query.crmEvents.findMany({
       where: eq(crmEvents.orgId, orgId),
       orderBy: [desc(crmEvents.id)],
@@ -359,7 +342,6 @@ export const crmRouter = createTRPCRouter({
     };
   }),
 
-  // ─── Support Dashboard ───────────────────────────────────────────────
   getSupportDashboard: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
 
@@ -393,7 +375,6 @@ export const crmRouter = createTRPCRouter({
       color: statusColors[status],
     }));
 
-    // Ticket volume timeline
     const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
       where: eq(crmMonthlyMetrics.orgId, orgId),
       orderBy: [desc(crmMonthlyMetrics.id)],
@@ -402,7 +383,6 @@ export const crmRouter = createTRPCRouter({
       .map((m) => ({ month: m.month, value: m.ticketVolume ?? 0 }))
       .reverse();
 
-    // Activity feed
     const supportActivities = await ctx.db.query.crmActivities.findMany({
       where: and(eq(crmActivities.orgId, orgId), eq(crmActivities.category, "support")),
       orderBy: [desc(crmActivities.createdAt)],
@@ -415,7 +395,6 @@ export const crmRouter = createTRPCRouter({
       person: a.person ?? "",
     }));
 
-    // Team members
     const teamMembers = await ctx.db.query.crmSupportTeamMembers.findMany({
       where: eq(crmSupportTeamMembers.orgId, orgId),
     });
@@ -427,7 +406,6 @@ export const crmRouter = createTRPCRouter({
       status: m.status as "online" | "away" | "offline",
     }));
 
-    // Tickets by priority
     const priorityLabels: Record<string, string> = {
       critical: "Critical",
       high: "High",
@@ -456,7 +434,6 @@ export const crmRouter = createTRPCRouter({
     };
   }),
 
-  // ─── Person Detail ───────────────────────────────────────────────────
   getPersonBySlug: protectedProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -468,7 +445,6 @@ export const crmRouter = createTRPCRouter({
 
       if (!person) return null;
 
-      // Get monthly performance
       const performance = await ctx.db.query.crmTeamPerformance.findMany({
         where: and(
           eq(crmTeamPerformance.orgId, orgId),
@@ -480,7 +456,6 @@ export const crmRouter = createTRPCRouter({
         value: Number(p.value),
       }));
 
-      // Get deals (for sales reps)
       const deals = await ctx.db.query.crmDeals.findMany({
         where: and(eq(crmDeals.orgId, orgId), eq(crmDeals.salesRepId, person.id)),
       });
@@ -492,7 +467,6 @@ export const crmRouter = createTRPCRouter({
         closeDate: d.closeDate ?? "",
       }));
 
-      // Get accounts (for CSMs)
       const accounts = await ctx.db.query.crmCompanies.findMany({
         where: and(eq(crmCompanies.orgId, orgId), eq(crmCompanies.csmId, person.id)),
       });
@@ -504,7 +478,6 @@ export const crmRouter = createTRPCRouter({
         renewalDate: a.renewalDate ?? "",
       }));
 
-      // Get activities
       const activities = await ctx.db.query.crmActivities.findMany({
         where: and(eq(crmActivities.orgId, orgId), eq(crmActivities.personId, person.id)),
         orderBy: [desc(crmActivities.createdAt)],
@@ -516,7 +489,6 @@ export const crmRouter = createTRPCRouter({
         time: a.time,
       }));
 
-      // Compute stats based on role
       const stats = computePersonStats(person.role, personDeals, personAccounts, monthlyPerformance);
 
       return {
@@ -540,13 +512,11 @@ export const crmRouter = createTRPCRouter({
       };
     }),
 
-  // ─── Person slug lookup helper ───────────────────────────────────────
   getPersonSlug: protectedProcedure
     .input(z.object({ name: z.string() }))
     .query(async ({ ctx, input }) => {
-      const orgId = ctx.session.orgId;
-      // Try matching by abbreviated name (e.g. "Sarah M.") or full name
-      const allPeople = await ctx.db.query.crmPeople.findMany({
+    const orgId = ctx.session.orgId;
+    const allPeople = await ctx.db.query.crmPeople.findMany({
         where: eq(crmPeople.orgId, orgId),
         columns: { slug: true, name: true },
       });
@@ -560,7 +530,6 @@ export const crmRouter = createTRPCRouter({
       return null;
     }),
 
-  // ─── All people slugs (for link resolution) ─────────────────────────
   getAllPeopleSlugs: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
     const people = await ctx.db.query.crmPeople.findMany({
@@ -568,7 +537,6 @@ export const crmRouter = createTRPCRouter({
       columns: { slug: true, name: true },
     });
 
-    // Build lookup maps: full name → slug, abbreviated → slug
     const slugMap: Record<string, string> = {};
     for (const p of people) {
       slugMap[p.name] = p.slug;
@@ -580,7 +548,6 @@ export const crmRouter = createTRPCRouter({
   }),
 });
 
-// Helper to compute person stats from their deals/accounts/performance
 function computePersonStats(
   role: string,
   deals: { value: number; stage: string; probability: number }[],

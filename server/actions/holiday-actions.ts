@@ -14,8 +14,6 @@ export async function addHoliday(data: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-
-  // Only ADMIN or OWNER can add holidays
   const member = await db.query.organizationMembers.findFirst({
     where: eq(organizationMembers.userId, session.user.id),
   });
@@ -84,29 +82,18 @@ export async function deleteHoliday(holidayId: number) {
     return { error: "Failed to delete holiday" };
   }
 }
-
-/**
- * Check for upcoming holidays (tomorrow) and send notifications
- * This should be run by a cron job daily at 12:00 PM
- */
 export async function sendHolidayNotifications() {
   try {
-    // Get tomorrow's date
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowDate = tomorrow.toISOString().split('T')[0];
-
-    // Find all holidays scheduled for tomorrow that haven't been notified
     const upcomingHolidays = await db.query.holidays.findMany({
       where: and(
         eq(holidays.date, tomorrowDate),
         eq(holidays.notificationSent, false)
       ),
     });
-
-    // Process each holiday
     for (const holiday of upcomingHolidays) {
-      // Get all active employees in the organization
       const members = await db
         .select({
           email: users.email,
@@ -126,7 +113,6 @@ export async function sendHolidayNotifications() {
         .filter((email): email is string => !!email);
 
       if (emails.length > 0) {
-        // Send bulk emails
         await sendBulkHolidayAnnouncement(
           emails,
           holiday.name,
@@ -138,8 +124,6 @@ export async function sendHolidayNotifications() {
           }),
           holiday.message || undefined
         );
-
-        // Mark notification as sent
         await db
           .update(holidays)
           .set({ notificationSent: true })

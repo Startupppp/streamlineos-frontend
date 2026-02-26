@@ -1,14 +1,9 @@
-// CRM Mock Data — used by Sales, Customer Executive, and Marketing dashboards
-
-// ─── Formatting Helpers (re-exported from format-utils for backward compat) ──
 
 export { formatCurrency, formatNumber } from "@/lib/format-utils";
 
 export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
 }
-
-// ─── Sales Dashboard Data ─────────────────────────────────────────────────────
 
 export const salesStats = {
   pipeline: { value: 2_850_000, trend: { value: 12.3, isPositive: true } },
@@ -68,8 +63,6 @@ export const dealsByStage = [
   { stage: "Negotiation", count: 9, value: 720_000, color: "#A855F7" },
   { stage: "Closed Won", count: 47, value: 2_850_000, color: "#10B981" },
 ];
-
-// ─── Customer Executive Dashboard Data ────────────────────────────────────────
 
 export const customerStats = {
   totalClients: { value: 156, trend: { value: 4.2, isPositive: true } },
@@ -138,8 +131,6 @@ export const csatTimeline = [
   { month: "Feb", value: 4.6 },
 ];
 
-// ─── Marketing Dashboard Data ─────────────────────────────────────────────────
-
 export const marketingStats = {
   campaigns: { value: 8, trend: { value: 14.3, isPositive: true } },
   leads: { value: 2_847, trend: { value: 22.1, isPositive: true } },
@@ -199,8 +190,6 @@ export const upcomingEvents = [
   { name: "Customer Advisory Board", date: "Apr 15", type: "Meeting", status: "confirmed" as const },
   { name: "Digital Marketing Workshop", date: "May 1", type: "Workshop", status: "planning" as const },
 ];
-
-// ─── Support Dashboard Data ─────────────────────────────────────────────────
 
 export const supportDashboardStats = {
   openTickets: { value: 142, trend: { value: 5.2, isPositive: false } },

@@ -1,6 +1,4 @@
 import { z } from "zod";
-
-// Custom refinement for URLs that accepts both full URLs and relative paths (for local storage)
 const fileUrlSchema = z.string().min(1).refine(
   (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
   { message: "Must be a valid URL or a relative path starting with /" }

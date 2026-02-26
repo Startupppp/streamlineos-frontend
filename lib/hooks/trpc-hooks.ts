@@ -822,8 +822,6 @@ export const useCreateHelpdeskTicket = (
     },
   });
 };
-
-// --- WORK LOGS ---
 export function useGetWorkLogs(
   input: RouterInputs["hr"]["getWorkLogs"],
   options?: UseQueryOptions<RouterOutputs["hr"]["getWorkLogs"]>
@@ -1973,8 +1971,6 @@ export const useDeleteProjectStatus = (
     },
   });
 };
-
-// ─── CRM Hooks ──────────────────────────────────────────────────────────────────
 
 export function useSalesDashboard(
   options?: Partial<UseQueryOptions<CrmRouterOutputs["getSalesDashboard"]>>
