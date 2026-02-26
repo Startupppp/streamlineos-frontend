@@ -7,6 +7,12 @@ export type EventStatus = "confirmed" | "planning";
 export type OnlineStatus = "online" | "away" | "offline";
 export type CampaignStatus = "active" | "paused" | "completed";
 
+const VALID_CAMPAIGN_STATUSES: ReadonlySet<string> = new Set(["active", "paused", "completed"]);
+
+export function isCampaignStatus(value: unknown): value is CampaignStatus {
+  return typeof value === "string" && VALID_CAMPAIGN_STATUSES.has(value);
+}
+
 const FALLBACK_COLOR = "bg-slate-500/10 text-slate-600 dark:text-slate-400";
 
 export const priorityColors: Record<Priority, string> = {
@@ -77,6 +83,13 @@ export const rankStyles = [
     badgeColor: "bg-amber-700 text-white",
   },
 ];
+
+/** Sprint ticket status colors (used in sprint-card) */
+export const sprintStatusColors = {
+  done: "bg-emerald-500",
+  inProgress: "bg-blue-500",
+  todo: "bg-slate-400",
+} as const;
 
 /** Semantic spark-line hex colors for MetricCard */
 export const sparkColors = {

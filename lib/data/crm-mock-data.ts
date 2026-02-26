@@ -1,16 +1,8 @@
 // CRM Mock Data — used by Sales, Customer Executive, and Marketing dashboards
 
-// ─── Formatting Helpers ───────────────────────────────────────────────────────
+// ─── Formatting Helpers (re-exported from format-utils for backward compat) ──
 
-export function formatCurrency(value: number): string {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
-  return `$${value.toLocaleString()}`;
-}
-
-export function formatNumber(value: number): string {
-  return value.toLocaleString();
-}
+export { formatCurrency, formatNumber } from "@/lib/format-utils";
 
 export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;

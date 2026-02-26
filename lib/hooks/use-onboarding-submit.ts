@@ -7,7 +7,7 @@ type ActionResult = { success: true } | { success?: false; error?: string };
 
 interface OnboardingSubmitOptions {
   successMessage: string;
-  onSuccess: () => void;
+  onSuccess: (values: Record<string, string | undefined>) => void;
   errorMessage?: string;
 }
 
@@ -32,7 +32,7 @@ export function useOnboardingSubmit(
         const res = await action(formData);
         if (res.success) {
           toast.success(optionsRef.current.successMessage);
-          optionsRef.current.onSuccess();
+          optionsRef.current.onSuccess(values);
         } else {
           toast.error(
             ("error" in res && res.error) || optionsRef.current.errorMessage || "Something went wrong",
