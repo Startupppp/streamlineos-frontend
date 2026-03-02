@@ -475,7 +475,8 @@ export const projectRouter = createTRPCRouter({
               creator.name || creator.firstName || 'Team Member'
             );
           }
-        } catch (error) {
+        } catch {
+          // Email notification is best-effort — don't block ticket creation
         }
       }
 
@@ -603,7 +604,8 @@ export const projectRouter = createTRPCRouter({
               undefined
             );
           }
-        } catch (error) {
+        } catch {
+          // Email notification is best-effort — don't block status update
         }
       }
     }),
