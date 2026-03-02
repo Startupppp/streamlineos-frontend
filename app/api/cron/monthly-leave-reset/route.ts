@@ -3,6 +3,8 @@ import {
   expireUnusedMonthlyCasualLeaves,
   resetYearlyLeaveBalances,
 } from "@/server/actions/leave-actions";
+import { logger } from "@/lib/logger";
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
       yearlyReset: yearlyResult,
     });
   } catch (error) {
-    console.error("Monthly leave reset cron failed:", error);
+    logger.error("Monthly leave reset cron failed", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

@@ -4,19 +4,52 @@ import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+const FILE_SIGNATURES: Record<string, number[][]> = {
+  "image/jpeg": [[0xff, 0xd8, 0xff]],
+  "image/png": [[0x89, 0x50, 0x4e, 0x47]],
+  "image/gif": [
+    [0x47, 0x49, 0x46, 0x38, 0x37, 0x61],
+    [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
+  ],
+  "image/webp": [[0x52, 0x49, 0x46, 0x46]],
+  "application/pdf": [[0x25, 0x50, 0x44, 0x46]],
+  "application/msword": [[0xd0, 0xcf, 0x11, 0xe0]],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+    [0x50, 0x4b, 0x03, 0x04],
+  ],
+  "application/vnd.ms-excel": [[0xd0, 0xcf, 0x11, 0xe0]],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    [0x50, 0x4b, 0x03, 0x04],
+  ],
+};
+
+function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
+  const signatures = FILE_SIGNATURES[mimeType];
+  if (!signatures) return true;
+  return signatures.some((sig) =>
+    sig.every((byte, i) => buffer[i] === byte)
+  );
+}
+
 async function uploadFileLocally(file: File, folder: string) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
   const fileName = `${Date.now()}-${sanitizedName}`;
-  
-  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
+
+  const uploadsRoot = path.resolve(process.cwd(), "public", "uploads");
+  const uploadDir = path.resolve(uploadsRoot, folder);
+
+  if (!uploadDir.startsWith(uploadsRoot + path.sep) && uploadDir !== uploadsRoot) {
+    throw new Error("Invalid upload folder");
+  }
+
   await mkdir(uploadDir, { recursive: true });
-  
+
   const filePath = path.join(uploadDir, fileName);
   await writeFile(filePath, buffer);
-  
+
   const url = `/uploads/${folder}/${fileName}`;
-  
+
   return {
     url,
     key: `${folder}/${fileName}`,
@@ -35,7 +68,8 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const folder = (formData.get("folder") as string) || "uploads";
+    const rawFolder = (formData.get("folder") as string) || "uploads";
+    const folder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, "-");
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -68,6 +102,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!validateMagicBytes(buffer, file.type)) {
+      return NextResponse.json(
+        { error: "File content does not match declared type" },
+        { status: 400 }
+      );
+    }
+
     let result;
     if (isStorageConfigured()) {
       try {
@@ -80,12 +122,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(result);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to upload file";
-    
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
   }
 }

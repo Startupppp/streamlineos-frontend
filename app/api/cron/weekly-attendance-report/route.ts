@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAndSendWeeklyReport } from "@/server/actions/weekly-attendance-report";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Weekly attendance report cron failed:", error);
+    logger.error("Weekly attendance report cron failed", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

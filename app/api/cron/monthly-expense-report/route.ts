@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAndSendMonthlyExpenseReport } from "@/server/actions/monthly-expense-report";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     const result = await generateAndSendMonthlyExpenseReport();
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Monthly expense report cron failed:", error);
+    logger.error("Monthly expense report cron failed", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -73,15 +73,28 @@ export async function GET(req: NextRequest) {
         fetchUrl = `${baseUrl}${finalUrl}`;
       }
 
+      try {
+        const urlObj = new URL(fetchUrl);
+        const blockedHosts = ["169.254.169.254", "metadata.google.internal", "localhost", "127.0.0.1", "0.0.0.0"];
+        if (blockedHosts.includes(urlObj.hostname) || urlObj.hostname.startsWith("10.") || urlObj.hostname.startsWith("192.168.") || urlObj.hostname.startsWith("172.")) {
+          return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+      }
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
       const response = await fetch(fetchUrl, {
         method: "GET",
-        headers: {
-          "User-Agent": "QR-Code-Downloader/1.0",
-        },
+        headers: { "User-Agent": "QR-Code-Downloader/1.0" },
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status}`);
+        throw new Error("Failed to fetch image");
       }
 
       const imageBuffer = await response.arrayBuffer();

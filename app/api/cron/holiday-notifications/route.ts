@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendHolidayNotifications } from "@/server/actions/holiday-actions";
+import { logger } from "@/lib/logger";
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await sendHolidayNotifications();
-    
+
     if (result.error) {
       return NextResponse.json(
         { error: result.error },
@@ -24,14 +26,14 @@ export async function GET(request: NextRequest) {
       count: result.count,
     });
   } catch (error) {
-    console.error("Holiday notification cron failed:", error);
+    logger.error("Holiday notification cron failed", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
 export async function POST(request: NextRequest) {
   return GET(request);
 }
-

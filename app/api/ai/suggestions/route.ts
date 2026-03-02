@@ -16,13 +16,14 @@ export async function GET(req: NextRequest) {
 
     const searchParams = req.nextUrl.searchParams;
     const type = searchParams.get("type");
-    const projectId = searchParams.get("projectId");
+    const projectIdParam = searchParams.get("projectId");
 
-    if (type === "tasks" && projectId) {
-      const suggestions = await suggestTaskAssignments(
-        orgId,
-        parseInt(projectId)
-      );
+    if (type === "tasks" && projectIdParam) {
+      const projectId = parseInt(projectIdParam, 10);
+      if (isNaN(projectId) || projectId <= 0) {
+        return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
+      }
+      const suggestions = await suggestTaskAssignments(orgId, projectId);
       return NextResponse.json({ suggestions });
     }
 

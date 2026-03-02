@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
 import { getWeeklyAttendanceReportTemplate } from "@/lib/email-templates";
 
@@ -43,7 +44,7 @@ export async function GET() {
       message: `Test weekly report sent to ${TEST_EMAIL}`,
     });
   } catch (error) {
-    console.error("Test weekly report email error:", error);
+    logger.error("Test weekly report email error", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to send test email" },
       { status: 500 }

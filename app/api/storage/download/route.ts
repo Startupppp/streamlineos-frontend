@@ -1,6 +1,7 @@
 import { Readable } from "stream";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
+import { logger } from "../../../../lib/logger";
 import {
   getFileUrl,
   getFileKeyFromUrl,
@@ -24,15 +25,14 @@ function getMimeType(filePath: string): string {
 }
 
 function resolveLocalPath(fileKey: string): string | null {
+  const publicDir = path.resolve(process.cwd(), "public");
   const candidates = [
-    path.join(process.cwd(), "public", "uploads", fileKey),
-    path.join(process.cwd(), "public", fileKey),
+    path.resolve(process.cwd(), "public", "uploads", fileKey),
+    path.resolve(process.cwd(), "public", fileKey),
   ];
-  if (fileKey.startsWith("/")) {
-    candidates.push(path.join(process.cwd(), "public", fileKey));
-  }
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
+  for (const resolved of candidates) {
+    if (!resolved.startsWith(publicDir + path.sep)) continue;
+    if (existsSync(resolved)) return resolved;
   }
   return null;
 }
@@ -48,7 +48,8 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const url = searchParams.get("url");
     const key = searchParams.get("key");
-    const expiresIn = parseInt(searchParams.get("expiresIn") || "3600");
+    const rawExpires = parseInt(searchParams.get("expiresIn") || "3600", 10);
+    const expiresIn = isNaN(rawExpires) ? 3600 : Math.min(Math.max(rawExpires, 60), 86400);
     const attachment = searchParams.get("attachment") === "1";
 
     if (!url && !key) {
@@ -81,7 +82,8 @@ export async function GET(req: NextRequest) {
         }
         const signedUrl = await getFileUrl(fileKey, expiresIn);
         return NextResponse.json({ url: signedUrl });
-      } catch {
+      } catch (err) {
+        logger.warn("R2 download failed, falling back to local", { fileKey, error: err });
       }
     }
     const localPath = resolveLocalPath(fileKey);

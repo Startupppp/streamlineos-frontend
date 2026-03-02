@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
 import { getMonthlyExpenseReportTemplate } from "@/lib/email-templates";
 import { generateMonthlyExpenseReportXlsx } from "@/lib/monthly-expense-report-xlsx";
@@ -67,7 +68,7 @@ export async function GET() {
       message: `Test monthly expense report (with XLSX) sent to ${TEST_EMAIL}`,
     });
   } catch (error) {
-    console.error("Test monthly expense report email error:", error);
+    logger.error("Test monthly expense report email error", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to send test email" },
       { status: 500 }

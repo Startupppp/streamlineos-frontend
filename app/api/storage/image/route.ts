@@ -1,6 +1,7 @@
 import { Readable } from "stream";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
+import { logger } from "../../../../lib/logger";
 import {
   getFileStream,
   isStorageConfigured,
@@ -23,15 +24,14 @@ function getMimeType(filePath: string): string {
 }
 
 function resolveLocalPath(fileKey: string): string | null {
+  const publicDir = path.resolve(process.cwd(), "public");
   const candidates = [
-    path.join(process.cwd(), "public", "uploads", fileKey),
-    path.join(process.cwd(), "public", fileKey),
+    path.resolve(process.cwd(), "public", "uploads", fileKey),
+    path.resolve(process.cwd(), "public", fileKey),
   ];
-  if (fileKey.startsWith("/")) {
-    candidates.push(path.join(process.cwd(), "public", fileKey));
-  }
-  for (const p of candidates) {
-    if (existsSync(p)) return p;
+  for (const resolved of candidates) {
+    if (!resolved.startsWith(publicDir + path.sep)) continue;
+    if (existsSync(resolved)) return resolved;
   }
   return null;
 }
@@ -57,7 +57,8 @@ export async function GET(req: NextRequest) {
             "Cache-Control": "public, max-age=86400, immutable",
           },
         });
-      } catch {
+      } catch (err) {
+        logger.warn("R2 image fetch failed, falling back to local", { key, error: err });
       }
     }
     const localPath = resolveLocalPath(key);
