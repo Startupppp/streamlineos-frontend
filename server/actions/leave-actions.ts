@@ -8,7 +8,7 @@ import {
   organizationMembers,
   users,
 } from "@/lib/db/schema";
-import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
@@ -303,15 +303,12 @@ export async function getApprovers() {
   });
   if (!member) return [];
 
-  let targetRoles = ["ADMIN", "OWNER"];
-  if (member.role === "ADMIN") {
-    targetRoles = ["OWNER"];
-  }
+  const targetRoles: ("ADMIN" | "OWNER")[] = member.role === "ADMIN" ? ["OWNER"] : ["ADMIN", "OWNER"];
 
   const approvers = await db.query.organizationMembers.findMany({
     where: and(
       eq(organizationMembers.orgId, member.orgId),
-      sql`${organizationMembers.role} IN ${targetRoles}`,
+      inArray(organizationMembers.role, targetRoles),
     ),
     with: { user: true },
   });
@@ -465,8 +462,16 @@ export async function getMyRequests() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return [];
+
   return await db.query.leaveRequests.findMany({
-    where: eq(leaveRequests.userId, session.user.id),
+    where: and(
+      eq(leaveRequests.userId, session.user.id),
+      eq(leaveRequests.orgId, member.orgId)
+    ),
     with: {
       leaveType: true,
       approver: true,
@@ -479,9 +484,15 @@ export async function getIncomingRequests() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return [];
+
   return await db.query.leaveRequests.findMany({
     where: and(
       eq(leaveRequests.approverId, session.user.id),
+      eq(leaveRequests.orgId, member.orgId),
       eq(leaveRequests.status, "PENDING"),
     ),
     with: {
@@ -496,12 +507,18 @@ export async function getPendingApprovalCount() {
   const session = await auth();
   if (!session?.user?.id) return 0;
 
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return 0;
+
   const count = await db
     .select({ count: sql<number>`count(*)` })
     .from(leaveRequests)
     .where(
       and(
         eq(leaveRequests.approverId, session.user.id),
+        eq(leaveRequests.orgId, member.orgId),
         eq(leaveRequests.status, "PENDING"),
       ),
     );

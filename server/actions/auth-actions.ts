@@ -10,7 +10,14 @@ import { revalidatePath } from "next/cache";
 export async function resetPassword(password: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-  
+
+  if (!password || password.length < 8) {
+    return { error: "Password must be at least 8 characters" };
+  }
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    return { error: "Password must contain uppercase, lowercase, and a number" };
+  }
+
   try {
      const hashedPassword = await bcrypt.hash(password, 10);
      

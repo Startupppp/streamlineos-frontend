@@ -34,10 +34,13 @@ export async function uploadDocument(data: CreateDocumentInput) {
 
   if (!member) return { error: "Not a member of any organization" };
 
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const targetUserId = (data.userId && isAdmin) ? data.userId : session.user.id;
+
   try {
     const [document] = await db.insert(documents).values({
       orgId: member.orgId,
-      userId: data.userId || session.user.id,
+      userId: targetUserId,
       departmentId: data.departmentId,
       name: data.name,
       description: data.description,

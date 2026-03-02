@@ -139,6 +139,19 @@ export async function deleteEmployee(userId: string) {
   }
 
   try {
+      const requesterOrgMember = await db.query.organizationMembers.findFirst({
+        where: eq(organizationMembers.userId, session.user.id),
+      });
+      if (!requesterOrgMember) return { error: "Organization context not found" };
+
+      const targetOrgMember = await db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, userId),
+          eq(organizationMembers.orgId, requesterOrgMember.orgId)
+        ),
+      });
+      if (!targetOrgMember) return { error: "Employee not found in your organization" };
+
       const employee = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });

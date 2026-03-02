@@ -250,7 +250,9 @@ export const organizationRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db.delete(invitations).where(eq(invitations.id, input.invitationId));
+      await ctx.db.delete(invitations).where(
+        and(eq(invitations.id, input.invitationId), eq(invitations.orgId, input.orgId))
+      );
 
       return { success: true };
     }),

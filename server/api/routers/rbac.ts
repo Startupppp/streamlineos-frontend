@@ -5,6 +5,7 @@ import {
   rolePermissions,
   userPermissions,
   users,
+  organizationMembers,
 } from "../../../lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import {
@@ -96,7 +97,10 @@ export const rbacRouter = createTRPCRouter({
     .input(z.object({ role: z.enum(["OWNER", "ADMIN", "MEMBER"]) }))
     .query(async ({ ctx, input }) => {
       const perms = await ctx.db.query.rolePermissions.findMany({
-        where: eq(rolePermissions.role, input.role),
+        where: and(
+          eq(rolePermissions.role, input.role),
+          eq(rolePermissions.orgId, ctx.session.orgId)
+        ),
         with: {
           permission: true,
         },
@@ -115,7 +119,6 @@ export const rbacRouter = createTRPCRouter({
       z.object({
         role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
         permissionId: z.number(),
-        orgId: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -138,7 +141,7 @@ export const rbacRouter = createTRPCRouter({
       await ctx.db.insert(rolePermissions).values({
         role: input.role,
         permissionId: input.permissionId,
-        orgId: input.orgId ?? ctx.session.orgId,
+        orgId: ctx.session.orgId,
       });
     }),
 
@@ -165,6 +168,17 @@ export const rbacRouter = createTRPCRouter({
 
       if (!hasAccess) {
         throw new Error("Permission denied");
+      }
+
+      const targetMember = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, input.userId),
+          eq(organizationMembers.orgId, ctx.session.orgId)
+        ),
+      });
+
+      if (!targetMember) {
+        throw new Error("Target user is not a member of this organization");
       }
 
       await ctx.db

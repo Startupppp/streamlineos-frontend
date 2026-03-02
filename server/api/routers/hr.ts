@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "../../../lib/logger";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   departments,
@@ -194,10 +195,12 @@ export const hrRouter = createTRPCRouter({
 
        const employeeIdPrefix = "VC";
        const yearSuffix = new Date().getFullYear().toString().slice(-2);
-       const existingCount = await ctx.db.select({ count: sql<number>`count(*)` })
-         .from(users)
-         .where(eq(users.isActive, true));
-       const empNumber = (Number(existingCount[0]?.count) || 0) + 1;
+       const maxIdResult = await ctx.db.select({
+         maxId: sql<string>`COALESCE(MAX(${users.employeeId}), '')`
+       }).from(users).where(eq(users.isActive, true));
+       const lastId = maxIdResult[0]?.maxId || "";
+       const lastNum = parseInt(lastId.replace(/\D/g, "").slice(-3)) || 0;
+       const empNumber = lastNum + 1;
        const generatedEmployeeId = `${employeeIdPrefix}${yearSuffix}${empNumber.toString().padStart(3, "0")}`;
 
        const [newUser] = await ctx.db.insert(users).values({
@@ -229,11 +232,12 @@ export const hrRouter = createTRPCRouter({
 
        try {
          await sendWelcomeEmail(
-            input.email, 
-            input.firstName, 
+            input.email,
+            input.firstName,
             rawPassword
          );
        } catch (error) {
+         logger.error("Failed to send welcome email", { email: input.email, error });
        }
 
        await ctx.db.insert(organizationMembers).values({
@@ -341,6 +345,20 @@ export const hrRouter = createTRPCRouter({
            message: "You cannot delete your own account.",
          });
        }
+       const targetMember = await ctx.db.query.organizationMembers.findFirst({
+         where: and(
+           eq(organizationMembers.userId, input.userId),
+           eq(organizationMembers.orgId, ctx.session.orgId)
+         ),
+       });
+
+       if (!targetMember) {
+         throw new TRPCError({
+           code: "NOT_FOUND",
+           message: "Employee not found in your organization.",
+         });
+       }
+
        const targetUser = await ctx.db.query.users.findFirst({
          where: eq(users.id, input.userId),
        });
@@ -636,6 +654,46 @@ export const hrRouter = createTRPCRouter({
   requestLeave: protectedProcedure
     .input(requestLeaveInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (input.startDate > input.endDate) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Start date must be before or equal to end date" });
+      }
+
+      const diffDays = Math.round(
+        Math.abs(new Date(input.endDate).getTime() - new Date(input.startDate).getTime()) / (1000 * 60 * 60 * 24)
+      ) + 1;
+
+      const balance = await ctx.db.query.leaveBalances.findFirst({
+        where: and(
+          eq(leaveBalances.userId, ctx.session.userId),
+          eq(leaveBalances.orgId, ctx.session.orgId),
+          eq(leaveBalances.leaveTypeId, input.typeId),
+          eq(leaveBalances.year, new Date().getFullYear()),
+        ),
+      });
+
+      if (balance && Number(balance.balance) < diffDays) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Insufficient leave balance. Available: ${balance.balance}, Required: ${diffDays}`,
+        });
+      }
+
+      const overlapping = await ctx.db.query.leaveRequests.findFirst({
+        where: and(
+          eq(leaveRequests.userId, ctx.session.userId),
+          eq(leaveRequests.orgId, ctx.session.orgId),
+          lte(leaveRequests.startDate, formatDateOnly(input.endDate)),
+          gte(leaveRequests.startDate, formatDateOnly(input.startDate)),
+        ),
+      });
+
+      if (overlapping && overlapping.status !== "REJECTED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You already have a leave request for overlapping dates",
+        });
+      }
+
       await ctx.db.insert(leaveRequests).values({
         orgId: ctx.session.orgId,
         userId: ctx.session.userId,
@@ -740,33 +798,35 @@ export const hrRouter = createTRPCRouter({
       if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage salary structures" });
       }
-      await ctx.db
-        .update(salaryStructures)
-        .set({ isActive: false })
-        .where(
-          and(
-            eq(salaryStructures.userId, input.userId),
-            eq(salaryStructures.orgId, ctx.session.orgId),
-            eq(salaryStructures.isActive, true)
-          )
-        );
+      const [structure] = await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(salaryStructures)
+          .set({ isActive: false })
+          .where(
+            and(
+              eq(salaryStructures.userId, input.userId),
+              eq(salaryStructures.orgId, ctx.session.orgId),
+              eq(salaryStructures.isActive, true)
+            )
+          );
 
-      const [structure] = await ctx.db
-        .insert(salaryStructures)
-        .values({
-          orgId: ctx.session.orgId,
-          userId: input.userId,
-          basicSalary: input.basicSalary.toString(),
-          hraPercentage: input.hraPercentage.toString(),
-          allowances: input.allowances.toString(),
-          deductions: input.deductions.toString(),
-          effectiveFrom: formatDateOnly(input.effectiveFrom),
-          effectiveTo: input.effectiveTo
-            ? formatDateOnly(input.effectiveTo)
-            : undefined,
-          isActive: true,
-        })
-        .returning();
+        return await tx
+          .insert(salaryStructures)
+          .values({
+            orgId: ctx.session.orgId,
+            userId: input.userId,
+            basicSalary: input.basicSalary.toString(),
+            hraPercentage: input.hraPercentage.toString(),
+            allowances: input.allowances.toString(),
+            deductions: input.deductions.toString(),
+            effectiveFrom: formatDateOnly(input.effectiveFrom),
+            effectiveTo: input.effectiveTo
+              ? formatDateOnly(input.effectiveTo)
+              : undefined,
+            isActive: true,
+          })
+          .returning();
+      });
       return structure;
     }),
 
@@ -838,6 +898,9 @@ export const hrRouter = createTRPCRouter({
   updateExpenseStatus: protectedProcedure
     .input(updateExpenseStatusInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can update expense status" });
+      }
       await ctx.db
         .update(expenses)
         .set({
@@ -871,8 +934,22 @@ export const hrRouter = createTRPCRouter({
             ))
             .where(eq(leaveTypes.orgId, ctx.session.orgId));
 
+        const targetMember = await ctx.db.query.organizationMembers.findFirst({
+            where: and(
+                eq(organizationMembers.userId, input.userId),
+                eq(organizationMembers.orgId, ctx.session.orgId)
+            ),
+        });
+
+        if (!targetMember) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Employee not found in your organization" });
+        }
+
         const recentLeaves = await ctx.db.query.leaveRequests.findMany({
-            where: eq(leaveRequests.userId, input.userId),
+            where: and(
+                eq(leaveRequests.userId, input.userId),
+                eq(leaveRequests.orgId, ctx.session.orgId)
+            ),
             limit: 5,
             orderBy: [desc(leaveRequests.createdAt)],
             with: {
@@ -883,10 +960,11 @@ export const hrRouter = createTRPCRouter({
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0,0,0,0);
-        
+
         const attendanceRecords = await ctx.db.query.attendance.findMany({
             where: and(
                 eq(attendance.userId, input.userId),
+                eq(attendance.orgId, ctx.session.orgId),
                 gte(attendance.date, formatDateOnly(startOfMonth))
             )
         });
@@ -1017,11 +1095,14 @@ export const hrRouter = createTRPCRouter({
   createDocument: protectedProcedure
     .input(createDocumentInputSchema)
     .mutation(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const targetUserId = (input.userId && isAdmin) ? input.userId : ctx.session.userId;
+
       const [document] = await ctx.db
         .insert(documents)
         .values({
           orgId: ctx.session.orgId,
-          userId: input.userId || ctx.session.userId,
+          userId: targetUserId,
           name: input.name,
           type: input.type,
           fileUrl: input.fileUrl,
@@ -1050,6 +1131,9 @@ export const hrRouter = createTRPCRouter({
   createPerformanceReview: protectedProcedure
     .input(createPerformanceReviewInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can create performance reviews" });
+      }
       const [review] = await ctx.db
         .insert(performanceReviews)
         .values({
@@ -1086,6 +1170,9 @@ export const hrRouter = createTRPCRouter({
   createGoal: protectedProcedure
     .input(createGoalInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can create goals" });
+      }
       const [goal] = await ctx.db
         .insert(goals)
         .values({
@@ -1234,7 +1321,10 @@ export const hrRouter = createTRPCRouter({
 
   getWfhRequests: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.query.wfhRequests.findMany({
-      where: eq(wfhRequests.userId, ctx.session.userId),
+      where: and(
+        eq(wfhRequests.userId, ctx.session.userId),
+        eq(wfhRequests.orgId, ctx.session.orgId)
+      ),
       orderBy: [desc(wfhRequests.createdAt)],
     });
   }),

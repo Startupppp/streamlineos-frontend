@@ -233,7 +233,8 @@ export async function approveExpense(expenseId: number) {
       })
       .where(and(
         eq(expenses.id, expenseId),
-        eq(expenses.orgId, member.orgId)
+        eq(expenses.orgId, member.orgId),
+        eq(expenses.status, "PENDING")
       ));
 
     revalidatePath("/hr/expenses");
@@ -265,7 +266,8 @@ export async function rejectExpense(expenseId: number, reason: string) {
       })
       .where(and(
         eq(expenses.id, expenseId),
-        eq(expenses.orgId, member.orgId)
+        eq(expenses.orgId, member.orgId),
+        eq(expenses.status, "PENDING")
       ));
 
     revalidatePath("/hr/expenses");

@@ -76,7 +76,7 @@ export async function deleteHoliday(holidayId: number) {
   }
 
   try {
-    await db.delete(holidays).where(eq(holidays.id, holidayId));
+    await db.delete(holidays).where(and(eq(holidays.id, holidayId), eq(holidays.orgId, member.orgId)));
     revalidatePath("/settings");
     return { success: true };
   } catch (e) {

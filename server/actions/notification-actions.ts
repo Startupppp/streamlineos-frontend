@@ -10,12 +10,7 @@ async function getOrgId(userId: string) {
         where: eq(organizationMembers.userId, userId),
         limit: 1,
     });
-    let orgId = userMemberships[0]?.orgId || null;
-    if (!orgId) {
-         const anyOrg = await db.query.organizations.findFirst();
-         if (anyOrg) orgId = anyOrg.id;
-    }
-    return orgId;
+    return userMemberships[0]?.orgId || null;
 }
 
 export async function getUnreadOnboardingCount() {
