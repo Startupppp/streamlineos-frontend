@@ -116,6 +116,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
       });
       setReportData(data);
     } catch {
+      // Report data fetch is non-blocking — empty state shown on failure
     } finally {
       setLoading(false);
     }

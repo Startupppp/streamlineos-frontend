@@ -106,6 +106,7 @@ export default function HRDashboardPage() {
           );
           await markOnboardingNotificationsAsRead();
         } catch {
+          // Non-critical — badge clear is best-effort
         }
       } catch (err) {
         if (!cancelled) toast.error("Failed to load employees");
