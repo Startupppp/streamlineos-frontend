@@ -11,6 +11,9 @@ const PROTECTED_ROUTES = [
   "/sales",
   "/customer-executive",
   "/marketing",
+  "/billing",
+  "/timesheets",
+  "/support",
 ];
 
 const AUTH_ROUTES = [
@@ -27,15 +30,57 @@ const ALLOW_AUTHENTICATED = [
   "/auth/reset-password",
 ];
 
+const RATE_LIMIT_WINDOW = 60_000;
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_CLEANUP_INTERVAL = 60_000;
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+let lastCleanup = Date.now();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+
+  if (now - lastCleanup > RATE_LIMIT_CLEANUP_INTERVAL) {
+    for (const [key, entry] of rateLimitMap) {
+      if (now > entry.resetTime) rateLimitMap.delete(key);
+    }
+    lastCleanup = now;
+  }
+
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
 function startsWithAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
 }
 
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
+
+  if (
+    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/trpc/auth.")
+  ) {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+  }
+
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
+
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -59,14 +104,19 @@ export default async function middleware(req: NextRequest) {
   ) {
     const callbackUrl = searchParams.get("callbackUrl");
     const url = req.nextUrl.clone();
-    url.pathname =
-      callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : "/dashboard";
+    const isSafeRedirect =
+      callbackUrl &&
+      callbackUrl.startsWith("/") &&
+      !callbackUrl.startsWith("//") &&
+      !callbackUrl.includes("\\");
+    url.pathname = isSafeRedirect ? callbackUrl : "/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }
   if (
     isAuthenticated &&
-    token?.isActive === false &&
+    token?.isActive !== undefined &&
+    token.isActive === false &&
     !pathname.startsWith("/api/auth/signout")
   ) {
     const url = req.nextUrl.clone();
@@ -102,6 +152,6 @@ export default async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

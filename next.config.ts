@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
       allowedOrigins: [
         "localhost:3000",
         "localhost:3001",
-        "*.devtunnels.ms",
-        "*.vscode.dev",
+        ...(process.env.NODE_ENV === "development"
+          ? ["*.devtunnels.ms", "*.vscode.dev"]
+          : []),
       ],
     },
   },
@@ -39,6 +40,24 @@ const nextConfig: NextConfig = {
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+        { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+        { key: "X-XSS-Protection", value: "0" },
+        { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+        { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+        {
+          key: "Content-Security-Policy",
+          value: [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://crm.vaivammcapital.com",
+            "font-src 'self'",
+            "connect-src 'self' https://*.r2.cloudflarestorage.com",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+          ].join("; "),
+        },
       ],
     },
   ],

@@ -263,7 +263,7 @@ export default function SettingsPage() {
                     Switch between light and dark themes.
                   </p>
                 </div>
-                <Switch id="dark-mode" aria-label="Toggle dark mode" />
+                <Switch id="dark-mode" aria-label="Toggle dark mode" disabled title="Coming soon" />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                     Use a more compact layout for lists and tables.
                   </p>
                 </div>
-                <Switch id="compact-view" aria-label="Toggle compact view" />
+                <Switch id="compact-view" aria-label="Toggle compact view" disabled title="Coming soon" />
               </div>
             </CardContent>
           </Card>
@@ -292,7 +292,7 @@ export default function SettingsPage() {
                     Receive updates about your projects via email.
                   </p>
                 </div>
-                <Switch id="email-notifications" aria-label="Toggle email notifications" defaultChecked />
+                <Switch id="email-notifications" aria-label="Toggle email notifications" defaultChecked disabled title="Coming soon" />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -301,7 +301,7 @@ export default function SettingsPage() {
                     Get reminded about pending leave approvals.
                   </p>
                 </div>
-                <Switch id="leave-reminders" aria-label="Toggle leave reminders" defaultChecked />
+                <Switch id="leave-reminders" aria-label="Toggle leave reminders" defaultChecked disabled title="Coming soon" />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -310,7 +310,7 @@ export default function SettingsPage() {
                     Notifications when tickets are assigned or updated.
                   </p>
                 </div>
-                <Switch id="project-updates" aria-label="Toggle project updates" defaultChecked />
+                <Switch id="project-updates" aria-label="Toggle project updates" defaultChecked disabled title="Coming soon" />
               </div>
             </CardContent>
           </Card>

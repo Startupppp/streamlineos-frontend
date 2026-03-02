@@ -1,4 +1,5 @@
 import sgMail from "@sendgrid/mail";
+import { logger } from "./logger";
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
@@ -51,7 +52,7 @@ async function sendEmail(options: EmailOptions) {
   
   if (!process.env.SENDGRID_API_KEY) {
     if (process.env.NODE_ENV === "development") {
-      console.log(`[EMAIL SKIPPED - No SendGrid API Key] To: ${options.to}, Subject: ${options.subject}`);
+      logger.info("Email skipped - No SendGrid API Key", { to: options.to, subject: options.subject });
     }
     return Promise.resolve();
   }
@@ -73,10 +74,10 @@ async function sendEmail(options: EmailOptions) {
       ...(attachments?.length ? { attachments } : {}),
     });
     if (process.env.NODE_ENV === "development") {
-      console.log(`[EMAIL SENT] To: ${options.to}, Subject: ${options.subject}`);
+      logger.info("Email sent", { to: options.to, subject: options.subject });
     }
   } catch (error) {
-    console.error(`[EMAIL ERROR] To: ${options.to}, Subject: ${options.subject}`, error);
+    logger.error("Email send failed", { to: options.to, subject: options.subject, error });
     throw error;
   }
 }

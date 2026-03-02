@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import Image from "next/image";
 import {
@@ -57,6 +57,7 @@ interface TimeEntryDetailSheetProps {
 export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDetailSheetProps) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [imageError, setImageError] = useState(false);
 
   const utils = api.useUtils();
 
@@ -209,7 +210,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                           : `/uploads/${imageUrl}`;
                         const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(imageUrl);
                         
-                        return isImage ? (
+                        return isImage && !imageError ? (
                           <div className="relative w-full max-h-[500px] flex items-center justify-center">
                             <Image
                               src={normalizedUrl}
@@ -218,29 +219,15 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                               height={500}
                               className="w-full h-auto max-h-[500px] object-contain"
                               unoptimized
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  parent.innerHTML = `
-                                    <div class="p-4 text-center">
-                                      <p class="text-sm text-muted-foreground mb-2">Unable to load image</p>
-                                      <a href="${normalizedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                        </svg>
-                                        Open file
-                                      </a>
-                                    </div>
-                                  `;
-                                }
-                              }}
+                              onError={() => setImageError(true)}
                             />
                           </div>
                         ) : (
                           <div className="p-4 text-center">
                             <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                            <p className="text-sm text-muted-foreground mb-2">Document attachment</p>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {imageError ? "Unable to load image" : "Document attachment"}
+                            </p>
                             <a
                               href={normalizedUrl}
                               target="_blank"
@@ -277,7 +264,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               <div className="pt-4 border-t flex gap-2 px-6">
                 <Button
                   onClick={handleApprove}
-                  disabled={approveMutation.isPending}
+                  disabled={approveMutation.isPending || rejectMutation.isPending}
                   className="flex-1"
                   variant="default"
                 >
@@ -287,7 +274,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                 </Button>
                 <Button
                   onClick={handleRejectClick}
-                  disabled={rejectMutation.isPending}
+                  disabled={rejectMutation.isPending || approveMutation.isPending}
                   className="flex-1"
                   variant="destructive"
                 >

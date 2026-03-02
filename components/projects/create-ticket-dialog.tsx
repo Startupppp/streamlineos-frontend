@@ -224,7 +224,7 @@ export function CreateTicketDialog({
                     <FormLabel>Priority</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
@@ -285,7 +285,7 @@ export function CreateTicketDialog({
                     <FormLabel>Assignee</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">

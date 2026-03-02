@@ -42,6 +42,7 @@ export function SalaryStructureForm({
     resolver: zodResolver(createSalaryStructureInputSchema),
     defaultValues: {
       userId,
+      basicSalary: 0,
       hraPercentage: 40,
       allowances: 0,
       deductions: 0,

@@ -413,39 +413,41 @@ export const projectRouter = createTRPCRouter({
   createTicket: protectedProcedure
     .input(createTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const maxTicketResult = await ctx.db
-        .select({ maxTicketNumber: sql<number>`COALESCE(MAX(${tickets.ticketNumber}), 0)` })
-        .from(tickets)
-        .where(
-          and(
-            eq(tickets.projectId, input.projectId),
-            eq(tickets.orgId, ctx.session.orgId)
-          )
-        );
+      const [ticket] = await ctx.db.transaction(async (tx) => {
+        const maxTicketResult = await tx
+          .select({ maxTicketNumber: sql<number>`COALESCE(MAX(${tickets.ticketNumber}), 0)` })
+          .from(tickets)
+          .where(
+            and(
+              eq(tickets.projectId, input.projectId),
+              eq(tickets.orgId, ctx.session.orgId)
+            )
+          );
 
-      const nextTicketNumber = (maxTicketResult[0]?.maxTicketNumber || 0) + 1;
+        const nextTicketNumber = (maxTicketResult[0]?.maxTicketNumber || 0) + 1;
 
-      const [ticket] = await ctx.db
-        .insert(tickets)
-        .values({
-          orgId: ctx.session.orgId,
-          projectId: input.projectId,
-          ticketNumber: nextTicketNumber,
-          title: input.title,
-          description: input.description,
-          type: normalizeTicketType(input.type),
-          priority: input.priority || "MEDIUM",
-          assigneeId: input.assigneeId,
-          reporterId: input.reporterId || ctx.session.userId,
-          sprintId: input.sprintId,
-          epicId: input.epicId,
-          points: input.points,
-          link: input.link,
-          originalEstimate: input.originalEstimate?.toString(),
-          parentTicketId: input.parentTicketId,
-          status: input.status || "TODO",
-        })
-        .returning();
+        return await tx
+          .insert(tickets)
+          .values({
+            orgId: ctx.session.orgId,
+            projectId: input.projectId,
+            ticketNumber: nextTicketNumber,
+            title: input.title,
+            description: input.description,
+            type: normalizeTicketType(input.type),
+            priority: input.priority || "MEDIUM",
+            assigneeId: input.assigneeId,
+            reporterId: input.reporterId || ctx.session.userId,
+            sprintId: input.sprintId,
+            epicId: input.epicId,
+            points: input.points,
+            link: input.link,
+            originalEstimate: input.originalEstimate?.toString(),
+            parentTicketId: input.parentTicketId,
+            status: input.status || "TODO",
+          })
+          .returning();
+      });
       if (input.assigneeId) {
         try {
           const [assignee, creator, project] = await Promise.all([
@@ -708,6 +710,18 @@ export const projectRouter = createTRPCRouter({
   addLabelToTicket: protectedProcedure
     .input(z.object({ ticketId: z.number(), labelId: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const ticket = await ctx.db.query.tickets.findFirst({
+        where: and(eq(tickets.id, input.ticketId), eq(tickets.orgId, ctx.session.orgId)),
+        columns: { id: true },
+      });
+      if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket not found" });
+
+      const label = await ctx.db.query.ticketLabels.findFirst({
+        where: and(eq(ticketLabels.id, input.labelId), eq(ticketLabels.orgId, ctx.session.orgId)),
+        columns: { id: true },
+      });
+      if (!label) throw new TRPCError({ code: "NOT_FOUND", message: "Label not found" });
+
       await ctx.db.insert(ticketLabelMappings).values({
         ticketId: input.ticketId,
         labelId: input.labelId,
@@ -717,6 +731,12 @@ export const projectRouter = createTRPCRouter({
   removeLabelFromTicket: protectedProcedure
     .input(z.object({ ticketId: z.number(), labelId: z.number() }))
     .mutation(async ({ ctx, input }) => {
+      const ticket = await ctx.db.query.tickets.findFirst({
+        where: and(eq(tickets.id, input.ticketId), eq(tickets.orgId, ctx.session.orgId)),
+        columns: { id: true },
+      });
+      if (!ticket) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket not found" });
+
       await ctx.db
         .delete(ticketLabelMappings)
         .where(
@@ -731,7 +751,7 @@ export const projectRouter = createTRPCRouter({
     .input(addTimeEntryInputSchema)
     .mutation(async ({ ctx, input }) => {
       const ticket = await ctx.db.query.tickets.findFirst({
-          where: eq(tickets.id, input.ticketId),
+          where: and(eq(tickets.id, input.ticketId), eq(tickets.orgId, ctx.session.orgId)),
           columns: { projectId: true },
           with: { project: { columns: { managerId: true, id: true } } }
       });

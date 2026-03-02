@@ -63,7 +63,7 @@ const SidebarProvider = React.forwardRef<
       }
 
       if (!isMobile) {
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState};path=/;max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState};path=/;max-age=${SIDEBAR_COOKIE_MAX_AGE};SameSite=Lax`
       }
     },
     [isMobile, onOpenChange, open]

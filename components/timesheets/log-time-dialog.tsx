@@ -106,7 +106,7 @@ export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProp
               <Select
                 onValueChange={(val) => {
                     setSelectedProjectId(parseInt(val));
-                    form.setValue("ticketId", -1);
+                    form.setValue("ticketId", undefined as unknown as number);
                 }}
               >
                 <FormControl>

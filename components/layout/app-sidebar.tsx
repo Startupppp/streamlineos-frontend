@@ -168,23 +168,29 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
   const [unreadOnboarding, setUnreadOnboarding] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     async function fetchCounts() {
         try {
             const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
             const { getUnreadOnboardingCount } = await import("@/server/actions/notification-actions");
-            
-            const leavesCount = await getPendingApprovalCount();
-            const onboardingCount = await getUnreadOnboardingCount();
-            
-            setPendingLeaves(leavesCount);
-            setUnreadOnboarding(onboardingCount);
+
+            const [leavesCount, onboardingCount] = await Promise.all([
+              getPendingApprovalCount(),
+              getUnreadOnboardingCount(),
+            ]);
+
+            if (!cancelled) {
+              setPendingLeaves(leavesCount);
+              setUnreadOnboarding(onboardingCount);
+            }
         } catch {
+            // Badge counts are non-critical — fail silently
         }
     }
     if (session?.user) {
         fetchCounts();
         const interval = setInterval(fetchCounts, 30000);
-        return () => clearInterval(interval);
+        return () => { cancelled = true; clearInterval(interval); };
     }
   }, [session]);
 
