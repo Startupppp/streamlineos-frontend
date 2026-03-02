@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "../../../lib/logger";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import {
   projects,
@@ -250,7 +251,7 @@ export const projectRouter = createTRPCRouter({
                   currentUser?.name || currentUser?.firstName || undefined
                 );
               } catch (emailError) {
-                console.error(`[PROJECT CREATE] Failed to send assignment email to ${member.email}:`, emailError);
+                logger.error(`Failed to send project assignment email`, { to: member.email, error: emailError });
               }
             }
           }
@@ -343,7 +344,7 @@ export const projectRouter = createTRPCRouter({
                       currentUser?.name || currentUser?.firstName || undefined
                     );
                   } catch (emailError) {
-                    console.error(`[PROJECT UPDATE] Failed to send assignment email to ${member.email}:`, emailError);
+                    logger.error(`Failed to send project update email`, { to: member.email, error: emailError });
                   }
                 }
               }
@@ -531,7 +532,7 @@ export const projectRouter = createTRPCRouter({
         
         return { success: true };
       } catch (error) {
-        console.error("Update ticket error:", error);
+        logger.error("Update ticket error", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update ticket",

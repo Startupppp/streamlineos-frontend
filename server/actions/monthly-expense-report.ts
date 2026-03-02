@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { expenses, organizationMembers } from "@/lib/db/schema";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { sendMonthlyExpenseReportEmail } from "@/lib/email";
@@ -99,7 +100,7 @@ export async function generateAndSendMonthlyExpenseReport() {
       );
       totalReportsSent++;
     } catch (error) {
-      console.error(`Failed to send monthly expense report for org ${org.id}:`, error);
+      logger.error("Failed to send monthly expense report", { orgId: org.id, error });
     }
   }
 

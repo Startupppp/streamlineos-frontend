@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { attendance, organizationMembers } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { sendWeeklyAttendanceReportEmail } from "@/lib/email";
@@ -100,7 +101,7 @@ export async function generateAndSendWeeklyReport() {
       );
       totalReportsSent++;
     } catch (error) {
-      console.error(`Failed to send weekly report for org ${org.id}:`, error);
+      logger.error("Failed to send weekly report", { orgId: org.id, error });
     }
   }
 

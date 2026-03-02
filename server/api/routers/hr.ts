@@ -150,7 +150,7 @@ export const hrRouter = createTRPCRouter({
 
        const userId = crypto.randomUUID();
        
-       const rawPassword = input.password || "123456";
+       const rawPassword = input.password || crypto.randomUUID().slice(0, 16);
        const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
        let finalDepartmentId = input.departmentId;
@@ -660,6 +660,9 @@ export const hrRouter = createTRPCRouter({
   generatePayroll: protectedProcedure
     .input(generatePayrollInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can generate payroll" });
+      }
       const memberships = await ctx.db.query.organizationMembers.findMany({
         where: eq(organizationMembers.orgId, ctx.session.orgId),
       });
@@ -734,6 +737,9 @@ export const hrRouter = createTRPCRouter({
   createSalaryStructure: protectedProcedure
     .input(createSalaryStructureInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage salary structures" });
+      }
       await ctx.db
         .update(salaryStructures)
         .set({ isActive: false })

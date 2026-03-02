@@ -77,6 +77,21 @@ export async function updateEmployee(data: {
     }
 
     try {
+        const requesterOrgMember = await db.query.organizationMembers.findFirst({
+            where: eq(organizationMembers.userId, session.user.id)
+        });
+
+        if (!requesterOrgMember) return { error: "Organization context not found" };
+
+        const targetOrgMember = await db.query.organizationMembers.findFirst({
+            where: and(
+                eq(organizationMembers.userId, data.id),
+                eq(organizationMembers.orgId, requesterOrgMember.orgId)
+            )
+        });
+
+        if (!targetOrgMember) return { error: "Employee not found in your organization" };
+
         await db.update(users)
             .set({
                 firstName: data.firstName,
@@ -94,9 +109,6 @@ export async function updateEmployee(data: {
                 bankDetails: data.bankDetails,
             })
             .where(eq(users.id, data.id));
-        const requesterOrgMember = await db.query.organizationMembers.findFirst({
-            where: eq(organizationMembers.userId, session.user.id)
-        });
 
         if (requesterOrgMember) {
              await db.update(organizationMembers)

@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { holidays, organizationMembers, users, organizations } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
@@ -133,7 +134,7 @@ export async function sendHolidayNotifications() {
 
     return { success: true, count: upcomingHolidays.length };
   } catch (error) {
-    console.error("Failed to send holiday notifications:", error);
+    logger.error("Failed to send holiday notifications", error);
     return { error: "Failed to send notifications" };
   }
 }

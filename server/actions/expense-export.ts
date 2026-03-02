@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { expenses } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or } from "drizzle-orm";
 import { getAuthenticatedMember } from "@/lib/auth-helpers";
@@ -556,7 +557,7 @@ export async function exportExpenses(
         return { success: false, error: "Invalid export format" };
     }
   } catch (error) {
-    console.error("Export error:", error);
+    logger.error("Expense export failed", error);
     return { success: false, error: "Failed to generate export" };
   }
 }

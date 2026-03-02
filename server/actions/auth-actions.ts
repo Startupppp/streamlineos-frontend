@@ -48,7 +48,7 @@ export async function createEmployee(data: {
             return { error: "User with this email already exists" };
         }
 
-        const rawPassword = data.initialPassword || "123456"; 
+        const rawPassword = data.initialPassword || crypto.randomUUID().slice(0, 16);
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
         const creatorOrg = await db.query.organizationMembers.findFirst({

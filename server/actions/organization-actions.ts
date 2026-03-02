@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 import { organizations, organizationMembers } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
@@ -60,7 +61,7 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
 
     return { success: true, orgId, slug };
   } catch (error) {
-    console.error("Failed to create organization:", error);
+    logger.error("Failed to create organization", error);
     return { error: "Failed to create organization. Please try again." };
   }
 }
