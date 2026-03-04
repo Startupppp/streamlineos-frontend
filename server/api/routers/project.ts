@@ -15,7 +15,7 @@ import {
   projectStatuses,
   projectMembers,
 } from "../../../lib/db/schema";
-import { eq, and, desc, asc, sql, or, inArray, gte, lte } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, inArray, gte, lte, ilike, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { differenceInCalendarDays, addDays } from "date-fns";
 import { formatDateOnly } from "../../../lib/date-utils";
@@ -80,6 +80,145 @@ export const projectRouter = createTRPCRouter({
       orderBy: [desc(projects.id)],
     });
   }),
+
+  getProjectsListing: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(9),
+        search: z.string().optional(),
+        status: z.enum(["ALL", "ACTIVE", "COMPLETED", "ARCHIVED"]).default("ALL"),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, status } = input;
+      const offset = getOffset(page, limit);
+
+      // Build where conditions
+      const conditions = [eq(projects.orgId, ctx.session.orgId)];
+
+      // Role-based access (same as getProjects)
+      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (!isOwnerOrAdmin) {
+        const memberOf = await ctx.db
+          .select({ projectId: projectMembers.projectId })
+          .from(projectMembers)
+          .where(eq(projectMembers.userId, ctx.session.userId));
+        const projectIds = memberOf.map((m) => m.projectId);
+
+        conditions.push(
+          or(
+            eq(projects.managerId, ctx.session.userId),
+            projectIds.length > 0 ? inArray(projects.id, projectIds) : sql`false`
+          )!
+        );
+      }
+
+      if (search && search.trim()) {
+        const term = `%${search.trim()}%`;
+        conditions.push(
+          or(ilike(projects.name, term), ilike(projects.key, term))!
+        );
+      }
+
+      if (status !== "ALL") {
+        conditions.push(eq(projects.status, status));
+      }
+
+      const whereClause = and(...conditions);
+
+      // Count total
+      const [{ total }] = await ctx.db
+        .select({ total: count() })
+        .from(projects)
+        .where(whereClause);
+
+      // Fetch paginated projects with manager
+      const projectRows = await ctx.db
+        .select({
+          id: projects.id,
+          name: projects.name,
+          description: projects.description,
+          key: projects.key,
+          status: projects.status,
+          startDate: projects.startDate,
+          endDate: projects.endDate,
+          managerId: projects.managerId,
+          managerFirstName: users.firstName,
+          managerLastName: users.lastName,
+          managerImage: users.image,
+        })
+        .from(projects)
+        .leftJoin(users, eq(projects.managerId, users.id))
+        .where(whereClause)
+        .orderBy(desc(projects.id))
+        .limit(limit)
+        .offset(offset);
+
+      if (projectRows.length === 0) {
+        return createPaginatedResponse([], total, page, limit);
+      }
+
+      const projectIds = projectRows.map((p) => p.id);
+
+      // Aggregate ticket progress per project
+      const progressRows = await ctx.db
+        .select({
+          projectId: tickets.projectId,
+          total: count(),
+          done: sql<number>`count(*) filter (where ${tickets.status} = 'DONE')`.as("done"),
+        })
+        .from(tickets)
+        .where(inArray(tickets.projectId, projectIds))
+        .groupBy(tickets.projectId);
+
+      const progressMap = new Map(
+        progressRows.map((r) => [r.projectId, { total: r.total, done: r.done }])
+      );
+
+      // Fetch members per project (limited to 5 per project)
+      const memberRows = await ctx.db
+        .select({
+          projectId: projectMembers.projectId,
+          userId: projectMembers.userId,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          image: users.image,
+        })
+        .from(projectMembers)
+        .innerJoin(users, eq(projectMembers.userId, users.id))
+        .where(inArray(projectMembers.projectId, projectIds));
+
+      const membersMap = new Map<number, { id: string; firstName: string | null; lastName: string | null; image: string | null }[]>();
+      for (const m of memberRows) {
+        if (!membersMap.has(m.projectId)) membersMap.set(m.projectId, []);
+        const arr = membersMap.get(m.projectId)!;
+        if (arr.length < 5) {
+          arr.push({ id: m.userId, firstName: m.firstName, lastName: m.lastName, image: m.image });
+        }
+      }
+
+      const data = projectRows.map((p) => {
+        const progress = progressMap.get(p.id) ?? { total: 0, done: 0 };
+        const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          key: p.key,
+          status: p.status,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          manager: p.managerId
+            ? { id: p.managerId, firstName: p.managerFirstName, lastName: p.managerLastName, image: p.managerImage }
+            : null,
+          progress: { total: progress.total, done: progress.done, percentage: pct },
+          members: membersMap.get(p.id) ?? [],
+        };
+      });
+
+      return createPaginatedResponse(data, total, page, limit);
+    }),
 
   getProjectMembers: protectedProcedure.query(async ({ ctx }) => {
     const members = await ctx.db
@@ -476,7 +615,6 @@ export const projectRouter = createTRPCRouter({
             );
           }
         } catch {
-          // Email notification is best-effort — don't block ticket creation
         }
       }
 
@@ -605,7 +743,6 @@ export const projectRouter = createTRPCRouter({
             );
           }
         } catch {
-          // Email notification is best-effort — don't block status update
         }
       }
     }),

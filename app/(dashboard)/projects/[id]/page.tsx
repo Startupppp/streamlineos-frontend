@@ -73,14 +73,14 @@ export default function ProjectBoardPage({ params }: PageProps) {
     try {
       const stored = localStorage.getItem(HIDE_COMPLETED_KEY);
       if (stored !== null) setHideCompleted(stored === "true");
-    } catch { /* localStorage may be unavailable */ }
+    } catch {}
   }, []);
 
   const setHideCompletedAndStore = (value: boolean) => {
     setHideCompleted(value);
     try {
       localStorage.setItem(HIDE_COMPLETED_KEY, String(value));
-    } catch { /* localStorage may be unavailable */ }
+    } catch {}
   };
 
   if (isLoading) {

@@ -45,8 +45,16 @@ const formSchema = z.object({
   }),
 });
 
-export function NewProjectDialog() {
-  const [open, setOpen] = useState(false);
+interface NewProjectDialogProps {
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }: NewProjectDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [memberSearch, setMemberSearch] = useState("");
   const { data: employees } = api.hr.getEmployees.useQuery();
 
@@ -88,10 +96,12 @@ export function NewProjectDialog() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button size="sm" className="gap-2">
+        {trigger ?? (
+          <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             New Project
-        </Button>
+          </Button>
+        )}
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col overflow-hidden">
         <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
