@@ -189,7 +189,6 @@ export async function deleteQRCode(id: number) {
           const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
           await deleteFile(fileKey);
         } catch {
-          // File cleanup is best-effort — QR deletion proceeds regardless
         }
       } else if (process.env.NODE_ENV !== "production") {
         try {
@@ -199,7 +198,6 @@ export async function deleteQRCode(id: number) {
             unlinkSync(localPath);
           }
         } catch {
-          // Local file cleanup is best-effort
         }
       }
     }
@@ -300,7 +298,6 @@ export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
             return signedUrl;
           }
         } catch {
-          // Signed URL generation failed — fall through to raw URL
         }
       }
     }
@@ -314,7 +311,6 @@ export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
         return signedUrl;
       }
     } catch {
-      // Signed URL generation failed — fall through to public URL
     }
 
     if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) {
