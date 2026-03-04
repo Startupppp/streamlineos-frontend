@@ -22,6 +22,7 @@ import {
   notifications,
   wfhRequests,
   employeeDevices,
+  holidays,
 } from "../../../lib/db/schema";
 import { eq, and, desc, isNull, gte, lte, asc, sql } from "drizzle-orm";
 import { format } from "date-fns";
@@ -1345,13 +1346,95 @@ export const hrRouter = createTRPCRouter({
     });
   }),
 
+  getHolidaysForCalendar: protectedProcedure
+    .input(z.object({ year: z.number(), month: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const start = new Date(input.year, input.month, 1);
+      const end = new Date(input.year, input.month + 1, 0);
+      const startStr = formatDateOnly(start);
+      const endStr = formatDateOnly(end);
+      return await ctx.db.query.holidays.findMany({
+        where: and(
+          eq(holidays.orgId, ctx.session.orgId),
+          gte(holidays.date, startStr),
+          lte(holidays.date, endStr)
+        ),
+        orderBy: [asc(holidays.date)],
+      });
+    }),
+
+  getHolidaysForYear: protectedProcedure
+    .input(z.object({ year: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const startStr = `${input.year}-01-01`;
+      const endStr = `${input.year}-12-31`;
+      return await ctx.db.query.holidays.findMany({
+        where: and(
+          eq(holidays.orgId, ctx.session.orgId),
+          gte(holidays.date, startStr),
+          lte(holidays.date, endStr)
+        ),
+        orderBy: [asc(holidays.date)],
+      });
+    }),
+
+  addHoliday: protectedProcedure
+    .input(z.object({
+      name: z.string().min(1, "Name is required"),
+      date: z.date(),
+      message: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can add holidays" });
+      }
+      const dateStr = formatDateOnly(input.date);
+      await ctx.db.insert(holidays).values({
+        orgId: ctx.session.orgId,
+        name: input.name,
+        date: dateStr,
+        message: input.message ?? null,
+        notificationSent: false,
+      });
+      return { success: true };
+    }),
+
+  deleteHoliday: protectedProcedure
+    .input(z.object({ holidayId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can delete holidays" });
+      }
+      await ctx.db
+        .delete(holidays)
+        .where(and(eq(holidays.id, input.holidayId), eq(holidays.orgId, ctx.session.orgId)));
+      return { success: true };
+    }),
+
   createWfhRequest: protectedProcedure
     .input(createWfhRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
+      const dateStr = formatDateOnly(input.date);
+
+      const existing = await ctx.db.query.wfhRequests.findFirst({
+        where: and(
+          eq(wfhRequests.userId, ctx.session.userId),
+          eq(wfhRequests.orgId, ctx.session.orgId),
+          eq(wfhRequests.date, dateStr),
+        ),
+      });
+
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "You already have a WFH request for this date",
+        });
+      }
+
       const [request] = await ctx.db.insert(wfhRequests).values({
         orgId: ctx.session.orgId,
         userId: ctx.session.userId,
-        date: formatDateOnly(input.date),
+        date: dateStr,
         reason: input.reason,
         approverId: input.approverId,
         status: "PENDING",

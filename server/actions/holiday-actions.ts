@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { holidays, organizationMembers, users, organizations } from "@/lib/db/schema";
+import { holidays, organizationMembers, users, notifications } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -97,6 +97,7 @@ export async function sendHolidayNotifications() {
     for (const holiday of upcomingHolidays) {
       const members = await db
         .select({
+          userId: organizationMembers.userId,
           email: users.email,
           name: users.name,
         })
@@ -110,26 +111,47 @@ export async function sendHolidayNotifications() {
         );
 
       const emails = members
-        .map(m => m.email)
+        .map((m) => m.email)
         .filter((email): email is string => !!email);
 
       if (emails.length > 0) {
         await sendBulkHolidayAnnouncement(
           emails,
           holiday.name,
-          tomorrow.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+          tomorrow.toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           }),
           holiday.message || undefined
         );
-        await db
-          .update(holidays)
-          .set({ notificationSent: true })
-          .where(eq(holidays.id, holiday.id));
       }
+
+      const dateLabel = tomorrow.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+      const message = `${holiday.name} is tomorrow (${dateLabel}).${holiday.message ? ` ${holiday.message}` : ""}`;
+      for (const row of members) {
+        if (row.userId) {
+          await db.insert(notifications).values({
+            orgId: holiday.orgId,
+            userId: row.userId,
+            type: "INFO",
+            title: "Holiday tomorrow",
+            message,
+            link: "/hr/attendance",
+          });
+        }
+      }
+
+      await db
+        .update(holidays)
+        .set({ notificationSent: true })
+        .where(eq(holidays.id, holiday.id));
     }
 
     return { success: true, count: upcomingHolidays.length };
@@ -138,11 +160,6 @@ export async function sendHolidayNotifications() {
     return { error: "Failed to send notifications" };
   }
 }
-
-/**
- * Bulk import holidays for the year
- * Useful for importing all festival dates at once
- */
 export async function bulkAddHolidays(holidayList: Array<{
   name: string;
   date: string;
