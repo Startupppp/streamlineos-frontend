@@ -505,6 +505,212 @@ export function EmptyPersonIllustration({ className }: IllustrationProps) {
   );
 }
 
+export function EmptyWfhIllustration({ className }: IllustrationProps) {
+  return (
+    <Wrapper className={className}>
+      <circle cx="100" cy="100" r="78" fill={GOLD} opacity="0.03" />
+
+      <rect x="120" y="22" width="50" height="40" rx="4" fill="white" stroke={BLUE} strokeWidth="1.5" />
+      <line x1="120" y1="32" x2="170" y2="32" stroke={BLUE} strokeWidth="1.5" opacity="0.2" />
+      <circle cx="145" cy="27" r="2" fill={GOLD} opacity="0.3" />
+      <line x1="145" y1="32" x2="145" y2="62" stroke={BLUE} strokeWidth="1" opacity="0.1" />
+      <line x1="120" y1="47" x2="170" y2="47" stroke={BLUE} strokeWidth="1" opacity="0.1" />
+      <circle cx="155" cy="42" r="5" fill={GOLD} opacity="0.25" />
+      {[0, 60, 120, 180, 240, 300].map((angle) => {
+        const rad = (angle * Math.PI) / 180;
+        return (
+          <line
+            key={`ws-${angle}`}
+            x1={155 + Math.cos(rad) * 7}
+            y1={42 + Math.sin(rad) * 7}
+            x2={155 + Math.cos(rad) * 9}
+            y2={42 + Math.sin(rad) * 9}
+            stroke={GOLD}
+            strokeWidth="1"
+            strokeLinecap="round"
+            opacity="0.2"
+          />
+        );
+      })}
+
+      <rect x="20" y="115" width="120" height="6" rx="2" fill={BLUE} opacity="0.12" />
+      <rect x="30" y="121" width="6" height="30" rx="2" fill={BLUE} opacity="0.08" />
+      <rect x="124" y="121" width="6" height="30" rx="2" fill={BLUE} opacity="0.08" />
+
+      <rect x="45" y="92" width="60" height="23" rx="3" fill="white" stroke={BLUE} strokeWidth="2" />
+      <rect x="50" y="97" width="50" height="14" rx="2" fill={BLUE} opacity="0.05" />
+      <rect x="54" y="100" width="18" height="3" rx="1" fill={GOLD} opacity="0.25" />
+      <rect x="54" y="106" width="30" height="2" rx="1" fill={BLUE} opacity="0.1" />
+      <path d="M40 115h70l-4-5H44l-4 5z" fill={BLUE} opacity="0.08" stroke={BLUE} strokeWidth="1.5" />
+
+      <rect x="115" y="103" width="12" height="12" rx="2" fill="white" stroke={GOLD} strokeWidth="1.5" />
+      <path d="M127 107a4 4 0 010 6" stroke={GOLD} strokeWidth="1" fill="none" />
+      <path d="M118 100q1-3 3 0" stroke={GOLD} strokeWidth="0.8" fill="none" opacity="0.3" />
+      <path d="M122 98q1-4 3 0" stroke={GOLD} strokeWidth="0.8" fill="none" opacity="0.2" />
+
+      <circle cx="75" cy="60" r="14" fill={SKIN} />
+      <ellipse cx="75" cy="51" rx="12" ry="10" fill={HAIR} />
+      <rect x="63" y="72" width="24" height="28" rx="6" fill={GOLD} />
+      <path d="M63 82l-10 18" stroke={SKIN} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M87 82l10 18" stroke={SKIN} strokeWidth="4.5" strokeLinecap="round" />
+      <rect x="65" y="100" width="8" height="20" rx="3" fill={BLUE} opacity="0.7" />
+      <rect x="77" y="100" width="8" height="20" rx="3" fill={BLUE} opacity="0.7" />
+
+      <rect x="148" y="98" width="10" height="17" rx="3" fill={GOLD} opacity="0.2" />
+      <circle cx="153" cy="92" r="8" fill="#4ade80" opacity="0.2" />
+      <circle cx="148" cy="88" r="5" fill="#4ade80" opacity="0.15" />
+
+      <g transform="translate(28, 50)" opacity="0.2">
+        <path d="M6 14a2 2 0 100-4 2 2 0 000 4z" fill={BLUE} />
+        <path d="M0 6a9 9 0 0112 0" stroke={BLUE} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        <path d="M2 9a6 6 0 018 0" stroke={BLUE} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      </g>
+
+      <ellipse cx="80" cy="158" rx="70" ry="4" fill={BLUE} opacity="0.04" />
+    </Wrapper>
+  );
+}
+
+export function EmptyApprovalIllustration({ className }: IllustrationProps) {
+  return (
+    <Wrapper className={className}>
+      <circle cx="100" cy="100" r="78" fill={BLUE} opacity="0.03" />
+
+      <rect x="55" y="28" width="80" height="120" rx="8" fill="white" stroke={BLUE} strokeWidth="2" />
+      <rect x="75" y="20" width="40" height="16" rx="5" fill={BLUE} opacity="0.12" stroke={BLUE} strokeWidth="1.5" />
+      <circle cx="95" cy="28" r="3" fill={BLUE} opacity="0.15" />
+
+      <rect x="68" y="48" width="14" height="14" rx="3" fill={GOLD} opacity="0.15" stroke={GOLD} strokeWidth="1.5" />
+      <path d="M71 55l3 3 7-7" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="90" y1="55" x2="122" y2="55" stroke={BLUE} strokeWidth="2" strokeLinecap="round" opacity="0.25" />
+
+      <rect x="68" y="72" width="14" height="14" rx="3" fill={GOLD} opacity="0.15" stroke={GOLD} strokeWidth="1.5" />
+      <path d="M71 79l3 3 7-7" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="90" y1="79" x2="118" y2="79" stroke={BLUE} strokeWidth="2" strokeLinecap="round" opacity="0.2" />
+
+      <rect x="68" y="96" width="14" height="14" rx="3" stroke={BLUE} strokeWidth="1.5" opacity="0.2" />
+      <line x1="90" y1="103" x2="114" y2="103" stroke={BLUE} strokeWidth="2" strokeLinecap="round" opacity="0.12" />
+
+      <rect x="68" y="118" width="14" height="14" rx="3" stroke={BLUE} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.12" />
+      <line x1="90" y1="125" x2="108" y2="125" stroke={BLUE} strokeWidth="2" strokeLinecap="round" opacity="0.08" />
+
+      <circle cx="160" cy="72" r="14" fill={SKIN} />
+      <ellipse cx="160" cy="63" rx="12" ry="10" fill={HAIR} />
+      <rect x="148" y="84" width="24" height="30" rx="6" fill={BLUE} />
+      <path d="M148 94l-14 14" stroke={SKIN} strokeWidth="5" strokeLinecap="round" />
+      <g transform="translate(128, 110) rotate(-45)">
+        <rect width="4" height="22" rx="1.5" fill={GOLD} />
+        <polygon points="0,22 4,22 2,26" fill={GOLD} opacity="0.7" />
+      </g>
+      <rect x="150" y="114" width="7" height="22" rx="3" fill={BLUE} opacity="0.7" />
+      <rect x="161" y="114" width="7" height="22" rx="3" fill={BLUE} opacity="0.7" />
+
+      <circle cx="42" cy="130" r="16" fill={GOLD} opacity="0.1" stroke={GOLD} strokeWidth="1.5" />
+      <path d="M34 130l5 5 11-11" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+      <circle cx="45" cy="42" r="3" fill={GOLD} opacity="0.2" />
+      <path d="M170 48l2-4 2 4-2 4z" fill={GOLD} opacity="0.2" />
+
+      <ellipse cx="100" cy="155" rx="70" ry="4" fill={BLUE} opacity="0.04" />
+    </Wrapper>
+  );
+}
+
+export function NotFoundIllustration({ className }: IllustrationProps) {
+  return (
+    <svg
+      className={cn("w-64 h-64", className)}
+      viewBox="0 0 400 400"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <circle cx="200" cy="200" r="170" fill={BLUE} opacity="0.03" />
+      <circle cx="200" cy="200" r="140" fill={GOLD} opacity="0.03" />
+
+      <text
+        x="200"
+        y="230"
+        textAnchor="middle"
+        fill={BLUE}
+        fontSize="130"
+        fontWeight="900"
+        opacity="0.04"
+        fontFamily="Inter, sans-serif"
+      >
+        404
+      </text>
+
+      <circle cx="200" cy="175" r="65" fill="white" stroke={BLUE} strokeWidth="3" />
+      <circle cx="200" cy="175" r="55" fill={BLUE} opacity="0.03" />
+      {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle) => {
+        const rad = (angle * Math.PI) / 180;
+        const major = angle % 90 === 0;
+        return (
+          <line
+            key={`cm-${angle}`}
+            x1={200 + Math.cos(rad) * (major ? 48 : 51)}
+            y1={175 + Math.sin(rad) * (major ? 48 : 51)}
+            x2={200 + Math.cos(rad) * 55}
+            y2={175 + Math.sin(rad) * 55}
+            stroke={BLUE}
+            strokeWidth={major ? 2.5 : 1.5}
+            strokeLinecap="round"
+            opacity={major ? 0.3 : 0.15}
+          />
+        );
+      })}
+      <line x1="200" y1="175" x2="185" y2="135" stroke={GOLD} strokeWidth="4" strokeLinecap="round" />
+      <line x1="200" y1="175" x2="220" y2="210" stroke={BLUE} strokeWidth="3" strokeLinecap="round" opacity="0.3" />
+      <circle cx="200" cy="175" r="6" fill={GOLD} />
+      <circle cx="200" cy="175" r="3" fill="white" />
+      <g opacity="0.15">
+        <line x1="165" y1="140" x2="235" y2="210" stroke={BLUE} strokeWidth="5" strokeLinecap="round" />
+        <line x1="235" y1="140" x2="165" y2="210" stroke={BLUE} strokeWidth="5" strokeLinecap="round" />
+      </g>
+
+      <circle cx="95" cy="200" r="22" fill={SKIN} />
+      <ellipse cx="95" cy="186" rx="20" ry="16" fill={HAIR} />
+      <circle cx="88" cy="200" r="2" fill={HAIR} />
+      <circle cx="102" cy="200" r="2" fill={HAIR} />
+      <path d="M88 210q7 3 14 0" stroke={HAIR} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <rect x="77" y="220" width="36" height="44" rx="10" fill={GOLD} />
+      <path d="M113 230q12-20 8-36" stroke={SKIN} strokeWidth="7" strokeLinecap="round" fill="none" />
+      <circle cx="118" cy="194" r="5" fill={SKIN} />
+      <path d="M77 240l-14 16" stroke={SKIN} strokeWidth="7" strokeLinecap="round" />
+      <rect x="82" y="264" width="10" height="32" rx="4" fill={BLUE} opacity="0.7" />
+      <rect x="96" y="264" width="10" height="32" rx="4" fill={BLUE} opacity="0.7" />
+      <ellipse cx="87" cy="298" rx="8" ry="4" fill={HAIR} />
+      <ellipse cx="101" cy="298" rx="8" ry="4" fill={HAIR} />
+
+      <text x="132" y="178" fill={GOLD} opacity="0.3" fontSize="22" fontWeight="bold">?</text>
+      <text x="146" y="158" fill={GOLD} opacity="0.2" fontSize="16" fontWeight="bold">?</text>
+      <text x="122" y="160" fill={GOLD} opacity="0.15" fontSize="12" fontWeight="bold">?</text>
+
+      <path
+        d="M280 280q20-20 30-10q10 10 30-5q20-15 30-5"
+        stroke={BLUE}
+        strokeWidth="3"
+        strokeDasharray="8 6"
+        fill="none"
+        opacity="0.12"
+        strokeLinecap="round"
+      />
+      <rect x="305" y="240" width="6" height="40" rx="2" fill={BLUE} opacity="0.15" />
+      <rect x="290" y="232" width="36" height="18" rx="3" fill={GOLD} opacity="0.15" stroke={GOLD} strokeWidth="1.5" />
+      <line x1="298" y1="241" x2="318" y2="241" stroke={GOLD} strokeWidth="2" strokeLinecap="round" opacity="0.2" />
+
+      <circle cx="320" cy="140" r="4" fill={GOLD} opacity="0.15" />
+      <circle cx="340" cy="160" r="2.5" fill={BLUE} opacity="0.1" />
+      <circle cx="75" cy="310" r="3" fill={GOLD} opacity="0.12" />
+      <path d="M60 155l3-5 3 5-3 5z" fill={GOLD} opacity="0.15" />
+      <path d="M330 200l2-4 2 4-2 4z" fill={BLUE} opacity="0.1" />
+
+      <ellipse cx="200" cy="320" rx="140" ry="8" fill={BLUE} opacity="0.04" />
+    </svg>
+  );
+}
+
 export function EmptyLeaveIllustration({ className }: IllustrationProps) {
   return (
     <Wrapper className={className}>

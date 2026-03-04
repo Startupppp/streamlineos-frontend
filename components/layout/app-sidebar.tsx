@@ -184,7 +184,6 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
               setUnreadOnboarding(onboardingCount);
             }
         } catch {
-            // Badge counts are non-critical — fail silently
         }
     }
     if (session?.user) {
