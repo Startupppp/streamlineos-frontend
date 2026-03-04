@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,7 +44,7 @@ const wfhFormSchema = z.object({
 
 type WfhFormValues = z.infer<typeof wfhFormSchema>;
 
-export function RequestWfhDialog() {
+export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}) {
   const [open, setOpen] = useState(false);
   const utils = api.useUtils();
 
@@ -86,10 +86,12 @@ export function RequestWfhDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Home className="mr-2 h-4 w-4" />
-          Request WFH
-        </Button>
+        {trigger ?? (
+          <Button variant="outline">
+            <Home className="mr-2 h-4 w-4" />
+            Request WFH
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

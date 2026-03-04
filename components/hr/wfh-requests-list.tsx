@@ -13,6 +13,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
+import { EmptyWfhIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -59,8 +60,8 @@ export function MyWfhRequests() {
       </CardHeader>
       <CardContent>
         {!requests || requests.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Home className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+            <EmptyWfhIllustration className="mb-3" />
             <p>No WFH requests yet</p>
           </div>
         ) : (

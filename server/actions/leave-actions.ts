@@ -40,10 +40,6 @@ async function ensureLeaveTypes(orgId: string) {
   return types;
 }
 
-/**
- * Lazy-init balances for an existing user when they first access the leave system.
- * Uses the user's joining date for pro-rating casual leaves.
- */
 async function ensureUserBalances(
   orgId: string,
   userId: string,
@@ -81,17 +77,6 @@ async function ensureUserBalances(
   }
 }
 
-/**
- * Initialize leave balances for a newly onboarded employee.
- *
- * Called from the `onboardEmployee` tRPC mutation so balances are ready
- * from day one instead of being lazy-loaded.
- *
- * Rules applied:
- *   - Casual Leave → pro-rated by remaining months (1 per month from joining month)
- *   - Sick Leave   → flat 6 regardless of joining date
- *   - Privilege    → pro-rated proportionally
- */
 export async function initializeLeaveBalances(
   orgId: string,
   userId: string,
@@ -131,15 +116,6 @@ export async function initializeLeaveBalances(
   }
 }
 
-/**
- * Expire unused casual leave for the previous month.
- *
- * For each active employee, if they did NOT use a casual leave in the
- * previous calendar month, deduct 1 from their casual-leave balance
- * (the unused monthly allocation "expires").
- *
- * Should be called via cron on the 1st of each month.
- */
 export async function expireUnusedMonthlyCasualLeaves() {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -205,13 +181,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
   return { expiredCount };
 }
 
-/**
- * Reset leave balances for a new calendar year.
- *
- * No carry-forward — both Casual and Sick get fresh allocations:
- *   - Casual: full 12 (existing employees get the full year)
- *   - Sick: flat 6
- */
 export async function resetYearlyLeaveBalances() {
   const newYear = new Date().getFullYear();
 
@@ -524,4 +493,38 @@ export async function getPendingApprovalCount() {
     );
 
   return Number(count[0]?.count || 0);
+}
+
+export async function getApprovedLeavesThisWeek() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return [];
+
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  return await db.query.leaveRequests.findMany({
+    where: and(
+      eq(leaveRequests.orgId, member.orgId),
+      eq(leaveRequests.status, "APPROVED"),
+      lte(leaveRequests.startDate, weekEnd.toISOString()),
+      gte(leaveRequests.endDate, weekStart.toISOString()),
+    ),
+    with: {
+      user: true,
+      leaveType: true,
+    },
+    orderBy: [desc(leaveRequests.startDate)],
+  });
 }
