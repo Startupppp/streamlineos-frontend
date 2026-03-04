@@ -148,7 +148,6 @@ export interface GetFileStreamResult {
   contentLength?: number;
 }
 
-/** Get a readable stream for a file from R2 (for proxying downloads). */
 export async function getFileStream(key: string): Promise<GetFileStreamResult> {
   const config = getR2Config();
   if (!config.bucketName) {

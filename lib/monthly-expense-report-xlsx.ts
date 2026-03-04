@@ -1,6 +1,14 @@
 import * as XLSX from "xlsx";
 import type { MonthlyExpenseReportRow } from "./email-templates";
-import type { MonthlyExpenseReportSummary } from "./monthly-expense-report-pdf";
+
+export interface MonthlyExpenseReportSummary {
+  totalAmount: string;
+  totalCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  paidCount: number;
+  rejectedCount: number;
+}
 export function generateMonthlyExpenseReportXlsx(
   monthLabel: string,
   orgName: string,
