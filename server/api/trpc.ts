@@ -44,10 +44,6 @@ const enforceSession = t.middleware(async ({ ctx, next }) => {
   });
 });
 
-/**
- * Reusable middleware that enforces users are logged in and in at least one org.
- * Gets the user's organization and adds orgId to the session context.
- */
 const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user?.id) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -78,6 +74,5 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   });
 });
 
-/** Procedure that only requires a valid session (e.g. for getOrganizations). */
 export const sessionProcedure = t.procedure.use(enforceSession);
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);

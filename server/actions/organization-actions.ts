@@ -66,10 +66,6 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
   }
 }
 
-/**
- * Checks if the current user has any organization memberships.
- * Used to determine if onboarding is needed.
- */
 export async function checkUserHasOrganization(): Promise<{ hasOrg: boolean; orgSlug?: string }> {
   const session = await auth();
   if (!session?.user?.id) {
