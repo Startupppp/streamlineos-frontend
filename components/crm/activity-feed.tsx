@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   Ticket,
 } from "lucide-react";
-import { getPersonSlug } from "@/lib/data/crm-people-data";
+import { useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
 
 type ActivityType = "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
 
@@ -37,12 +37,14 @@ const typeConfig: Record<ActivityType, { icon: React.ElementType; color: string;
 };
 
 export function ActivityFeed({ items }: ActivityFeedProps) {
+  const { data: slugMap } = useCrmPeopleSlugs();
+
   return (
     <div className="space-y-0">
       {items.map((item, i) => {
         const config = typeConfig[item.type];
         const Icon = config.icon;
-        const personSlug = item.person ? getPersonSlug(item.person) : null;
+        const personSlug = item.person && slugMap ? slugMap[item.person] ?? null : null;
 
         return (
           <motion.div

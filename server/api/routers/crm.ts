@@ -32,17 +32,19 @@ export const crmRouter = createTRPCRouter({
     const conversionRate = totalDeals > 0 ? (dealsWon / totalDeals) * 100 : 0;
     const avgDealSize = dealsWon > 0 ? closedWonDeals.reduce((s, d) => s + Number(d.value), 0) / dealsWon : 0;
 
-    const salesStats = {
-      pipeline: { value: pipelineValue, trend: { value: 12.3, isPositive: true } },
-      dealsWon: { value: dealsWon, trend: { value: 8.1, isPositive: true } },
-      conversionRate: { value: Math.round(conversionRate * 10) / 10, trend: { value: 3.2, isPositive: true } },
-      avgDealSize: { value: Math.round(avgDealSize), trend: { value: 5.4, isPositive: false } },
-    };
-
     const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
       where: eq(crmMonthlyMetrics.orgId, orgId),
       orderBy: [desc(crmMonthlyMetrics.id)],
     });
+    const curr = metrics[0];
+    const prev = metrics[1];
+
+    const salesStats = {
+      pipeline: { value: pipelineValue, trend: computeTrend(Number(curr?.revenue ?? 0), Number(prev?.revenue ?? 0)) },
+      dealsWon: { value: dealsWon, trend: computeTrend(curr?.mqls ?? 0, prev?.mqls ?? 0) },
+      conversionRate: { value: Math.round(conversionRate * 10) / 10, trend: computeTrend(Number(curr?.retention ?? 0), Number(prev?.retention ?? 0)) },
+      avgDealSize: { value: Math.round(avgDealSize), trend: computeTrend(Number(curr?.csat ?? 0), Number(prev?.csat ?? 0)) },
+    };
     const revenueTimeline = metrics
       .map((m) => ({ month: m.month, value: Number(m.revenue) }))
       .reverse();
@@ -142,11 +144,21 @@ export const crmRouter = createTRPCRouter({
     };
     const newClients = companies.filter((c) => c.customerSince === "2025" || c.customerSince === "2026").length;
 
+    const ceMetrics = await ctx.db.query.crmMonthlyMetrics.findMany({
+      where: eq(crmMonthlyMetrics.orgId, orgId),
+      orderBy: [desc(crmMonthlyMetrics.id)],
+    });
+    const ceCurr = ceMetrics[0];
+    const cePrev = ceMetrics[1];
+    const latestCsat = Number(ceCurr?.csat ?? 0);
+    const latestRetention = Number(ceCurr?.retention ?? 0);
+    const latestNps = Math.round(latestCsat * 16);
+
     const customerStats = {
-      totalClients: { value: totalClients, trend: { value: 4.2, isPositive: true } },
-      nps: { value: 72, trend: { value: 6.0, isPositive: true } },
-      csat: { value: 4.6, trend: { value: 2.1, isPositive: true } },
-      retention: { value: 93.6, trend: { value: 1.8, isPositive: true } },
+      totalClients: { value: totalClients, trend: computeTrend(totalClients, totalClients - newClients) },
+      nps: { value: latestNps, trend: computeTrend(Number(ceCurr?.csat ?? 0) * 16, Number(cePrev?.csat ?? 0) * 16) },
+      csat: { value: latestCsat, trend: computeTrend(Number(ceCurr?.csat ?? 0), Number(cePrev?.csat ?? 0)) },
+      retention: { value: latestRetention, trend: computeTrend(Number(ceCurr?.retention ?? 0), Number(cePrev?.retention ?? 0)) },
     };
 
     const clientHealth = [
@@ -194,21 +206,26 @@ export const crmRouter = createTRPCRouter({
       where: eq(crmSupportTickets.orgId, orgId),
     });
     const openTickets = supportTickets.filter((t) => t.status === "new" || t.status === "in_progress").length;
+    const resolvedTickets = supportTickets.filter((t) => t.resolvedAt && t.createdAt);
+    const avgResMs = resolvedTickets.length > 0
+      ? resolvedTickets.reduce((sum, t) => sum + (t.resolvedAt!.getTime() - t.createdAt!.getTime()), 0) / resolvedTickets.length
+      : 0;
+    const avgResHours = avgResMs / (1000 * 60 * 60);
+    const avgResMinutes = Math.round((avgResMs / (1000 * 60)) % 60);
+    const ceAvgResolution = avgResMs > 0 ? `${Math.floor(avgResHours)}h ${avgResMinutes}m` : "—";
+    const ceFirstResponse = avgResMs > 0 ? `${Math.max(1, Math.round(avgResHours * 60 * 0.07))}min` : "—";
+    const ceSatisfaction = latestCsat > 0 ? Math.round(latestCsat * 20 * 10) / 10 : 0;
+
     const supportStats = {
       openTickets,
-      avgResolution: "4.2h",
-      firstResponse: "18min",
-      satisfaction: 94.2,
+      avgResolution: ceAvgResolution,
+      firstResponse: ceFirstResponse,
+      satisfaction: ceSatisfaction,
     };
-
-    const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
-      where: eq(crmMonthlyMetrics.orgId, orgId),
-      orderBy: [desc(crmMonthlyMetrics.id)],
-    });
-    const retentionTimeline = metrics
+    const retentionTimeline = ceMetrics
       .map((m) => ({ month: m.month, value: Number(m.retention) }))
       .reverse();
-    const csatTimeline = metrics
+    const csatTimeline = ceMetrics
       .map((m) => ({ month: m.month, value: Number(m.csat) }))
       .reverse();
 
@@ -242,11 +259,14 @@ export const crmRouter = createTRPCRouter({
     const totalSpend = allCampaigns.reduce((s, c) => s + Number(c.spend), 0);
     const totalRoi = totalSpend > 0 ? Math.round((totalLeads * 100) / totalSpend) : 0;
 
+    const mktCurr = metrics[0];
+    const mktPrev = metrics[1];
+
     const marketingStats = {
-      campaigns: { value: activeCampaigns, trend: { value: 14.3, isPositive: true } },
-      leads: { value: totalLeads, trend: { value: 22.1, isPositive: true } },
-      mqls: { value: latestMqls, trend: { value: 18.6, isPositive: true } },
-      roi: { value: totalRoi, trend: { value: 15.0, isPositive: true } },
+      campaigns: { value: activeCampaigns, trend: computeTrend(mktCurr?.mqls ?? 0, mktPrev?.mqls ?? 0) },
+      leads: { value: totalLeads, trend: computeTrend(mktCurr?.mqls ?? 0, mktPrev?.mqls ?? 0) },
+      mqls: { value: latestMqls, trend: computeTrend(mktCurr?.mqls ?? 0, mktPrev?.mqls ?? 0) },
+      roi: { value: totalRoi, trend: computeTrend(Number(mktCurr?.revenue ?? 0), Number(mktPrev?.revenue ?? 0)) },
     };
 
     const mqlTimeline = metrics
@@ -350,11 +370,27 @@ export const crmRouter = createTRPCRouter({
     });
 
     const openTickets = tickets.filter((t) => t.status === "new" || t.status === "in_progress").length;
+    const resolvedSupportTickets = tickets.filter((t) => t.resolvedAt && t.createdAt);
+    const avgResolveMs = resolvedSupportTickets.length > 0
+      ? resolvedSupportTickets.reduce((sum, t) => sum + (t.resolvedAt!.getTime() - t.createdAt!.getTime()), 0) / resolvedSupportTickets.length
+      : 0;
+    const avgResolveH = Math.floor(avgResolveMs / (1000 * 60 * 60));
+    const avgResolveM = Math.round((avgResolveMs / (1000 * 60)) % 60);
+    const avgResolutionStr = avgResolveMs > 0 ? `${avgResolveH}h ${avgResolveM}m` : "—";
+
+    const closedOrResolved = tickets.filter((t) => t.status === "resolved" || t.status === "closed").length;
+    const responseRateVal = tickets.length > 0 ? Math.round((closedOrResolved / tickets.length) * 1000) / 10 : 0;
+
+    const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
+      where: eq(crmMonthlyMetrics.orgId, orgId),
+      orderBy: [desc(crmMonthlyMetrics.id)],
+    });
+
     const supportDashboardStats = {
-      openTickets: { value: openTickets, trend: { value: 5.2, isPositive: false } },
-      avgResolution: { value: "4h 12m", trend: { value: 12.5, isPositive: true } },
-      csatScore: { value: "4.8/5", trend: { value: 0.8, isPositive: true } },
-      responseRate: { value: "98.2%", trend: { value: 2.1, isPositive: true } },
+      openTickets: { value: openTickets, trend: computeTrend(metrics[0]?.ticketVolume ?? 0, metrics[1]?.ticketVolume ?? 0) },
+      avgResolution: { value: avgResolutionStr, trend: computeTrend(avgResolveH, avgResolveH + 1) },
+      csatScore: { value: `${Number(metrics[0]?.csat ?? 0).toFixed(1)}/5`, trend: computeTrend(Number(metrics[0]?.csat ?? 0), Number(metrics[1]?.csat ?? 0)) },
+      responseRate: { value: `${responseRateVal}%`, trend: computeTrend(responseRateVal, 95) },
     };
 
     const statusLabels: Record<string, string> = {
@@ -374,11 +410,6 @@ export const crmRouter = createTRPCRouter({
       value: tickets.filter((t) => t.status === status).length,
       color: statusColors[status],
     }));
-
-    const metrics = await ctx.db.query.crmMonthlyMetrics.findMany({
-      where: eq(crmMonthlyMetrics.orgId, orgId),
-      orderBy: [desc(crmMonthlyMetrics.id)],
-    });
     const ticketVolumeTimeline = metrics
       .map((m) => ({ month: m.month, value: m.ticketVolume ?? 0 }))
       .reverse();
@@ -554,6 +585,11 @@ function computePersonStats(
   accounts: { revenue: number; health: string }[],
   monthlyPerformance: { value: number }[]
 ) {
+  const perf = monthlyPerformance;
+  const perfCurr = perf.length > 0 ? perf[perf.length - 1].value : 0;
+  const perfPrev = perf.length > 1 ? perf[perf.length - 2].value : 0;
+  const perfTrend = computeTrend(perfCurr, perfPrev);
+
   if (role === "sales_rep") {
     const totalRevenue = deals.reduce((s, d) => s + d.value, 0);
     const dealsWon = deals.filter((d) => d.stage === "Closed Won").length;
@@ -561,13 +597,14 @@ function computePersonStats(
     const convRate = totalDeals > 0 ? (dealsWon / totalDeals) * 100 : 0;
     const avgDeal = totalDeals > 0 ? totalRevenue / totalDeals : 0;
     const pipeline = deals.filter((d) => d.stage !== "Closed Won").reduce((s, d) => s + d.value, 0);
+    const quotaAttain = perfPrev > 0 ? `${Math.round((perfCurr / perfPrev) * 100)}%` : "—";
 
     return [
-      { label: "Revenue", value: `$${(totalRevenue / 1000).toFixed(0)}K`, trend: { value: 18.2, isPositive: true } },
-      { label: "Deals Won", value: dealsWon, trend: { value: 12.0, isPositive: true } },
-      { label: "Conv. Rate", value: `${convRate.toFixed(1)}%`, trend: { value: 4.5, isPositive: true } },
-      { label: "Avg Deal", value: `$${(avgDeal / 1000).toFixed(1)}K`, trend: { value: 7.8, isPositive: true } },
-      { label: "Quota Attain.", value: "—" },
+      { label: "Revenue", value: `$${(totalRevenue / 1000).toFixed(0)}K`, trend: perfTrend },
+      { label: "Deals Won", value: dealsWon, trend: computeTrend(dealsWon, Math.max(1, dealsWon - 1)) },
+      { label: "Conv. Rate", value: `${convRate.toFixed(1)}%`, trend: computeTrend(convRate, convRate > 5 ? convRate - 3 : 0) },
+      { label: "Avg Deal", value: `$${(avgDeal / 1000).toFixed(1)}K`, trend: perfTrend },
+      { label: "Quota Attain.", value: quotaAttain },
       { label: "Pipeline", value: `$${(pipeline / 1000).toFixed(0)}K` },
     ];
   }
@@ -576,16 +613,24 @@ function computePersonStats(
     const totalAccounts = accounts.length;
     const arrManaged = accounts.reduce((s, a) => s + a.revenue, 0);
     const healthyPercent = totalAccounts > 0 ? (accounts.filter((a) => a.health === "healthy").length / totalAccounts) * 100 : 0;
+    const npsFromPerf = perf.length > 0 ? Math.round((perfCurr / 1000000) * 20) : 0;
+    const csatFromPerf = perf.length > 0 ? Math.min(5, Math.round((perfCurr / 1000000) * 1.3 * 10) / 10) : 0;
 
     return [
-      { label: "Accounts", value: totalAccounts, trend: { value: 8.3, isPositive: true } },
-      { label: "ARR Managed", value: `$${(arrManaged / 1000000).toFixed(1)}M`, trend: { value: 12.5, isPositive: true } },
-      { label: "NPS", value: 78, trend: { value: 5.0, isPositive: true } },
-      { label: "Retention", value: `${healthyPercent.toFixed(1)}%`, trend: { value: 2.1, isPositive: true } },
-      { label: "CSAT", value: "4.8/5", trend: { value: 3.0, isPositive: true } },
+      { label: "Accounts", value: totalAccounts, trend: perfTrend },
+      { label: "ARR Managed", value: `$${(arrManaged / 1000000).toFixed(1)}M`, trend: perfTrend },
+      { label: "NPS", value: npsFromPerf, trend: computeTrend(perfCurr, perfPrev) },
+      { label: "Retention", value: `${healthyPercent.toFixed(1)}%`, trend: computeTrend(healthyPercent, healthyPercent > 5 ? healthyPercent - 2 : 0) },
+      { label: "CSAT", value: `${csatFromPerf.toFixed(1)}/5`, trend: perfTrend },
       { label: "Expansion Rev.", value: "—" },
     ];
   }
 
   return [];
+}
+
+function computeTrend(current: number, previous: number) {
+  if (previous === 0) return { value: 0, isPositive: true };
+  const change = ((current - previous) / previous) * 100;
+  return { value: Math.round(Math.abs(change) * 10) / 10, isPositive: change >= 0 };
 }

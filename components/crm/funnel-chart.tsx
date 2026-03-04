@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatNumber } from "../../lib/data/crm-mock-data";
+import { formatNumber } from "@/lib/format-utils";
 
 interface FunnelStage {
   stage: string;
