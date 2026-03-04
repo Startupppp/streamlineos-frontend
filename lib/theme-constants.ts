@@ -82,14 +82,12 @@ export const rankStyles = [
   },
 ];
 
-/** Sprint ticket status colors (used in sprint-card) */
 export const sprintStatusColors = {
   done: "bg-emerald-500",
   inProgress: "bg-blue-500",
   todo: "bg-slate-400",
 } as const;
 
-/** Semantic spark-line hex colors for MetricCard */
 export const sparkColors = {
   blue: "#3B82F6",
   green: "#10B981",
@@ -127,6 +125,20 @@ export const deviceStatusColors: Record<DeviceStatus, string> = {
   INACTIVE: "bg-gray-500/10 text-gray-700 border-gray-200",
   LOST: "bg-red-500/10 text-red-700 border-red-200",
   RETURNED: "bg-blue-500/10 text-blue-700 border-blue-200",
+};
+
+export type WfhStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+const VALID_WFH_STATUSES: ReadonlySet<string> = new Set(["PENDING", "APPROVED", "REJECTED"]);
+
+export function isWfhStatus(value: unknown): value is WfhStatus {
+  return typeof value === "string" && VALID_WFH_STATUSES.has(value);
+}
+
+export const wfhStatusColors: Record<WfhStatus, string> = {
+  APPROVED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  REJECTED: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800",
+  PENDING: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
 };
 
 export type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
@@ -178,7 +190,28 @@ export const roleBadgeConfig: Record<CrmRole, { label: string; color: string }> 
   marketing: { label: "Marketing", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400" },
 };
 
-/** Safe lookup with fallback for any color map */
+const VALID_PROJECT_STATUSES: ReadonlySet<string> = new Set(["ACTIVE", "PLANNING", "COMPLETED", "ON_HOLD", "ARCHIVED"]);
+
+export function isProjectStatus(value: unknown): value is ProjectStatus | "ARCHIVED" {
+  return typeof value === "string" && VALID_PROJECT_STATUSES.has(value);
+}
+
+export const projectStatusDisplayLabels: Record<string, string> = {
+  ACTIVE: "IN PROGRESS",
+  PLANNING: "PLANNING",
+  COMPLETED: "COMPLETED",
+  ON_HOLD: "ON HOLD",
+  ARCHIVED: "ARCHIVED",
+};
+
+export const projectProgressBarColors: Record<string, string> = {
+  ACTIVE: "bg-emerald-500",
+  PLANNING: "bg-blue-400",
+  COMPLETED: "bg-gold",
+  ON_HOLD: "bg-slate-400",
+  ARCHIVED: "bg-slate-300",
+};
+
 export function getColorSafe<K extends string>(map: Record<K, string>, key: string): string {
   return (map as Record<string, string>)[key] ?? FALLBACK_COLOR;
 }

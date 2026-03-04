@@ -4,10 +4,6 @@ export const paginationInputSchema = z.object({
   limit: z.number().min(1).max(100).default(20),
 });
 
-/**
- * Optional pagination input - makes pagination parameters optional
- * for backwards compatibility with existing endpoints.
- */
 export const optionalPaginationInputSchema = z.object({
   page: z.number().min(1).optional(),
   limit: z.number().min(1).max(100).optional(),
@@ -16,9 +12,6 @@ export const optionalPaginationInputSchema = z.object({
 export type PaginationInput = z.infer<typeof paginationInputSchema>;
 export type OptionalPaginationInput = z.infer<typeof optionalPaginationInputSchema>;
 
-/**
- * Standard paginated response wrapper.
- */
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
@@ -30,9 +23,6 @@ export interface PaginatedResponse<T> {
   };
 }
 
-/**
- * Creates a paginated response from data and total count.
- */
 export function createPaginatedResponse<T>(
   data: T[],
   total: number,
@@ -52,16 +42,10 @@ export function createPaginatedResponse<T>(
   };
 }
 
-/**
- * Calculates offset from page and limit.
- */
 export function getOffset(page: number, limit: number): number {
   return (page - 1) * limit;
 }
 
-/**
- * Default pagination values.
- */
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;
