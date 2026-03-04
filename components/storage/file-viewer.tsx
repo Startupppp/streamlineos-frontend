@@ -35,7 +35,6 @@ export function FileViewer({
         window.open(data.url, "_blank");
       }
     } catch {
-      // Download URL resolution failed — silent since window.open won't fire
     }
   };
 
