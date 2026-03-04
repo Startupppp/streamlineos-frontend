@@ -58,9 +58,6 @@ export function formatINR(amount: string | number): string {
   }).format(num);
 }
 
-/**
- * Convert a number to Indian-English words (supports up to Crores).
- */
 export function numberToWords(num: number): string {
   const ones = [
     "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
