@@ -11,11 +11,6 @@ const SAMPLE_ROWS = [
   { name: "Carol Williams", totalHours: "45.0", autoCheckoutDays: 0, overtimeDays: 3, daysPresent: 5 },
 ];
 
-/**
- * GET /api/test/weekly-report-email
- * Sends a sample weekly attendance report to the test email.
- * Only allowed when NODE_ENV=development or ALLOW_TEST_EMAIL=1.
- */
 export async function GET() {
   const allowed =
     process.env.NODE_ENV === "development" ||
