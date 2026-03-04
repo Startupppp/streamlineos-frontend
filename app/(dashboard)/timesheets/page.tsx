@@ -1,13 +1,27 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfQuarter,
+  endOfQuarter,
+  subWeeks,
+  subMonths,
+  subQuarters,
+} from "date-fns";
 import { api } from "@/trpc/react";
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
-import { Loader2, Filter, X, Edit, Trash2, Clock } from "lucide-react";
-import { EmptyTimeIllustration } from "@/components/illustrations";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
-import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -16,9 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -26,7 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,20 +53,71 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { EmptyTimeIllustration } from "@/components/illustrations";
+import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
+import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
+import {
+  MoreVertical,
+  Edit,
+  Trash2,
+  Loader2,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
+const ITEMS_PER_PAGE = 10;
+
+const statusBadgeStyles: Record<string, string> = {
+  APPROVED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  REJECTED: "bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400",
+};
+
+const statusLabels: Record<string, string> = {
+  APPROVED: "Approved",
+  PENDING: "Pending",
+  REJECTED: "Rejected",
+};
+
+const PROJECT_DOT_COLORS = [
+  "bg-blue-500",
+  "bg-purple-500",
+  "bg-emerald-500",
+  "bg-rose-500",
+  "bg-amber-500",
+  "bg-cyan-500",
+  "bg-indigo-500",
+  "bg-pink-500",
+] as const;
+
+function getProjectDotColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return PROJECT_DOT_COLORS[Math.abs(hash) % PROJECT_DOT_COLORS.length];
+}
+
+function formatHoursMinutes(hours: string | number | null | undefined): string {
+  const h = typeof hours === "string" ? parseFloat(hours) : (hours ?? 0);
+  if (h <= 0) return "0h 00m";
+  const wholeHours = Math.floor(h);
+  const minutes = Math.round((h - wholeHours) * 60);
+  return `${wholeHours}h ${String(minutes).padStart(2, "0")}m`;
+}
+
+type ViewMode = "current" | "history";
 
 export default function TimesheetsPage() {
-  const [selectedProject, setSelectedProject] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<string>("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState("all");
+  const [dateRange, setDateRange] = useState("this-quarter");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<ViewMode>("current");
   const [editingEntry, setEditingEntry] = useState<{
     id: number;
     description: string | null;
@@ -62,51 +129,51 @@ export default function TimesheetsPage() {
 
   const { data: projects } = api.project.getProjects.useQuery();
   const utils = api.useUtils();
-  
-  const getDateRange = () => {
+
+  const computedRange = useMemo(() => {
     const now = new Date();
-    let start: string | undefined;
-    let end: string | undefined;
-
     switch (dateRange) {
+      case "this-quarter":
+        return {
+          start: format(startOfQuarter(now), "yyyy-MM-dd"),
+          end: format(endOfQuarter(now), "yyyy-MM-dd"),
+        };
+      case "last-quarter": {
+        const s = startOfQuarter(subQuarters(now, 1));
+        const e = endOfQuarter(subQuarters(now, 1));
+        return { start: format(s, "yyyy-MM-dd"), end: format(e, "yyyy-MM-dd") };
+      }
       case "this-week":
-        start = format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
-        end = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd");
-        break;
-      case "last-week":
-        const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
-        const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
-        start = format(lastWeekStart, "yyyy-MM-dd");
-        end = format(lastWeekEnd, "yyyy-MM-dd");
-        break;
+        return {
+          start: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+          end: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+        };
+      case "last-week": {
+        const s = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+        const e = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+        return { start: format(s, "yyyy-MM-dd"), end: format(e, "yyyy-MM-dd") };
+      }
       case "this-month":
-        start = format(startOfMonth(now), "yyyy-MM-dd");
-        end = format(endOfMonth(now), "yyyy-MM-dd");
-        break;
-      case "last-month":
-        const lastMonthStart = startOfMonth(subMonths(now, 1));
-        const lastMonthEnd = endOfMonth(subMonths(now, 1));
-        start = format(lastMonthStart, "yyyy-MM-dd");
-        end = format(lastMonthEnd, "yyyy-MM-dd");
-        break;
+        return {
+          start: format(startOfMonth(now), "yyyy-MM-dd"),
+          end: format(endOfMonth(now), "yyyy-MM-dd"),
+        };
+      case "last-month": {
+        const s = startOfMonth(subMonths(now, 1));
+        const e = endOfMonth(subMonths(now, 1));
+        return { start: format(s, "yyyy-MM-dd"), end: format(e, "yyyy-MM-dd") };
+      }
       case "custom":
-        start = startDate || undefined;
-        end = endDate || undefined;
-        break;
+        return { start: startDate || undefined, end: endDate || undefined };
       default:
-        start = undefined;
-        end = undefined;
+        return { start: undefined, end: undefined };
     }
-
-    return { start, end };
-  };
-
-  const { start, end } = getDateRange();
+  }, [dateRange, startDate, endDate]);
 
   const { data: entries, isLoading } = api.project.getTimeEntries.useQuery({
     projectId: selectedProject === "all" ? undefined : parseInt(selectedProject),
-    startDate: start,
-    endDate: end,
+    startDate: computedRange.start,
+    endDate: computedRange.end,
   });
 
   const totalHours = useMemo(() => {
@@ -114,228 +181,349 @@ export default function TimesheetsPage() {
     return entries.reduce((sum, e) => sum + parseFloat(e.hours?.toString() || "0"), 0);
   }, [entries]);
 
-  const hasActiveFilters = selectedProject !== "all" || dateRange !== "all";
+  const paginatedEntries = useMemo(() => {
+    if (!entries) return [];
+    const startIdx = (page - 1) * ITEMS_PER_PAGE;
+    return entries.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  }, [entries, page]);
 
-  const clearFilters = () => {
+  const totalPages = entries ? Math.ceil(entries.length / ITEMS_PER_PAGE) : 0;
+
+  const clearFilters = useCallback(() => {
     setSelectedProject("all");
-    setDateRange("all");
+    setDateRange("this-quarter");
     setStartDate("");
     setEndDate("");
-  };
+    setPage(1);
+    setViewMode("current");
+  }, []);
 
   const deleteMutation = api.project.deleteTimeEntry.useMutation({
     onSuccess: () => {
-      toast.success("Time entry deleted successfully");
+      toast.success("Time entry deleted");
       setDeleteDialogOpen(false);
       setEntryToDelete(null);
       utils.project.getTimeEntries.invalidate();
     },
-    onError: (err) => {
-      toast.error(err.message || "Failed to delete time entry");
-    },
+    onError: (err) => toast.error(err.message || "Failed to delete"),
   });
 
-  const handleDelete = (entryId: number) => {
-    setEntryToDelete(entryId);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (entryToDelete) {
-      deleteMutation.mutate({ entryId: entryToDelete });
+  const handleViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    setPage(1);
+    if (mode === "current") {
+      setDateRange("this-quarter");
+    } else {
+      setDateRange("all");
     }
-  };
+  }, []);
+
+  const currentYear = new Date().getFullYear();
+  const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;
+
+  // Compute visible page numbers for pagination
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (page <= 3) return [1, 2, 3, 4, 5];
+    if (page >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [page - 2, page - 1, page, page + 1, page + 2];
+  }, [page, totalPages]);
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Timesheets</h2>
-          <p className="text-muted-foreground mt-1">
-            {entries ? (
-              <>
-                {entries.length} {entries.length === 1 ? "entry" : "entries"} — {totalHours.toFixed(1)}h logged
-                {hasActiveFilters && " (filtered)"}
-              </>
-            ) : (
-              "Track your time across projects"
-            )}
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <LogTimeDialog variant="sheet" />
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Time Entries</CardTitle>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
-                <X className="h-4 w-4 mr-1" />
-                Clear Filters
+    <div className="space-y-6">
+      <PageHeader
+        title="Daily Work Logs"
+        description="Track and manage professional activity across projects."
+        actions={
+          <LogTimeDialog
+            variant="sheet"
+            trigger={
+              <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white font-bold shadow-sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Log
               </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6 space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filters</span>
+            }
+          />
+        }
+      />
+
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
+        {/* Inline filter chips */}
+        <motion.div variants={fadeUp}>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Project filter chip */}
+            <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Project:</span>
+              <Select value={selectedProject} onValueChange={(v) => { setSelectedProject(v); setPage(1); }}>
+                <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Projects</SelectItem>
+                  {projects?.map((p) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="project-filter" className="text-xs">Project</Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger id="project-filter">
-                    <SelectValue placeholder="All Projects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Projects</SelectItem>
-                    {projects?.map((project) => (
-                      <SelectItem key={project.id} value={project.id.toString()}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="date-range" className="text-xs">Date Range</Label>
-                <Select value={dateRange} onValueChange={setDateRange}>
-                  <SelectTrigger id="date-range">
-                    <SelectValue placeholder="All Time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="this-week">This Week</SelectItem>
-                    <SelectItem value="last-week">Last Week</SelectItem>
-                    <SelectItem value="this-month">This Month</SelectItem>
-                    <SelectItem value="last-month">Last Month</SelectItem>
-                    <SelectItem value="custom">Custom Range</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Period filter chip */}
+            <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Period:</span>
+              <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setPage(1); setViewMode(v === "all" ? "history" : "current"); }}>
+                <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="this-quarter">{currentQuarter} {currentYear}</SelectItem>
+                  <SelectItem value="last-quarter">Last Quarter</SelectItem>
+                  <SelectItem value="this-week">This Week</SelectItem>
+                  <SelectItem value="last-week">Last Week</SelectItem>
+                  <SelectItem value="this-month">This Month</SelectItem>
+                  <SelectItem value="last-month">Last Month</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {dateRange === "custom" && (
+            {/* Custom date inputs */}
+            {dateRange === "custom" && (
+              <>
+                <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">From:</Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                    className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
+                  />
+                </div>
+                <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">To:</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                    className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Divider */}
+            <div className="h-7 w-px bg-border mx-1 hidden sm:block" />
+
+            {/* View mode tabs */}
+            <button
+              onClick={() => handleViewMode("current")}
+              className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
+                viewMode === "current"
+                  ? "bg-[#bd882c]/10 text-[#bd882c]"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Current Quarter
+            </button>
+            <button
+              onClick={() => handleViewMode("history")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                viewMode === "history"
+                  ? "bg-[#bd882c]/10 text-[#bd882c]"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              History
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Summary bar */}
+        {entries && entries.length > 0 && (
+          <motion.div variants={fadeUp}>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{entries.length}</span>{" "}
+              {entries.length === 1 ? "entry" : "entries"} —{" "}
+              <span className="font-semibold text-foreground">{totalHours.toFixed(1)}h</span> logged
+            </p>
+          </motion.div>
+        )}
+
+        {/* Table */}
+        <motion.div variants={fadeUp}>
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
+              {isLoading ? (
+                <div className="p-6 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-14 w-full" />
+                  ))}
+                </div>
+              ) : (
                 <>
-                  <div className="space-y-2">
-                    <Label htmlFor="start-date" className="text-xs">Start Date</Label>
-                    <Input
-                      id="start-date"
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <caption className="sr-only">Your daily work logs</caption>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30">
+                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
+                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Project</TableHead>
+                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Task Description</TableHead>
+                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Duration</TableHead>
+                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Status</TableHead>
+                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedEntries.length > 0 ? (
+                          paginatedEntries.map((entry) => {
+                            const canEdit = entry.status === "PENDING";
+                            const ticket = entry.ticket;
+                            const projectName = ticket?.project?.name || "Unknown";
+                            const dotColor = getProjectDotColor(projectName);
+                            const statusKey = entry.status || "PENDING";
+                            return (
+                              <TableRow key={entry.id} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="px-6 py-5 whitespace-nowrap">
+                                  <span className="text-sm font-semibold">
+                                    {format(new Date(entry.date), "MMM dd, yyyy")}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="px-6 py-5">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`size-2 rounded-full shrink-0 ${dotColor}`} />
+                                    <span className="text-sm font-medium">{projectName}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 max-w-xs">
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    {entry.description || "No description"}
+                                  </p>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 whitespace-nowrap">
+                                  <span className="text-sm font-medium">
+                                    {formatHoursMinutes(entry.hours)}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 whitespace-nowrap">
+                                  <Badge className={`text-xs font-bold border-0 rounded-full px-2.5 py-0.5 ${statusBadgeStyles[statusKey]}`}>
+                                    {statusLabels[statusKey] || statusKey}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="px-6 py-5 text-right">
+                                  {canEdit ? (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            setEditingEntry({
+                                              id: entry.id,
+                                              description: entry.description,
+                                              hours: entry.hours?.toString() || "0",
+                                              status: entry.status || "PENDING",
+                                            })
+                                          }
+                                        >
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setEntryToDelete(entry.id);
+                                            setDeleteDialogOpen(true);
+                                          }}
+                                          className="text-destructive"
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  ) : (
+                                    <span className="text-muted-foreground/30 inline-flex h-8 w-8 items-center justify-center">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                              <div className="flex flex-col items-center gap-3">
+                                <EmptyTimeIllustration />
+                                <p>
+                                  {selectedProject !== "all" || dateRange !== "this-quarter"
+                                    ? "No work logs found matching your filters."
+                                    : "No work logs found. Add your first log!"}
+                                </p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="end-date" className="text-xs">End Date</Label>
-                    <Input
-                      id="end-date"
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </div>
+
+                  {/* Pagination */}
+                  {entries && entries.length > 0 && (
+                    <div className="px-6 py-4 bg-muted/20 border-t flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        Showing {Math.min((page - 1) * ITEMS_PER_PAGE + 1, entries.length)}-{Math.min(page * ITEMS_PER_PAGE, entries.length)} of {entries.length} entries
+                      </span>
+                      {totalPages > 1 && (
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={page <= 1}
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            aria-label="Previous page"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          {pageNumbers.map((num) => (
+                            <Button
+                              key={num}
+                              variant={num === page ? "default" : "outline"}
+                              size="icon"
+                              className={`h-8 w-8 text-sm font-bold ${
+                                num === page
+                                  ? "bg-[#bd882c] hover:bg-[#a67724] text-white border-[#bd882c]"
+                                  : ""
+                              }`}
+                              onClick={() => setPage(num)}
+                            >
+                              {num}
+                            </Button>
+                          ))}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={page >= totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                            aria-label="Next page"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
-            </div>
-          </div>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <>
-              {hasActiveFilters && entries && entries.length > 0 && (
-                <div className="mb-4 text-sm text-muted-foreground">
-                  Showing {entries.length} time {entries.length === 1 ? "entry" : "entries"}
-                  {selectedProject !== "all" && ` for selected project`}
-                  {dateRange !== "all" && ` in selected date range`}
-                </div>
-              )}
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Ticket</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {entries?.map((entry) => {
-                    const canEdit = entry.status === "PENDING";
-                    const ticket = entry.ticket;
-                    return (
-                      <TableRow key={entry.id}>
-                        <TableCell>{format(new Date(entry.date), "MMM d, yyyy")}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{ticket?.project?.name || "Unknown Project"}</Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                           {ticket?.id ? `#${ticket.id} - ${ticket.title || 'Untitled'}` : '-'}
-                        </TableCell>
-                        <TableCell>{entry.hours}h</TableCell>
-                        <TableCell className="text-muted-foreground">{entry.description}</TableCell>
-                        <TableCell>
-                          {canEdit && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => setEditingEntry({
-                                    id: entry.id,
-                                    description: entry.description,
-                                    hours: entry.hours?.toString() || "0",
-                                    status: entry.status || "PENDING",
-                                  })}
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(entry.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {!entries?.length && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                        <div className="flex flex-col items-center gap-3">
-                          <EmptyTimeIllustration />
-                          <p>{hasActiveFilters
-                            ? "No time entries found matching your filters."
-                            : "No time entries found. Log your first work item!"}</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {editingEntry && (
         <EditTimeEntryDialog
@@ -356,7 +544,7 @@ export default function TimesheetsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDelete}
+              onClick={() => entryToDelete && deleteMutation.mutate({ entryId: entryToDelete })}
               disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

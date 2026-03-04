@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
-import { Plus, Loader2, Link as LinkIcon } from "lucide-react";
+import { Plus, Loader2, Link as LinkIcon, Upload, X, FileText } from "lucide-react";
 import { addTimeEntryInputSchema } from "@/lib/validations/project";
 import type { Project, Ticket } from "@/types/api";
 
@@ -51,9 +51,16 @@ interface LogTimeDialogProps {
   trigger?: React.ReactNode;
 }
 
+const ACCEPT_ATTACHMENTS = "image/jpeg,image/png,image/gif,image/webp,application/pdf";
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+
 export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: projects } = api.project.getProjects.useQuery();
   const { data: projectDetails, isLoading: isLoadingTickets } = api.project.getProjectDetails.useQuery(
@@ -68,12 +75,69 @@ export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProp
           setOpen(false);
           form.reset();
           setSelectedProjectId(null);
+          setAttachmentFile(null);
+          setAttachmentPreview(null);
           utils.project.getTimeEntries.invalidate();
       },
       onError: (err) => {
           toast.error(err.message || "Failed to log time");
       }
   });
+
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      toast.error("File too large (max 10MB)");
+      return;
+    }
+    const allowed = ACCEPT_ATTACHMENTS.split(",").map((t) => t.trim());
+    if (!allowed.includes(file.type)) {
+      toast.error("Please select an image (JPEG, PNG, GIF, WebP) or PDF");
+      return;
+    }
+    setAttachmentFile(file);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onloadend = () => setAttachmentPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setAttachmentPreview(null);
+    }
+  };
+
+  const removeAttachment = () => {
+    setAttachmentFile(null);
+    setAttachmentPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadAttachment = async (file: File): Promise<string | null> => {
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "time-entries");
+
+      const response = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
+
+      const data = await response.json();
+      return data.url ?? data.key ?? null;
+    } catch {
+      toast.error("Failed to upload file");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const form = useForm<z.infer<typeof addTimeEntryInputSchema>>({
     resolver: zodResolver(addTimeEntryInputSchema),
@@ -85,10 +149,17 @@ export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProp
     },
   });
 
-  function onSubmit(values: z.infer<typeof addTimeEntryInputSchema>) {
+  async function onSubmit(values: z.infer<typeof addTimeEntryInputSchema>) {
+    let imageUrl: string | undefined;
+    if (attachmentFile) {
+      const url = await uploadAttachment(attachmentFile);
+      if (!url) return;
+      imageUrl = url;
+    }
     const submitValues = {
       ...values,
       workLink: (values.workLink || "").trim() || undefined,
+      imageUrl: imageUrl ?? values.imageUrl ?? "",
     };
     mutation.mutate(submitValues);
   }
@@ -244,17 +315,81 @@ export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProp
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={() => (
+            <FormItem>
+              <FormLabel>Attachment (image or PDF)</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? "Uploading..." : "Upload file"}
+                    </Button>
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept={ACCEPT_ATTACHMENTS}
+                      onChange={handleAttachmentChange}
+                    />
+                  </div>
+                  {attachmentFile && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                      {attachmentPreview ? (
+                        <img
+                          src={attachmentPreview}
+                          alt="Preview"
+                          className="h-12 w-12 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <span className="text-sm truncate flex-1 min-w-0">
+                        {attachmentFile.name}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={removeAttachment}
+                        aria-label="Remove attachment"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Images (JPEG, PNG, GIF, WebP) or PDF, max 10MB. Stored in R2.
+                  </p>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         {variant === "sheet" ? (
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">
-              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={mutation.isPending || uploading} className="w-full sm:w-auto">
+              {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Log Time
             </Button>
           </div>
         ) : (
           <DialogFooter className="pt-2">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={mutation.isPending || uploading}>
+              {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Log Time
             </Button>
           </DialogFooter>
