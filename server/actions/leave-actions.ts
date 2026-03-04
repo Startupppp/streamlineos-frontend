@@ -15,6 +15,7 @@ import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 import {
   DEFAULT_LEAVE_TYPES,
   LEAVE_POLICY,
+  ALLOWED_LEAVE_TYPE_NAMES,
   resolveInitialBalance,
 } from "@/lib/leave-policy";
 async function ensureLeaveTypes(orgId: string) {
@@ -23,6 +24,7 @@ async function ensureLeaveTypes(orgId: string) {
   });
 
   if (types.length === 0) {
+    // First-time seed: insert all default types
     for (const t of DEFAULT_LEAVE_TYPES) {
       await db.insert(leaveTypes).values({
         orgId,
@@ -31,11 +33,24 @@ async function ensureLeaveTypes(orgId: string) {
         carryForward: t.carryForward,
       });
     }
-
-    types = await db.query.leaveTypes.findMany({
-      where: eq(leaveTypes.orgId, orgId),
-    });
+  } else {
+    // Backfill any missing default types (e.g. Unpaid Leave)
+    const existingNames = new Set(types.map((t) => t.name));
+    for (const t of DEFAULT_LEAVE_TYPES) {
+      if (!existingNames.has(t.name)) {
+        await db.insert(leaveTypes).values({
+          orgId,
+          name: t.name,
+          daysPerYear: t.daysPerYear,
+          carryForward: t.carryForward,
+        });
+      }
+    }
   }
+
+  types = await db.query.leaveTypes.findMany({
+    where: eq(leaveTypes.orgId, orgId),
+  });
 
   return types;
 }
@@ -242,14 +257,22 @@ export async function getLeaveContext() {
   if (!member) return { error: "No organization found" };
 
   const types = await ensureLeaveTypes(member.orgId);
-  await ensureUserBalances(member.orgId, session.user.id, types);
+  const allowedTypes = types.filter((t) => ALLOWED_LEAVE_TYPE_NAMES.has(t.name));
+  const seenTypeNames = new Set<string>();
+  const filteredTypes = allowedTypes.filter((t) => {
+    if (seenTypeNames.has(t.name)) return false;
+    seenTypeNames.add(t.name);
+    return true;
+  });
+  await ensureUserBalances(member.orgId, session.user.id, filteredTypes);
 
-  const balances = await db
+  const rawBalances = await db
     .select({
       id: leaveBalances.id,
       leaveTypeId: leaveBalances.leaveTypeId,
       balance: leaveBalances.balance,
       typeName: leaveTypes.name,
+      daysPerYear: leaveTypes.daysPerYear,
     })
     .from(leaveBalances)
     .leftJoin(leaveTypes, eq(leaveBalances.leaveTypeId, leaveTypes.id))
@@ -260,7 +283,15 @@ export async function getLeaveContext() {
       ),
     );
 
-  return { success: true, balances, types };
+  const allowedBalances = rawBalances.filter((b) => b.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(b.typeName));
+  const seenNames = new Set<string>();
+  const balances = allowedBalances.filter((b) => {
+    if (!b.typeName || seenNames.has(b.typeName)) return false;
+    seenNames.add(b.typeName);
+    return true;
+  });
+
+  return { success: true, balances, types: filteredTypes };
 }
 
 export async function getApprovers() {
@@ -372,31 +403,37 @@ export async function processLeaveRequest(data: {
         })
         .where(eq(leaveRequests.id, data.requestId));
 
-      if (data.status === "APPROVED") {
-        const start = new Date(request.startDate);
-        const end = new Date(request.endDate);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-        const balanceRecord = await tx.query.leaveBalances.findFirst({
-          where: and(
-            eq(leaveBalances.userId, request.userId),
-            eq(leaveBalances.leaveTypeId, request.leaveTypeId!),
-            eq(leaveBalances.year, new Date().getFullYear()),
-          ),
+      if (data.status === "APPROVED" && request.leaveTypeId) {
+        const leaveType = await tx.query.leaveTypes.findFirst({
+          where: eq(leaveTypes.id, request.leaveTypeId),
+          columns: { name: true },
         });
+        if (leaveType?.name !== LEAVE_POLICY.UNPAID.name) {
+          const start = new Date(request.startDate);
+          const end = new Date(request.endDate);
+          const diffTime = Math.abs(end.getTime() - start.getTime());
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-        if (balanceRecord) {
-          const newBal = Number(balanceRecord.balance) - diffDays;
-          if (newBal < 0) {
-            throw new Error(
-              `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`,
-            );
+          const balanceRecord = await tx.query.leaveBalances.findFirst({
+            where: and(
+              eq(leaveBalances.userId, request.userId),
+              eq(leaveBalances.leaveTypeId, request.leaveTypeId),
+              eq(leaveBalances.year, new Date().getFullYear()),
+            ),
+          });
+
+          if (balanceRecord) {
+            const newBal = Number(balanceRecord.balance) - diffDays;
+            if (newBal < 0) {
+              throw new Error(
+                `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`,
+              );
+            }
+            await tx
+              .update(leaveBalances)
+              .set({ balance: newBal.toString() })
+              .where(eq(leaveBalances.id, balanceRecord.id));
           }
-          await tx
-            .update(leaveBalances)
-            .set({ balance: newBal.toString() })
-            .where(eq(leaveBalances.id, balanceRecord.id));
         }
       }
     });

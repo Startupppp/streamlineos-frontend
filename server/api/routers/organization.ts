@@ -58,28 +58,42 @@ export const organizationRouter = createTRPCRouter({
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    const memberships = await ctx.db.query.organizationMembers.findMany({
-      where: eq(organizationMembers.userId, ctx.session.user.id),
-      orderBy: [desc(organizationMembers.joinedAt)],
-    });
+    try {
+      const memberships = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.userId, ctx.session.user.id),
+        orderBy: [desc(organizationMembers.joinedAt)],
+      });
 
-    const orgIds = memberships.map((m) => m.orgId);
-    const orgs = orgIds.length > 0 
-      ? await ctx.db.select().from(organizations).where(inArray(organizations.id, orgIds))
-      : [];
+      if (memberships.length === 0) {
+        return [];
+      }
 
-    const orgMap = new Map(orgs.map((o) => [o.id, o]));
+      const orgIds = memberships.map((m) => m.orgId);
+      const orgs =
+        orgIds.length > 0
+          ? await ctx.db
+              .select()
+              .from(organizations)
+              .where(inArray(organizations.id, orgIds))
+          : [];
 
-    return memberships.map((m) => {
-      const org = orgMap.get(m.orgId);
-      return {
-        id: org?.id || m.orgId,
-        name: org?.name || "Unknown",
-        slug: org?.slug || "",
-        role: m.role,
-        joinedAt: m.joinedAt,
-      };
-    });
+      const orgMap = new Map(orgs.map((o) => [o.id, o]));
+
+      return memberships.map((m) => {
+        const org = orgMap.get(m.orgId);
+        return {
+          id: org?.id || m.orgId,
+          name: org?.name || "Unknown",
+          slug: org?.slug || "",
+          role: m.role,
+          joinedAt: m.joinedAt,
+        };
+      });
+    } catch (error) {
+      console.error("organization.getOrganizations failed", error);
+      // Fail safe: return empty list instead of propagating DB error to the client
+      return [];
+    }
   }),
 
   createOrganization: protectedProcedure

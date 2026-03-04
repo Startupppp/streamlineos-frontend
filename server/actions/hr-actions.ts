@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, organizationMembers } from "@/lib/db/schema";
+import { users, organizationMembers, departments } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -13,16 +13,20 @@ export async function getEmployees() {
   const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id)
   });
-  
+
   if (!member) return [];
 
   const orgMembers = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, member.orgId),
     with: {
-        user: true
+        user: {
+          with: {
+            department: true,
+          },
+        },
     }
   });
-  return orgMembers.map(m => m.user).filter(u => u.isActive !== false);
+  return orgMembers.map(m => m.user);
 }
 
 export async function getEmployeeById(userId: string) {

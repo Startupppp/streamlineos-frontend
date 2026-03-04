@@ -1,4 +1,3 @@
-
 export const LEAVE_POLICY = {
   CASUAL: {
     name: "Casual Leave",
@@ -13,12 +12,26 @@ export const LEAVE_POLICY = {
     carryForward: false,
     expiresMonthly: false,
   },
+  UNPAID: {
+    name: "Unpaid Leave",
+    daysPerYear: 0,
+    carryForward: false,
+    expiresMonthly: false,
+  },
 } as const;
 
 export const DEFAULT_LEAVE_TYPES = [
   { name: LEAVE_POLICY.CASUAL.name, daysPerYear: LEAVE_POLICY.CASUAL.daysPerYear, carryForward: LEAVE_POLICY.CASUAL.carryForward },
   { name: LEAVE_POLICY.SICK.name, daysPerYear: LEAVE_POLICY.SICK.daysPerYear, carryForward: LEAVE_POLICY.SICK.carryForward },
+  { name: LEAVE_POLICY.UNPAID.name, daysPerYear: LEAVE_POLICY.UNPAID.daysPerYear, carryForward: LEAVE_POLICY.UNPAID.carryForward },
 ] as const;
+
+/** The only leave types shown in the UI balance overview: 12 casual, 6 sick, unpaid */
+export const ALLOWED_LEAVE_TYPE_NAMES: ReadonlySet<string> = new Set([
+  LEAVE_POLICY.CASUAL.name,
+  LEAVE_POLICY.SICK.name,
+  LEAVE_POLICY.UNPAID.name,
+]);
 
 export function calculateProratedCasualLeaves(
   joiningDate: Date | string,
@@ -48,6 +61,8 @@ export function resolveInitialBalance(
       return calculateProratedCasualLeaves(joiningDate, year);
     case LEAVE_POLICY.SICK.name:
       return getSickLeaveAllocation();
+    case LEAVE_POLICY.UNPAID.name:
+      return 0;
     default:
       return daysPerYear;
   }

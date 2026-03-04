@@ -27,6 +27,7 @@ import {
 import { eq, and, desc, isNull, gte, lte, asc, sql } from "drizzle-orm";
 import { format } from "date-fns";
 import { formatDateOnly, getTodayString } from "../../../lib/date-utils";
+import { ALLOWED_LEAVE_TYPE_NAMES, LEAVE_POLICY } from "../../../lib/leave-policy";
 import { TRPCError } from "@trpc/server";
 import { checkInInputSchema } from "../../../lib/validations/attendance";
 import { requestLeaveInputSchema } from "../../../lib/validations/leave";
@@ -663,16 +664,23 @@ export const hrRouter = createTRPCRouter({
         Math.abs(new Date(input.endDate).getTime() - new Date(input.startDate).getTime()) / (1000 * 60 * 60 * 24)
       ) + 1;
 
-      const balance = await ctx.db.query.leaveBalances.findFirst({
-        where: and(
-          eq(leaveBalances.userId, ctx.session.userId),
-          eq(leaveBalances.orgId, ctx.session.orgId),
-          eq(leaveBalances.leaveTypeId, input.typeId),
-          eq(leaveBalances.year, new Date().getFullYear()),
-        ),
-      });
+      const [balance, leaveType] = await Promise.all([
+        ctx.db.query.leaveBalances.findFirst({
+          where: and(
+            eq(leaveBalances.userId, ctx.session.userId),
+            eq(leaveBalances.orgId, ctx.session.orgId),
+            eq(leaveBalances.leaveTypeId, input.typeId),
+            eq(leaveBalances.year, new Date().getFullYear()),
+          ),
+        }),
+        ctx.db.query.leaveTypes.findFirst({
+          where: eq(leaveTypes.id, input.typeId),
+          columns: { name: true },
+        }),
+      ]);
 
-      if (balance && Number(balance.balance) < diffDays) {
+      const isUnpaid = leaveType?.name === LEAVE_POLICY.UNPAID.name;
+      if (!isUnpaid && balance && Number(balance.balance) < diffDays) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Insufficient leave balance. Available: ${balance.balance}, Required: ${diffDays}`,
@@ -920,7 +928,7 @@ export const hrRouter = createTRPCRouter({
   getEmployeeStats: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
-        const balances = await ctx.db
+        const rawBalances = await ctx.db
             .select({
                 id: leaveTypes.id,
                 name: leaveTypes.name,
@@ -934,6 +942,14 @@ export const hrRouter = createTRPCRouter({
                 eq(leaveBalances.year, new Date().getFullYear())
             ))
             .where(eq(leaveTypes.orgId, ctx.session.orgId));
+
+        const allowed = rawBalances.filter((b) => b.name && ALLOWED_LEAVE_TYPE_NAMES.has(b.name));
+        const seen = new Set<string>();
+        const balances = allowed.filter((b) => {
+            if (!b.name || seen.has(b.name)) return false;
+            seen.add(b.name);
+            return true;
+        });
 
         const targetMember = await ctx.db.query.organizationMembers.findFirst({
             where: and(
