@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   Download,
   FileSpreadsheet,
@@ -26,6 +26,268 @@ import { toast } from "sonner";
 import { exportExpenses, ExportFilters, ExportResult } from "@/server/actions/expense-export";
 import { ExpenseFilters } from "@/server/actions/expense-query";
 import * as XLSX from "xlsx";
+
+type PdfData = NonNullable<Extract<ExportResult, { format: "pdf" }>["data"]>;
+
+const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  PENDING: { bg: "#fef3c7", color: "#92400e" },
+  APPROVED: { bg: "#d1fae5", color: "#065f46" },
+  PAID: { bg: "#dbeafe", color: "#1e40af" },
+  REJECTED: { bg: "#fee2e2", color: "#991b1b" },
+};
+
+const SUMMARY_BORDER_COLORS: Record<string, string> = {
+  total: "#0066cc",
+  pending: "#f59e0b",
+  approved: "#10b981",
+  paid: "#3b82f6",
+  rejected: "#ef4444",
+};
+
+const formatInr = (amount: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+const cellStyle: React.CSSProperties = {
+  padding: "10px 8px",
+  borderBottom: "1px solid #eee",
+  fontSize: "12px",
+};
+
+const thStyle: React.CSSProperties = {
+  ...cellStyle,
+  background: "#f5f5f5",
+  fontWeight: 600,
+  borderBottom: "2px solid #ddd",
+  textAlign: "left",
+};
+
+function SummaryCard({
+  label,
+  value,
+  count,
+  borderColor,
+}: {
+  label: string;
+  value: string;
+  count?: string;
+  borderColor: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "#f8f9fa",
+        padding: "20px",
+        borderRadius: "8px",
+        borderLeft: `4px solid ${borderColor}`,
+      }}
+    >
+      <div style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "22px", fontWeight: 700 }}>{value}</div>
+      {count && <div style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}>{count}</div>}
+    </div>
+  );
+}
+
+function ExpensePdfContent({ data }: { data: PdfData }) {
+  return (
+    <div
+      style={{
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        padding: "40px",
+        color: "#1a1a1a",
+        width: "800px",
+        background: "#ffffff",
+      }}
+    >
+      <div style={{ borderBottom: "2px solid #333", paddingBottom: "20px", marginBottom: "30px" }}>
+        <h1 style={{ fontSize: "28px", marginBottom: "8px" }}>{data.title}</h1>
+        <p style={{ color: "#666", fontSize: "14px" }}>Generated on {data.generatedAt}</p>
+      </div>
+
+      <div
+        style={{
+          background: "#f5f5f5",
+          padding: "15px",
+          borderRadius: "8px",
+          marginBottom: "30px",
+          fontSize: "13px",
+        }}
+      >
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+          {[
+            { label: "Period", value: data.filters.period },
+            { label: "Status", value: data.filters.status },
+            { label: "Category", value: data.filters.category },
+            { label: "Total Records", value: String(data.summary.totalCount) },
+          ].map((f) => (
+            <div key={f.label}>
+              <div style={{ color: "#666", marginBottom: "2px" }}>{f.label}</div>
+              <div style={{ fontWeight: 600 }}>{f.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "15px",
+          marginBottom: "30px",
+        }}
+      >
+        <SummaryCard
+          label="Total Amount"
+          value={formatInr(data.summary.totalAmount)}
+          count={`${data.summary.totalCount} expenses`}
+          borderColor={SUMMARY_BORDER_COLORS.total}
+        />
+        <SummaryCard
+          label="Pending Approval"
+          value={formatInr(data.summary.pendingAmount)}
+          borderColor={SUMMARY_BORDER_COLORS.pending}
+        />
+        <SummaryCard
+          label="Approved"
+          value={formatInr(data.summary.approvedAmount)}
+          borderColor={SUMMARY_BORDER_COLORS.approved}
+        />
+        <SummaryCard
+          label="Paid"
+          value={formatInr(data.summary.paidAmount)}
+          borderColor={SUMMARY_BORDER_COLORS.paid}
+        />
+        <SummaryCard
+          label="Rejected"
+          value={formatInr(data.summary.rejectedAmount)}
+          borderColor={SUMMARY_BORDER_COLORS.rejected}
+        />
+      </div>
+
+      {data.byCategory.length > 0 && (
+        <div style={{ marginBottom: "30px" }}>
+          <div
+            style={{
+              fontSize: "18px",
+              fontWeight: 600,
+              marginBottom: "15px",
+              paddingBottom: "8px",
+              borderBottom: "1px solid #ddd",
+            }}
+          >
+            Expenses by Category
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Category</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Count</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>Amount</th>
+                <th style={thStyle}>Distribution</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.byCategory.map((cat) => (
+                <tr key={cat.category}>
+                  <td style={cellStyle}>{cat.category}</td>
+                  <td style={{ ...cellStyle, textAlign: "right" }}>{cat.count}</td>
+                  <td style={{ ...cellStyle, textAlign: "right" }}>{formatInr(cat.amount)}</td>
+                  <td style={cellStyle}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div
+                        style={{
+                          height: "8px",
+                          width: `${cat.percentage}%`,
+                          background: "#0066cc",
+                          borderRadius: "4px",
+                        }}
+                      />
+                      <span>{cat.percentage.toFixed(1)}%</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ marginBottom: "30px" }}>
+        <div
+          style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            marginBottom: "15px",
+            paddingBottom: "8px",
+            borderBottom: "1px solid #ddd",
+          }}
+        >
+          Expense Details
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Date</th>
+              <th style={thStyle}>Category</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Merchant</th>
+              <th style={thStyle}>Employee</th>
+              <th style={{ ...thStyle, textAlign: "right" }}>Amount</th>
+              <th style={thStyle}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.expenses.map((exp, idx) => {
+              const statusColor = STATUS_COLORS[exp.status] ?? STATUS_COLORS.PENDING;
+              return (
+                <tr key={idx} style={idx % 2 === 1 ? { background: "#fafafa" } : undefined}>
+                  <td style={cellStyle}>{exp.date}</td>
+                  <td style={cellStyle}>{exp.category}</td>
+                  <td style={cellStyle}>{exp.description}</td>
+                  <td style={cellStyle}>{exp.merchant}</td>
+                  <td style={cellStyle}>{exp.employee}</td>
+                  <td style={{ ...cellStyle, textAlign: "right" }}>{formatInr(exp.amount)}</td>
+                  <td style={cellStyle}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                        background: statusColor.bg,
+                        color: statusColor.color,
+                      }}
+                    >
+                      {exp.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div
+        style={{
+          marginTop: "40px",
+          paddingTop: "20px",
+          borderTop: "1px solid #ddd",
+          fontSize: "11px",
+          color: "#888",
+          textAlign: "center",
+        }}
+      >
+        <p>This report was generated automatically. For questions, please contact your administrator.</p>
+      </div>
+    </div>
+  );
+}
 
 interface ExpenseExportDialogProps {
   filters: ExpenseFilters;
@@ -160,255 +422,61 @@ export function ExpenseExportDialog({
     XLSX.writeFile(workbook, filename);
   };
 
-  const downloadPDF = (
-    data: NonNullable<Extract<ExportResult, { format: "pdf" }>["data"]>,
-    filename: string
-  ) => {
-    const formatCurrency = (amount: number) =>
-      new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-      }).format(amount);
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const [pdfData, setPdfData] = useState<PdfData | null>(null);
 
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${data.title}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 40px;
-            color: #1a1a1a;
-          }
-          .header {
-            border-bottom: 2px solid #333;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-          }
-          .header h1 { font-size: 28px; margin-bottom: 8px; }
-          .header p { color: #666; font-size: 14px; }
-          .filters {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            font-size: 13px;
-          }
-          .filters-grid { display: flex; flex-wrap: wrap; gap: 20px; }
-          .filter-item { }
-          .filter-label { color: #666; margin-bottom: 2px; }
-          .filter-value { font-weight: 600; }
-          .summary {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-          }
-          .summary-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #0066cc;
-          }
-          .summary-card.pending { border-color: #f59e0b; }
-          .summary-card.approved { border-color: #10b981; }
-          .summary-card.paid { border-color: #3b82f6; }
-          .summary-card.rejected { border-color: #ef4444; }
-          .summary-label { font-size: 12px; color: #666; margin-bottom: 4px; }
-          .summary-value { font-size: 22px; font-weight: 700; }
-          .summary-count { font-size: 12px; color: #888; margin-top: 4px; }
-          .section { margin-bottom: 30px; }
-          .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #ddd;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-          }
-          th {
-            background: #f5f5f5;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid #ddd;
-          }
-          td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #eee;
-          }
-          tr:nth-child(even) { background: #fafafa; }
-          .text-right { text-align: right; }
-          .status {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-          }
-          .status.PENDING { background: #fef3c7; color: #92400e; }
-          .status.APPROVED { background: #d1fae5; color: #065f46; }
-          .status.PAID { background: #dbeafe; color: #1e40af; }
-          .status.REJECTED { background: #fee2e2; color: #991b1b; }
-          .category-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          .bar {
-            height: 8px;
-            background: #0066cc;
-            border-radius: 4px;
-          }
-          .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            font-size: 11px;
-            color: #888;
-            text-align: center;
-          }
-          @media print {
-            body { padding: 20px; }
-            .page-break { page-break-before: always; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>${data.title}</h1>
-          <p>Generated on ${data.generatedAt}</p>
-        </div>
+  const downloadPDF = useCallback(
+    async (data: PdfData, filename: string) => {
+      setPdfData(data);
 
-        <div class="filters">
-          <div class="filters-grid">
-            <div class="filter-item">
-              <div class="filter-label">Period</div>
-              <div class="filter-value">${data.filters.period}</div>
-            </div>
-            <div class="filter-item">
-              <div class="filter-label">Status</div>
-              <div class="filter-value">${data.filters.status}</div>
-            </div>
-            <div class="filter-item">
-              <div class="filter-label">Category</div>
-              <div class="filter-value">${data.filters.category}</div>
-            </div>
-            <div class="filter-item">
-              <div class="filter-label">Total Records</div>
-              <div class="filter-value">${data.summary.totalCount}</div>
-            </div>
-          </div>
-        </div>
+      await new Promise((r) => setTimeout(r, 100));
 
-        <div class="summary">
-          <div class="summary-card">
-            <div class="summary-label">Total Amount</div>
-            <div class="summary-value">${formatCurrency(data.summary.totalAmount)}</div>
-            <div class="summary-count">${data.summary.totalCount} expenses</div>
-          </div>
-          <div class="summary-card pending">
-            <div class="summary-label">Pending Approval</div>
-            <div class="summary-value">${formatCurrency(data.summary.pendingAmount)}</div>
-          </div>
-          <div class="summary-card approved">
-            <div class="summary-label">Approved</div>
-            <div class="summary-value">${formatCurrency(data.summary.approvedAmount)}</div>
-          </div>
-          <div class="summary-card paid">
-            <div class="summary-label">Paid</div>
-            <div class="summary-value">${formatCurrency(data.summary.paidAmount)}</div>
-          </div>
-          <div class="summary-card rejected">
-            <div class="summary-label">Rejected</div>
-            <div class="summary-value">${formatCurrency(data.summary.rejectedAmount)}</div>
-          </div>
-        </div>
+      const container = pdfRef.current;
+      if (!container) return;
 
-        ${data.byCategory.length > 0 ? `
-        <div class="section">
-          <div class="section-title">Expenses by Category</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th class="text-right">Count</th>
-                <th class="text-right">Amount</th>
-                <th>Distribution</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.byCategory.map(cat => `
-                <tr>
-                  <td>${cat.category}</td>
-                  <td class="text-right">${cat.count}</td>
-                  <td class="text-right">${formatCurrency(cat.amount)}</td>
-                  <td>
-                    <div class="category-bar">
-                      <div class="bar" style="width: ${cat.percentage}%"></div>
-                      <span>${cat.percentage.toFixed(1)}%</span>
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        ` : ''}
+      try {
+        const html2canvas = (await import("html2canvas")).default;
+        const jsPDF = (await import("jspdf")).default;
 
-        <div class="section page-break">
-          <div class="section-title">Expense Details</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Merchant</th>
-                <th>Employee</th>
-                <th class="text-right">Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.expenses.map(exp => `
-                <tr>
-                  <td>${exp.date}</td>
-                  <td>${exp.category}</td>
-                  <td>${exp.description}</td>
-                  <td>${exp.merchant}</td>
-                  <td>${exp.employee}</td>
-                  <td class="text-right">${formatCurrency(exp.amount)}</td>
-                  <td><span class="status ${exp.status}">${exp.status}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+        const canvas = await html2canvas(container, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          logging: false,
+          allowTaint: true,
+          foreignObjectRendering: false,
+        });
 
-        <div class="footer">
-          <p>This report was generated automatically. For questions, please contact your administrator.</p>
-        </div>
-      </body>
-      </html>
-    `;
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.onload = () => {
-        printWindow.print();
-      };
-    }
-  };
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
+          compress: true,
+        });
+
+        const imgWidth = 210;
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save(filename);
+      } finally {
+        setPdfData(null);
+      }
+    },
+    [],
+  );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -545,6 +613,16 @@ export function ExpenseExportDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {pdfData && (
+        <div
+          ref={pdfRef}
+          style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}
+          aria-hidden="true"
+        >
+          <ExpensePdfContent data={pdfData} />
+        </div>
+      )}
     </Dialog>
   );
 }
