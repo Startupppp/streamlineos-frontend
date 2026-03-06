@@ -3,6 +3,7 @@ import superjson from "superjson";
 import { ZodError } from "zod";
 import { auth } from "../../lib/auth";
 import { db } from "../../lib/db";
+import "../../lib/env";
 import { organizationMembers } from "../../lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 export const createTRPCContext = async (opts: { headers: Headers }) => {
