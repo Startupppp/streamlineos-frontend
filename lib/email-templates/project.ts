@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl } from "./base";
+import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
 
 export function getProjectAssignmentEmailTemplate(
   memberName: string,
@@ -7,21 +7,24 @@ export function getProjectAssignmentEmailTemplate(
   projectUrl: string,
   assignedBy?: string
 ): string {
+  const sProject = escapeHtml(projectName);
+  const sKey = escapeHtml(projectKey);
+  const sAssignedBy = assignedBy ? escapeHtml(assignedBy) : undefined;
   const content = `
     <h2 class="email-title">📋 You've Been Added to a Project</h2>
     <p class="email-text">
-      ${assignedBy ? `<strong>${assignedBy}</strong> has added you` : 'You have been added'}
-      to the project <strong>${projectName}</strong>.
+      ${sAssignedBy ? `<strong>${sAssignedBy}</strong> has added you` : 'You have been added'}
+      to the project <strong>${sProject}</strong>.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Project:</span>
-        <span class="credential-value">${projectName}</span>
+        <span class="credential-value">${sProject}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Project Key:</span>
-        <span class="credential-value">${projectKey}</span>
+        <span class="credential-value">${sKey}</span>
       </div>
     </div>
 
@@ -50,8 +53,8 @@ export function getProjectAssignmentEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Added to Project: ${projectName} - Vaivamm Capital`,
-    preheader: `You've been added to ${projectName}`,
+    title: `Added to Project: ${sProject} - Vaivamm Capital`,
+    preheader: `You've been added to ${sProject}`,
     content,
   });
 }
@@ -73,21 +76,24 @@ export function getTicketAssignmentEmailTemplate(
   };
 
   const priorityColor = priorityColors[ticketPriority] || '#64748b';
+  const sTitle = escapeHtml(ticketTitle);
+  const sProject = escapeHtml(projectName);
+  const sCreatedBy = escapeHtml(createdBy);
 
   const content = `
     <h2 class="email-title">🎫 New Ticket Assigned to You</h2>
     <p class="email-text">
-      <strong>${createdBy}</strong> has created a ticket and assigned it to you.
+      <strong>${sCreatedBy}</strong> has created a ticket and assigned it to you.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Ticket:</span>
-        <span class="credential-value">${ticketTitle}</span>
+        <span class="credential-value">${sTitle}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Project:</span>
-        <span class="credential-value">${projectName}</span>
+        <span class="credential-value">${sProject}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Type:</span>
@@ -124,8 +130,8 @@ export function getTicketAssignmentEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Ticket Assigned: ${ticketTitle} - Vaivamm Capital`,
-    preheader: `${createdBy} assigned you a ${ticketPriority.toLowerCase()} priority ticket`,
+    title: `Ticket Assigned: ${sTitle} - Vaivamm Capital`,
+    preheader: `${sCreatedBy} assigned you a ${ticketPriority.toLowerCase()} priority ticket`,
     content,
   });
 }
@@ -139,21 +145,26 @@ export function getTicketReviewRequestEmailTemplate(
   completedBy: string,
   comment?: string
 ): string {
+  const sTitle = escapeHtml(ticketTitle);
+  const sProject = escapeHtml(projectName);
+  const sCompletedBy = escapeHtml(completedBy);
+  const sComment = comment ? escapeHtml(comment) : undefined;
+
   const content = `
     <h2 class="email-title">👀 Ticket Ready for Your Review</h2>
     <p class="email-text">
-      <strong>${completedBy}</strong> has completed their work and moved a ticket to
+      <strong>${sCompletedBy}</strong> has completed their work and moved a ticket to
       <span style="display: inline-block; background: #eab308; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 13px;">IN REVIEW</span>.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Ticket:</span>
-        <span class="credential-value">${ticketTitle}</span>
+        <span class="credential-value">${sTitle}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Project:</span>
-        <span class="credential-value">${projectName}</span>
+        <span class="credential-value">${sProject}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Type:</span>
@@ -161,14 +172,14 @@ export function getTicketReviewRequestEmailTemplate(
       </div>
       <div class="credential-item">
         <span class="credential-label">Completed By:</span>
-        <span class="credential-value">${completedBy}</span>
+        <span class="credential-value">${sCompletedBy}</span>
       </div>
     </div>
 
-    ${comment ? `
+    ${sComment ? `
     <div style="background: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px; margin: 24px 0; border-radius: 4px;">
       <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e293b; font-size: 14px;">💬 Latest Comment:</p>
-      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">${comment}</p>
+      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">${sComment}</p>
     </div>
     ` : ''}
 
@@ -193,8 +204,8 @@ export function getTicketReviewRequestEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Review Requested: ${ticketTitle} - Vaivamm Capital`,
-    preheader: `${completedBy} completed work on ${ticketTitle} and needs your review`,
+    title: `Review Requested: ${sTitle} - Vaivamm Capital`,
+    preheader: `${sCompletedBy} completed work on ${sTitle} and needs your review`,
     content,
   });
 }
@@ -207,32 +218,37 @@ export function getTicketChangesRequestedEmailTemplate(
   reviewerName: string,
   comment?: string
 ): string {
+  const sTitle = escapeHtml(ticketTitle);
+  const sProject = escapeHtml(projectName);
+  const sReviewer = escapeHtml(reviewerName);
+  const sComment = comment ? escapeHtml(comment) : undefined;
+
   const content = `
     <h2 class="email-title">🔄 Changes Requested on Your Ticket</h2>
     <p class="email-text">
-      <strong>${reviewerName}</strong> has reviewed your work and moved the ticket back to
+      <strong>${sReviewer}</strong> has reviewed your work and moved the ticket back to
       <span style="display: inline-block; background: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 13px;">IN PROGRESS</span>.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Ticket:</span>
-        <span class="credential-value">${ticketTitle}</span>
+        <span class="credential-value">${sTitle}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Project:</span>
-        <span class="credential-value">${projectName}</span>
+        <span class="credential-value">${sProject}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Reviewed By:</span>
-        <span class="credential-value">${reviewerName}</span>
+        <span class="credential-value">${sReviewer}</span>
       </div>
     </div>
 
-    ${comment ? `
+    ${sComment ? `
     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 4px;">
       <p style="margin: 0 0 8px 0; font-weight: 600; color: #92400e; font-size: 14px;">💬 Review Feedback:</p>
-      <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">${comment}</p>
+      <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">${sComment}</p>
     </div>
     ` : ''}
 
@@ -257,8 +273,8 @@ export function getTicketChangesRequestedEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Changes Requested: ${ticketTitle} - Vaivamm Capital`,
-    preheader: `${reviewerName} requested changes on ${ticketTitle}`,
+    title: `Changes Requested: ${sTitle} - Vaivamm Capital`,
+    preheader: `${sReviewer} requested changes on ${sTitle}`,
     content,
   });
 }

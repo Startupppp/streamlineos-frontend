@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl } from "./base";
+import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
 
 export function getLeaveRequestEmailTemplate(
   approverName: string,
@@ -9,20 +9,23 @@ export function getLeaveRequestEmailTemplate(
   reason: string,
   leaveUrl: string
 ): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sLeaveType = escapeHtml(leaveType);
+  const sReason = escapeHtml(reason);
   const content = `
     <h2 class="email-title">📅 New Leave Request</h2>
     <p class="email-text">
-      <strong>${employeeName}</strong> has submitted a new leave request that requires your approval.
+      <strong>${sEmployee}</strong> has submitted a new leave request that requires your approval.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Employee:</span>
-        <span class="credential-value">${employeeName}</span>
+        <span class="credential-value">${sEmployee}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Leave Type:</span>
-        <span class="credential-value">${leaveType}</span>
+        <span class="credential-value">${sLeaveType}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Duration:</span>
@@ -32,7 +35,7 @@ export function getLeaveRequestEmailTemplate(
 
     <div style="background: #f8fafc; border-left: 4px solid #0f2b7f; padding: 16px; margin: 24px 0; border-radius: 4px;">
       <p style="margin: 0 0 8px 0; font-weight: 600; color: #1e293b; font-size: 14px;">💬 Reason:</p>
-      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">${reason}</p>
+      <p style="margin: 0; color: #475569; font-size: 14px; line-height: 1.6;">${sReason}</p>
     </div>
 
     <div style="text-align: center;">
@@ -49,8 +52,8 @@ export function getLeaveRequestEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Leave Request: ${employeeName} - Vaivamm Capital`,
-    preheader: `${employeeName} requested ${leaveType} from ${startDate} to ${endDate}`,
+    title: `Leave Request: ${sEmployee} - Vaivamm Capital`,
+    preheader: `${sEmployee} requested ${sLeaveType} from ${startDate} to ${endDate}`,
     content,
   });
 }
@@ -66,11 +69,14 @@ export function getLeaveStatusUpdateEmailTemplate(
 ): string {
   const isApproved = status === "APPROVED";
   const statusColor = isApproved ? "#22c55e" : "#ef4444";
+  const sLeaveType = escapeHtml(leaveType);
+  const sApprover = escapeHtml(approverName);
+  const sRejection = rejectionReason ? escapeHtml(rejectionReason) : undefined;
 
   const content = `
     <h2 class="email-title">${isApproved ? "✅ Leave Request Approved" : "❌ Leave Request Rejected"}</h2>
     <p class="email-text">
-      Your leave request for <strong>${leaveType}</strong> from <strong>${startDate} to ${endDate}</strong> has been <strong>${status.toLowerCase()}</strong> by ${approverName}.
+      Your leave request for <strong>${sLeaveType}</strong> from <strong>${startDate} to ${endDate}</strong> has been <strong>${status.toLowerCase()}</strong> by ${sApprover}.
     </p>
 
     <div class="credential-box">
@@ -80,7 +86,7 @@ export function getLeaveStatusUpdateEmailTemplate(
       </div>
       <div class="credential-item">
         <span class="credential-label">Leave Type:</span>
-        <span class="credential-value">${leaveType}</span>
+        <span class="credential-value">${sLeaveType}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Dates:</span>
@@ -88,10 +94,10 @@ export function getLeaveStatusUpdateEmailTemplate(
       </div>
     </div>
 
-    ${!isApproved && rejectionReason ? `
+    ${!isApproved && sRejection ? `
     <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 24px 0; border-radius: 4px;">
       <p style="margin: 0 0 8px 0; font-weight: 600; color: #991b1b; font-size: 14px;">💬 Reason for Rejection:</p>
-      <p style="margin: 0; color: #b91c1c; font-size: 14px; line-height: 1.6;">${rejectionReason}</p>
+      <p style="margin: 0; color: #b91c1c; font-size: 14px; line-height: 1.6;">${sRejection}</p>
     </div>
     ` : ''}
 
@@ -103,7 +109,7 @@ export function getLeaveStatusUpdateEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Leave Request ${status}: ${leaveType} - Vaivamm Capital`,
+    title: `Leave Request ${status}: ${sLeaveType} - Vaivamm Capital`,
     preheader: `Your leave request has been ${status.toLowerCase()}`,
     content,
   });
@@ -116,20 +122,22 @@ export function getLeaveCancellationEmailTemplate(
   startDate: string,
   endDate: string
 ): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sLeaveType = escapeHtml(leaveType);
   const content = `
     <h2 class="email-title">🚫 Leave Request Cancelled</h2>
     <p class="email-text">
-      <strong>${employeeName}</strong> has cancelled their previously submitted leave request.
+      <strong>${sEmployee}</strong> has cancelled their previously submitted leave request.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Employee:</span>
-        <span class="credential-value">${employeeName}</span>
+        <span class="credential-value">${sEmployee}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Leave Type:</span>
-        <span class="credential-value">${leaveType}</span>
+        <span class="credential-value">${sLeaveType}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Duration:</span>
@@ -145,8 +153,8 @@ export function getLeaveCancellationEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Leave Cancelled: ${employeeName} - Vaivamm Capital`,
-    preheader: `${employeeName} cancelled their ${leaveType} request`,
+    title: `Leave Cancelled: ${sEmployee} - Vaivamm Capital`,
+    preheader: `${sEmployee} cancelled their ${sLeaveType} request`,
     content,
   });
 }
@@ -160,11 +168,14 @@ export function getDocumentExpiryReminderEmailTemplate(
 ): string {
   const urgencyColor = daysRemaining <= 7 ? '#dc2626' : daysRemaining <= 14 ? '#f59e0b' : '#2563eb';
   const urgencyBg = daysRemaining <= 7 ? '#fee2e2' : daysRemaining <= 14 ? '#fef3c7' : '#dbeafe';
+  const sEmployee = escapeHtml(employeeName);
+  const sDocName = escapeHtml(documentName);
+  const sDocType = escapeHtml(documentType);
 
   const content = `
     <h2 class="email-title">📋 Document Expiry Reminder</h2>
     <p class="email-text">
-      Hello <strong>${employeeName}</strong>,
+      Hello <strong>${sEmployee}</strong>,
     </p>
 
     <p class="email-text">
@@ -175,11 +186,11 @@ export function getDocumentExpiryReminderEmailTemplate(
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Document:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${documentName}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${sDocName}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Type:</td>
-          <td style="padding: 8px 0; color: #475569;">${documentType}</td>
+          <td style="padding: 8px 0; color: #475569;">${sDocType}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Expiry Date:</td>
@@ -200,8 +211,8 @@ export function getDocumentExpiryReminderEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Document Expiring Soon: ${documentName}`,
-    preheader: `Your ${documentType} expires in ${daysRemaining} days`,
+    title: `Document Expiring Soon: ${sDocName}`,
+    preheader: `Your ${sDocType} expires in ${daysRemaining} days`,
     content,
   });
 }

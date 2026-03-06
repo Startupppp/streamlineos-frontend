@@ -2,6 +2,15 @@ export const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_U
 
 export const logoUrl = `${baseUrl}/logo.png`;
 
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export interface EmailTemplateProps {
   title: string;
   preheader?: string;

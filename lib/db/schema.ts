@@ -1163,3 +1163,15 @@ export const crmTeamPerformanceRelations = relations(crmTeamPerformance, ({ one 
     references: [crmPeople.id],
   }),
 }));
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  action: text("action").notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id),
+  targetId: text("target_id"),
+  targetType: text("target_type"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

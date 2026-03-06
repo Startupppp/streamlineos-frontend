@@ -1,11 +1,13 @@
-import { getEmailTemplate, baseUrl, logoUrl } from "./base";
+import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
 
 export function getInvitationEmailTemplate(invitationUrl: string, organizationName: string, inviterName?: string): string {
+  const safeOrgName = escapeHtml(organizationName);
+  const safeInviterName = inviterName ? escapeHtml(inviterName) : undefined;
   const content = `
     <h2 class="email-title">🎉 You're Invited!</h2>
     <p class="email-text">
-      ${inviterName ? `<strong>${inviterName}</strong> has invited you` : 'You have been invited'}
-      to join <strong>${organizationName}</strong> on Vaivamm Capital CRM.
+      ${safeInviterName ? `<strong>${safeInviterName}</strong> has invited you` : 'You have been invited'}
+      to join <strong>${safeOrgName}</strong> on Vaivamm Capital CRM.
     </p>
 
     <p class="email-text">
@@ -36,8 +38,8 @@ export function getInvitationEmailTemplate(invitationUrl: string, organizationNa
   `;
 
   return getEmailTemplate({
-    title: `Invitation to join ${organizationName} - Vaivamm Capital`,
-    preheader: `You've been invited to join ${organizationName}`,
+    title: `Invitation to join ${safeOrgName} - Vaivamm Capital`,
+    preheader: `You've been invited to join ${safeOrgName}`,
     content,
   });
 }
@@ -47,24 +49,27 @@ export function getHolidayAnnouncementEmailTemplate(
   holidayDate: string,
   message?: string
 ): string {
+  const safeName = escapeHtml(holidayName);
+  const safeDate = escapeHtml(holidayDate);
+  const safeMessage = message ? escapeHtml(message) : undefined;
   const content = `
-    <h2 class="email-title">🎉 Upcoming Holiday: ${holidayName}</h2>
+    <h2 class="email-title">🎉 Upcoming Holiday: ${safeName}</h2>
     <p class="email-text">
       Dear Team,
     </p>
 
     <p class="email-text">
-      This is a friendly reminder that <strong>${holidayName}</strong> is tomorrow, <strong>${holidayDate}</strong>.
+      This is a friendly reminder that <strong>${safeName}</strong> is tomorrow, <strong>${safeDate}</strong>.
     </p>
 
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Holiday:</span>
-        <span class="credential-value">${holidayName}</span>
+        <span class="credential-value">${safeName}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Date:</span>
-        <span class="credential-value">${holidayDate}</span>
+        <span class="credential-value">${safeDate}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Status:</span>
@@ -72,10 +77,10 @@ export function getHolidayAnnouncementEmailTemplate(
       </div>
     </div>
 
-    ${message ? `
+    ${safeMessage ? `
     <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin: 24px 0; border-radius: 4px;">
       <p style="margin: 0 0 8px 0; font-weight: 600; color: #166534; font-size: 14px;">💬 Message:</p>
-      <p style="margin: 0; color: #15803d; font-size: 14px; line-height: 1.6;">${message}</p>
+      <p style="margin: 0; color: #15803d; font-size: 14px; line-height: 1.6;">${safeMessage}</p>
     </div>
     ` : ''}
 
@@ -86,13 +91,13 @@ export function getHolidayAnnouncementEmailTemplate(
     <div class="divider"></div>
 
     <p class="email-text">
-      Wishing you and your family a wonderful ${holidayName}! 🎊
+      Wishing you and your family a wonderful ${safeName}! 🎊
     </p>
   `;
 
   return getEmailTemplate({
-    title: `Holiday Tomorrow: ${holidayName} - Vaivamm Capital`,
-    preheader: `Office closed tomorrow for ${holidayName}`,
+    title: `Holiday Tomorrow: ${safeName} - Vaivamm Capital`,
+    preheader: `Office closed tomorrow for ${safeName}`,
     content,
   });
 }
@@ -102,6 +107,9 @@ export function getCompanyAnnouncementEmailTemplate(
   message: string,
   announcedBy: string
 ): string {
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message);
+  const safeAnnouncedBy = escapeHtml(announcedBy);
   const content = `
     <h2 class="email-title">📢 Company Announcement</h2>
     <p class="email-text">
@@ -109,12 +117,12 @@ export function getCompanyAnnouncementEmailTemplate(
     </p>
 
     <p class="email-text">
-      <strong>${announcedBy}</strong> has shared an important announcement:
+      <strong>${safeAnnouncedBy}</strong> has shared an important announcement:
     </p>
 
     <div class="credential-box">
-      <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px;">${subject}</h3>
-      <div style="color: #475569; font-size: 15px; line-height: 1.7; white-space: pre-wrap;">${message}</div>
+      <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px;">${safeSubject}</h3>
+      <div style="color: #475569; font-size: 15px; line-height: 1.7; white-space: pre-wrap;">${safeMessage}</div>
     </div>
 
     <div class="divider"></div>
@@ -125,8 +133,8 @@ export function getCompanyAnnouncementEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Announcement: ${subject} - Vaivamm Capital`,
-    preheader: subject,
+    title: `Announcement: ${safeSubject} - Vaivamm Capital`,
+    preheader: safeSubject,
     content,
   });
 }

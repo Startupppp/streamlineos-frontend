@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl } from "./base";
+import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
 
 export function getVerificationEmailTemplate(verificationUrl: string): string {
   const content = `
@@ -74,8 +74,10 @@ export function getPasswordResetEmailTemplate(resetUrl: string): string {
 }
 
 export function getWelcomeEmailTemplate(name: string, email: string, tempPassword: string, loginUrl: string): string {
+  const sName = escapeHtml(name);
+  const sEmail = escapeHtml(email);
   const content = `
-    <h2 class="email-title">Welcome to Vaivamm Capital, ${name}! 🚀</h2>
+    <h2 class="email-title">Welcome to Vaivamm Capital, ${sName}! 🚀</h2>
     <p class="email-text">
       Your account has been successfully created. We're excited to have you on board!
     </p>
@@ -87,7 +89,7 @@ export function getWelcomeEmailTemplate(name: string, email: string, tempPasswor
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Email:</span>
-        <span class="credential-value">${email}</span>
+        <span class="credential-value">${sEmail}</span>
       </div>
       <div class="credential-item">
         <span class="credential-label">Temporary Password:</span>
@@ -128,10 +130,11 @@ export function getWelcomeEmailTemplate(name: string, email: string, tempPasswor
 }
 
 export function getPasswordChangeConfirmationEmailTemplate(userName: string): string {
+  const sUserName = escapeHtml(userName);
   const content = `
     <h2 class="email-title">🔒 Password Changed Successfully</h2>
     <p class="email-text">
-      Hi <strong>${userName}</strong>,
+      Hi <strong>${sUserName}</strong>,
     </p>
 
     <p class="email-text">
@@ -171,21 +174,24 @@ export function getAccountDeactivationEmailTemplate(
   deactivatedBy: string,
   reason?: string
 ): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sDeactivatedBy = escapeHtml(deactivatedBy);
+  const sReason = reason ? escapeHtml(reason) : undefined;
   const content = `
     <h2 class="email-title">👋 Account Deactivated</h2>
     <p class="email-text">
-      Dear <strong>${employeeName}</strong>,
+      Dear <strong>${sEmployee}</strong>,
     </p>
 
     <p class="email-text">
-      Your account on Vaivamm Capital CRM has been deactivated by <strong>${deactivatedBy}</strong>.
+      Your account on Vaivamm Capital CRM has been deactivated by <strong>${sDeactivatedBy}</strong>.
     </p>
 
-    ${reason ? `
+    ${sReason ? `
     <div class="credential-box">
       <div class="credential-item">
         <span class="credential-label">Reason:</span>
-        <span style="color: #475569; margin-left: 8px;">${reason}</span>
+        <span style="color: #475569; margin-left: 8px;">${sReason}</span>
       </div>
     </div>
     ` : ''}

@@ -4,6 +4,66 @@ import { getQRCodeImageUrl } from "@/app/(dashboard)/ceo/qr-code/actions";
 import { db } from "@/lib/db";
 import { qrCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { logger } from "@/lib/logger";
+
+const MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_DOMAINS = [
+  "r2.cloudflarestorage.com",
+  "crm.vaivammcapital.com",
+  "api.dicebear.com",
+];
+
+function isAllowedUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.protocol !== "https:") return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "0.0.0.0" ||
+      hostname === "[::1]" ||
+      hostname === "::1" ||
+      hostname === "metadata.google.internal" ||
+      hostname === "169.254.169.254"
+    ) {
+      return false;
+    }
+
+    if (
+      hostname.startsWith("10.") ||
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("172.16.") ||
+      hostname.startsWith("172.17.") ||
+      hostname.startsWith("172.18.") ||
+      hostname.startsWith("172.19.") ||
+      hostname.startsWith("172.2") ||
+      hostname.startsWith("172.30.") ||
+      hostname.startsWith("172.31.") ||
+      hostname.startsWith("fc") ||
+      hostname.startsWith("fd") ||
+      hostname.startsWith("fe80")
+    ) {
+      return false;
+    }
+
+    const isAllowed = ALLOWED_DOMAINS.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+    );
+
+    return isAllowed;
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeFilename(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,38 +92,45 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "QR code not found" }, { status: 404 });
     }
 
+    const safeSlug = sanitizeFilename(slug);
+
     if (format === "svg") {
-      const trackingUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL 
+      const trackingUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL
         ? `${process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL}/qr/${slug}`
-        : process.env.NEXTAUTH_URL 
+        : process.env.NEXTAUTH_URL
           ? `${process.env.NEXTAUTH_URL}/qr/${slug}`
           : `https://localhost:3000/qr/${slug}`;
-      
+
       const { default: QRCode } = await import("qrcode");
-      const svgString = await QRCode.toString(trackingUrl, { 
-        type: "svg", 
-        width: 1024, 
-        margin: 2 
+      const svgString = await QRCode.toString(trackingUrl, {
+        type: "svg",
+        width: 1024,
+        margin: 2,
       });
 
       return new NextResponse(svgString, {
         headers: {
           "Content-Type": "image/svg+xml",
-          "Content-Disposition": `attachment; filename="qr-code-${slug}.svg"`,
+          "Content-Disposition": `attachment; filename="${safeSlug}.svg"`,
         },
       });
     }
 
-    let imageUrl = qrCode.imageUrl;
-    
+    const imageUrl = qrCode.imageUrl;
+
     if (!imageUrl || !imageUrl.trim()) {
       return NextResponse.json({ error: "Image URL not found" }, { status: 404 });
     }
 
     try {
       const finalUrl = await getQRCodeImageUrl(imageUrl.trim());
-      
-      if (!finalUrl || (!finalUrl.startsWith("http://") && !finalUrl.startsWith("https://") && !finalUrl.startsWith("/"))) {
+
+      if (
+        !finalUrl ||
+        (!finalUrl.startsWith("http://") &&
+          !finalUrl.startsWith("https://") &&
+          !finalUrl.startsWith("/"))
+      ) {
         return NextResponse.json({ error: "Invalid image URL" }, { status: 500 });
       }
 
@@ -73,13 +140,8 @@ export async function GET(req: NextRequest) {
         fetchUrl = `${baseUrl}${finalUrl}`;
       }
 
-      try {
-        const urlObj = new URL(fetchUrl);
-        const blockedHosts = ["169.254.169.254", "metadata.google.internal", "localhost", "127.0.0.1", "0.0.0.0"];
-        if (blockedHosts.includes(urlObj.hostname) || urlObj.hostname.startsWith("10.") || urlObj.hostname.startsWith("192.168.") || urlObj.hostname.startsWith("172.")) {
-          return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
-        }
-      } catch {
+      if (!isAllowedUrl(fetchUrl)) {
+        logger.warn("Blocked SSRF attempt on QR download", { url: fetchUrl });
         return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
       }
 
@@ -90,6 +152,7 @@ export async function GET(req: NextRequest) {
         method: "GET",
         headers: { "User-Agent": "QR-Code-Downloader/1.0" },
         signal: controller.signal,
+        redirect: "error",
       });
       clearTimeout(timeout);
 
@@ -97,7 +160,17 @@ export async function GET(req: NextRequest) {
         throw new Error("Failed to fetch image");
       }
 
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_SIZE) {
+        return NextResponse.json({ error: "Image too large" }, { status: 400 });
+      }
+
       const imageBuffer = await response.arrayBuffer();
+
+      if (imageBuffer.byteLength > MAX_RESPONSE_SIZE) {
+        return NextResponse.json({ error: "Image too large" }, { status: 400 });
+      }
+
       const contentType = response.headers.get("content-type") || "image/png";
 
       let finalBuffer: Buffer;
@@ -107,19 +180,17 @@ export async function GET(req: NextRequest) {
       if (format === "jpeg" && contentType.includes("png")) {
         const sharp = await import("sharp");
         const imageData = Buffer.from(imageBuffer);
-        finalBuffer = await sharp.default(imageData)
-          .jpeg({ quality: 90 })
-          .toBuffer();
+        finalBuffer = await sharp.default(imageData).jpeg({ quality: 90 }).toBuffer();
         finalContentType = "image/jpeg";
-        filename = `qr-code-${slug}.jpg`;
+        filename = `${safeSlug}.jpg`;
       } else if (format === "jpeg") {
         finalBuffer = Buffer.from(imageBuffer);
         finalContentType = "image/jpeg";
-        filename = `qr-code-${slug}.jpg`;
+        filename = `${safeSlug}.jpg`;
       } else {
         finalBuffer = Buffer.from(imageBuffer);
         finalContentType = contentType;
-        filename = `qr-code-${slug}.png`;
+        filename = `${safeSlug}.png`;
       }
 
       return new NextResponse(new Uint8Array(finalBuffer), {
@@ -130,18 +201,14 @@ export async function GET(req: NextRequest) {
         },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      logger.error("QR code download failed", error);
       return NextResponse.json(
-        { error: `Failed to download QR code: ${errorMessage}` },
+        { error: "Failed to download QR code" },
         { status: 500 }
       );
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: `Download failed: ${errorMessage}` },
-      { status: 500 }
-    );
+    logger.error("QR download route error", error);
+    return NextResponse.json({ error: "Download failed" }, { status: 500 });
   }
 }
-

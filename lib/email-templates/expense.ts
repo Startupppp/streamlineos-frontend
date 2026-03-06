@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl } from "./base";
+import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
 
 export function getExpenseSubmittedEmailTemplate(
   approverName: string,
@@ -8,30 +8,35 @@ export function getExpenseSubmittedEmailTemplate(
   description: string,
   expenseLink: string
 ): string {
+  const sApprover = escapeHtml(approverName);
+  const sEmployee = escapeHtml(employeeName);
+  const sCategory = escapeHtml(category);
+  const sAmount = escapeHtml(amount);
+  const sDescription = description ? escapeHtml(description) : "";
   const content = `
     <h2 class="email-title">🧾 New Expense Claim</h2>
     <p class="email-text">
-      Hello <strong>${approverName}</strong>,
+      Hello <strong>${sApprover}</strong>,
     </p>
 
     <p class="email-text">
-      <strong>${employeeName}</strong> has submitted a new expense claim for your approval.
+      <strong>${sEmployee}</strong> has submitted a new expense claim for your approval.
     </p>
 
     <div class="credential-box">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Category:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${category}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${sCategory}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 700; font-size: 18px;">₹${amount}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 700; font-size: 18px;">₹${sAmount}</td>
         </tr>
-        ${description ? `
+        ${sDescription ? `
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Description:</td>
-          <td style="padding: 8px 0; color: #475569;">${description}</td>
+          <td style="padding: 8px 0; color: #475569;">${sDescription}</td>
         </tr>
         ` : ''}
       </table>
@@ -51,8 +56,8 @@ export function getExpenseSubmittedEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `New Expense Claim from ${employeeName}`,
-    preheader: `${employeeName} submitted a ₹${amount} expense claim`,
+    title: `New Expense Claim from ${sEmployee}`,
+    preheader: `${sEmployee} submitted a ₹${sAmount} expense claim`,
     content,
   });
 }
@@ -63,25 +68,29 @@ export function getExpenseApprovedEmailTemplate(
   amount: string,
   approverName: string
 ): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sCategory = escapeHtml(category);
+  const sAmount = escapeHtml(amount);
+  const sApprover = escapeHtml(approverName);
   const content = `
     <h2 class="email-title">✅ Expense Claim Approved</h2>
     <p class="email-text">
-      Hello <strong>${employeeName}</strong>,
+      Hello <strong>${sEmployee}</strong>,
     </p>
 
     <p class="email-text">
-      Great news! Your expense claim has been <strong style="color: #16a34a;">approved</strong> by <strong>${approverName}</strong>.
+      Great news! Your expense claim has been <strong style="color: #16a34a;">approved</strong> by <strong>${sApprover}</strong>.
     </p>
 
     <div class="credential-box" style="border-left-color: #16a34a;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Category:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${category}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${sCategory}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount:</td>
-          <td style="padding: 8px 0; color: #16a34a; font-weight: 700; font-size: 18px;">₹${amount}</td>
+          <td style="padding: 8px 0; color: #16a34a; font-weight: 700; font-size: 18px;">₹${sAmount}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Status:</td>
@@ -98,8 +107,8 @@ export function getExpenseApprovedEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Expense Claim Approved - ₹${amount}`,
-    preheader: `Your ₹${amount} expense claim has been approved`,
+    title: `Expense Claim Approved - ₹${sAmount}`,
+    preheader: `Your ₹${sAmount} expense claim has been approved`,
     content,
   });
 }
@@ -111,25 +120,30 @@ export function getExpenseRejectedEmailTemplate(
   approverName: string,
   reason: string
 ): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sCategory = escapeHtml(category);
+  const sAmount = escapeHtml(amount);
+  const sApprover = escapeHtml(approverName);
+  const sReason = escapeHtml(reason);
   const content = `
     <h2 class="email-title">❌ Expense Claim Rejected</h2>
     <p class="email-text">
-      Hello <strong>${employeeName}</strong>,
+      Hello <strong>${sEmployee}</strong>,
     </p>
 
     <p class="email-text">
-      Unfortunately, your expense claim has been <strong style="color: #dc2626;">rejected</strong> by <strong>${approverName}</strong>.
+      Unfortunately, your expense claim has been <strong style="color: #dc2626;">rejected</strong> by <strong>${sApprover}</strong>.
     </p>
 
     <div class="credential-box" style="border-left-color: #dc2626;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Category:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${category}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${sCategory}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount:</td>
-          <td style="padding: 8px 0; color: #dc2626; font-weight: 700; font-size: 18px;">₹${amount}</td>
+          <td style="padding: 8px 0; color: #dc2626; font-weight: 700; font-size: 18px;">₹${sAmount}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Status:</td>
@@ -140,7 +154,7 @@ export function getExpenseRejectedEmailTemplate(
 
     <div class="credential-box" style="margin-top: 16px; border-left-color: #f59e0b;">
       <p style="margin: 0 0 8px 0; color: #64748b; font-size: 14px;">Reason for rejection:</p>
-      <p style="margin: 0; color: #0f172a; font-style: italic;">"${reason}"</p>
+      <p style="margin: 0; color: #0f172a; font-style: italic;">"${sReason}"</p>
     </div>
 
     <div class="divider"></div>
@@ -151,8 +165,8 @@ export function getExpenseRejectedEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Expense Claim Rejected - ₹${amount}`,
-    preheader: `Your ₹${amount} expense claim has been rejected`,
+    title: `Expense Claim Rejected - ₹${sAmount}`,
+    preheader: `Your ₹${sAmount} expense claim has been rejected`,
     content,
   });
 }
@@ -163,10 +177,14 @@ export function getExpensePaidEmailTemplate(
   amount: string,
   transactionRef?: string
 ): string {
+  const sEmployee = escapeHtml(employeeName);
+  const sCategory = escapeHtml(category);
+  const sAmount = escapeHtml(amount);
+  const sRef = transactionRef ? escapeHtml(transactionRef) : undefined;
   const content = `
     <h2 class="email-title">💰 Expense Reimbursed</h2>
     <p class="email-text">
-      Hello <strong>${employeeName}</strong>,
+      Hello <strong>${sEmployee}</strong>,
     </p>
 
     <p class="email-text">
@@ -177,16 +195,16 @@ export function getExpensePaidEmailTemplate(
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Category:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${category}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: 600;">${sCategory}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Amount Reimbursed:</td>
-          <td style="padding: 8px 0; color: #2563eb; font-weight: 700; font-size: 18px;">₹${amount}</td>
+          <td style="padding: 8px 0; color: #2563eb; font-weight: 700; font-size: 18px;">₹${sAmount}</td>
         </tr>
-        ${transactionRef ? `
+        ${sRef ? `
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Transaction Ref:</td>
-          <td style="padding: 8px 0; color: #0f172a; font-family: monospace;">${transactionRef}</td>
+          <td style="padding: 8px 0; color: #0f172a; font-family: monospace;">${sRef}</td>
         </tr>
         ` : ''}
         <tr>
@@ -204,8 +222,8 @@ export function getExpensePaidEmailTemplate(
   `;
 
   return getEmailTemplate({
-    title: `Expense Reimbursed - ₹${amount}`,
-    preheader: `Your ₹${amount} expense has been reimbursed`,
+    title: `Expense Reimbursed - ₹${sAmount}`,
+    preheader: `Your ₹${sAmount} expense has been reimbursed`,
     content,
   });
 }
