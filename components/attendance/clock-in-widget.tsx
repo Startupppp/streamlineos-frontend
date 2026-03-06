@@ -9,8 +9,7 @@ import {
   useHrCheckOut,
 } from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
-import { LoadingSpinner } from "../pre-ui/loading-spinner";
-import { Clock, Timer } from "lucide-react";
+import { Clock, Loader2, Timer } from "lucide-react";
 
 export function ClockInWidget() {
   const [now, setNow] = useState(new Date());
@@ -132,7 +131,7 @@ export function ClockInWidget() {
         }`}
       >
         {isPending ? (
-          <LoadingSpinner size="sm" />
+          <Loader2 className="h-4 w-4 animate-spin" />
         ) : isCheckedIn || isOnBreak ? (
           "WEB CLOCK-OUT"
         ) : isInCooldown ? (

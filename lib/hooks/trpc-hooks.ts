@@ -9,3 +9,4 @@ export * from "./dashboard-hooks";
 export * from "./rbac-hooks";
 export * from "./reports-hooks";
 export * from "./crm-hooks";
+export * from "./auth-hooks";

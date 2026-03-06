@@ -19,7 +19,7 @@ import {
   Building2,
   RefreshCw,
 } from "lucide-react";
-import { ErrorMessage } from "@/components/pre-ui/error-message";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
@@ -116,7 +116,10 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8" role="alert">
         <div className="space-y-4">
-          <ErrorMessage message={error instanceof Error ? error.message : "Failed to load dashboard stats"} />
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <span>{error instanceof Error ? error.message : "Failed to load dashboard stats"}</span>
+          </div>
           <Button onClick={() => refetch()} variant="outline" size="sm">
             <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
             Retry
