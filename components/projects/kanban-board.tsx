@@ -89,6 +89,8 @@ interface KanbanBoardProps {
   epics?: Array<{ id: number; title: string }>;
 }
 
+type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+
 function QuickAddInput({ columnId, projectId }: { columnId: string; projectId: number }) {
   const [value, setValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -114,7 +116,7 @@ function QuickAddInput({ columnId, projectId }: { columnId: string; projectId: n
       projectId,
       title: value.trim(),
       type: "TASK",
-      status: columnId,
+      status: columnId as TicketStatus,
     });
   };
 

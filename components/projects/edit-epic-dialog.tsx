@@ -38,7 +38,7 @@ const editEpicSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-  status: z.string(),
+  status: z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]),
 });
 
 type EditEpicInput = z.infer<typeof editEpicSchema>;
@@ -65,7 +65,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
       title: epic.title,
       description: epic.description || "",
       priority: (epic.priority as EditEpicInput["priority"]) || "MEDIUM",
-      status: epic.status || "TODO",
+      status: (epic.status as EditEpicInput["status"]) || "TODO",
     },
   });
 
@@ -75,7 +75,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
         title: epic.title,
         description: epic.description || "",
         priority: (epic.priority as EditEpicInput["priority"]) || "MEDIUM",
-        status: epic.status || "TODO",
+        status: (epic.status as EditEpicInput["status"]) || "TODO",
       });
     }
   }, [open, epic, form]);

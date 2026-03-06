@@ -141,7 +141,7 @@ export function CreateTicketDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      type: "Task",
+      type: "TASK",
       description: "",
       priority: "MEDIUM",
       link: "",
@@ -194,23 +194,17 @@ export function CreateTicketDialog({
                   <FormItem>
                     <FormLabel>Type</FormLabel>
                     <FormControl>
-                        <div className="relative">
-                            <Input 
-                                {...field} 
-                                list="ticket-types" 
-                                placeholder="Task, Bug, Call..." 
-                                className="w-full"
-                            />
-                            <datalist id="ticket-types">
-                                <option value="Task" />
-                                <option value="Bug" />
-                                <option value="Story" />
-                                <option value="Epic" />
-                                <option value="Call" />
-                                <option value="Followup" />
-                                <option value="Meeting" />
-                            </datalist>
-                        </div>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="TASK">Task</SelectItem>
+                          <SelectItem value="BUG">Bug</SelectItem>
+                          <SelectItem value="STORY">Story</SelectItem>
+                          <SelectItem value="EPIC">Epic</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
