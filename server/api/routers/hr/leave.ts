@@ -250,7 +250,7 @@ export const leaveRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
-      await ctx.db.update(wfhRequests)
+      const result = await ctx.db.update(wfhRequests)
         .set({
           status: input.status,
           rejectionReason: input.rejectionReason,
@@ -258,8 +258,13 @@ export const leaveRouter = createTRPCRouter({
         })
         .where(and(
           eq(wfhRequests.id, input.requestId),
-          eq(wfhRequests.orgId, ctx.session.orgId)
-        ));
+          eq(wfhRequests.orgId, ctx.session.orgId),
+          eq(wfhRequests.status, "PENDING")
+        ))
+        .returning({ id: wfhRequests.id });
+      if (result.length === 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "WFH request has already been processed" });
+      }
 
       return { success: true };
     }),

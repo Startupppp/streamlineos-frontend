@@ -395,13 +395,22 @@ export async function processLeaveRequest(data: {
 
   try {
     await db.transaction(async (tx) => {
-      await tx
+      const updated = await tx
         .update(leaveRequests)
         .set({
           status: data.status,
           rejectionReason: data.rejectionReason,
         })
-        .where(eq(leaveRequests.id, data.requestId));
+        .where(
+          and(
+            eq(leaveRequests.id, data.requestId),
+            eq(leaveRequests.status, "PENDING")
+          )
+        )
+        .returning({ id: leaveRequests.id });
+      if (updated.length === 0) {
+        throw new Error("Leave request has already been processed");
+      }
 
       if (data.status === "APPROVED" && request.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({

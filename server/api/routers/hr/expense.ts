@@ -87,7 +87,7 @@ export const expenseRouter = createTRPCRouter({
       if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can update expense status" });
       }
-      await ctx.db
+      const result = await ctx.db
         .update(expenses)
         .set({
           status: input.status,
@@ -97,8 +97,13 @@ export const expenseRouter = createTRPCRouter({
         .where(
           and(
             eq(expenses.id, input.expenseId),
-            eq(expenses.orgId, ctx.session.orgId)
+            eq(expenses.orgId, ctx.session.orgId),
+            eq(expenses.status, "PENDING")
           )
-        );
+        )
+        .returning({ id: expenses.id });
+      if (result.length === 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "Expense has already been processed" });
+      }
     }),
 });
