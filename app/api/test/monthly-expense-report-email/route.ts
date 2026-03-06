@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email";
 import { getMonthlyExpenseReportTemplate } from "@/lib/email-templates";
 import { generateMonthlyExpenseReportXlsx } from "@/lib/monthly-expense-report-xlsx";
 
-const TEST_EMAIL = "tarunchintakunta@gmail.com";
+const TEST_EMAIL = process.env.TEST_EMAIL || "test@example.com";
 
 const SAMPLE_ROWS = [
   { date: "Jan 15, 2025", employeeName: "Alice Smith", category: "Travel", amount: "2,500.00", currency: "INR", status: "PAID" },

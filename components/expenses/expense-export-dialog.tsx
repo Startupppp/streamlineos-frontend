@@ -383,7 +383,6 @@ export function ExpenseExportDialog({
         setExportComplete(false);
       }, 1500);
     } catch (error) {
-      console.error("Export error:", error);
       toast.error("Failed to export expenses");
     } finally {
       setIsExporting(false);

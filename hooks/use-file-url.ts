@@ -33,7 +33,6 @@ export async function getSignedFileUrl(fileUrl: string): Promise<string> {
     const data = await response.json();
     return data.url;
   } catch (error) {
-    console.error("Error getting signed URL:", error);
     throw error;
   }
 }

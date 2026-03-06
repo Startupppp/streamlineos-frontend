@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/email";
 import { getWeeklyAttendanceReportTemplate } from "@/lib/email-templates";
 
-const TEST_EMAIL = "tarunchintakunta@gmail.com";
+const TEST_EMAIL = process.env.TEST_EMAIL || "test@example.com";
 const SAMPLE_ROWS = [
   { name: "Alice Smith", totalHours: "42.5", autoCheckoutDays: 0, overtimeDays: 2, daysPresent: 5 },
   { name: "Bob Johnson", totalHours: "38.0", autoCheckoutDays: 1, overtimeDays: 0, daysPresent: 5 },

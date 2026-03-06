@@ -1,9 +1,14 @@
 import { sendHolidayAnnouncementEmail } from "@/lib/email";
 
-const TEST_EMAILS = [
-  "tarunchintakunta@gmail.com",
-  "chintakuntatarun@gmail.com"
-];
+const TEST_EMAILS = (process.env.TEST_EMAIL || process.argv[2] || "")
+  .split(",")
+  .map((e) => e.trim())
+  .filter(Boolean);
+
+if (TEST_EMAILS.length === 0) {
+  console.error("Set TEST_EMAIL env var (comma-separated) or pass emails as argument");
+  process.exit(1);
+}
 
 async function sendTestEmails() {
   try {

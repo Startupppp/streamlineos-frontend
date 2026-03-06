@@ -73,8 +73,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
     try {
       const stored = localStorage.getItem(HIDE_COMPLETED_KEY);
       if (stored !== null) setHideCompleted(stored === "true");
-    } catch (e) {
-      console.warn("Failed to read localStorage:", e);
+    } catch {
     }
   }, []);
 
@@ -82,8 +81,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
     setHideCompleted(value);
     try {
       localStorage.setItem(HIDE_COMPLETED_KEY, String(value));
-    } catch (e) {
-      console.warn("Failed to write localStorage:", e);
+    } catch {
     }
   };
 

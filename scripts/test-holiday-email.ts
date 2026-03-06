@@ -1,17 +1,24 @@
 import { sendHolidayAnnouncementEmail } from "@/lib/email";
 
+const testEmail = process.env.TEST_EMAIL || process.argv[2];
+
 async function sendTestEmail() {
+  if (!testEmail) {
+    console.error("Set TEST_EMAIL env var or pass email as argument");
+    process.exit(1);
+  }
+
   try {
-    console.log("📧 Sending test holiday email...");
-    
+    console.log(`Sending test holiday email to ${testEmail}...`);
+
     await sendHolidayAnnouncementEmail(
-      "tarunchintakunta@gmail.com",
+      testEmail,
       "Diwali",
       "Friday, November 8, 2026",
-      "Wishing you and your family a joyous and prosperous Diwali! May the festival of lights bring happiness, success, and prosperity to your life. Enjoy the celebrations! 🪔✨"
+      "Wishing you and your family a joyous and prosperous Diwali! May the festival of lights bring happiness, success, and prosperity to your life. Enjoy the celebrations!"
     );
-    
-    console.log("✅ Test email sent successfully to tarunchintakunta@gmail.com");
+
+    console.log(`Test email sent successfully to ${testEmail}`);
     console.log("\n📬 Check your inbox for:");
     console.log("   Subject: Holiday Tomorrow: Diwali - Vaivamm Capital");
     console.log("\n💡 If you don't see it, check your spam folder!");
