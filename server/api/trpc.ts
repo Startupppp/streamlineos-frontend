@@ -27,6 +27,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
   },
 });
 export const createTRPCRouter = t.router;
+export const mergeRouters = t.mergeRouters;
 
 export const publicProcedure = t.procedure;
 const enforceSession = t.middleware(async ({ ctx, next }) => {
