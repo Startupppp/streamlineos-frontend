@@ -1,6 +1,7 @@
 import { auth } from "../../../lib/auth";
 import { processChatWithGraph } from "../../../lib/ai/langchain-graph";
 import { z } from "zod";
+import { logger } from "../../../lib/logger";
 
 export const maxDuration = 30;
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const orgId = (session as { orgId?: string }).orgId;
+    const orgId = "orgId" in session && typeof session.orgId === "string" ? session.orgId : undefined;
     if (!orgId) {
       return new Response("No organization context", { status: 403 });
     }
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
     );
     return result.toTextStreamResponse();
   } catch (error) {
+    logger.error("Chat route error", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }

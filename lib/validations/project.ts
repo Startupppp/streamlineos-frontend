@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
-export const ticketTypeSchema = z.string().min(1, "Ticket type is required");
-export const ticketStatusSchema = z.string();
+export const ticketTypeSchema = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
+export const ticketStatusSchema = z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 export const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),
@@ -48,7 +48,7 @@ export const createTicketInputSchema = z.object({
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   originalEstimate: z.number().positive().optional(),
   parentTicketId: z.number().int().positive().optional(),
-  status: z.string().optional(),
+  status: ticketStatusSchema.optional(),
 });
 
 export const updateTicketInputSchema = z.object({

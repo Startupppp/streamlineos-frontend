@@ -15,6 +15,12 @@ import {
 import { checkPermission } from "../../../lib/rbac/middleware";
 import { TRPCError } from "@trpc/server";
 
+const VALID_ROLES = ["OWNER", "ADMIN", "MEMBER"] as const;
+type ValidRole = typeof VALID_ROLES[number];
+function isValidRole(role: unknown): role is ValidRole {
+  return typeof role === "string" && VALID_ROLES.includes(role as ValidRole);
+}
+
 export const rbacRouter = createTRPCRouter({
   getUserPermissions: protectedProcedure.query(async ({ ctx }) => {
     const { userId, orgId } = ctx.session;
@@ -34,10 +40,10 @@ export const rbacRouter = createTRPCRouter({
       },
     });
 
-    const rolePerms = role
+    const rolePerms = role && isValidRole(role)
       ? await ctx.db.query.rolePermissions.findMany({
           where: and(
-            eq(rolePermissions.role, role as "OWNER" | "ADMIN" | "MEMBER"),
+            eq(rolePermissions.role, role),
             eq(rolePermissions.orgId, orgId)
           ),
           with: {
@@ -51,16 +57,14 @@ export const rbacRouter = createTRPCRouter({
     const permissionSet = new Set<string>();
 
     userPerms.forEach((up) => {
-      const perm = up.permission as { name: string } | null | undefined;
-      if (perm?.name) {
-        permissionSet.add(perm.name);
+      if (up.permission?.name) {
+        permissionSet.add(up.permission.name);
       }
     });
 
     rolePerms.forEach((rp) => {
-      const perm = rp.permission as { name: string } | null | undefined;
-      if (perm?.name) {
-        permissionSet.add(perm.name);
+      if (rp.permission?.name) {
+        permissionSet.add(rp.permission.name);
       }
     });
 
@@ -108,11 +112,8 @@ export const rbacRouter = createTRPCRouter({
       });
 
       return perms
-        .map((rp) => {
-          const perm = rp.permission as { name: string } | null | undefined;
-          return perm?.name;
-        })
-        .filter(Boolean) as string[];
+        .map((rp) => rp.permission?.name)
+        .filter((name): name is string => !!name);
     }),
 
   assignRolePermission: protectedProcedure

@@ -4,6 +4,7 @@ import {
   suggestTaskAssignments,
   analyzeWorkload,
 } from "../../../../lib/ai/automation";
+import { logger } from "../../../../lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const orgId = (session as { orgId?: string }).orgId || session.user.id;
+    const orgId = "orgId" in session && typeof session.orgId === "string" ? session.orgId : session.user.id;
 
     const searchParams = req.nextUrl.searchParams;
     const type = searchParams.get("type");
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
+    logger.error("AI suggestions error", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

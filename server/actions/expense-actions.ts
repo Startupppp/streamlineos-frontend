@@ -5,6 +5,7 @@ import { expenses, expenseCategories, organizationMembers } from "@/lib/db/schem
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 interface CreateExpenseInput {
   category: string;
@@ -100,7 +101,8 @@ export async function createExpense(data: CreateExpenseInput) {
 
     revalidatePath("/hr/expenses");
     return { success: true, expense };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to create expense", error);
     return { error: "Failed to create expense" };
   }
 }
@@ -132,7 +134,11 @@ export async function getExpenses(filters?: {
   }
 
   if (filters?.status && filters.status !== "all") {
-    conditions.push(eq(expenses.status, filters.status as "PENDING" | "APPROVED" | "REJECTED" | "PAID"));
+    const validStatuses = ["PENDING", "APPROVED", "REJECTED", "PAID"] as const;
+    const status = validStatuses.find(s => s === filters.status);
+    if (status) {
+      conditions.push(eq(expenses.status, status));
+    }
   }
 
   if (filters?.startDate) {
@@ -239,7 +245,8 @@ export async function approveExpense(expenseId: number) {
 
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to approve expense", error);
     return { error: "Failed to approve expense" };
   }
 }
@@ -272,7 +279,8 @@ export async function rejectExpense(expenseId: number, reason: string) {
 
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to reject expense", error);
     return { error: "Failed to reject expense" };
   }
 }
@@ -305,7 +313,8 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
 
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to mark expense as paid", error);
     return { error: "Failed to mark expense as paid" };
   }
 }
@@ -341,7 +350,8 @@ export async function deleteExpense(expenseId: number) {
     await db.delete(expenses).where(eq(expenses.id, expenseId));
     revalidatePath("/hr/expenses");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to delete expense", error);
     return { error: "Failed to delete expense" };
   }
 }
@@ -392,7 +402,8 @@ export async function createExpenseCategory(data: {
 
     revalidatePath("/hr/expenses");
     return { success: true, category };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to create category", error);
     return { error: "Failed to create category" };
   }
 }

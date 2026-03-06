@@ -20,7 +20,7 @@ export const expenseRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string().optional(),
-        status: z.string().optional(),
+        status: z.enum(["PENDING", "APPROVED", "REJECTED", "PAID"]).optional(),
         page: z.number().min(1).optional(),
         limit: z.number().min(1).max(100).optional(),
         startDate: z.string().optional(),
@@ -37,7 +37,7 @@ export const expenseRouter = createTRPCRouter({
         conditions.push(eq(expenses.userId, input.userId));
       }
       if (input.status) {
-        conditions.push(eq(expenses.status, input.status as "PENDING" | "APPROVED" | "REJECTED" | "PAID"));
+        conditions.push(eq(expenses.status, input.status));
       }
       if (input.startDate) {
         conditions.push(gte(expenses.expenseDate, input.startDate));
