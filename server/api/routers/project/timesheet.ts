@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   projects,
   tickets,
@@ -32,7 +33,7 @@ export const timesheetRouter = createTRPCRouter({
 
       if (!ticket || !ticket.project) throw new TRPCError({ code: "NOT_FOUND", message: "Ticket not found" });
 
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       const isManager = ticket.project.managerId === ctx.session.userId;
 
       if (!isOwnerOrAdmin && !isManager) {
@@ -91,7 +92,7 @@ export const timesheetRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       const page = input.page || DEFAULT_PAGE;
       const limit = input.limit || 50;
       const offset = getOffset(page, limit);
@@ -176,7 +177,7 @@ export const timesheetRouter = createTRPCRouter({
           message: "Cannot edit timesheet entry that has been reviewed"
         });
       }
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       if (!isOwnerOrAdmin && entry.userId !== ctx.session.userId) {
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -245,7 +246,7 @@ export const timesheetRouter = createTRPCRouter({
           message: "Cannot delete timesheet entry that has been reviewed"
         });
       }
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       if (!isOwnerOrAdmin && entry.userId !== ctx.session.userId) {
         throw new TRPCError({
           code: "FORBIDDEN",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import { performanceReviews, goals, organizationMembers } from "../../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
@@ -14,7 +15,7 @@ export const performanceRouter = createTRPCRouter({
   getPerformanceReviews: protectedProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       const conditions = [eq(performanceReviews.orgId, ctx.session.orgId)];
       if (input.userId) {
         if (input.userId !== ctx.session.userId && !isAdmin) {
@@ -70,7 +71,7 @@ export const performanceRouter = createTRPCRouter({
   getGoals: protectedProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       const conditions = [eq(goals.orgId, ctx.session.orgId)];
       if (input.userId) {
         if (input.userId !== ctx.session.userId && !isAdmin) {

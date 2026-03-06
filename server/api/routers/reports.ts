@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { isAdminOrOwner } from "../../../lib/auth-helpers";
 import { db } from "../../../lib/db";
 import {
   attendance,
@@ -24,7 +25,7 @@ export const reportsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       if (input.userId && input.userId !== ctx.session.userId && !isAdmin) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
@@ -67,7 +68,7 @@ export const reportsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       if (input.userId && input.userId !== ctx.session.userId && !isAdmin) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }

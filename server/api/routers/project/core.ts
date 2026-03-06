@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { logger } from "../../../../lib/logger";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   projects,
   tickets,
@@ -28,7 +29,7 @@ import { sendProjectAssignmentEmail } from "../../../../lib/email";
 
 export const coreRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
-    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+    const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
     if (isOwnerOrAdmin) {
       return await ctx.db.query.projects.findMany({
         where: eq(projects.orgId, ctx.session.orgId),
@@ -71,7 +72,7 @@ export const coreRouter = createTRPCRouter({
       const conditions = [eq(projects.orgId, ctx.session.orgId)];
 
       // Role-based access (same as getProjects)
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       if (!isOwnerOrAdmin) {
         const memberOf = await ctx.db
           .select({ projectId: projectMembers.projectId })
@@ -218,7 +219,7 @@ export const coreRouter = createTRPCRouter({
   getProjectDetails: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       const projectCheck = await ctx.db.query.projects.findFirst({
         where: and(
           eq(projects.id, input.id),
@@ -375,7 +376,7 @@ export const coreRouter = createTRPCRouter({
   updateProjectSettings: protectedProcedure
     .input(updateProjectSettingsInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       if (!isOwnerOrAdmin) {
         const project = await ctx.db.query.projects.findFirst({
           where: and(

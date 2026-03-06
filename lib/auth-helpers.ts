@@ -6,6 +6,10 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import type { AuthResult } from "@/lib/auth-types";
 
+export function isAdminOrOwner(role: string | undefined | null): boolean {
+  return role === "OWNER" || role === "ADMIN";
+}
+
 export async function getAuthenticatedMember(): Promise<AuthResult> {
   const session = await auth();
   if (!session?.user?.id) {

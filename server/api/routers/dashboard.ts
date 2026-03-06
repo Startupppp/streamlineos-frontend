@@ -4,6 +4,7 @@ import { eq, and, sql, desc, or, inArray, count } from "drizzle-orm";
 import { getTodayString } from "../../../lib/date-utils";
 
 import { TRPCError } from "@trpc/server";
+import { isAdminOrOwner } from "../../../lib/auth-helpers";
 
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {
@@ -70,7 +71,7 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   getRecentProjects: protectedProcedure.query(async ({ ctx }) => {
-    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+    const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
 
     let recentProjects;
 
@@ -161,7 +162,7 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   getActiveSprintSummary: protectedProcedure.query(async ({ ctx }) => {
-    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+    const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
 
     let projectIds: number[];
     if (isOwnerOrAdmin) {
@@ -228,7 +229,7 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   getRecentActivity: protectedProcedure.query(async ({ ctx }) => {
-    const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+    const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
 
     let projectIds: number[];
     if (isOwnerOrAdmin) {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   documents,
   assets,
@@ -24,7 +25,7 @@ export const documentRouter = createTRPCRouter({
       z.object({ userId: z.string().optional(), type: z.enum(documentTypeEnum.enumValues).optional() })
     )
     .query(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       const conditions = [
         eq(documents.orgId, ctx.session.orgId),
         eq(documents.isActive, true),
@@ -49,7 +50,7 @@ export const documentRouter = createTRPCRouter({
   createDocument: protectedProcedure
     .input(createDocumentInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       const targetUserId = (input.userId && isAdmin) ? input.userId : ctx.session.userId;
 
       if (targetUserId !== ctx.session.userId) {

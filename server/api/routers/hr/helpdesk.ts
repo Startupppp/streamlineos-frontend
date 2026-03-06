@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { helpdeskTickets, ticketStatusEnum } from "../../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 
 export const helpdeskRouter = createTRPCRouter({
   getHelpdeskTickets: protectedProcedure
@@ -10,7 +11,7 @@ export const helpdeskRouter = createTRPCRouter({
       z.object({ userId: z.string().optional(), status: z.enum(ticketStatusEnum.enumValues).optional() })
     )
     .query(async ({ ctx, input }) => {
-      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
       const conditions = [eq(helpdeskTickets.orgId, ctx.session.orgId)];
       if (input.userId) {
         if (input.userId !== ctx.session.userId && !isAdmin) {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { logger } from "../../../../lib/logger";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   departments,
   users,
@@ -65,7 +66,7 @@ export const employeeRouter = createTRPCRouter({
         });
       }
       const isSelf = ctx.session.userId === input.userId;
-      const isOwnerOrAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      const isOwnerOrAdmin = isAdminOrOwner(ctx.session.user.role);
       if (!isSelf && !isOwnerOrAdmin) {
         throw new TRPCError({
           code: "FORBIDDEN",
