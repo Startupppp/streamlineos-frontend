@@ -5,6 +5,7 @@ import { documents, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc, or, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
 
@@ -59,7 +60,8 @@ export async function uploadDocument(data: CreateDocumentInput) {
 
     revalidatePath("/hr/documents");
     return { success: true, document };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to upload document", error);
     return { error: "Failed to upload document" };
   }
 }
@@ -264,7 +266,8 @@ export async function updateDocument(documentId: number, data: Partial<CreateDoc
 
     revalidatePath("/hr/documents");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to update document", error);
     return { error: "Failed to update document" };
   }
 }
@@ -320,7 +323,8 @@ export async function uploadNewVersion(documentId: number, data: {
 
     revalidatePath("/hr/documents");
     return { success: true, document: newDoc };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to upload new version", error);
     return { error: "Failed to upload new version" };
   }
 }
@@ -358,7 +362,8 @@ export async function deleteDocument(documentId: number) {
 
     revalidatePath("/hr/documents");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to delete document", error);
     return { error: "Failed to delete document" };
   }
 }

@@ -11,6 +11,7 @@ import {
 import { eq, and, desc, sql, gte, lte, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 import {
   DEFAULT_LEAVE_TYPES,
@@ -366,7 +367,8 @@ export async function submitLeaveRequest(data: {
 
     revalidatePath("/hr/leaves");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to submit leave request", error);
     return { error: "Failed to submit request" };
   }
 }
@@ -468,7 +470,8 @@ export async function processLeaveRequest(data: {
 
     revalidatePath("/hr/leaves");
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to process leave request", error);
     return { error: "Failed to process request" };
   }
 }

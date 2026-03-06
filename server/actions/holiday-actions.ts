@@ -189,7 +189,8 @@ export async function bulkAddHolidays(holidayList: Array<{
 
     revalidatePath("/settings");
     return { success: true, count: holidayList.length };
-  } catch {
+  } catch (error) {
+    logger.error("Failed to import holidays", error);
     return { error: "Failed to import holidays" };
   }
 }

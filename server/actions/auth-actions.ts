@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 export async function resetPassword(password: string) {
   const session = await auth();
@@ -29,7 +30,8 @@ export async function resetPassword(password: string) {
         .where(eq(users.id, session.user.id));
         
      return { success: true };
-  } catch {
+  } catch (error) {
+      logger.error("Failed to reset password", error);
       return { error: "Failed to reset password" };
   }
 }
@@ -88,7 +90,8 @@ export async function createEmployee(data: {
         revalidatePath("/hr");
         return { success: true };
 
-    } catch (err) {
+    } catch (error) {
+        logger.error("Failed to create employee", error);
         return { error: "Failed to create employee" };
     }
 }
