@@ -12,7 +12,9 @@
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
-    "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts"
+    "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.44",
@@ -76,6 +78,8 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
@@ -85,8 +89,10 @@
     "drizzle-kit": "^0.31.8",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
+    "jsdom": "^28.1.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }
