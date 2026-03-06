@@ -25,7 +25,7 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User menu">
           <Avatar className="h-10 w-10">
             <AvatarImage src={resolveImageUrl(session.user.image)} alt={session.user.name || ""} />
             <AvatarFallback>{session.user.name?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
