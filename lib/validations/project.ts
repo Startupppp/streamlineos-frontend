@@ -18,9 +18,9 @@ export const updateProjectSettingsInputSchema = z.object({
 });
 
 export const createProjectInputSchema = z.object({
-  key: z.string().min(2).optional(),
-  name: z.string().min(1, "Project name is required"),
-  description: z.string().optional(),
+  key: z.string().min(2).max(10).optional(),
+  name: z.string().min(1, "Project name is required").max(200),
+  description: z.string().max(2000).optional(),
   managerId: z.string().optional(),
   clientId: z.string().optional(),
   startDate: z.date().optional(),

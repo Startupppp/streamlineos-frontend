@@ -66,6 +66,9 @@ export default async function middleware(req: NextRequest) {
   const RATE_LIMITED_PREFIXES = [
     "/api/auth/",
     "/api/trpc/auth.",
+    "/api/trpc/organization.inviteUser",
+    "/api/trpc/organization.createOrganization",
+    "/api/trpc/hr.employee.onboardEmployee",
     "/api/storage/upload",
     "/api/ai/",
     "/api/chat",
