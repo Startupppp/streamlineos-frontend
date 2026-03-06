@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { expenses, expenseCategories, users } from "@/lib/db/schema";
+import { expenses, expenseCategories, users, expenseStatusEnum } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or, asc, count } from "drizzle-orm";
 import { getAuthenticatedMember } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
@@ -146,12 +146,13 @@ function buildFilterConditions(
     conditions.push(inArray(expenses.categoryId, filters.categoryIds));
   }
   if (filters.status) {
+    type ExpenseStatus = (typeof expenseStatusEnum.enumValues)[number];
     if (Array.isArray(filters.status)) {
       if (filters.status.length > 0 && !filters.status.includes("all")) {
-        conditions.push(inArray(expenses.status, filters.status as any));
+        conditions.push(inArray(expenses.status, filters.status as ExpenseStatus[]));
       }
     } else if (filters.status !== "all") {
-      conditions.push(eq(expenses.status, filters.status as any));
+      conditions.push(eq(expenses.status, filters.status as ExpenseStatus));
     }
   }
   if (filters.minAmount !== undefined && filters.minAmount > 0) {
@@ -548,8 +549,8 @@ export async function getExpenseReportDataOptimized(
       amount: Number(c.amount),
       percentage: (Number(c.amount) / totalAmount) * 100,
     })),
-    byEmployee: (byEmployee as any[]).map((e) => ({
-      userId: e.userId,
+    byEmployee: (byEmployee as { userId: string | null; firstName: string | null; lastName: string | null; count: number; amount: number }[]).map((e) => ({
+      userId: e.userId || "",
       userName: `${e.firstName || ""} ${e.lastName || ""}`.trim() || "Unknown",
       count: Number(e.count),
       amount: Number(e.amount),

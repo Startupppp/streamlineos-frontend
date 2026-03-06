@@ -67,10 +67,7 @@ export const authRouter = createTRPCRouter({
       });
 
       if (existingUser) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "User with this email already exists",
-        });
+        return { success: true, message: "If this email is available, a verification link has been sent." };
       }
 
       const hashedPassword = await bcrypt.hash(input.password, 10);
@@ -85,25 +82,27 @@ export const authRouter = createTRPCRouter({
           ? `${input.firstName} ${input.lastName}`
           : input.firstName || input.lastName || null;
 
-      await ctx.db.insert(users).values({
-        id: userId,
-        email: input.email,
-        password: hashedPassword,
-        name: fullName,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        emailVerified: null,
-      });
+      await ctx.db.transaction(async (tx) => {
+        await tx.insert(users).values({
+          id: userId,
+          email: input.email,
+          password: hashedPassword,
+          name: fullName,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          emailVerified: null,
+        });
 
-      await ctx.db.insert(verificationTokens).values({
-        identifier: input.email,
-        token: verificationToken,
-        expires,
+        await tx.insert(verificationTokens).values({
+          identifier: input.email,
+          token: verificationToken,
+          expires,
+        });
       });
 
       await sendVerificationEmail(input.email, verificationToken);
 
-      return { success: true, userId };
+      return { success: true, message: "If this email is available, a verification link has been sent." };
     }),
 
   verifyEmail: publicProcedure
@@ -191,7 +190,7 @@ export const authRouter = createTRPCRouter({
 
       await ctx.db
         .delete(passwordResetTokens)
-        .where(eq(passwordResetTokens.token, input.token));
+        .where(eq(passwordResetTokens.email, tokenRecord.email));
 
       return { success: true };
     }),
@@ -233,27 +232,29 @@ export const authRouter = createTRPCRouter({
           ? `${input.firstName} ${input.lastName}`
           : input.firstName || input.lastName || null;
 
-      await ctx.db.insert(users).values({
-        id: userId,
-        email: invitation.email,
-        password: hashedPassword,
-        name: fullName,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        emailVerified: new Date(),
-        role: invitation.role,
-      });
+      await ctx.db.transaction(async (tx) => {
+        await tx.insert(users).values({
+          id: userId,
+          email: invitation.email,
+          password: hashedPassword,
+          name: fullName,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          emailVerified: new Date(),
+          role: invitation.role,
+        });
 
-      await ctx.db.insert(organizationMembers).values({
-        userId,
-        orgId: invitation.orgId,
-        role: invitation.role,
-      });
+        await tx.insert(organizationMembers).values({
+          userId,
+          orgId: invitation.orgId,
+          role: invitation.role,
+        });
 
-      await ctx.db
-        .update(invitations)
-        .set({ acceptedAt: new Date() })
-        .where(eq(invitations.id, invitation.id));
+        await tx
+          .update(invitations)
+          .set({ acceptedAt: new Date() })
+          .where(eq(invitations.id, invitation.id));
+      });
 
       return { success: true, userId };
     }),
@@ -265,18 +266,8 @@ export const authRouter = createTRPCRouter({
         where: eq(users.email, input.email),
       });
 
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-
-      if (user.emailVerified) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Email already verified",
-        });
+      if (!user || user.emailVerified) {
+        return { success: true };
       }
 
       const verificationToken = nanoid(32);

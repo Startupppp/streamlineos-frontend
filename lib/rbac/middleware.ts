@@ -1,11 +1,14 @@
 import { TRPCError } from "@trpc/server";
-import { permissions, rolePermissions, userPermissions } from "../db/schema";
+import { rolePermissions, userPermissions } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbClient = { query: any };
 
 export function requirePermission(permissionName: string) {
   return async (opts: {
-    ctx: { db: any; session: { userId: string; orgId: string; role?: string } };
-    next: () => Promise<any>;
+    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string } };
+    next: () => Promise<unknown>;
   }) => {
     const { ctx, next } = opts;
     const { userId, orgId, role } = ctx.session;
@@ -30,7 +33,7 @@ export function requirePermission(permissionName: string) {
 }
 
 export async function checkPermission(
-  db: any,
+  db: DbClient,
   userId: string,
   orgId: string,
   role?: string,
@@ -62,9 +65,10 @@ export async function checkPermission(
   }
 
   if (role) {
+    const validRole = role as "OWNER" | "ADMIN" | "MEMBER";
     const rolePerm = await db.query.rolePermissions.findFirst({
       where: and(
-        eq(rolePermissions.role, role as any),
+        eq(rolePermissions.role, validRole),
         or(eq(rolePermissions.orgId, orgId), isNull(rolePermissions.orgId))
       ),
       with: {
@@ -86,8 +90,8 @@ export async function checkPermission(
 
 export function hasAnyPermission(permissionNames: string[]) {
   return async (opts: {
-    ctx: { db: any; session: { userId: string; orgId: string; role?: string } };
-    next: () => Promise<any>;
+    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string } };
+    next: () => Promise<unknown>;
   }) => {
     const { ctx, next } = opts;
     const { userId, orgId, role } = ctx.session;

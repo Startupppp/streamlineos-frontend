@@ -12,6 +12,7 @@ import {
 import { eq, and, sql, gte, lte, desc } from "drizzle-orm";
 import { format } from "date-fns";
 import { formatDateOnly, getTodayString } from "../../../lib/date-utils";
+import { TRPCError } from "@trpc/server";
 
 export const reportsRouter = createTRPCRouter({
   getAttendanceReport: protectedProcedure
@@ -23,10 +24,15 @@ export const reportsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (input.userId && input.userId !== ctx.session.userId && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+      const targetUserId = input.userId || (isAdmin ? undefined : ctx.session.userId);
       const records = await ctx.db.query.attendance.findMany({
         where: and(
           eq(attendance.orgId, ctx.session.orgId),
-          ...(input.userId ? [eq(attendance.userId, input.userId)] : []),
+          ...(targetUserId ? [eq(attendance.userId, targetUserId)] : []),
           gte(attendance.date, formatDateOnly(input.startDate)),
           lte(attendance.date, formatDateOnly(input.endDate))
         ),
@@ -61,10 +67,15 @@ export const reportsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (input.userId && input.userId !== ctx.session.userId && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+      const targetUserId = input.userId || (isAdmin ? undefined : ctx.session.userId);
       const payrollsList = await ctx.db.query.payrolls.findMany({
         where: and(
           eq(payrolls.orgId, ctx.session.orgId),
-          ...(input.userId ? [eq(payrolls.userId, input.userId)] : []),
+          ...(targetUserId ? [eq(payrolls.userId, targetUserId)] : []),
           sql`${payrolls.month} >= ${input.startMonth}`,
           sql`${payrolls.month} <= ${input.endMonth}`
         ),

@@ -6,7 +6,7 @@ import {
   organizationMembers,
   users,
 } from "../../../../lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
@@ -37,44 +37,42 @@ export const payrollRouter = createTRPCRouter({
         where: eq(organizationMembers.orgId, ctx.session.orgId),
       });
 
-      for (const mem of memberships) {
-        const uId = mem.userId;
-        if (!uId) continue;
+      const memberUserIds = memberships.map((m) => m.userId).filter(Boolean) as string[];
+      if (memberUserIds.length === 0) return;
 
-        const salaryStructure = await ctx.db.query.salaryStructures.findFirst({
+      const [allSalaryStructures, existingPayrolls] = await Promise.all([
+        ctx.db.query.salaryStructures.findMany({
           where: and(
-            eq(salaryStructures.userId, uId),
+            inArray(salaryStructures.userId, memberUserIds),
             eq(salaryStructures.orgId, ctx.session.orgId),
             eq(salaryStructures.isActive, true)
           ),
-        });
-
-        const basic = salaryStructure
-          ? parseFloat(salaryStructure.basicSalary)
-          : 50000;
-        const hraPercentage = salaryStructure
-          ? parseFloat(salaryStructure.hraPercentage || "40")
-          : 40;
-        const hra = basic * (hraPercentage / 100);
-        const allowances = salaryStructure
-          ? parseFloat(salaryStructure.allowances || "0")
-          : 5000;
-        const deductions = salaryStructure
-          ? parseFloat(salaryStructure.deductions || "0")
-          : 2000;
-        const gross = basic + hra + allowances;
-        const net = gross - deductions;
-
-        const existing = await ctx.db.query.payrolls.findFirst({
+        }),
+        ctx.db.query.payrolls.findMany({
           where: and(
-            eq(payrolls.userId, uId),
+            inArray(payrolls.userId, memberUserIds),
             eq(payrolls.month, input.month),
             eq(payrolls.orgId, ctx.session.orgId)
           ),
-        });
+        }),
+      ]);
 
-        if (!existing) {
-          await ctx.db.insert(payrolls).values({
+      const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
+      const existingPayrollUserIds = new Set(existingPayrolls.map((p) => p.userId));
+
+      const newPayrolls = memberUserIds
+        .filter((uId) => !existingPayrollUserIds.has(uId))
+        .map((uId) => {
+          const salaryStructure = salaryMap.get(uId);
+          const basic = salaryStructure ? parseFloat(salaryStructure.basicSalary) : 50000;
+          const hraPercentage = salaryStructure ? parseFloat(salaryStructure.hraPercentage || "40") : 40;
+          const hra = basic * (hraPercentage / 100);
+          const allowances = salaryStructure ? parseFloat(salaryStructure.allowances || "0") : 5000;
+          const deductions = salaryStructure ? parseFloat(salaryStructure.deductions || "0") : 2000;
+          const gross = basic + hra + allowances;
+          const net = gross - deductions;
+
+          return {
             orgId: ctx.session.orgId,
             userId: uId,
             month: input.month,
@@ -84,19 +82,28 @@ export const payrollRouter = createTRPCRouter({
             deductions: deductions.toString(),
             grossSalary: gross.toString(),
             netSalary: net.toString(),
-            status: "DRAFT",
+            status: "DRAFT" as const,
             generatedBy: ctx.session.userId,
-          });
-        }
+          };
+        });
+
+      if (newPayrolls.length > 0) {
+        await ctx.db.insert(payrolls).values(newPayrolls);
       }
     }),
 
   getSalaryStructures: protectedProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (input.userId && input.userId !== ctx.session.userId && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
       const conditions = [eq(salaryStructures.orgId, ctx.session.orgId)];
       if (input.userId) {
         conditions.push(eq(salaryStructures.userId, input.userId));
+      } else if (!isAdmin) {
+        conditions.push(eq(salaryStructures.userId, ctx.session.userId));
       }
       return await ctx.db.query.salaryStructures.findMany({
         where: and(...conditions),

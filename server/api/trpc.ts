@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { auth } from "../../lib/auth";
 import { db } from "../../lib/db";
 import { organizationMembers } from "../../lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth();
   return {
@@ -51,6 +51,7 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   }
   const userMemberships = await ctx.db.query.organizationMembers.findMany({
     where: eq(organizationMembers.userId, ctx.session.user.id),
+    orderBy: [asc(organizationMembers.joinedAt)],
     limit: 1,
   });
 

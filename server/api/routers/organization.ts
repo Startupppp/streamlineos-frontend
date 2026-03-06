@@ -90,9 +90,11 @@ export const organizationRouter = createTRPCRouter({
         };
       });
     } catch (error) {
-      console.error("organization.getOrganizations failed", error);
-      // Fail safe: return empty list instead of propagating DB error to the client
-      return [];
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch organizations",
+        cause: error,
+      });
     }
   }),
 
@@ -113,15 +115,17 @@ export const organizationRouter = createTRPCRouter({
         });
       }
       const orgId = nanoid();
-      await ctx.db.insert(organizations).values({
-        id: orgId,
-        name: input.name,
-        slug: input.slug,
-      });
-      await ctx.db.insert(organizationMembers).values({
-        userId: ctx.session.user.id,
-        orgId,
-        role: "OWNER",
+      await ctx.db.transaction(async (tx) => {
+        await tx.insert(organizations).values({
+          id: orgId,
+          name: input.name,
+          slug: input.slug,
+        });
+        await tx.insert(organizationMembers).values({
+          userId: ctx.session.user.id,
+          orgId,
+          role: "OWNER",
+        });
       });
 
       return { id: orgId, name: input.name, slug: input.slug };

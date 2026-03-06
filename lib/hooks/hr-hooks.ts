@@ -104,7 +104,7 @@ export const useHrAssets = (
 
 export const useHrDocuments = (
   userId?: string,
-  type?: string,
+  type?: "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER",
   options?: Omit<
     UseQueryOptions<HrRouterOutputs["getDocuments"], Error>,
     "queryKey" | "queryFn"
@@ -147,7 +147,7 @@ export const useHrGoals = (
 
 export const useHrHelpdeskTickets = (
   userId?: string,
-  status?: string,
+  status?: "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE",
   options?: Omit<
     UseQueryOptions<HrRouterOutputs["getHelpdeskTickets"], Error>,
     "queryKey" | "queryFn"

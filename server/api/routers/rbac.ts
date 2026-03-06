@@ -13,6 +13,7 @@ import {
   ROLE_DEFAULT_PERMISSIONS,
 } from "../../../lib/rbac/permissions";
 import { checkPermission } from "../../../lib/rbac/middleware";
+import { TRPCError } from "@trpc/server";
 
 export const rbacRouter = createTRPCRouter({
   getUserPermissions: protectedProcedure.query(async ({ ctx }) => {
@@ -36,7 +37,7 @@ export const rbacRouter = createTRPCRouter({
     const rolePerms = role
       ? await ctx.db.query.rolePermissions.findMany({
           where: and(
-            eq(rolePermissions.role, role as any),
+            eq(rolePermissions.role, role as "OWNER" | "ADMIN" | "MEMBER"),
             eq(rolePermissions.orgId, orgId)
           ),
           with: {
@@ -135,7 +136,7 @@ export const rbacRouter = createTRPCRouter({
       );
 
       if (!hasAccess) {
-        throw new Error("Permission denied");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Permission denied" });
       }
 
       await ctx.db.insert(rolePermissions).values({
@@ -167,7 +168,7 @@ export const rbacRouter = createTRPCRouter({
       );
 
       if (!hasAccess) {
-        throw new Error("Permission denied");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Permission denied" });
       }
 
       const targetMember = await ctx.db.query.organizationMembers.findFirst({
@@ -178,7 +179,7 @@ export const rbacRouter = createTRPCRouter({
       });
 
       if (!targetMember) {
-        throw new Error("Target user is not a member of this organization");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Target user is not a member of this organization" });
       }
 
       await ctx.db

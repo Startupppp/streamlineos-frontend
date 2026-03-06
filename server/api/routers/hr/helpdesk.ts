@@ -1,20 +1,27 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { helpdeskTickets } from "../../../../lib/db/schema";
+import { helpdeskTickets, ticketStatusEnum } from "../../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const helpdeskRouter = createTRPCRouter({
   getHelpdeskTickets: protectedProcedure
     .input(
-      z.object({ userId: z.string().optional(), status: z.string().optional() })
+      z.object({ userId: z.string().optional(), status: z.enum(ticketStatusEnum.enumValues).optional() })
     )
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       const conditions = [eq(helpdeskTickets.orgId, ctx.session.orgId)];
       if (input.userId) {
+        if (input.userId !== ctx.session.userId && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view other users' tickets" });
+        }
         conditions.push(eq(helpdeskTickets.userId, input.userId));
+      } else if (!isAdmin) {
+        conditions.push(eq(helpdeskTickets.userId, ctx.session.userId));
       }
       if (input.status) {
-        conditions.push(eq(helpdeskTickets.status, input.status as any));
+        conditions.push(eq(helpdeskTickets.status, input.status));
       }
       return await ctx.db.query.helpdeskTickets.findMany({
         where: and(...conditions),
