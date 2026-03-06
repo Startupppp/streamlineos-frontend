@@ -104,6 +104,11 @@ export const leaveRouter = createTRPCRouter({
   getEmployeeStats: protectedProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
+        const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+        if (input.userId !== ctx.session.userId && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view other employees' stats" });
+        }
+
         const rawBalances = await ctx.db
             .select({
                 id: leaveTypes.id,

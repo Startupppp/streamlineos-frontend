@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { performanceReviews, goals } from "../../../../lib/db/schema";
+import { performanceReviews, goals, organizationMembers } from "../../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
 import { TRPCError } from "@trpc/server";
@@ -14,9 +14,15 @@ export const performanceRouter = createTRPCRouter({
   getPerformanceReviews: protectedProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       const conditions = [eq(performanceReviews.orgId, ctx.session.orgId)];
       if (input.userId) {
+        if (input.userId !== ctx.session.userId && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+        }
         conditions.push(eq(performanceReviews.userId, input.userId));
+      } else if (!isAdmin) {
+        conditions.push(eq(performanceReviews.userId, ctx.session.userId));
       }
       return await ctx.db.query.performanceReviews.findMany({
         where: and(...conditions),
@@ -30,6 +36,17 @@ export const performanceRouter = createTRPCRouter({
       if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can create performance reviews" });
       }
+
+      const targetMember = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, input.userId),
+          eq(organizationMembers.orgId, ctx.session.orgId)
+        ),
+      });
+      if (!targetMember) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Target user not found in your organization" });
+      }
+
       const [review] = await ctx.db
         .insert(performanceReviews)
         .values({
@@ -53,9 +70,15 @@ export const performanceRouter = createTRPCRouter({
   getGoals: protectedProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       const conditions = [eq(goals.orgId, ctx.session.orgId)];
       if (input.userId) {
+        if (input.userId !== ctx.session.userId && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+        }
         conditions.push(eq(goals.userId, input.userId));
+      } else if (!isAdmin) {
+        conditions.push(eq(goals.userId, ctx.session.userId));
       }
       return await ctx.db.query.goals.findMany({
         where: and(...conditions),

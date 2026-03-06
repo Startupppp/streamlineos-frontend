@@ -2,6 +2,7 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { timesheets } from "../../../../lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
+import { TRPCError } from "@trpc/server";
 import {
   upsertWorkLogInputSchema,
   getWorkLogsInputSchema,
@@ -12,6 +13,10 @@ export const workLogRouter = createTRPCRouter({
     .input(getWorkLogsInputSchema)
     .query(async ({ ctx, input }) => {
       const { year, quarter, userId } = input;
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
+      if (userId && userId !== ctx.session.userId && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view other users' work logs" });
+      }
       const targetUserId = userId || ctx.session.userId;
 
       const startMonth = (quarter - 1) * 3;

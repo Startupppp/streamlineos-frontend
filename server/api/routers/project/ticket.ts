@@ -104,7 +104,8 @@ export const ticketRouter = createTRPCRouter({
               creator.name || creator.firstName || 'Team Member'
             );
           }
-        } catch {
+        } catch (emailError) {
+          logger.error("Failed to send ticket assignment email", { error: emailError });
         }
       }
 

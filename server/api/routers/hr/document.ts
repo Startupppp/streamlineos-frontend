@@ -4,6 +4,8 @@ import {
   documents,
   assets,
   employeeDevices,
+  documentTypeEnum,
+  organizationMembers,
 } from "../../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
@@ -19,18 +21,24 @@ import {
 export const documentRouter = createTRPCRouter({
   getDocuments: protectedProcedure
     .input(
-      z.object({ userId: z.string().optional(), type: z.string().optional() })
+      z.object({ userId: z.string().optional(), type: z.enum(documentTypeEnum.enumValues).optional() })
     )
     .query(async ({ ctx, input }) => {
+      const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       const conditions = [
         eq(documents.orgId, ctx.session.orgId),
         eq(documents.isActive, true),
       ];
       if (input.userId) {
+        if (input.userId !== ctx.session.userId && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view other users' documents" });
+        }
         conditions.push(eq(documents.userId, input.userId));
+      } else if (!isAdmin) {
+        conditions.push(eq(documents.userId, ctx.session.userId));
       }
       if (input.type) {
-        conditions.push(eq(documents.type, input.type as any));
+        conditions.push(eq(documents.type, input.type));
       }
       return await ctx.db.query.documents.findMany({
         where: and(...conditions),
@@ -43,6 +51,18 @@ export const documentRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const isAdmin = ctx.session.user.role === "OWNER" || ctx.session.user.role === "ADMIN";
       const targetUserId = (input.userId && isAdmin) ? input.userId : ctx.session.userId;
+
+      if (targetUserId !== ctx.session.userId) {
+        const targetMember = await ctx.db.query.organizationMembers.findFirst({
+          where: and(
+            eq(organizationMembers.userId, targetUserId),
+            eq(organizationMembers.orgId, ctx.session.orgId)
+          ),
+        });
+        if (!targetMember) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Target user not found in your organization" });
+        }
+      }
 
       const [document] = await ctx.db
         .insert(documents)
