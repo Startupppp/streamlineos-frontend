@@ -5,6 +5,7 @@ import { eq, and, gt, desc, inArray, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { sendInvitationEmail } from "../../../lib/email";
+import { createAuditLog } from "../../../lib/audit-log";
 
 const inviteUserSchema = z.object({
   email: z.string().email(),
@@ -206,7 +207,15 @@ export const organizationRouter = createTRPCRouter({
         invitationToken,
         org?.name || "Unknown Organization"
       );
-      
+
+      await createAuditLog({
+        action: "org.member_invited",
+        userId: ctx.session.user.id,
+        orgId: input.orgId,
+        targetId: invitationId,
+        targetType: "invitation",
+        metadata: { email: input.email, role: input.role },
+      });
 
       return { success: true, invitationId };
     }),
@@ -305,6 +314,15 @@ export const organizationRouter = createTRPCRouter({
           )
         );
 
+      await createAuditLog({
+        action: "org.member_role_changed",
+        userId: ctx.session.user.id,
+        orgId: input.orgId,
+        targetId: input.userId,
+        targetType: "user",
+        metadata: { newRole: input.role },
+      });
+
       return { success: true };
     }),
 
@@ -343,6 +361,14 @@ export const organizationRouter = createTRPCRouter({
             eq(organizationMembers.orgId, input.orgId)
           )
         );
+
+      await createAuditLog({
+        action: "org.member_removed",
+        userId: ctx.session.user.id,
+        orgId: input.orgId,
+        targetId: input.userId,
+        targetType: "user",
+      });
 
       return { success: true };
     }),

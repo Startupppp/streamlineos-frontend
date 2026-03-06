@@ -6,6 +6,7 @@ import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
+import { createAuditLog } from "@/lib/audit-log";
 
 interface CreateExpenseInput {
   category: string;
@@ -243,6 +244,14 @@ export async function approveExpense(expenseId: number) {
         eq(expenses.status, "PENDING")
       ));
 
+    await createAuditLog({
+      action: "expense.approved",
+      userId: session.user.id,
+      orgId: member.orgId,
+      targetId: String(expenseId),
+      targetType: "expense",
+    });
+
     revalidatePath("/hr/expenses");
     return { success: true };
   } catch (error) {
@@ -276,6 +285,15 @@ export async function rejectExpense(expenseId: number, reason: string) {
         eq(expenses.orgId, member.orgId),
         eq(expenses.status, "PENDING")
       ));
+
+    await createAuditLog({
+      action: "expense.rejected",
+      userId: session.user.id,
+      orgId: member.orgId,
+      targetId: String(expenseId),
+      targetType: "expense",
+      metadata: { reason },
+    });
 
     revalidatePath("/hr/expenses");
     return { success: true };

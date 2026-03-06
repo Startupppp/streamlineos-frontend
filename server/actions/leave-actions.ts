@@ -13,6 +13,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
+import { createAuditLog } from "@/lib/audit-log";
 import {
   DEFAULT_LEAVE_TYPES,
   LEAVE_POLICY,
@@ -467,6 +468,15 @@ export async function processLeaveRequest(data: {
         data.rejectionReason,
       );
     }
+
+    await createAuditLog({
+      action: data.status === "APPROVED" ? "hr.leave_approved" : "hr.leave_rejected",
+      userId: session.user.id,
+      orgId: request.orgId,
+      targetId: String(data.requestId),
+      targetType: "leave_request",
+      metadata: { status: data.status, rejectionReason: data.rejectionReason },
+    });
 
     revalidatePath("/hr/leaves");
     return { success: true };
