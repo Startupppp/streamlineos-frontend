@@ -90,6 +90,15 @@ export function numberToWords(num: number): string {
   return convertLessThanThousand(crores) + " Crore" + (remainder ? " " + numberToWords(remainder) : "");
 }
 
+export function formatHoursMinutes(hours: string | number | null | undefined): string {
+  if (hours === null || hours === undefined) return "0h 00m";
+  const num = typeof hours === "string" ? parseFloat(hours) : hours;
+  if (Number.isNaN(num)) return "0h 00m";
+  const h = Math.floor(num);
+  const m = Math.round((num - h) * 60);
+  return `${h}h ${m.toString().padStart(2, "0")}m`;
+}
+
 const GREETING_AFTERNOON_HOUR = 12;
 const GREETING_EVENING_HOUR = 17;
 
