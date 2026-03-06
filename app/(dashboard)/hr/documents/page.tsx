@@ -341,12 +341,12 @@ export default function DocumentsPage() {
                   <caption className="sr-only">Documents expiring within 30 days</caption>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
-                      <TableHead>Document</TableHead>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Expiry Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead scope="col">Document</TableHead>
+                      <TableHead scope="col">Employee</TableHead>
+                      <TableHead scope="col">Type</TableHead>
+                      <TableHead scope="col">Expiry Date</TableHead>
+                      <TableHead scope="col">Status</TableHead>
+                      <TableHead scope="col" className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -415,7 +415,7 @@ export default function DocumentsPage() {
               />
             </div>
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px]" aria-label="Filter documents by type">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
@@ -447,13 +447,13 @@ export default function DocumentsPage() {
                   <caption className="sr-only">All documents</caption>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
-                      <TableHead>Document</TableHead>
-                      {isAdmin && <TableHead>Employee</TableHead>}
-                      <TableHead>Type</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Uploaded</TableHead>
-                      <TableHead>Expiry</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead scope="col">Document</TableHead>
+                      {isAdmin && <TableHead scope="col">Employee</TableHead>}
+                      <TableHead scope="col">Type</TableHead>
+                      <TableHead scope="col">Size</TableHead>
+                      <TableHead scope="col">Uploaded</TableHead>
+                      <TableHead scope="col">Expiry</TableHead>
+                      <TableHead scope="col" className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

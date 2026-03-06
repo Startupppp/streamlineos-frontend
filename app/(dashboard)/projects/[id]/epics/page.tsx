@@ -104,7 +104,7 @@ export default function EpicsPage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite">
+    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite" aria-atomic="true">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Epics</h1>
@@ -345,6 +345,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
             aria-valuemin={0}
             aria-valuemax={100}
             aria-label={`Epic progress: ${completedItems} of ${totalItems} stories completed`}
+            aria-valuetext={`${totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}% complete, ${completedItems} of ${totalItems} stories done`}
           >
             {totalItems > 0 && (
               <>

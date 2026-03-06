@@ -77,6 +77,7 @@ export default function SprintsPage({ params }: PageProps) {
       utils.project.getSprints.invalidate();
       utils.project.getProjectDetails.invalidate();
     },
+    onError: (error) => toast.error(error.message || "Failed to update ticket"),
   });
 
   function handleStartSprint(sprintId: number) {
@@ -152,7 +153,7 @@ export default function SprintsPage({ params }: PageProps) {
   const nextPlannedSprint = sprints?.find(s => s.status === "PLANNED");
 
   return (
-    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite">
+    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite" aria-atomic="true">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Sprints</h1>
@@ -191,6 +192,7 @@ export default function SprintsPage({ params }: PageProps) {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
+                        aria-label="Backlog tickets"
                         className={cn(
                           "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
                           snapshot.isDraggingOver && "bg-primary/5 border-primary/30"
@@ -228,6 +230,7 @@ export default function SprintsPage({ params }: PageProps) {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
+                        aria-label={`${planningSprint.name} tickets`}
                         className={cn(
                           "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
                           snapshot.isDraggingOver && "bg-primary/5 border-primary/30"
@@ -534,6 +537,7 @@ function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating
             aria-valuemin={0}
             aria-valuemax={100}
             aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
+            aria-valuetext={`${Math.round(progress)}% complete, ${completedPoints} of ${totalPoints} points done`}
           >
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"

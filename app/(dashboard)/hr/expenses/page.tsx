@@ -454,7 +454,7 @@ export default function ExpensesPage() {
                     value={datePreset}
                     onValueChange={setDatePreset}
                   >
-                    <SelectTrigger className="h-9 w-[160px] text-sm">
+                    <SelectTrigger className="h-9 w-[160px] text-sm" aria-label="Filter expenses by date range">
                       <SelectValue placeholder="Filter by Date" />
                     </SelectTrigger>
                     <SelectContent>
@@ -509,13 +509,13 @@ export default function ExpensesPage() {
                           <caption className="sr-only">Expense claims</caption>
                           <TableHeader>
                             <TableRow className="bg-muted/30">
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Claim ID</TableHead>
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Category</TableHead>
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Description</TableHead>
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Amount</TableHead>
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Status</TableHead>
-                              <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Action</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Claim ID</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Category</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Description</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Amount</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Status</TableHead>
+                              <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Action</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -566,7 +566,12 @@ export default function ExpensesPage() {
                                         size="sm"
                                         className="h-7 text-xs text-[#bd882c] border-[#bd882c]/20 hover:bg-[#bd882c]/5"
                                         onClick={() => {
-                                          toast.info("Resubmit coming soon");
+                                          setIsCreateOpen(true);
+                                          toast.info(
+                                            expense.rejectionReason
+                                              ? `Rejected: ${expense.rejectionReason}. Please create a new claim with corrections.`
+                                              : "Please create a new claim with corrections."
+                                          );
                                         }}
                                       >
                                         <RotateCcw className="mr-1 h-3 w-3" />
@@ -670,13 +675,13 @@ export default function ExpensesPage() {
                         <caption className="sr-only">Pending expense claims awaiting approval</caption>
                         <TableHeader>
                           <TableRow className="bg-muted/30">
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Employee</TableHead>
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Category</TableHead>
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Description</TableHead>
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Amount</TableHead>
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Receipt</TableHead>
-                            <TableHead className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Actions</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Employee</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Category</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Description</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Amount</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4">Receipt</TableHead>
+                            <TableHead scope="col" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>

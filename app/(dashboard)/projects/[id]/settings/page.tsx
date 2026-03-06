@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useMemo } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -142,7 +142,14 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   }
 
   if (!project) {
-    return <div>Project not found</div>;
+    return (
+      <div className="flex items-center justify-center h-64 p-8" role="alert">
+        <div className="text-center space-y-2">
+          <h2 className="text-lg font-semibold text-destructive">Project not found</h2>
+          <p className="text-sm text-muted-foreground">The requested project could not be loaded.</p>
+        </div>
+      </div>
+    );
   }
 
   const onSubmit = (values: FormValues) => {
@@ -298,10 +305,10 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
     const { data: employees } = api.hr.getEmployees.useQuery();
     const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredEmployees = employees?.filter(emp => 
-        emp.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const filteredEmployees = useMemo(() => employees?.filter(emp =>
+        emp.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         emp.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ), [employees, searchQuery]);
 
     return (
         <FormField
@@ -321,11 +328,12 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] sm:w-[460px] p-2" align="start">
                         <div className="p-1 mb-2">
-                             <Input 
-                                placeholder="Search by name or email..." 
+                             <Input
+                                placeholder="Search by name or email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="h-8"
+                                aria-label="Search team members"
                              />
                         </div>
                         <div className="space-y-2 max-h-[200px] overflow-y-auto">
@@ -340,7 +348,8 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
                                             field.onChange(newData);
                                         }}
                                 >
-                                    <Checkbox 
+                                    <Checkbox
+                                        aria-label={`Select ${emp.name || emp.email || "member"}`}
                                         checked={field.value?.includes(emp.id)}
                                         onCheckedChange={(checked) => {
                                             const current = field.value || [];

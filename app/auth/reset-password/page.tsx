@@ -22,8 +22,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+const PASSWORD_SETUP_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
 const formSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(PASSWORD_SETUP_REGEX, "Must include uppercase, lowercase, number, and special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -76,7 +80,7 @@ export default function ResetPasswordPage() {
         <p className="text-muted-foreground mt-2">Complete your account setup</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl">
+      <Card className="w-full max-w-md shadow-noir">
         <CardHeader className="space-y-1 text-center pb-4">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
             <Rocket className="w-8 h-8 text-primary" />
@@ -109,6 +113,8 @@ export default function ResetPasswordPage() {
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            aria-pressed={showPassword}
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
@@ -137,6 +143,8 @@ export default function ResetPasswordPage() {
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                            aria-pressed={showConfirmPassword}
                           >
                             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
@@ -171,7 +179,7 @@ export default function ResetPasswordPage() {
       </Card>
       
       <div className="mt-8 text-muted-foreground/60 text-sm">
-        &copy; 2025 Vaivamm Capital
+        &copy; {new Date().getFullYear()} Vaivamm Capital
       </div>
     </div>
   );

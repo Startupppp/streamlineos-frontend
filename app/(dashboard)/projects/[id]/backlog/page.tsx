@@ -268,6 +268,7 @@ export default function BacklogPage({ params }: PageProps) {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="From date"
+              aria-label="Filter by start date"
             />
           </div>
 
@@ -278,6 +279,7 @@ export default function BacklogPage({ params }: PageProps) {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="To date"
+              aria-label="Filter by end date"
             />
           </div>
         </div>
@@ -296,13 +298,13 @@ export default function BacklogPage({ params }: PageProps) {
           <caption className="sr-only">Backlog tickets for this project</caption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">ID</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Assignee</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead className="w-[100px]" scope="col">ID</TableHead>
+              <TableHead scope="col">Title</TableHead>
+              <TableHead scope="col">Status</TableHead>
+              <TableHead scope="col">Type</TableHead>
+              <TableHead scope="col">Priority</TableHead>
+              <TableHead scope="col">Assignee</TableHead>
+              <TableHead scope="col">Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -114,7 +114,7 @@ export default function OrgSelectionPage() {
     <div className="min-h-screen w-full noir-mesh flex flex-col relative">
       <BrandHeader />
 
-      <main className="flex-1 flex items-center justify-center p-4">
+      <main id="main-content" aria-label="Organization selection" className="flex-1 flex items-center justify-center p-4">
         <motion.div
           className="w-full max-w-md"
           variants={staggerContainer}
@@ -144,12 +144,14 @@ export default function OrgSelectionPage() {
                   )}
 
                   {filteredOrgs && filteredOrgs.length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2" role="list" aria-label="Organizations">
                       {filteredOrgs.map((org) => (
                         <button
                           key={org.id}
                           onClick={() => handleSelectOrg(org.id)}
                           className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:border-gold/30 hover:shadow-sm transition-all group"
+                          role="listitem"
+                          aria-label={`Select ${org.name}`}
                         >
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">

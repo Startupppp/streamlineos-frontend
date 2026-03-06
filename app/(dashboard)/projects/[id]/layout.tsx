@@ -43,7 +43,7 @@ export default async function ProjectLayout({
     if (!project) {
         if (isOwnerOrAdmin) {
             return (
-                <div className="flex items-center justify-center h-full w-full p-8">
+                <div className="flex items-center justify-center h-full w-full p-8" role="alert">
                     <EmptyState
                         icon={Lock}
                         title="Access Denied"

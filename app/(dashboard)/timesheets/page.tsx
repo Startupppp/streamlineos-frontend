@@ -57,6 +57,7 @@ import { EmptyTimeIllustration } from "@/components/illustrations";
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { formatHoursMinutes } from "@/lib/format-utils";
 import { toast } from "sonner";
 import {
   MoreVertical,
@@ -99,14 +100,6 @@ function getProjectDotColor(name: string): string {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
   return PROJECT_DOT_COLORS[Math.abs(hash) % PROJECT_DOT_COLORS.length];
-}
-
-function formatHoursMinutes(hours: string | number | null | undefined): string {
-  const h = typeof hours === "string" ? parseFloat(hours) : (hours ?? 0);
-  if (h <= 0) return "0h 00m";
-  const wholeHours = Math.floor(h);
-  const minutes = Math.round((h - wholeHours) * 60);
-  return `${wholeHours}h ${String(minutes).padStart(2, "0")}m`;
 }
 
 type ViewMode = "current" | "history";
@@ -255,7 +248,7 @@ export default function TimesheetsPage() {
             <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Project:</span>
               <Select value={selectedProject} onValueChange={(v) => { setSelectedProject(v); setPage(1); }}>
-                <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
+                <SelectTrigger aria-label="Filter by project" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
@@ -271,7 +264,7 @@ export default function TimesheetsPage() {
             <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Period:</span>
               <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setPage(1); setViewMode(v === "all" ? "history" : "current"); }}>
-                <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
+                <SelectTrigger aria-label="Filter by time period" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -296,6 +289,7 @@ export default function TimesheetsPage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                    aria-label="From date"
                     className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
                   />
                 </div>
@@ -305,6 +299,7 @@ export default function TimesheetsPage() {
                     type="date"
                     value={endDate}
                     onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                    aria-label="To date"
                     className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
                   />
                 </div>
@@ -366,12 +361,12 @@ export default function TimesheetsPage() {
                       <caption className="sr-only">Your daily work logs</caption>
                       <TableHeader>
                         <TableRow className="bg-muted/30">
-                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
-                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Project</TableHead>
-                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Task Description</TableHead>
-                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Duration</TableHead>
-                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Status</TableHead>
-                          <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Actions</TableHead>
+                          <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
+                          <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Project</TableHead>
+                          <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Task Description</TableHead>
+                          <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Duration</TableHead>
+                          <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Status</TableHead>
+                          <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4 text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -500,6 +495,7 @@ export default function TimesheetsPage() {
                                   : ""
                               }`}
                               onClick={() => setPage(num)}
+                              {...(num === page ? { "aria-current": "page" as const } : {})}
                             >
                               {num}
                             </Button>

@@ -44,6 +44,7 @@ import { TimeEntryDetailSheet } from "@/components/timesheets/time-entry-detail-
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { formatHoursMinutes } from "@/lib/format-utils";
 import { toast } from "sonner";
 import {
   Download,
@@ -108,12 +109,6 @@ const WeeklyProductivityChart = memo(function WeeklyProductivityChart({
   const percentChange = prevWeekHours > 0
     ? (((totalHours - prevWeekHours) / prevWeekHours) * 100).toFixed(1)
     : null;
-
-  const formatHoursMinutes = (h: number): string => {
-    const hours = Math.floor(h);
-    const minutes = Math.round((h - hours) * 60);
-    return `${hours}h ${minutes}m`;
-  };
 
   return (
     <Card className="lg:col-span-2">
@@ -227,7 +222,7 @@ const ViewSettingsCard = memo(function ViewSettingsCard({
           <div className="space-y-1">
             <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Employee</label>
             <Select value={selectedEmployee} onValueChange={onEmployeeChange}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger aria-label="Filter by employee" className="h-8 text-xs">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -243,7 +238,7 @@ const ViewSettingsCard = memo(function ViewSettingsCard({
           <div className="space-y-1">
             <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Status</label>
             <Select value={selectedStatus} onValueChange={onStatusChange}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger aria-label="Filter by status" className="h-8 text-xs">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
@@ -259,7 +254,7 @@ const ViewSettingsCard = memo(function ViewSettingsCard({
         <div className="space-y-1">
           <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Project</label>
           <Select value={selectedProject} onValueChange={onProjectChange}>
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger aria-label="Filter by project" className="h-8 text-xs">
               <SelectValue placeholder="All Projects" />
             </SelectTrigger>
             <SelectContent>
@@ -442,27 +437,32 @@ export default function TeamTimesheetsPage() {
 
   const exportToCSV = useCallback(() => {
     if (!timesheets || timesheets.length === 0) return;
-    const headers = ["Employee", "Date", "Project", "Ticket", "Hours", "Description", "Status"];
-    const rows = timesheets.map((entry) => [
-      `${entry.user?.firstName || ""} ${entry.user?.lastName || ""}`.trim(),
-      format(new Date(entry.date), "yyyy-MM-dd"),
-      entry.ticket?.project?.name || "N/A",
-      entry.ticketId ? `#${entry.ticketId}` : "N/A",
-      entry.hours || "0",
-      entry.description || "",
-      entry.status || "PENDING",
-    ]);
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `team-timesheets-${format(new Date(), "yyyy-MM-dd")}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const headers = ["Employee", "Date", "Project", "Ticket", "Hours", "Description", "Status"];
+      const rows = timesheets.map((entry) => [
+        `${entry.user?.firstName || ""} ${entry.user?.lastName || ""}`.trim(),
+        format(new Date(entry.date), "yyyy-MM-dd"),
+        entry.ticket?.project?.name || "N/A",
+        entry.ticketId ? `#${entry.ticketId}` : "N/A",
+        entry.hours || "0",
+        entry.description || "",
+        entry.status || "PENDING",
+      ]);
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+      ].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `team-timesheets-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("CSV exported successfully");
+    } catch (error) {
+      toast.error("Failed to export CSV. Please try again.");
+    }
   }, [timesheets]);
 
   const handleEntryClick = useCallback((entry: TimesheetEntry) => {
@@ -558,12 +558,12 @@ export default function TeamTimesheetsPage() {
                       <caption className="sr-only">Team timesheet entries</caption>
                       <TableHeader>
                         <TableRow className="border-b">
-                          <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Employee</TableHead>
-                          <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Project</TableHead>
-                          <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Task Description</TableHead>
-                          <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Duration</TableHead>
-                          <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
-                          <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4 w-10"></TableHead>
+                          <TableHead scope="col" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Employee</TableHead>
+                          <TableHead scope="col" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Project</TableHead>
+                          <TableHead scope="col" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Task Description</TableHead>
+                          <TableHead scope="col" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4">Duration</TableHead>
+                          <TableHead scope="col" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4 text-center">Status</TableHead>
+                          <TableHead scope="col" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-6 py-4 w-10"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

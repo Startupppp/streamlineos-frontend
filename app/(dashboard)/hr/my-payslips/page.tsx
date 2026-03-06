@@ -174,7 +174,7 @@ export default function MyPayslipsPage() {
             description="View and download your salary slips"
             actions={
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[200px]" aria-label="Select payslip month">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>
@@ -200,7 +200,7 @@ export default function MyPayslipsPage() {
       ) : selectedPayslip ? (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={handleDownload}>
+            <Button onClick={handleDownload} aria-label="Download payslip as PDF">
               <Download className="mr-2 h-4 w-4" />
               Download Payslip
             </Button>
@@ -313,10 +313,10 @@ export default function MyPayslipsPage() {
                 <caption className="sr-only">Payslip earnings and deductions breakdown</caption>
                 <thead>
                   <tr style={{ backgroundColor: "#f3f4f6" }}>
-                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
-                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
-                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Deductions</th>
-                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
+                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
+                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
+                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Deductions</th>
+                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>

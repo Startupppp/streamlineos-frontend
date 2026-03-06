@@ -236,7 +236,30 @@ export default function HRDashboardPage() {
         description="Manage your company directory and employee access"
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                const headers = ["Name", "Email", "Role", "Department", "Status"];
+                const rows = filteredEmployees.map((e) => [
+                  getDisplayName(e),
+                  e.email,
+                  e.designation ?? ROLE_LABELS[e.role] ?? e.role,
+                  e.department?.name ?? "",
+                  e.isActive !== false ? "Active" : "Inactive",
+                ]);
+                const csv = [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success("Employees exported successfully");
+              }}
+            >
               <Download className="h-4 w-4" aria-hidden="true" />
               Export
             </Button>
@@ -322,12 +345,12 @@ export default function HRDashboardPage() {
                 <caption className="sr-only">Employee directory table</caption>
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Name</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Email</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Role</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Department</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
-                    <th className="text-right text-xs font-medium text-muted-foreground py-3 px-4">Actions</th>
+                    <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Name</th>
+                    <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Email</th>
+                    <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Role</th>
+                    <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Department</th>
+                    <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
+                    <th scope="col" className="text-right text-xs font-medium text-muted-foreground py-3 px-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -449,15 +472,20 @@ export default function HRDashboardPage() {
                   disabled={page <= 1}
                   onClick={() => setPage(page - 1)}
                   className="h-8 text-xs"
+                  aria-label="Go to previous page"
                 >
                   Previous
                 </Button>
+                <span className="text-xs text-muted-foreground" aria-current="page">
+                  Page {page} of {totalPages}
+                </span>
                 <Button
                   variant="outline"
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
                   className="h-8 text-xs"
+                  aria-label="Go to next page"
                 >
                   Next
                 </Button>

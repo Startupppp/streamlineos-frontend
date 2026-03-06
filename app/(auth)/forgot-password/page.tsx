@@ -95,24 +95,25 @@ export default function ForgotPasswordPage() {
               <p className="font-medium text-foreground mt-1">{form.getValues("email")}</p>
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <div role="status" className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
               <p className="text-sm text-blue-600">
                 Click the link in the email to reset your password. The link will expire in 1 hour.
               </p>
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <aside aria-label="Email delivery help" className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
               <p className="text-xs text-amber-600">
                 Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@vaivamm.com.
               </p>
-            </div>
+            </aside>
 
             <Button
               variant="ghost"
               className="w-full"
               onClick={handleResend}
               disabled={forgotPassword.isPending || cooldown > 0}
+              aria-label={cooldown > 0 ? `Resend available in ${cooldown} seconds` : "Resend reset email"}
             >
               {forgotPassword.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -160,10 +161,12 @@ export default function ForgotPasswordPage() {
                   {...form.register("email")}
                   disabled={forgotPassword.isPending}
                   className="pl-10 focus-visible:ring-primary"
+                  aria-invalid={!!form.formState.errors.email}
+                  aria-describedby={form.formState.errors.email ? "email-error" : undefined}
                 />
               </div>
               {form.formState.errors.email && (
-                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                <p id="email-error" role="alert" className="text-sm text-destructive">{form.formState.errors.email.message}</p>
               )}
             </div>
 

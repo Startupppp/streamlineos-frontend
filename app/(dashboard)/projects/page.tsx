@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/trpc/react";
 import { PageHeader } from "@/components/ui/page-header";
@@ -12,20 +12,12 @@ import { ProjectPagination } from "./project-pagination";
 import { LaunchProjectCard } from "./launch-project-card";
 import { ProjectsEmptyState } from "./projects-empty-state";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return debounced;
-}
 
 export default function ProjectsPage() {
   const [search, setSearch] = useState("");
@@ -34,7 +26,7 @@ export default function ProjectsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
 
-  const debouncedSearch = useDebounce(search, 300);
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   // Reset page on filter changes
   const handleSearchChange = useCallback((value: string) => {

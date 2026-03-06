@@ -130,12 +130,12 @@ export default function InvitationPage() {
             <Badge variant="secondary">{invitation.role}</Badge>
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={acceptInvitation.isPending}>
             <div className="space-y-2">
               <Label className="text-foreground">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={invitation.email} disabled className="pl-10 bg-muted/30 cursor-not-allowed" />
+                <Input value={invitation.email} disabled className="pl-10 bg-muted/30 cursor-not-allowed" aria-label="Invitation email address" />
               </div>
             </div>
 

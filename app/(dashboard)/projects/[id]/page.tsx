@@ -73,14 +73,18 @@ export default function ProjectBoardPage({ params }: PageProps) {
     try {
       const stored = localStorage.getItem(HIDE_COMPLETED_KEY);
       if (stored !== null) setHideCompleted(stored === "true");
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to read localStorage:", e);
+    }
   }, []);
 
   const setHideCompletedAndStore = (value: boolean) => {
     setHideCompleted(value);
     try {
       localStorage.setItem(HIDE_COMPLETED_KEY, String(value));
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to write localStorage:", e);
+    }
   };
 
   if (isLoading) {
@@ -188,7 +192,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
+        <div className="flex items-center gap-2 mt-3 flex-wrap" role="search" aria-label="Filter tickets">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input

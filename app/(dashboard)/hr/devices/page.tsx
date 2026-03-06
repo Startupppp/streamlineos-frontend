@@ -161,7 +161,7 @@ export default function DevicesPage() {
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button aria-label="Add new device">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Device
               </Button>
@@ -319,12 +319,12 @@ export default function DevicesPage() {
               <caption className="sr-only">Company devices assigned to employees</caption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Device</TableHead>
-                  <TableHead>Assigned To</TableHead>
-                  <TableHead>Serial Number</TableHead>
-                  <TableHead>Assigned Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead scope="col">Device</TableHead>
+                  <TableHead scope="col">Assigned To</TableHead>
+                  <TableHead scope="col">Serial Number</TableHead>
+                  <TableHead scope="col">Assigned Date</TableHead>
+                  <TableHead scope="col">Status</TableHead>
+                  <TableHead scope="col" className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -363,7 +363,7 @@ export default function DevicesPage() {
                           value={device.status || "ACTIVE"}
                           onValueChange={(val) => handleStatusChange(device.id, val)}
                         >
-                          <SelectTrigger className="w-[120px]">
+                          <SelectTrigger className="w-[120px]" aria-label={`Change status for ${device.deviceName}`}>
                             <Badge variant="outline" className={getColorSafe(deviceStatusColors, device.status ?? "ACTIVE")}>
                               {device.status || "ACTIVE"}
                             </Badge>

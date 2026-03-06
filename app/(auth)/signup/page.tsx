@@ -137,7 +137,7 @@ export default function SignUpPage() {
             </Link>
           </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={signUp.isPending}>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-foreground">First Name</Label>
@@ -172,9 +172,11 @@ export default function SignUpPage() {
                 {...form.register("email")}
                 disabled={signUp.isPending}
                 className="focus-visible:ring-primary"
+                aria-invalid={!!form.formState.errors.email}
+                aria-describedby={form.formState.errors.email ? "signup-email-error" : undefined}
               />
               {form.formState.errors.email && (
-                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                <p id="signup-email-error" role="alert" className="text-sm text-destructive">{form.formState.errors.email.message}</p>
               )}
             </div>
 
@@ -188,6 +190,8 @@ export default function SignUpPage() {
                   {...form.register("password")}
                   disabled={signUp.isPending}
                   className="pr-10 focus-visible:ring-primary"
+                  aria-invalid={!!form.formState.errors.password}
+                  aria-describedby={form.formState.errors.password ? "signup-password-error" : "password-strength"}
                 />
                 <button
                   type="button"
@@ -200,9 +204,9 @@ export default function SignUpPage() {
                 </button>
               </div>
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                <p id="signup-password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
-              {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
+              {password.length > 0 && <div id="password-strength"><PasswordStrengthIndicator strength={strength} /></div>}
             </div>
 
             <PasswordConfirmField

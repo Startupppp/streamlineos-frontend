@@ -79,7 +79,7 @@ export default function SignInPage() {
 
       <Card className="shadow-noir border-border">
         <CardContent className="pt-6">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={signInMutation.isPending}>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground">Email address</Label>
               <div className="relative">
@@ -91,10 +91,12 @@ export default function SignInPage() {
                   {...form.register("email")}
                   disabled={signInMutation.isPending}
                   className="pl-10 focus-visible:ring-primary"
+                  aria-invalid={!!form.formState.errors.email}
+                  aria-describedby={form.formState.errors.email ? "email-error" : undefined}
                 />
               </div>
               {form.formState.errors.email && (
-                <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                <p id="email-error" role="alert" className="text-sm text-destructive">{form.formState.errors.email.message}</p>
               )}
             </div>
 
@@ -117,6 +119,8 @@ export default function SignInPage() {
                   {...form.register("password")}
                   disabled={signInMutation.isPending}
                   className="pl-10 pr-10 focus-visible:ring-primary"
+                  aria-invalid={!!form.formState.errors.password}
+                  aria-describedby={form.formState.errors.password ? "password-error" : undefined}
                 />
                 <button
                   type="button"
@@ -129,7 +133,7 @@ export default function SignInPage() {
                 </button>
               </div>
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                <p id="password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
             </div>
 

@@ -84,7 +84,7 @@ function VerifyEmailForm() {
 
         <Card className="shadow-noir border-border">
           <CardContent className="pt-6 space-y-4">
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+            <div role="status" aria-live="polite" className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <p className="text-sm text-green-600">Redirecting you to sign in page...</p>
             </div>
             <Link href="/signin" className="block">
@@ -139,18 +139,18 @@ function VerifyEmailForm() {
             </div>
           )}
 
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <div role="status" className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
             <p className="text-sm text-blue-600">
               Click the link in the email to verify your account. The link will expire in 24 hours.
             </p>
           </div>
 
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <aside aria-label="Email delivery help" className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
             <p className="text-xs text-amber-600">
               Didn&apos;t receive an email? Check your spam folder or contact support.
             </p>
-          </div>
+          </aside>
 
           {email && (
             <Button
@@ -158,6 +158,7 @@ function VerifyEmailForm() {
               className="w-full"
               onClick={handleResend}
               disabled={resendVerification.isPending || cooldown > 0}
+              aria-label={cooldown > 0 ? `Resend available in ${cooldown} seconds` : "Resend verification link"}
             >
               {resendVerification.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

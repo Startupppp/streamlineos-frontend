@@ -114,11 +114,11 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-8" role="alert">
         <div className="space-y-4">
           <ErrorMessage message={error instanceof Error ? error.message : "Failed to load dashboard stats"} />
           <Button onClick={() => refetch()} variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
             Retry
           </Button>
         </div>

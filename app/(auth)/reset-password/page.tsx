@@ -86,7 +86,7 @@ function ResetPasswordForm() {
 
         <Card className="shadow-noir border-border">
           <CardContent className="pt-6 space-y-4">
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+            <div role="status" aria-live="polite" className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <p className="text-sm text-green-600">Redirecting you to sign in page...</p>
             </div>
             <Link href="/signin" className="block">
@@ -110,7 +110,7 @@ function ResetPasswordForm() {
 
       <Card className="shadow-noir border-border">
         <CardContent className="pt-6">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={resetPassword.isPending}>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-foreground">New Password</Label>
               <div className="relative">
@@ -122,6 +122,8 @@ function ResetPasswordForm() {
                   {...form.register("password")}
                   disabled={resetPassword.isPending}
                   className="pl-10 pr-10 focus-visible:ring-primary"
+                  aria-invalid={!!form.formState.errors.password}
+                  aria-describedby={form.formState.errors.password ? "reset-password-error" : undefined}
                 />
                 <button
                   type="button"
@@ -134,7 +136,7 @@ function ResetPasswordForm() {
                 </button>
               </div>
               {form.formState.errors.password && (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                <p id="reset-password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
               {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
             </div>
