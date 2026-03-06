@@ -38,9 +38,9 @@ export const createSalaryStructureInputSchema = z.object({
 });
 
 export const createExpenseInputSchema = z.object({
-  category: z.string().min(1, "Category is required"),
+  category: z.string().min(1, "Category is required").max(100),
   amount: z.number().positive(),
-  description: z.string().optional(),
+  description: z.string().max(1000).optional(),
   receiptUrl: fileUrlSchema.optional(),
   expenseDate: z.date(),
 });
@@ -48,18 +48,18 @@ export const createExpenseInputSchema = z.object({
 export const updateExpenseStatusInputSchema = z.object({
   expenseId: z.number().int().positive(),
   status: z.enum(["PENDING", "APPROVED", "REJECTED", "PAID"]),
-  rejectionReason: z.string().optional(),
+  rejectionReason: z.string().max(500).optional(),
 });
 
 export const createAssetInputSchema = z.object({
-  name: z.string().min(1, "Asset name is required"),
-  type: z.string().min(1, "Asset type is required"),
-  serialNumber: z.string().optional(),
+  name: z.string().min(1, "Asset name is required").max(200),
+  type: z.string().min(1, "Asset type is required").max(100),
+  serialNumber: z.string().max(100).optional(),
   assignedTo: z.string().optional(),
   purchaseDate: z.date().optional(),
   purchaseCost: z.number().positive().optional(),
-  location: z.string().optional(),
-  notes: z.string().optional(),
+  location: z.string().max(200).optional(),
+  notes: z.string().max(1000).optional(),
 });
 
 export const updateAssetInputSchema = z.object({
@@ -178,14 +178,14 @@ export const onboardEmployeeInputSchema = z.object({
 
 export const createWfhRequestInputSchema = z.object({
   date: z.date(),
-  reason: z.string().optional(),
+  reason: z.string().max(500).optional(),
   approverId: z.string().min(1, "Approver is required"),
 });
 
 export const processWfhRequestInputSchema = z.object({
   requestId: z.number().int().positive(),
   status: z.enum(["APPROVED", "REJECTED"]),
-  rejectionReason: z.string().optional(),
+  rejectionReason: z.string().max(500).optional(),
 });
 
 export const createDeviceInputSchema = z.object({

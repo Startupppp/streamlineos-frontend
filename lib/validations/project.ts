@@ -7,8 +7,8 @@ export const ticketStatusSchema = z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "D
 export const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),
-  name: z.string().min(1, "Project name is required"),
-  description: z.string().optional(),
+  name: z.string().min(1, "Project name is required").max(200),
+  description: z.string().max(2000).optional(),
   status: projectStatusSchema,
   managerId: z.string().optional(),
   clientId: z.string().optional(),
@@ -36,8 +36,8 @@ export const createProjectInputSchema = z.object({
 
 export const createTicketInputSchema = z.object({
   projectId: z.number().int().positive(),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: z.string().min(1, "Title is required").max(500),
+  description: z.string().max(5000).optional(),
   type: ticketTypeSchema,
   priority: ticketPrioritySchema.optional(),
   assigneeId: z.string().optional(),
@@ -72,7 +72,7 @@ export const updateTicketStatusInputSchema = z.object({
 
 export const createSprintInputSchema = z.object({
   projectId: z.number().int().positive(),
-  name: z.string().min(1, "Sprint name is required"),
+  name: z.string().min(1, "Sprint name is required").max(200),
   startDate: z.date(),
   endDate: z.date(),
   goal: z.string().optional(),
@@ -92,7 +92,7 @@ export const updateSprintInputSchema = z.object({
 
 export const addCommentInputSchema = z.object({
   ticketId: z.number().int().positive(),
-  content: z.string().min(1, "Comment is required"),
+  content: z.string().min(1, "Comment is required").max(5000),
   parentCommentId: z.number().int().positive().optional(),
 });
 
