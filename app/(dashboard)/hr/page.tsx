@@ -340,8 +340,8 @@ export default function HRDashboardPage() {
       {paginatedEmployees.length > 0 ? (
         <Card className="border-border">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full" aria-label="Employees directory">
+            <div className="overflow-x-auto" role="region" aria-label="Employee directory table" tabIndex={0}>
+              <table className="w-full">
                 <caption className="sr-only">Employee directory table</caption>
                 <thead>
                   <tr className="border-b border-border">

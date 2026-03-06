@@ -356,7 +356,7 @@ export default function TimesheetsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto" role="region" aria-label="Timesheets table" tabIndex={0}>
                     <Table>
                       <caption className="sr-only">Your daily work logs</caption>
                       <TableHeader>

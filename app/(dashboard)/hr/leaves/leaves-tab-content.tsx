@@ -172,8 +172,8 @@ export function LeavesTabContent({
                 />
               ) : (
                 <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full" aria-label="Leave request history">
+                  <div className="overflow-x-auto" role="region" aria-label="Leave requests table" tabIndex={0}>
+                    <table className="w-full">
                       <caption className="sr-only">Your leave request history</caption>
                       <thead>
                         <tr className="border-b border-border">

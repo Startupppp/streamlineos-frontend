@@ -85,7 +85,7 @@ const TimerCard = memo(function TimerCard() {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
 
-  const { data: statusData, isLoading } = useHrAttendanceStatus({ refetchInterval: 30000 });
+  const { data: statusData, isLoading } = useHrAttendanceStatus({ refetchInterval: 60000, staleTime: 30000 });
 
   const checkInMutation = useHrCheckIn({
     onSuccess: () => {
@@ -747,7 +747,7 @@ const DailyHistoryTable = memo(function DailyHistoryTable() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" aria-label="Attendance records table" tabIndex={0}>
           <Table>
             <caption className="sr-only">Recent attendance history</caption>
             <TableHeader>

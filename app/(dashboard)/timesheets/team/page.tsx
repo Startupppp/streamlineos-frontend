@@ -553,7 +553,7 @@ export default function TeamTimesheetsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto" role="region" aria-label="Team timesheets table" tabIndex={0}>
                     <Table>
                       <caption className="sr-only">Team timesheet entries</caption>
                       <TableHeader>

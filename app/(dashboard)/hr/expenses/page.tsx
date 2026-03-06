@@ -433,12 +433,22 @@ export default function ExpensesPage() {
               {/* Status filter pills + date filter */}
               <div className="flex flex-wrap gap-4 items-center justify-between">
                 <div className="flex items-center gap-1 bg-muted p-1 rounded-lg" role="tablist" aria-label="Filter by status">
-                  {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map((s) => (
+                  {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map((s, i, arr) => (
                     <button
                       key={s}
                       role="tab"
                       aria-selected={statusFilter === s}
+                      tabIndex={statusFilter === s ? 0 : -1}
                       onClick={() => setStatusFilter(s)}
+                      onKeyDown={(e) => {
+                        let nextIdx = i;
+                        if (e.key === "ArrowRight") nextIdx = (i + 1) % arr.length;
+                        else if (e.key === "ArrowLeft") nextIdx = (i - 1 + arr.length) % arr.length;
+                        else return;
+                        e.preventDefault();
+                        setStatusFilter(arr[nextIdx]);
+                        (e.currentTarget.parentElement?.children[nextIdx] as HTMLElement)?.focus();
+                      }}
                       className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                         statusFilter === s
                           ? "bg-background text-foreground shadow-sm"
@@ -504,7 +514,7 @@ export default function ExpensesPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto" role="region" aria-label="Expense claims table" tabIndex={0}>
                         <Table>
                           <caption className="sr-only">Expense claims</caption>
                           <TableHeader>
@@ -737,13 +747,14 @@ export default function ExpensesPage() {
                                 </TableCell>
                                 <TableCell className="px-6 py-4 text-right">
                                   <div className="flex justify-end gap-2">
-                                    <Button size="sm" className="h-8" onClick={() => handleApprove(expense.id)}>
+                                    <Button size="sm" className="h-8" onClick={() => handleApprove(expense.id)} disabled={isPending} aria-busy={isPending}>
                                       Approve
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="outline"
                                       className="h-8"
+                                      disabled={isPending}
                                       onClick={() => {
                                         setSelectedExpense(expense);
                                         setIsRejectDialogOpen(true);
