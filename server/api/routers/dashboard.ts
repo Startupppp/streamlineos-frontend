@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets } from "../../../lib/db/schema";
-import { eq, and, sql, desc, or, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, or, inArray, count } from "drizzle-orm";
 import { getTodayString } from "../../../lib/date-utils";
 
 import { TRPCError } from "@trpc/server";
@@ -24,43 +24,38 @@ export const dashboardRouter = createTRPCRouter({
       }
 
       const orgId = userMemberships[0].orgId;
-
-      const org = await ctx.db.query.organizations.findFirst({
-        where: eq(organizations.id, orgId),
-      });
-
-      const memberCountResult = await ctx.db
-        .select({ count: sql<number>`count(*)` })
-        .from(organizationMembers)
-        .innerJoin(users, eq(organizationMembers.userId, users.id))
-        .where(and(
-          eq(organizationMembers.orgId, orgId),
-          eq(users.isActive, true)
-        ));
-
-      const totalEmployees = Number(memberCountResult[0]?.count || 0);
-
-      const activeProjectsCount = (
-        await ctx.db.query.projects.findMany({
-          where: eq(projects.orgId, orgId),
-        })
-      ).length;
-
       const today = getTodayString();
-      const presentCount = (
-        await ctx.db.query.attendance.findMany({
-          where: and(
+
+      const [org, memberCountResult, projectCountResult, attendanceCountResult] = await Promise.all([
+        ctx.db.query.organizations.findFirst({
+          where: eq(organizations.id, orgId),
+        }),
+        ctx.db
+          .select({ count: count() })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(and(
+            eq(organizationMembers.orgId, orgId),
+            eq(users.isActive, true)
+          )),
+        ctx.db
+          .select({ count: count() })
+          .from(projects)
+          .where(eq(projects.orgId, orgId)),
+        ctx.db
+          .select({ count: count() })
+          .from(attendance)
+          .where(and(
             eq(attendance.orgId, orgId),
             eq(attendance.date, today)
-          ),
-        })
-      ).length;
+          )),
+      ]);
 
       return {
         orgName: org?.name || "Organization",
-        totalEmployees,
-        activeProjects: activeProjectsCount,
-        presentToday: presentCount,
+        totalEmployees: Number(memberCountResult[0]?.count || 0),
+        activeProjects: Number(projectCountResult[0]?.count || 0),
+        presentToday: Number(attendanceCountResult[0]?.count || 0),
         orgSlug: org?.slug || orgId.slice(0, 8),
       };
     } catch (error) {
