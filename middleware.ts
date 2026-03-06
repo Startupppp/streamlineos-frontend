@@ -63,10 +63,14 @@ function startsWithAny(pathname: string, routes: string[]): boolean {
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
-  if (
-    pathname.startsWith("/api/auth/") ||
-    pathname.startsWith("/api/trpc/auth.")
-  ) {
+  const RATE_LIMITED_PREFIXES = [
+    "/api/auth/",
+    "/api/trpc/auth.",
+    "/api/storage/upload",
+    "/api/ai/",
+    "/api/chat",
+  ];
+  if (RATE_LIMITED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     if (!checkRateLimit(ip)) {

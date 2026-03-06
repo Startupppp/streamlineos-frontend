@@ -9,10 +9,12 @@ const handler = (req: Request) =>
     req,
     router: appRouter,
     createContext: () => createTRPCContext({ headers: req.headers }),
-    onError: ({ path, error }) => {
+    onError: ({ path, error, ctx }) => {
       logger.error(`tRPC error on ${path ?? "unknown"}`, {
         code: error.code,
         message: error.message,
+        userId: (ctx as Record<string, unknown>)?.userId,
+        orgId: (ctx as Record<string, unknown>)?.orgId,
       });
     },
   });

@@ -9,5 +9,10 @@ if (!connectionString) {
 
 import * as schema from "./db/schema";
 
-export const client = postgres(connectionString, { prepare: false });
+export const client = postgres(connectionString, {
+  prepare: false,
+  max: 10,
+  idle_timeout: 60,
+  connect_timeout: 10,
+});
 export const db = drizzle(client, { schema });
