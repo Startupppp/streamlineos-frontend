@@ -21,13 +21,12 @@ import { Loader2, Rocket, Shield, Eye, EyeOff } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-const PASSWORD_SETUP_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+import { PASSWORD_REGEX } from "@/lib/password-utils";
 
 const formSchema = z.object({
   password: z.string()
     .min(8, "Password must be at least 8 characters")
-    .regex(PASSWORD_SETUP_REGEX, "Must include uppercase, lowercase, number, and special character"),
+    .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",

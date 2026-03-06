@@ -11,7 +11,7 @@ import {
   useHrCheckOut,
   useHrToggleBreak,
 } from "../../lib/hooks/trpc-hooks";
-import { useAttendanceTimer } from "../../hooks/useAttendanceTimer";
+import { useAttendanceTimer } from "../../hooks/use-attendance-timer";
 import { type AttendanceStatus, type TodayLog } from "../../types/api";
 
 interface AttendanceTrackerProps {
