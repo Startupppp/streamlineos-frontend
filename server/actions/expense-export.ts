@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { expenses } from "@/lib/db/schema";
+import { expenses, expenseStatusEnum } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or } from "drizzle-orm";
 import { getAuthenticatedMember } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
@@ -84,12 +84,13 @@ function buildExportConditions(
     conditions.push(eq(expenses.category, filters.category));
   }
   if (filters.status) {
+    type ExpenseStatus = (typeof expenseStatusEnum.enumValues)[number];
     if (Array.isArray(filters.status)) {
       if (filters.status.length > 0 && !filters.status.includes("all")) {
-        conditions.push(inArray(expenses.status, filters.status as any));
+        conditions.push(inArray(expenses.status, filters.status as ExpenseStatus[]));
       }
     } else if (filters.status !== "all") {
-      conditions.push(eq(expenses.status, filters.status as any));
+      conditions.push(eq(expenses.status, filters.status as ExpenseStatus));
     }
   }
   if (filters.minAmount !== undefined && filters.minAmount > 0) {

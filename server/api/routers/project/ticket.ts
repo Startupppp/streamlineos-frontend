@@ -233,7 +233,8 @@ export const ticketRouter = createTRPCRouter({
               undefined
             );
           }
-        } catch {
+        } catch (emailError) {
+          logger.error("Failed to send ticket status change email", { error: emailError });
         }
       }
     }),

@@ -76,7 +76,7 @@ export const useHrSalaryStructures = (
 
 export const useHrExpenses = (
   userId?: string,
-  status?: string,
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "PAID",
   options?: Omit<
     UseQueryOptions<HrRouterOutputs["getExpenses"], Error>,
     "queryKey" | "queryFn"
