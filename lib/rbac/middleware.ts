@@ -1,9 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { rolePermissions, userPermissions } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
+import type { db as database } from "../db";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbClient = { query: any };
+type DbClient = Pick<typeof database, "query">;
 
 export function requirePermission(permissionName: string) {
   return async (opts: {
