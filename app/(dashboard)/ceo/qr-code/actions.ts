@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { qrCodes, users } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
@@ -188,7 +189,8 @@ export async function deleteQRCode(id: number) {
         try {
           const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
           await deleteFile(fileKey);
-        } catch {
+        } catch (error) {
+          logger.warn("Failed to delete remote QR file", error);
         }
       } else if (process.env.NODE_ENV !== "production") {
         try {
@@ -197,7 +199,8 @@ export async function deleteQRCode(id: number) {
           if (existsSync(localPath)) {
             unlinkSync(localPath);
           }
-        } catch {
+        } catch (error) {
+          logger.warn("Failed to delete local QR file", error);
         }
       }
     }
@@ -297,7 +300,8 @@ export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
           if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
             return signedUrl;
           }
-        } catch {
+        } catch (error) {
+          logger.warn("Failed to get signed URL for R2 key", error);
         }
       }
     }
@@ -310,7 +314,8 @@ export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
       if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
         return signedUrl;
       }
-    } catch {
+    } catch (error) {
+      logger.warn("Failed to get signed URL", error);
     }
 
     if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) {

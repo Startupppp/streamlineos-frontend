@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
         ? `${process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL}/qr/${slug}`
         : process.env.NEXTAUTH_URL
           ? `${process.env.NEXTAUTH_URL}/qr/${slug}`
-          : `https://localhost:3000/qr/${slug}`;
+          : `http://localhost:3000/qr/${slug}`;
 
       const { default: QRCode } = await import("qrcode");
       const svgString = await QRCode.toString(trackingUrl, {

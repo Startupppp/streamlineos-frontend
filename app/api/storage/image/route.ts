@@ -74,7 +74,8 @@ export async function GET(req: NextRequest) {
     }
 
     return new NextResponse("Not found", { status: 404 });
-  } catch {
+  } catch (error) {
+    logger.error("Image proxy error", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }

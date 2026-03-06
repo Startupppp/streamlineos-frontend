@@ -3,6 +3,7 @@ import { auth } from "../../../../lib/auth";
 import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { logger } from "../../../../lib/logger";
 
 const FILE_SIGNATURES: Record<string, number[][]> = {
   "image/jpeg": [[0xff, 0xd8, 0xff]],
@@ -122,7 +123,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(result);
-  } catch {
+  } catch (error) {
+    logger.error("File upload failed", error);
     return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
   }
 }
