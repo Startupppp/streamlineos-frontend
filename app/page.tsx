@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Users, LayoutGrid, TrendingUp } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Vaivamm Capital CRM — HR & Project Management Platform",
+  description: "Streamline your HR, project management, and CRM operations with Vaivamm Capital's all-in-one platform.",
+};
 
 export default async function HomePage() {
   const session = await auth();

@@ -29,8 +29,22 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vaivamm CRM",
-  description: "Advanced HR and Project Management",
+  title: {
+    default: "Vaivamm Capital CRM",
+    template: "%s | Vaivamm Capital CRM",
+  },
+  description: "Advanced HR, Project Management, and CRM platform for modern teams.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://crm.vaivammcapital.com"),
+  openGraph: {
+    type: "website",
+    siteName: "Vaivamm Capital CRM",
+    title: "Vaivamm Capital CRM",
+    description: "Advanced HR, Project Management, and CRM platform for modern teams.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
