@@ -64,8 +64,10 @@ export async function checkPermission(
     return false;
   }
 
-  if (role) {
-    const validRole = role as "OWNER" | "ADMIN" | "MEMBER";
+  const VALID_ROLES = ["OWNER", "ADMIN", "MEMBER"] as const;
+  type ValidRole = typeof VALID_ROLES[number];
+  if (role && VALID_ROLES.includes(role as ValidRole)) {
+    const validRole: ValidRole = role as ValidRole;
     const rolePerm = await db.query.rolePermissions.findFirst({
       where: and(
         eq(rolePermissions.role, validRole),
