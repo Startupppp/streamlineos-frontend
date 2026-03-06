@@ -51,9 +51,9 @@ export default function BacklogPage({ params }: PageProps) {
     const assignees = tickets
       .filter((t) => t.assignee)
       .map((t) => ({
-        id: t.assignee!.id,
-        name: `${t.assignee!.firstName || ""} ${
-          t.assignee!.lastName || ""
+        id: t.assignee?.id ?? "",
+        name: `${t.assignee?.firstName || ""} ${
+          t.assignee?.lastName || ""
         }`.trim(),
       }));
 

@@ -415,7 +415,7 @@ export default function TeamTimesheetsPage() {
     const totalHours = timesheets.reduce((sum, e) => sum + parseFloat(e.hours || "0"), 0);
     const uniqueEmployees = new Set(timesheets.map((e) => e.userId)).size;
     const uniqueProjects = new Set(
-      timesheets.filter((e) => e.ticket?.projectId).map((e) => e.ticket!.projectId)
+      timesheets.filter((e) => e.ticket?.projectId).map((e) => e.ticket?.projectId)
     ).size;
     const uniqueDates = new Set(timesheets.map((e) => e.date)).size;
     const avgHoursPerDay = uniqueDates > 0 ? totalHours / uniqueDates : 0;
