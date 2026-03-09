@@ -8,6 +8,7 @@ import {
   ticketComments,
   ticketAttachments,
   ticketLabelMappings,
+  ticketAssignees,
   timesheets,
   sprints,
   organizationMembers,
@@ -269,6 +270,11 @@ export const coreRouter = createTRPCRouter({
             with: {
               assignee: true,
               reporter: true,
+              assignees: {
+                with: {
+                  user: true,
+                },
+              },
               comments: {
                 with: {
                   user: true,
@@ -285,7 +291,33 @@ export const coreRouter = createTRPCRouter({
           },
         },
       });
-      return project ?? null;
+
+      if (!project) return null;
+
+      // Ticket isolation for non-admin users:
+      // They can see ticket cards (title, status, type, priority) on the board
+      // but description, comments, and attachments are stripped for tickets they're not part of
+      if (!isOwnerOrAdmin) {
+        const userId = ctx.session.userId;
+        project.tickets = project.tickets.map((ticket) => {
+          const isAssignee = ticket.assigneeId === userId ||
+            ticket.assignees?.some((a: { userId: string }) => a.userId === userId);
+          const isReporter = ticket.reporterId === userId;
+
+          if (isAssignee || isReporter) return ticket;
+
+          // Return restricted view — card info only, no details
+          return {
+            ...ticket,
+            description: null,
+            comments: [],
+            attachments: [],
+            _restricted: true,
+          };
+        });
+      }
+
+      return project;
     }),
 
   createProject: protectedProcedure

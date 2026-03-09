@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { logger } from "../../../../lib/logger";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   projects,
   tickets,
@@ -8,6 +9,7 @@ import {
   ticketAttachments,
   ticketLabels,
   ticketLabelMappings,
+  ticketAssignees,
   users,
   projectMembers,
 } from "../../../../lib/db/schema";
@@ -55,7 +57,7 @@ export const ticketRouter = createTRPCRouter({
 
         const nextTicketNumber = (maxTicketResult[0]?.maxTicketNumber || 0) + 1;
 
-        return await tx
+        const [created] = await tx
           .insert(tickets)
           .values({
             orgId: ctx.session.orgId,
@@ -76,6 +78,23 @@ export const ticketRouter = createTRPCRouter({
             status: input.status || "TODO",
           })
           .returning();
+
+        // Insert into ticket_assignees junction table
+        const allAssigneeIds = new Set<string>();
+        if (input.assigneeId) allAssigneeIds.add(input.assigneeId);
+        if (input.assigneeIds) input.assigneeIds.forEach(id => allAssigneeIds.add(id));
+
+        if (allAssigneeIds.size > 0) {
+          await tx.insert(ticketAssignees).values(
+            Array.from(allAssigneeIds).map(userId => ({
+              ticketId: created.id,
+              userId,
+              assignedBy: ctx.session.userId,
+            }))
+          );
+        }
+
+        return [created];
       });
       if (input.assigneeId) {
         try {
@@ -161,6 +180,36 @@ export const ticketRouter = createTRPCRouter({
           .where(
             and(eq(tickets.id, ticketId), eq(tickets.orgId, ctx.session.orgId))
           );
+
+        // Sync ticket_assignees if assigneeIds provided
+        if (updateData.assigneeIds !== undefined) {
+          await ctx.db.delete(ticketAssignees).where(eq(ticketAssignees.ticketId, ticketId));
+          const allIds = new Set(updateData.assigneeIds);
+          if (updateData.assigneeId && updateData.assigneeId !== "" && updateData.assigneeId !== "unassigned") {
+            allIds.add(updateData.assigneeId);
+          }
+          if (allIds.size > 0) {
+            await ctx.db.insert(ticketAssignees).values(
+              Array.from(allIds).map(userId => ({
+                ticketId,
+                userId,
+                assignedBy: ctx.session.userId,
+              }))
+            );
+          }
+        } else if (updateData.assigneeId !== undefined) {
+          // Legacy single assignee update — sync junction table too
+          await ctx.db.delete(ticketAssignees).where(eq(ticketAssignees.ticketId, ticketId));
+          const newAssigneeId = updateData.assigneeId === "" || updateData.assigneeId === "unassigned"
+            ? null : updateData.assigneeId;
+          if (newAssigneeId) {
+            await ctx.db.insert(ticketAssignees).values({
+              ticketId,
+              userId: newAssigneeId,
+              assignedBy: ctx.session.userId,
+            });
+          }
+        }
 
         return { success: true };
       } catch (error) {
@@ -262,6 +311,11 @@ export const ticketRouter = createTRPCRouter({
           sprint: true,
           assignee: true,
           reporter: true,
+          assignees: {
+            with: {
+              user: true,
+            },
+          },
           comments: {
             with: {
               user: true,
@@ -280,6 +334,23 @@ export const ticketRouter = createTRPCRouter({
           },
         },
       });
+
+      if (!ticket) return null;
+
+      // Ticket isolation: only assignees, reporter, or admin/owner can see full details
+      if (!isAdminOrOwner(ctx.session.user.role)) {
+        const isAssignee = ticket.assigneeId === ctx.session.userId ||
+          ticket.assignees.some(a => a.userId === ctx.session.userId);
+        const isReporter = ticket.reporterId === ctx.session.userId;
+
+        if (!isAssignee && !isReporter) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You don't have access to this ticket's details.",
+          });
+        }
+      }
+
       return ticket;
     }),
 
@@ -362,8 +433,20 @@ export const ticketRouter = createTRPCRouter({
       const limit = input.limit || DEFAULT_LIMIT;
       const offset = getOffset(page, limit);
 
+      // Find ticket IDs from junction table (multi-assignee)
+      const multiAssigned = await ctx.db
+        .select({ ticketId: ticketAssignees.ticketId })
+        .from(ticketAssignees)
+        .where(eq(ticketAssignees.userId, input.userId));
+      const multiTicketIds = multiAssigned.map(r => r.ticketId);
+
+      // Build conditions: primary assignee OR in ticketAssignees
+      const assigneeCondition = multiTicketIds.length > 0
+        ? sql`(${tickets.assigneeId} = ${input.userId} OR ${tickets.id} IN (${sql.join(multiTicketIds.map(id => sql`${id}`), sql`, `)}))`
+        : eq(tickets.assigneeId, input.userId);
+
       const conditions = [
-        eq(tickets.assigneeId, input.userId),
+        assigneeCondition,
         eq(tickets.orgId, ctx.session.orgId),
       ];
 
@@ -390,6 +473,11 @@ export const ticketRouter = createTRPCRouter({
             columns: {
               id: true,
               name: true,
+            },
+          },
+          assignees: {
+            with: {
+              user: true,
             },
           },
         },

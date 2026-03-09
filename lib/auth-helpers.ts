@@ -1,5 +1,4 @@
-"use server";
-
+// Pure utility - no "use server" directive needed since this is imported by tRPC routers
 import { db } from "@/lib/db";
 import { organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

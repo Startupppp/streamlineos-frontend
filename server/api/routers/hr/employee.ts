@@ -38,12 +38,21 @@ export const employeeRouter = createTRPCRouter({
         user: true,
       },
     });
-    return members.map((m) => m.user).filter((u) => u.isActive !== false);
+    return members
+      .map((m) => m.user)
+      .filter((u) => u.isActive !== false)
+      .map(({ password, bankDetails, taxId, ...safe }) => safe);
   }),
 
   createDepartment: protectedProcedure
     .input(createDepartmentInputSchema)
     .mutation(async ({ ctx, input }) => {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only Admins and Owners can create departments.",
+        });
+      }
       await ctx.db.insert(departments).values({
         name: input.name,
         orgId: ctx.session.orgId,
@@ -114,8 +123,20 @@ export const employeeRouter = createTRPCRouter({
 
        const userId = crypto.randomUUID();
 
-       const rawPassword = input.password || crypto.randomUUID().slice(0, 16);
-       const hashedPassword = await bcrypt.hash(rawPassword, 10);
+       function generateCompliantPassword(): string {
+         const lower = "abcdefghijklmnopqrstuvwxyz";
+         const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+         const digits = "0123456789";
+         const special = "@$!%*?&";
+         const all = lower + upper + digits + special;
+         const pick = (chars: string) => chars[Math.floor(Math.random() * chars.length)];
+         const required = [pick(lower), pick(upper), pick(digits), pick(special)];
+         for (let i = 0; i < 12; i++) required.push(pick(all));
+         return required.sort(() => Math.random() - 0.5).join("");
+       }
+
+       const rawPassword = input.password || generateCompliantPassword();
+       const hashedPassword = await bcrypt.hash(rawPassword, 12);
 
        let finalDepartmentId = input.departmentId;
        if (input.departmentId && input.departmentId < 0) {
@@ -166,32 +187,95 @@ export const employeeRouter = createTRPCRouter({
        const empNumber = lastNum + 1;
        const generatedEmployeeId = `${employeeIdPrefix}${yearSuffix}${empNumber.toString().padStart(3, "0")}`;
 
-       const [newUser] = await ctx.db.insert(users).values({
-          id: userId,
-          email: input.email,
-          name: `${input.firstName} ${input.lastName}`,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          gender: input.gender,
-          phone: input.phone,
-          whatsappNumber: input.whatsappSameAsPhone ? input.phone : input.whatsappNumber,
-          whatsappSameAsPhone: input.whatsappSameAsPhone,
-          role: input.role,
-          designation: input.designation,
-          departmentId: finalDepartmentId,
-          joiningDate: formatDateOnly(input.joiningDate),
-          experienceYears: input.experienceYears?.toString(),
-          skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
-          taxId: input.taxId,
-          bankDetails: input.bankDetails,
-          monthlySalary: input.monthlySalary?.toString(),
-          employeeId: generatedEmployeeId,
-          password: hashedPassword,
-          isPasswordChangeRequired: true,
-          image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-       }).returning();
+       const newUser = await ctx.db.transaction(async (tx) => {
+         const [createdUser] = await tx.insert(users).values({
+            id: userId,
+            email: input.email,
+            name: `${input.firstName} ${input.lastName}`,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            gender: input.gender,
+            phone: input.phone,
+            whatsappNumber: input.whatsappSameAsPhone ? input.phone : input.whatsappNumber,
+            whatsappSameAsPhone: input.whatsappSameAsPhone,
+            role: input.role,
+            designation: input.designation,
+            departmentId: finalDepartmentId,
+            joiningDate: formatDateOnly(input.joiningDate),
+            experienceYears: input.experienceYears?.toString(),
+            skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
+            taxId: input.taxId,
+            bankDetails: input.bankDetails,
+            monthlySalary: input.monthlySalary?.toString(),
+            employeeId: generatedEmployeeId,
+            password: hashedPassword,
+            isPasswordChangeRequired: true,
+            image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+         }).returning();
+
+         await tx.insert(organizationMembers).values({
+            userId: createdUser.id,
+            orgId: ctx.session.orgId,
+            role: input.role,
+            joinedAt: new Date(),
+         });
+
+         const monthlySalary = input.monthlySalary || 0;
+         const basicSalary = monthlySalary * 0.5;
+         const hra = monthlySalary * 0.25;
+         const specialAllowance = monthlySalary * 0.25;
+
+         await tx.insert(salaryStructures).values({
+            orgId: ctx.session.orgId,
+            userId: createdUser.id,
+            basicSalary: basicSalary.toString(),
+            hraPercentage: "50",
+            allowances: specialAllowance.toString(),
+            deductions: "200",
+            effectiveFrom: getTodayString(),
+            isActive: true,
+         });
+
+         if (monthlySalary > 0) {
+           const currentMonth = format(new Date(), "yyyy-MM");
+           const grossSalary = basicSalary + hra + specialAllowance;
+           const netSalary = grossSalary - 200;
+
+           await tx.insert(payrolls).values({
+             orgId: ctx.session.orgId,
+             userId: createdUser.id,
+             month: currentMonth,
+             basicSalary: basicSalary.toString(),
+             hra: hra.toString(),
+             allowances: specialAllowance.toString(),
+             deductions: "200",
+             grossSalary: grossSalary.toString(),
+             netSalary: netSalary.toString(),
+             status: "DRAFT",
+             generatedBy: ctx.session.userId,
+           });
+         }
+
+         const defaultSteps = ["Profile Setup", "Document Submission", "IT Setup", "Introduction"];
+         await tx.insert(onboardingSteps).values(
+           defaultSteps.map((step) => ({
+             orgId: ctx.session.orgId,
+             userId: createdUser.id,
+             stepName: step,
+             status: "PENDING" as const,
+           }))
+         );
+
+         return createdUser;
+       });
+
+       await initializeLeaveBalances(
+         ctx.session.orgId,
+         newUser.id,
+         input.joiningDate,
+       );
 
        try {
          await sendWelcomeEmail(
@@ -203,93 +287,32 @@ export const employeeRouter = createTRPCRouter({
          logger.error("Failed to send welcome email", { email: input.email, error });
        }
 
-       await ctx.db.insert(organizationMembers).values({
-          userId: newUser.id,
-          orgId: ctx.session.orgId,
-          role: input.role,
-          joinedAt: new Date(),
-       });
-
-       const monthlySalary = input.monthlySalary || 0;
-       const basicSalary = monthlySalary * 0.5;
-       const hra = monthlySalary * 0.25;
-       const specialAllowance = monthlySalary * 0.25;
-
-        await ctx.db.insert(salaryStructures).values({
-            orgId: ctx.session.orgId,
-            userId: newUser.id,
-            basicSalary: basicSalary.toString(),
-            hraPercentage: "50",
-            allowances: specialAllowance.toString(),
-            deductions: "200",
-            effectiveFrom: getTodayString(),
-            isActive: true,
-        });
-
-       if (monthlySalary > 0) {
-         const currentMonth = format(new Date(), "yyyy-MM");
-         const grossSalary = basicSalary + hra + specialAllowance;
-         const netSalary = grossSalary - 200;
-
-         await ctx.db.insert(payrolls).values({
-           orgId: ctx.session.orgId,
-           userId: newUser.id,
-           month: currentMonth,
-           basicSalary: basicSalary.toString(),
-           hra: hra.toString(),
-           allowances: specialAllowance.toString(),
-           deductions: "200",
-           grossSalary: grossSalary.toString(),
-           netSalary: netSalary.toString(),
-           status: "DRAFT",
-           generatedBy: ctx.session.userId,
-         });
-       }
-
-       const defaultSteps = ["Profile Setup", "Document Submission", "IT Setup", "Introduction"];
-       for (const step of defaultSteps) {
-           await ctx.db.insert(onboardingSteps).values({
-               orgId: ctx.session.orgId,
-               userId: newUser.id,
-               stepName: step,
-               status: "PENDING",
-           });
-       }
-       await initializeLeaveBalances(
-         ctx.session.orgId,
-         newUser.id,
-         input.joiningDate,
-       );
-
        const admins = await ctx.db.query.organizationMembers.findMany({
-          where: and(
-             eq(organizationMembers.orgId, ctx.session.orgId),
-
-          ),
+          where: eq(organizationMembers.orgId, ctx.session.orgId),
           with: {
              user: true
           }
        });
 
-
        const recipientIds = admins
           .filter(m => (m.role === "ADMIN" || m.role === "OWNER") && m.userId !== user.id)
           .map(m => m.userId);
 
-        for (const recipientId of recipientIds) {
-
-           await ctx.db.insert(notifications).values({
+       if (recipientIds.length > 0) {
+         await ctx.db.insert(notifications).values(
+           recipientIds.map((recipientId) => ({
               orgId: ctx.session.orgId,
               userId: recipientId,
-              type: "INFO",
+              type: "INFO" as const,
               title: "New Employee Onboarded",
               message: `${input.firstName} ${input.lastName} has joined as ${input.designation}.`,
               link: "/hr/employees",
               isRead: false,
-           });
-        }
+           }))
+         );
+       }
 
-       return newUser;
+       return { id: newUser.id, email: newUser.email, name: newUser.name, employeeId: newUser.employeeId };
     }),
 
   deleteEmployee: protectedProcedure

@@ -41,34 +41,33 @@ export async function checkPermission(
 ): Promise<boolean> {
   if (!permissionName) return true;
 
-  const userPerm = await db.query.userPermissions.findFirst({
+  if (role === "OWNER") {
+    return true;
+  }
+
+  const userPerms = await db.query.userPermissions.findMany({
     where: and(
       eq(userPermissions.userId, userId),
-      eq(userPermissions.orgId, orgId),
-      eq(userPermissions.granted, true)
+      eq(userPermissions.orgId, orgId)
     ),
     with: {
       permission: true,
     },
   });
 
-  if (userPerm && userPerm.permission?.name === permissionName) {
-    return true;
-  }
+  const matchingUserPerm = userPerms.find(
+    (up) => up.permission?.name === permissionName
+  );
 
-  if (
-    userPerm &&
-    userPerm.permission?.name === permissionName &&
-    !userPerm.granted
-  ) {
-    return false;
+  if (matchingUserPerm) {
+    return matchingUserPerm.granted;
   }
 
   const VALID_ROLES = ["OWNER", "ADMIN", "MEMBER"] as const;
-  type ValidRole = typeof VALID_ROLES[number];
+  type ValidRole = (typeof VALID_ROLES)[number];
   if (role && VALID_ROLES.includes(role as ValidRole)) {
     const validRole: ValidRole = role as ValidRole;
-    const rolePerm = await db.query.rolePermissions.findFirst({
+    const rolePerms = await db.query.rolePermissions.findMany({
       where: and(
         eq(rolePermissions.role, validRole),
         or(eq(rolePermissions.orgId, orgId), isNull(rolePermissions.orgId))
@@ -78,12 +77,18 @@ export async function checkPermission(
       },
     });
 
-    if (rolePerm && rolePerm.permission?.name === permissionName) {
+    const hasRolePerm = rolePerms.some(
+      (rp) => rp.permission?.name === permissionName
+    );
+
+    if (hasRolePerm) {
       return true;
     }
   }
 
-  if (role === "OWNER") {
+  const { ROLE_DEFAULT_PERMISSIONS } = await import("./permissions");
+  const defaults = role ? ROLE_DEFAULT_PERMISSIONS[role] ?? [] : [];
+  if (defaults.includes(permissionName)) {
     return true;
   }
 

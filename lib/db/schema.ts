@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER"]);
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
@@ -73,7 +73,9 @@ export const organizationMembers = pgTable("organization_members", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   role: roleEnum("role").default("MEMBER").notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("uniq_org_members_user_org").on(table.userId, table.orgId),
+]);
 export const accounts = pgTable("accounts", {
   userId: text("user_id").references(() => users.id).notNull(),
   type: text("type").notNull(),
@@ -167,11 +169,13 @@ export const users = pgTable("users", {
   monthlySalary: decimal("monthly_salary"),
   employeeId: text("employee_id"),
   metadata: jsonb("metadata"),
-  isPasswordChangeRequired: boolean("is_password_change_required").default(false), 
+  isPasswordChangeRequired: boolean("is_password_change_required").default(false),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_users_email").on(table.email),
+]);
 
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
@@ -180,7 +184,7 @@ export const attendance = pgTable("attendance", {
   date: date("date").notNull(),
   checkIn: timestamp("check_in"),
   checkOut: timestamp("check_out"),
-  status: text("status").default("PRESENT"), 
+  status: text("status").default("PRESENT"),
   workHours: decimal("work_hours"),
   breakHours: decimal("break_hours").default("0"),
   breaks: jsonb("breaks").$type<{ start: string; end?: string }[]>().default([]),
@@ -188,7 +192,11 @@ export const attendance = pgTable("attendance", {
   isOvertime: boolean("is_overtime").default(false),
   autoCheckedOut: boolean("auto_checked_out").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_attendance_user_id").on(table.userId),
+  index("idx_attendance_org_date").on(table.orgId, table.date),
+  index("idx_attendance_date").on(table.date),
+]);
 
 export const leaveTypes = pgTable("leave_types", {
   id: serial("id").primaryKey(),
@@ -219,7 +227,10 @@ export const leaveRequests = pgTable("leave_requests", {
   approverId: text("approver_id").references(() => users.id),
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_leave_requests_user_id").on(table.userId),
+  index("idx_leave_requests_org_status").on(table.orgId, table.status),
+]);
 
 export const onboardingSteps = pgTable("onboarding_steps", {
   id: serial("id").primaryKey(),
@@ -252,7 +263,9 @@ export const payrolls = pgTable("payrolls", {
   overtimeAmount: decimal("overtime_amount").default("0"),
   payslipUrl: text("payslip_url"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_payrolls_org_month").on(table.orgId, table.month),
+]);
 
 export const salaryStructures = pgTable("salary_structures", {
   id: serial("id").primaryKey(),
@@ -303,7 +316,10 @@ export const expenses = pgTable("expenses", {
   expenseDate: date("expense_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_expenses_user_id").on(table.userId),
+  index("idx_expenses_org_status").on(table.orgId, table.status),
+]);
 
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
@@ -475,7 +491,11 @@ export const tickets = pgTable("tickets", {
   parentReference: foreignKey({
       columns: [t.parentTicketId],
       foreignColumns: [t.id]
-  })
+  }),
+  projectIdx: index("idx_tickets_project_id").on(t.projectId),
+  assigneeIdx: index("idx_tickets_assignee_id").on(t.assigneeId),
+  sprintIdx: index("idx_tickets_sprint_id").on(t.sprintId),
+  orgStatusIdx: index("idx_tickets_org_status").on(t.orgId, t.status),
 }));
 
 export const projectStatuses = pgTable("project_statuses", {
@@ -495,7 +515,20 @@ export const projectMembers = pgTable("project_members", {
   userId: text("user_id").references(() => users.id).notNull(),
   role: text("role").default("CONTRIBUTOR"),
   joinedAt: timestamp("joined_at").defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("uniq_project_members_project_user").on(table.projectId, table.userId),
+]);
+export const ticketAssignees = pgTable("ticket_assignees", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").references(() => tickets.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  assignedBy: text("assigned_by").references(() => users.id),
+}, (table) => [
+  uniqueIndex("uniq_ticket_assignees_ticket_user").on(table.ticketId, table.userId),
+  index("idx_ticket_assignees_user_id").on(table.userId),
+]);
+
 export const ticketComments = pgTable("ticket_comments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -741,6 +774,23 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   comments: many(ticketComments),
   attachments: many(ticketAttachments),
   labels: many(ticketLabelMappings),
+  assignees: many(ticketAssignees),
+}));
+
+export const ticketAssigneesRelations = relations(ticketAssignees, ({ one }) => ({
+  ticket: one(tickets, {
+    fields: [ticketAssignees.ticketId],
+    references: [tickets.id],
+  }),
+  user: one(users, {
+    fields: [ticketAssignees.userId],
+    references: [users.id],
+  }),
+  assigner: one(users, {
+    fields: [ticketAssignees.assignedBy],
+    references: [users.id],
+    relationName: "assigner",
+  }),
 }));
 
 export const ticketCommentsRelations = relations(ticketComments, ({ one }) => ({
@@ -1194,4 +1244,9 @@ export const auditLogs = pgTable("audit_logs", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   ipAddress: text("ip_address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_audit_logs_user_id").on(table.userId),
+  index("idx_audit_logs_org_id").on(table.orgId),
+  index("idx_audit_logs_action").on(table.action),
+  index("idx_audit_logs_created_at").on(table.createdAt),
+]);
