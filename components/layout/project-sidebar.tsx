@@ -178,9 +178,16 @@ export function ProjectSidebar(props: ProjectSidebarProps) {
 
             
             <div className="md:hidden fixed top-[4.5rem] left-4 z-40">
-                <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+                <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen} modal>
                     <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" className="shadow-md bg-background border-border">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="shadow-md bg-background border-border"
+                            aria-label="Open project menu"
+                            aria-expanded={isMobileOpen}
+                        >
                             <Menu className="h-4 w-4" />
                         </Button>
                     </SheetTrigger>

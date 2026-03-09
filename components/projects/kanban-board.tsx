@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { MoreHorizontal, Plus, Lock } from "lucide-react";
 import {
   useUpdateTicketOrder,
   useCreateTicket,
@@ -78,8 +78,10 @@ interface KanbanTicket {
   ticketNumber?: number;
   epicId?: number | null;
   assignee?: { firstName?: string; lastName?: string; id: string; image?: string | null } | null;
+  assignees?: Array<{ userId: string; user: { firstName?: string; lastName?: string; id: string; image?: string | null } }>;
   order?: number | null;
   labels?: Array<{ label: { id: number; name: string; color: string | null } }>;
+  _restricted?: boolean;
 }
 
 interface KanbanBoardProps {
@@ -345,14 +347,20 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                         >
                                             <Card
                                             className={cn(
-                                                "cursor-grab active:cursor-grabbing transition-all duration-200 bg-card group border-border",
-                                                "hover:shadow-md hover:border-primary/20",
+                                                "transition-all duration-200 bg-card group border-border",
+                                                ticket._restricted
+                                                  ? "cursor-default opacity-75"
+                                                  : "cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary/20",
                                                 snapshot.isDragging && "shadow-xl rotate-1 scale-[1.02] border-primary/30"
                                             )}
                                             onMouseDown={(e) => {
                                               dragStartRef.current = { x: e.clientX, y: e.clientY };
                                             }}
                                             onClick={(e) => {
+                                              if (ticket._restricted) {
+                                                toast.info("You don't have access to this ticket's details.");
+                                                return;
+                                              }
                                               if (dragStartRef.current) {
                                                 const moved = Math.abs(e.clientX - dragStartRef.current.x) > 5 ||
                                                               Math.abs(e.clientY - dragStartRef.current.y) > 5;
@@ -364,11 +372,14 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                             }}
                                             >
                                             <CardContent className="p-2.5 sm:p-3 space-y-2">
-                                                
+
                                                 <div className="flex justify-between items-start gap-2">
                                                   <h4 className="font-medium text-sm text-foreground line-clamp-2 leading-snug flex-1">
                                                       {ticket.title}
                                                   </h4>
+                                                  {ticket._restricted ? (
+                                                    <Lock className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
+                                                  ) : (
                                                   <DropdownMenu>
                                                       <DropdownMenuTrigger asChild>
                                                       <Button
@@ -394,9 +405,10 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                       ))}
                                                       </DropdownMenuContent>
                                                   </DropdownMenu>
+                                                  )}
                                                 </div>
 
-                                                
+
                                                 {((ticket.labels && ticket.labels.length > 0) || (ticket.epicId && epicMap.has(ticket.epicId))) && (
                                                   <div className="flex items-center gap-1 flex-wrap">
                                                     {ticket.epicId && epicMap.has(ticket.epicId) && (
@@ -418,7 +430,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                   </div>
                                                 )}
 
-                                                
+
                                                 <div className="flex items-center justify-between pt-1">
                                                   <div className="flex items-center gap-1.5">
                                                       <TicketTypeIcon type={ticket.type} />
@@ -433,7 +445,24 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
                                                       )}
                                                   </div>
 
-                                                  {ticket.assignee ? (
+                                                  {/* Multi-assignee avatars */}
+                                                  {ticket.assignees && ticket.assignees.length > 1 ? (
+                                                    <div className="flex -space-x-2">
+                                                      {ticket.assignees.slice(0, 3).map(({ user }) => (
+                                                        <Avatar key={user.id} className="h-6 w-6 border-2 border-background">
+                                                          <AvatarImage src={resolveImageUrl(user.image)} />
+                                                          <AvatarFallback className="text-[7px] bg-primary/10 text-primary font-medium">
+                                                            {user.firstName?.[0]}{user.lastName?.[0]}
+                                                          </AvatarFallback>
+                                                        </Avatar>
+                                                      ))}
+                                                      {ticket.assignees.length > 3 && (
+                                                        <div className="h-6 w-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                                                          <span className="text-[8px] text-muted-foreground font-medium">+{ticket.assignees.length - 3}</span>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ) : ticket.assignee ? (
                                                       <Avatar className="h-7 w-7 border border-background ring-2 ring-background">
                                                       <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
                                                       <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-medium">

@@ -140,9 +140,11 @@ const employeeNavGroups: NavGroup[] = [
 interface AppSidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  /** Called when a nav link is clicked (e.g. to close mobile sheet) */
+  onNavigate?: () => void;
 }
 
-export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebarProps) {
+export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -230,7 +232,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
     <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
       
       <div className="px-4 py-4 relative">
-        <Link href="/dashboard" className="flex items-center gap-3">
+        <Link href="/dashboard" className="flex items-center gap-3" onClick={onNavigate}>
           <div className="relative w-8 h-8 bg-card rounded-lg border border-gold/20 flex items-center justify-center overflow-hidden shadow-noir shrink-0">
             <Image
               src="/logo.svg"
@@ -335,6 +337,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                         key={route.href}
                         href={route.href}
                         title={isCollapsed ? route.label : undefined}
+                        onClick={onNavigate}
                         className={cn(
                           "flex items-center rounded-lg transition-colors relative",
                           isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
@@ -357,6 +360,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebar
                       key={route.href}
                       href={route.href}
                       title={isCollapsed ? route.label : undefined}
+                      onClick={onNavigate}
                       className={cn(
                         "flex items-center rounded-lg transition-colors relative",
                         isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",

@@ -139,7 +139,7 @@ export function TicketDetailsDialog({
   const [localDescription, setLocalDescription] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: ticket, isLoading } = useTicket(ticketId || 0);
+  const { data: ticket, isLoading, error: ticketError } = useTicket(ticketId || 0);
   const { data: projectData } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
 
@@ -352,6 +352,14 @@ export function TicketDetailsDialog({
             <div className="py-16 text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
               <p className="text-muted-foreground">Loading ticket details...</p>
+            </div>
+          ) : ticketError?.message?.includes("don't have access") || ticketError?.message?.includes("FORBIDDEN") ? (
+            <div className="py-16 text-center">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="font-medium text-foreground mb-1">Restricted Access</p>
+              <p className="text-sm text-muted-foreground">You can only view details of tickets assigned to you.</p>
             </div>
           ) : ticket ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
@@ -590,40 +598,80 @@ export function TicketDetailsDialog({
 
                 
                 <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Assignee</label>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">Assignees</label>
+                  {/* Current assignees displayed as chips */}
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {(ticket.assignees && ticket.assignees.length > 0
+                      ? ticket.assignees.map((a: { userId: string; user: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null } }) => ({
+                          id: a.userId,
+                          firstName: a.user.firstName,
+                          lastName: a.user.lastName,
+                          image: a.user.image,
+                        }))
+                      : ticket.assignee ? [ticket.assignee] : []
+                    ).map((person: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null }) => (
+                      <div key={person.id} className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-0.5">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={resolveImageUrl(person.image)} />
+                          <AvatarFallback className="text-[8px]">
+                            {person.firstName?.[0]}{person.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs">{person.firstName} {person.lastName}</span>
+                        <button
+                          className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                          onClick={() => {
+                            const currentIds = ticket.assignees
+                              ? ticket.assignees.map((a: { userId: string }) => a.userId)
+                              : ticket.assignee ? [ticket.assignee.id] : [];
+                            const newIds = currentIds.filter((id: string) => id !== person.id);
+                            autoSave({
+                              assigneeId: newIds[0] || "",
+                              assigneeIds: newIds,
+                            });
+                          }}
+                          aria-label={`Remove ${person.firstName}`}
+                        >
+                          <span className="text-xs font-bold">&times;</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Add assignee dropdown */}
                   <Select
-                    value={ticket.assignee?.id || "unassigned"}
-                    onValueChange={(value) => autoSave({ assigneeId: value === "unassigned" ? "" : value })}
+                    value=""
+                    onValueChange={(value) => {
+                      if (!value || value === "unassigned") return;
+                      const currentIds = ticket.assignees
+                        ? ticket.assignees.map((a: { userId: string }) => a.userId)
+                        : ticket.assignee ? [ticket.assignee.id] : [];
+                      if (currentIds.includes(value)) return;
+                      const newIds = [...currentIds, value];
+                      autoSave({
+                        assigneeId: newIds[0] || "",
+                        assigneeIds: newIds,
+                      });
+                    }}
                   >
-                    <SelectTrigger className="bg-background">
-                      {ticket.assignee ? (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-7 w-7">
-                            <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-                            <AvatarFallback className="text-[10px]">
-                              {ticket.assignee.firstName?.[0]}{ticket.assignee.lastName?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="truncate">{ticket.assignee.firstName} {ticket.assignee.lastName}</span>
-                        </div>
-                      ) : (
-                        <SelectValue placeholder="Unassigned" />
-                      )}
+                    <SelectTrigger className="bg-background h-8 text-xs">
+                      <SelectValue placeholder="+ Add assignee" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unassigned">
-                        <span className="text-muted-foreground">Unassigned</span>
-                      </SelectItem>
-                      {members?.map((member) => (
+                      {members?.filter(m => {
+                        const currentIds = ticket.assignees
+                          ? ticket.assignees.map((a: { userId: string }) => a.userId)
+                          : ticket.assignee ? [ticket.assignee.id] : [];
+                        return !currentIds.includes(m.id);
+                      }).map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-7 w-7">
+                            <Avatar className="h-6 w-6">
                               <AvatarImage src={resolveImageUrl(member.image)} />
-                              <AvatarFallback className="text-[10px]">
+                              <AvatarFallback className="text-[9px]">
                                 {member.firstName?.[0]}{member.lastName?.[0]}
                               </AvatarFallback>
                             </Avatar>
-                            <span>{member.firstName} {member.lastName}</span>
+                            <span className="text-sm">{member.firstName} {member.lastName}</span>
                           </div>
                         </SelectItem>
                       ))}
