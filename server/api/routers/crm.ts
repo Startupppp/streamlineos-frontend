@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, gte, count } from "drizzle-orm";
 import {
   crmPeople,
   crmCompanies,
@@ -14,7 +14,10 @@ import {
   crmMonthlyMetrics,
   crmTeamPerformance,
   crmSupportTeamMembers,
+  leads,
+  leadActivities,
 } from "../../../lib/db/schema";
+import { subDays } from "date-fns";
 
 export const crmRouter = createTRPCRouter({
   getSalesDashboard: protectedProcedure.query(async ({ ctx }) => {
@@ -117,6 +120,40 @@ export const crmRouter = createTRPCRouter({
       };
     });
 
+    const allLeads = await ctx.db.query.leads.findMany({
+      where: eq(leads.orgId, orgId),
+    });
+
+    const activeClients = allLeads.filter(l => l.status === "CONVERTED").length;
+    const inactiveClients = allLeads.filter(l => l.status === "LOST").length;
+
+    const sevenDaysAgo = subDays(new Date(), 7);
+    const recentActivities = await ctx.db
+      .select({ type: leadActivities.type, count: count() })
+      .from(leadActivities)
+      .innerJoin(leads, eq(leads.id, leadActivities.leadId))
+      .where(and(eq(leads.orgId, orgId), gte(leadActivities.createdAt, sevenDaysAgo)))
+      .groupBy(leadActivities.type);
+
+    const activityMap = Object.fromEntries(recentActivities.map(a => [a.type, a.count]));
+
+    const leadsNeedingFollowUp = allLeads.filter(l => {
+      if (l.status === "CONVERTED" || l.status === "LOST") return false;
+      if (!l.updatedAt) return true;
+      const daysSinceContact = (Date.now() - new Date(l.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+      return daysSinceContact > 3;
+    }).length;
+
+    const enhancedMetrics = {
+      activeClients,
+      inactiveClients,
+      totalCalls: activityMap["call"] ?? 0,
+      totalMeetings: activityMap["meeting"] ?? 0,
+      totalEmails: activityMap["email"] ?? 0,
+      totalSiteVisits: activityMap["site_visit"] ?? 0,
+      followUpNeeded: leadsNeedingFollowUp,
+    };
+
     return {
       salesStats,
       revenueTimeline,
@@ -125,6 +162,7 @@ export const crmRouter = createTRPCRouter({
       salesLeaderboard,
       salesActivity,
       dealsByStage,
+      enhancedMetrics,
     };
   }),
 

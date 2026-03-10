@@ -10,6 +10,13 @@ import {
   Target,
   ArrowUpRight,
   Medal,
+  Phone,
+  Users,
+  UserX,
+  CalendarClock,
+  Mail,
+  MapPin,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -39,6 +46,7 @@ export default function SalesDashboardPage() {
   const salesLeaderboard = data?.salesLeaderboard ?? [];
   const salesActivity = data?.salesActivity ?? [];
   const dealsByStage = data?.dealsByStage ?? [];
+  const enhanced = data?.enhancedMetrics;
 
   const maxLeaderboardRevenue = useMemo(
     () => safeMax(salesLeaderboard.map((r) => r.revenue)),
@@ -112,6 +120,38 @@ export default function SalesDashboardPage() {
           sparkColor={sparkColors.amber}
         />
       </motion.div>
+
+      {enhanced && (
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-noir">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-gold" />
+                Live CRM Metrics (Last 7 Days)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-7">
+                {[
+                  { label: "Active Clients", value: enhanced.activeClients, icon: Users, color: "text-emerald-500" },
+                  { label: "Inactive Clients", value: enhanced.inactiveClients, icon: UserX, color: "text-red-400" },
+                  { label: "Total Calls", value: enhanced.totalCalls, icon: Phone, color: "text-blue-500" },
+                  { label: "Meetings", value: enhanced.totalMeetings, icon: CalendarClock, color: "text-purple-500" },
+                  { label: "Emails Sent", value: enhanced.totalEmails, icon: Mail, color: "text-amber-500" },
+                  { label: "Site Visits", value: enhanced.totalSiteVisits, icon: MapPin, color: "text-cyan-500" },
+                  { label: "Need Follow-up", value: enhanced.followUpNeeded, icon: AlertCircle, color: enhanced.followUpNeeded > 0 ? "text-red-500" : "text-muted-foreground" },
+                ].map((m) => (
+                  <div key={m.label} className="flex flex-col items-center gap-1 p-3 rounded-xl border border-border bg-muted/30">
+                    <m.icon className={cn("h-5 w-5", m.color)} />
+                    <span className="text-2xl font-bold text-foreground">{m.value}</span>
+                    <span className="text-[11px] text-muted-foreground text-center leading-tight">{m.label}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-7" variants={fadeUp}>
