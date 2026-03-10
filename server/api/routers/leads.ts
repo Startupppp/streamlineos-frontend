@@ -511,6 +511,53 @@ export const leadsRouter = createTRPCRouter({
       .slice(0, 20);
   }),
 
+  getSlaAlerts: protectedProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.session.orgId;
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const allLeads = await ctx.db.query.leads.findMany({
+      where: and(
+        eq(leads.orgId, orgId),
+        sql`${leads.status} IN ('NEW', 'CONTACTED', 'INTERESTED', 'QUALIFIED')`
+      ),
+      with: {
+        assignedTo: { columns: { id: true, name: true } },
+      },
+    });
+
+    const slaBreached: {
+      leadId: number;
+      leadName: string;
+      status: string;
+      assignedTo: string | null;
+      hoursSinceUpdate: number;
+      priority: string | null;
+    }[] = [];
+
+    for (const lead of allLeads) {
+      const updatedAt = lead.updatedAt ? new Date(lead.updatedAt) : lead.createdAt ? new Date(lead.createdAt) : now;
+      if (updatedAt < twentyFourHoursAgo) {
+        const hoursSince = Math.round((now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60));
+        slaBreached.push({
+          leadId: lead.id,
+          leadName: lead.name,
+          status: lead.status,
+          assignedTo: lead.assignedTo?.name || null,
+          hoursSinceUpdate: hoursSince,
+          priority: lead.priority,
+        });
+      }
+    }
+
+    slaBreached.sort((a, b) => b.hoursSinceUpdate - a.hoursSinceUpdate);
+
+    return {
+      total: slaBreached.length,
+      leads: slaBreached,
+    };
+  }),
+
   getDashboardMetrics: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
 

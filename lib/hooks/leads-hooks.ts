@@ -124,6 +124,16 @@ export function useSalesLeaderboard(
   });
 }
 
+export function useSlaAlerts(
+  options?: Partial<UseQueryOptions<LeadsRouterOutputs["getSlaAlerts"]>>
+) {
+  return useQuery<LeadsRouterOutputs["getSlaAlerts"]>({
+    queryKey: [...vaivammKeys.leads.all, "slaAlerts"],
+    queryFn: () => vaivammTrpcClient.leads.getSlaAlerts.query(),
+    ...options,
+  });
+}
+
 export function useLeadDashboardMetrics(
   options?: Partial<UseQueryOptions<LeadsRouterOutputs["getDashboardMetrics"]>>
 ) {
