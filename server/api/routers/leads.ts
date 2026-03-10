@@ -3,6 +3,8 @@ import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
 import { leads, leadActivities, notifications, tickets, projects, users } from "../../../lib/db/schema";
 import { TRPCError } from "@trpc/server";
+import { sendEmail } from "../../../lib/email";
+import { logger } from "../../../lib/logger";
 
 const leadStatusValues = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 const leadSourceValues = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"] as const;
@@ -179,6 +181,46 @@ export const leadsRouter = createTRPCRouter({
         message: `You have been assigned lead: ${updated.name}`,
         link: `/crm/leads/${updated.id}`,
       });
+
+      try {
+        const assignee = await ctx.db.query.users.findFirst({
+          where: eq(users.id, input.assignedToId),
+          columns: { email: true, name: true },
+        });
+        const assigner = await ctx.db.query.users.findFirst({
+          where: eq(users.id, ctx.session.userId),
+          columns: { name: true },
+        });
+        if (assignee?.email) {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+          await sendEmail({
+            to: assignee.email,
+            subject: `Lead Assigned: ${updated.name} — Vaivamm Capital`,
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+              <div style="background:linear-gradient(135deg,#0f2b7f,#1e40af);padding:24px;text-align:center;border-radius:10px 10px 0 0;">
+                <h1 style="color:#bd882c;margin:0;font-size:22px;">Vaivamm Capital</h1>
+              </div>
+              <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;">
+                <h2 style="color:#1e40af;margin-top:0;">New Lead Assigned to You</h2>
+                <p>Hi <strong>${assignee.name || "Team Member"}</strong>,</p>
+                <p><strong>${assigner?.name || "A manager"}</strong> has assigned you the following lead:</p>
+                <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+                  <tr><td style="padding:8px;color:#6b7280;">Name</td><td style="padding:8px;font-weight:bold;">${updated.name}</td></tr>
+                  ${updated.company ? `<tr><td style="padding:8px;color:#6b7280;">Company</td><td style="padding:8px;">${updated.company}</td></tr>` : ""}
+                  ${updated.email ? `<tr><td style="padding:8px;color:#6b7280;">Email</td><td style="padding:8px;">${updated.email}</td></tr>` : ""}
+                  ${updated.phone ? `<tr><td style="padding:8px;color:#6b7280;">Phone</td><td style="padding:8px;">${updated.phone}</td></tr>` : ""}
+                  <tr><td style="padding:8px;color:#6b7280;">Status</td><td style="padding:8px;">${updated.status}</td></tr>
+                </table>
+                <div style="text-align:center;margin:24px 0;">
+                  <a href="${baseUrl}/crm/leads/${updated.id}" style="background:#0f2b7f;color:#bd882c;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;">View Lead</a>
+                </div>
+              </div>
+            </body></html>`,
+          });
+        }
+      } catch (emailErr) {
+        logger.error("Failed to send lead assignment email", { leadId: updated.id, error: emailErr });
+      }
 
       return updated;
     }),
