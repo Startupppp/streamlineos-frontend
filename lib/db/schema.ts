@@ -1009,6 +1009,86 @@ export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => 
   }),
 }));
 
+export const leadPipelineStatusEnum = pgEnum("lead_pipeline_status", ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]);
+export const leadActivityTypeEnum = pgEnum("lead_activity_type", ["call", "email", "whatsapp", "meeting", "site_visit"]);
+export const leadSourceEnum = pgEnum("lead_source", ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"]);
+
+export const departmentMembers = pgTable("department_members", {
+  id: serial("id").primaryKey(),
+  departmentId: integer("department_id").references(() => departments.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  role: text("role").default("member"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_dept_members_dept_user").on(table.departmentId, table.userId),
+]);
+
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  whatsappNumber: text("whatsapp_number"),
+  source: leadSourceEnum("source").default("other"),
+  campaignId: integer("campaign_id").references(() => crmCampaigns.id),
+  status: leadPipelineStatusEnum("status").default("NEW").notNull(),
+  investmentInterest: decimal("investment_interest"),
+  potentialValue: decimal("potential_value"),
+  notes: text("notes"),
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  assignedById: text("assigned_by_id").references(() => users.id),
+  assignedAt: timestamp("assigned_at"),
+  convertedAt: timestamp("converted_at"),
+  lostReason: text("lost_reason"),
+  company: text("company"),
+  designation: text("designation"),
+  city: text("city"),
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_leads_org_status").on(table.orgId, table.status),
+  index("idx_leads_assigned_to").on(table.assignedToId),
+]);
+
+export const leadActivities = pgTable("lead_activities", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  leadId: integer("lead_id").references(() => leads.id).notNull(),
+  type: leadActivityTypeEnum("type").notNull(),
+  date: timestamp("date").notNull(),
+  duration: integer("duration"),
+  subject: text("subject"),
+  location: text("location"),
+  locationLink: text("location_link"),
+  messageSummary: text("message_summary"),
+  notes: text("notes"),
+  outcome: text("outcome"),
+  userId: text("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_activities_lead").on(table.leadId),
+  index("idx_lead_activities_user").on(table.userId),
+]);
+
+export const targets = pgTable("targets", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  metricType: text("metric_type").notNull(),
+  targetValue: decimal("target_value").notNull(),
+  currentValue: decimal("current_value").default("0"),
+  period: text("period").default("daily"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  setById: text("set_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_targets_user_period").on(table.userId, table.period),
+]);
+
 export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
 export const crmHealthEnum = pgEnum("crm_health", ["healthy", "at_risk", "critical"]);
 export const crmDealStageEnum = pgEnum("crm_deal_stage", ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]);
@@ -1231,6 +1311,70 @@ export const crmTeamPerformanceRelations = relations(crmTeamPerformance, ({ one 
   person: one(crmPeople, {
     fields: [crmTeamPerformance.personId],
     references: [crmPeople.id],
+  }),
+}));
+
+export const departmentsRelations = relations(departments, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [departments.orgId],
+    references: [organizations.id],
+  }),
+  members: many(departmentMembers),
+}));
+
+export const departmentMembersRelations = relations(departmentMembers, ({ one }) => ({
+  department: one(departments, {
+    fields: [departmentMembers.departmentId],
+    references: [departments.id],
+  }),
+  user: one(users, {
+    fields: [departmentMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const leadsRelations = relations(leads, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [leads.orgId],
+    references: [organizations.id],
+  }),
+  assignedTo: one(users, {
+    fields: [leads.assignedToId],
+    references: [users.id],
+    relationName: "leadAssignee",
+  }),
+  assignedBy: one(users, {
+    fields: [leads.assignedById],
+    references: [users.id],
+    relationName: "leadAssigner",
+  }),
+  campaign: one(crmCampaigns, {
+    fields: [leads.campaignId],
+    references: [crmCampaigns.id],
+  }),
+  activities: many(leadActivities),
+}));
+
+export const leadActivitiesRelations = relations(leadActivities, ({ one }) => ({
+  lead: one(leads, {
+    fields: [leadActivities.leadId],
+    references: [leads.id],
+  }),
+  user: one(users, {
+    fields: [leadActivities.userId],
+    references: [users.id],
+  }),
+}));
+
+export const targetsRelations = relations(targets, ({ one }) => ({
+  user: one(users, {
+    fields: [targets.userId],
+    references: [users.id],
+  }),
+  setBy: one(users, {
+    fields: [targets.setById],
+    references: [users.id],
+    relationName: "targetSetter",
   }),
 }));
 

@@ -7,6 +7,9 @@ import { reportsRouter } from "./routers/reports";
 import { authRouter } from "./routers/auth";
 import { organizationRouter } from "./routers/organization";
 import { crmRouter } from "./routers/crm";
+import { leadsRouter } from "./routers/leads";
+import { targetsRouter } from "./routers/targets";
+import { notificationsRouter } from "./routers/notifications";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -17,6 +20,9 @@ export const appRouter = createTRPCRouter({
   rbac: rbacRouter,
   reports: reportsRouter,
   crm: crmRouter,
+  leads: leadsRouter,
+  targets: targetsRouter,
+  notifications: notificationsRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";

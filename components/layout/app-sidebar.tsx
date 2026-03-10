@@ -28,6 +28,10 @@ import {
   Handshake,
   Megaphone,
   HeadphonesIcon,
+  Contact2,
+  Trophy,
+  BarChart3,
+  Bell,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -88,6 +92,9 @@ const adminNavGroups: NavGroup[] = [
   {
     label: "CRM",
     routes: [
+      { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
+      { label: "Targets", icon: Trophy, href: "/crm/targets" },
+      { label: "Reports", icon: BarChart3, href: "/crm/reports" },
       { label: "Sales", icon: DollarSign, href: "/sales" },
       { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
       { label: "Marketing", icon: Megaphone, href: "/marketing" },
@@ -97,6 +104,7 @@ const adminNavGroups: NavGroup[] = [
   {
     label: "System",
     routes: [
+      { label: "Notifications", icon: Bell, href: "/notifications" },
       { label: "Settings", icon: Settings, href: "/settings" },
     ],
   },
@@ -129,10 +137,18 @@ const employeeNavGroups: NavGroup[] = [
   {
     label: "CRM",
     routes: [
+      { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
+      { label: "Targets", icon: Trophy, href: "/crm/targets" },
       { label: "Sales", icon: DollarSign, href: "/sales" },
       { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
       { label: "Marketing", icon: Megaphone, href: "/marketing" },
       { label: "Support", icon: HeadphonesIcon, href: "/support" },
+    ],
+  },
+  {
+    label: "System",
+    routes: [
+      { label: "Notifications", icon: Bell, href: "/notifications" },
     ],
   },
 ];

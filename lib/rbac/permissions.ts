@@ -270,6 +270,60 @@ export const PERMISSIONS: Permission[] = [
     action: "manage",
     description: "Manage RBAC permissions",
   },
+  {
+    name: "crm:leads:view",
+    resource: "crm:leads",
+    action: "view",
+    description: "View CRM leads",
+  },
+  {
+    name: "crm:leads:create",
+    resource: "crm:leads",
+    action: "create",
+    description: "Create CRM leads",
+  },
+  {
+    name: "crm:leads:update",
+    resource: "crm:leads",
+    action: "update",
+    description: "Update CRM leads",
+  },
+  {
+    name: "crm:leads:assign",
+    resource: "crm:leads",
+    action: "assign",
+    description: "Assign CRM leads",
+  },
+  {
+    name: "crm:leads:delete",
+    resource: "crm:leads",
+    action: "delete",
+    description: "Delete CRM leads",
+  },
+  {
+    name: "crm:targets:view",
+    resource: "crm:targets",
+    action: "view",
+    description: "View targets",
+  },
+  {
+    name: "crm:targets:manage",
+    resource: "crm:targets",
+    action: "manage",
+    description: "Manage targets",
+  },
+  {
+    name: "crm:reports:view",
+    resource: "crm:reports",
+    action: "view",
+    description: "View CRM reports",
+  },
+  {
+    name: "crm:reports:export",
+    resource: "crm:reports",
+    action: "export",
+    description: "Export CRM reports",
+  },
 ];
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
@@ -295,6 +349,11 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:view",
     "projects:timesheets:create",
     "reports:view",
+    "crm:leads:view",
+    "crm:leads:create",
+    "crm:leads:update",
+    "crm:targets:view",
+    "crm:reports:view",
   ],
   CLIENT: [
     "projects:view",

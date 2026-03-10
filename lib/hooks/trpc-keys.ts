@@ -13,6 +13,9 @@ const dashboardBaseKey = [...baseKey, "dashboard"] as const;
 const rbacBaseKey = [...baseKey, "rbac"] as const;
 const reportsBaseKey = [...baseKey, "reports"] as const;
 const crmBaseKey = [...baseKey, "crm"] as const;
+const leadsBaseKey = [...baseKey, "leads"] as const;
+const targetsBaseKey = [...baseKey, "targets"] as const;
+const notificationsBaseKey = [...baseKey, "notifications"] as const;
 
 export const vaivammKeys = {
   all: baseKey,
@@ -94,6 +97,28 @@ export const vaivammKeys = {
     person: (slug: string) => [...crmBaseKey, "person", slug] as const,
     allPeopleSlugs: () => [...crmBaseKey, "allPeopleSlugs"] as const,
   },
+
+  leads: {
+    all: leadsBaseKey,
+    list: (status?: string, assignedTo?: string) => [...leadsBaseKey, "list", { status, assignedTo }] as const,
+    board: () => [...leadsBaseKey, "board"] as const,
+    detail: (id: number) => [...leadsBaseKey, "detail", { id }] as const,
+    stats: () => [...leadsBaseKey, "stats"] as const,
+    activities: (leadId: number) => [...leadsBaseKey, "activities", { leadId }] as const,
+  },
+
+  targets: {
+    all: targetsBaseKey,
+    list: (userId?: string) => [...targetsBaseKey, "list", { userId }] as const,
+    myTargets: () => [...targetsBaseKey, "myTargets"] as const,
+    leaderboard: (metricType?: string) => [...targetsBaseKey, "leaderboard", { metricType }] as const,
+  },
+
+  notifications: {
+    all: notificationsBaseKey,
+    list: () => [...notificationsBaseKey, "list"] as const,
+    unreadCount: () => [...notificationsBaseKey, "unreadCount"] as const,
+  },
 };
 
 export type HrRouterOutputs = RouterOutputs["hr"];
@@ -109,3 +134,9 @@ export type DashboardRouterInputs = RouterInputs["dashboard"];
 export type RbacRouterInputs = RouterInputs["rbac"];
 export type ReportsRouterInputs = RouterInputs["reports"];
 export type CrmRouterInputs = RouterInputs["crm"];
+export type LeadsRouterOutputs = RouterOutputs["leads"];
+export type LeadsRouterInputs = RouterInputs["leads"];
+export type TargetsRouterOutputs = RouterOutputs["targets"];
+export type TargetsRouterInputs = RouterInputs["targets"];
+export type NotificationsRouterOutputs = RouterOutputs["notifications"];
+export type NotificationsRouterInputs = RouterInputs["notifications"];

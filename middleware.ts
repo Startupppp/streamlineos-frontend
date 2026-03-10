@@ -14,6 +14,8 @@ const PROTECTED_ROUTES = [
   "/billing",
   "/timesheets",
   "/support",
+  "/crm",
+  "/notifications",
 ];
 
 const AUTH_ROUTES = [
