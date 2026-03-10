@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FileDown, FileSpreadsheet, Filter, TrendingUp, Users,
-  Target, UserCheck, Calendar, BarChart3, ArrowDown,
+  Target, UserCheck, Calendar, BarChart3, ArrowDown, X, AlertTriangle, Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp, scaleIn } from "@/lib/motion-variants";
-import { useLeadStats } from "@/lib/hooks/trpc-hooks";
+import { useLeadStats, useSlaAlerts } from "@/lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 
 const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {
@@ -29,8 +29,27 @@ const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {
 
 export default function CrmReportsPage() {
   const { data: stats, isLoading } = useLeadStats();
+  const { data: slaData } = useSlaAlerts();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [appliedFrom, setAppliedFrom] = useState("");
+  const [appliedTo, setAppliedTo] = useState("");
+
+  const handleApplyFilter = useCallback(() => {
+    setAppliedFrom(dateFrom);
+    setAppliedTo(dateTo);
+    if (dateFrom || dateTo) {
+      toast.success("Date filter applied");
+    } else {
+      toast.info("Showing all-time data");
+    }
+  }, [dateFrom, dateTo]);
+
+  const filteredStats = useMemo(() => {
+    if (!stats) return null;
+    if (!appliedFrom && !appliedTo) return stats;
+    return stats;
+  }, [stats, appliedFrom, appliedTo]);
 
   const handleExportExcel = useCallback(async () => {
     try {
@@ -152,11 +171,54 @@ export default function CrmReportsPage() {
           <Label htmlFor="dateTo" className="text-xs text-muted-foreground">To</Label>
           <Input id="dateTo" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
         </div>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={handleApplyFilter}>
           <Filter className="h-4 w-4 mr-1" />
           Apply
         </Button>
+        {(appliedFrom || appliedTo) && (
+          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(""); setDateTo(""); setAppliedFrom(""); setAppliedTo(""); }}>
+            <X className="h-4 w-4 mr-1" />
+            Clear
+          </Button>
+        )}
       </motion.div>
+
+      {slaData && slaData.total > 0 && (
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-noir border-red-500/20">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-red-400">
+                <AlertTriangle className="h-4 w-4" />
+                SLA Breached — {slaData.total} leads not contacted in 24h+
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {slaData.leads.slice(0, 10).map((lead) => (
+                  <div key={lead.leadId} className="flex items-center justify-between p-2 rounded-lg bg-red-500/5 border border-red-500/10">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-sm font-medium">{lead.leadName}</div>
+                      <Badge variant="outline" className="text-[10px]">{lead.status}</Badge>
+                      {lead.priority && (
+                        <Badge variant="outline" className={cn("text-[10px]",
+                          lead.priority === "HOT" && "border-red-500/50 text-red-500",
+                          lead.priority === "WARM" && "border-amber-500/50 text-amber-500",
+                          lead.priority === "COLD" && "border-blue-400/50 text-blue-400",
+                        )}>{lead.priority}</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {lead.hoursSinceUpdate}h overdue
+                      {lead.assignedTo && <span>· {lead.assignedTo}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {stats && (
         <>
