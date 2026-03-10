@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -36,6 +36,7 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
 import { useProjects } from "../../lib/hooks/trpc-hooks";
+import { ROLE_DEFAULT_PERMISSIONS } from "../../lib/rbac/permissions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,56 +50,62 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Skeleton } from "../ui/skeleton";
 import { ScrollArea } from "../ui/scroll-area";
 
-interface NavGroup {
+interface NavRoute {
   label: string;
-  routes: {
-    label: string;
-    icon: React.ElementType;
-    href: string;
-    badge?: "leaves" | "onboarding";
-    isProjectsList?: boolean;
-  }[];
+  icon: React.ElementType;
+  href: string;
+  badge?: "leaves" | "onboarding";
+  isProjectsList?: boolean;
+  permission?: string;
+  ownerOnly?: boolean;
+  adminOnly?: boolean;
 }
 
-const adminNavGroups: NavGroup[] = [
+interface NavGroup {
+  label: string;
+  routes: NavRoute[];
+}
+
+const allNavGroups: NavGroup[] = [
   {
     label: "Core",
     routes: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-      { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
+      { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code", ownerOnly: true },
     ],
   },
   {
     label: "HR Management",
     routes: [
-      { label: "Employees", icon: Users, href: "/hr", badge: "onboarding" },
-      { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding" },
-      { label: "Attendance", icon: Clock, href: "/hr/attendance" },
-      { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
-      { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
-      { label: "Devices", icon: Laptop, href: "/hr/devices" },
-      { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
-      { label: "Documents", icon: FileText, href: "/hr/documents" },
+      { label: "Employees", icon: Users, href: "/hr", badge: "onboarding", permission: "hr:employees:view" },
+      { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding", permission: "hr:employees:create" },
+      { label: "Attendance", icon: Clock, href: "/hr/attendance", permission: "hr:attendance:view" },
+      { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves", permission: "hr:leaves:view" },
+      { label: "Payroll", icon: CreditCard, href: "/hr/payroll", permission: "hr:payroll:view" },
+      { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips", permission: "hr:payroll:view" },
+      { label: "Devices", icon: Laptop, href: "/hr/devices", permission: "hr:assets:view" },
+      { label: "Expenses", icon: Receipt, href: "/hr/expenses", permission: "hr:expenses:view" },
+      { label: "Documents", icon: FileText, href: "/hr/documents", permission: "hr:documents:view" },
     ],
   },
   {
     label: "Projects",
     routes: [
-      { label: "Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-      { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-      { label: "Team Timesheets", icon: Clock, href: "/timesheets/team" },
+      { label: "Projects", icon: Briefcase, href: "/projects", isProjectsList: true, permission: "projects:view" },
+      { label: "My Timesheets", icon: Timer, href: "/timesheets", permission: "projects:timesheets:view" },
+      { label: "Team Timesheets", icon: Clock, href: "/timesheets/team", adminOnly: true },
     ],
   },
   {
     label: "CRM",
     routes: [
-      { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
-      { label: "Targets", icon: Trophy, href: "/crm/targets" },
-      { label: "Reports", icon: BarChart3, href: "/crm/reports" },
-      { label: "Sales", icon: DollarSign, href: "/sales" },
-      { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
-      { label: "Marketing", icon: Megaphone, href: "/marketing" },
-      { label: "Support", icon: HeadphonesIcon, href: "/support" },
+      { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads", permission: "crm:leads:view" },
+      { label: "Targets", icon: Trophy, href: "/crm/targets", permission: "crm:targets:view" },
+      { label: "Reports", icon: BarChart3, href: "/crm/reports", permission: "crm:reports:view" },
+      { label: "Sales", icon: DollarSign, href: "/sales", permission: "crm:leads:view" },
+      { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "crm:leads:view" },
+      { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "crm:leads:view" },
+      { label: "Support", icon: HeadphonesIcon, href: "/support", permission: "crm:leads:view" },
     ],
   },
   {
@@ -110,53 +117,34 @@ const adminNavGroups: NavGroup[] = [
   },
 ];
 
-const employeeNavGroups: NavGroup[] = [
-  {
-    label: "Core",
-    routes: [
-      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-    ],
-  },
-  {
-    label: "My Work",
-    routes: [
-      { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-      { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-    ],
-  },
-  {
-    label: "HR",
-    routes: [
-      { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
-      { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
-      { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
-      { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
-      { label: "My Documents", icon: FileText, href: "/hr/documents" },
-    ],
-  },
-  {
-    label: "CRM",
-    routes: [
-      { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
-      { label: "Targets", icon: Trophy, href: "/crm/targets" },
-      { label: "Sales", icon: DollarSign, href: "/sales" },
-      { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
-      { label: "Marketing", icon: Megaphone, href: "/marketing" },
-      { label: "Support", icon: HeadphonesIcon, href: "/support" },
-    ],
-  },
-  {
-    label: "System",
-    routes: [
-      { label: "Notifications", icon: Bell, href: "/notifications" },
-    ],
-  },
-];
+function filterNavGroups(role: string | undefined): NavGroup[] {
+  if (!role) return [];
+  const permissions = ROLE_DEFAULT_PERMISSIONS[role] || [];
+  const isOwner = role === "OWNER";
+  const isAdminOrOwner = role === "ADMIN" || role === "OWNER";
+
+  return allNavGroups
+    .map((group) => ({
+      ...group,
+      routes: group.routes.filter((route) => {
+        if (route.ownerOnly && !isOwner) return false;
+        if (route.adminOnly && !isAdminOrOwner) return false;
+        if (route.permission && !permissions.includes(route.permission)) return false;
+        if (role === "MEMBER") {
+          if (route.href === "/hr" && route.label === "Employees") return false;
+          if (route.href === "/hr/onboarding") return false;
+          if (route.href === "/hr/payroll") return false;
+          if (route.href === "/hr/devices") return false;
+        }
+        return true;
+      }),
+    }))
+    .filter((group) => group.routes.length > 0);
+}
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  /** Called when a nav link is clicked (e.g. to close mobile sheet) */
   onNavigate?: () => void;
 }
 
@@ -166,16 +154,9 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
   const { data: projects = [], isLoading: projectsLoading } = useProjects();
-  
+
   const role = session?.user?.role;
-  const currentProjectId = pathname?.match(/\/projects\/(\d+)/)?.[1];
-  let navGroups = role === "OWNER" || role === "ADMIN" ? adminNavGroups : employeeNavGroups;
-  if (role === "ADMIN") {
-    navGroups = adminNavGroups.map(group => ({
-      ...group,
-      routes: group.routes.filter(route => route.href !== "/ceo/qr-code")
-    }));
-  }
+  const navGroups = useMemo(() => filterNavGroups(role), [role]);
 
   const handleOrgChange = (_id: string) => {
     router.push("/dashboard");
@@ -246,7 +227,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
 
   return (
     <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
-      
+
       <div className="px-4 py-4 relative">
         <Link href="/dashboard" className="flex items-center gap-3" onClick={onNavigate}>
           <div className="relative w-8 h-8 bg-card rounded-lg border border-gold/20 flex items-center justify-center overflow-hidden shadow-noir shrink-0">
@@ -280,7 +261,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
         )}
       </div>
 
-      
+
       {organizations && organizations.length > 0 && !isCollapsed && (
         <div className="px-4 mb-4">
           <DropdownMenu>
@@ -315,10 +296,10 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
         </div>
       )}
 
-      
+
       <div className="mx-4 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
 
-      
+
       <ScrollArea className="flex-1">
         <nav className={cn("pb-4 pt-2", isCollapsed ? "px-2" : "px-3")}>
           {navGroups.map((group, groupIndex) => (
@@ -333,20 +314,20 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
               <div className="space-y-0.5">
                 {group.routes.map((route) => {
                   const isExactMatch = pathname === route.href;
-                  const hasSiblingRoutes = group.routes.some(r => 
-                    r.href !== route.href && 
+                  const hasSiblingRoutes = group.routes.some(r =>
+                    r.href !== route.href &&
                     (r.href.startsWith(route.href + "/") || route.href.startsWith(r.href + "/"))
                   );
-                  const isChildRoute = !hasSiblingRoutes && 
-                    route.href !== "/dashboard" && 
+                  const isChildRoute = !hasSiblingRoutes &&
+                    route.href !== "/dashboard" &&
                     pathname.startsWith(route.href + "/");
                   const isActive = isExactMatch || (route.isProjectsList && pathname.startsWith("/projects/"));
-                  const showBadge = 
-                    (route.badge === "leaves" && pendingLeaves > 0) || 
+                  const showBadge =
+                    (route.badge === "leaves" && pendingLeaves > 0) ||
                     (route.badge === "onboarding" && unreadOnboarding > 0);
                   const isProjectsRoute = route.isProjectsList;
                   const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
-                  
+
                   if (isProjectsRoute) {
                     return (
                       <Link
@@ -416,7 +397,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
         </nav>
       </ScrollArea>
 
-      
+
       <div className={cn("py-4 border-t border-sidebar-border", isCollapsed ? "px-2" : "px-3")}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -467,4 +448,3 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
     </div>
   );
 }
-
