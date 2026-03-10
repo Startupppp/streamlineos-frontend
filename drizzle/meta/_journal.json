@@ -36,6 +36,20 @@
       "when": 1773141065397,
       "tag": "0004_brief_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773144395110,
+      "tag": "0005_foamy_dust",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773144609031,
+      "tag": "0006_magenta_night_nurse",
+      "breakpoints": true
     }
   ]
 }
