@@ -1,7 +1,8 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { leads, leadActivities, notifications, tickets, projects, users } from "../../../lib/db/schema";
+import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers } from "../../../lib/db/schema";
+import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "../../../lib/email";
 import { logger } from "../../../lib/logger";
@@ -313,7 +314,20 @@ export const leadsRouter = createTRPCRouter({
 
     const filters = [eq(leads.orgId, orgId)];
     if (role === "MEMBER") {
-      filters.push(eq(leads.assignedToId, userId));
+      const teamLeadDepts = await ctx.db.query.departmentMembers.findMany({
+        where: and(eq(departmentMembers.userId, userId), eq(departmentMembers.role, "lead")),
+      });
+
+      if (teamLeadDepts.length > 0) {
+        const deptIds = teamLeadDepts.map(d => d.departmentId);
+        const teamMembers = await ctx.db.query.departmentMembers.findMany({
+          where: inArray(departmentMembers.departmentId, deptIds),
+        });
+        const teamUserIds = [...new Set(teamMembers.map(m => m.userId))];
+        filters.push(inArray(leads.assignedToId, teamUserIds));
+      } else {
+        filters.push(eq(leads.assignedToId, userId));
+      }
     }
 
     const allLeads = await ctx.db.query.leads.findMany({
