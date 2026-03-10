@@ -104,6 +104,7 @@ export default function LeadsPipelinePage() {
       source: (formData.get("source") as string || "other") as any,
       potentialValue: formData.get("potentialValue") as string || undefined,
       investmentInterest: formData.get("investmentInterest") as string || undefined,
+      priority: (formData.get("priority") as string || "WARM") as any,
       notes: formData.get("notes") as string || undefined,
       city: formData.get("city") as string || undefined,
     };
@@ -184,6 +185,19 @@ export default function LeadsPipelinePage() {
                 <div>
                   <Label htmlFor="city">City</Label>
                   <Input id="city" name="city" placeholder="Mumbai" />
+                </div>
+                <div>
+                  <Label htmlFor="priority">Priority</Label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    defaultValue="WARM"
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="HOT">🔥 Hot</option>
+                    <option value="WARM">🌤 Warm</option>
+                    <option value="COLD">❄️ Cold</option>
+                  </select>
                 </div>
                 <div>
                   <Label htmlFor="source">Source</Label>
@@ -330,6 +344,16 @@ export default function LeadsPipelinePage() {
                               </div>
 
                               <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                {lead.priority && (
+                                  <span className={cn(
+                                    "text-[10px] px-1.5 py-0.5 rounded-full border font-semibold",
+                                    lead.priority === "HOT" && "bg-red-500/15 text-red-400 border-red-500/30",
+                                    lead.priority === "WARM" && "bg-amber-500/15 text-amber-400 border-amber-500/30",
+                                    lead.priority === "COLD" && "bg-blue-400/15 text-blue-400 border-blue-400/30",
+                                  )}>
+                                    {lead.priority}
+                                  </span>
+                                )}
                                 {lead.source && (
                                   <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full border", SOURCE_COLORS[lead.source] || SOURCE_COLORS.other)}>
                                     {lead.source.replace("_", " ")}
