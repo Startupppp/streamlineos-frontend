@@ -1012,6 +1012,7 @@ export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => 
 export const leadPipelineStatusEnum = pgEnum("lead_pipeline_status", ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]);
 export const leadActivityTypeEnum = pgEnum("lead_activity_type", ["call", "email", "whatsapp", "meeting", "site_visit"]);
 export const leadSourceEnum = pgEnum("lead_source", ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"]);
+export const leadPriorityEnum = pgEnum("lead_priority", ["HOT", "WARM", "COLD"]);
 
 export const departmentMembers = pgTable("department_members", {
   id: serial("id").primaryKey(),
@@ -1033,6 +1034,7 @@ export const leads = pgTable("leads", {
   source: leadSourceEnum("source").default("other"),
   campaignId: integer("campaign_id").references(() => crmCampaigns.id),
   status: leadPipelineStatusEnum("status").default("NEW").notNull(),
+  priority: leadPriorityEnum("priority").default("WARM"),
   investmentInterest: decimal("investment_interest"),
   potentialValue: decimal("potential_value"),
   notes: text("notes"),

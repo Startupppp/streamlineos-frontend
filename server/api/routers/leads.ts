@@ -10,6 +10,7 @@ import { logger } from "../../../lib/logger";
 const leadStatusValues = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 const leadSourceValues = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"] as const;
 const activityTypeValues = ["call", "email", "whatsapp", "meeting", "site_visit"] as const;
+const leadPriorityValues = ["HOT", "WARM", "COLD"] as const;
 
 export const leadsRouter = createTRPCRouter({
   getAll: protectedProcedure
@@ -87,6 +88,7 @@ export const leadsRouter = createTRPCRouter({
       city: z.string().optional(),
       tags: z.string().array().optional(),
       assignedToId: z.string().optional(),
+      priority: z.enum(leadPriorityValues).default("WARM"),
     }))
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
@@ -100,6 +102,7 @@ export const leadsRouter = createTRPCRouter({
         whatsappNumber: input.whatsappNumber,
         source: input.source,
         campaignId: input.campaignId,
+        priority: input.priority,
         investmentInterest: input.investmentInterest,
         potentialValue: input.potentialValue,
         notes: input.notes,
@@ -143,6 +146,7 @@ export const leadsRouter = createTRPCRouter({
       city: z.string().optional(),
       tags: z.string().array().optional(),
       lostReason: z.string().optional(),
+      priority: z.enum(leadPriorityValues).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
