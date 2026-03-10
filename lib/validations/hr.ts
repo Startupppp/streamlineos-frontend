@@ -10,10 +10,22 @@ export const createDepartmentInputSchema = z.object({
 
 export const updateProfileInputSchema = z.object({
   userId: z.string().min(1),
+  name: z.string().min(1).optional(),
   designation: z.string().optional(),
   departmentId: z.number().int().positive().optional(),
   phone: z.string().optional(),
   image: z.string().optional(),
+});
+
+export const changePasswordInputSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z
+    .string()
+    .min(8)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      "Password must contain uppercase, lowercase, number, and special character"
+    ),
 });
 
 const monthStringSchema = z.string()

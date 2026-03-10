@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { Switch } from "@/components/ui/switch";
-import { User, Palette, Bell, Shield, Camera, Loader2, Trash2 } from "lucide-react";
+import { User, Palette, Bell, Shield, Camera, Loader2, Trash2, Eye, EyeOff, Check } from "lucide-react";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
@@ -24,14 +24,41 @@ export default function SettingsPage() {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [editName, setEditName] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [notifEmail, setNotifEmail] = useState(true);
+  const [notifLeave, setNotifLeave] = useState(true);
+  const [notifProject, setNotifProject] = useState(true);
+
   const updateProfile = api.hr.updateProfile.useMutation({
     onSuccess: async () => {
       await updateSession({});
-      toast.success("Profile photo updated successfully");
+      toast.success("Profile updated successfully");
+      setIsEditingName(false);
       setTimeout(() => setPreviewUrl(null), 1000);
     },
     onError: (err) => {
       toast.error(err.message || "Failed to update profile");
+    },
+  });
+
+  const changePassword = api.hr.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to change password");
     },
   });
 
@@ -115,6 +142,37 @@ export default function SettingsPage() {
       setUploading(false);
     }
   }, [session, updateProfile]);
+
+  const handleSaveName = useCallback(() => {
+    if (!session?.user?.id || !editName.trim()) return;
+    updateProfile.mutate({
+      userId: session.user.id,
+      name: editName.trim(),
+    });
+  }, [session, editName, updateProfile]);
+
+  const handleStartEditName = useCallback(() => {
+    setEditName(session?.user?.name || "");
+    setIsEditingName(true);
+  }, [session]);
+
+  const handleChangePassword = useCallback(() => {
+    if (!newPassword || !currentPassword) return;
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    changePassword.mutate({
+      currentPassword,
+      newPassword,
+    });
+  }, [currentPassword, newPassword, confirmPassword, changePassword]);
+
+  const passwordValid = newPassword.length >= 8 &&
+    /[a-z]/.test(newPassword) &&
+    /[A-Z]/.test(newPassword) &&
+    /\d/.test(newPassword) &&
+    /[@$!%*?&]/.test(newPassword);
 
   const displayImage = previewUrl || resolveImageUrl(session?.user?.image);
   const isBusy = uploading || updateProfile.isPending;
@@ -223,12 +281,47 @@ export default function SettingsPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-foreground">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={session?.user?.name || ""}
-                    disabled
-                    className="bg-muted/50"
-                  />
+                  {isEditingName ? (
+                    <div className="flex gap-2">
+                      <Input
+                        id="name"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Enter your full name"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleSaveName}
+                        disabled={updateProfile.isPending || !editName.trim()}
+                        className="shrink-0"
+                      >
+                        {updateProfile.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setIsEditingName(false)}
+                        className="shrink-0"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 text-sm cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={handleStartEditName}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartEditName(); }}
+                      aria-label="Click to edit name"
+                    >
+                      {session?.user?.name || "Click to set name"}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-foreground">Email Address</Label>
@@ -239,11 +332,8 @@ export default function SettingsPage() {
                     disabled
                     className="bg-muted/50"
                   />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed. Contact admin for assistance.</p>
                 </div>
-              </div>
-
-              <div className="flex justify-end pt-4 border-t border-border">
-                <Button disabled>Save Changes</Button>
               </div>
             </CardContent>
           </Card>
@@ -292,7 +382,12 @@ export default function SettingsPage() {
                     Receive updates about your projects via email.
                   </p>
                 </div>
-                <Switch id="email-notifications" aria-label="Toggle email notifications" defaultChecked disabled title="Coming soon" />
+                <Switch
+                  id="email-notifications"
+                  aria-label="Toggle email notifications"
+                  checked={notifEmail}
+                  onCheckedChange={setNotifEmail}
+                />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -301,7 +396,12 @@ export default function SettingsPage() {
                     Get reminded about pending leave approvals.
                   </p>
                 </div>
-                <Switch id="leave-reminders" aria-label="Toggle leave reminders" defaultChecked disabled title="Coming soon" />
+                <Switch
+                  id="leave-reminders"
+                  aria-label="Toggle leave reminders"
+                  checked={notifLeave}
+                  onCheckedChange={setNotifLeave}
+                />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
@@ -310,8 +410,16 @@ export default function SettingsPage() {
                     Notifications when tickets are assigned or updated.
                   </p>
                 </div>
-                <Switch id="project-updates" aria-label="Toggle project updates" defaultChecked disabled title="Coming soon" />
+                <Switch
+                  id="project-updates"
+                  aria-label="Toggle project updates"
+                  checked={notifProject}
+                  onCheckedChange={setNotifProject}
+                />
               </div>
+              <p className="text-xs text-muted-foreground pt-2">
+                Preferences are saved locally. Server-side email preferences coming soon.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -319,23 +427,117 @@ export default function SettingsPage() {
         <TabsContent value="security">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-foreground">Security Settings</CardTitle>
-              <CardDescription>Manage your account security and authentication.</CardDescription>
+              <CardTitle className="text-foreground">Change Password</CardTitle>
+              <CardDescription>Update your account password. Use a strong, unique password.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">Password</p>
-                    <p className="text-sm text-muted-foreground">
-                      Last changed on {new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} (30 days ago)
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current Password</Label>
+                <div className="relative">
+                  <Input
+                    id="current-password"
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                  >
+                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {newPassword && (
+                  <div className="space-y-1 text-xs">
+                    <p className={newPassword.length >= 8 ? "text-emerald-500" : "text-muted-foreground"}>
+                      {newPassword.length >= 8 ? "✓" : "○"} At least 8 characters
                     </p>
-                    <p className="text-xs text-muted-foreground/70">
-                      We recommend changing your password every 90 days for better security.
+                    <p className={/[A-Z]/.test(newPassword) ? "text-emerald-500" : "text-muted-foreground"}>
+                      {/[A-Z]/.test(newPassword) ? "✓" : "○"} One uppercase letter
+                    </p>
+                    <p className={/[a-z]/.test(newPassword) ? "text-emerald-500" : "text-muted-foreground"}>
+                      {/[a-z]/.test(newPassword) ? "✓" : "○"} One lowercase letter
+                    </p>
+                    <p className={/\d/.test(newPassword) ? "text-emerald-500" : "text-muted-foreground"}>
+                      {/\d/.test(newPassword) ? "✓" : "○"} One number
+                    </p>
+                    <p className={/[@$!%*?&]/.test(newPassword) ? "text-emerald-500" : "text-muted-foreground"}>
+                      {/[@$!%*?&]/.test(newPassword) ? "✓" : "○"} One special character (@$!%*?&)
                     </p>
                   </div>
-                  <Button variant="outline">Change Password</Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-destructive">Passwords do not match</p>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleChangePassword}
+                  disabled={
+                    changePassword.isPending ||
+                    !currentPassword ||
+                    !passwordValid ||
+                    newPassword !== confirmPassword
+                  }
+                >
+                  {changePassword.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Changing...
+                    </>
+                  ) : (
+                    "Change Password"
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>

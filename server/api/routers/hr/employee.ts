@@ -18,6 +18,7 @@ import { TRPCError } from "@trpc/server";
 import {
   createDepartmentInputSchema,
   updateProfileInputSchema,
+  changePasswordInputSchema,
   onboardEmployeeInputSchema,
 } from "../../../../lib/validations/hr";
 import bcrypt from "bcryptjs";
@@ -84,6 +85,7 @@ export const employeeRouter = createTRPCRouter({
       }
 
       const updateData: Record<string, unknown> = {};
+      if (input.name !== undefined) updateData.name = input.name;
       if (input.designation !== undefined) updateData.designation = input.designation;
       if (input.departmentId !== undefined) updateData.departmentId = input.departmentId;
       if (input.phone !== undefined) updateData.phone = input.phone;
@@ -95,6 +97,37 @@ export const employeeRouter = createTRPCRouter({
           .set(updateData)
           .where(eq(users.id, input.userId));
       }
+
+      return { success: true };
+    }),
+
+  changePassword: protectedProcedure
+    .input(changePasswordInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.session.userId),
+      });
+
+      if (!user?.password) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No password set for this account.",
+        });
+      }
+
+      const isValid = await bcrypt.compare(input.currentPassword, user.password);
+      if (!isValid) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Current password is incorrect.",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(input.newPassword, 12);
+      await ctx.db
+        .update(users)
+        .set({ password: hashedPassword, isPasswordChangeRequired: false })
+        .where(eq(users.id, ctx.session.userId));
 
       return { success: true };
     }),
