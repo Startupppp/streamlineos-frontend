@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,9 +34,31 @@ export default function SettingsPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [notifEmail, setNotifEmail] = useState(true);
-  const [notifLeave, setNotifLeave] = useState(true);
-  const [notifProject, setNotifProject] = useState(true);
+  const [compactView, setCompactView] = useState(false);
+  useEffect(() => {
+    setCompactView(localStorage.getItem("compactView") === "true");
+  }, []);
+
+  const handleCompactToggle = (checked: boolean) => {
+    setCompactView(checked);
+    localStorage.setItem("compactView", String(checked));
+    document.documentElement.classList.toggle("compact", checked);
+    toast.success(checked ? "Compact view enabled" : "Compact view disabled");
+  };
+
+  const { data: notifPrefs } = api.hr.getNotificationPreferences.useQuery();
+  const updateNotifPrefs = api.hr.updateNotificationPreferences.useMutation({
+    onSuccess: () => toast.success("Notification preferences saved"),
+    onError: () => toast.error("Failed to save preferences"),
+  });
+
+  const notifEmail = notifPrefs?.emailNotifications ?? true;
+  const notifLeave = notifPrefs?.leaveReminders ?? true;
+  const notifProject = notifPrefs?.projectUpdates ?? true;
+
+  const toggleNotif = (key: "emailNotifications" | "leaveReminders" | "projectUpdates", value: boolean) => {
+    updateNotifPrefs.mutate({ [key]: value });
+  };
 
   const updateProfile = api.hr.updateProfile.useMutation({
     onSuccess: async () => {
@@ -362,7 +384,7 @@ export default function SettingsPage() {
                     Use a more compact layout for lists and tables.
                   </p>
                 </div>
-                <Switch id="compact-view" aria-label="Toggle compact view" disabled title="Coming soon" />
+                <Switch id="compact-view" aria-label="Toggle compact view" checked={compactView} onCheckedChange={handleCompactToggle} />
               </div>
             </CardContent>
           </Card>
@@ -386,7 +408,8 @@ export default function SettingsPage() {
                   id="email-notifications"
                   aria-label="Toggle email notifications"
                   checked={notifEmail}
-                  onCheckedChange={setNotifEmail}
+                  onCheckedChange={(v) => toggleNotif("emailNotifications", v)}
+                  disabled={updateNotifPrefs.isPending}
                 />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
@@ -400,7 +423,8 @@ export default function SettingsPage() {
                   id="leave-reminders"
                   aria-label="Toggle leave reminders"
                   checked={notifLeave}
-                  onCheckedChange={setNotifLeave}
+                  onCheckedChange={(v) => toggleNotif("leaveReminders", v)}
+                  disabled={updateNotifPrefs.isPending}
                 />
               </div>
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
@@ -414,11 +438,12 @@ export default function SettingsPage() {
                   id="project-updates"
                   aria-label="Toggle project updates"
                   checked={notifProject}
-                  onCheckedChange={setNotifProject}
+                  onCheckedChange={(v) => toggleNotif("projectUpdates", v)}
+                  disabled={updateNotifPrefs.isPending}
                 />
               </div>
               <p className="text-xs text-muted-foreground pt-2">
-                Preferences are saved locally. Server-side email preferences coming soon.
+                Preferences are saved to your account and persist across sessions.
               </p>
             </CardContent>
           </Card>

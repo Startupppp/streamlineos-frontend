@@ -132,6 +132,40 @@ export const employeeRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  getNotificationPreferences: protectedProcedure
+    .query(async ({ ctx }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.session.userId),
+        columns: { metadata: true },
+      });
+      const meta = (user?.metadata as Record<string, unknown>) || {};
+      return {
+        emailNotifications: meta.emailNotifications !== false,
+        leaveReminders: meta.leaveReminders !== false,
+        projectUpdates: meta.projectUpdates !== false,
+      };
+    }),
+
+  updateNotificationPreferences: protectedProcedure
+    .input(z.object({
+      emailNotifications: z.boolean().optional(),
+      leaveReminders: z.boolean().optional(),
+      projectUpdates: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.session.userId),
+        columns: { metadata: true },
+      });
+      const meta = (user?.metadata as Record<string, unknown>) || {};
+      const updated = { ...meta, ...input };
+      await ctx.db
+        .update(users)
+        .set({ metadata: updated })
+        .where(eq(users.id, ctx.session.userId));
+      return { success: true };
+    }),
+
   onboardEmployee: protectedProcedure
     .input(onboardEmployeeInputSchema)
     .mutation(async ({ ctx, input }) => {
