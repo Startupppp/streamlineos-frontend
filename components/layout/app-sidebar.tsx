@@ -32,6 +32,7 @@ import {
   Trophy,
   BarChart3,
   Bell,
+  UserCheck,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
@@ -102,6 +103,7 @@ const allNavGroups: NavGroup[] = [
       { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads", permission: "crm:leads:view" },
       { label: "Targets", icon: Trophy, href: "/crm/targets", permission: "crm:targets:view" },
       { label: "Reports", icon: BarChart3, href: "/crm/reports", permission: "crm:reports:view" },
+      { label: "Clients", icon: UserCheck, href: "/crm/clients", permission: "crm:leads:view" },
       { label: "Sales", icon: DollarSign, href: "/sales", permission: "crm:leads:view" },
       { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "crm:leads:view" },
       { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "crm:leads:view" },

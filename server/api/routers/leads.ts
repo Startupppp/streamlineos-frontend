@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers } from "../../../lib/db/schema";
+import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients } from "../../../lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "../../../lib/email";
@@ -298,12 +298,26 @@ export const leadsRouter = createTRPCRouter({
           });
         }
 
+        await ctx.db.insert(clients).values({
+          orgId,
+          leadId: updated.id,
+          name: updated.name,
+          email: updated.email,
+          phone: updated.phone,
+          company: updated.company,
+          designation: updated.designation,
+          city: updated.city,
+          investmentValue: updated.potentialValue,
+          accountManagerId: updated.assignedToId,
+          status: "active",
+        });
+
         await ctx.db.insert(notifications).values({
           orgId,
           userId: updated.assignedToId ?? ctx.session.userId,
           type: "SUCCESS",
           title: "Lead Converted!",
-          message: `${updated.name} has been converted. A task has been auto-created for the sales team.`,
+          message: `${updated.name} has been converted to a client. A task has been auto-created.`,
           link: `/crm/leads/${updated.id}`,
         });
       }
@@ -557,6 +571,37 @@ export const leadsRouter = createTRPCRouter({
       leads: slaBreached,
     };
   }),
+
+  getClients: protectedProcedure
+    .input(z.object({
+      status: z.enum(["active", "inactive"]).optional(),
+      search: z.string().optional(),
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.session.orgId;
+      const filters = [eq(clients.orgId, orgId)];
+      if (input?.status) filters.push(eq(clients.status, input.status));
+
+      let allClients = await ctx.db.query.clients.findMany({
+        where: and(...filters),
+        with: {
+          accountManager: { columns: { id: true, name: true, image: true } },
+          lead: { columns: { id: true, source: true, priority: true } },
+        },
+        orderBy: [desc(clients.createdAt)],
+      });
+
+      if (input?.search) {
+        const s = input.search.toLowerCase();
+        allClients = allClients.filter(c =>
+          c.name.toLowerCase().includes(s) ||
+          c.email?.toLowerCase().includes(s) ||
+          c.company?.toLowerCase().includes(s)
+        );
+      }
+
+      return allClients;
+    }),
 
   getDashboardMetrics: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;

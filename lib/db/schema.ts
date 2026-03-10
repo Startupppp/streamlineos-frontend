@@ -1074,6 +1074,27 @@ export const leadActivities = pgTable("lead_activities", {
   index("idx_lead_activities_user").on(table.userId),
 ]);
 
+export const clients = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  leadId: integer("lead_id").references(() => leads.id),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  company: text("company"),
+  designation: text("designation"),
+  city: text("city"),
+  investmentValue: decimal("investment_value"),
+  status: text("status").default("active").notNull(),
+  accountManagerId: text("account_manager_id").references(() => users.id),
+  notes: text("notes"),
+  convertedAt: timestamp("converted_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_clients_org").on(table.orgId),
+]);
+
 export const targets = pgTable("targets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1364,6 +1385,17 @@ export const leadActivitiesRelations = relations(leadActivities, ({ one }) => ({
   }),
   user: one(users, {
     fields: [leadActivities.userId],
+    references: [users.id],
+  }),
+}));
+
+export const clientsRelations = relations(clients, ({ one }) => ({
+  lead: one(leads, {
+    fields: [clients.leadId],
+    references: [leads.id],
+  }),
+  accountManager: one(users, {
+    fields: [clients.accountManagerId],
     references: [users.id],
   }),
 }));

@@ -124,6 +124,17 @@ export function useSalesLeaderboard(
   });
 }
 
+export function useClients(
+  input?: { status?: "active" | "inactive"; search?: string },
+  options?: Partial<UseQueryOptions<LeadsRouterOutputs["getClients"]>>
+) {
+  return useQuery<LeadsRouterOutputs["getClients"]>({
+    queryKey: [...vaivammKeys.leads.all, "clients", input?.status],
+    queryFn: () => vaivammTrpcClient.leads.getClients.query(input as any),
+    ...options,
+  });
+}
+
 export function useSlaAlerts(
   options?: Partial<UseQueryOptions<LeadsRouterOutputs["getSlaAlerts"]>>
 ) {
