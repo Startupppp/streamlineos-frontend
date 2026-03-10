@@ -200,7 +200,38 @@ export default function BillingPage() {
                                      </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button onClick={() => toast.success("Invoice sent to client (Mock)")}>Send Invoice</Button>
+                                    <Button onClick={async () => {
+                                      try {
+                                        const { default: jsPDF } = await import("jspdf");
+                                        const doc = new jsPDF();
+                                        doc.setFontSize(22);
+                                        doc.text("INVOICE", 20, 25);
+                                        doc.setFontSize(10);
+                                        doc.setTextColor(100);
+                                        doc.text("Vaivamm Capital — Capital Advisors LLP", 20, 33);
+                                        doc.text(`Date: ${format(new Date(), "MMM d, yyyy")}`, 20, 40);
+                                        doc.setDrawColor(189, 136, 44);
+                                        doc.line(20, 45, 190, 45);
+                                        doc.setTextColor(0);
+                                        doc.setFontSize(14);
+                                        doc.text(`Project: ${item.projectName}`, 20, 55);
+                                        doc.setFontSize(11);
+                                        doc.text(`Period: ${format(startDate, "MMM d")} — ${format(endDate, "MMM d, yyyy")}`, 20, 65);
+                                        doc.text(`Total Hours: ${item.totalHours?.toFixed(1) || 0}h`, 20, 75);
+                                        doc.text(`Rate: $${hourlyRate}/h`, 20, 83);
+                                        doc.line(20, 90, 190, 90);
+                                        doc.setFontSize(16);
+                                        doc.text(`Total Due: $${((item.totalHours || 0) * hourlyRate).toFixed(2)}`, 20, 102);
+                                        doc.setFontSize(9);
+                                        doc.setTextColor(150);
+                                        doc.text("Payment Terms: Net 30 days", 20, 115);
+                                        doc.text("Thank you for your business.", 20, 122);
+                                        doc.save(`invoice-${item.projectName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+                                        toast.success("Invoice PDF downloaded");
+                                      } catch {
+                                        toast.error("Failed to generate invoice");
+                                      }
+                                    }}>Download PDF</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
