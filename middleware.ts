@@ -20,7 +20,7 @@ const AUTH_ROUTES = [
   "/signin",
   "/signup",
   "/forgot-password",
-  "/reset-password",
+  "/auth/reset-password",
   "/verify-email",
 ];
 
