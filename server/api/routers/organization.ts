@@ -326,6 +326,55 @@ export const organizationRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  updateOrganization: protectedProcedure
+    .input(z.object({
+      name: z.string().min(1).optional(),
+      slug: z.string().min(1).regex(/^[a-z0-9-]+$/).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.session.orgId;
+      const { user } = ctx.session;
+      if (user.role !== "OWNER" && user.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only Owners and Admins can update organization settings.",
+        });
+      }
+
+      if (input.slug) {
+        const existing = await ctx.db.query.organizations.findFirst({
+          where: and(eq(organizations.slug, input.slug), eq(organizations.id, orgId)),
+        });
+        if (!existing) {
+          const slugTaken = await ctx.db.query.organizations.findFirst({
+            where: eq(organizations.slug, input.slug),
+          });
+          if (slugTaken) {
+            throw new TRPCError({ code: "CONFLICT", message: "Slug already in use." });
+          }
+        }
+      }
+
+      const updateData: Record<string, string> = {};
+      if (input.name) updateData.name = input.name;
+      if (input.slug) updateData.slug = input.slug;
+
+      if (Object.keys(updateData).length > 0) {
+        await ctx.db.update(organizations).set(updateData).where(eq(organizations.id, orgId));
+      }
+
+      await createAuditLog({
+        action: "settings.updated",
+        userId: ctx.session.user.id,
+        orgId,
+        targetId: orgId,
+        targetType: "organization",
+        metadata: updateData,
+      });
+
+      return { success: true };
+    }),
+
   removeMember: protectedProcedure
     .input(z.object({ userId: z.string(), orgId: z.string() }))
     .mutation(async ({ ctx, input }) => {
