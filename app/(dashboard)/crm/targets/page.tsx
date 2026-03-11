@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Trophy, Target, TrendingUp, Plus, Medal, Users,
+  Trophy, Target, TrendingUp, Plus, Medal,
   Zap, Phone, UserCheck, BarChart3, Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
+import { EmptyTargetIllustration, EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { useMyTargets, useTargetLeaderboard, useCreateTarget } from "@/lib/hooks/trpc-hooks";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -229,9 +230,9 @@ export default function TargetsPage() {
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
             <CardContent className="py-12 text-center">
-              <Target className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No targets assigned yet</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">
+              <EmptyTargetIllustration className="w-40 h-40 mx-auto mb-2" />
+              <p className="text-muted-foreground font-medium">No targets assigned yet</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">
                 {isAdmin ? "Create a target using the button above" : "Your admin will set targets for you"}
               </p>
             </CardContent>
@@ -326,9 +327,9 @@ export default function TargetsPage() {
         ) : (
           <Card className="shadow-noir">
             <CardContent className="py-12 text-center">
-              <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No leaderboard data yet</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Targets need to be set for team members first</p>
+              <EmptyLeaderboardIllustration className="w-40 h-40 mx-auto mb-2" />
+              <p className="text-muted-foreground font-medium">No leaderboard data yet</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Targets need to be set for team members first</p>
             </CardContent>
           </Card>
         )}
