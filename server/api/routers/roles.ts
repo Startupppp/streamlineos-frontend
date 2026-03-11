@@ -29,7 +29,7 @@ export const rolesRouter = createTRPCRouter({
       return role;
     }),
 
-  // Create a new role (CEO, ADMIN, or HR can do this)
+  // Create a new role (CEO or ADMIN can do this)
   create: protectedProcedure
     .input(z.object({
       name: z.string().min(1, "Role name is required").max(100),
@@ -38,8 +38,8 @@ export const rolesRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const userRole = ctx.session.user.role;
-      if (!isAdminOrOwner(userRole) && userRole !== "HR") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only CEO, Admin, or HR can create roles" });
+      if (!isAdminOrOwner(userRole)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only CEO or Admin can create roles" });
       }
 
       // Check slug uniqueness within org
@@ -70,8 +70,8 @@ export const rolesRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const userRole = ctx.session.user.role;
-      if (!isAdminOrOwner(userRole) && userRole !== "HR") {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Only CEO, Admin, or HR can update roles" });
+      if (!isAdminOrOwner(userRole)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only CEO or Admin can update roles" });
       }
 
       const existing = await ctx.db.query.roles.findFirst({

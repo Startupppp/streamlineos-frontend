@@ -370,17 +370,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
   // CEO — sees everything
   CEO: PERMISSIONS.map((p) => p.name),
 
-  // Admin — sees everything except RBAC management
+  // Admin — full access except RBAC (merges old HR + Admin)
   ADMIN: PERMISSIONS.filter((p) => !p.name.startsWith("settings:rbac")).map((p) => p.name),
-
-  // HR — full HR suite + projects + reports
-  HR: [
-    ...PERMISSIONS.filter((p) => p.name.startsWith("hr:")).map((p) => p.name),
-    "projects:view",
-    "reports:view",
-    "reports:create",
-    "settings:view",
-  ],
 
   // Sales — Sales dashboard + CRM leads/targets
   SALES: [
@@ -391,89 +382,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "crm:leads:update",
     "crm:targets:view",
     "crm:targets:manage",
-    "crm:reports:view",
-    "reports:view",
-  ],
-
-  // Customer Executive — Customer Exec dashboard + CRM leads
-  CUSTOMER_EXECUTIVE: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:customer-executive:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:targets:view",
-    "crm:reports:view",
-    "reports:view",
-  ],
-
-  // Digital Marketing — Marketing dashboard + CRM + projects
-  DIGITAL_MARKETING: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:marketing:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:targets:view",
-    "crm:reports:view",
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Social Media Manager — Marketing dashboard + CRM
-  SOCIAL_MEDIA_MANAGER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:marketing:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:targets:view",
-    "crm:reports:view",
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Graphic Designer — Projects only, no CRM dashboards
-  GRAPHIC_DESIGNER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Video Editor — Projects only, no CRM dashboards
-  VIDEO_EDITOR: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Support — Support CRM dashboard
-  SUPPORT: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:support:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
     "crm:reports:view",
     "reports:view",
   ],
@@ -495,23 +403,15 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:create",
   ],
 
-  // Business Development — Sales dashboard + CRM leads
-  BUSINESS_DEVELOPMENT: [
+  // Marketing — Marketing dashboard + CRM + projects (merges Digital Marketing, Social Media, Content Writer, SEO)
+  MARKETING: [
     ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:sales:view",
+    "dashboard:marketing:view",
     "crm:leads:view",
     "crm:leads:create",
     "crm:leads:update",
     "crm:targets:view",
-    "crm:targets:manage",
     "crm:reports:view",
-    "reports:view",
-  ],
-
-  // Content Writer — Marketing dashboard + projects
-  CONTENT_WRITER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:marketing:view",
     "projects:view",
     "projects:tickets:view",
     "projects:tickets:create",
@@ -521,12 +421,46 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:view",
   ],
 
-  // SEO Specialist — Marketing dashboard + CRM + projects
-  SEO_SPECIALIST: [
+  // Designer — Projects (merges Graphic Designer, UI/UX Designer, Video Editor)
+  DESIGNER: [
     ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:marketing:view",
+    "projects:view",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
+    "reports:view",
+  ],
+
+  // Engineer — Projects + sprints + management (merges all dev roles, Tech Lead, Product Manager)
+  ENGINEER: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "projects:view",
+    "projects:create",
+    "projects:update",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:tickets:assign",
+    "projects:sprints:view",
+    "projects:sprints:manage",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
+    "reports:view",
+    "reports:create",
+  ],
+
+  // Customer Support — Support + Customer Exec dashboards + CRM (merges Customer Executive, Support, IT Support)
+  CUSTOMER_SUPPORT: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "dashboard:support:view",
+    "dashboard:customer-executive:view",
     "crm:leads:view",
     "crm:leads:create",
+    "crm:leads:update",
+    "crm:leads:assign",
+    "crm:targets:view",
     "crm:reports:view",
     "projects:view",
     "projects:tickets:view",
@@ -537,120 +471,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:view",
   ],
 
-  // UI/UX Designer — Projects only
-  UI_UX_DESIGNER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Software Engineer — Projects + sprints
-  SOFTWARE_ENGINEER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:sprints:view",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Frontend Developer — same as Software Engineer
-  FRONTEND_DEVELOPER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:sprints:view",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Backend Developer — same as Software Engineer
-  BACKEND_DEVELOPER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:sprints:view",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // DevOps Engineer — projects + sprints
-  DEVOPS_ENGINEER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:sprints:view",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // QA Engineer — projects + sprints
-  QA_ENGINEER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:sprints:view",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Tech Lead — projects with management + reports
-  TECH_LEAD: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:create",
-    "projects:update",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:tickets:assign",
-    "projects:sprints:view",
-    "projects:sprints:manage",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-    "reports:create",
-  ],
-
-  // Product Manager — projects with management + reports
-  PRODUCT_MANAGER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:create",
-    "projects:update",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:tickets:assign",
-    "projects:sprints:view",
-    "projects:sprints:manage",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-    "reports:create",
-  ],
-
-  // Finance — HR payroll access + reports
+  // Finance — HR payroll access + reports (merges Accountant)
   FINANCE: [
     ...EMPLOYEE_SELF_SERVICE,
     "hr:payroll:generate",
@@ -663,17 +484,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "settings:view",
   ],
 
-  // Accountant — same as Finance
-  ACCOUNTANT: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "hr:payroll:view",
-    "hr:salary:view",
-    "hr:expenses:view",
-    "reports:view",
-    "reports:create",
-    "reports:export",
-  ],
-
   // Operations — broad view access + reports
   OPERATIONS: [
     ...EMPLOYEE_SELF_SERVICE,
@@ -683,18 +493,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:view",
     "reports:create",
     "settings:view",
-  ],
-
-  // IT Support — basic projects + settings
-  IT_SUPPORT: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
   ],
 
   // Intern — minimal access

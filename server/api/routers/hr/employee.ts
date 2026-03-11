@@ -224,19 +224,14 @@ export const employeeRouter = createTRPCRouter({
        let finalDepartmentId = input.departmentId;
        if (input.departmentId && input.departmentId < 0) {
           const commonRoleNames: Record<number, string> = {
-            [-1]: "Admin",
-            [-2]: "HR",
-            [-3]: "Sales",
-            [-4]: "Customer Support",
-            [-5]: "Graphic Designer",
-            [-6]: "Digital Marketing",
-            [-7]: "Social Media Manager",
-            [-8]: "Engineering",
-            [-9]: "Product",
-            [-10]: "Design",
-            [-11]: "Marketing",
-            [-12]: "Finance",
-            [-13]: "Operations",
+            [-1]: "Administration",
+            [-2]: "Sales",
+            [-3]: "Customer Support",
+            [-4]: "Engineering",
+            [-5]: "Design",
+            [-6]: "Marketing",
+            [-7]: "Finance",
+            [-8]: "Operations",
           };
 
           const roleName = commonRoleNames[input.departmentId];

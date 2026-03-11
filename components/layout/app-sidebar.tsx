@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { cn, resolveImageUrl } from "../../lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
@@ -32,13 +32,12 @@ import {
   Trophy,
   BarChart3,
   UserCheck,
-
+  Building2,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
-import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
-import { useProjects } from "../../lib/hooks/trpc-hooks";
-import { ROLE_DEFAULT_PERMISSIONS } from "../../lib/rbac/permissions";
-import { useRbacUserPermissions } from "../../lib/hooks/rbac-hooks";
+import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
+import { ROLE_DEFAULT_PERMISSIONS } from "@/lib/rbac/permissions";
+import { useRbacUserPermissions } from "@/lib/hooks/rbac-hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,11 +45,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Skeleton } from "../ui/skeleton";
-import { ScrollArea } from "../ui/scroll-area";
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface NavRoute {
   label: string;
@@ -128,7 +127,6 @@ function filterNavGroups(role: string | undefined, userPermissions?: string[]): 
   if (!role) return [];
   const isCEO = role === "CEO" || role === "OWNER"; // backward compat for stale sessions
   const isAdminOrCEO = role === "ADMIN" || isCEO;
-  const isHR = role === "HR";
 
   // CEO/OWNER bypasses all permission checks
   if (isCEO) {
@@ -147,7 +145,7 @@ function filterNavGroups(role: string | undefined, userPermissions?: string[]): 
       ...group,
       routes: group.routes.filter((route) => {
         if (route.ownerOnly) return false;
-        if (route.adminOnly && !isAdminOrCEO && !isHR) return false;
+        if (route.adminOnly && !isAdminOrCEO) return false;
         if (route.permission && !permissions.includes(route.permission)) return false;
         return true;
       }),
@@ -166,16 +164,9 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const router = useRouter();
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
-  const { data: projects = [], isLoading: projectsLoading } = useProjects();
-
   const role = session?.user?.role;
   const { data: userPermissions } = useRbacUserPermissions({ enabled: !!session?.user });
   const navGroups = useMemo(() => filterNavGroups(role, userPermissions), [role, userPermissions]);
-
-  const handleOrgChange = (_id: string) => {
-    router.push("/dashboard");
-    router.refresh();
-  };
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
   useEffect(() => {
@@ -273,35 +264,12 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
 
       {organizations && organizations.length > 0 && !isCollapsed && (
         <div className="px-4 mb-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg border-sidebar-border bg-sidebar-accent/30 h-10"
-              >
-                <span className="truncate text-sm">
-                  {organizations[0]?.name || "Select Organization"}
-                </span>
-                <span className="text-xs opacity-60">▼</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Organizations</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {organizations.map((org) => (
-                <DropdownMenuItem
-                  key={org.id}
-                  onClick={() => handleOrgChange(org.id)}
-                >
-                  {org.name}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/org-selection")}>
-                Manage Organizations
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-sidebar-border bg-sidebar-accent/30 h-10">
+            <Building2 className="h-4 w-4 text-sidebar-foreground/60 shrink-0" />
+            <span className="truncate text-sm text-sidebar-foreground">
+              {organizations[0]?.name || "Organization"}
+            </span>
+          </div>
         </div>
       )}
 

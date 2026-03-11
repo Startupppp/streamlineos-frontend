@@ -61,25 +61,13 @@ async function main() {
   // ─── Departments ───
   const departmentList = [
     "Engineering",
-    "Product",
     "Design",
     "Marketing",
-    "Digital Marketing",
-    "Social Media",
     "Sales",
-    "HR / People",
     "Finance",
     "Operations",
     "Customer Support",
-    "Legal",
-    "Content",
-    "Video Production",
-    "Quality Assurance",
-    "IT / Infrastructure",
-    "Business Development",
-    "Research & Development",
     "Administration",
-    "Accounts",
   ];
 
   for (const deptName of departmentList) {
@@ -89,49 +77,18 @@ async function main() {
     }).onConflictDoNothing();
   }
 
-  // ─── System Roles (A–Z comprehensive) ───
+  // ─── System Roles (consolidated) ───
   const systemRoles = [
-    // Leadership & Management
     { name: "CEO", slug: "CEO" },
     { name: "Admin", slug: "ADMIN" },
-    { name: "HR", slug: "HR" },
-
-    // Sales & CRM
     { name: "Sales", slug: "SALES" },
     { name: "Sales Manager", slug: "SALES_MANAGER" },
-    { name: "Business Development", slug: "BUSINESS_DEVELOPMENT" },
-    { name: "Customer Executive", slug: "CUSTOMER_EXECUTIVE" },
-
-    // Marketing & Content
-    { name: "Digital Marketing", slug: "DIGITAL_MARKETING" },
-    { name: "Social Media Manager", slug: "SOCIAL_MEDIA_MANAGER" },
-    { name: "Content Writer", slug: "CONTENT_WRITER" },
-    { name: "SEO Specialist", slug: "SEO_SPECIALIST" },
-
-    // Design & Creative
-    { name: "Graphic Designer", slug: "GRAPHIC_DESIGNER" },
-    { name: "UI/UX Designer", slug: "UI_UX_DESIGNER" },
-    { name: "Video Editor", slug: "VIDEO_EDITOR" },
-
-    // Engineering & Tech
-    { name: "Software Engineer", slug: "SOFTWARE_ENGINEER" },
-    { name: "Frontend Developer", slug: "FRONTEND_DEVELOPER" },
-    { name: "Backend Developer", slug: "BACKEND_DEVELOPER" },
-    { name: "DevOps Engineer", slug: "DEVOPS_ENGINEER" },
-    { name: "QA Engineer", slug: "QA_ENGINEER" },
-    { name: "Tech Lead", slug: "TECH_LEAD" },
-    { name: "Product Manager", slug: "PRODUCT_MANAGER" },
-
-    // Finance & Operations
+    { name: "Marketing", slug: "MARKETING" },
+    { name: "Designer", slug: "DESIGNER" },
+    { name: "Engineer", slug: "ENGINEER" },
+    { name: "Customer Support", slug: "CUSTOMER_SUPPORT" },
     { name: "Finance", slug: "FINANCE" },
-    { name: "Accountant", slug: "ACCOUNTANT" },
     { name: "Operations", slug: "OPERATIONS" },
-
-    // Support
-    { name: "Support", slug: "SUPPORT" },
-    { name: "IT Support", slug: "IT_SUPPORT" },
-
-    // Intern & General
     { name: "Intern", slug: "INTERN" },
     { name: "Member", slug: "MEMBER" },
   ];

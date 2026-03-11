@@ -40,14 +40,19 @@ export async function ensureOrgMembership(
 
   const memberRole = role || "MEMBER";
 
-  await db
-    .insert(organizationMembers)
-    .values({
-      userId,
-      orgId: org.id,
-      role: memberRole,
-    })
-    .onConflictDoNothing();
+  try {
+    await db
+      .insert(organizationMembers)
+      .values({
+        userId,
+        orgId: org.id,
+        role: memberRole,
+      })
+      .onConflictDoNothing();
+  } catch {
+    // FK or other constraint error — user may not exist yet
+    return null;
+  }
 
   return { orgId: org.id, role: memberRole };
 }
