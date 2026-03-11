@@ -26,7 +26,6 @@ import {
   ChevronRight,
   DollarSign,
   Handshake,
-  Megaphone,
   HeadphonesIcon,
   Contact2,
   Trophy,
@@ -35,11 +34,10 @@ import {
   Building2,
   ClipboardList,
   Network,
+  Ticket,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
-import { ROLE_DEFAULT_PERMISSIONS } from "@/lib/rbac/permissions";
-import { useRbacUserPermissions } from "@/lib/hooks/rbac-hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,9 +57,6 @@ interface NavRoute {
   href: string;
   badge?: "leaves";
   isProjectsList?: boolean;
-  permission?: string;
-  ownerOnly?: boolean;
-  adminOnly?: boolean;
 }
 
 interface NavGroup {
@@ -69,94 +64,216 @@ interface NavGroup {
   routes: NavRoute[];
 }
 
-const allNavGroups: NavGroup[] = [
-  {
-    label: "Core",
-    routes: [
-      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-      { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code", ownerOnly: true },
-    ],
-  },
-  {
-    label: "HR Management",
-    routes: [
-      { label: "Employees", icon: Users, href: "/hr", permission: "hr:employees:view" },
-      { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding", permission: "hr:employees:create" },
-      { label: "Attendance", icon: Clock, href: "/hr/attendance", permission: "hr:attendance:view" },
-      { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves", permission: "hr:leaves:view" },
-      { label: "Payroll", icon: CreditCard, href: "/hr/payroll", permission: "hr:payroll:view" },
-      { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips", permission: "hr:payroll:view" },
-      { label: "Devices", icon: Laptop, href: "/hr/devices", permission: "hr:assets:view" },
-      { label: "Expenses", icon: Receipt, href: "/hr/expenses", permission: "hr:expenses:view" },
-      { label: "Documents", icon: FileText, href: "/hr/documents", permission: "hr:documents:view" },
-      { label: "Work Logs", icon: ClipboardList, href: "/hr/work-logs" },
-      { label: "Org Chart", icon: Network, href: "/hr/org-chart" },
-    ],
-  },
-  {
-    label: "Projects",
-    routes: [
-      { label: "Projects", icon: Briefcase, href: "/projects", isProjectsList: true, permission: "projects:view" },
-      { label: "My Timesheets", icon: Timer, href: "/timesheets", permission: "projects:timesheets:view" },
-      { label: "Team Timesheets", icon: Clock, href: "/timesheets/team", adminOnly: true },
-    ],
-  },
-  {
-    label: "CRM",
-    routes: [
-      { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads", permission: "crm:leads:view" },
-      { label: "Deals", icon: Handshake, href: "/crm/deals", permission: "crm:leads:view" },
-      { label: "Targets", icon: Trophy, href: "/crm/targets", permission: "crm:targets:view" },
-      { label: "Reports", icon: BarChart3, href: "/crm/reports", permission: "crm:reports:view" },
-      { label: "Clients", icon: UserCheck, href: "/crm/clients", permission: "crm:leads:view" },
-    ],
-  },
-  {
-    label: "Dashboards",
-    routes: [
-      { label: "Sales", icon: DollarSign, href: "/sales", permission: "dashboard:sales:view" },
-      { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "dashboard:customer-executive:view" },
-      { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "dashboard:marketing:view" },
-      { label: "Support", icon: HeadphonesIcon, href: "/support", permission: "dashboard:support:view" },
-    ],
-  },
-  {
-    label: "System",
-    routes: [
-      { label: "Billing", icon: Receipt, href: "/billing", adminOnly: true },
-      { label: "Settings", icon: Settings, href: "/settings" },
-    ],
-  },
-];
-
-function filterNavGroups(role: string | undefined, userPermissions?: string[]): NavGroup[] {
+/**
+ * Role-based sidebar navigation.
+ * Each role gets EXACTLY what they should see — nothing more.
+ */
+function getNavGroupsForRole(role: string | undefined): NavGroup[] {
   if (!role) return [];
-  const isCEO = role === "CEO" || role === "OWNER"; // backward compat for stale sessions
-  const isAdminOrCEO = role === "HR" || isCEO;
 
-  // CEO/OWNER bypasses all permission checks
-  if (isCEO) {
-    return allNavGroups
-      .map((group) => ({ ...group, routes: [...group.routes] }))
-      .filter((group) => group.routes.length > 0);
+  switch (role) {
+    case "CEO":
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
+          ],
+        },
+        {
+          label: "HR Management",
+          routes: [
+            { label: "Employees", icon: Users, href: "/hr" },
+            { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding" },
+            { label: "Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
+            { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Devices", icon: Laptop, href: "/hr/devices" },
+            { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "Documents", icon: FileText, href: "/hr/documents" },
+            { label: "Work Logs", icon: ClipboardList, href: "/hr/work-logs" },
+            { label: "Org Chart", icon: Network, href: "/hr/org-chart" },
+          ],
+        },
+        {
+          label: "CRM",
+          routes: [
+            { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
+            { label: "Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "Targets", icon: Trophy, href: "/crm/targets" },
+            { label: "Reports", icon: BarChart3, href: "/crm/reports" },
+            { label: "Clients", icon: UserCheck, href: "/crm/clients" },
+          ],
+        },
+        {
+          label: "Dashboards",
+          routes: [
+            { label: "Sales", icon: DollarSign, href: "/sales" },
+            { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
+          ],
+        },
+        {
+          label: "Projects",
+          routes: [
+            { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "Team Timesheets", icon: Clock, href: "/timesheets/team" },
+          ],
+        },
+        {
+          label: "Support",
+          routes: [
+            { label: "Tickets", icon: Ticket, href: "/support" },
+          ],
+        },
+        {
+          label: "System",
+          routes: [
+            { label: "Billing", icon: Receipt, href: "/billing" },
+            { label: "Settings", icon: Settings, href: "/settings" },
+          ],
+        },
+      ];
+
+    case "HR":
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+          ],
+        },
+        {
+          label: "HR Management",
+          routes: [
+            { label: "Employees", icon: Users, href: "/hr" },
+            { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding" },
+            { label: "Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
+            { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Devices", icon: Laptop, href: "/hr/devices" },
+            { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "Documents", icon: FileText, href: "/hr/documents" },
+            { label: "Work Logs", icon: ClipboardList, href: "/hr/work-logs" },
+            { label: "Org Chart", icon: Network, href: "/hr/org-chart" },
+          ],
+        },
+        {
+          label: "CRM",
+          routes: [
+            { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
+            { label: "Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "Targets", icon: Trophy, href: "/crm/targets" },
+            { label: "Reports", icon: BarChart3, href: "/crm/reports" },
+            { label: "Clients", icon: UserCheck, href: "/crm/clients" },
+          ],
+        },
+        {
+          label: "Projects",
+          routes: [
+            { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+          ],
+        },
+        {
+          label: "Support",
+          routes: [
+            { label: "Tickets", icon: Ticket, href: "/support" },
+          ],
+        },
+        {
+          label: "System",
+          routes: [
+            { label: "Settings", icon: Settings, href: "/settings" },
+          ],
+        },
+      ];
+
+    case "SALES":
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+          ],
+        },
+        {
+          label: "My Work",
+          routes: [
+            { label: "My Leads", icon: Contact2, href: "/crm/leads" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+            { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+          ],
+        },
+      ];
+
+    case "CUSTOMER_SUPPORT":
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+          ],
+        },
+        {
+          label: "My Work",
+          routes: [
+            { label: "My Tickets", icon: Ticket, href: "/support" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+            { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+          ],
+        },
+      ];
+
+    case "ENGINEERING":
+    case "DESIGN":
+    case "VIDEO_EDITOR":
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+          ],
+        },
+        {
+          label: "My Work",
+          routes: [
+            { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+            { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+          ],
+        },
+      ];
+
+    default:
+      // Unknown role — only self-service
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+          ],
+        },
+        {
+          label: "My Work",
+          routes: [
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+            { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+          ],
+        },
+      ];
   }
-
-  // Use actual user permissions from RBAC if available, fallback to defaults
-  const permissions = userPermissions && userPermissions.length > 0
-    ? userPermissions
-    : ROLE_DEFAULT_PERMISSIONS[role] || [];
-
-  return allNavGroups
-    .map((group) => ({
-      ...group,
-      routes: group.routes.filter((route) => {
-        if (route.ownerOnly) return false;
-        if (route.adminOnly && !isAdminOrCEO) return false;
-        if (route.permission && !permissions.includes(route.permission)) return false;
-        return true;
-      }),
-    }))
-    .filter((group) => group.routes.length > 0);
 }
 
 interface AppSidebarProps {
@@ -171,33 +288,28 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
   const role = session?.user?.role;
-  const { data: userPermissions } = useRbacUserPermissions({ enabled: !!session?.user });
-  const navGroups = useMemo(() => filterNavGroups(role, userPermissions), [role, userPermissions]);
+  const navGroups = useMemo(() => getNavGroupsForRole(role), [role]);
+  const isAdmin = role === "CEO" || role === "HR";
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
   useEffect(() => {
+    if (!isAdmin || !session?.user) return;
     let cancelled = false;
     async function fetchCounts() {
         try {
             const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
-
-            const [leavesCount] = await Promise.all([
-              getPendingApprovalCount(),
-            ]);
-
+            const leavesCount = await getPendingApprovalCount();
             if (!cancelled) {
               setPendingLeaves(leavesCount);
             }
         } catch {
-          // Leave count fetch is non-critical; silently ignore errors
+          // non-critical
         }
     }
-    if (session?.user) {
-        fetchCounts();
-        const interval = setInterval(fetchCounts, 30000);
-        return () => { cancelled = true; clearInterval(interval); };
-    }
-  }, [session]);
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [session, isAdmin]);
 
   if (status === "loading") {
     return (
@@ -298,16 +410,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
               <div className="space-y-0.5">
                 {group.routes.map((route) => {
                   const isExactMatch = pathname === route.href;
-                  const hasSiblingRoutes = group.routes.some(r =>
-                    r.href !== route.href &&
-                    (r.href.startsWith(route.href + "/") || route.href.startsWith(r.href + "/"))
-                  );
-                  const isChildRoute = !hasSiblingRoutes &&
-                    route.href !== "/dashboard" &&
-                    pathname.startsWith(route.href + "/");
                   const isActive = isExactMatch || (route.isProjectsList && pathname.startsWith("/projects/"));
-                  const showBadge =
-                    (route.badge === "leaves" && pendingLeaves > 0);
+                  const showBadge = (route.badge === "leaves" && pendingLeaves > 0);
                   const isProjectsRoute = route.isProjectsList;
                   const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
 
@@ -412,10 +516,12 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {

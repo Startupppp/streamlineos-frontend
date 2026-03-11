@@ -3,13 +3,13 @@
 import { useState, useCallback } from "react";
 import Cropper, { Area } from "react-easy-crop";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetDescription,
-} from "./sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "./dialog";
 import { Button } from "./button";
 import { Slider } from "./slider";
 import { ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react";
@@ -101,14 +101,16 @@ export function AvatarCropDialog({
   }, []);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
-          <SheetDescription>{description}</SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-0">
+        <div className="px-6 pt-6">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="relative w-full h-72 bg-muted rounded-lg overflow-hidden">
+        <div className="relative w-full aspect-square max-h-[50vh] bg-muted overflow-hidden">
           <Cropper
             image={imageSrc}
             crop={crop}
@@ -122,27 +124,29 @@ export function AvatarCropDialog({
           />
         </div>
 
-        <div className="flex items-center gap-3 px-1">
-          <ZoomOut className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Slider
-            value={[zoom]}
-            min={1}
-            max={3}
-            step={0.05}
-            onValueChange={(val) => setZoom(val[0])}
-          />
-          <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleReset}
-            className="shrink-0"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+        <div className="px-6 pb-2">
+          <div className="flex items-center gap-3">
+            <ZoomOut className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Slider
+              value={[zoom]}
+              min={1}
+              max={3}
+              step={0.05}
+              onValueChange={(val) => setZoom(val[0])}
+            />
+            <ZoomIn className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleReset}
+              className="shrink-0"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <SheetFooter>
+        <DialogFooter className="px-6 pb-6">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -160,8 +164,8 @@ export function AvatarCropDialog({
               "Save Photo"
             )}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -10,12 +10,10 @@ const PROTECTED_ROUTES = [
   "/ceo",
   "/sales",
   "/customer-executive",
-  "/marketing",
   "/billing",
   "/timesheets",
   "/support",
   "/crm",
-  // "/notifications",
 ];
 
 const AUTH_ROUTES = [
@@ -30,6 +28,52 @@ const ALLOW_AUTHENTICATED = [
   "/invitation",
   "/auth/reset-password",
 ];
+
+// Route → allowed roles. CEO always has access (hardcoded bypass).
+// Routes not listed here are accessible to all authenticated users.
+const ROUTE_ROLE_MAP: Record<string, string[]> = {
+  // HR Management — CEO and HR only
+  "/hr": ["CEO", "HR"],
+  "/hr/onboarding": ["CEO", "HR"],
+  "/hr/payroll": ["CEO", "HR"],
+  "/hr/devices": ["CEO", "HR"],
+  "/hr/documents": ["CEO", "HR"],
+  "/hr/work-logs": ["CEO", "HR"],
+  "/hr/org-chart": ["CEO", "HR"],
+
+  // Self-service HR — all roles (explicit override for sub-routes of /hr)
+  "/hr/my-payslips": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+  "/hr/leaves": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+  "/hr/expenses": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+  "/hr/attendance": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+
+  // CRM — CEO, HR, SALES (sales sees filtered data)
+  "/crm/leads": ["CEO", "HR", "SALES"],
+  "/crm/deals": ["CEO", "HR"],
+  "/crm/targets": ["CEO", "HR"],
+  "/crm/reports": ["CEO", "HR"],
+  "/crm/clients": ["CEO", "HR"],
+
+  // Projects — CEO, HR, and project-based roles
+  "/projects": ["CEO", "HR", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+  "/timesheets": ["CEO", "HR", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+
+  // Support — CEO, HR, CUSTOMER_SUPPORT
+  "/support": ["CEO", "HR", "CUSTOMER_SUPPORT"],
+
+  // Dashboards — CEO, HR only
+  "/sales": ["CEO", "HR"],
+  "/customer-executive": ["CEO", "HR"],
+
+  // Settings — CEO and HR
+  "/settings": ["CEO", "HR"],
+
+  // Billing — CEO only
+  "/billing": ["CEO"],
+
+  // CEO-only
+  "/ceo": ["CEO"],
+};
 
 const RATE_LIMIT_WINDOW = 60_000;
 const RATE_LIMIT_MAX = 10;
@@ -59,6 +103,28 @@ function checkRateLimit(ip: string): boolean {
 
 function startsWithAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
+}
+
+/**
+ * Check if user's role can access this pathname.
+ * Matches the most specific route first (longest prefix).
+ */
+function canAccessRoute(pathname: string, role: string): boolean {
+  // CEO bypasses everything
+  if (role === "CEO") return true;
+
+  // Find the most specific matching route
+  const matchingRoutes = Object.keys(ROUTE_ROLE_MAP)
+    .filter((route) => pathname === route || pathname.startsWith(route + "/"))
+    .sort((a, b) => b.length - a.length); // longest first
+
+  if (matchingRoutes.length === 0) {
+    // No specific rule → allow (e.g., /dashboard itself)
+    return true;
+  }
+
+  const bestMatch = matchingRoutes[0];
+  return ROUTE_ROLE_MAP[bestMatch].includes(role);
 }
 
 export default async function middleware(req: NextRequest) {
@@ -153,6 +219,17 @@ export default async function middleware(req: NextRequest) {
     url.pathname = "/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  // RBAC route protection — block unauthorized role access
+  if (isAuthenticated && token?.role && startsWithAny(pathname, PROTECTED_ROUTES)) {
+    const userRole = token.role as string;
+    if (!canAccessRoute(pathname, userRole)) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/dashboard";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();

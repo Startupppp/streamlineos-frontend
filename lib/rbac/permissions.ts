@@ -324,7 +324,7 @@ export const PERMISSIONS: Permission[] = [
     action: "export",
     description: "Export CRM reports",
   },
-  // Dashboard-specific permissions (role-isolated dashboards)
+  // Dashboard-specific permissions
   {
     name: "dashboard:sales:view",
     resource: "dashboard:sales",
@@ -338,39 +338,69 @@ export const PERMISSIONS: Permission[] = [
     description: "View Customer Executive dashboard",
   },
   {
-    name: "dashboard:marketing:view",
-    resource: "dashboard:marketing",
-    action: "view",
-    description: "View Marketing dashboard",
-  },
-  {
     name: "dashboard:support:view",
     resource: "dashboard:support",
     action: "view",
     description: "View Support CRM dashboard",
   },
+  // Self-service permissions (every employee has these)
+  {
+    name: "self:attendance",
+    resource: "self",
+    action: "attendance",
+    description: "Check in/out own attendance",
+  },
+  {
+    name: "self:leaves",
+    resource: "self",
+    action: "leaves",
+    description: "Submit and view own leave requests",
+  },
+  {
+    name: "self:expenses",
+    resource: "self",
+    action: "expenses",
+    description: "Submit and view own expense claims",
+  },
+  {
+    name: "self:payslips",
+    resource: "self",
+    action: "payslips",
+    description: "View own payslips",
+  },
 ];
 
-// Common self-service HR permissions for all employees
+// Self-service permissions every employee gets (own data only)
 const EMPLOYEE_SELF_SERVICE = [
-  "hr:attendance:view",
-  "hr:leaves:view",
-  "hr:leaves:create",
-  "hr:payroll:view",
-  "hr:salary:view",
-  "hr:expenses:view",
-  "hr:expenses:create",
-  "hr:documents:view",
-  "hr:performance:view",
-  "hr:goals:view",
-  "hr:goals:manage",
+  "self:attendance",
+  "self:leaves",
+  "self:expenses",
+  "self:payslips",
+  "hr:leaves:create",       // submit own leave
+  "hr:expenses:create",     // submit own expense
 ];
+
+/**
+ * EXACTLY 7 roles. No others exist.
+ * CEO, HR, SALES, CUSTOMER_SUPPORT, ENGINEERING, DESIGN, VIDEO_EDITOR
+ */
+export const SYSTEM_ROLES = [
+  "CEO",
+  "HR",
+  "SALES",
+  "CUSTOMER_SUPPORT",
+  "ENGINEERING",
+  "DESIGN",
+  "VIDEO_EDITOR",
+] as const;
+
+export type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  // CEO — full access to everything
+  // CEO — full god-mode access to everything
   CEO: PERMISSIONS.map((p) => p.name),
 
-  // HR — full HR module + employee management + settings
+  // HR — full HR module + employee management + settings + can view CRM/projects for admin
   HR: [
     ...EMPLOYEE_SELF_SERVICE,
     "hr:employees:view",
@@ -379,85 +409,72 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "hr:employees:delete",
     "hr:attendance:view",
     "hr:attendance:manage",
+    "hr:leaves:view",
     "hr:leaves:approve",
     "hr:payroll:view",
     "hr:payroll:generate",
     "hr:payroll:approve",
     "hr:salary:view",
     "hr:salary:manage",
+    "hr:expenses:view",
     "hr:expenses:approve",
+    "hr:documents:view",
     "hr:documents:manage",
     "hr:assets:view",
     "hr:assets:manage",
+    "hr:performance:view",
     "hr:performance:manage",
-    "hr:helpdesk:manage",
+    "hr:goals:view",
+    "hr:goals:manage",
+    "crm:leads:view",
+    "crm:leads:create",
+    "crm:leads:update",
+    "crm:leads:assign",
+    "crm:targets:view",
+    "crm:reports:view",
+    "projects:view",
+    "projects:create",
+    "projects:update",
+    "projects:tickets:view",
     "reports:view",
     "reports:create",
     "reports:export",
     "settings:view",
-    "settings:update",
-  ],
-
-  // SALES — Sales dashboard + CRM leads/targets + reports
-  SALES: [
-    ...EMPLOYEE_SELF_SERVICE,
+    "settings:manage",
     "dashboard:sales:view",
     "dashboard:customer-executive:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:leads:delete",
-    "crm:targets:view",
-    "crm:targets:manage",
-    "crm:reports:view",
-    "crm:reports:export",
-    "reports:view",
-    "reports:create",
+    "dashboard:support:view",
   ],
 
-  // CRM — Support + Customer Exec dashboards + full CRM access
-  CRM: [
+  // SALES — can ONLY see their assigned leads, update lead status, log interactions
+  SALES: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "crm:leads:view",    // filtered to own assigned leads only
+    "crm:leads:update",  // update status of own leads
+  ],
+
+  // CUSTOMER_SUPPORT — can ONLY see tickets assigned to them
+  CUSTOMER_SUPPORT: [
     ...EMPLOYEE_SELF_SERVICE,
     "dashboard:support:view",
-    "dashboard:customer-executive:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:targets:view",
-    "crm:targets:manage",
-    "crm:reports:view",
-    "crm:reports:export",
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
+    "projects:tickets:view",    // filtered to own assigned tickets
+    "projects:tickets:update",  // update own tickets
   ],
 
-  // DIGITAL_MARKETING — Marketing dashboard + CRM + projects
-  DIGITAL_MARKETING: [
+  // ENGINEERING — can ONLY see projects/tasks assigned to them
+  ENGINEERING: [
     ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:marketing:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:targets:view",
-    "crm:reports:view",
-    "projects:view",
+    "projects:view",            // filtered to member projects
     "projects:tickets:view",
     "projects:tickets:create",
     "projects:tickets:update",
+    "projects:sprints:view",
     "projects:timesheets:view",
     "projects:timesheets:create",
-    "reports:view",
   ],
 
-  // DESIGN_TEAM — Projects + tickets + timesheets (UI/UX, graphic design)
-  DESIGN_TEAM: [
+  // DESIGN — can ONLY see projects/tasks assigned to them
+  DESIGN: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
     "projects:tickets:view",
@@ -465,10 +482,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:tickets:update",
     "projects:timesheets:view",
     "projects:timesheets:create",
-    "reports:view",
   ],
 
-  // VIDEO_EDITOR — Projects + tickets + timesheets (video production)
+  // VIDEO_EDITOR — can ONLY see projects/tasks assigned to them
   VIDEO_EDITOR: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
@@ -477,25 +493,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:tickets:update",
     "projects:timesheets:view",
     "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // ENGINEER — Projects + sprints + tickets + timesheets
-  ENGINEER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:create",
-    "projects:update",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:tickets:assign",
-    "projects:sprints:view",
-    "projects:sprints:manage",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-    "reports:create",
   ],
 };
 
@@ -507,4 +504,3 @@ export function parsePermission(permission: string): { resource: string; action:
   const [resource, action] = permission.split(":");
   return { resource: resource ?? "", action: action ?? "" };
 }
-

@@ -18,6 +18,8 @@ import {
   CalendarCheck,
   Building2,
   RefreshCw,
+  Contact2,
+  Ticket,
 } from "lucide-react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,17 +45,23 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
+  const role = session?.user?.role;
+  const isAdmin = role === "CEO" || role === "HR";
+  const isProjectRole = role === "ENGINEERING" || role === "DESIGN" || role === "VIDEO_EDITOR";
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
     retryDelay: 1000,
   });
 
+  // Only fetch admin-level data for CEO/HR
   const { data: recentProjects, isLoading: projectsLoading, error: projectsError } = useRecentProjects();
   const { data: teamAvailability, isLoading: teamLoading } = useTeamAvailability();
+  const { data: recentActivity, isLoading: activityLoading, error: activityError } = useRecentActivity();
+
+  // Fetch tickets/sprint for project roles and admins
   const { data: myTicketsData, isLoading: ticketsLoading, error: ticketsError } = useEmployeeTickets(currentUserId ?? "");
   const { data: sprintSummary, isLoading: sprintLoading } = useActiveSprintSummary();
-  const { data: recentActivity, isLoading: activityLoading, error: activityError } = useRecentActivity();
 
   const greeting = useMemo(() => getGreeting(), []);
   const todayFormatted = useMemo(() => format(new Date(), "EEEE, MMMM do, yyyy"), []);
@@ -61,15 +69,48 @@ export default function DashboardPage() {
   const handleGoToDashboard = useCallback(() => router.push("/dashboard"), [router]);
   const handleGoToProjects = useCallback(() => router.push("/projects"), [router]);
 
+  // Role-specific stat cards
   const statCards = useMemo(() => {
     if (!stats) return [];
-    return [
-      { id: "employees", label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
-      { id: "projects", label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
-      { id: "present", label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
-      { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
-    ];
-  }, [stats]);
+
+    switch (role) {
+      case "CEO":
+        return [
+          { id: "employees", label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
+          { id: "projects", label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
+          { id: "present", label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
+          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+        ];
+      case "HR":
+        return [
+          { id: "employees", label: "Total Employees", value: stats.totalEmployees, icon: Users, href: "/hr" },
+          { id: "present", label: "Present Today", value: stats.presentToday, icon: CalendarCheck, href: "/hr/attendance" },
+          { id: "projects", label: "Active Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
+          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+        ];
+      case "SALES":
+        return [
+          { id: "org", label: "Welcome", value: stats.orgName, icon: Building2 },
+          { id: "leads", label: "My Leads", value: "View", icon: Contact2, href: "/crm/leads" },
+        ];
+      case "CUSTOMER_SUPPORT":
+        return [
+          { id: "org", label: "Welcome", value: stats.orgName, icon: Building2 },
+          { id: "tickets", label: "My Tickets", value: "View", icon: Ticket, href: "/support" },
+        ];
+      case "ENGINEERING":
+      case "DESIGN":
+      case "VIDEO_EDITOR":
+        return [
+          { id: "projects", label: "My Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
+          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+        ];
+      default:
+        return [
+          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+        ];
+    }
+  }, [stats, role]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myTicketsData?.data ?? [];
@@ -165,7 +206,7 @@ export default function DashboardPage() {
         <ClockInWidget />
       </motion.div>
 
-      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div variants={fadeUp} className={`grid gap-4 ${statCards.length >= 4 ? "md:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
         {statCards.map((stat, i) => (
           <StatCard
             key={stat.id}
@@ -182,39 +223,45 @@ export default function DashboardPage() {
         <QuickActions />
       </motion.div>
 
-      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-4">
-          <MyIssuesCard
-            tickets={sortedMyTickets}
-            isLoading={ticketsLoading}
-            error={ticketsError}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
-        </div>
-      </motion.div>
+      {/* My Issues + Sprint — shown to admins and project-based roles */}
+      {(isAdmin || isProjectRole) && (
+        <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+          <div className="lg:col-span-4">
+            <MyIssuesCard
+              tickets={sortedMyTickets}
+              isLoading={ticketsLoading}
+              error={ticketsError}
+            />
+          </div>
+          <div className="lg:col-span-3">
+            <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
+          </div>
+        </motion.div>
+      )}
 
-      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
-        <div className="lg:col-span-4">
-          <RecentProjectsCard
-            projects={recentProjects}
-            isLoading={projectsLoading}
-            error={projectsError}
-            onCreateProject={handleGoToProjects}
-          />
-        </div>
-        <div className="lg:col-span-4">
-          <RecentActivityCard
-            items={recentActivity}
-            isLoading={activityLoading}
-            error={activityError}
-          />
-        </div>
-        <div className="lg:col-span-4">
-          <TeamCard members={teamAvailability} isLoading={teamLoading} />
-        </div>
-      </motion.div>
+      {/* Projects, Activity, Team — CEO/HR only */}
+      {isAdmin && (
+        <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <RecentProjectsCard
+              projects={recentProjects}
+              isLoading={projectsLoading}
+              error={projectsError}
+              onCreateProject={handleGoToProjects}
+            />
+          </div>
+          <div className="lg:col-span-4">
+            <RecentActivityCard
+              items={recentActivity}
+              isLoading={activityLoading}
+              error={activityError}
+            />
+          </div>
+          <div className="lg:col-span-4">
+            <TeamCard members={teamAvailability} isLoading={teamLoading} />
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

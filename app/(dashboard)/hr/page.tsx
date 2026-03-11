@@ -71,17 +71,16 @@ interface Employee {
 
 type UserRole = string;
 type StatusFilter = "All" | "Active" | "Inactive";
-type RoleFilter = "All" | "CEO" | "HR" | "SALES" | "CRM" | "DIGITAL_MARKETING" | "DESIGN_TEAM" | "VIDEO_EDITOR" | "ENGINEER";
+type RoleFilter = "All" | "CEO" | "HR" | "SALES" | "CUSTOMER_SUPPORT" | "ENGINEERING" | "DESIGN" | "VIDEO_EDITOR";
 
 const ROLE_LABELS: Record<string, string> = {
   CEO: "CEO",
   HR: "HR",
   SALES: "Sales",
-  CRM: "CRM",
-  DIGITAL_MARKETING: "Digital Marketing",
-  DESIGN_TEAM: "Design Team",
+  CUSTOMER_SUPPORT: "Customer Support",
+  ENGINEERING: "Engineering",
+  DESIGN: "Design",
   VIDEO_EDITOR: "Video Editor",
-  ENGINEER: "Engineer",
 };
 
 const PAGE_SIZE = 6;
@@ -342,11 +341,10 @@ export default function HRDashboardPage() {
                 <SelectItem value="CEO">CEO</SelectItem>
                 <SelectItem value="HR">HR</SelectItem>
                 <SelectItem value="SALES">Sales</SelectItem>
-                <SelectItem value="CRM">CRM</SelectItem>
-                <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
-                <SelectItem value="DESIGN_TEAM">Design Team</SelectItem>
+                <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
+                <SelectItem value="ENGINEERING">Engineering</SelectItem>
+                <SelectItem value="DESIGN">Design</SelectItem>
                 <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-                <SelectItem value="ENGINEER">Engineer</SelectItem>
               </SelectContent>
             </Select>
 

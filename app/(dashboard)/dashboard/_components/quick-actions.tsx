@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import {
@@ -10,20 +11,71 @@ import {
   BarChart3,
   CalendarDays,
   Settings,
+  Contact2,
+  Clock,
+  Briefcase,
+  CheckSquare,
+  Network,
+  Ticket,
 } from "lucide-react";
 
-const quickActions = [
-  { label: "New Project", icon: Plus, href: "/projects" },
-  { label: "Add Employee", icon: UserPlus, href: "/hr" },
-  { label: "View Reports", icon: BarChart3, href: "/projects" },
-  { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
-  { label: "Settings", icon: Settings, href: "/settings" },
-];
+interface QuickAction {
+  label: string;
+  icon: React.ElementType;
+  href: string;
+}
+
+function getQuickActionsForRole(role: string | undefined): QuickAction[] {
+  switch (role) {
+    case "CEO":
+      return [
+        { label: "New Project", icon: Plus, href: "/projects" },
+        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
+        { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
+        { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
+        { label: "Settings", icon: Settings, href: "/settings" },
+      ];
+    case "HR":
+      return [
+        { label: "Add Employee", icon: UserPlus, href: "/hr/onboarding" },
+        { label: "View Reports", icon: BarChart3, href: "/crm/reports" },
+        { label: "Team Schedule", icon: CalendarDays, href: "/hr/attendance" },
+        { label: "Org Chart", icon: Network, href: "/hr/org-chart" },
+      ];
+    case "SALES":
+      return [
+        { label: "View My Leads", icon: Contact2, href: "/crm/leads" },
+        { label: "Check In", icon: Clock, href: "/hr/attendance" },
+      ];
+    case "CUSTOMER_SUPPORT":
+      return [
+        { label: "View My Tickets", icon: Ticket, href: "/support" },
+        { label: "Check In", icon: Clock, href: "/hr/attendance" },
+      ];
+    case "ENGINEERING":
+    case "DESIGN":
+    case "VIDEO_EDITOR":
+      return [
+        { label: "My Projects", icon: Briefcase, href: "/projects" },
+        { label: "My Tasks", icon: CheckSquare, href: "/projects" },
+        { label: "Check In", icon: Clock, href: "/hr/attendance" },
+      ];
+    default:
+      return [
+        { label: "Check In", icon: Clock, href: "/hr/attendance" },
+      ];
+  }
+}
 
 export const QuickActions = memo(function QuickActions() {
+  const { data: session } = useSession();
+  const actions = getQuickActionsForRole(session?.user?.role);
+
+  if (actions.length === 0) return null;
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-      {quickActions.map((action) => {
+    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${actions.length >= 5 ? "md:grid-cols-5" : actions.length >= 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+      {actions.map((action) => {
         const ActionIcon = action.icon;
         return (
           <motion.div key={action.label} variants={fadeUp}>

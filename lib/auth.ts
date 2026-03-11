@@ -60,7 +60,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               .values({
                 userId: user.id,
                 orgId: org.id,
-                role: user.role || "ENGINEER",
+                role: user.role || "ENGINEERING",
               })
               .onConflictDoNothing();
           }

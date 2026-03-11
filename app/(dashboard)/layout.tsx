@@ -20,7 +20,10 @@ export default function DashboardLayout({
   const { data: session } = useSession();
   const isProjectPage = pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
 
-  const hasDashboardAccess = session?.user?.hasDashboardAccess !== false;
+  const role = session?.user?.role;
+  // CEO and HR always have dashboard access regardless of the flag
+  const isAdminRole = role === "CEO" || role === "HR";
+  const hasDashboardAccess = isAdminRole || session?.user?.hasDashboardAccess !== false;
 
   return (
     <OrganizationGuard>

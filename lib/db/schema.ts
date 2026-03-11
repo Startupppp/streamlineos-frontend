@@ -91,7 +91,7 @@ export const organizationMembers = pgTable("organization_members", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id).notNull(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
-  role: text("role").default("ENGINEER").notNull(),
+  role: text("role").default("ENGINEERING").notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uniq_org_members_user_org").on(table.userId, table.orgId),
@@ -134,7 +134,7 @@ export const invitations = pgTable("invitations", {
   email: text("email").notNull(),
   token: text("token").notNull().unique(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
-  role: text("role").default("ENGINEER").notNull(),
+  role: text("role").default("ENGINEERING").notNull(),
   invitedBy: text("invited_by").references(() => users.id).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   acceptedAt: timestamp("accepted_at"),
@@ -180,7 +180,7 @@ export const users = pgTable("users", {
     accountHolder: string;
   }>(),
   image: text("image"),
-  role: text("role").default("ENGINEER").notNull(),
+  role: text("role").default("ENGINEERING").notNull(),
   departmentId: integer("department_id").references(() => departments.id),
   designation: text("designation"),
   phone: text("phone"),
@@ -191,7 +191,7 @@ export const users = pgTable("users", {
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false),
   isActive: boolean("is_active").default(true).notNull(),
-  hasDashboardAccess: boolean("has_dashboard_access").default(true).notNull(),
+  hasDashboardAccess: boolean("has_dashboard_access").default(false).notNull(),
   reportingTo: text("reporting_to"),
   team: text("team"),
   emergencyContact: jsonb("emergency_contact").$type<{

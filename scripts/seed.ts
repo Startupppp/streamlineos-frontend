@@ -8,6 +8,7 @@ async function main() {
   const { db } = await import("../lib/db");
   const { users, organizations, organizationMembers, departments, roles } = await import("../lib/db/schema");
   const { ROLE_DEFAULT_PERMISSIONS } = await import("../lib/rbac/permissions");
+  const { eq } = await import("drizzle-orm");
 
   // Admin password: Tarun@1234
   const passwordHash = await hash("Tarun@1234", 10);
@@ -35,8 +36,7 @@ async function main() {
   let adminUserId: string;
   if (existingAdmin) {
     adminUserId = existingAdmin.id;
-    // Ensure CEO role and active status
-    const { eq } = await import("drizzle-orm");
+    // Ensure CEO role, active, and dashboard access
     await db.update(users).set({ role: "CEO", isActive: true, hasDashboardAccess: true }).where(eq(users.id, adminUserId));
   } else {
     adminUserId = "user_" + nanoid();
@@ -50,6 +50,7 @@ async function main() {
       role: "CEO",
       emailVerified: new Date(),
       isActive: true,
+      hasDashboardAccess: true,
       isPasswordChangeRequired: false,
       image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${adminEmail}`,
     });
@@ -80,16 +81,15 @@ async function main() {
     }).onConflictDoNothing();
   }
 
-  // ─── System Roles (consolidated) ───
+  // ─── System Roles (exactly 7) ───
   const systemRoles = [
     { name: "CEO", slug: "CEO" },
     { name: "HR", slug: "HR" },
     { name: "Sales", slug: "SALES" },
-    { name: "CRM", slug: "CRM" },
-    { name: "Digital Marketing", slug: "DIGITAL_MARKETING" },
-    { name: "Design Team", slug: "DESIGN_TEAM" },
+    { name: "Customer Support", slug: "CUSTOMER_SUPPORT" },
+    { name: "Engineering", slug: "ENGINEERING" },
+    { name: "Design", slug: "DESIGN" },
     { name: "Video Editor", slug: "VIDEO_EDITOR" },
-    { name: "Engineer", slug: "ENGINEER" },
   ];
 
   for (const role of systemRoles) {
@@ -98,13 +98,13 @@ async function main() {
       slug: role.slug,
       orgId: orgId,
       isSystem: true,
-      permissions: ROLE_DEFAULT_PERMISSIONS[role.slug] || ROLE_DEFAULT_PERMISSIONS["ENGINEER"] || [],
+      permissions: ROLE_DEFAULT_PERMISSIONS[role.slug] || [],
     }).onConflictDoNothing();
   }
 
   console.log("Seed complete!");
   console.log(`  Organization: Vaivamm Capital (${orgId})`);
-  console.log(`  Admin: ${adminEmail} (CEO) — email verified`);
+  console.log(`  Admin: ${adminEmail} (CEO) — email verified, dashboard access ON`);
   console.log(`  Departments: ${departmentList.length} created`);
   console.log(`  Roles: ${systemRoles.length} system roles created`);
 
