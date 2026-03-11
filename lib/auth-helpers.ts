@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import type { AuthResult } from "@/lib/auth-types";
 
 // Roles with full admin privileges
-const ADMIN_ROLES = ["CEO", "ADMIN"];
+const ADMIN_ROLES = ["CEO", "HR"];
 
 export function isAdminOrOwner(role: string | undefined | null): boolean {
   return !!role && ADMIN_ROLES.includes(role);
@@ -38,7 +38,7 @@ export async function ensureOrgMembership(
   const org = await db.query.organizations.findFirst();
   if (!org) return null;
 
-  const memberRole = role || "MEMBER";
+  const memberRole = role || "ENGINEER";
 
   try {
     await db

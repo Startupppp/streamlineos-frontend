@@ -71,13 +71,17 @@ interface Employee {
 
 type UserRole = string;
 type StatusFilter = "All" | "Active" | "Inactive";
-type RoleFilter = "All" | "ADMIN" | "MEMBER" | "CEO";
+type RoleFilter = "All" | "CEO" | "HR" | "SALES" | "CRM" | "DIGITAL_MARKETING" | "DESIGN_TEAM" | "VIDEO_EDITOR" | "ENGINEER";
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Admin",
-  MEMBER: "Member",
   CEO: "CEO",
-  CLIENT: "Client",
+  HR: "HR",
+  SALES: "Sales",
+  CRM: "CRM",
+  DIGITAL_MARKETING: "Digital Marketing",
+  DESIGN_TEAM: "Design Team",
+  VIDEO_EDITOR: "Video Editor",
+  ENGINEER: "Engineer",
 };
 
 const PAGE_SIZE = 6;
@@ -90,7 +94,7 @@ function canDeleteEmployee(
 ): boolean {
   if (targetId === currentId) return false;
   if (currentRole === "CEO") return targetRole !== "CEO";
-  if (currentRole === "ADMIN") return targetRole === "MEMBER";
+  if (currentRole === "HR") return targetRole !== "CEO" && targetRole !== "HR";
   return false;
 }
 
@@ -336,8 +340,13 @@ export default function HRDashboardPage() {
               <SelectContent>
                 <SelectItem value="All">Role: All</SelectItem>
                 <SelectItem value="CEO">CEO</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="MEMBER">Member</SelectItem>
+                <SelectItem value="HR">HR</SelectItem>
+                <SelectItem value="SALES">Sales</SelectItem>
+                <SelectItem value="CRM">CRM</SelectItem>
+                <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
+                <SelectItem value="DESIGN_TEAM">Design Team</SelectItem>
+                <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                <SelectItem value="ENGINEER">Engineer</SelectItem>
               </SelectContent>
             </Select>
 
@@ -368,7 +377,7 @@ export default function HRDashboardPage() {
                     <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Role</th>
                     <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Department</th>
                     <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
-                    {(currentUserRole === "CEO" || currentUserRole === "ADMIN") && (
+                    {(currentUserRole === "CEO" || currentUserRole === "HR") && (
                       <th scope="col" className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Dashboard</th>
                     )}
                     <th scope="col" className="text-right text-xs font-medium text-muted-foreground py-3 px-4">Actions</th>
@@ -437,7 +446,7 @@ export default function HRDashboardPage() {
                         </td>
 
                         {/* Dashboard Access Toggle */}
-                        {(currentUserRole === "CEO" || currentUserRole === "ADMIN") && (
+                        {(currentUserRole === "CEO" || currentUserRole === "HR") && (
                           <td className="py-3 px-4 text-center">
                             {user.role === "CEO" || user.id === currentUserId ? (
                               <Switch

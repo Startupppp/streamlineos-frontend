@@ -367,29 +367,42 @@ const EMPLOYEE_SELF_SERVICE = [
 ];
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  // CEO — sees everything
+  // CEO — full access to everything
   CEO: PERMISSIONS.map((p) => p.name),
 
-  // Admin — full access except RBAC (merges old HR + Admin)
-  ADMIN: PERMISSIONS.filter((p) => !p.name.startsWith("settings:rbac")).map((p) => p.name),
+  // HR — full HR module + employee management + settings
+  HR: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "hr:employees:view",
+    "hr:employees:create",
+    "hr:employees:update",
+    "hr:employees:delete",
+    "hr:attendance:view",
+    "hr:attendance:manage",
+    "hr:leaves:approve",
+    "hr:payroll:view",
+    "hr:payroll:generate",
+    "hr:payroll:approve",
+    "hr:salary:view",
+    "hr:salary:manage",
+    "hr:expenses:approve",
+    "hr:documents:manage",
+    "hr:assets:view",
+    "hr:assets:manage",
+    "hr:performance:manage",
+    "hr:helpdesk:manage",
+    "reports:view",
+    "reports:create",
+    "reports:export",
+    "settings:view",
+    "settings:update",
+  ],
 
-  // Sales — Sales dashboard + CRM leads/targets
+  // SALES — Sales dashboard + CRM leads/targets + reports
   SALES: [
     ...EMPLOYEE_SELF_SERVICE,
     "dashboard:sales:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:targets:view",
-    "crm:targets:manage",
-    "crm:reports:view",
-    "reports:view",
-  ],
-
-  // Sales Manager — Sales dashboard + full CRM + manage targets
-  SALES_MANAGER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:sales:view",
+    "dashboard:customer-executive:view",
     "crm:leads:view",
     "crm:leads:create",
     "crm:leads:update",
@@ -403,8 +416,30 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:create",
   ],
 
-  // Marketing — Marketing dashboard + CRM + projects (merges Digital Marketing, Social Media, Content Writer, SEO)
-  MARKETING: [
+  // CRM — Support + Customer Exec dashboards + full CRM access
+  CRM: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "dashboard:support:view",
+    "dashboard:customer-executive:view",
+    "crm:leads:view",
+    "crm:leads:create",
+    "crm:leads:update",
+    "crm:leads:assign",
+    "crm:targets:view",
+    "crm:targets:manage",
+    "crm:reports:view",
+    "crm:reports:export",
+    "projects:view",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
+    "reports:view",
+  ],
+
+  // DIGITAL_MARKETING — Marketing dashboard + CRM + projects
+  DIGITAL_MARKETING: [
     ...EMPLOYEE_SELF_SERVICE,
     "dashboard:marketing:view",
     "crm:leads:view",
@@ -421,8 +456,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:view",
   ],
 
-  // Designer — Projects (merges Graphic Designer, UI/UX Designer, Video Editor)
-  DESIGNER: [
+  // DESIGN_TEAM — Projects + tickets + timesheets (UI/UX, graphic design)
+  DESIGN_TEAM: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
     "projects:tickets:view",
@@ -433,7 +468,19 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "reports:view",
   ],
 
-  // Engineer — Projects + sprints + management (merges all dev roles, Tech Lead, Product Manager)
+  // VIDEO_EDITOR — Projects + tickets + timesheets (video production)
+  VIDEO_EDITOR: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "projects:view",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
+    "reports:view",
+  ],
+
+  // ENGINEER — Projects + sprints + tickets + timesheets
   ENGINEER: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
@@ -449,73 +496,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
     "reports:view",
     "reports:create",
-  ],
-
-  // Customer Support — Support + Customer Exec dashboards + CRM (merges Customer Executive, Support, IT Support)
-  CUSTOMER_SUPPORT: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:support:view",
-    "dashboard:customer-executive:view",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:targets:view",
-    "crm:reports:view",
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
-  ],
-
-  // Finance — HR payroll access + reports (merges Accountant)
-  FINANCE: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "hr:payroll:generate",
-    "hr:payroll:approve",
-    "hr:salary:manage",
-    "hr:expenses:approve",
-    "reports:view",
-    "reports:create",
-    "reports:export",
-    "settings:view",
-  ],
-
-  // Operations — broad view access + reports
-  OPERATIONS: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "hr:employees:view",
-    "hr:attendance:manage",
-    "projects:view",
-    "reports:view",
-    "reports:create",
-    "settings:view",
-  ],
-
-  // Intern — minimal access
-  INTERN: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-  ],
-
-  // Member — basic access, no specific dashboards
-  MEMBER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:sprints:view",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-    "reports:view",
   ],
 };
 

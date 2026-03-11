@@ -85,7 +85,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
-      role: employee.role || "MEMBER",
+      role: employee.role || "ENGINEER",
       designation: employee.designation || "",
       departmentId: employee.departmentId || undefined,
       phone: employee.phone || "",
@@ -319,8 +319,13 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                    <SelectItem value="MEMBER">Member</SelectItem>
-                                    <SelectItem value="ADMIN">Admin</SelectItem>
+                                    <SelectItem value="HR">HR</SelectItem>
+                                    <SelectItem value="SALES">Sales</SelectItem>
+                                    <SelectItem value="CRM">CRM</SelectItem>
+                                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
+                                    <SelectItem value="DESIGN_TEAM">Design Team</SelectItem>
+                                    <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                                    <SelectItem value="ENGINEER">Engineer</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

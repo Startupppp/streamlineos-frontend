@@ -24,10 +24,7 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
-  DollarSign,
   Handshake,
-  Megaphone,
-  HeadphonesIcon,
   Contact2,
   Trophy,
   BarChart3,
@@ -112,15 +109,6 @@ const allNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Dashboards",
-    routes: [
-      { label: "Sales", icon: DollarSign, href: "/sales", permission: "dashboard:sales:view" },
-      { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "dashboard:customer-executive:view" },
-      { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "dashboard:marketing:view" },
-      { label: "Support", icon: HeadphonesIcon, href: "/support", permission: "dashboard:support:view" },
-    ],
-  },
-  {
     label: "System",
     routes: [
       { label: "Billing", icon: Receipt, href: "/billing", adminOnly: true },
@@ -132,7 +120,7 @@ const allNavGroups: NavGroup[] = [
 function filterNavGroups(role: string | undefined, userPermissions?: string[]): NavGroup[] {
   if (!role) return [];
   const isCEO = role === "CEO" || role === "OWNER"; // backward compat for stale sessions
-  const isAdminOrCEO = role === "ADMIN" || isCEO;
+  const isAdminOrCEO = role === "HR" || isCEO;
 
   // CEO/OWNER bypasses all permission checks
   if (isCEO) {

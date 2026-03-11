@@ -60,19 +60,13 @@ const STEP_DETAILS: Record<number, { title: string; description: string }> = {
 };
 
 const COMMON_ROLE_DEPARTMENTS = [
-  "Admin",
   "HR",
   "Sales",
-  "Customer Support",
-  "Graphic Designer",
+  "CRM",
   "Digital Marketing",
-  "Social Media Manager",
+  "Design Team",
+  "Video Editing",
   "Engineering",
-  "Product",
-  "Design",
-  "Marketing",
-  "Finance",
-  "Operations",
 ];
 
 
@@ -119,7 +113,7 @@ export function OnboardingWizard() {
       password: "",
       designation: "",
       departmentId: undefined,
-      role: "MEMBER",
+      role: "ENGINEER",
       employeeId: "",
       joiningDate: new Date(),
       dateOfBirth: undefined,
@@ -492,8 +486,8 @@ export function OnboardingWizard() {
                                   ))}
                                   {assignableRoles.length === 0 && (
                                     <>
-                                      <SelectItem value="MEMBER">Member</SelectItem>
-                                      <SelectItem value="ADMIN">Admin</SelectItem>
+                                      <SelectItem value="ENGINEER">Engineer</SelectItem>
+                                      <SelectItem value="HR">HR</SelectItem>
                                     </>
                                   )}
                                 </SelectContent>

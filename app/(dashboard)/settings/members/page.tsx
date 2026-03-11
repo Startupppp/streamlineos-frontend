@@ -24,7 +24,7 @@ export default function MembersSettingsPage() {
   const cancelInvitation = useCancelInvitation();
   
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"MEMBER" | "ADMIN">("MEMBER");
+  const [inviteRole, setInviteRole] = useState<string>("ENGINEER");
   const [showInviteForm, setShowInviteForm] = useState(false);
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -99,8 +99,13 @@ export default function MembersSettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MEMBER">Member</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="SALES">Sales</SelectItem>
+                    <SelectItem value="CRM">CRM</SelectItem>
+                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
+                    <SelectItem value="DESIGN_TEAM">Design Team</SelectItem>
+                    <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                    <SelectItem value="ENGINEER">Engineer</SelectItem>
 
                   </SelectContent>
                 </Select>

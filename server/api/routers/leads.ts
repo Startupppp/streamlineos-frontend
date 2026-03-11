@@ -335,7 +335,8 @@ export const leadsRouter = createTRPCRouter({
     const userId = ctx.session.userId;
 
     const filters = [eq(leads.orgId, orgId)];
-    if (role === "MEMBER") {
+    const crmRoles = ["CEO", "HR", "SALES", "CRM", "DIGITAL_MARKETING"];
+    if (!crmRoles.includes(role ?? "")) {
       const teamLeadDepts = await ctx.db.query.departmentMembers.findMany({
         where: and(eq(departmentMembers.userId, userId), eq(departmentMembers.role, "lead")),
       });
@@ -662,12 +663,12 @@ export const leadsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
       const userRole = ctx.session.user.role ?? "";
-      const allowedRoles = ["CEO", "ADMIN", "HR", "MARKETING", "DIGITAL_MARKETING"];
+      const allowedRoles = ["CEO", "HR", "SALES", "CRM", "DIGITAL_MARKETING"];
 
       if (!allowedRoles.includes(userRole)) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Only CEO, ADMIN, HR, or MARKETING roles can distribute leads",
+          message: "Only CEO, HR, SALES, CRM, or DIGITAL_MARKETING roles can distribute leads",
         });
       }
 
@@ -687,7 +688,7 @@ export const leadsRouter = createTRPCRouter({
           inArray(users.id, orgMemberIds),
           eq(users.isActive, true),
           eq(users.hasDashboardAccess, true),
-          inArray(users.role, ["SALES", "SALES_MANAGER"]),
+          inArray(users.role, ["SALES", "CRM"]),
         ),
         columns: { id: true, name: true, email: true },
       });
@@ -695,7 +696,7 @@ export const leadsRouter = createTRPCRouter({
       if (salesPeople.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No active sales team members found. Ensure users with SALES or SALES_MANAGER role exist and have dashboard access enabled.",
+          message: "No active sales team members found. Ensure users with SALES or CRM role exist and have dashboard access enabled.",
         });
       }
 

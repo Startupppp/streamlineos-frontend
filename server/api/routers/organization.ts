@@ -145,7 +145,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "ADMIN" && membership.role !== "CEO")) {
+      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to invite users",
@@ -233,7 +233,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "ADMIN" && membership.role !== "CEO")) {
+      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to view invitations",
@@ -270,7 +270,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "ADMIN" && membership.role !== "CEO")) {
+      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to cancel invitations",
@@ -334,7 +334,7 @@ export const organizationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
       const { user } = ctx.session;
-      if (user.role !== "CEO" && user.role !== "ADMIN") {
+      if (user.role !== "CEO" && user.role !== "HR") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only Owners and Admins can update organization settings.",
@@ -395,7 +395,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "ADMIN" && membership.role !== "CEO")) {
+      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to remove members",

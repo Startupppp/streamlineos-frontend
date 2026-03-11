@@ -35,6 +35,9 @@ async function main() {
   let adminUserId: string;
   if (existingAdmin) {
     adminUserId = existingAdmin.id;
+    // Ensure CEO role and active status
+    const { eq } = await import("drizzle-orm");
+    await db.update(users).set({ role: "CEO", isActive: true, hasDashboardAccess: true }).where(eq(users.id, adminUserId));
   } else {
     adminUserId = "user_" + nanoid();
     await db.insert(users).values({
@@ -80,17 +83,13 @@ async function main() {
   // ─── System Roles (consolidated) ───
   const systemRoles = [
     { name: "CEO", slug: "CEO" },
-    { name: "Admin", slug: "ADMIN" },
+    { name: "HR", slug: "HR" },
     { name: "Sales", slug: "SALES" },
-    { name: "Sales Manager", slug: "SALES_MANAGER" },
-    { name: "Marketing", slug: "MARKETING" },
-    { name: "Designer", slug: "DESIGNER" },
+    { name: "CRM", slug: "CRM" },
+    { name: "Digital Marketing", slug: "DIGITAL_MARKETING" },
+    { name: "Design Team", slug: "DESIGN_TEAM" },
+    { name: "Video Editor", slug: "VIDEO_EDITOR" },
     { name: "Engineer", slug: "ENGINEER" },
-    { name: "Customer Support", slug: "CUSTOMER_SUPPORT" },
-    { name: "Finance", slug: "FINANCE" },
-    { name: "Operations", slug: "OPERATIONS" },
-    { name: "Intern", slug: "INTERN" },
-    { name: "Member", slug: "MEMBER" },
   ];
 
   for (const role of systemRoles) {
@@ -99,7 +98,7 @@ async function main() {
       slug: role.slug,
       orgId: orgId,
       isSystem: true,
-      permissions: ROLE_DEFAULT_PERMISSIONS[role.slug] || ROLE_DEFAULT_PERMISSIONS["MEMBER"] || [],
+      permissions: ROLE_DEFAULT_PERMISSIONS[role.slug] || ROLE_DEFAULT_PERMISSIONS["ENGINEER"] || [],
     }).onConflictDoNothing();
   }
 

@@ -123,12 +123,12 @@ const requireRoles = (...allowedRoles: string[]) =>
 export const sessionProcedure = t.procedure.use(enforceSession);
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 
-/** Admin-only procedure: CEO or ADMIN role required */
+/** Admin-only procedure: CEO or HR role required */
 export const adminProcedure = protectedProcedure.use(
-  requireRoles("CEO", "ADMIN")
+  requireRoles("CEO", "HR")
 );
 
-/** Manager procedure: CEO, ADMIN, or HR */
+/** Manager procedure: CEO or HR */
 export const managerProcedure = protectedProcedure.use(
-  requireRoles("CEO", "ADMIN", "HR")
+  requireRoles("CEO", "HR")
 );

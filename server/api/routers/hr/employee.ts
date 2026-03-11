@@ -171,7 +171,7 @@ export const employeeRouter = createTRPCRouter({
     .input(onboardEmployeeInputSchema)
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
-       if (user.role !== "CEO" && user.role !== "ADMIN") {
+       if (user.role !== "CEO" && user.role !== "HR") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can onboard new employees.",
@@ -382,7 +382,7 @@ export const employeeRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
-       if (user.role !== "CEO" && user.role !== "ADMIN") {
+       if (user.role !== "CEO" && user.role !== "HR") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can delete employees.",
@@ -418,7 +418,7 @@ export const employeeRouter = createTRPCRouter({
            message: "User not found.",
          });
        }
-       if (user.role === "ADMIN" && (targetUser.role === "ADMIN" || targetUser.role === "CEO")) {
+       if (user.role === "HR" && (targetUser.role === "HR" || targetUser.role === "CEO")) {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Admins can only delete Member accounts.",
@@ -443,7 +443,7 @@ export const employeeRouter = createTRPCRouter({
     .input(z.object({ userId: z.string(), hasDashboardAccess: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx.session;
-      if (user.role !== "CEO" && user.role !== "ADMIN" && user.role !== "HR") {
+      if (user.role !== "CEO" && user.role !== "HR" && user.role !== "HR") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only CEO, Admin, or HR can toggle dashboard access.",
