@@ -170,7 +170,7 @@ export const employeeRouter = createTRPCRouter({
     .input(onboardEmployeeInputSchema)
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
-       if (user.role !== "OWNER" && user.role !== "ADMIN") {
+       if (user.role !== "CEO" && user.role !== "ADMIN") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can onboard new employees.",
@@ -362,7 +362,7 @@ export const employeeRouter = createTRPCRouter({
        });
 
        const recipientIds = admins
-          .filter(m => (m.role === "ADMIN" || m.role === "OWNER") && m.userId !== user.id)
+          .filter(m => (m.role === "ADMIN" || m.role === "CEO") && m.userId !== user.id)
           .map(m => m.userId);
 
        if (recipientIds.length > 0) {
@@ -386,7 +386,7 @@ export const employeeRouter = createTRPCRouter({
     .input(z.object({ userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
        const { user } = ctx.session;
-       if (user.role !== "OWNER" && user.role !== "ADMIN") {
+       if (user.role !== "CEO" && user.role !== "ADMIN") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Only Admins and Owners can delete employees.",
@@ -422,13 +422,13 @@ export const employeeRouter = createTRPCRouter({
            message: "User not found.",
          });
        }
-       if (user.role === "ADMIN" && (targetUser.role === "ADMIN" || targetUser.role === "OWNER")) {
+       if (user.role === "ADMIN" && (targetUser.role === "ADMIN" || targetUser.role === "CEO")) {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Admins can only delete Member accounts.",
          });
        }
-       if (user.role === "OWNER" && targetUser.role === "OWNER") {
+       if (user.role === "CEO" && targetUser.role === "CEO") {
          throw new TRPCError({
            code: "FORBIDDEN",
            message: "Cannot delete another Owner account.",

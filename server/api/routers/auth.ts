@@ -16,18 +16,6 @@ import {
   sendPasswordResetEmail,
 } from "../../../lib/email";
 
-const signUpSchema = z.object({
-  email: z.string().email(),
-  password: z
-    .string()
-    .min(8)
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    ),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-});
-
 const verifyEmailSchema = z.object({
   token: z.string(),
 });
@@ -59,52 +47,6 @@ const acceptInvitationSchema = z.object({
 });
 
 export const authRouter = createTRPCRouter({
-  signUp: publicProcedure
-    .input(signUpSchema)
-    .mutation(async ({ ctx, input }) => {
-      const existingUser = await ctx.db.query.users.findFirst({
-        where: eq(users.email, input.email),
-      });
-
-      if (existingUser) {
-        return { success: true, message: "If this email is available, a verification link has been sent." };
-      }
-
-      const hashedPassword = await bcrypt.hash(input.password, 10);
-
-      const verificationToken = nanoid(32);
-      const expires = new Date();
-      expires.setHours(expires.getHours() + 24);
-
-      const userId = nanoid();
-      const fullName =
-        input.firstName && input.lastName
-          ? `${input.firstName} ${input.lastName}`
-          : input.firstName || input.lastName || null;
-
-      await ctx.db.transaction(async (tx) => {
-        await tx.insert(users).values({
-          id: userId,
-          email: input.email,
-          password: hashedPassword,
-          name: fullName,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          emailVerified: null,
-        });
-
-        await tx.insert(verificationTokens).values({
-          identifier: input.email,
-          token: verificationToken,
-          expires,
-        });
-      });
-
-      await sendVerificationEmail(input.email, verificationToken);
-
-      return { success: true, message: "If this email is available, a verification link has been sent." };
-    }),
-
   verifyEmail: publicProcedure
     .input(verifyEmailSchema)
     .mutation(async ({ ctx, input }) => {
@@ -182,7 +124,7 @@ export const authRouter = createTRPCRouter({
 
       await ctx.db
         .update(users)
-        .set({ 
+        .set({
           password: hashedPassword,
           isPasswordChangeRequired: false,
         })

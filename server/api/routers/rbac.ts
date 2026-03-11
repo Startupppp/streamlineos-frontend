@@ -15,12 +15,6 @@ import {
 import { checkPermission } from "../../../lib/rbac/middleware";
 import { TRPCError } from "@trpc/server";
 
-const VALID_ROLES = ["OWNER", "ADMIN", "MEMBER"] as const;
-type ValidRole = typeof VALID_ROLES[number];
-function isValidRole(role: unknown): role is ValidRole {
-  return typeof role === "string" && VALID_ROLES.includes(role as ValidRole);
-}
-
 export const rbacRouter = createTRPCRouter({
   getUserPermissions: protectedProcedure.query(async ({ ctx }) => {
     const { userId, orgId } = ctx.session;
@@ -40,7 +34,7 @@ export const rbacRouter = createTRPCRouter({
       },
     });
 
-    const rolePerms = role && isValidRole(role)
+    const rolePerms = role
       ? await ctx.db.query.rolePermissions.findMany({
           where: and(
             eq(rolePermissions.role, role),
@@ -70,7 +64,7 @@ export const rbacRouter = createTRPCRouter({
 
     defaultPerms.forEach((perm) => permissionSet.add(perm));
 
-    if (role === "OWNER") {
+    if (role === "CEO") {
       PERMISSIONS.forEach((p) => permissionSet.add(p.name));
     }
 
@@ -99,7 +93,7 @@ export const rbacRouter = createTRPCRouter({
   }),
 
   getRolePermissions: protectedProcedure
-    .input(z.object({ role: z.enum(["OWNER", "ADMIN", "MEMBER"]) }))
+    .input(z.object({ role: z.string() }))
     .query(async ({ ctx, input }) => {
       const perms = await ctx.db.query.rolePermissions.findMany({
         where: and(
@@ -119,7 +113,7 @@ export const rbacRouter = createTRPCRouter({
   assignRolePermission: protectedProcedure
     .input(
       z.object({
-        role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
+        role: z.string(),
         permissionId: z.number(),
       })
     )

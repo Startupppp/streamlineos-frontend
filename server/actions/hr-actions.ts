@@ -58,7 +58,7 @@ export async function updateEmployee(data: {
     id: string;
     firstName: string;
     lastName: string;
-    role: "ADMIN" | "MEMBER";
+    role: string;
     designation?: string;
     departmentId?: number;
     phone?: string;
@@ -76,7 +76,7 @@ export async function updateEmployee(data: {
     };
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
+    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "ADMIN")) {
         return { error: "Unauthorized" };
     }
 
@@ -135,7 +135,7 @@ export async function deleteEmployee(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   const { role, id: currentUserId } = session.user;
-  if (role !== "OWNER" && role !== "ADMIN") {
+  if (role !== "CEO" && role !== "ADMIN") {
       return { error: "Permission denied" };
   }
   if (userId === currentUserId) {
@@ -163,10 +163,10 @@ export async function deleteEmployee(userId: string) {
       if (!employee) {
         return { error: "User not found" };
       }
-      if (role === "ADMIN" && (employee.role === "ADMIN" || employee.role === "OWNER")) {
+      if (role === "ADMIN" && (employee.role === "ADMIN" || employee.role === "CEO")) {
         return { error: "Admins can only delete Member accounts" };
       }
-      if (role === "OWNER" && employee.role === "OWNER") {
+      if (role === "CEO" && employee.role === "CEO") {
         return { error: "Cannot delete another Owner account" };
       }
       await db.update(users)

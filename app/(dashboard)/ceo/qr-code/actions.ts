@@ -31,12 +31,12 @@ export async function generateQRCode(formData: FormData) {
 
     const validatedData = generateSchema.parse(rawData);
 
-    if (session.user.role !== "OWNER") {
+    if (session.user.role !== "CEO") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
       
-      if (!user || user.role !== "OWNER") {
+      if (!user || user.role !== "CEO") {
         return { success: false, error: "Access Denied: Only organization owners can generate QR codes." };
       }
     }
@@ -163,12 +163,12 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "QR code not found" };
     }
 
-    if (session.user.role !== "OWNER") {
+    if (session.user.role !== "CEO") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
       
-      if (!user || user.role !== "OWNER") {
+      if (!user || user.role !== "CEO") {
         return { success: false, error: "Access Denied: Only organization owners can delete QR codes." };
       }
     }
@@ -222,12 +222,12 @@ export async function getQRCodes(orgId: string) {
       return [];
     }
 
-    if (session.user.role !== "OWNER") {
+    if (session.user.role !== "CEO") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
       
-      if (!user || user.role !== "OWNER") {
+      if (!user || user.role !== "CEO") {
         return [];
       }
     }

@@ -46,7 +46,7 @@ export default function TargetsPage() {
   const createTarget = useCreateTarget();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const isAdmin = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
 
   const handleCreateTarget = async (formData: FormData) => {
     try {

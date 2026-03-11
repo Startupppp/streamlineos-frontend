@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { rolePermissions, userPermissions } from "../db/schema";
+import { rolePermissions, userPermissions, roles } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
 import type { db as database } from "../db";
 
@@ -41,10 +41,12 @@ export async function checkPermission(
 ): Promise<boolean> {
   if (!permissionName) return true;
 
-  if (role === "OWNER") {
+  // CEO always has full access
+  if (role === "CEO") {
     return true;
   }
 
+  // 1. Check user-level overrides first
   const userPerms = await db.query.userPermissions.findMany({
     where: and(
       eq(userPermissions.userId, userId),
@@ -63,13 +65,11 @@ export async function checkPermission(
     return matchingUserPerm.granted;
   }
 
-  const VALID_ROLES = ["OWNER", "ADMIN", "MEMBER"] as const;
-  type ValidRole = (typeof VALID_ROLES)[number];
-  if (role && VALID_ROLES.includes(role as ValidRole)) {
-    const validRole: ValidRole = role as ValidRole;
+  // 2. Check role_permissions table (legacy per-permission grants)
+  if (role) {
     const rolePerms = await db.query.rolePermissions.findMany({
       where: and(
-        eq(rolePermissions.role, validRole),
+        eq(rolePermissions.role, role),
         or(eq(rolePermissions.orgId, orgId), isNull(rolePermissions.orgId))
       ),
       with: {
@@ -86,6 +86,20 @@ export async function checkPermission(
     }
   }
 
+  // 3. Check the roles table (primary source — permissions stored as jsonb)
+  if (role) {
+    const dbRole = await db.query.roles.findFirst({
+      where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
+    });
+
+    if (dbRole?.permissions && Array.isArray(dbRole.permissions)) {
+      if ((dbRole.permissions as string[]).includes(permissionName)) {
+        return true;
+      }
+    }
+  }
+
+  // 4. Fallback to hardcoded defaults (for backward compat)
   const { ROLE_DEFAULT_PERMISSIONS } = await import("./permissions");
   const defaults = role ? ROLE_DEFAULT_PERMISSIONS[role] ?? [] : [];
   if (defaults.includes(permissionName)) {

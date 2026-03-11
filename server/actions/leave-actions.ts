@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
+import { createNotification, notifyAllMembers } from "./create-notification";
 import {
   DEFAULT_LEAVE_TYPES,
   LEAVE_POLICY,
@@ -305,7 +306,7 @@ export async function getApprovers() {
   });
   if (!member) return [];
 
-  const targetRoles: ("ADMIN" | "OWNER")[] = member.role === "ADMIN" ? ["OWNER"] : ["ADMIN", "OWNER"];
+  const targetRoles: ("ADMIN" | "CEO")[] = member.role === "ADMIN" ? ["CEO"] : ["ADMIN", "CEO"];
 
   const approvers = await db.query.organizationMembers.findMany({
     where: and(
@@ -366,6 +367,17 @@ export async function submitLeaveRequest(data: {
       );
     }
 
+    // In-app notification to the approver
+    await createNotification({
+      orgId: member.orgId,
+      userId: data.approverId,
+      type: "WARNING",
+      title: "Leave Request Pending",
+      message: `${session.user.name || "An employee"} has requested ${leaveType?.name || "leave"} from ${data.startDate.toLocaleDateString()} to ${data.endDate.toLocaleDateString()}.`,
+      link: "/hr/leaves",
+      metadata: { leaveType: leaveType?.name, reason: data.reason },
+    });
+
     revalidatePath("/hr/leaves");
     return { success: true };
   } catch (error) {
@@ -391,7 +403,7 @@ export async function processLeaveRequest(data: {
     const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id),
     });
-    if (request.orgId !== member?.orgId || member.role !== "OWNER") {
+    if (request.orgId !== member?.orgId || member.role !== "CEO") {
       return { error: "Not authorized to process this request" };
     }
   }
@@ -467,6 +479,28 @@ export async function processLeaveRequest(data: {
         approver?.name || "Manager",
         data.rejectionReason,
       );
+    }
+
+    // In-app notification to the employee about approval/rejection
+    const statusLabel = data.status === "APPROVED" ? "approved" : "rejected";
+    await createNotification({
+      orgId: request.orgId,
+      userId: request.userId,
+      type: data.status === "APPROVED" ? "SUCCESS" : "ERROR",
+      title: `Leave ${data.status === "APPROVED" ? "Approved" : "Rejected"}`,
+      message: `Your ${leaveType?.name || "leave"} request (${new Date(request.startDate).toLocaleDateString()} – ${new Date(request.endDate).toLocaleDateString()}) has been ${statusLabel} by ${approver?.name || "your manager"}.${data.rejectionReason ? ` Reason: ${data.rejectionReason}` : ""}`,
+      link: "/hr/leaves",
+    });
+
+    // If approved, notify the whole org that this person will be on leave
+    if (data.status === "APPROVED" && employee) {
+      await notifyAllMembers(request.orgId, {
+        type: "INFO",
+        title: "Upcoming Leave",
+        message: `${employee.firstName || employee.name || "A team member"} will be on ${leaveType?.name || "leave"} from ${new Date(request.startDate).toLocaleDateString()} to ${new Date(request.endDate).toLocaleDateString()}.`,
+        link: "/hr/leaves",
+        excludeUserId: request.userId, // don't double-notify the requester
+      });
     }
 
     await createAuditLog({

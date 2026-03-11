@@ -25,7 +25,7 @@ export default function OrganizationSettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
 
   const role = session?.user?.role;
-  const canEdit = role === "OWNER" || role === "ADMIN";
+  const canEdit = role === "CEO" || role === "ADMIN";
 
   const updateOrg = api.organization.updateOrganization.useMutation({
     onSuccess: async () => {

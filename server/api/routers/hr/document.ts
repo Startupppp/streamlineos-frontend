@@ -143,7 +143,7 @@ export const documentRouter = createTRPCRouter({
   getDevices: protectedProcedure
     .input(z.object({ userId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -164,7 +164,7 @@ export const documentRouter = createTRPCRouter({
   createDevice: protectedProcedure
     .input(createDeviceInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -187,7 +187,7 @@ export const documentRouter = createTRPCRouter({
   updateDevice: protectedProcedure
     .input(updateDeviceInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -215,7 +215,7 @@ export const documentRouter = createTRPCRouter({
   deleteDevice: protectedProcedure
     .input(z.object({ deviceId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 

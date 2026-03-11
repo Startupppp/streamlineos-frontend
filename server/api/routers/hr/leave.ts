@@ -198,7 +198,7 @@ export const leaveRouter = createTRPCRouter({
   }),
 
   getPendingWfhRequests: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+    if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
       return [];
     }
     return await ctx.db.query.wfhRequests.findMany({
@@ -247,7 +247,7 @@ export const leaveRouter = createTRPCRouter({
   processWfhRequest: protectedProcedure
     .input(processWfhRequestInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -309,7 +309,7 @@ export const leaveRouter = createTRPCRouter({
       message: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can add holidays" });
       }
       const dateStr = formatDateOnly(input.date);
@@ -326,7 +326,7 @@ export const leaveRouter = createTRPCRouter({
   deleteHoliday: protectedProcedure
     .input(z.object({ holidayId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can delete holidays" });
       }
       await ctx.db

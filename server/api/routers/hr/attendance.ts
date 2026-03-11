@@ -255,7 +255,7 @@ export const attendanceRouter = createTRPCRouter({
         month: z.number()
     }))
     .query(async ({ ctx, input }) => {
-        if (ctx.session.user.id !== input.userId && ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+        if (ctx.session.user.id !== input.userId && ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
             throw new TRPCError({ code: "FORBIDDEN" });
         }
 

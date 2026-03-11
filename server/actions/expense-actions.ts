@@ -7,6 +7,19 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
+import { ensureOrgMembership } from "@/lib/auth-helpers";
+
+/** Get authenticated member, auto-creating org membership if needed */
+async function getExpenseMember() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+  await ensureOrgMembership(session.user.id, session.user.role);
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return null;
+  return { session, member };
+}
 
 interface CreateExpenseInput {
   category: string;
@@ -22,14 +35,10 @@ interface CreateExpenseInput {
 }
 
 export async function createExpense(data: CreateExpenseInput) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
 
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return { error: "Not a member of any organization" };
   const duplicateCheck = await db.query.expenses.findFirst({
     where: and(
       eq(expenses.orgId, member.orgId),
@@ -124,7 +133,7 @@ export async function getExpenses(filters?: {
 
   if (!member) return [];
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
 
   const conditions = [eq(expenses.orgId, member.orgId)];
 
@@ -199,7 +208,7 @@ export async function getPendingExpenses() {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return [];
   }
 
@@ -226,7 +235,7 @@ export async function approveExpense(expenseId: number) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return { error: "Permission denied" };
   }
 
@@ -268,7 +277,7 @@ export async function rejectExpense(expenseId: number, reason: string) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return { error: "Permission denied" };
   }
 
@@ -311,7 +320,7 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return { error: "Permission denied" };
   }
 
@@ -357,7 +366,7 @@ export async function deleteExpense(expenseId: number) {
   if (!expense) return { error: "Expense not found" };
 
   const isOwner = expense.userId === session.user.id;
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const isPending = expense.status === "PENDING";
 
   if (!isAdmin && (!isOwner || !isPending)) {
@@ -405,7 +414,7 @@ export async function createExpenseCategory(data: {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return { error: "Permission denied" };
   }
 
@@ -435,7 +444,7 @@ export async function getExpenseStats() {
 
   if (!member) return null;
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const conditions = [eq(expenses.orgId, member.orgId)];
   
   if (!isAdmin) {
@@ -471,7 +480,7 @@ export async function getCategorySpending() {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return [];
   }
 
@@ -522,7 +531,7 @@ export async function getExpenseReportData(filters: {
 
   if (!member) return null;
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const conditions = [
     eq(expenses.orgId, member.orgId),
     gte(expenses.expenseDate, filters.startDate),

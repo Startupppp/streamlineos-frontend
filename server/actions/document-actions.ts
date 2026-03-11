@@ -6,6 +6,7 @@ import { eq, and, desc, or, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
+import { ensureOrgMembership } from "@/lib/auth-helpers";
 
 type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
 
@@ -29,13 +30,15 @@ export async function uploadDocument(data: CreateDocumentInput) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
 
+  const membership = await ensureOrgMembership(session.user.id, session.user.role);
+  if (!membership) return { error: "No organization found" };
+
   const member = await db.query.organizationMembers.findFirst({
     where: eq(organizationMembers.userId, session.user.id),
   });
+  if (!member) return { error: "No organization found" };
 
-  if (!member) return { error: "Not a member of any organization" };
-
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const targetUserId = (data.userId && isAdmin) ? data.userId : session.user.id;
 
   try {
@@ -82,7 +85,7 @@ export async function getDocuments(filters?: {
 
   if (!member) return [];
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const conditions = [
     eq(documents.orgId, member.orgId),
     eq(documents.isActive, true),
@@ -152,7 +155,7 @@ export async function getEmployeeDocuments(employeeId: string) {
 
   if (!member) return [];
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const isOwn = employeeId === session.user.id;
 
   if (!isAdmin && !isOwn) return [];
@@ -204,7 +207,7 @@ export async function getExpiringDocuments(daysAhead: number = 30) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
+  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
     return [];
   }
 
@@ -244,7 +247,7 @@ export async function updateDocument(documentId: number, data: Partial<CreateDoc
 
   if (!existingDoc) return { error: "Document not found" };
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const isUploader = existingDoc.uploadedBy === session.user.id;
 
   if (!isAdmin && !isUploader) {
@@ -348,7 +351,7 @@ export async function deleteDocument(documentId: number) {
 
   if (!existingDoc) return { error: "Document not found" };
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const isUploader = existingDoc.uploadedBy === session.user.id;
 
   if (!isAdmin && !isUploader) {
@@ -378,7 +381,7 @@ export async function getDocumentStats() {
 
   if (!member) return null;
 
-  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
+  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const conditions = [
     eq(documents.orgId, member.orgId),
     eq(documents.isActive, true),

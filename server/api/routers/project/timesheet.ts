@@ -289,7 +289,7 @@ export const timesheetRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only owners and admins can view team timesheets",
@@ -385,7 +385,7 @@ export const timesheetRouter = createTRPCRouter({
       timesheetId: z.number(),
     }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only owners and admins can approve timesheets",
@@ -416,7 +416,7 @@ export const timesheetRouter = createTRPCRouter({
       reason: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only owners and admins can reject timesheets",
@@ -445,7 +445,7 @@ export const timesheetRouter = createTRPCRouter({
       timesheetIds: z.array(z.number()),
     }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only owners and admins can approve timesheets",
@@ -473,7 +473,7 @@ export const timesheetRouter = createTRPCRouter({
   getBillingSummary: protectedProcedure
     .input(z.object({ startDate: z.date(), endDate: z.date() }))
     .query(async ({ ctx, input }) => {
-       if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+       if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
            throw new TRPCError({ code: "FORBIDDEN" });
        }
 

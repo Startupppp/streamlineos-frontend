@@ -49,7 +49,7 @@ export const useRbacCheckPermission = (
 };
 
 export const useRbacRolePermissions = (
-  role: "OWNER" | "ADMIN" | "MEMBER",
+  role: string,
   options?: Omit<
     UseQueryOptions<RbacRouterOutputs["getRolePermissions"], Error>,
     "queryKey" | "queryFn" | "enabled"

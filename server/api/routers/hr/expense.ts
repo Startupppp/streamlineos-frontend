@@ -84,7 +84,7 @@ export const expenseRouter = createTRPCRouter({
   updateExpenseStatus: protectedProcedure
     .input(updateExpenseStatusInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER" && ctx.session.user.role !== "ADMIN") {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can update expense status" });
       }
       const result = await ctx.db

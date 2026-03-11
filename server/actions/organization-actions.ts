@@ -53,7 +53,7 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
     await db.insert(organizationMembers).values({
       userId: session.user.id,
       orgId,
-      role: "OWNER",
+      role: "CEO",
     });
 
     revalidatePath("/dashboard");

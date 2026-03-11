@@ -159,7 +159,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
     });
   };
 
-  const isOwner = session?.user?.role === "OWNER";
+  const isOwner = session?.user?.role === "CEO";
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto p-4 md:p-6 pt-6 md:pt-10">

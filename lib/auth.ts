@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens } from "./db/schema";
+import { accounts, sessions, users, verificationTokens, organizationMembers, organizations } from "./db/schema";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
@@ -48,12 +48,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Single-org auto-membership: ensure user belongs to the organization
+        const existingMembership = await db.query.organizationMembers.findFirst({
+          where: eq(organizationMembers.userId, user.id),
+        });
+        if (!existingMembership) {
+          const org = await db.query.organizations.findFirst();
+          if (org) {
+            await db
+              .insert(organizationMembers)
+              .values({
+                userId: user.id,
+                orgId: org.id,
+                role: user.role || "MEMBER",
+              })
+              .onConflictDoNothing();
+          }
+        }
+
         const fullName =
           user.firstName && user.lastName
             ? `${user.firstName} ${user.lastName}`
             : user.name || user.email;
 
-        const role = user.role as "OWNER" | "ADMIN" | "MEMBER" | "CLIENT";
+        const role = user.role;
         const forceChangePassword = user.isPasswordChangeRequired || false;
 
         return {
@@ -113,11 +131,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
-        session.user.role = token.role as
-          | "OWNER"
-          | "ADMIN"
-          | "MEMBER"
-          | "CLIENT";
+        session.user.role = token.role as string;
         session.user.image = (token.image as string) || null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = token.isActive as boolean;

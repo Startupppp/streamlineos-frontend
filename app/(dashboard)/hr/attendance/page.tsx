@@ -38,7 +38,7 @@ export default function AttendancePage() {
   if (!userId) return null;
 
   const isAdmin =
-    session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
+    session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
 
   return (
     <div className="space-y-6">

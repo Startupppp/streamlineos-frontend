@@ -31,13 +31,13 @@ export async function generateAndSendWeeklyCeoRecap() {
         .where(
           and(
             eq(organizationMembers.orgId, org.id),
-            eq(organizationMembers.role, "OWNER"),
+            eq(organizationMembers.role, "CEO"),
             eq(users.isActive, true)
           )
         );
 
       if (owners.length === 0) {
-        results.push({ orgId: org.id, sent: false, error: "No active OWNER" });
+        results.push({ orgId: org.id, sent: false, error: "No active CEO" });
         continue;
       }
 

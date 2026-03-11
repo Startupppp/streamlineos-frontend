@@ -19,7 +19,7 @@ export async function addHoliday(data: {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
+  if (!member || (member.role !== "ADMIN" && member.role !== "CEO")) {
     return { error: "Permission denied" };
   }
 
@@ -71,7 +71,7 @@ export async function deleteHoliday(holidayId: number) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
+  if (!member || (member.role !== "ADMIN" && member.role !== "CEO")) {
     return { error: "Permission denied" };
   }
 
@@ -172,7 +172,7 @@ export async function bulkAddHolidays(holidayList: Array<{
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
+  if (!member || (member.role !== "ADMIN" && member.role !== "CEO")) {
     return { error: "Permission denied" };
   }
 

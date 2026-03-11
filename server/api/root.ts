@@ -9,6 +9,7 @@ import { organizationRouter } from "./routers/organization";
 import { crmRouter } from "./routers/crm";
 import { leadsRouter } from "./routers/leads";
 import { targetsRouter } from "./routers/targets";
+import { rolesRouter } from "./routers/roles";
 import { notificationsRouter } from "./routers/notifications";
 
 export const appRouter = createTRPCRouter({
@@ -22,6 +23,7 @@ export const appRouter = createTRPCRouter({
   crm: crmRouter,
   leads: leadsRouter,
   targets: targetsRouter,
+  roles: rolesRouter,
   notifications: notificationsRouter,
 });
 

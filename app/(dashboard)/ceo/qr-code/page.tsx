@@ -157,7 +157,7 @@ export default function CEOQRCodePage() {
   const [qrCodeToDelete, setQrCodeToDelete] = useState<number | null>(null);
 
   useEffect(() => {
-    if (session?.user?.role && session.user.role !== "OWNER") {
+    if (session?.user?.role && session.user.role !== "CEO") {
       toast.error("Access Denied: Only organization owners can access QR codes.");
       router.push("/dashboard");
     }
@@ -286,7 +286,7 @@ export default function CEOQRCodePage() {
     }
   };
 
-  if (!session?.user || session.user.role !== "OWNER") {
+  if (!session?.user || session.user.role !== "CEO") {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin" />

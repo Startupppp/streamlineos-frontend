@@ -1,14 +1,14 @@
 import type { Session } from "next-auth";
 
 export type AuthResult =
-  | { error: "Unauthorized" | "Not a member" }
+  | { error: "Unauthorized" }
   | {
       session: Session;
       member: {
         id: number;
         orgId: string;
         userId: string;
-        role: "OWNER" | "ADMIN" | "MEMBER";
+        role: string;
         joinedAt: Date | null;
       };
       isAdmin: boolean;
@@ -16,6 +16,6 @@ export type AuthResult =
       orgId: string;
     };
 
-export function isAuthError(result: AuthResult): result is { error: "Unauthorized" | "Not a member" } {
+export function isAuthError(result: AuthResult): result is { error: "Unauthorized" } {
   return "error" in result;
 }

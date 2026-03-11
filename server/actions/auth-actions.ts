@@ -41,11 +41,11 @@ export async function createEmployee(data: {
     lastName: string;
     email: string;
     gender: "MALE" | "FEMALE" | "OTHER";
-    role: "ADMIN" | "MEMBER";
+    role: string;
     initialPassword?: string;
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
+    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "ADMIN" && session.user.role !== "HR")) {
         return { error: "Unauthorized: Insufficient permissions" };
     }
 

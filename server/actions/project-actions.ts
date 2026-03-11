@@ -20,7 +20,7 @@ export async function getProjects() {
     });
     if (!member) return [];
 
-    const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
+    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
     if (isOwnerOrAdmin) {
         return await db.query.projects.findMany({
             where: eq(projects.orgId, member.orgId),
@@ -143,7 +143,7 @@ export async function getProjectById(projectId: number) {
     });
 
     if (!project) return null;
-    const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
+    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
     if (isOwnerOrAdmin) return project;
     const isManager = project.managerId === session.user.id;
     if (isManager) return project;

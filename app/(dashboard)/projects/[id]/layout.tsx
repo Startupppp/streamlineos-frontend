@@ -38,7 +38,7 @@ export default async function ProjectLayout({
         return notFound();
     }
 
-    const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
+    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
     const project = await getProjectById(Number(id));
     if (!project) {
         if (isOwnerOrAdmin) {
