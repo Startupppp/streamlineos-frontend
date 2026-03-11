@@ -98,27 +98,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "update") {
-        if (token.id) {
-          const dbUser = await db.query.users.findFirst({
-            where: eq(users.id, token.id as string),
-          });
-          if (dbUser) {
-            token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
-            token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
-            token.image = dbUser.image || null;
-            if (dbUser.firstName && dbUser.lastName) {
-              token.name = `${dbUser.firstName} ${dbUser.lastName}`;
-            } else if (dbUser.name) {
-              token.name = dbUser.name;
-            }
-          }
-        }
-        if (session?.forceChangePassword !== undefined) {
-          token.forceChangePassword = session.forceChangePassword;
-        }
-      }
-
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -128,6 +107,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isActive = user.isActive;
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
       }
+
+      // Always refresh critical fields from DB
+      if (token.id) {
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.id, token.id as string),
+          columns: {
+            isActive: true,
+            hasDashboardAccess: true,
+            isPasswordChangeRequired: true,
+            image: true,
+            firstName: true,
+            lastName: true,
+            name: true,
+            role: true,
+          },
+        });
+        if (dbUser) {
+          token.isActive = dbUser.isActive;
+          token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
+          token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
+          token.role = dbUser.role || token.role;
+          token.image = dbUser.image || null;
+          if (dbUser.firstName && dbUser.lastName) {
+            token.name = `${dbUser.firstName} ${dbUser.lastName}`;
+          } else if (dbUser.name) {
+            token.name = dbUser.name;
+          }
+        }
+      }
+
+      if (trigger === "update" && session?.forceChangePassword !== undefined) {
+        token.forceChangePassword = session.forceChangePassword;
+      }
+
       return token;
     },
     async session({ session, token }) {
