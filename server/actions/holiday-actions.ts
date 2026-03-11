@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { holidays, organizationMembers, users, notifications } from "@/lib/db/schema";
+import { holidays, organizationMembers, users, /* notifications */ } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -135,18 +135,12 @@ export async function sendHolidayNotifications() {
         year: "numeric",
       });
       const message = `${holiday.name} is tomorrow (${dateLabel}).${holiday.message ? ` ${holiday.message}` : ""}`;
-      for (const row of members) {
-        if (row.userId) {
-          await db.insert(notifications).values({
-            orgId: holiday.orgId,
-            userId: row.userId,
-            type: "INFO",
-            title: "Holiday tomorrow",
-            message,
-            link: "/hr/attendance",
-          });
-        }
-      }
+      // In-app notifications disabled
+      // for (const row of members) {
+      //   if (row.userId) {
+      //     await db.insert(notifications).values({...});
+      //   }
+      // }
 
       await db
         .update(holidays)

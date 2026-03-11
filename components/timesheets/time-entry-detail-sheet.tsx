@@ -7,6 +7,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -14,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, Loader2, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
@@ -287,14 +287,14 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
         </SheetContent>
       </Sheet>
 
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Timesheet</DialogTitle>
-            <DialogDescription>
+      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Reject Timesheet</SheetTitle>
+            <SheetDescription>
               Please provide a reason for rejecting this timesheet entry.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
           <div className="py-4">
             <Textarea
               placeholder="Enter rejection reason..."
@@ -303,7 +303,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               rows={4}
             />
           </div>
-          <DialogFooter>
+          <SheetFooter>
             <Button
               variant="outline"
               onClick={() => {
@@ -321,9 +321,9 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Reject
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

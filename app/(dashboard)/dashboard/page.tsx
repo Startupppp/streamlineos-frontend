@@ -58,7 +58,7 @@ export default function DashboardPage() {
   const greeting = useMemo(() => getGreeting(), []);
   const todayFormatted = useMemo(() => format(new Date(), "EEEE, MMMM do, yyyy"), []);
 
-  const handleGoToOrgSelection = useCallback(() => router.push("/org-selection"), [router]);
+  const handleGoToDashboard = useCallback(() => router.push("/dashboard"), [router]);
   const handleGoToProjects = useCallback(() => router.push("/projects"), [router]);
 
   const statCards = useMemo(() => {
@@ -134,11 +134,11 @@ export default function DashboardPage() {
       <div className="space-y-8">
         <EmptyState
           icon={Building2}
-          title="No organization selected"
-          description="Please select an organization to view dashboard statistics."
+          title="No data available"
+          description="Dashboard statistics are not available. Please try refreshing."
           action={{
-            label: "Select Organization",
-            onClick: handleGoToOrgSelection,
+            label: "Refresh",
+            onClick: handleGoToDashboard,
           }}
         />
       </div>

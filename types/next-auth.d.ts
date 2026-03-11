@@ -8,6 +8,7 @@ declare module "next-auth" {
       role?: string;
       forceChangePassword?: boolean;
       isActive?: boolean;
+      hasDashboardAccess?: boolean;
     } & DefaultSession["user"];
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
     forceChangePassword?: boolean;
     id?: string;
     isActive?: boolean;
+    hasDashboardAccess?: boolean;
   }
 }
 
@@ -24,6 +26,7 @@ declare module "next-auth/jwt" {
     role?: string;
     forceChangePassword?: boolean;
     isActive?: boolean;
+    hasDashboardAccess?: boolean;
     image?: string | null;
   }
 }

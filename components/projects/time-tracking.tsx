@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Clock, Plus } from "lucide-react";
 import { useTimeEntries, useAddTimeEntry } from "@/lib/hooks/trpc-hooks";
 import { toast } from "sonner";
@@ -83,17 +83,17 @@ export function TimeTracking({ ticketId }: TimeTrackingProps) {
             <Clock className="h-5 w-5" />
             Time Tracking
           </CardTitle>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Entry
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Time Entry</DialogTitle>
-              </DialogHeader>
+            </SheetTrigger>
+            <SheetContent className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Add Time Entry</SheetTitle>
+              </SheetHeader>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Label>Date</Label>
@@ -130,8 +130,8 @@ export function TimeTracking({ ticketId }: TimeTrackingProps) {
                   {addTimeEntry.isPending ? "Adding..." : "Add Entry"}
                 </Button>
               </form>
-            </DialogContent>
-          </Dialog>
+            </SheetContent>
+          </Sheet>
         </div>
       </CardHeader>
       <CardContent>

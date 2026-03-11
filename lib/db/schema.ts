@@ -191,10 +191,20 @@ export const users = pgTable("users", {
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false),
   isActive: boolean("is_active").default(true).notNull(),
+  hasDashboardAccess: boolean("has_dashboard_access").default(true).notNull(),
+  reportingTo: text("reporting_to"),
+  team: text("team"),
+  emergencyContact: jsonb("emergency_contact").$type<{
+    name: string;
+    relation: string;
+    phone: string;
+    email?: string;
+  }>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_users_email").on(table.email),
+  foreignKey({ columns: [table.reportingTo], foreignColumns: [table.id] }),
 ]);
 
 export const attendance = pgTable("attendance", {
@@ -233,7 +243,9 @@ export const leaveBalances = pgTable("leave_balances", {
   leaveTypeId: integer("leave_type_id").references(() => leaveTypes.id),
   balance: decimal("balance").default("0").notNull(),
   year: integer("year").notNull(),
-});
+}, (table) => [
+  index("idx_leave_balances_user_year").on(table.userId, table.year),
+]);
 
 export const leaveRequests = pgTable("leave_requests", {
   id: serial("id").primaryKey(),
@@ -615,7 +627,9 @@ export const timesheets = pgTable("timesheets", {
   isBillable: boolean("is_billable").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_timesheets_user_date").on(table.userId, table.date),
+]);
 
 export const reports = pgTable("reports", {
   id: serial("id").primaryKey(),
@@ -711,6 +725,11 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   organizations: many(organizationMembers),
   accounts: many(accounts),
   sessions: many(sessions),
+  manager: one(users, {
+    fields: [users.reportingTo],
+    references: [users.id],
+    relationName: "manager",
+  }),
   assignedTickets: many(tickets, { relationName: "assignee" }),
   reportedTickets: many(tickets, { relationName: "reporter" }),
 }));
@@ -1060,6 +1079,7 @@ export const leads = pgTable("leads", {
   notes: text("notes"),
   assignedToId: text("assigned_to_id").references(() => users.id),
   assignedById: text("assigned_by_id").references(() => users.id),
+  verifiedById: text("verified_by_id").references(() => users.id),
   assignedAt: timestamp("assigned_at"),
   convertedAt: timestamp("converted_at"),
   lostReason: text("lost_reason"),
@@ -1130,6 +1150,33 @@ export const targets = pgTable("targets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_targets_user_period").on(table.userId, table.period),
+]);
+
+export const dealStageEnum = pgEnum("deal_stage", ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]);
+
+export const deals = pgTable("deals", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  leadId: integer("lead_id").references(() => leads.id),
+  clientId: integer("client_id").references(() => clients.id),
+  name: text("name").notNull(),
+  value: decimal("value").default("0"),
+  stage: dealStageEnum("stage").default("LEAD").notNull(),
+  probability: integer("probability").default(0),
+  contactPerson: text("contact_person"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  assignedToId: text("assigned_to_id").references(() => users.id),
+  lastContactDate: timestamp("last_contact_date"),
+  expectedCloseDate: date("expected_close_date"),
+  actualCloseDate: date("actual_close_date"),
+  lostReason: text("lost_reason"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_deals_org_stage").on(table.orgId, table.stage),
+  index("idx_deals_assigned_to").on(table.assignedToId),
 ]);
 
 export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
@@ -1429,6 +1476,25 @@ export const targetsRelations = relations(targets, ({ one }) => ({
     fields: [targets.setById],
     references: [users.id],
     relationName: "targetSetter",
+  }),
+}));
+
+export const dealsRelations = relations(deals, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [deals.orgId],
+    references: [organizations.id],
+  }),
+  lead: one(leads, {
+    fields: [deals.leadId],
+    references: [leads.id],
+  }),
+  client: one(clients, {
+    fields: [deals.clientId],
+    references: [clients.id],
+  }),
+  assignedTo: one(users, {
+    fields: [deals.assignedToId],
+    references: [users.id],
   }),
 }));
 

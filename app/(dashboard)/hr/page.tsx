@@ -32,7 +32,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { EmptySearchIllustration, EmptyTeamIllustration } from "@/components/illustrations";
-import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions";
+import { Switch } from "@/components/ui/switch";
+import { getEmployees, deleteEmployee, toggleDashboardAccess } from "@/server/actions/hr-actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +65,7 @@ interface Employee {
   image: string | null;
   designation: string | null;
   isActive: boolean;
+  hasDashboardAccess: boolean;
   department: { id: number; name: string } | null;
 }
 
@@ -113,6 +115,7 @@ export default function HRDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [togglingAccess, setTogglingAccess] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Active");
@@ -213,6 +216,29 @@ export default function HRDashboardPage() {
       setEmployeeToDelete(null);
     }
   }, [employeeToDelete]);
+
+  const handleToggleDashboardAccess = useCallback(async (userId: string, newValue: boolean) => {
+    setTogglingAccess((prev) => new Set(prev).add(userId));
+    try {
+      const result = await toggleDashboardAccess(userId, newValue);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setEmployees((prev) =>
+          prev.map((e) => (e.id === userId ? { ...e, hasDashboardAccess: newValue } : e))
+        );
+        toast.success(`Dashboard access ${newValue ? "enabled" : "disabled"}`);
+      }
+    } catch {
+      toast.error("Failed to toggle dashboard access");
+    } finally {
+      setTogglingAccess((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  }, []);
 
   if (loading) {
     return <EmployeesLoadingSkeleton />;
@@ -342,6 +368,9 @@ export default function HRDashboardPage() {
                     <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Role</th>
                     <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Department</th>
                     <th scope="col" className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
+                    {(currentUserRole === "CEO" || currentUserRole === "ADMIN") && (
+                      <th scope="col" className="text-center text-xs font-medium text-muted-foreground py-3 px-4">Dashboard</th>
+                    )}
                     <th scope="col" className="text-right text-xs font-medium text-muted-foreground py-3 px-4">Actions</th>
                   </tr>
                 </thead>
@@ -406,6 +435,26 @@ export default function HRDashboardPage() {
                             {isActive ? "Active" : "Inactive"}
                           </Badge>
                         </td>
+
+                        {/* Dashboard Access Toggle */}
+                        {(currentUserRole === "CEO" || currentUserRole === "ADMIN") && (
+                          <td className="py-3 px-4 text-center">
+                            {user.role === "CEO" || user.id === currentUserId ? (
+                              <Switch
+                                checked={true}
+                                disabled
+                                aria-label="Dashboard access always on"
+                              />
+                            ) : (
+                              <Switch
+                                checked={user.hasDashboardAccess}
+                                disabled={togglingAccess.has(user.id)}
+                                onCheckedChange={(checked) => handleToggleDashboardAccess(user.id, checked)}
+                                aria-label={`Toggle dashboard access for ${displayName}`}
+                              />
+                            )}
+                          </td>
+                        )}
 
                         {/* Actions */}
                         <td className="py-3 px-4 text-right">

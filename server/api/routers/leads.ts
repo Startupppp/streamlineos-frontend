@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients } from "../../../lib/db/schema";
+import { leads, leadActivities, /* notifications, */ tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "../../../lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "../../../lib/email";
@@ -115,16 +115,10 @@ export const leadsRouter = createTRPCRouter({
         assignedAt: input.assignedToId ? new Date() : null,
       }).returning();
 
-      if (input.assignedToId) {
-        await ctx.db.insert(notifications).values({
-          orgId,
-          userId: input.assignedToId,
-          type: "INFO",
-          title: "New Lead Assigned",
-          message: `You have been assigned a new lead: ${input.name}`,
-          link: `/crm/leads/${newLead.id}`,
-        });
-      }
+      // In-app notifications disabled
+      // if (input.assignedToId) {
+      //   await ctx.db.insert(notifications).values({...});
+      // }
 
       return newLead;
     }),
@@ -178,14 +172,8 @@ export const leadsRouter = createTRPCRouter({
 
       if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
 
-      await ctx.db.insert(notifications).values({
-        orgId,
-        userId: input.assignedToId,
-        type: "INFO",
-        title: "Lead Assigned to You",
-        message: `You have been assigned lead: ${updated.name}`,
-        link: `/crm/leads/${updated.id}`,
-      });
+      // In-app notifications disabled
+      // await ctx.db.insert(notifications).values({...});
 
       try {
         const assignee = await ctx.db.query.users.findFirst({
@@ -273,6 +261,28 @@ export const leadsRouter = createTRPCRouter({
 
       if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
 
+      // Create a deal record when lead becomes INTERESTED or QUALIFIED
+      if (input.status === "INTERESTED" || input.status === "QUALIFIED") {
+        // Check if a deal already exists for this lead to avoid duplicates
+        const existingDeal = await ctx.db.query.deals.findFirst({
+          where: and(eq(deals.leadId, updated.id), eq(deals.orgId, orgId)),
+        });
+
+        if (!existingDeal) {
+          await ctx.db.insert(deals).values({
+            orgId,
+            leadId: updated.id,
+            name: `${updated.name}${updated.company ? " - " + updated.company : ""}`,
+            value: updated.potentialValue || updated.investmentInterest || "0",
+            stage: "LEAD",
+            contactPerson: updated.name,
+            contactEmail: updated.email,
+            contactPhone: updated.phone,
+            assignedToId: null,
+          });
+        }
+      }
+
       if (input.status === "CONVERTED") {
         const firstProject = await ctx.db.query.projects.findFirst({
           where: eq(projects.orgId, orgId),
@@ -312,14 +322,8 @@ export const leadsRouter = createTRPCRouter({
           status: "active",
         });
 
-        await ctx.db.insert(notifications).values({
-          orgId,
-          userId: updated.assignedToId ?? ctx.session.userId,
-          type: "SUCCESS",
-          title: "Lead Converted!",
-          message: `${updated.name} has been converted to a client. A task has been auto-created.`,
-          link: `/crm/leads/${updated.id}`,
-        });
+        // In-app notifications disabled
+        // await ctx.db.insert(notifications).values({...});
       }
 
       return updated;
@@ -637,4 +641,174 @@ export const leadsRouter = createTRPCRouter({
       conversionRate: allLeads.length > 0 ? Math.round((activeClients / allLeads.length) * 1000) / 10 : 0,
     };
   }),
+
+  distributeToSales: protectedProcedure
+    .input(z.object({ leadIds: z.number().array().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.session.orgId;
+      const userRole = ctx.session.user.role ?? "";
+      const allowedRoles = ["CEO", "ADMIN", "HR", "MARKETING", "DIGITAL_MARKETING"];
+
+      if (!allowedRoles.includes(userRole)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only CEO, ADMIN, HR, or MARKETING roles can distribute leads",
+        });
+      }
+
+      // Get active sales team members who are org members
+      const orgMembers = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.orgId, orgId),
+        columns: { userId: true },
+      });
+      const orgMemberIds = orgMembers.map(m => m.userId);
+
+      if (orgMemberIds.length === 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No organization members found" });
+      }
+
+      const salesPeople = await ctx.db.query.users.findMany({
+        where: and(
+          inArray(users.id, orgMemberIds),
+          eq(users.isActive, true),
+          eq(users.hasDashboardAccess, true),
+          inArray(users.role, ["SALES", "SALES_MANAGER"]),
+        ),
+        columns: { id: true, name: true, email: true },
+      });
+
+      if (salesPeople.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No active sales team members found. Ensure users with SALES or SALES_MANAGER role exist and have dashboard access enabled.",
+        });
+      }
+
+      // Verify leads belong to this org
+      const leadsToDistribute = await ctx.db.query.leads.findMany({
+        where: and(
+          inArray(leads.id, input.leadIds),
+          eq(leads.orgId, orgId),
+        ),
+      });
+
+      if (leadsToDistribute.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "No valid leads found to distribute" });
+      }
+
+      // Round-robin distribution
+      const assignments = new Map<string, typeof leadsToDistribute>();
+      for (const sp of salesPeople) {
+        assignments.set(sp.id, []);
+      }
+
+      for (let i = 0; i < leadsToDistribute.length; i++) {
+        const salesPerson = salesPeople[i % salesPeople.length];
+        assignments.get(salesPerson.id)!.push(leadsToDistribute[i]);
+      }
+
+      // Update leads with assignments
+      const now = new Date();
+      for (const [salesPersonId, assignedLeads] of assignments) {
+        if (assignedLeads.length === 0) continue;
+
+        const leadIds = assignedLeads.map(l => l.id);
+        await ctx.db.update(leads)
+          .set({
+            assignedToId: salesPersonId,
+            assignedById: ctx.session.userId,
+            assignedAt: now,
+            updatedAt: now,
+          })
+          .where(and(
+            inArray(leads.id, leadIds),
+            eq(leads.orgId, orgId),
+          ));
+      }
+
+      // Send email notifications to each sales person
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const assignerName = ctx.session.user.name || "A manager";
+
+      for (const sp of salesPeople) {
+        const assignedLeads = assignments.get(sp.id) || [];
+        if (assignedLeads.length === 0 || !sp.email) continue;
+
+        try {
+          const leadRows = assignedLeads.map(l =>
+            `<tr>
+              <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${l.name}</td>
+              <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${l.company || "N/A"}</td>
+              <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${l.status}</td>
+            </tr>`
+          ).join("");
+
+          await sendEmail({
+            to: sp.email,
+            subject: `${assignedLeads.length} New Lead${assignedLeads.length > 1 ? "s" : ""} Assigned — Vaivamm Capital`,
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+              <div style="background:linear-gradient(135deg,#0f2b7f,#1e40af);padding:24px;text-align:center;border-radius:10px 10px 0 0;">
+                <h1 style="color:#bd882c;margin:0;font-size:22px;">Vaivamm Capital</h1>
+              </div>
+              <div style="background:#fff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;">
+                <h2 style="color:#1e40af;margin-top:0;">New Leads Assigned to You</h2>
+                <p>Hi <strong>${sp.name || "Team Member"}</strong>,</p>
+                <p><strong>${assignerName}</strong> has distributed <strong>${assignedLeads.length}</strong> lead${assignedLeads.length > 1 ? "s" : ""} to you:</p>
+                <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+                  <tr style="background:#f3f4f6;">
+                    <th style="padding:8px;text-align:left;">Name</th>
+                    <th style="padding:8px;text-align:left;">Company</th>
+                    <th style="padding:8px;text-align:left;">Status</th>
+                  </tr>
+                  ${leadRows}
+                </table>
+                <div style="text-align:center;margin:24px 0;">
+                  <a href="${baseUrl}/crm/leads" style="background:#0f2b7f;color:#bd882c;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;">View Leads</a>
+                </div>
+              </div>
+            </body></html>`,
+          });
+        } catch (emailErr) {
+          logger.error("Failed to send lead distribution email", { salesPersonId: sp.id, error: emailErr });
+        }
+      }
+
+      return {
+        distributed: leadsToDistribute.length,
+        salesPeople: salesPeople.length,
+      };
+    }),
+
+  bulkImport: protectedProcedure
+    .input(z.object({
+      leads: z.array(z.object({
+        name: z.string().min(1, "Lead name is required"),
+        email: z.string().email().optional().or(z.literal("")),
+        phone: z.string().optional(),
+        company: z.string().optional(),
+        source: z.enum(leadSourceValues).optional(),
+        notes: z.string().optional(),
+      })).min(1, "At least one lead is required").max(500, "Maximum 500 leads per import"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.session.orgId;
+      const userId = ctx.session.userId;
+
+      const valuesToInsert = input.leads.map(lead => ({
+        orgId,
+        name: lead.name,
+        email: lead.email || null,
+        phone: lead.phone || null,
+        company: lead.company || null,
+        source: lead.source || ("other" as const),
+        notes: lead.notes || null,
+        status: "NEW" as const,
+        priority: "WARM" as const,
+        assignedById: userId,
+      }));
+
+      const inserted = await ctx.db.insert(leads).values(valuesToInsert).returning({ id: leads.id });
+
+      return { imported: inserted.length };
+    }),
 });

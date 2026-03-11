@@ -119,21 +119,13 @@ test.describe("Accessibility - Keyboard Navigation", () => {
     await expect(activeElement).toBeVisible();
   });
 
-  test("org selection has accessible org buttons", async ({ page }) => {
-    await page.goto("/org-selection");
+  test("can tab through dashboard navigation", async ({ page }) => {
+    await page.goto("/dashboard");
     const url = page.url();
     if (url.includes("signin")) return;
 
-    const orgList = page.locator("[role='list'][aria-label='Organizations']");
-    if ((await orgList.count()) > 0) {
-      const orgButtons = orgList.locator("[role='listitem']");
-      const count = await orgButtons.count();
-      if (count > 0) {
-        const firstBtn = orgButtons.first();
-        const ariaLabel = await firstBtn.getAttribute("aria-label");
-        expect(ariaLabel).toBeTruthy();
-        expect(ariaLabel).toContain("Select");
-      }
-    }
+    await page.keyboard.press("Tab");
+    const activeElement = page.locator(":focus");
+    await expect(activeElement).toBeVisible();
   });
 });

@@ -229,7 +229,6 @@ export default function TimesheetsPage() {
         description="Track and manage professional activity across projects."
         actions={
           <LogTimeDialog
-            variant="sheet"
             trigger={
               <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white font-bold shadow-sm">
                 <Plus className="mr-2 h-4 w-4" />

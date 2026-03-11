@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { AppSidebar } from "../../components/layout/app-sidebar";
 import { DashboardHeader } from "../../components/layout/dashboard-header";
 import { OrganizationGuard } from "../../components/auth/organization-guard";
 import { ScrollArea } from "../../components/ui/scroll-area";
+import { NotActivatedPage } from "../../components/auth/not-activated-page";
 
 export default function DashboardLayout({
   children,
@@ -14,7 +16,10 @@ export default function DashboardLayout({
 }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
   const isProjectPage = pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
+
+  const hasDashboardAccess = session?.user?.hasDashboardAccess !== false;
 
   return (
     <OrganizationGuard>
@@ -25,27 +30,35 @@ export default function DashboardLayout({
         >
           Skip to content
         </a>
-        <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 border-r bg-sidebar transition-all duration-300 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-72'}`}>
-          <AppSidebar 
-            isCollapsed={isSidebarCollapsed} 
-            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-          />
-        </div>
-        <main id="dashboard-content" className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-72'}`}>
-          {!isProjectPage && <DashboardHeader />}
-          <div className="relative flex-1 min-h-0 overflow-hidden">
-            {isProjectPage ? (
-              <div className="h-full w-full overflow-auto">
-                {children}
-              </div>
-            ) : (
-              <ScrollArea className="h-full w-full" style={{ overflowX: 'auto' }}>
-                <div className="p-4 md:p-8">
-                  {children}
-                </div>
-              </ScrollArea>
-            )}
+        {hasDashboardAccess && (
+          <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 border-r bg-sidebar transition-all duration-300 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-72'}`}>
+            <AppSidebar
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
           </div>
+        )}
+        <main id="dashboard-content" className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${hasDashboardAccess ? (isSidebarCollapsed ? 'md:pl-20' : 'md:pl-72') : ''}`}>
+          {hasDashboardAccess ? (
+            <>
+              {!isProjectPage && <DashboardHeader />}
+              <div className="relative flex-1 min-h-0 overflow-hidden">
+                {isProjectPage ? (
+                  <div className="h-full w-full overflow-auto">
+                    {children}
+                  </div>
+                ) : (
+                  <ScrollArea className="h-full w-full" style={{ overflowX: 'auto' }}>
+                    <div className="p-4 md:p-8">
+                      {children}
+                    </div>
+                  </ScrollArea>
+                )}
+              </div>
+            </>
+          ) : (
+            <NotActivatedPage />
+          )}
         </main>
       </div>
     </OrganizationGuard>

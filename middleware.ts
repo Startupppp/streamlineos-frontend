@@ -15,7 +15,7 @@ const PROTECTED_ROUTES = [
   "/timesheets",
   "/support",
   "/crm",
-  "/notifications",
+  // "/notifications",
 ];
 
 const AUTH_ROUTES = [
@@ -27,7 +27,6 @@ const AUTH_ROUTES = [
 ];
 
 const ALLOW_AUTHENTICATED = [
-  "/setup-organization",
   "/invitation",
   "/auth/reset-password",
 ];

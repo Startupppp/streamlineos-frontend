@@ -20,14 +20,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-  } from "@/components/ui/dialog";
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+  } from "@/components/ui/sheet";
 
 export default function BillingPage() {
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
@@ -167,20 +167,20 @@ export default function BillingPage() {
                     <TableCell>${hourlyRate}/h</TableCell>
                     <TableCell>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</TableCell>
                     <TableCell>
-                        <Dialog>
-                            <DialogTrigger asChild>
+                        <Sheet>
+                            <SheetTrigger asChild>
                                 <Button variant="outline" size="sm">
                                   Generate Invoice
                                   <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">Preview</Badge>
                                 </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Invoice Preview</DialogTitle>
-                                    <DialogDescription>
+                            </SheetTrigger>
+                            <SheetContent className="overflow-y-auto">
+                                <SheetHeader>
+                                    <SheetTitle>Invoice Preview</SheetTitle>
+                                    <SheetDescription>
                                         Draft invoice for {item.projectName}
-                                    </DialogDescription>
-                                </DialogHeader>
+                                    </SheetDescription>
+                                </SheetHeader>
                                 <div className="space-y-4 py-4">
                                      <div className="flex justify-between border-b pb-2">
                                          <span className="font-bold">Period:</span>
@@ -199,7 +199,7 @@ export default function BillingPage() {
                                          <span>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</span>
                                      </div>
                                 </div>
-                                <DialogFooter>
+                                <SheetFooter>
                                     <Button onClick={async () => {
                                       try {
                                         const { default: jsPDF } = await import("jspdf");
@@ -232,9 +232,9 @@ export default function BillingPage() {
                                         toast.error("Failed to generate invoice");
                                       }
                                     }}>Download PDF</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                                </SheetFooter>
+                            </SheetContent>
+                        </Sheet>
                     </TableCell>
                   </TableRow>
                 ))}

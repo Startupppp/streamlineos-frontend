@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,17 +90,17 @@ export default function TargetsPage() {
           description="Track daily targets and team performance rankings"
         />
         {isAdmin && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+            <SheetTrigger asChild>
               <Button className="bg-gold hover:bg-gold/90 text-white shadow-lg">
                 <Plus className="h-4 w-4 mr-2" />
                 Set Target
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Set New Target</DialogTitle>
-              </DialogHeader>
+            </SheetTrigger>
+            <SheetContent className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Set New Target</SheetTitle>
+              </SheetHeader>
               <form action={handleCreateTarget} className="space-y-4">
                 <div>
                   <Label htmlFor="metricType">Metric</Label>
@@ -149,8 +149,8 @@ export default function TargetsPage() {
                   </Button>
                 </div>
               </form>
-            </DialogContent>
-          </Dialog>
+            </SheetContent>
+          </Sheet>
         )}
       </motion.div>
 

@@ -183,6 +183,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
               setPendingLeaves(leavesCount);
             }
         } catch {
+          // Leave count fetch is non-critical; silently ignore errors
         }
     }
     if (session?.user) {

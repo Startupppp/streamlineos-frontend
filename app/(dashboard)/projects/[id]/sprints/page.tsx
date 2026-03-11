@@ -30,12 +30,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -347,14 +347,14 @@ export default function SprintsPage({ params }: PageProps) {
         </Card>
       )}
 
-      <Dialog open={!!completionSprintId} onOpenChange={(open) => !open && setCompletionSprintId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <Sheet open={!!completionSprintId} onOpenChange={(open) => !open && setCompletionSprintId(null)}>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
               Complete Sprint: {completionSprint?.name}
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
           <div className="space-y-4">
             {incompleteCount > 0 ? (
               <>
@@ -377,14 +377,14 @@ export default function SprintsPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground">All tickets are done! Ready to complete this sprint.</p>
             )}
           </div>
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setCompletionSprintId(null)}>Cancel</Button>
             <Button onClick={confirmCompleteSprint} disabled={updateSprint.isPending}>
               {updateSprint.isPending ? "Completing..." : "Complete Sprint"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

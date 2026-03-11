@@ -23,6 +23,17 @@ import { useLeadDetail, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity }
 import { toast } from "sonner";
 
 const STATUS_PIPELINE = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
+type PipelineStatus = typeof STATUS_PIPELINE[number];
+
+const ACTIVITY_TYPES = ["call", "email", "whatsapp", "meeting", "site_visit"] as const;
+type LeadActivityType = typeof ACTIVITY_TYPES[number];
+function isActivityType(v: unknown): v is LeadActivityType {
+  return typeof v === "string" && (ACTIVITY_TYPES as readonly string[]).includes(v);
+}
+
+function isPipelineStatus(v: unknown): v is PipelineStatus {
+  return typeof v === "string" && (STATUS_PIPELINE as readonly string[]).includes(v);
+}
 
 const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
   NEW: { color: "text-blue-400", bg: "bg-blue-500/15" },
@@ -86,9 +97,14 @@ export default function LeadDetailPage() {
 
   const handleLogActivity = useCallback(async (formData: FormData) => {
     try {
+      const activityType = formData.get("type");
+      if (!isActivityType(activityType)) {
+        toast.error("Invalid activity type");
+        return;
+      }
       await logActivity.mutateAsync({
         leadId,
-        type: formData.get("type") as any,
+        type: activityType,
         date: new Date().toISOString(),
         duration: formData.get("duration") ? Number(formData.get("duration")) : undefined,
         subject: formData.get("subject") as string || undefined,
@@ -126,7 +142,7 @@ export default function LeadDetailPage() {
     );
   }
 
-  const currentStatusIndex = STATUS_PIPELINE.indexOf(lead.status as any);
+  const currentStatusIndex = isPipelineStatus(lead.status) ? STATUS_PIPELINE.indexOf(lead.status) : -1;
 
   return (
     <motion.div
@@ -297,7 +313,7 @@ export default function LeadDetailPage() {
                 <div className="relative">
                   <div className="absolute left-4 top-0 bottom-0 w-px bg-border/50" />
                   <div className="space-y-4">
-                    {lead.activities.map((activity: any) => {
+                    {lead.activities.map((activity: { id: number; type: string; date: string | Date; subject?: string | null; notes?: string | null; outcome?: string | null; duration?: number | null; user?: { name?: string | null } | null }) => {
                       const config = ACTIVITY_ICONS[activity.type] || ACTIVITY_ICONS.call;
                       const ActivityIcon = config.icon;
                       return (

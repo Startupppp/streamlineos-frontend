@@ -438,4 +438,56 @@ export const employeeRouter = createTRPCRouter({
 
        return { success: true, message: "Employee deactivated successfully." };
     }),
+
+  toggleDashboardAccess: protectedProcedure
+    .input(z.object({ userId: z.string(), hasDashboardAccess: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const { user } = ctx.session;
+      if (user.role !== "CEO" && user.role !== "ADMIN" && user.role !== "HR") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only CEO, Admin, or HR can toggle dashboard access.",
+        });
+      }
+
+      const targetMember = await ctx.db.query.organizationMembers.findFirst({
+        where: and(
+          eq(organizationMembers.userId, input.userId),
+          eq(organizationMembers.orgId, ctx.session.orgId)
+        ),
+      });
+
+      if (!targetMember) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Employee not found in your organization.",
+        });
+      }
+
+      // Prevent toggling your own access
+      if (input.userId === user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot toggle your own dashboard access.",
+        });
+      }
+
+      // Prevent toggling CEO access
+      const targetUser = await ctx.db.query.users.findFirst({
+        where: eq(users.id, input.userId),
+      });
+      if (targetUser?.role === "CEO") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cannot modify dashboard access for the CEO.",
+        });
+      }
+
+      await ctx.db
+        .update(users)
+        .set({ hasDashboardAccess: input.hasDashboardAccess })
+        .where(eq(users.id, input.userId));
+
+      return { success: true };
+    }),
 });

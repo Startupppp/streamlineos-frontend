@@ -83,6 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           forceChangePassword: forceChangePassword,
           isActive: user.isActive,
+          hasDashboardAccess: user.hasDashboardAccess ?? true,
         };
       },
     }),
@@ -104,6 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
           if (dbUser) {
             token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
+            token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
             token.image = dbUser.image || null;
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
@@ -124,6 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.image = user.image;
         token.forceChangePassword = user.forceChangePassword;
         token.isActive = user.isActive;
+        token.hasDashboardAccess = user.hasDashboardAccess ?? true;
       }
       return token;
     },
@@ -135,6 +138,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.image = (token.image as string) || null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = token.isActive as boolean;
+        session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
       }
       return session;
     },

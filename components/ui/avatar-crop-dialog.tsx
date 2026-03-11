@@ -3,13 +3,13 @@
 import { useState, useCallback } from "react";
 import Cropper, { Area } from "react-easy-crop";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "./dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetDescription,
+} from "./sheet";
 import { Button } from "./button";
 import { Slider } from "./slider";
 import { ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react";
@@ -101,12 +101,12 @@ export function AvatarCropDialog({
   }, []);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{title}</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
+        </SheetHeader>
 
         <div className="relative w-full h-72 bg-muted rounded-lg overflow-hidden">
           <Cropper
@@ -142,7 +142,7 @@ export function AvatarCropDialog({
           </Button>
         </div>
 
-        <DialogFooter>
+        <SheetFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -160,8 +160,8 @@ export function AvatarCropDialog({
               "Save Photo"
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

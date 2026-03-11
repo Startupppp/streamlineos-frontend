@@ -12,8 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +32,37 @@ import { toast } from "sonner";
 
 const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 type LeadStatus = typeof STATUSES[number];
+
+const LEAD_SOURCES = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"] as const;
+type LeadSource = typeof LEAD_SOURCES[number];
+function isLeadSource(v: unknown): v is LeadSource {
+  return typeof v === "string" && (LEAD_SOURCES as readonly string[]).includes(v);
+}
+
+const LEAD_PRIORITIES = ["HOT", "WARM", "COLD"] as const;
+type LeadPriority = typeof LEAD_PRIORITIES[number];
+function isLeadPriority(v: unknown): v is LeadPriority {
+  return typeof v === "string" && (LEAD_PRIORITIES as readonly string[]).includes(v);
+}
+
+const ACTIVITY_TYPES = ["call", "email", "whatsapp", "meeting", "site_visit"] as const;
+type LeadActivityType = typeof ACTIVITY_TYPES[number];
+function isActivityType(v: unknown): v is LeadActivityType {
+  return typeof v === "string" && (ACTIVITY_TYPES as readonly string[]).includes(v);
+}
+
+interface BoardLead {
+  id: number;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  source?: string | null;
+  priority?: string | null;
+  potentialValue?: string | null;
+  createdAt?: string | Date | null;
+  assignedTo?: { name?: string | null; image?: string | null } | null;
+}
 
 const STATUS_CONFIG: Record<LeadStatus, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
   NEW: { label: "New", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", icon: Zap },
@@ -92,7 +122,7 @@ export default function LeadsPipelinePage() {
     const q = searchQuery.toLowerCase();
     const filtered: Record<string, typeof board[keyof typeof board]> = {};
     for (const [status, leads] of Object.entries(board)) {
-      filtered[status] = leads.filter((l: any) =>
+      filtered[status] = leads.filter((l: BoardLead) =>
         l.name.toLowerCase().includes(q) ||
         l.email?.toLowerCase().includes(q) ||
         l.phone?.includes(q) ||
@@ -126,10 +156,10 @@ export default function LeadsPipelinePage() {
       email: (formData.get("email") as string)?.trim() || undefined,
       phone: (formData.get("phone") as string)?.trim() || undefined,
       company: (formData.get("company") as string)?.trim() || undefined,
-      source: (formData.get("source") as string || "other") as any,
+      source: isLeadSource(formData.get("source")) ? formData.get("source") as LeadSource : "other",
       potentialValue: potentialValueRaw || undefined,
       investmentInterest: investmentInterestRaw || undefined,
-      priority: (formData.get("priority") as string || "WARM") as any,
+      priority: isLeadPriority(formData.get("priority")) ? formData.get("priority") as LeadPriority : "WARM",
       notes: (formData.get("notes") as string)?.trim() || undefined,
       city: (formData.get("city") as string)?.trim() || undefined,
     };
@@ -178,17 +208,17 @@ export default function LeadsPipelinePage() {
           title="Lead Pipeline"
           description="Track and manage your sales leads through the conversion funnel"
         />
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
+        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+          <SheetTrigger asChild>
             <Button className="bg-gold hover:bg-gold/90 text-white shadow-lg">
               <Plus className="h-4 w-4 mr-2" />
               New Lead
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Create New Lead</DialogTitle>
-            </DialogHeader>
+          </SheetTrigger>
+          <SheetContent className="sm:max-w-lg overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Create New Lead</SheetTitle>
+            </SheetHeader>
             <form action={handleCreateLead} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
@@ -260,8 +290,8 @@ export default function LeadsPipelinePage() {
                 </Button>
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </motion.div>
 
       {stats && (
@@ -304,7 +334,7 @@ export default function LeadsPipelinePage() {
           {STATUSES.map((status) => {
             const config = STATUS_CONFIG[status];
             const StatusIcon = config.icon;
-            const columnLeads = (filteredBoard as any)?.[status] ?? [];
+            const columnLeads: BoardLead[] = (filteredBoard as Record<string, BoardLead[]> | null)?.[status] ?? [];
 
             return (
               <div key={status} className="flex-1 min-w-[200px]">
@@ -321,7 +351,7 @@ export default function LeadsPipelinePage() {
 
                   <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
                     <AnimatePresence>
-                      {columnLeads.map((lead: any) => (
+                      {columnLeads.map((lead: BoardLead) => (
                         <motion.div
                           key={lead.id}
                           layout
@@ -472,9 +502,14 @@ function LeadDetailSheet({
   const handleLogActivity = useCallback(async (formData: FormData) => {
     if (!leadId) return;
     try {
+      const activityType = formData.get("activityType");
+      if (!isActivityType(activityType)) {
+        toast.error("Invalid activity type");
+        return;
+      }
       await logActivity.mutateAsync({
         leadId,
-        type: formData.get("activityType") as any,
+        type: activityType,
         date: new Date().toISOString(),
         duration: formData.get("duration") ? Number(formData.get("duration")) : undefined,
         subject: formData.get("subject") as string || undefined,
@@ -633,7 +668,7 @@ function LeadDetailSheet({
                   <ScrollArea className="h-[300px]">
                     {lead.activities && lead.activities.length > 0 ? (
                       <div className="space-y-3">
-                        {lead.activities.map((activity: any) => (
+                        {lead.activities.map((activity: { id: number; type: string; date: string | Date; subject?: string | null; notes?: string | null; outcome?: string | null; user?: { name?: string | null } | null }) => (
                           <div key={activity.id} className="flex gap-3 p-3 rounded-lg bg-muted/20 border border-border/30">
                             <div className={cn(
                               "h-8 w-8 rounded-full flex items-center justify-center shrink-0",

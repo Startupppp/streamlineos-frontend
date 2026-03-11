@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,13 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 
 export default function OrganizationSettingsPage() {
-  const router = useRouter();
   const { data: session } = useSession();
   const { data: organizations, isLoading, refetch } = useGetOrganizations();
   const org = organizations?.[0];
@@ -84,10 +82,9 @@ export default function OrganizationSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-6">
-            <Button onClick={() => router.push("/setup-organization")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Organization
-            </Button>
+            <p className="text-sm text-muted-foreground">
+              Please contact your administrator to set up an organization.
+            </p>
           </CardContent>
         </Card>
       </div>

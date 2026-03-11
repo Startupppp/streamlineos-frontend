@@ -6,18 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -47,14 +39,13 @@ import { addTimeEntryInputSchema } from "@/lib/validations/project";
 import type { Project, Ticket } from "@/types/api";
 
 interface LogTimeDialogProps {
-  variant?: "dialog" | "sheet";
   trigger?: React.ReactNode;
 }
 
 const ACCEPT_ATTACHMENTS = "image/jpeg,image/png,image/gif,image/webp,application/pdf";
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 
-export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProps) {
+export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
@@ -379,70 +370,37 @@ export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProp
           )}
         />
 
-        {variant === "sheet" ? (
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="submit" disabled={mutation.isPending || uploading} className="w-full sm:w-auto">
-              {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Log Time
-            </Button>
-          </div>
-        ) : (
-          <DialogFooter className="pt-2">
-            <Button type="submit" disabled={mutation.isPending || uploading}>
-              {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Log Time
-            </Button>
-          </DialogFooter>
-        )}
+        <SheetFooter className="pt-2">
+          <Button type="submit" disabled={mutation.isPending || uploading}>
+            {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Log Time
+          </Button>
+        </SheetFooter>
       </form>
     </Form>
   );
 
-  if (variant === "sheet") {
-    return (
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          {trigger || (
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Log Time
-            </Button>
-          )}
-        </SheetTrigger>
-        <SheetContent side="right" className="w-full sm:max-w-[540px] overflow-y-auto">
-          <SheetHeader className="pb-6 pt-6 px-6">
-            <SheetTitle>Log Time</SheetTitle>
-            <SheetDescription className="mt-2">
-              Record your work hours on a ticket.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="px-6 pb-6">
-            {formContent}
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         {trigger || (
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Log Time
           </Button>
         )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader className="pb-4">
-          <DialogTitle>Log Time</DialogTitle>
-          <DialogDescription>
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-[540px] overflow-y-auto">
+        <SheetHeader className="pb-6 pt-6 px-6">
+          <SheetTitle>Log Time</SheetTitle>
+          <SheetDescription className="mt-2">
             Record your work hours on a ticket.
-          </DialogDescription>
-        </DialogHeader>
-        {formContent}
-      </DialogContent>
-    </Dialog>
+          </SheetDescription>
+        </SheetHeader>
+        <div className="px-6 pb-6">
+          {formContent}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

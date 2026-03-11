@@ -260,7 +260,7 @@ export default function PayrollPage() {
                   Generate Individual
         </Button>
               </SheetTrigger>
-              <SheetContent className="max-w-2xl">
+              <SheetContent className="sm:max-w-2xl overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>
                     {showPreview ? "Payslip Preview" : "Generate Payslip for Employee"}

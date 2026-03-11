@@ -13,7 +13,5 @@ Disallow: /marketing/
 Disallow: /billing/
 Disallow: /timesheets/
 Disallow: /support/
-Disallow: /org-selection/
-Disallow: /setup-organization/
 
 Sitemap: https://crm.vaivammcapital.com/sitemap.xml

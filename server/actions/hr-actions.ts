@@ -130,6 +130,48 @@ export async function updateEmployee(data: {
     }
 }
 
+export async function toggleDashboardAccess(userId: string, hasDashboardAccess: boolean) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+  const { role, id: currentUserId } = session.user;
+  if (role !== "CEO" && role !== "ADMIN" && role !== "HR") {
+    return { error: "Permission denied" };
+  }
+  if (userId === currentUserId) {
+    return { error: "You cannot toggle your own dashboard access" };
+  }
+
+  try {
+    const requesterOrgMember = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, session.user.id),
+    });
+    if (!requesterOrgMember) return { error: "Organization context not found" };
+
+    const targetOrgMember = await db.query.organizationMembers.findFirst({
+      where: and(
+        eq(organizationMembers.userId, userId),
+        eq(organizationMembers.orgId, requesterOrgMember.orgId)
+      ),
+    });
+    if (!targetOrgMember) return { error: "Employee not found in your organization" };
+
+    const employee = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
+    if (!employee) return { error: "User not found" };
+    if (employee.role === "CEO") return { error: "Cannot modify dashboard access for the CEO" };
+
+    await db.update(users)
+      .set({ hasDashboardAccess })
+      .where(eq(users.id, userId));
+
+    revalidatePath("/hr");
+    return { success: true };
+  } catch {
+    return { error: "Failed to toggle dashboard access" };
+  }
+}
+
 export async function deleteEmployee(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };

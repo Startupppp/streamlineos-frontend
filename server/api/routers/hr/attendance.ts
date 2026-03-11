@@ -165,6 +165,8 @@ export const attendanceRouter = createTRPCRouter({
     if (!log)
       throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot check out" });
 
+
+
     if (!log.checkIn) {
       throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Missing check-in time" });
     }
