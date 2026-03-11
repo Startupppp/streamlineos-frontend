@@ -17,39 +17,6 @@ type MutationOnSuccess<TData, TVariables, TContext> = (
   variables: TVariables,
   context: TContext
 ) => void | Promise<void>;
-export const useSignUp = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["signUp"],
-    Error,
-    AuthRouterInputs["signUp"],
-    unknown
-  >
-) => {
-  const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["signUp"],
-        AuthRouterInputs["signUp"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["signUp"],
-    Error,
-    AuthRouterInputs["signUp"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.signUp.mutate(variables) as Promise<
-        AuthRouterOutputs["signUp"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
 export const useVerifyEmail = (
   options?: UseMutationOptions<
     AuthRouterOutputs["verifyEmail"],

@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { vaivammTrpcClient } from "@/lib/trpc";
 import { useAcceptInvitation } from "@/lib/hooks/auth-hooks";
@@ -19,7 +18,7 @@ import { PasswordStrengthIndicator } from "@/components/auth/password-strength-i
 import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { Users, Mail, User, Lock, Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Users, Mail, User, Lock, Loader2, Eye, EyeOff, ArrowRight, X, Shield } from "lucide-react";
 
 const invitationSchema = z.object({
   firstName: z.string().optional(),
@@ -91,7 +90,7 @@ export default function InvitationPage() {
   if (!invitation) {
     return (
       <div className="flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <Loader2 className="h-10 w-10 animate-spin text-[#bd882c]" />
         <p className="text-sm text-muted-foreground">Verifying your invitation...</p>
       </div>
     );
@@ -104,125 +103,170 @@ export default function InvitationPage() {
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={fadeUp} className="text-center mb-8">
-        <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
-          <Users className="w-8 h-8 text-primary" />
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">Join Organization</h1>
-        <p className="text-muted-foreground mt-2">
-          You&apos;ve been invited to join <span className="font-semibold text-foreground">{invitation.organizationName}</span>
-        </p>
-      </motion.div>
-
       <motion.div variants={fadeUp}>
-      <Card className="shadow-noir border-border">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border mb-6">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
+        <Card className="shadow-2xl border-border overflow-hidden">
+          {/* Illustration Header */}
+          <div
+            className="relative h-40 flex items-center justify-center overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #0f2b7f 0%, #1a3a8f 40%, #bd882c 100%)" }}
+          >
+            {/* Abstract team illustration with circles */}
+            <div className="relative flex items-end gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
+              <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
+              <div className="w-16 h-16 rounded-full bg-white/25 border-2 border-white/45 flex items-center justify-center">
+                <Users className="w-7 h-7 text-white/80" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Assigned Role</p>
+              <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
+              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
+            </div>
+            {/* Decorative dots */}
+            <div className="absolute top-4 left-6 w-2 h-2 rounded-full bg-white/20" />
+            <div className="absolute top-8 right-10 w-3 h-3 rounded-full bg-white/15" />
+            <div className="absolute bottom-6 left-12 w-2.5 h-2.5 rounded-full bg-white/15" />
+            <div className="absolute top-12 left-20 w-1.5 h-1.5 rounded-full bg-white/25" />
+            <div className="absolute bottom-4 right-16 w-2 h-2 rounded-full bg-white/20" />
+          </div>
+
+          <CardContent className="px-6 md:px-8 pt-6 pb-8">
+            {/* Heading */}
+            <div className="text-center mb-6">
+              <div className="mx-auto w-12 h-12 rounded-full bg-[#bd882c]/10 flex items-center justify-center mb-3">
+                <Mail className="w-6 h-6 text-[#bd882c]" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">Join Organization</h1>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                You&apos;ve been invited to join <span className="font-semibold text-foreground">{invitation.organizationName}</span>
+              </p>
+            </div>
+
+            {/* Info Blocks */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Invited By</p>
+                <p className="text-sm font-medium text-foreground truncate">{invitation.organizationName}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Shield className="w-3 h-3 text-muted-foreground" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assigned Role</p>
+                </div>
                 <p className="text-sm font-medium text-foreground">{invitation.role}</p>
               </div>
             </div>
-            <Badge variant="secondary">{invitation.role}</Badge>
-          </div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={acceptInvitation.isPending}>
-            <div className="space-y-2">
-              <Label className="text-foreground">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={invitation.email} disabled className="pl-10 bg-muted/30 cursor-not-allowed" aria-label="Invitation email address" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Form */}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={acceptInvitation.isPending}>
               <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-foreground">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  {...form.register("firstName")}
-                  disabled={acceptInvitation.isPending}
-                  className="focus-visible:ring-primary"
-                />
+                <Label className="text-foreground text-xs font-medium">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input value={invitation.email} disabled className="pl-10 bg-muted/30 cursor-not-allowed text-sm" aria-label="Invitation email address" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-foreground">Last Name</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  placeholder="Doe"
-                  {...form.register("lastName")}
-                  disabled={acceptInvitation.isPending}
-                  className="focus-visible:ring-primary"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
-                  {...form.register("password")}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-foreground text-xs font-medium">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    {...form.register("firstName")}
+                    disabled={acceptInvitation.isPending}
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-foreground text-xs font-medium">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Doe"
+                    {...form.register("lastName")}
+                    disabled={acceptInvitation.isPending}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-foreground text-xs font-medium">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a strong password"
+                    {...form.register("password")}
+                    disabled={acceptInvitation.isPending}
+                    aria-required="true"
+                    aria-invalid={!!form.formState.errors.password}
+                    aria-describedby={form.formState.errors.password ? "password-error" : undefined}
+                    className="pl-10 pr-10 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {form.formState.errors.password && (
+                  <p id="password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                )}
+                {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
+              </div>
+
+              <PasswordConfirmField
+                value={confirmPassword}
+                onChange={(val) => form.setValue("confirmPassword", val, { shouldDirty: true })}
+                password={password}
+                disabled={acceptInvitation.isPending}
+                showIcon
+              />
+
+              <div className="pt-2 space-y-3">
+                <Button
+                  type="submit"
+                  className="w-full gap-2 text-white font-medium h-11"
+                  style={{ background: "linear-gradient(135deg, #bd882c, #d4a04a)" }}
                   disabled={acceptInvitation.isPending}
-                  aria-required="true"
-                  aria-invalid={!!form.formState.errors.password}
-                  aria-describedby={form.formState.errors.password ? "password-error" : undefined}
-                  className="pl-10 pr-10 focus-visible:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                  {acceptInvitation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      Accept Invitation
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 h-10"
+                  onClick={() => router.push("/signin")}
+                  disabled={acceptInvitation.isPending}
+                >
+                  <X className="h-4 w-4" />
+                  Decline
+                </Button>
               </div>
-              {form.formState.errors.password && (
-                <p id="password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-              )}
-              {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
-            </div>
 
-            <PasswordConfirmField
-              value={confirmPassword}
-              onChange={(val) => form.setValue("confirmPassword", val, { shouldDirty: true })}
-              password={password}
-              disabled={acceptInvitation.isPending}
-              showIcon
-            />
-
-            <Button type="submit" className="w-full" disabled={acceptInvitation.isPending}>
-              {acceptInvitation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  Accept Invitation
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              By accepting this invitation, you will have access to shared leads, deal pipelines, and team analytics within this organization.
-            </p>
-          </form>
-        </CardContent>
-      </Card>
+              <p className="text-[11px] text-center text-muted-foreground pt-2">
+                By accepting this invitation, you will have access to shared leads, deal pipelines, and team analytics within this organization.
+              </p>
+            </form>
+          </CardContent>
+        </Card>
       </motion.div>
     </motion.div>
   );

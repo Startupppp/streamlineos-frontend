@@ -162,10 +162,7 @@ export default function SignInPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-              Sign Up
-            </Link>
+            <p className="text-xs">Vaivamm Capital &mdash; Admin access only</p>
           </div>
         </CardContent>
       </Card>
