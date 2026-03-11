@@ -173,6 +173,7 @@ export const onboardEmployeeInputSchema = z.object({
     message: "Department is required",
   }),
   role: z.string().default("MEMBER"),
+  employeeId: z.string().optional(),
   joiningDate: z.date(),
   dateOfBirth: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),

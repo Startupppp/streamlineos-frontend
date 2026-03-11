@@ -13,7 +13,6 @@ export async function getEmployees() {
   const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id)
   });
-
   if (!member) return [];
 
   const orgMembers = await db.query.organizationMembers.findMany({

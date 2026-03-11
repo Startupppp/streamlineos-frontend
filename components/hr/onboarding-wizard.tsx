@@ -152,6 +152,7 @@ export function OnboardingWizard() {
       designation: "",
       departmentId: undefined,
       role: "MEMBER",
+      employeeId: "",
       joiningDate: new Date(),
       dateOfBirth: undefined,
       skills: "",
@@ -167,10 +168,18 @@ export function OnboardingWizard() {
       }
     };
     if (draft?.values) {
-      return { ...base, ...draft.values };
+      const merged = { ...base, ...draft.values };
+      // Validate that the draft role exists in assignable roles; reset to MEMBER if stale
+      if (merged.role && assignableRoles.length > 0) {
+        const roleExists = assignableRoles.some((r) => r.slug === merged.role);
+        if (!roleExists) {
+          merged.role = "MEMBER";
+        }
+      }
+      return merged;
     }
     return base;
-  }, [draft]);
+  }, [draft, assignableRoles]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
@@ -581,6 +590,22 @@ export function OnboardingWizard() {
                                   />
                                 </PopoverContent>
                               </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="employeeId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Employee ID</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Auto-generated if blank" {...field} />
+                              </FormControl>
+                              <FormDescription className="text-xs">
+                                Leave blank to auto-generate, or enter a custom employee ID.
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}

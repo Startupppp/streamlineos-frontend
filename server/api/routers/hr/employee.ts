@@ -9,7 +9,8 @@ import {
   salaryStructures,
   payrolls,
   onboardingSteps,
-  notifications,
+  roles,
+  // notifications,
 } from "../../../../lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { format } from "date-fns";
@@ -177,6 +178,20 @@ export const employeeRouter = createTRPCRouter({
          });
        }
 
+       // Validate that the role exists in the roles table for this org
+       const roleRecord = await ctx.db.query.roles.findFirst({
+         where: and(
+           eq(roles.slug, input.role),
+           eq(roles.orgId, ctx.session.orgId)
+         ),
+       });
+       if (!roleRecord) {
+         throw new TRPCError({
+           code: "BAD_REQUEST",
+           message: `Role "${input.role}" does not exist in your organization. Please select a valid role.`,
+         });
+       }
+
        const existingUser = await ctx.db.query.users.findFirst({
          where: eq(users.email, input.email)
        });
@@ -188,6 +203,7 @@ export const employeeRouter = createTRPCRouter({
           });
        }
 
+       try {
        const userId = crypto.randomUUID();
 
        function generateCompliantPassword(): string {
@@ -253,6 +269,7 @@ export const employeeRouter = createTRPCRouter({
        const lastNum = parseInt(lastId.replace(/\D/g, "").slice(-3)) || 0;
        const empNumber = lastNum + 1;
        const generatedEmployeeId = `${employeeIdPrefix}${yearSuffix}${empNumber.toString().padStart(3, "0")}`;
+       const finalEmployeeId = input.employeeId?.trim() || generatedEmployeeId;
 
        const newUser = await ctx.db.transaction(async (tx) => {
          const [createdUser] = await tx.insert(users).values({
@@ -274,7 +291,7 @@ export const employeeRouter = createTRPCRouter({
             taxId: input.taxId,
             bankDetails: input.bankDetails,
             monthlySalary: input.monthlySalary?.toString(),
-            employeeId: generatedEmployeeId,
+            employeeId: finalEmployeeId,
             password: hashedPassword,
             isPasswordChangeRequired: true,
             image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
@@ -354,32 +371,16 @@ export const employeeRouter = createTRPCRouter({
          logger.error("Failed to send welcome email", { email: input.email, error });
        }
 
-       const admins = await ctx.db.query.organizationMembers.findMany({
-          where: eq(organizationMembers.orgId, ctx.session.orgId),
-          with: {
-             user: true
-          }
-       });
-
-       const recipientIds = admins
-          .filter(m => (m.role === "ADMIN" || m.role === "CEO") && m.userId !== user.id)
-          .map(m => m.userId);
-
-       if (recipientIds.length > 0) {
-         await ctx.db.insert(notifications).values(
-           recipientIds.map((recipientId) => ({
-              orgId: ctx.session.orgId,
-              userId: recipientId,
-              type: "INFO" as const,
-              title: "New Employee Onboarded",
-              message: `${input.firstName} ${input.lastName} has joined as ${input.designation}.`,
-              link: "/hr/employees",
-              isRead: false,
-           }))
-         );
-       }
-
        return { id: newUser.id, email: newUser.email, name: newUser.name, employeeId: newUser.employeeId };
+
+       } catch (error) {
+         if (error instanceof TRPCError) throw error;
+         logger.error("Failed to onboard employee", { email: input.email, error });
+         throw new TRPCError({
+           code: "INTERNAL_SERVER_ERROR",
+           message: "Failed to create employee. Please check the details and try again.",
+         });
+       }
     }),
 
   deleteEmployee: protectedProcedure
