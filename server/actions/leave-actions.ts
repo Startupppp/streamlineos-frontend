@@ -337,6 +337,7 @@ export async function submitLeaveRequest(data: {
   endDate: Date;
   reason: string;
   approverId: string;
+  attachmentUrl?: string;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
@@ -357,6 +358,7 @@ export async function submitLeaveRequest(data: {
       endDate: data.endDate.toISOString(),
       reason: data.reason,
       approverId: data.approverId,
+      attachmentUrl: data.attachmentUrl || null,
       status: "PENDING",
     });
 

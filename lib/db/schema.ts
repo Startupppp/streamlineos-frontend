@@ -258,6 +258,7 @@ export const leaveRequests = pgTable("leave_requests", {
   status: leaveStatusEnum("status").default("PENDING"),
   approverId: text("approver_id").references(() => users.id),
   rejectionReason: text("rejection_reason"),
+  attachmentUrl: text("attachment_url"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_leave_requests_user_id").on(table.userId),

@@ -35,11 +35,11 @@ import {
   Loader2,
   Filter,
   CalendarDays,
-  Paperclip,
   Download,
 } from "lucide-react";
 
 import { submitLeaveRequest } from "@/server/actions/leave-actions";
+import { FileUpload } from "@/components/storage/file-upload";
 
 import type { LeaveBalance, LeaveType, Approver, LeaveRequest } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
@@ -77,6 +77,7 @@ export function LeavesTabContent({
 }: LeavesTabContentProps) {
   const router = useRouter();
   const [leaveFormLoading, setLeaveFormLoading] = useState(false);
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
   const currentYear = new Date().getFullYear();
 
@@ -108,12 +109,14 @@ export function LeavesTabContent({
       endDate: new Date(data.endDate),
       reason: data.reason,
       approverId,
+      attachmentUrl: attachmentUrl || undefined,
     });
     setLeaveFormLoading(false);
 
     if (result.success) {
       toast.success("Leave requested successfully!");
       leaveForm.reset();
+      setAttachmentUrl(null);
       router.refresh();
     } else {
       toast.error(result.error || "Failed to submit request");
@@ -331,9 +334,15 @@ export function LeavesTabContent({
                   />
 
                   {/* Attach documents */}
-                  <div className="flex flex-col items-center gap-1 py-3 border border-dashed border-border rounded-lg text-muted-foreground">
-                    <Paperclip className="h-5 w-5" />
-                    <span className="text-xs">Attach documents (Optional)</span>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      Attach Document (Optional)
+                    </label>
+                    <FileUpload
+                      folder="leave-attachments"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onUploadComplete={(url) => setAttachmentUrl(url)}
+                    />
                   </div>
 
                   {/* Submit */}
