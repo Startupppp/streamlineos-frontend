@@ -34,6 +34,7 @@ import {
   UserCheck,
   Building2,
   ClipboardList,
+  Network,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
@@ -89,6 +90,7 @@ const allNavGroups: NavGroup[] = [
       { label: "Expenses", icon: Receipt, href: "/hr/expenses", permission: "hr:expenses:view" },
       { label: "Documents", icon: FileText, href: "/hr/documents", permission: "hr:documents:view" },
       { label: "Work Logs", icon: ClipboardList, href: "/hr/work-logs" },
+      { label: "Org Chart", icon: Network, href: "/hr/org-chart" },
     ],
   },
   {

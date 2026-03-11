@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, FolderKanban, Clock, Receipt,
   Settings, Contact2, Target, BarChart3, Handshake,
   UserPlus, Megaphone, HeadphonesIcon, CalendarDays,
-  Briefcase, FileText, DollarSign, UserCheck,
+  Briefcase, FileText, DollarSign, UserCheck, Network,
 } from "lucide-react";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
@@ -21,6 +21,7 @@ const PAGES = [
   { name: "Expenses", href: "/hr/expenses", icon: Receipt, group: "HR" },
   { name: "Devices", href: "/hr/devices", icon: Briefcase, group: "HR" },
   { name: "Work Logs", href: "/hr/work-logs", icon: Clock, group: "HR" },
+  { name: "Org Chart", href: "/hr/org-chart", icon: Network, group: "HR" },
   { name: "Projects", href: "/projects", icon: FolderKanban, group: "Projects" },
   { name: "Timesheets", href: "/timesheets", icon: Clock, group: "Projects" },
   { name: "Lead Pipeline", href: "/crm/leads", icon: Contact2, group: "CRM" },
