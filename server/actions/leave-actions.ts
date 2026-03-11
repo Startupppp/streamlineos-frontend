@@ -151,48 +151,58 @@ export async function expireUnusedMonthlyCasualLeaves() {
 
   let expiredCount = 0;
 
-  for (const { orgId } of orgs) {
-    const casualType = await db.query.leaveTypes.findFirst({
-      where: and(
-        eq(leaveTypes.orgId, orgId),
-        eq(leaveTypes.name, LEAVE_POLICY.CASUAL.name),
+  // Batch: fetch all casual leave types across orgs in one query
+  const casualTypes = await db.query.leaveTypes.findMany({
+    where: eq(leaveTypes.name, LEAVE_POLICY.CASUAL.name),
+  });
+
+  if (casualTypes.length === 0) return { expiredCount: 0 };
+
+  const orgCasualMap = new Map(casualTypes.map((ct) => [ct.orgId, ct]));
+  const casualTypeIds = casualTypes.map((ct) => ct.id);
+
+  // Batch: fetch all balances for casual leave types at once
+  const allBalances = await db.query.leaveBalances.findMany({
+    where: and(
+      inArray(leaveBalances.leaveTypeId, casualTypeIds),
+      eq(leaveBalances.year, prevMonthYear),
+    ),
+  });
+
+  const positiveBalances = allBalances.filter((b) => Number(b.balance) > 0);
+  if (positiveBalances.length === 0) return { expiredCount: 0 };
+
+  // Batch: find all users who used casual leave in prev month
+  const usedLeaveResults = await db
+    .select({
+      userId: leaveRequests.userId,
+      leaveTypeId: leaveRequests.leaveTypeId,
+      count: sql<number>`count(*)`,
+    })
+    .from(leaveRequests)
+    .where(
+      and(
+        inArray(leaveRequests.leaveTypeId, casualTypeIds),
+        eq(leaveRequests.status, "APPROVED"),
+        gte(leaveRequests.startDate, monthStartStr!),
+        lte(leaveRequests.endDate, monthEndStr!),
       ),
-    });
+    )
+    .groupBy(leaveRequests.userId, leaveRequests.leaveTypeId);
 
-    if (!casualType) continue;
-    const balances = await db.query.leaveBalances.findMany({
-      where: and(
-        eq(leaveBalances.orgId, orgId),
-        eq(leaveBalances.leaveTypeId, casualType.id),
-        eq(leaveBalances.year, prevMonthYear),
-      ),
-    });
+  const usedSet = new Set(usedLeaveResults.map((r) => `${r.userId}:${r.leaveTypeId}`));
 
-    for (const bal of balances) {
-      if (Number(bal.balance) <= 0) continue;
-      const usedLeaves = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(leaveRequests)
-        .where(
-          and(
-            eq(leaveRequests.userId, bal.userId),
-            eq(leaveRequests.leaveTypeId, casualType.id),
-            eq(leaveRequests.status, "APPROVED"),
-            gte(leaveRequests.startDate, monthStartStr),
-            lte(leaveRequests.endDate, monthEndStr),
-          ),
-        );
+  for (const bal of positiveBalances) {
+    const casualType = orgCasualMap.get(bal.orgId);
+    if (!casualType || bal.leaveTypeId !== casualType.id) continue;
 
-      const count = Number(usedLeaves[0]?.count ?? 0);
-
-      if (count === 0) {
-        const newBalance = Math.max(0, Number(bal.balance) - LEAVE_POLICY.CASUAL.perMonth);
-        await db
-          .update(leaveBalances)
-          .set({ balance: newBalance.toString() })
-          .where(eq(leaveBalances.id, bal.id));
-        expiredCount++;
-      }
+    if (!usedSet.has(`${bal.userId}:${bal.leaveTypeId}`)) {
+      const newBalance = Math.max(0, Number(bal.balance) - LEAVE_POLICY.CASUAL.perMonth);
+      await db
+        .update(leaveBalances)
+        .set({ balance: newBalance.toString() })
+        .where(eq(leaveBalances.id, bal.id));
+      expiredCount++;
     }
   }
 
@@ -435,8 +445,13 @@ export async function processLeaveRequest(data: {
         if (leaveType?.name !== LEAVE_POLICY.UNPAID.name) {
           const start = new Date(request.startDate);
           const end = new Date(request.endDate);
-          const diffTime = Math.abs(end.getTime() - start.getTime());
-          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          let diffDays = 0;
+          const cursor = new Date(start);
+          while (cursor <= end) {
+            const day = cursor.getDay();
+            if (day !== 0 && day !== 6) diffDays++;
+            cursor.setDate(cursor.getDate() + 1);
+          }
 
           const balanceRecord = await tx.query.leaveBalances.findFirst({
             where: and(

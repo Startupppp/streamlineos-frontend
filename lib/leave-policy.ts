@@ -1,3 +1,6 @@
+/** Maximum WFH days allowed per month */
+export const WFH_MONTHLY_QUOTA = 4;
+
 export const LEAVE_POLICY = {
   CASUAL: {
     name: "Casual Leave",

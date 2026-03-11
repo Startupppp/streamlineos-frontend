@@ -56,7 +56,14 @@ const SOURCE_COLORS: Record<string, string> = {
 function timeAgo(date: string | Date) {
   const now = new Date();
   const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
   const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+  if (diff < 0) {
+    const absDiff = Math.abs(diff);
+    if (absDiff < 3600) return `in ${Math.floor(absDiff / 60)}m`;
+    if (absDiff < 86400) return `in ${Math.floor(absDiff / 3600)}h`;
+    return `in ${Math.floor(absDiff / 86400)}d`;
+  }
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -96,17 +103,35 @@ export default function LeadsPipelinePage() {
   }, [board, searchQuery]);
 
   const handleCreateLead = useCallback(async (formData: FormData) => {
+    const name = (formData.get("name") as string)?.trim();
+    if (!name) {
+      toast.error("Name is required");
+      return;
+    }
+
+    const potentialValueRaw = (formData.get("potentialValue") as string)?.trim();
+    const investmentInterestRaw = (formData.get("investmentInterest") as string)?.trim();
+
+    if (potentialValueRaw && (isNaN(Number(potentialValueRaw)) || Number(potentialValueRaw) < 0)) {
+      toast.error("Potential value must be a valid positive number");
+      return;
+    }
+    if (investmentInterestRaw && (isNaN(Number(investmentInterestRaw)) || Number(investmentInterestRaw) < 0)) {
+      toast.error("Investment interest must be a valid positive number");
+      return;
+    }
+
     const data = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string || undefined,
-      phone: formData.get("phone") as string || undefined,
-      company: formData.get("company") as string || undefined,
+      name,
+      email: (formData.get("email") as string)?.trim() || undefined,
+      phone: (formData.get("phone") as string)?.trim() || undefined,
+      company: (formData.get("company") as string)?.trim() || undefined,
       source: (formData.get("source") as string || "other") as any,
-      potentialValue: formData.get("potentialValue") as string || undefined,
-      investmentInterest: formData.get("investmentInterest") as string || undefined,
+      potentialValue: potentialValueRaw || undefined,
+      investmentInterest: investmentInterestRaw || undefined,
       priority: (formData.get("priority") as string || "WARM") as any,
-      notes: formData.get("notes") as string || undefined,
-      city: formData.get("city") as string || undefined,
+      notes: (formData.get("notes") as string)?.trim() || undefined,
+      city: (formData.get("city") as string)?.trim() || undefined,
     };
 
     try {
@@ -217,11 +242,11 @@ export default function LeadsPipelinePage() {
                 </div>
                 <div>
                   <Label htmlFor="potentialValue">Potential Value (₹)</Label>
-                  <Input id="potentialValue" name="potentialValue" placeholder="500000" />
+                  <Input id="potentialValue" name="potentialValue" type="number" min="0" step="1" placeholder="500000" />
                 </div>
                 <div>
                   <Label htmlFor="investmentInterest">Investment Interest (₹)</Label>
-                  <Input id="investmentInterest" name="investmentInterest" placeholder="1000000" />
+                  <Input id="investmentInterest" name="investmentInterest" type="number" min="0" step="1" placeholder="1000000" />
                 </div>
                 <div className="col-span-2">
                   <Label htmlFor="notes">Notes</Label>
@@ -372,19 +397,31 @@ export default function LeadsPipelinePage() {
                                 </span>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                   {status !== "CONVERTED" && status !== "LOST" && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const nextIdx = STATUSES.indexOf(status) + 1;
-                                        if (nextIdx < STATUSES.length - 1) {
-                                          handleMoveStatus(lead.id, STATUSES[nextIdx]);
-                                        }
-                                      }}
-                                      className="h-5 w-5 rounded flex items-center justify-center hover:bg-gold/20 transition-colors"
-                                      aria-label="Move to next stage"
-                                    >
-                                      <ArrowRight className="h-3 w-3 text-gold" />
-                                    </button>
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleMoveStatus(lead.id, "LOST");
+                                        }}
+                                        className="h-5 w-5 rounded flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                        aria-label="Mark as lost"
+                                      >
+                                        <X className="h-3 w-3 text-red-400" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const nextIdx = STATUSES.indexOf(status) + 1;
+                                          if (nextIdx < STATUSES.length - 1) {
+                                            handleMoveStatus(lead.id, STATUSES[nextIdx]);
+                                          }
+                                        }}
+                                        className="h-5 w-5 rounded flex items-center justify-center hover:bg-gold/20 transition-colors"
+                                        aria-label="Move to next stage"
+                                      >
+                                        <ArrowRight className="h-3 w-3 text-gold" />
+                                      </button>
+                                    </>
                                   )}
                                 </div>
                               </div>

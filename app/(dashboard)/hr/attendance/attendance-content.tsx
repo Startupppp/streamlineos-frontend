@@ -20,6 +20,7 @@ import {
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { WFH_MONTHLY_QUOTA } from "@/lib/leave-policy";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
 import {
   Clock,
@@ -41,7 +42,6 @@ import {
 } from "lucide-react";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-const WFH_MONTHLY_QUOTA = 4;
 
 interface CalendarDay {
   date: Date;
@@ -136,7 +136,8 @@ const TimerCard = memo(function TimerCard() {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
     const checkInTime = new Date(statusData.todayLog.checkIn);
-    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime());
+    const breakMs = (Number(statusData.todayLog.breakHours) || 0) * 3600000;
+    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime() - breakMs);
     return {
       hours: Math.floor(diffMs / 3600000),
       minutes: Math.floor((diffMs % 3600000) / 60000),

@@ -4,8 +4,8 @@ import { ZodError } from "zod";
 import { auth } from "../../lib/auth";
 import { db } from "../../lib/db";
 import "../../lib/env";
-import { organizationMembers } from "../../lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { ensureOrgMembership } from "../../lib/auth-helpers";
+
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth();
   return {
@@ -50,18 +50,26 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user?.id) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  const userMemberships = await ctx.db.query.organizationMembers.findMany({
-    where: eq(organizationMembers.userId, ctx.session.user.id),
-    orderBy: [asc(organizationMembers.joinedAt)],
-    limit: 1,
-  });
 
-  const orgId = userMemberships[0]?.orgId;
+  // Auto-add to single org if not already a member
+  const membership = await ensureOrgMembership(
+    ctx.session.user.id,
+    ctx.session.user.role
+  );
 
-  if (!orgId) {
+  if (!membership) {
     throw new TRPCError({
       code: "FORBIDDEN",
-      message: "You are not a member of any organization.",
+      message: "No organization found. Please contact your administrator.",
+    });
+  }
+
+  // Validate explicit orgId header if provided
+  const headerOrgId = ctx.headers.get("x-org-id");
+  if (headerOrgId && headerOrgId !== membership.orgId) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Organization mismatch. You do not have access to this organization.",
     });
   }
 
@@ -71,7 +79,7 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
         ...ctx.session,
         userId: ctx.session.user.id,
         user: ctx.session.user,
-        orgId,
+        orgId: membership.orgId,
       },
     },
   });
