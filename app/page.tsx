@@ -47,9 +47,6 @@ export default async function HomePage() {
                 Sign In
               </Button>
             </Link>
-            <Link href="/signup">
-              <Button>Get Started</Button>
-            </Link>
           </div>
         </div>
       </header>
@@ -78,23 +75,6 @@ export default async function HomePage() {
               Streamline your enterprise operations with an all-in-one platform for human resources,
               project management, and customer relationship management.
             </p>
-
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-              <Link href="/signup">
-                <Button size="lg" className="w-full sm:w-auto text-base px-8 py-5 h-auto tracking-wide">
-                  Start Free Trial
-                </Button>
-              </Link>
-              <Link href="/signin">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-base px-8 py-5 h-auto border-foreground/15 text-foreground/70 hover:border-gold/30 hover:text-foreground tracking-wide"
-                >
-                  Book Demo
-                </Button>
-              </Link>
-            </div>
           </div>
         </section>
 
@@ -182,25 +162,9 @@ export default async function HomePage() {
             <h2 className="mb-5 text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
               Ready to transform your business operations?
             </h2>
-            <p className="mx-auto mb-10 max-w-xl text-lg text-foreground/50 leading-relaxed">
+            <p className="mx-auto max-w-xl text-lg text-foreground/50 leading-relaxed">
               Join thousands of teams who trust Vaivamm to manage their HR, projects, and sales.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link href="/signup">
-                <Button size="lg" className="w-full sm:w-auto text-base px-8 py-5 h-auto tracking-wide">
-                  Start Free Trial
-                </Button>
-              </Link>
-              <Link href="/signin">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-base px-8 py-5 h-auto border-foreground/15 text-foreground/70 hover:border-gold/30 hover:text-foreground tracking-wide"
-                >
-                  Contact Sales
-                </Button>
-              </Link>
-            </div>
           </div>
         </section>
       </main>
