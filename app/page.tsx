@@ -104,13 +104,11 @@ export default async function HomePage() {
 
           <div className="deco-line" />
           <div className="container relative mx-auto px-4 lg:px-8 py-16">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-8 max-w-3xl mx-auto">
               {[
-                { value: "+24.5%", label: "Revenue Growth" },
-                { value: "50k+", label: "Active Users" },
-                { value: "1.2k+", label: "Companies" },
-                { value: "250k+", label: "Projects Managed" },
-                { value: "98%", label: "Satisfaction" },
+                { value: "Secure", label: "Data & compliance" },
+                { value: "Unified", label: "HR, projects & deals" },
+                { value: "Simple", label: "One place to run operations" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <p className="text-3xl lg:text-4xl font-extrabold text-white/95 tracking-tight mb-1">
