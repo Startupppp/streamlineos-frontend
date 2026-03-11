@@ -95,20 +95,6 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex -space-x-2">
-                {["bg-amber-700", "bg-blue-800", "bg-emerald-700", "bg-rose-700", "bg-violet-700"].map((bg, i) => (
-                  <div
-                    key={i}
-                    className={`h-7 w-7 rounded-full ${bg} border-2 border-background ring-1 ring-gold/10`}
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-foreground/45 font-medium">
-                Trusted by <span className="text-foreground/70">1,200+</span> companies
-              </p>
-            </div>
           </div>
         </section>
 
