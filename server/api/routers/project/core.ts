@@ -44,13 +44,18 @@ export const coreRouter = createTRPCRouter({
 
     const projectIds = memberOf.map((m) => m.projectId);
 
+    const memberCondition =
+      projectIds.length > 0
+        ? or(
+            eq(projects.managerId, ctx.session.userId),
+            inArray(projects.id, projectIds)
+          )
+        : eq(projects.managerId, ctx.session.userId);
+
     return await ctx.db.query.projects.findMany({
       where: and(
         eq(projects.orgId, ctx.session.orgId),
-        or(
-          eq(projects.managerId, ctx.session.userId),
-          projectIds.length > 0 ? inArray(projects.id, projectIds) : undefined
-        )
+        memberCondition
       ),
       orderBy: [desc(projects.id)],
     });
@@ -582,7 +587,7 @@ export const coreRouter = createTRPCRouter({
   deleteProject: protectedProcedure
     .input(z.object({ projectId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "OWNER") {
+      if (ctx.session.user.role !== "CEO") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only organization owners can delete projects",
