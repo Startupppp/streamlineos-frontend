@@ -28,11 +28,12 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { api } from "@/trpc/react";
+import { DepartmentCombobox } from "@/components/hr/department-combobox";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
-  role: z.enum(["ADMIN", "MEMBER", "OWNER"]),
+  role: z.string(),
   designation: z.string().optional(),
   departmentId: z.number().optional(),
   phone: z.string().optional(),
@@ -53,7 +54,7 @@ export interface EmployeeData {
     firstName: string | null;
     lastName: string | null;
     email: string;
-    role: "ADMIN" | "MEMBER" | "OWNER" | null; 
+    role: string | null;
     designation: string | null;
     departmentId: number | null;
     phone: string | null;
@@ -79,14 +80,12 @@ interface EditEmployeeFormProps {
 export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { data: departments } = api.hr.getDepartments.useQuery();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
-      role: (employee.role as "ADMIN" | "MEMBER" | "OWNER") || "MEMBER",
+      role: employee.role || "MEMBER",
       designation: employee.designation || "",
       departmentId: employee.departmentId || undefined,
       phone: employee.phone || "",
@@ -111,7 +110,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
         id: employee.id,
         firstName: values.firstName,
         lastName: values.lastName,
-        role: values.role as "ADMIN" | "MEMBER",
+        role: values.role as string,
         designation: values.designation,
         departmentId: values.departmentId,
         phone: values.phone,
@@ -296,24 +295,13 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                             render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Department</FormLabel>
-                                <Select 
-                                    onValueChange={(val) => field.onChange(Number(val))} 
-                                    defaultValue={field.value?.toString()}
-                                    value={field.value?.toString()}
-                                >
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Department" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    {departments?.map(dept => (
-                                        <SelectItem key={dept.id} value={dept.id.toString()}>
-                                            {dept.name}
-                                        </SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
+                                <FormControl>
+                                    <DepartmentCombobox
+                                        value={field.value ?? null}
+                                        onValueChange={(val) => field.onChange(val ?? undefined)}
+                                        placeholder="Select Department"
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                             )}
