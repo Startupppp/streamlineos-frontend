@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useForm, FieldPath, DefaultValues, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,7 +37,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Loader2,
-  Save,
   Lightbulb,
 } from "lucide-react";
 import { api } from "../../trpc/react";
@@ -76,39 +75,9 @@ const COMMON_ROLE_DEPARTMENTS = [
   "Operations",
 ];
 
-const STORAGE_KEY = "onboarding-wizard-draft";
-
-function saveDraft(values: Record<string, unknown>, step: number) {
-  try {
-    const serializable: Record<string, unknown> = { ...values, _step: step };
-    if (serializable.joiningDate instanceof Date) serializable.joiningDate = serializable.joiningDate.toISOString();
-    if (serializable.dateOfBirth instanceof Date) serializable.dateOfBirth = serializable.dateOfBirth.toISOString();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
-  } catch { /* quota exceeded or private browsing */ }
-}
-
-function loadDraft(): { values: Record<string, unknown>; step: number } | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    const step = parsed._step ?? 1;
-    delete parsed._step;
-    if (parsed.joiningDate) parsed.joiningDate = new Date(parsed.joiningDate);
-    if (parsed.dateOfBirth) parsed.dateOfBirth = new Date(parsed.dateOfBirth);
-    return { values: parsed, step };
-  } catch {
-    return null;
-  }
-}
-
-function clearDraft() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
-}
 
 export function OnboardingWizard() {
-  const draft = useMemo(() => loadDraft(), []);
-  const [currentStep, setCurrentStep] = useState(draft?.step ?? 1);
+  const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
   const { data: departments } = api.hr.getDepartments.useQuery();
   const { data: orgRoles } = useRolesList();
@@ -128,7 +97,6 @@ export function OnboardingWizard() {
   }, [departments]);
   const onboardEmployee = api.hr.onboardEmployee.useMutation({
     onSuccess: () => {
-      clearDraft();
       toast.success("Employee onboarding initiated successfully!");
       router.push("/hr/employees");
     },
@@ -167,19 +135,8 @@ export function OnboardingWizard() {
         accountHolder: ""
       }
     };
-    if (draft?.values) {
-      const merged = { ...base, ...draft.values };
-      // Validate that the draft role exists in assignable roles; reset to MEMBER if stale
-      if (merged.role && assignableRoles.length > 0) {
-        const roleExists = assignableRoles.some((r) => r.slug === merged.role);
-        if (!roleExists) {
-          merged.role = "MEMBER";
-        }
-      }
-      return merged;
-    }
     return base;
-  }, [draft, assignableRoles]);
+  }, [assignableRoles]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
@@ -188,13 +145,6 @@ export function OnboardingWizard() {
   });
 
   const { trigger, getValues, watch } = form;
-
-  useEffect(() => {
-    const subscription = watch((values) => {
-      saveDraft(values as Record<string, unknown>, currentStep);
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, currentStep]);
 
   const nextStep = async () => {
     let fieldsToValidate: FieldPath<FormValues>[] = [];
@@ -207,14 +157,12 @@ export function OnboardingWizard() {
     const isValid = await trigger(fieldsToValidate);
     if (isValid) {
       const nextStepNum = Math.min(STEPS.length, currentStep + 1);
-      saveDraft(getValues() as unknown as Record<string, unknown>, nextStepNum);
       setCurrentStep(nextStepNum);
     }
   };
 
   const prevStep = () => {
     const prevStepNum = Math.max(1, currentStep - 1);
-    saveDraft(getValues() as unknown as Record<string, unknown>, prevStepNum);
     setCurrentStep(prevStepNum);
   };
 
@@ -830,19 +778,6 @@ export function OnboardingWizard() {
                   </Button>
 
                   <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        saveDraft(getValues() as unknown as Record<string, unknown>, currentStep);
-                        toast.success("Draft saved!");
-                      }}
-                      className="gap-1.5 text-muted-foreground"
-                    >
-                      <Save className="w-4 h-4" />
-                      Save as Draft
-                    </Button>
-
                     {currentStep < 5 ? (
                       <Button
                         type="button"

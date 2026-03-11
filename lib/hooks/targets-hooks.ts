@@ -10,7 +10,7 @@ export function useTargets(
 ) {
   return useQuery<TargetsRouterOutputs["getAll"]>({
     queryKey: vaivammKeys.targets.list(input?.userId),
-    queryFn: () => vaivammTrpcClient.targets.getAll.query(input as any),
+    queryFn: () => vaivammTrpcClient.targets.getAll.query(input),
     ...options,
   });
 }

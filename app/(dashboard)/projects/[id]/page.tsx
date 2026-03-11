@@ -4,7 +4,7 @@ import { useProject } from "@/lib/hooks/trpc-hooks";
 import { KanbanBoard } from "@/components/projects/kanban-board";
 import { notFound } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
-import { use, useState, useEffect, useMemo } from "react";
+import { use, useState, useMemo } from "react";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, Search, X, Bug, Bookmark, Zap, CheckSquare } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 
-const HIDE_COMPLETED_KEY = "kanban-hide-completed";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -69,20 +68,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
     return Array.from(map.values());
   }, [allTickets]);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(HIDE_COMPLETED_KEY);
-      if (stored !== null) setHideCompleted(stored === "true");
-    } catch {
-    }
-  }, []);
-
   const setHideCompletedAndStore = (value: boolean) => {
     setHideCompleted(value);
-    try {
-      localStorage.setItem(HIDE_COMPLETED_KEY, String(value));
-    } catch {
-    }
   };
 
   if (isLoading) {

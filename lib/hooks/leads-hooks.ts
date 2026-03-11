@@ -4,13 +4,15 @@ import { vaivammTrpcClient } from "../trpc";
 import { vaivammKeys } from "./trpc-keys";
 import type { LeadsRouterOutputs } from "./trpc-keys";
 
+type LeadStatus = "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST";
+
 export function useLeads(
-  input?: { status?: string; assignedToId?: string; search?: string },
+  input?: { status?: LeadStatus; assignedToId?: string; search?: string },
   options?: Partial<UseQueryOptions<LeadsRouterOutputs["getAll"]>>
 ) {
   return useQuery<LeadsRouterOutputs["getAll"]>({
     queryKey: vaivammKeys.leads.list(input?.status, input?.assignedToId),
-    queryFn: () => vaivammTrpcClient.leads.getAll.query(input as any),
+    queryFn: () => vaivammTrpcClient.leads.getAll.query(input),
     ...options,
   });
 }
@@ -130,7 +132,7 @@ export function useClients(
 ) {
   return useQuery<LeadsRouterOutputs["getClients"]>({
     queryKey: [...vaivammKeys.leads.all, "clients", input?.status],
-    queryFn: () => vaivammTrpcClient.leads.getClients.query(input as any),
+    queryFn: () => vaivammTrpcClient.leads.getClients.query(input),
     ...options,
   });
 }

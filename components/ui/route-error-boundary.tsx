@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface RouteErrorBoundaryProps {
   error: Error & { digest?: string };
@@ -20,7 +21,7 @@ export function RouteErrorBoundary({
   layout = "inline",
 }: RouteErrorBoundaryProps) {
   useEffect(() => {
-    console.error(error);
+    logger.error("Route error boundary caught error", { error: error.message, digest: error.digest });
   }, [error]);
   const displayMessage = error.digest
     ? fallbackMessage

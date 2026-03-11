@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,13 +35,9 @@ export default function SettingsPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [compactView, setCompactView] = useState(false);
-  useEffect(() => {
-    setCompactView(localStorage.getItem("compactView") === "true");
-  }, []);
 
   const handleCompactToggle = (checked: boolean) => {
     setCompactView(checked);
-    localStorage.setItem("compactView", String(checked));
     document.documentElement.classList.toggle("compact", checked);
     toast.success(checked ? "Compact view enabled" : "Compact view disabled");
   };
