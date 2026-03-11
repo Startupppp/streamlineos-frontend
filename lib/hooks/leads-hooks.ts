@@ -40,11 +40,12 @@ export function useLeadBoard(
 }
 
 export function useLeadStats(
+  input?: { dateFrom?: string; dateTo?: string },
   options?: Partial<UseQueryOptions<LeadsRouterOutputs["getStats"]>>
 ) {
   return useQuery<LeadsRouterOutputs["getStats"]>({
-    queryKey: vaivammKeys.leads.stats(),
-    queryFn: () => vaivammTrpcClient.leads.getStats.query(),
+    queryKey: [...vaivammKeys.leads.stats(), input?.dateFrom, input?.dateTo],
+    queryFn: () => vaivammTrpcClient.leads.getStats.query(input),
     ...options,
   });
 }

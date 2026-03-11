@@ -378,11 +378,26 @@ export const leadsRouter = createTRPCRouter({
     return board;
   }),
 
-  getStats: protectedProcedure.query(async ({ ctx }) => {
+  getStats: protectedProcedure
+    .input(z.object({
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+    }).optional())
+    .query(async ({ ctx, input }) => {
     const orgId = ctx.session.orgId;
-    const allLeads = await ctx.db.query.leads.findMany({
+    let allLeads = await ctx.db.query.leads.findMany({
       where: eq(leads.orgId, orgId),
     });
+
+    if (input?.dateFrom) {
+      const from = new Date(input.dateFrom);
+      allLeads = allLeads.filter(l => new Date(l.createdAt!) >= from);
+    }
+    if (input?.dateTo) {
+      const to = new Date(input.dateTo);
+      to.setHours(23, 59, 59, 999);
+      allLeads = allLeads.filter(l => new Date(l.createdAt!) <= to);
+    }
 
     const total = allLeads.length;
     const byStatus = {

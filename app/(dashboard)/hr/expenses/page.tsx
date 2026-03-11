@@ -297,10 +297,7 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                   <p className="text-3xl font-bold">{pendingCount}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs font-medium text-emerald-600">+2%</span>
-                    <span className="text-xs text-muted-foreground">vs last week</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Awaiting review</p>
                 </CardContent>
               </Card>
 
@@ -313,10 +310,7 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                   <p className="text-3xl font-bold">{formatINR(stats?.approvedAmount || 0)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs font-medium text-red-500">-5%</span>
-                    <span className="text-xs text-muted-foreground">vs yesterday</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Approved today</p>
                 </CardContent>
               </Card>
 
@@ -329,10 +323,7 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                   <p className="text-3xl font-bold">{formatINR(stats?.rejectedAmount || 0)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs font-medium text-emerald-600">+1%</span>
-                    <span className="text-xs text-muted-foreground">vs yesterday</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Rejected today</p>
                 </CardContent>
               </Card>
 
@@ -347,10 +338,7 @@ export default function ExpensesPage() {
                   <p className="text-3xl font-bold">
                     {formatINR((stats?.approvedAmount || 0) + (stats?.pendingAmount || 0) + (stats?.rejectedAmount || 0) + (stats?.paidAmount || 0))}
                   </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-xs font-medium text-emerald-600">+8%</span>
-                    <span className="text-xs text-muted-foreground">vs last month</span>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">This month total</p>
                 </CardContent>
               </Card>
             </div>
@@ -797,7 +785,15 @@ export default function ExpensesPage() {
                                     Resubmit
                                   </Button>
                                 ) : canEdit ? (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-[#bd882c] hover:text-[#a67724]">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-[#bd882c] hover:text-[#a67724]"
+                                    onClick={() => {
+                                      setIsCreateOpen(true);
+                                      toast.info("Edit your expense claim and resubmit.");
+                                    }}
+                                  >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                 ) : (

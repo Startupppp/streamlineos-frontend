@@ -28,12 +28,21 @@ const PIPELINE_COLORS: Record<string, { color: string; bg: string }> = {
 };
 
 export default function CrmReportsPage() {
-  const { data: stats, isLoading } = useLeadStats();
-  const { data: slaData } = useSlaAlerts();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
+
+  const statsInput = useMemo(() => {
+    if (!appliedFrom && !appliedTo) return undefined;
+    return {
+      ...(appliedFrom && { dateFrom: appliedFrom }),
+      ...(appliedTo && { dateTo: appliedTo }),
+    };
+  }, [appliedFrom, appliedTo]);
+
+  const { data: stats, isLoading } = useLeadStats(statsInput);
+  const { data: slaData } = useSlaAlerts();
 
   const handleApplyFilter = useCallback(() => {
     setAppliedFrom(dateFrom);
@@ -44,12 +53,6 @@ export default function CrmReportsPage() {
       toast.info("Showing all-time data");
     }
   }, [dateFrom, dateTo]);
-
-  const filteredStats = useMemo(() => {
-    if (!stats) return null;
-    if (!appliedFrom && !appliedTo) return stats;
-    return stats;
-  }, [stats, appliedFrom, appliedTo]);
 
   const handleExportExcel = useCallback(async () => {
     try {
