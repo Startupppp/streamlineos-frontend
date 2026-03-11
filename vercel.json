@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/daily-notifications",
+      "schedule": "0 9 * * *"
+    },
+    {
       "path": "/api/cron/holiday-notifications",
       "schedule": "0 12 * * *"
     },
@@ -13,13 +17,16 @@
       "schedule": "0 9 * * 6"
     },
     {
+      "path": "/api/cron/weekly-ceo-recap",
+      "schedule": "0 10 * * 1"
+    },
+    {
       "path": "/api/cron/monthly-expense-report",
       "schedule": "0 9 1 * *"
+    },
+    {
+      "path": "/api/cron/monthly-leave-reset",
+      "schedule": "0 0 1 * *"
     }
   ]
 }
-
-
-
-
-

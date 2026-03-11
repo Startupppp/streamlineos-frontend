@@ -22,7 +22,7 @@ const serverSchema = z.object({
   CRON_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
   ALLOW_TEST_EMAIL: z.string().optional(),
-  TEST_EMAIL: z.string().email().optional(),
+  TEST_EMAIL: z.string().email().optional().or(z.literal("")),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
 
