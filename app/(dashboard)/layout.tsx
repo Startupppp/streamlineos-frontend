@@ -8,6 +8,7 @@ import { DashboardHeader } from "../../components/layout/dashboard-header";
 import { OrganizationGuard } from "../../components/auth/organization-guard";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { NotActivatedPage } from "../../components/auth/not-activated-page";
+import { CommandPalette } from "../../components/layout/command-palette";
 
 export default function DashboardLayout({
   children,
@@ -41,6 +42,7 @@ export default function DashboardLayout({
         <main id="dashboard-content" className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${hasDashboardAccess ? (isSidebarCollapsed ? 'md:pl-20' : 'md:pl-72') : ''}`}>
           {hasDashboardAccess ? (
             <>
+              <CommandPalette />
               {!isProjectPage && <DashboardHeader />}
               <div className="relative flex-1 min-h-0 overflow-hidden">
                 {isProjectPage ? (
