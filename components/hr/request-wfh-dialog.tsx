@@ -7,13 +7,13 @@ import { z } from "zod";
 import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -50,7 +50,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
 
   const { data: members } = api.project.getProjectMembers.useQuery();
   const approvers = (members || []).filter(
-    (m) => m.role === "ADMIN" || m.role === "OWNER"
+    (m) => m.role === "ADMIN" || m.role === "CEO"
   );
 
   const form = useForm<WfhFormValues>({
@@ -84,25 +84,25 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         {trigger ?? (
           <Button variant="outline">
             <Home className="mr-2 h-4 w-4" />
             Request WFH
           </Button>
         )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      </SheetTrigger>
+      <SheetContent className="sm:max-w-[425px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
             <Home className="h-5 w-5 text-primary" />
             Work From Home Request
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             Request to work from home for a specific date.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -186,7 +186,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

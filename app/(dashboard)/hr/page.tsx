@@ -60,21 +60,21 @@ interface Employee {
   firstName: string | null;
   lastName: string | null;
   email: string;
-  role: "ADMIN" | "MEMBER" | "OWNER" | "CLIENT";
+  role: string;
   image: string | null;
   designation: string | null;
   isActive: boolean;
   department: { id: number; name: string } | null;
 }
 
-type UserRole = "ADMIN" | "MEMBER" | "OWNER" | "CLIENT";
+type UserRole = string;
 type StatusFilter = "All" | "Active" | "Inactive";
-type RoleFilter = "All" | "ADMIN" | "MEMBER" | "OWNER";
+type RoleFilter = "All" | "ADMIN" | "MEMBER" | "CEO";
 
-const ROLE_LABELS: Record<UserRole, string> = {
+const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Admin",
   MEMBER: "Member",
-  OWNER: "Owner",
+  CEO: "CEO",
   CLIENT: "Client",
 };
 
@@ -87,7 +87,7 @@ function canDeleteEmployee(
   currentId: string | undefined,
 ): boolean {
   if (targetId === currentId) return false;
-  if (currentRole === "OWNER") return targetRole !== "OWNER";
+  if (currentRole === "CEO") return targetRole !== "CEO";
   if (currentRole === "ADMIN") return targetRole === "MEMBER";
   return false;
 }
@@ -190,14 +190,6 @@ export default function HRDashboardPage() {
       try {
         const data = await getEmployees();
         if (!cancelled) setEmployees(data as Employee[]);
-        try {
-          const { markOnboardingNotificationsAsRead } = await import(
-            "@/server/actions/notification-actions"
-          );
-          await markOnboardingNotificationsAsRead();
-        } catch {
-          // Best-effort: notification read mark is non-blocking
-        }
       } catch {
         if (!cancelled) toast.error("Failed to load employees");
       } finally {
@@ -317,7 +309,7 @@ export default function HRDashboardPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">Role: All</SelectItem>
-                <SelectItem value="OWNER">Owner</SelectItem>
+                <SelectItem value="CEO">CEO</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
                 <SelectItem value="MEMBER">Member</SelectItem>
               </SelectContent>

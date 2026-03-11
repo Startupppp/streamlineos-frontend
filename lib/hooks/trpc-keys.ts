@@ -15,7 +15,7 @@ const reportsBaseKey = [...baseKey, "reports"] as const;
 const crmBaseKey = [...baseKey, "crm"] as const;
 const leadsBaseKey = [...baseKey, "leads"] as const;
 const targetsBaseKey = [...baseKey, "targets"] as const;
-const notificationsBaseKey = [...baseKey, "notifications"] as const;
+const rolesBaseKey = [...baseKey, "roles"] as const;
 
 export const vaivammKeys = {
   all: baseKey,
@@ -114,10 +114,10 @@ export const vaivammKeys = {
     leaderboard: (metricType?: string) => [...targetsBaseKey, "leaderboard", { metricType }] as const,
   },
 
-  notifications: {
-    all: notificationsBaseKey,
-    list: () => [...notificationsBaseKey, "list"] as const,
-    unreadCount: () => [...notificationsBaseKey, "unreadCount"] as const,
+  roles: {
+    all: rolesBaseKey,
+    list: () => [...rolesBaseKey, "list"] as const,
+    detail: (id: number) => [...rolesBaseKey, "detail", { id }] as const,
   },
 };
 
@@ -138,5 +138,5 @@ export type LeadsRouterOutputs = RouterOutputs["leads"];
 export type LeadsRouterInputs = RouterInputs["leads"];
 export type TargetsRouterOutputs = RouterOutputs["targets"];
 export type TargetsRouterInputs = RouterInputs["targets"];
-export type NotificationsRouterOutputs = RouterOutputs["notifications"];
-export type NotificationsRouterInputs = RouterInputs["notifications"];
+export type RolesRouterOutputs = RouterOutputs["roles"];
+export type RolesRouterInputs = RouterInputs["roles"];

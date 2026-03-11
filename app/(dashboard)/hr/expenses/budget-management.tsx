@@ -27,12 +27,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -296,11 +296,11 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
       </Card>
 
       
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Expense Category</DialogTitle>
-          </DialogHeader>
+      <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Create Expense Category</SheetTitle>
+          </SheetHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Category Name *</Label>
@@ -350,16 +350,16 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleCreateCategory} className="bg-violet-600 hover:bg-violet-700">
               Create Category
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

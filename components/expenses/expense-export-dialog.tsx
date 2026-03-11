@@ -11,14 +11,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -478,22 +478,22 @@ export function ExpenseExportDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         {trigger || (
           <Button variant="outline" className="gap-2">
             <Download className="h-4 w-4" />
             Export
           </Button>
         )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Export Expenses</DialogTitle>
-          <DialogDescription>
+      </SheetTrigger>
+      <SheetContent className="sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Export Expenses</SheetTitle>
+          <SheetDescription>
             Export your filtered expenses to your preferred format.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <div className="space-y-6 py-4">
           
@@ -584,7 +584,7 @@ export function ExpenseExportDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <SheetFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
@@ -610,8 +610,8 @@ export function ExpenseExportDialog({
               </>
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </SheetFooter>
+      </SheetContent>
 
       {pdfData && (
         <div
@@ -622,6 +622,6 @@ export function ExpenseExportDialog({
           <ExpensePdfContent data={pdfData} />
         </div>
       )}
-    </Dialog>
+    </Sheet>
   );
 }

@@ -31,13 +31,14 @@ import {
   Contact2,
   Trophy,
   BarChart3,
-  Bell,
   UserCheck,
+
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
 import { useProjects } from "../../lib/hooks/trpc-hooks";
 import { ROLE_DEFAULT_PERMISSIONS } from "../../lib/rbac/permissions";
+import { useRbacUserPermissions } from "../../lib/hooks/rbac-hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,7 +56,7 @@ interface NavRoute {
   label: string;
   icon: React.ElementType;
   href: string;
-  badge?: "leaves" | "onboarding";
+  badge?: "leaves";
   isProjectsList?: boolean;
   permission?: string;
   ownerOnly?: boolean;
@@ -78,7 +79,7 @@ const allNavGroups: NavGroup[] = [
   {
     label: "HR Management",
     routes: [
-      { label: "Employees", icon: Users, href: "/hr", badge: "onboarding", permission: "hr:employees:view" },
+      { label: "Employees", icon: Users, href: "/hr", permission: "hr:employees:view" },
       { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding", permission: "hr:employees:create" },
       { label: "Attendance", icon: Clock, href: "/hr/attendance", permission: "hr:attendance:view" },
       { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves", permission: "hr:leaves:view" },
@@ -104,40 +105,50 @@ const allNavGroups: NavGroup[] = [
       { label: "Targets", icon: Trophy, href: "/crm/targets", permission: "crm:targets:view" },
       { label: "Reports", icon: BarChart3, href: "/crm/reports", permission: "crm:reports:view" },
       { label: "Clients", icon: UserCheck, href: "/crm/clients", permission: "crm:leads:view" },
-      { label: "Sales", icon: DollarSign, href: "/sales", permission: "crm:leads:view" },
-      { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "crm:leads:view" },
-      { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "crm:leads:view" },
-      { label: "Support", icon: HeadphonesIcon, href: "/support", permission: "crm:leads:view" },
+    ],
+  },
+  {
+    label: "Dashboards",
+    routes: [
+      { label: "Sales", icon: DollarSign, href: "/sales", permission: "dashboard:sales:view" },
+      { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "dashboard:customer-executive:view" },
+      { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "dashboard:marketing:view" },
+      { label: "Support", icon: HeadphonesIcon, href: "/support", permission: "dashboard:support:view" },
     ],
   },
   {
     label: "System",
     routes: [
-      { label: "Notifications", icon: Bell, href: "/notifications" },
       { label: "Settings", icon: Settings, href: "/settings" },
     ],
   },
 ];
 
-function filterNavGroups(role: string | undefined): NavGroup[] {
+function filterNavGroups(role: string | undefined, userPermissions?: string[]): NavGroup[] {
   if (!role) return [];
-  const permissions = ROLE_DEFAULT_PERMISSIONS[role] || [];
-  const isOwner = role === "OWNER";
-  const isAdminOrOwner = role === "ADMIN" || role === "OWNER";
+  const isCEO = role === "CEO" || role === "OWNER"; // backward compat for stale sessions
+  const isAdminOrCEO = role === "ADMIN" || isCEO;
+  const isHR = role === "HR";
+
+  // CEO/OWNER bypasses all permission checks
+  if (isCEO) {
+    return allNavGroups
+      .map((group) => ({ ...group, routes: [...group.routes] }))
+      .filter((group) => group.routes.length > 0);
+  }
+
+  // Use actual user permissions from RBAC if available, fallback to defaults
+  const permissions = userPermissions && userPermissions.length > 0
+    ? userPermissions
+    : ROLE_DEFAULT_PERMISSIONS[role] || [];
 
   return allNavGroups
     .map((group) => ({
       ...group,
       routes: group.routes.filter((route) => {
-        if (route.ownerOnly && !isOwner) return false;
-        if (route.adminOnly && !isAdminOrOwner) return false;
+        if (route.ownerOnly) return false;
+        if (route.adminOnly && !isAdminOrCEO && !isHR) return false;
         if (route.permission && !permissions.includes(route.permission)) return false;
-        if (role === "MEMBER") {
-          if (route.href === "/hr" && route.label === "Employees") return false;
-          if (route.href === "/hr/onboarding") return false;
-          if (route.href === "/hr/payroll") return false;
-          if (route.href === "/hr/devices") return false;
-        }
         return true;
       }),
     }))
@@ -158,7 +169,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const { data: projects = [], isLoading: projectsLoading } = useProjects();
 
   const role = session?.user?.role;
-  const navGroups = useMemo(() => filterNavGroups(role), [role]);
+  const { data: userPermissions } = useRbacUserPermissions({ enabled: !!session?.user });
+  const navGroups = useMemo(() => filterNavGroups(role, userPermissions), [role, userPermissions]);
 
   const handleOrgChange = (_id: string) => {
     router.push("/dashboard");
@@ -166,23 +178,18 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   };
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
-  const [unreadOnboarding, setUnreadOnboarding] = useState(0);
-
   useEffect(() => {
     let cancelled = false;
     async function fetchCounts() {
         try {
             const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
-            const { getUnreadOnboardingCount } = await import("@/server/actions/notification-actions");
 
-            const [leavesCount, onboardingCount] = await Promise.all([
+            const [leavesCount] = await Promise.all([
               getPendingApprovalCount(),
-              getUnreadOnboardingCount(),
             ]);
 
             if (!cancelled) {
               setPendingLeaves(leavesCount);
-              setUnreadOnboarding(onboardingCount);
             }
         } catch {
         }
@@ -325,8 +332,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
                     pathname.startsWith(route.href + "/");
                   const isActive = isExactMatch || (route.isProjectsList && pathname.startsWith("/projects/"));
                   const showBadge =
-                    (route.badge === "leaves" && pendingLeaves > 0) ||
-                    (route.badge === "onboarding" && unreadOnboarding > 0);
+                    (route.badge === "leaves" && pendingLeaves > 0);
                   const isProjectsRoute = route.isProjectsList;
                   const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
 

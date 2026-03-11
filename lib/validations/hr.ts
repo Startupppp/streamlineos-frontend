@@ -172,7 +172,7 @@ export const onboardEmployeeInputSchema = z.object({
   departmentId: z.coerce.number().int().refine((val) => val !== 0 && !isNaN(val), {
     message: "Department is required",
   }),
-  role: z.enum(["OWNER", "ADMIN", "MEMBER"]).default("MEMBER"),
+  role: z.string().default("MEMBER"),
   joiningDate: z.date(),
   dateOfBirth: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),

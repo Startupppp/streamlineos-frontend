@@ -370,15 +370,6 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                 <div className="space-y-1">
-                  <p className="font-medium text-foreground">Dark Mode</p>
-                  <p className="text-sm text-muted-foreground">
-                    Switch between light and dark themes.
-                  </p>
-                </div>
-                <Switch id="dark-mode" aria-label="Toggle dark mode" disabled title="Coming soon" />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                <div className="space-y-1">
                   <p className="font-medium text-foreground">Compact View</p>
                   <p className="text-sm text-muted-foreground">
                     Use a more compact layout for lists and tables.

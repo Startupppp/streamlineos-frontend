@@ -11,13 +11,13 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -66,7 +66,7 @@ import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 
 export default function PayrollPage() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
-  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [generateSheetOpen, setGenerateSheetOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
   const [lopDays, setLopDays] = useState<string>("");
@@ -139,7 +139,7 @@ export default function PayrollPage() {
   const generateEmployeePayslipMutation = api.hr.generateEmployeePayslip.useMutation({
     onSuccess: () => {
       toast.success("Payslip generated successfully");
-      resetDialog();
+      resetSheet();
       refetch();
     },
     onError: (error) => {
@@ -167,8 +167,8 @@ export default function PayrollPage() {
     },
   });
 
-  const resetDialog = () => {
-    setGenerateDialogOpen(false);
+  const resetSheet = () => {
+    setGenerateSheetOpen(false);
     setSelectedEmployee("");
     setShowPreview(false);
     setLopDays("");
@@ -250,22 +250,22 @@ export default function PayrollPage() {
               </SelectContent>
             </Select>
 
-            <Dialog open={generateDialogOpen} onOpenChange={(open) => {
-              if (!open) resetDialog();
-              else setGenerateDialogOpen(true);
+            <Sheet open={generateSheetOpen} onOpenChange={(open) => {
+              if (!open) resetSheet();
+              else setGenerateSheetOpen(true);
             }}>
-              <DialogTrigger asChild>
+              <SheetTrigger asChild>
                 <Button variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
                   Generate Individual
         </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>
+              </SheetTrigger>
+              <SheetContent className="max-w-2xl">
+                <SheetHeader>
+                  <SheetTitle>
                     {showPreview ? "Payslip Preview" : "Generate Payslip for Employee"}
-                  </DialogTitle>
-                </DialogHeader>
+                  </SheetTitle>
+                </SheetHeader>
                 
                 <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
                   {showPreview ? `Payslip preview for ${selectedEmployeeData?.firstName ?? "employee"}` : ""}
@@ -417,15 +417,15 @@ export default function PayrollPage() {
                       </>
                     )}
 
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
+                    <SheetFooter>
+                      <Button variant="outline" onClick={() => setGenerateSheetOpen(false)}>
                         Cancel
                       </Button>
                       <Button onClick={handleShowPreview} disabled={!selectedEmployee}>
                         <Eye className="mr-2 h-4 w-4" />
                         Preview Payslip
                       </Button>
-                    </DialogFooter>
+                    </SheetFooter>
                   </div>
                 ) : (
                   <div className="space-y-6 pt-4">
@@ -548,7 +548,7 @@ export default function PayrollPage() {
             </CardContent>
           </Card>
 
-                    <DialogFooter>
+                    <SheetFooter>
                       <Button variant="outline" onClick={() => setShowPreview(false)}>
                         <Calculator className="mr-2 h-4 w-4" />
                         Edit Details
@@ -564,11 +564,11 @@ export default function PayrollPage() {
                         )}
                         Confirm & Generate
                       </Button>
-                    </DialogFooter>
+                    </SheetFooter>
                   </div>
                 )}
-              </DialogContent>
-            </Dialog>
+              </SheetContent>
+            </Sheet>
 
             <Button onClick={handleGenerateAll} disabled={generatePayrollMutation.isPending}>
               {generatePayrollMutation.isPending ? (

@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { Eye, Download, X, ZoomIn, ZoomOut, RotateCw, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getSignedFileUrl, downloadFile, viewFile } from "@/hooks/use-file-url";
@@ -97,17 +97,17 @@ export function ReceiptViewer({
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-          <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-between">
-            <DialogTitle className="text-base font-medium">
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent className="sm:max-w-4xl p-0 overflow-hidden">
+          <SheetHeader className="px-4 py-3 border-b flex flex-row items-center justify-between">
+            <SheetTitle className="text-base font-medium">
               Receipt Preview
               {fileName && (
                 <span className="text-muted-foreground font-normal ml-2 text-sm">
                   {fileName}
                 </span>
               )}
-            </DialogTitle>
+            </SheetTitle>
             <div className="flex items-center gap-1">
               {isImage && (
                 <>
@@ -169,9 +169,9 @@ export function ReceiptViewer({
                 <Download className="h-4 w-4" />
               </Button>
             </div>
-          </DialogHeader>
+          </SheetHeader>
 
-          <div className="flex-1 overflow-auto bg-muted/30 min-h-[400px] max-h-[calc(90vh-80px)] flex items-center justify-center p-4">
+          <div className="flex-1 overflow-auto bg-muted/30 min-h-[400px] flex items-center justify-center p-4">
             {loadingUrl ? (
               <div className="flex flex-col items-center justify-center p-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
@@ -247,8 +247,8 @@ export function ReceiptViewer({
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

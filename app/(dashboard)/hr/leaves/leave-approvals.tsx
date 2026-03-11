@@ -13,11 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   EmptyApprovalIllustration,
@@ -276,11 +276,11 @@ export function LeaveApprovalsContent({
       </div>
 
       {/* ─── Reject WFH Dialog ─── */}
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reject WFH Request</DialogTitle>
-          </DialogHeader>
+      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Reject WFH Request</SheetTitle>
+          </SheetHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
               Provide a reason for rejecting this request (optional).
@@ -315,8 +315,8 @@ export function LeaveApprovalsContent({
               Reject Request
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* ─── SR Announcement ─── */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">

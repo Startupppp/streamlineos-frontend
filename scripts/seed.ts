@@ -6,9 +6,11 @@ dotenv.config({ path: ".env" });
 
 async function main() {
   const { db } = await import("../lib/db");
-  const { users, organizations, organizationMembers, departments } = await import("../lib/db/schema");
+  const { users, organizations, organizationMembers, departments, roles } = await import("../lib/db/schema");
+  const { ROLE_DEFAULT_PERMISSIONS } = await import("../lib/rbac/permissions");
 
-  const passwordHash = await hash("123456", 10);
+  // Admin password: Tarun@1234
+  const passwordHash = await hash("Tarun@1234", 10);
   let orgId = "org_" + nanoid();
   const existingOrg = await db.query.organizations.findFirst({
       where: (orgs, { eq }) => eq(orgs.slug, "vaivamm-capital"),
@@ -23,59 +25,137 @@ async function main() {
         slug: "vaivamm-capital",
       });
   }
-  const userList = [
-    { email: "ceo@vaivamm.com", name: "CEO Vaivamm", role: "OWNER" as const },
-    { email: "hr@vaivamm.com", name: "HR Manager", role: "ADMIN" as const },
-    { email: "emp@vaivamm.com", name: "Employee One", role: "MEMBER" as const },
-  ];
 
-  for (const u of userList) {
-    let userId;
-    const existingUser = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.email, u.email),
+  // Hardcoded admin (CEO) — email already verified
+  const adminEmail = "tarunchintakunta@gmail.com";
+  const existingAdmin = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.email, adminEmail),
+  });
+
+  let adminUserId: string;
+  if (existingAdmin) {
+    adminUserId = existingAdmin.id;
+  } else {
+    adminUserId = "user_" + nanoid();
+    await db.insert(users).values({
+      id: adminUserId,
+      email: adminEmail,
+      name: "Tarun Chintakunta",
+      firstName: "Tarun",
+      lastName: "Chintakunta",
+      password: passwordHash,
+      role: "CEO",
+      emailVerified: new Date(),
+      isActive: true,
+      isPasswordChangeRequired: false,
+      image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${adminEmail}`,
     });
-
-    if (existingUser) {
-        userId = existingUser.id;
-    } else {
-        userId = "user_" + nanoid();
-        await db.insert(users).values({
-          id: userId,
-          email: u.email,
-          name: u.name,
-          password: passwordHash,
-          role: u.role,
-          image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${u.email}`,
-        });
-    }
-    await db.insert(organizationMembers).values({
-      userId: userId,
-      orgId: orgId,
-      role: u.role,
-    }).onConflictDoNothing();
   }
+
+  await db.insert(organizationMembers).values({
+    userId: adminUserId,
+    orgId: orgId,
+    role: "CEO",
+  }).onConflictDoNothing();
+
+  // ─── Departments ───
   const departmentList = [
     "Engineering",
     "Product",
     "Design",
     "Marketing",
+    "Digital Marketing",
+    "Social Media",
     "Sales",
     "HR / People",
     "Finance",
     "Operations",
     "Customer Support",
+    "Legal",
+    "Content",
+    "Video Production",
+    "Quality Assurance",
+    "IT / Infrastructure",
+    "Business Development",
+    "Research & Development",
+    "Administration",
+    "Accounts",
   ];
 
   for (const deptName of departmentList) {
     await db.insert(departments).values({
       orgId: orgId,
       name: deptName,
-    }).onConflictDoNothing(); 
+    }).onConflictDoNothing();
   }
+
+  // ─── System Roles (A–Z comprehensive) ───
+  const systemRoles = [
+    // Leadership & Management
+    { name: "CEO", slug: "CEO" },
+    { name: "Admin", slug: "ADMIN" },
+    { name: "HR", slug: "HR" },
+
+    // Sales & CRM
+    { name: "Sales", slug: "SALES" },
+    { name: "Sales Manager", slug: "SALES_MANAGER" },
+    { name: "Business Development", slug: "BUSINESS_DEVELOPMENT" },
+    { name: "Customer Executive", slug: "CUSTOMER_EXECUTIVE" },
+
+    // Marketing & Content
+    { name: "Digital Marketing", slug: "DIGITAL_MARKETING" },
+    { name: "Social Media Manager", slug: "SOCIAL_MEDIA_MANAGER" },
+    { name: "Content Writer", slug: "CONTENT_WRITER" },
+    { name: "SEO Specialist", slug: "SEO_SPECIALIST" },
+
+    // Design & Creative
+    { name: "Graphic Designer", slug: "GRAPHIC_DESIGNER" },
+    { name: "UI/UX Designer", slug: "UI_UX_DESIGNER" },
+    { name: "Video Editor", slug: "VIDEO_EDITOR" },
+
+    // Engineering & Tech
+    { name: "Software Engineer", slug: "SOFTWARE_ENGINEER" },
+    { name: "Frontend Developer", slug: "FRONTEND_DEVELOPER" },
+    { name: "Backend Developer", slug: "BACKEND_DEVELOPER" },
+    { name: "DevOps Engineer", slug: "DEVOPS_ENGINEER" },
+    { name: "QA Engineer", slug: "QA_ENGINEER" },
+    { name: "Tech Lead", slug: "TECH_LEAD" },
+    { name: "Product Manager", slug: "PRODUCT_MANAGER" },
+
+    // Finance & Operations
+    { name: "Finance", slug: "FINANCE" },
+    { name: "Accountant", slug: "ACCOUNTANT" },
+    { name: "Operations", slug: "OPERATIONS" },
+
+    // Support
+    { name: "Support", slug: "SUPPORT" },
+    { name: "IT Support", slug: "IT_SUPPORT" },
+
+    // Intern & General
+    { name: "Intern", slug: "INTERN" },
+    { name: "Member", slug: "MEMBER" },
+  ];
+
+  for (const role of systemRoles) {
+    await db.insert(roles).values({
+      name: role.name,
+      slug: role.slug,
+      orgId: orgId,
+      isSystem: true,
+      permissions: ROLE_DEFAULT_PERMISSIONS[role.slug] || ROLE_DEFAULT_PERMISSIONS["MEMBER"] || [],
+    }).onConflictDoNothing();
+  }
+
+  console.log("Seed complete!");
+  console.log(`  Organization: Vaivamm Capital (${orgId})`);
+  console.log(`  Admin: ${adminEmail} (CEO) — email verified`);
+  console.log(`  Departments: ${departmentList.length} created`);
+  console.log(`  Roles: ${systemRoles.length} system roles created`);
 
   process.exit(0);
 }
 
 main().catch((err) => {
+  console.error("Seed failed:", err);
   process.exit(1);
 });

@@ -50,7 +50,7 @@ export function LeavesWfhContent({
 }: LeavesWfhContentProps) {
   const { data: session } = useSession();
   const isAdmin =
-    session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
+    session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
 
   const { data: pendingWfhRequests } =
     api.hr.getPendingWfhRequests.useQuery();

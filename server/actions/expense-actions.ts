@@ -124,14 +124,9 @@ export async function getExpenses(filters?: {
   endDate?: string;
   categoryId?: number;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return [];
+  const ctx = await getExpenseMember();
+  if (!ctx) return [];
+  const { session, member } = ctx;
 
   const isAdmin = member.role === "CEO" || member.role === "ADMIN";
 
@@ -176,14 +171,9 @@ export async function getExpenses(filters?: {
 }
 
 export async function getMyExpenses() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return [];
+  const ctx = await getExpenseMember();
+  if (!ctx) return [];
+  const { session, member } = ctx;
 
   return await db.query.expenses.findMany({
     where: and(
@@ -201,14 +191,11 @@ export async function getMyExpenses() {
 }
 
 export async function getPendingExpenses() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  const ctx = await getExpenseMember();
+  if (!ctx) return [];
+  const { member } = ctx;
 
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (member.role !== "CEO" && member.role !== "ADMIN") {
     return [];
   }
 
@@ -228,14 +215,11 @@ export async function getPendingExpenses() {
 }
 
 export async function approveExpense(expenseId: number) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
 
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (member.role !== "CEO" && member.role !== "ADMIN") {
     return { error: "Permission denied" };
   }
 
@@ -270,14 +254,11 @@ export async function approveExpense(expenseId: number) {
 }
 
 export async function rejectExpense(expenseId: number, reason: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
 
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (member.role !== "CEO" && member.role !== "ADMIN") {
     return { error: "Permission denied" };
   }
 
@@ -313,14 +294,11 @@ export async function rejectExpense(expenseId: number, reason: string) {
 }
 
 export async function markExpenseAsPaid(expenseId: number, transactionRef?: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
 
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (member.role !== "CEO" && member.role !== "ADMIN") {
     return { error: "Permission denied" };
   }
 
@@ -347,14 +325,9 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
 }
 
 export async function deleteExpense(expenseId: number) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return { error: "Permission denied" };
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
 
   const expense = await db.query.expenses.findFirst({
     where: and(
@@ -383,14 +356,9 @@ export async function deleteExpense(expenseId: number) {
   }
 }
 export async function getExpenseCategories() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return [];
+  const ctx = await getExpenseMember();
+  if (!ctx) return [];
+  const { session, member } = ctx;
 
   return await db.query.expenseCategories.findMany({
     where: and(
@@ -407,14 +375,11 @@ export async function createExpenseCategory(data: {
   budgetLimit?: number;
   budgetPeriod?: string;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
 
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (member.role !== "CEO" && member.role !== "ADMIN") {
     return { error: "Permission denied" };
   }
 
@@ -435,14 +400,9 @@ export async function createExpenseCategory(data: {
   }
 }
 export async function getExpenseStats() {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return null;
+  const ctx = await getExpenseMember();
+  if (!ctx) return null;
+  const { session, member } = ctx;
 
   const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const conditions = [eq(expenses.orgId, member.orgId)];
@@ -522,14 +482,9 @@ export async function getExpenseReportData(filters: {
   startDate: string;
   endDate: string;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return null;
+  const ctx = await getExpenseMember();
+  if (!ctx) return null;
+  const { session, member } = ctx;
 
   const isAdmin = member.role === "CEO" || member.role === "ADMIN";
   const conditions = [

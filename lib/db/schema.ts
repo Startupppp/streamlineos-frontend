@@ -1,6 +1,26 @@
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-export const roleEnum = pgEnum("role", ["OWNER", "ADMIN", "MEMBER"]);
+// Dynamic roles table — predefined: CEO, ADMIN, HR, DIGITAL_MARKETING, VIDEO_EDITOR
+// HR can create additional roles at runtime
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),           // Display name e.g. "Digital Marketing"
+  slug: text("slug").notNull(),            // Lookup key e.g. "DIGITAL_MARKETING"
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  isSystem: boolean("is_system").default(false).notNull(), // true = predefined, can't delete
+  permissions: jsonb("permissions").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_role_slug_org").on(table.slug, table.orgId),
+]);
+
+export const rolesRelations = relations(roles, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [roles.orgId],
+    references: [organizations.id],
+  }),
+}));
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 export const ticketPriorityEnum = pgEnum("ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
@@ -26,7 +46,7 @@ export const permissions = pgTable("permissions", {
 
 export const rolePermissions = pgTable("role_permissions", {
   id: serial("id").primaryKey(),
-  role: roleEnum("role").notNull(),
+  role: text("role").notNull(),
   permissionId: integer("permission_id").references(() => permissions.id).notNull(),
   orgId: text("org_id").references(() => organizations.id),
   createdAt: timestamp("created_at").defaultNow(),
@@ -71,7 +91,7 @@ export const organizationMembers = pgTable("organization_members", {
   id: serial("id").primaryKey(),
   userId: text("user_id").references(() => users.id).notNull(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
-  role: roleEnum("role").default("MEMBER").notNull(),
+  role: text("role").default("MEMBER").notNull(),
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uniq_org_members_user_org").on(table.userId, table.orgId),
@@ -114,7 +134,7 @@ export const invitations = pgTable("invitations", {
   email: text("email").notNull(),
   token: text("token").notNull().unique(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
-  role: roleEnum("role").default("MEMBER").notNull(),
+  role: text("role").default("MEMBER").notNull(),
   invitedBy: text("invited_by").references(() => users.id).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   acceptedAt: timestamp("accepted_at"),
@@ -160,7 +180,7 @@ export const users = pgTable("users", {
     accountHolder: string;
   }>(),
   image: text("image"),
-  role: roleEnum("role").default("MEMBER").notNull(),
+  role: text("role").default("MEMBER").notNull(),
   departmentId: integer("department_id").references(() => departments.id),
   designation: text("designation"),
   phone: text("phone"),

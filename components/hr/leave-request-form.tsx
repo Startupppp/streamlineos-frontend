@@ -8,12 +8,12 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
 import {
   Form,
   FormControl,
@@ -101,16 +101,16 @@ export function LeaveRequestForm({ types = [] }: LeaveRequestFormProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button className="bg-primary text-primary-foreground">
           <Plus className="mr-2 h-4 w-4" /> Request Leave
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Request Leave</DialogTitle>
-        </DialogHeader>
+      </SheetTrigger>
+      <SheetContent className="sm:max-w-[425px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Request Leave</SheetTitle>
+        </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -193,7 +193,7 @@ export function LeaveRequestForm({ types = [] }: LeaveRequestFormProps) {
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

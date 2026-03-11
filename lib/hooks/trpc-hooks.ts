@@ -12,4 +12,4 @@ export * from "./crm-hooks";
 export * from "./auth-hooks";
 export * from "./leads-hooks";
 export * from "./targets-hooks";
-export * from "./notifications-hooks";
+export * from "./roles-hooks";

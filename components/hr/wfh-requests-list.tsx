@@ -19,11 +19,11 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const statusStyles: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-800 border-amber-200",
@@ -210,11 +210,11 @@ export function PendingWfhApprovals() {
         </CardContent>
       </Card>
 
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reject WFH Request</DialogTitle>
-          </DialogHeader>
+      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Reject WFH Request</SheetTitle>
+          </SheetHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
               Provide a reason for rejecting this WFH request (optional).
@@ -240,8 +240,8 @@ export function PendingWfhApprovals() {
               Reject
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

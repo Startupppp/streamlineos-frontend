@@ -32,7 +32,7 @@ async function createOrganization(
     await db.insert(organizationMembers).values({
       userId: owner.id,
       orgId,
-      role: "OWNER",
+      role: "CEO",
     });
 
     return { id: orgId, name, slug };
