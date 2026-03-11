@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
+import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-utils";
@@ -106,7 +107,7 @@ function getInitials(name: string) {
 }
 
 export default function LeadsPipelinePage() {
-  const { data: board, isLoading: boardLoading } = useLeadBoard();
+  const { data: board, isLoading: boardLoading, refetch: refetchBoard } = useLeadBoard();
   const { data: stats, isLoading: statsLoading } = useLeadStats();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
@@ -208,7 +209,9 @@ export default function LeadsPipelinePage() {
           title="Lead Pipeline"
           description="Track and manage your sales leads through the conversion funnel"
         />
-        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+        <div className="flex items-center gap-2">
+          <CsvUploadDialog onSuccess={() => refetchBoard()} />
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
             <Button className="bg-gold hover:bg-gold/90 text-white shadow-lg">
               <Plus className="h-4 w-4 mr-2" />
@@ -292,6 +295,7 @@ export default function LeadsPipelinePage() {
             </form>
           </SheetContent>
         </Sheet>
+        </div>
       </motion.div>
 
       {stats && (

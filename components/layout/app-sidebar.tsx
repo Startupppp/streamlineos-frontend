@@ -103,6 +103,7 @@ const allNavGroups: NavGroup[] = [
     label: "CRM",
     routes: [
       { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads", permission: "crm:leads:view" },
+      { label: "Deals", icon: Handshake, href: "/crm/deals", permission: "crm:leads:view" },
       { label: "Targets", icon: Trophy, href: "/crm/targets", permission: "crm:targets:view" },
       { label: "Reports", icon: BarChart3, href: "/crm/reports", permission: "crm:reports:view" },
       { label: "Clients", icon: UserCheck, href: "/crm/clients", permission: "crm:leads:view" },

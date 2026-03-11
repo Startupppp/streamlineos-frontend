@@ -10,6 +10,7 @@ import { crmRouter } from "./routers/crm";
 import { leadsRouter } from "./routers/leads";
 import { targetsRouter } from "./routers/targets";
 import { rolesRouter } from "./routers/roles";
+import { dealsRouter } from "./routers/deals";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   leads: leadsRouter,
   targets: targetsRouter,
   roles: rolesRouter,
+  deals: dealsRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
