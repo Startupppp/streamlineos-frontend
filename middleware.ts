@@ -54,12 +54,12 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   "/crm/reports": ["CEO", "HR"],
   "/crm/clients": ["CEO", "HR"],
 
-  // Projects — CEO, HR, and project-based roles
-  "/projects": ["CEO", "HR", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
-  "/timesheets": ["CEO", "HR", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+  // Projects & Timesheets — all roles
+  "/projects": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+  "/timesheets": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
 
-  // Support — CEO, HR, CUSTOMER_SUPPORT
-  "/support": ["CEO", "HR", "CUSTOMER_SUPPORT"],
+  // Support/Tickets — all roles
+  "/support": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
 
   // Dashboards — CEO, HR only
   "/sales": ["CEO", "HR"],

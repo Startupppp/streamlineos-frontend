@@ -203,6 +203,9 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Leads", icon: Contact2, href: "/crm/leads" },
+            { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "Tickets", icon: Ticket, href: "/support" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -223,6 +226,8 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Tickets", icon: Ticket, href: "/support" },
+            { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -246,6 +251,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "Tickets", icon: Ticket, href: "/support" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -255,7 +261,6 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
       ];
 
     default:
-      // Unknown role — only self-service
       return [
         {
           label: "Core",
@@ -266,6 +271,8 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         {
           label: "My Work",
           routes: [
+            { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+            { label: "Tickets", icon: Ticket, href: "/support" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },

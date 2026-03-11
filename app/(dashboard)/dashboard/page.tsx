@@ -47,7 +47,7 @@ export default function DashboardPage() {
   const firstName = getFirstName(session);
   const role = session?.user?.role;
   const isAdmin = role === "CEO" || role === "HR";
-  const isProjectRole = role === "ENGINEERING" || role === "DESIGN" || role === "VIDEO_EDITOR";
+  // All roles now have access to projects and tickets
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
@@ -223,21 +223,19 @@ export default function DashboardPage() {
         <QuickActions />
       </motion.div>
 
-      {/* My Issues + Sprint — shown to admins and project-based roles */}
-      {(isAdmin || isProjectRole) && (
-        <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <div className="lg:col-span-4">
-            <MyIssuesCard
-              tickets={sortedMyTickets}
-              isLoading={ticketsLoading}
-              error={ticketsError}
-            />
-          </div>
-          <div className="lg:col-span-3">
-            <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
-          </div>
-        </motion.div>
-      )}
+      {/* My Issues + Sprint — shown to all roles */}
+      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <div className="lg:col-span-4">
+          <MyIssuesCard
+            tickets={sortedMyTickets}
+            isLoading={ticketsLoading}
+            error={ticketsError}
+          />
+        </div>
+        <div className="lg:col-span-3">
+          <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
+        </div>
+      </motion.div>
 
       {/* Projects, Activity, Team — CEO/HR only */}
       {isAdmin && (

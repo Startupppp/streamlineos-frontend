@@ -446,19 +446,29 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "dashboard:support:view",
   ],
 
-  // SALES — can ONLY see their assigned leads, update lead status, log interactions
+  // SALES — own leads + projects + tickets
   SALES: [
     ...EMPLOYEE_SELF_SERVICE,
-    "crm:leads:view",    // filtered to own assigned leads only
-    "crm:leads:update",  // update status of own leads
+    "crm:leads:view",
+    "crm:leads:update",
+    "projects:view",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
   ],
 
-  // CUSTOMER_SUPPORT — can ONLY see tickets assigned to them
+  // CUSTOMER_SUPPORT — own tickets + projects
   CUSTOMER_SUPPORT: [
     ...EMPLOYEE_SELF_SERVICE,
     "dashboard:support:view",
-    "projects:tickets:view",    // filtered to own assigned tickets
-    "projects:tickets:update",  // update own tickets
+    "projects:view",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
   ],
 
   // ENGINEERING — can ONLY see projects/tasks assigned to them
