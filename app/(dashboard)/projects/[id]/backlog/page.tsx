@@ -27,6 +27,7 @@ import {
 import { X, Search, Filter } from "lucide-react";
 import { EmptyTasksIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format, isAfter, isBefore, parseISO } from "date-fns";
+import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -164,6 +165,7 @@ export default function BacklogPage({ params }: PageProps) {
 
   return (
     <div className="p-4 md:p-8 h-full flex flex-col">
+      <ProjectSubNav projectId={projectId} projectName={data.name} />
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4 pt-4 md:pt-8">
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold text-primary">Backlog</h1>

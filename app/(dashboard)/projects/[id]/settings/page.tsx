@@ -44,6 +44,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown, User, AlertTriangle } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useSession } from "next-auth/react";
+import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -163,6 +164,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto p-4 md:p-6 pt-6 md:pt-10">
+      <ProjectSubNav projectId={projectId} projectName={project.name} />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
         <p className="text-muted-foreground mt-1">

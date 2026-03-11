@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, Search, X, Bug, Bookmark, Zap, CheckSquare } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 
 
 interface PageProps {
@@ -165,7 +166,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
   return (
     <div className="h-full flex flex-col w-full relative">
       <div className="flex-shrink-0 pl-6 pr-3 sm:pl-8 sm:pr-4 md:pl-12 md:pr-8 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background sticky top-0 z-50 border-b shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <ProjectSubNav projectId={projectId} projectName={data.name} />
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mt-4">
           <div className="flex-1 min-w-0 w-full sm:w-auto">
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary break-words">{data.name}</h1>

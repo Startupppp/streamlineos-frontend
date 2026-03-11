@@ -27,6 +27,7 @@ import { EmptyTasksIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import Link from "next/link";
+import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import {
   Popover,
   PopoverContent,
@@ -105,6 +106,7 @@ export default function EpicsPage({ params }: PageProps) {
 
   return (
     <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite" aria-atomic="true">
+      <ProjectSubNav projectId={projectId} projectName={project?.name} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Epics</h1>
