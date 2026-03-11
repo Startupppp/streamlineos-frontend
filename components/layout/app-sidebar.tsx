@@ -24,7 +24,10 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
+  DollarSign,
   Handshake,
+  Megaphone,
+  HeadphonesIcon,
   Contact2,
   Trophy,
   BarChart3,
@@ -106,6 +109,15 @@ const allNavGroups: NavGroup[] = [
       { label: "Targets", icon: Trophy, href: "/crm/targets", permission: "crm:targets:view" },
       { label: "Reports", icon: BarChart3, href: "/crm/reports", permission: "crm:reports:view" },
       { label: "Clients", icon: UserCheck, href: "/crm/clients", permission: "crm:leads:view" },
+    ],
+  },
+  {
+    label: "Dashboards",
+    routes: [
+      { label: "Sales", icon: DollarSign, href: "/sales", permission: "dashboard:sales:view" },
+      { label: "Customer Exec", icon: Handshake, href: "/customer-executive", permission: "dashboard:customer-executive:view" },
+      { label: "Marketing", icon: Megaphone, href: "/marketing", permission: "dashboard:marketing:view" },
+      { label: "Support", icon: HeadphonesIcon, href: "/support", permission: "dashboard:support:view" },
     ],
   },
   {

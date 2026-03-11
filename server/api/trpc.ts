@@ -56,20 +56,13 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   // Check user is active in the database
   const dbUser = await db.query.users.findFirst({
     where: eq(users.id, ctx.session.user.id),
-    columns: { isActive: true, hasDashboardAccess: true },
+    columns: { isActive: true },
   });
 
   if (!dbUser?.isActive) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Your account has been deactivated. Please contact your administrator.",
-    });
-  }
-
-  if (!dbUser.hasDashboardAccess) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Dashboard access has not been granted. Please contact your administrator.",
     });
   }
 
