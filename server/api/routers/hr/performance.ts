@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../../trpc";
 import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import { performanceReviews, goals, organizationMembers } from "../../../../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -114,7 +114,7 @@ export const performanceRouter = createTRPCRouter({
       return goal;
     }),
 
-  updateGoal: protectedProcedure
+  updateGoal: adminProcedure
     .input(updateGoalInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { goalId, ...updateData } = input;

@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
 import { leads, leadActivities, /* notifications, */ tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "../../../lib/db/schema";
@@ -779,7 +779,7 @@ export const leadsRouter = createTRPCRouter({
       };
     }),
 
-  bulkImport: protectedProcedure
+  bulkImport: adminProcedure
     .input(z.object({
       leads: z.array(z.object({
         name: z.string().min(1, "Lead name is required"),

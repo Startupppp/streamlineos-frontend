@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../../trpc";
 import {
   sprints,
   timesheets,
@@ -34,7 +34,7 @@ export const sprintRouter = createTRPCRouter({
       });
     }),
 
-  createSprint: protectedProcedure
+  createSprint: adminProcedure
     .input(createSprintInputSchema)
     .mutation(async ({ ctx, input }) => {
       const [sprint] = await ctx.db
@@ -52,7 +52,7 @@ export const sprintRouter = createTRPCRouter({
       return sprint;
     }),
 
-  updateSprint: protectedProcedure
+  updateSprint: adminProcedure
     .input(updateSprintInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { sprintId, ...updateData } = input;

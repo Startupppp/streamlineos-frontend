@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { logger } from "../../../../lib/logger";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../../trpc";
 import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   projects,
@@ -325,7 +325,7 @@ export const coreRouter = createTRPCRouter({
       return project;
     }),
 
-  createProject: protectedProcedure
+  createProject: adminProcedure
     .input(createProjectInputSchema)
     .mutation(async ({ ctx, input }) => {
       let projectKey = input.key;
@@ -504,7 +504,7 @@ export const coreRouter = createTRPCRouter({
       }
     }),
 
-  createProjectStatus: protectedProcedure
+  createProjectStatus: adminProcedure
     .input(z.object({
         projectId: z.number(),
         name: z.string(),
@@ -531,7 +531,7 @@ export const coreRouter = createTRPCRouter({
         return status;
     }),
 
-  updateProjectStatusOrder: protectedProcedure
+  updateProjectStatusOrder: adminProcedure
     .input(z.object({
         projectId: z.number(),
         statusIds: z.array(z.number()),
@@ -551,7 +551,7 @@ export const coreRouter = createTRPCRouter({
         });
     }),
 
-  deleteProjectStatus: protectedProcedure
+  deleteProjectStatus: adminProcedure
     .input(z.object({
         statusId: z.number(),
         projectId: z.number(),

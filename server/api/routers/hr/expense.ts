@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import { expenses } from "../../../../lib/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
@@ -33,7 +34,10 @@ export const expenseRouter = createTRPCRouter({
       const offset = getOffset(page, limit);
 
       const conditions = [eq(expenses.orgId, ctx.session.orgId)];
-      if (input.userId) {
+      // Non-admin users can only see their own expenses
+      if (!isAdminOrOwner(ctx.session.user.role)) {
+        conditions.push(eq(expenses.userId, ctx.session.userId));
+      } else if (input.userId) {
         conditions.push(eq(expenses.userId, input.userId));
       }
       if (input.status) {

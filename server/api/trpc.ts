@@ -1,10 +1,12 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { eq } from "drizzle-orm";
 import { auth } from "../../lib/auth";
 import { db } from "../../lib/db";
+import { users } from "../../lib/db/schema";
 import "../../lib/env";
-import { ensureOrgMembership } from "../../lib/auth-helpers";
+import { ensureOrgMembership, isAdminOrOwner } from "../../lib/auth-helpers";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth();
@@ -51,6 +53,26 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
+  // Check user is active in the database
+  const dbUser = await db.query.users.findFirst({
+    where: eq(users.id, ctx.session.user.id),
+    columns: { isActive: true, hasDashboardAccess: true },
+  });
+
+  if (!dbUser?.isActive) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Your account has been deactivated. Please contact your administrator.",
+    });
+  }
+
+  if (!dbUser.hasDashboardAccess) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Dashboard access has not been granted. Please contact your administrator.",
+    });
+  }
+
   // Auto-add to single org if not already a member
   const membership = await ensureOrgMembership(
     ctx.session.user.id,
@@ -85,5 +107,28 @@ const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
   });
 });
 
+/** Role-gated middleware: restricts access to specific roles */
+const requireRoles = (...allowedRoles: string[]) =>
+  t.middleware(async ({ ctx, next }) => {
+    const userRole = ctx.session?.user?.role;
+    if (!userRole || (!allowedRoles.includes(userRole) && userRole !== "CEO")) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "You do not have permission to perform this action.",
+      });
+    }
+    return next();
+  });
+
 export const sessionProcedure = t.procedure.use(enforceSession);
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+/** Admin-only procedure: CEO or ADMIN role required */
+export const adminProcedure = protectedProcedure.use(
+  requireRoles("CEO", "ADMIN")
+);
+
+/** Manager procedure: CEO, ADMIN, or HR */
+export const managerProcedure = protectedProcedure.use(
+  requireRoles("CEO", "ADMIN", "HR")
+);

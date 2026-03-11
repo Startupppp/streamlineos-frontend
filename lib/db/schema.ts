@@ -191,7 +191,7 @@ export const users = pgTable("users", {
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false),
   isActive: boolean("is_active").default(true).notNull(),
-  hasDashboardAccess: boolean("has_dashboard_access").default(true).notNull(),
+  hasDashboardAccess: boolean("has_dashboard_access").default(false).notNull(),
   reportingTo: text("reporting_to"),
   team: text("team"),
   emergencyContact: jsonb("emergency_contact").$type<{

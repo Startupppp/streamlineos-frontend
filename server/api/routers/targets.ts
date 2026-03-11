@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
 import { targets } from "../../../lib/db/schema";
@@ -34,7 +34,7 @@ export const targetsRouter = createTRPCRouter({
     });
   }),
 
-  create: protectedProcedure
+  create: adminProcedure
     .input(z.object({
       userId: z.string(),
       metricType: z.string(),
@@ -58,7 +58,7 @@ export const targetsRouter = createTRPCRouter({
       return target;
     }),
 
-  update: protectedProcedure
+  update: adminProcedure
     .input(z.object({
       id: z.number(),
       targetValue: z.string().optional(),
@@ -75,7 +75,7 @@ export const targetsRouter = createTRPCRouter({
       return updated;
     }),
 
-  delete: protectedProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.delete(targets)

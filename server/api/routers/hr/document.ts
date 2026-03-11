@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure, managerProcedure } from "../../trpc";
 import { isAdminOrOwner } from "../../../../lib/auth-helpers";
 import {
   documents,
@@ -89,7 +89,7 @@ export const documentRouter = createTRPCRouter({
     });
   }),
 
-  createAsset: protectedProcedure
+  createAsset: managerProcedure
     .input(createAssetInputSchema)
     .mutation(async ({ ctx, input }) => {
       const [asset] = await ctx.db
@@ -112,7 +112,7 @@ export const documentRouter = createTRPCRouter({
       return asset;
     }),
 
-  updateAsset: protectedProcedure
+  updateAsset: managerProcedure
     .input(updateAssetInputSchema)
     .mutation(async ({ ctx, input }) => {
       const { assetId, ...updateData } = input;
