@@ -16,6 +16,7 @@ const crmBaseKey = [...baseKey, "crm"] as const;
 const leadsBaseKey = [...baseKey, "leads"] as const;
 const targetsBaseKey = [...baseKey, "targets"] as const;
 const rolesBaseKey = [...baseKey, "roles"] as const;
+const chatBaseKey = [...baseKey, "chat"] as const;
 
 export const vaivammKeys = {
   all: baseKey,
@@ -119,6 +120,18 @@ export const vaivammKeys = {
     list: () => [...rolesBaseKey, "list"] as const,
     detail: (id: number) => [...rolesBaseKey, "detail", { id }] as const,
   },
+
+  chat: {
+    all: chatBaseKey,
+    myChannels: () => [...chatBaseKey, "myChannels"] as const,
+    channel: (id: number) => [...chatBaseKey, "channel", { id }] as const,
+    messages: (channelId: number) => [...chatBaseKey, "messages", { channelId }] as const,
+    poll: (channelId: number, since: string) => [...chatBaseKey, "poll", { channelId, since }] as const,
+    unreadTotal: () => [...chatBaseKey, "unreadTotal"] as const,
+    onlineUsers: () => [...chatBaseKey, "onlineUsers"] as const,
+    orgUsers: () => [...chatBaseKey, "orgUsers"] as const,
+    search: (query: string) => [...chatBaseKey, "search", { query }] as const,
+  },
 };
 
 export type HrRouterOutputs = RouterOutputs["hr"];
@@ -140,3 +153,5 @@ export type TargetsRouterOutputs = RouterOutputs["targets"];
 export type TargetsRouterInputs = RouterInputs["targets"];
 export type RolesRouterOutputs = RouterOutputs["roles"];
 export type RolesRouterInputs = RouterInputs["roles"];
+export type ChatRouterOutputs = RouterOutputs["chat"];
+export type ChatRouterInputs = RouterInputs["chat"];

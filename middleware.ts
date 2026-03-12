@@ -14,6 +14,7 @@ const PROTECTED_ROUTES = [
   "/timesheets",
   "/support",
   "/crm",
+  "/chat",
 ];
 
 const AUTH_ROUTES = [
@@ -60,6 +61,9 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
 
   // Support/Tickets — all roles
   "/support": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
+
+  // Chat — all roles
+  "/chat": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR"],
 
   // Dashboards — CEO, HR only
   "/sales": ["CEO", "HR"],

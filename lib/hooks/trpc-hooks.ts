@@ -13,3 +13,4 @@ export * from "./auth-hooks";
 export * from "./leads-hooks";
 export * from "./targets-hooks";
 export * from "./roles-hooks";
+export * from "./chat-hooks";

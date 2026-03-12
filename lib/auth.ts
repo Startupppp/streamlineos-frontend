@@ -108,32 +108,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
       }
 
-      // Always refresh critical fields from DB
+      // Refresh critical fields from DB (with error handling to prevent auth crashes)
       if (token.id) {
-        const dbUser = await db.query.users.findFirst({
-          where: eq(users.id, token.id as string),
-          columns: {
-            isActive: true,
-            hasDashboardAccess: true,
-            isPasswordChangeRequired: true,
-            image: true,
-            firstName: true,
-            lastName: true,
-            name: true,
-            role: true,
-          },
-        });
-        if (dbUser) {
-          token.isActive = dbUser.isActive;
-          token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
-          token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
-          token.role = dbUser.role || token.role;
-          token.image = dbUser.image || null;
-          if (dbUser.firstName && dbUser.lastName) {
-            token.name = `${dbUser.firstName} ${dbUser.lastName}`;
-          } else if (dbUser.name) {
-            token.name = dbUser.name;
+        try {
+          const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, token.id as string),
+            columns: {
+              isActive: true,
+              hasDashboardAccess: true,
+              isPasswordChangeRequired: true,
+              image: true,
+              firstName: true,
+              lastName: true,
+              name: true,
+              role: true,
+            },
+          });
+          if (dbUser) {
+            token.isActive = dbUser.isActive;
+            token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
+            token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
+            token.role = dbUser.role || token.role;
+            token.image = dbUser.image || null;
+            if (dbUser.firstName && dbUser.lastName) {
+              token.name = `${dbUser.firstName} ${dbUser.lastName}`;
+            } else if (dbUser.name) {
+              token.name = dbUser.name;
+            }
           }
+        } catch {
+          // DB query failed (likely pool exhaustion) — keep existing token values
+          // This prevents ClientFetchError when many concurrent requests hit auth
         }
       }
 
