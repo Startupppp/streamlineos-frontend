@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
-  Trophy, Target, TrendingUp, Plus, Medal,
+  Trophy, Target, TrendingUp, Plus, Medal, Users,
   Zap, Phone, UserCheck, BarChart3, Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
-import { EmptyTargetIllustration, EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { useMyTargets, useTargetLeaderboard, useCreateTarget } from "@/lib/hooks/trpc-hooks";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -229,12 +229,27 @@ export default function TargetsPage() {
       {myTargets && myTargets.length === 0 && (
         <motion.div variants={fadeUp}>
           <Card className="shadow-noir">
-            <CardContent className="py-12 text-center">
-              <EmptyTargetIllustration className="w-40 h-40 mx-auto mb-2" />
-              <p className="text-muted-foreground font-medium">No targets assigned yet</p>
-              <p className="text-sm text-muted-foreground/60 mt-1">
-                {isAdmin ? "Create a target using the button above" : "Your admin will set targets for you"}
-              </p>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-full max-w-sm">
+                  <Image
+                    src="/illustrations/targets-empty.svg"
+                    alt="No targets illustration"
+                    width={400}
+                    height={260}
+                    className="mx-auto h-auto w-full"
+                    priority
+                  />
+                </div>
+                <div>
+                  <p className="text-base font-medium text-foreground">No targets assigned yet</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
+                    {isAdmin
+                      ? "Use the Set Target button above to add daily, weekly, or monthly goals for your team."
+                      : "Your admin will set targets for you. Once they do, you’ll see your progress visualized here."}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -326,10 +341,25 @@ export default function TargetsPage() {
           </Card>
         ) : (
           <Card className="shadow-noir">
-            <CardContent className="py-12 text-center">
-              <EmptyLeaderboardIllustration className="w-40 h-40 mx-auto mb-2" />
-              <p className="text-muted-foreground font-medium">No leaderboard data yet</p>
-              <p className="text-sm text-muted-foreground/60 mt-1">Targets need to be set for team members first</p>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-full max-w-sm">
+                  <Image
+                    src="/illustrations/leaderboard-empty.svg"
+                    alt="No leaderboard data illustration"
+                    width={400}
+                    height={260}
+                    className="mx-auto h-auto w-full"
+                  />
+                </div>
+                <div>
+                  <p className="text-base font-medium text-foreground">No leaderboard data yet</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
+                    Targets need to be set for team members first. Once your team starts tracking activity,
+                    their rankings will appear here.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
