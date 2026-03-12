@@ -85,7 +85,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
-      role: employee.role || "ENGINEERING",
+      role: employee.role || "ENGINEER",
       designation: employee.designation || "",
       departmentId: employee.departmentId || undefined,
       phone: employee.phone || "",
@@ -321,10 +321,11 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                                     <SelectContent>
                                     <SelectItem value="HR">HR</SelectItem>
                                     <SelectItem value="SALES">Sales</SelectItem>
-                                    <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
-                                    <SelectItem value="ENGINEERING">Engineering</SelectItem>
-                                    <SelectItem value="DESIGN">Design</SelectItem>
+                                    <SelectItem value="CRM">CRM</SelectItem>
+                                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
+                                    <SelectItem value="DESIGN_TEAM">Design Team</SelectItem>
                                     <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                                    <SelectItem value="ENGINEER">Engineer</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
