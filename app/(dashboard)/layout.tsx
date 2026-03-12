@@ -17,13 +17,20 @@ export default function DashboardLayout({
 }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isProjectPage = pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
+  const isChatPage = pathname === "/chat";
+  const isFullHeightPage = isProjectPage || isChatPage;
 
   const role = session?.user?.role;
   // CEO and HR always have dashboard access regardless of the flag
   const isAdminRole = role === "CEO" || role === "HR";
-  const hasDashboardAccess = isAdminRole || session?.user?.hasDashboardAccess !== false;
+  // While session is loading or role hasn't populated, assume access so the sidebar container renders
+  // (the sidebar itself shows a skeleton in that state)
+  const hasDashboardAccess =
+    status === "loading" || !role
+      ? true
+      : isAdminRole || session?.user?.hasDashboardAccess !== false;
 
   return (
     <OrganizationGuard>
@@ -46,9 +53,9 @@ export default function DashboardLayout({
           {hasDashboardAccess ? (
             <>
               <CommandPalette />
-              {!isProjectPage && <DashboardHeader />}
+              {!isFullHeightPage && <DashboardHeader />}
               <div className="relative flex-1 min-h-0 overflow-hidden">
-                {isProjectPage ? (
+                {isFullHeightPage ? (
                   <div className="h-full w-full overflow-auto">
                     {children}
                   </div>

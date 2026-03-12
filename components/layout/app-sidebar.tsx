@@ -35,6 +35,7 @@ import {
   ClipboardList,
   Network,
   Ticket,
+  MessageCircle,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
@@ -78,6 +79,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Chat", icon: MessageCircle, href: "/chat" },
             { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
           ],
         },
@@ -143,6 +145,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Chat", icon: MessageCircle, href: "/chat" },
           ],
         },
         {
@@ -197,6 +200,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Chat", icon: MessageCircle, href: "/chat" },
           ],
         },
         {
@@ -220,6 +224,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Chat", icon: MessageCircle, href: "/chat" },
           ],
         },
         {
@@ -244,6 +249,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Chat", icon: MessageCircle, href: "/chat" },
           ],
         },
         {
@@ -266,6 +272,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Chat", icon: MessageCircle, href: "/chat" },
           ],
         },
         {
@@ -318,7 +325,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
     return () => { cancelled = true; clearInterval(interval); };
   }, [session, isAdmin]);
 
-  if (status === "loading") {
+  // Show skeleton while session loads OR if role hasn't populated yet
+  if (status === "loading" || (status === "authenticated" && !role)) {
     return (
       <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
         <div className="px-4 py-4 flex-1">
