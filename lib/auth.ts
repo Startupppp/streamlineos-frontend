@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens, organizationMembers, organizations } from "./db/schema";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -27,8 +27,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        const normalizedEmail = (credentials.email as string).toLowerCase().trim();
+
         const user = await db.query.users.findFirst({
-          where: eq(users.email, credentials.email as string),
+          where: sql`lower(${users.email}) = ${normalizedEmail}`,
         });
 
         if (!user || !user.password) {
