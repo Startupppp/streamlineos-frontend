@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -302,8 +302,18 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
   const role = session?.user?.role;
-  const navGroups = useMemo(() => getNavGroupsForRole(role), [role]);
-  const isAdmin = role === "CEO" || role === "HR";
+
+  // Preserve last known role so sidebar doesn't flash skeleton during transient session refreshes
+  const lastKnownRoleRef = useRef<string | undefined>(role);
+  const hasEverLoadedRef = useRef(false);
+  if (role) {
+    lastKnownRoleRef.current = role;
+    hasEverLoadedRef.current = true;
+  }
+  const effectiveRole = role || lastKnownRoleRef.current;
+
+  const navGroups = useMemo(() => getNavGroupsForRole(effectiveRole), [effectiveRole]);
+  const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
   useEffect(() => {
@@ -325,8 +335,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
     return () => { cancelled = true; clearInterval(interval); };
   }, [session, isAdmin]);
 
-  // Show skeleton while session loads OR if role hasn't populated yet
-  if (status === "loading" || (status === "authenticated" && !role)) {
+  // Only show skeleton on very first load, never during navigation
+  if (!hasEverLoadedRef.current && (status === "loading" || (status === "authenticated" && !role))) {
     return (
       <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
         <div className="px-4 py-4 flex-1">

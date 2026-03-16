@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { AppSidebar } from "../../components/layout/app-sidebar";
@@ -23,14 +23,26 @@ export default function DashboardLayout({
   const isFullHeightPage = isProjectPage || isChatPage;
 
   const role = session?.user?.role;
-  // CEO and HR always have dashboard access regardless of the flag
   const isAdminRole = role === "CEO" || role === "HR";
-  // While session is loading or role hasn't populated, assume access so the sidebar container renders
-  // (the sidebar itself shows a skeleton in that state)
+
+  // Track whether we've ever successfully loaded session data.
+  // Once authenticated, preserve access during transient session refreshes
+  // to prevent the dashboard from flickering/disappearing on navigation.
+  const lastKnownAccessRef = useRef<boolean>(true);
+  const hasEverLoadedRef = useRef(false);
+
+  if (status === "authenticated" && role) {
+    hasEverLoadedRef.current = true;
+    lastKnownAccessRef.current = isAdminRole || session?.user?.hasDashboardAccess !== false;
+  }
+
+  // Use last known good state during loading/transient states
   const hasDashboardAccess =
-    status === "loading" || !role
-      ? true
-      : isAdminRole || session?.user?.hasDashboardAccess !== false;
+    status === "authenticated" && role
+      ? isAdminRole || session?.user?.hasDashboardAccess !== false
+      : hasEverLoadedRef.current
+        ? lastKnownAccessRef.current
+        : true; // First load: assume access, sidebar shows skeleton
 
   return (
     <OrganizationGuard>
