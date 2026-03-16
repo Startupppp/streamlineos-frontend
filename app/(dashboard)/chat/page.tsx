@@ -253,7 +253,7 @@ function ChannelSidebar({
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
 
   const onlineUserIds = useMemo(
-    () => new Set(onlineUsers?.map((u) => u.userId) ?? []),
+    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
   );
 
@@ -574,7 +574,7 @@ function MessagePanel({
   const { data: onlineUsers } = useChatOnlineUsers();
 
   const onlineUserIds = useMemo(
-    () => new Set(onlineUsers?.map((u) => u.userId) ?? []),
+    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
   );
 
@@ -1523,7 +1523,7 @@ function ChannelInfoPanel({
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
   const onlineUserIds = useMemo(
-    () => new Set(onlineUsers?.map((u) => u.userId) ?? []),
+    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
   );
 
@@ -1650,7 +1650,7 @@ function NewDMDialog({
   const [search, setSearch] = useState("");
 
   const onlineUserIds = useMemo(
-    () => new Set(onlineUsers?.map((u) => u.userId) ?? []),
+    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
   );
 
