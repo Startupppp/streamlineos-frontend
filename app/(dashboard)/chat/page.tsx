@@ -143,6 +143,22 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function getFileExt(name: string) {
+  return name.split(".").pop()?.toUpperCase() || "FILE";
+}
+
+function getFileColor(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "pdf": return { bg: "bg-red-500/10", text: "text-red-600", badge: "bg-red-500" };
+    case "doc": case "docx": return { bg: "bg-blue-500/10", text: "text-blue-600", badge: "bg-blue-500" };
+    case "xls": case "xlsx": return { bg: "bg-emerald-500/10", text: "text-emerald-600", badge: "bg-emerald-500" };
+    case "ppt": case "pptx": return { bg: "bg-orange-500/10", text: "text-orange-600", badge: "bg-orange-500" };
+    case "zip": case "rar": return { bg: "bg-amber-500/10", text: "text-amber-600", badge: "bg-amber-500" };
+    default: return { bg: "bg-slate-500/10", text: "text-slate-600", badge: "bg-slate-500" };
+  }
+}
+
 function isImageMime(mime: string) {
   return mime.startsWith("image/");
 }
@@ -1184,30 +1200,36 @@ function MessagePanel({
           {/* Pending attachments preview */}
           {pendingAttachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
-              {pendingAttachments.map((att, idx) => (
-                <div
-                  key={idx}
-                  className="relative group flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-2.5 py-1.5"
-                >
-                  {att.mimeType.startsWith("image/") ? (
-                    <img src={att.fileUrl} alt={att.fileName} className="h-10 w-10 rounded object-cover" />
-                  ) : (
-                    <div className="h-10 w-10 rounded bg-[#bd882c]/10 flex items-center justify-center">
-                      <FileText className="h-4 w-4 text-[#bd882c]" />
-                    </div>
-                  )}
-                  <div className="min-w-0 max-w-[120px]">
-                    <p className="text-[11px] font-medium truncate">{att.fileName}</p>
-                    <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
-                  </div>
-                  <button
-                    onClick={() => setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))}
-                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              {pendingAttachments.map((att, idx) => {
+                const colors = getFileColor(att.fileName);
+                return (
+                  <div
+                    key={idx}
+                    className="relative group flex items-center gap-2.5 bg-background border border-border rounded-xl px-3 py-2 shadow-sm"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
+                    {att.mimeType.startsWith("image/") ? (
+                      <img src={att.fileUrl} alt={att.fileName} className="h-11 w-11 rounded-lg object-cover border border-border/30" />
+                    ) : (
+                      <div className={cn("h-11 w-11 rounded-lg flex flex-col items-center justify-center relative", colors.bg)}>
+                        <FileText className={cn("h-5 w-5", colors.text)} />
+                        <span className={cn("text-[7px] font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+                          {getFileExt(att.fileName)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="min-w-0 max-w-[140px]">
+                      <p className="text-[12px] font-medium truncate">{att.fileName}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+                    </div>
+                    <button
+                      onClick={() => setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
               {uploading && (
                 <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-3 py-2">
                   <Loader2 className="h-4 w-4 animate-spin text-[#bd882c]" />
@@ -1480,26 +1502,43 @@ function ChatBubble({
                         loading="lazy"
                       />
                     </a>
-                  ) : (
+                  ) : (() => {
+                    const colors = getFileColor(att.fileName);
+                    return (
                     <a
                       key={att.id}
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
-                        "flex items-center gap-2 px-2.5 py-2 rounded-lg",
-                        isOwn ? "bg-white/15" : "bg-muted/40"
+                        "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors",
+                        isOwn
+                          ? "bg-white/10 border-white/15 hover:bg-white/20"
+                          : "bg-background border-border/50 hover:bg-muted/30 shadow-sm"
                       )}
                     >
-                      <FileText className="h-4 w-4 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-[12px] font-medium truncate">{att.fileName}</p>
-                        <p className={cn("text-[10px]", isOwn ? "text-white/50" : "text-muted-foreground")}>
-                          {formatFileSize(att.fileSize)}
+                      <div className={cn(
+                        "h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0",
+                        isOwn ? "bg-white/15" : colors.bg
+                      )}>
+                        <FileText className={cn("h-4 w-4", isOwn ? "text-white/80" : colors.text)} />
+                        <span className={cn(
+                          "text-[6px] font-bold text-white px-1 rounded mt-0.5",
+                          isOwn ? "bg-white/30" : colors.badge
+                        )}>
+                          {getFileExt(att.fileName)}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[12px] font-semibold truncate max-w-[180px]">{att.fileName}</p>
+                        <p className={cn("text-[10px] mt-0.5", isOwn ? "text-white/60" : "text-muted-foreground")}>
+                          {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
                         </p>
                       </div>
+                      <ArrowDown className={cn("h-4 w-4 shrink-0", isOwn ? "text-white/50" : "text-muted-foreground/50")} />
                     </a>
-                  );
+                    );
+                  })();
                 })}
               </div>
             )}

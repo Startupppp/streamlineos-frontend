@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { logger } from "../../../../lib/logger";
 
 const FILE_SIGNATURES: Record<string, number[][]> = {
@@ -32,39 +30,19 @@ function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
   );
 }
 
-async function uploadFileLocally(file: File, folder: string) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-  const fileName = `${Date.now()}-${sanitizedName}`;
-
-  const uploadsRoot = path.resolve(process.cwd(), "public", "uploads");
-  const uploadDir = path.resolve(uploadsRoot, folder);
-
-  if (!uploadDir.startsWith(uploadsRoot + path.sep) && uploadDir !== uploadsRoot) {
-    throw new Error("Invalid upload folder");
-  }
-
-  await mkdir(uploadDir, { recursive: true });
-
-  const filePath = path.join(uploadDir, fileName);
-  await writeFile(filePath, buffer);
-
-  const url = `/uploads/${folder}/${fileName}`;
-
-  return {
-    url,
-    key: `${folder}/${fileName}`,
-    size: buffer.length,
-    mimeType: file.type,
-  };
-}
-
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isStorageConfigured()) {
+      return NextResponse.json(
+        { error: "Cloud storage (R2) is not configured. Set R2_BUCKET_NAME, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_ENDPOINT environment variables." },
+        { status: 503 }
+      );
     }
 
     const formData = await req.formData();
@@ -111,17 +89,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let result;
-    if (isStorageConfigured()) {
-      try {
-        result = await uploadFile(file, folder);
-      } catch (r2Error) {
-        result = await uploadFileLocally(file, folder);
-      }
-    } else {
-      result = await uploadFileLocally(file, folder);
-    }
-
+    const result = await uploadFile(file, folder);
     return NextResponse.json(result);
   } catch (error) {
     logger.error("File upload failed", error);

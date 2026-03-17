@@ -7,26 +7,6 @@ import { eq, and } from "drizzle-orm";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-async function uploadFileLocally(file: File, folder: string) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-  const fileName = `${Date.now()}-${sanitizedName}`;
-  
-  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
-  await mkdir(uploadDir, { recursive: true });
-  
-  const filePath = path.join(uploadDir, fileName);
-  await writeFile(filePath, buffer);
-  
-  return {
-    url: `/uploads/${folder}/${fileName}`,
-    key: `${folder}/${fileName}`,
-    size: buffer.length,
-    mimeType: file.type,
-  };
-}
 
 export async function updatePersonalDetails(formData: FormData) {
   const session = await auth();
@@ -88,19 +68,13 @@ export async function uploadOnboardingDocument(formData: FormData) {
   if (!file) return { error: "No file provided" };
 
   try {
-    let fileUrl = "";
-    if (isStorageConfigured()) {
-      try {
-        const result = await uploadFile(file, "onboarding");
-        fileUrl = result.url;
-      } catch (r2Error) {
-        const localResult = await uploadFileLocally(file, "onboarding");
-        fileUrl = localResult.url;
-      }
-    } else {
-      const localResult = await uploadFileLocally(file, "onboarding");
-      fileUrl = localResult.url;
+    if (!isStorageConfigured()) {
+      return { error: "Cloud storage (R2) is not configured. Contact your administrator." };
     }
+
+    let fileUrl = "";
+    const result = await uploadFile(file, "onboarding");
+    fileUrl = result.url;
     const userOrg = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id),
     });
