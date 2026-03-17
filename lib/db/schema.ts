@@ -1620,3 +1620,96 @@ export const auditLogs = pgTable("audit_logs", {
   index("idx_audit_logs_action").on(table.action),
   index("idx_audit_logs_created_at").on(table.createdAt),
 ]);
+
+// ─── Invoices ───
+
+export const invoiceStatusEnum = pgEnum("invoice_status", ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"]);
+
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id),
+  projectId: integer("project_id").references(() => projects.id),
+  invoiceNumber: text("invoice_number").notNull(),
+  status: invoiceStatusEnum("status").default("DRAFT").notNull(),
+  lineItems: jsonb("line_items").$type<{ description: string; quantity: number; rate: number; amount: number }[]>().default([]),
+  subtotal: decimal("subtotal").default("0").notNull(),
+  taxRate: decimal("tax_rate").default("0"),
+  taxAmount: decimal("tax_amount").default("0"),
+  discount: decimal("discount").default("0"),
+  total: decimal("total").default("0").notNull(),
+  currency: text("currency").default("INR").notNull(),
+  dueDate: date("due_date"),
+  notes: text("notes"),
+  sentAt: timestamp("sent_at"),
+  paidAt: timestamp("paid_at"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_invoices_org_status").on(table.orgId, table.status),
+  index("idx_invoices_client").on(table.clientId),
+  index("idx_invoices_project").on(table.projectId),
+  index("idx_invoices_due_date").on(table.dueDate),
+]);
+
+export const invoicesRelations = relations(invoices, ({ one }) => ({
+  organization: one(organizations, { fields: [invoices.orgId], references: [organizations.id] }),
+  client: one(clients, { fields: [invoices.clientId], references: [clients.id] }),
+  project: one(projects, { fields: [invoices.projectId], references: [projects.id] }),
+  creator: one(users, { fields: [invoices.createdBy], references: [users.id] }),
+}));
+
+// ─── Support Tickets ───
+
+export const supportTicketStatusEnum = pgEnum("support_ticket_status", ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"]);
+export const supportTicketPriorityEnum = pgEnum("support_ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
+
+export const supportTickets = pgTable("support_tickets", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id),
+  assigneeId: text("assignee_id").references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: supportTicketStatusEnum("status").default("OPEN").notNull(),
+  priority: supportTicketPriorityEnum("priority").default("MEDIUM").notNull(),
+  slaDeadline: timestamp("sla_deadline"),
+  resolvedAt: timestamp("resolved_at"),
+  closedAt: timestamp("closed_at"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_support_tickets_org_status").on(table.orgId, table.status),
+  index("idx_support_tickets_assignee").on(table.assigneeId),
+  index("idx_support_tickets_client").on(table.clientId),
+  index("idx_support_tickets_priority").on(table.priority),
+  index("idx_support_tickets_sla").on(table.slaDeadline),
+]);
+
+export const supportTicketMessages = pgTable("support_ticket_messages", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").references(() => supportTickets.id, { onDelete: "cascade" }).notNull(),
+  authorId: text("author_id").references(() => users.id).notNull(),
+  body: text("body").notNull(),
+  isInternal: boolean("is_internal").default(false).notNull(),
+  attachments: jsonb("attachments").$type<{ fileName: string; fileUrl: string; fileSize: number; mimeType: string }[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_support_ticket_messages_ticket").on(table.ticketId),
+  index("idx_support_ticket_messages_author").on(table.authorId),
+]);
+
+export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
+  organization: one(organizations, { fields: [supportTickets.orgId], references: [organizations.id] }),
+  client: one(clients, { fields: [supportTickets.clientId], references: [clients.id] }),
+  assignee: one(users, { fields: [supportTickets.assigneeId], references: [users.id] }),
+  creator: one(users, { fields: [supportTickets.createdBy], references: [users.id] }),
+  messages: many(supportTicketMessages),
+}));
+
+export const supportTicketMessagesRelations = relations(supportTicketMessages, ({ one }) => ({
+  ticket: one(supportTickets, { fields: [supportTicketMessages.ticketId], references: [supportTickets.id] }),
+  author: one(users, { fields: [supportTicketMessages.authorId], references: [users.id] }),
+}));

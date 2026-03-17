@@ -13,6 +13,8 @@ import { rolesRouter } from "./routers/roles";
 import { dealsRouter } from "./routers/deals";
 import { notificationsRouter } from "./routers/notifications";
 import { chatRouter } from "./routers/chat";
+import { invoiceRouter } from "./routers/invoice";
+import { supportRouter } from "./routers/support";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -29,6 +31,8 @@ export const appRouter = createTRPCRouter({
   deals: dealsRouter,
   notifications: notificationsRouter,
   chat: chatRouter,
+  invoice: invoiceRouter,
+  support: supportRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
