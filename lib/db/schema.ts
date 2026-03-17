@@ -1,11 +1,11 @@
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-// Dynamic roles table — predefined: CEO, ADMIN, SALES, ENGINEER, MARKETING, etc.
+// Dynamic roles table — predefined: CEO, HR, SALES, ENGINEERING, DESIGN, etc.
 // Admins can create additional roles at runtime
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),           // Display name e.g. "Engineer"
-  slug: text("slug").notNull(),            // Lookup key e.g. "ENGINEER"
+  name: text("name").notNull(),           // Display name e.g. "Engineering"
+  slug: text("slug").notNull(),            // Lookup key e.g. "ENGINEERING"
   orgId: text("org_id").references(() => organizations.id).notNull(),
   isSystem: boolean("is_system").default(false).notNull(), // true = predefined, can't delete
   permissions: jsonb("permissions").$type<string[]>().default([]),

@@ -23,12 +23,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { updateEmployee } from "@/server/actions/hr-actions";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { api } from "@/trpc/react";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
+import { useRolesList } from "@/lib/hooks/roles-hooks";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -80,12 +81,17 @@ interface EditEmployeeFormProps {
 export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { data: orgRoles } = useRolesList();
+  const assignableRoles = useMemo(
+    () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
+    [orgRoles]
+  );
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: employee.firstName || "",
       lastName: employee.lastName || "",
-      role: employee.role || "ENGINEER",
+      role: employee.role || "ENGINEERING",
       designation: employee.designation || "",
       departmentId: employee.departmentId || undefined,
       phone: employee.phone || "",
@@ -319,13 +325,21 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                    <SelectItem value="HR">HR</SelectItem>
-                                    <SelectItem value="SALES">Sales</SelectItem>
-                                    <SelectItem value="CRM">CRM</SelectItem>
-                                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
-                                    <SelectItem value="DESIGN_TEAM">Design Team</SelectItem>
-                                    <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-                                    <SelectItem value="ENGINEER">Engineer</SelectItem>
+                                    {assignableRoles.map((role) => (
+                                      <SelectItem key={role.slug} value={role.slug}>
+                                        {role.name}
+                                      </SelectItem>
+                                    ))}
+                                    {assignableRoles.length === 0 && (
+                                      <>
+                                        <SelectItem value="ENGINEERING">Engineering</SelectItem>
+                                        <SelectItem value="HR">HR</SelectItem>
+                                        <SelectItem value="SALES">Sales</SelectItem>
+                                        <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
+                                        <SelectItem value="DESIGN">Design</SelectItem>
+                                        <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                                      </>
+                                    )}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
