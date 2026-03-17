@@ -41,57 +41,45 @@ export async function generateAndSendWeeklyCeoRecap() {
         continue;
       }
 
-      const [employeeCount] = await db
-        .select({ count: count() })
-        .from(organizationMembers)
-        .innerJoin(users, eq(users.id, organizationMembers.userId))
-        .where(and(eq(organizationMembers.orgId, org.id), eq(users.isActive, true)));
-
-      const [newLeadCount] = await db
-        .select({ count: count() })
-        .from(leads)
-        .where(and(eq(leads.orgId, org.id), gte(leads.createdAt, weekStart)));
-
-      const [convertedCount] = await db
-        .select({ count: count() })
-        .from(leads)
-        .where(
-          and(eq(leads.orgId, org.id), eq(leads.status, "CONVERTED"), gte(leads.updatedAt, weekStart))
-        );
-
-      const [activityCount] = await db
-        .select({ count: count() })
-        .from(leadActivities)
-        .innerJoin(leads, eq(leads.id, leadActivities.leadId))
-        .where(and(eq(leads.orgId, org.id), gte(leadActivities.createdAt, weekStart)));
-
-      const [openTicketCount] = await db
-        .select({ count: count() })
-        .from(tickets)
-        .where(
-          and(
-            eq(tickets.orgId, org.id),
-            sql`${tickets.status} NOT IN ('DONE', 'CANCELLED')`
-          )
-        );
-
-      const [closedTicketCount] = await db
-        .select({ count: count() })
-        .from(tickets)
-        .where(
-          and(eq(tickets.orgId, org.id), eq(tickets.status, "DONE"), gte(tickets.updatedAt, weekStart))
-        );
-
-      const [pendingLeaveCount] = await db
-        .select({ count: count() })
-        .from(leaveRequests)
-        .where(and(eq(leaveRequests.orgId, org.id), eq(leaveRequests.status, "PENDING")));
-
-      const pipelineRaw = await db
-        .select({ status: leads.status, count: count() })
-        .from(leads)
-        .where(eq(leads.orgId, org.id))
-        .groupBy(leads.status);
+      // Run all independent count queries in parallel
+      const [
+        [employeeCount],
+        [newLeadCount],
+        [convertedCount],
+        [activityCount],
+        [openTicketCount],
+        [closedTicketCount],
+        [pendingLeaveCount],
+        pipelineRaw,
+      ] = await Promise.all([
+        db.select({ count: count() })
+          .from(organizationMembers)
+          .innerJoin(users, eq(users.id, organizationMembers.userId))
+          .where(and(eq(organizationMembers.orgId, org.id), eq(users.isActive, true))),
+        db.select({ count: count() })
+          .from(leads)
+          .where(and(eq(leads.orgId, org.id), gte(leads.createdAt, weekStart))),
+        db.select({ count: count() })
+          .from(leads)
+          .where(and(eq(leads.orgId, org.id), eq(leads.status, "CONVERTED"), gte(leads.updatedAt, weekStart))),
+        db.select({ count: count() })
+          .from(leadActivities)
+          .innerJoin(leads, eq(leads.id, leadActivities.leadId))
+          .where(and(eq(leads.orgId, org.id), gte(leadActivities.createdAt, weekStart))),
+        db.select({ count: count() })
+          .from(tickets)
+          .where(and(eq(tickets.orgId, org.id), sql`${tickets.status} NOT IN ('DONE', 'CANCELLED')`)),
+        db.select({ count: count() })
+          .from(tickets)
+          .where(and(eq(tickets.orgId, org.id), eq(tickets.status, "DONE"), gte(tickets.updatedAt, weekStart))),
+        db.select({ count: count() })
+          .from(leaveRequests)
+          .where(and(eq(leaveRequests.orgId, org.id), eq(leaveRequests.status, "PENDING"))),
+        db.select({ status: leads.status, count: count() })
+          .from(leads)
+          .where(eq(leads.orgId, org.id))
+          .groupBy(leads.status),
+      ]);
 
       const leaderboardRaw = await db
         .select({
