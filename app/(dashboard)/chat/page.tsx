@@ -147,6 +147,12 @@ function isImageMime(mime: string) {
   return mime.startsWith("image/");
 }
 
+function resolveFileUrl(url: string): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
+  return `/api/storage/image?key=${encodeURIComponent(url)}`;
+}
+
 function getDateLabel(date: Date | string | null) {
   if (!date) return "";
   const d = new Date(date);
@@ -1457,25 +1463,27 @@ function ChatBubble({
             {/* Attachments */}
             {message.attachments.length > 0 && (
               <div className="mt-1.5 space-y-1.5">
-                {message.attachments.map((att) =>
-                  isImageMime(att.mimeType) ? (
+                {message.attachments.map((att) => {
+                  const url = resolveFileUrl(att.fileUrl);
+                  return isImageMime(att.mimeType) ? (
                     <a
                       key={att.id}
-                      href={att.fileUrl}
+                      href={url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block rounded-lg overflow-hidden"
                     >
                       <img
-                        src={att.fileUrl}
+                        src={url}
                         alt={att.fileName}
                         className="max-w-[280px] max-h-[200px] object-cover rounded-lg"
+                        loading="lazy"
                       />
                     </a>
                   ) : (
                     <a
                       key={att.id}
-                      href={att.fileUrl}
+                      href={url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
@@ -1491,8 +1499,8 @@ function ChatBubble({
                         </p>
                       </div>
                     </a>
-                  )
-                )}
+                  );
+                })}
               </div>
             )}
 
