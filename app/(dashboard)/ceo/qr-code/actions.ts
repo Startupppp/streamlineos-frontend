@@ -8,8 +8,6 @@ import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { generateQRCodeWithLogo } from "@/lib/qr-code";
 import { uploadFile, deleteFile, getFileKeyFromUrl, getFileUrl, isStorageConfigured } from "@/lib/storage";
-import { join } from "path";
-import { existsSync, writeFileSync, mkdirSync } from "fs";
 import { auth } from "@/lib/auth";
 
 const generateSchema = z.object({
@@ -97,6 +95,10 @@ export async function generateQRCode(formData: FormData) {
 
     let imageUrl: string;
 
+    if (!isStorageConfigured()) {
+      return { success: false, error: "Cloud storage (R2) is not configured. Contact your administrator." };
+    }
+
     try {
       const uploadResult = await uploadFile(
         qrBuffer,
@@ -106,30 +108,8 @@ export async function generateQRCode(formData: FormData) {
       );
       imageUrl = uploadResult.url;
     } catch (error) {
-      if (process.env.NODE_ENV === "production") {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        return {
-          success: false,
-          error: `R2 storage unavailable. Please configure R2 for production. Error: ${errorMessage}`,
-        };
-      }
-      
-      if (!isStorageConfigured()) {
-        const publicQrDir = join(process.cwd(), "public", "qr-codes");
-        if (!existsSync(publicQrDir)) {
-          mkdirSync(publicQrDir, { recursive: true });
-        }
-        
-        const localPath = join(publicQrDir, `${slug}.png`);
-        writeFileSync(localPath, qrBuffer);
-        imageUrl = `/qr-codes/${slug}.png`;
-      } else {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        return {
-          success: false,
-          error: `Failed to upload to R2 storage: ${errorMessage}`,
-        };
-      }
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return { success: false, error: `Failed to upload QR code: ${errorMessage}` };
     }
 
     await db.insert(qrCodes).values({
