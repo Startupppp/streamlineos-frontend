@@ -55,6 +55,7 @@ function getQuickActionsForRole(role: string | undefined): QuickAction[] {
     case "ENGINEERING":
     case "DESIGN":
     case "VIDEO_EDITOR":
+    case "DIGITAL_MARKETING":
       return [
         { label: "My Projects", icon: Briefcase, href: "/projects" },
         { label: "My Tasks", icon: CheckSquare, href: "/projects" },

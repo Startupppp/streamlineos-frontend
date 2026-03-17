@@ -90,6 +90,7 @@ async function main() {
     { name: "Engineering", slug: "ENGINEERING" },
     { name: "Design", slug: "DESIGN" },
     { name: "Video Editor", slug: "VIDEO_EDITOR" },
+    { name: "Digital Marketing", slug: "DIGITAL_MARKETING" },
   ];
 
   for (const role of systemRoles) {

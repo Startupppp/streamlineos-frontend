@@ -105,7 +105,7 @@ export default function MembersSettingsPage() {
                     <SelectItem value="ENGINEERING">Engineering</SelectItem>
                     <SelectItem value="DESIGN">Design</SelectItem>
                     <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-
+                    <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -338,6 +338,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                                         <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
                                         <SelectItem value="DESIGN">Design</SelectItem>
                                         <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                                        <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
                                       </>
                                     )}
                                     </SelectContent>

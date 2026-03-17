@@ -381,8 +381,8 @@ const EMPLOYEE_SELF_SERVICE = [
 ];
 
 /**
- * EXACTLY 7 roles. No others exist.
- * CEO, HR, SALES, CUSTOMER_SUPPORT, ENGINEERING, DESIGN, VIDEO_EDITOR
+ * System roles.
+ * CEO, HR, SALES, CUSTOMER_SUPPORT, ENGINEERING, DESIGN, VIDEO_EDITOR, DIGITAL_MARKETING
  */
 export const SYSTEM_ROLES = [
   "CEO",
@@ -392,6 +392,7 @@ export const SYSTEM_ROLES = [
   "ENGINEERING",
   "DESIGN",
   "VIDEO_EDITOR",
+  "DIGITAL_MARKETING",
 ] as const;
 
 export type SystemRole = (typeof SYSTEM_ROLES)[number];
@@ -496,6 +497,17 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
 
   // VIDEO_EDITOR — can ONLY see projects/tasks assigned to them
   VIDEO_EDITOR: [
+    ...EMPLOYEE_SELF_SERVICE,
+    "projects:view",
+    "projects:tickets:view",
+    "projects:tickets:create",
+    "projects:tickets:update",
+    "projects:timesheets:view",
+    "projects:timesheets:create",
+  ],
+
+  // DIGITAL_MARKETING — projects, timesheets, and self-service
+  DIGITAL_MARKETING: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
     "projects:tickets:view",

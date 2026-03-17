@@ -101,6 +101,7 @@ export default function DashboardPage() {
       case "ENGINEERING":
       case "DESIGN":
       case "VIDEO_EDITOR":
+      case "DIGITAL_MARKETING":
         return [
           { id: "projects", label: "My Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
           { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },

@@ -71,7 +71,7 @@ interface Employee {
 
 type UserRole = string;
 type StatusFilter = "All" | "Active" | "Inactive";
-type RoleFilter = "All" | "CEO" | "HR" | "SALES" | "CUSTOMER_SUPPORT" | "ENGINEERING" | "DESIGN" | "VIDEO_EDITOR";
+type RoleFilter = "All" | "CEO" | "HR" | "SALES" | "CUSTOMER_SUPPORT" | "ENGINEERING" | "DESIGN" | "VIDEO_EDITOR" | "DIGITAL_MARKETING";
 
 const ROLE_LABELS: Record<string, string> = {
   CEO: "CEO",
@@ -81,6 +81,7 @@ const ROLE_LABELS: Record<string, string> = {
   ENGINEERING: "Engineering",
   DESIGN: "Design",
   VIDEO_EDITOR: "Video Editor",
+  DIGITAL_MARKETING: "Digital Marketing",
 };
 
 const PAGE_SIZE = 6;
@@ -345,6 +346,7 @@ export default function HRDashboardPage() {
                 <SelectItem value="ENGINEERING">Engineering</SelectItem>
                 <SelectItem value="DESIGN">Design</SelectItem>
                 <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
               </SelectContent>
             </Select>
 

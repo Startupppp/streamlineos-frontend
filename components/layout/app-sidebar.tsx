@@ -244,6 +244,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
     case "ENGINEERING":
     case "DESIGN":
     case "VIDEO_EDITOR":
+    case "DIGITAL_MARKETING":
       return [
         {
           label: "Core",
