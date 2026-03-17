@@ -1061,13 +1061,19 @@ function MessagePanel({
                   const isOwn = msg.senderId === currentUserId;
                   const prevMsg = idx > 0 ? group.messages[idx - 1] : null;
                   const isSameSender = prevMsg?.senderId === msg.senderId && !prevMsg?.isDeleted;
+                  // Add extra gap if more than 2 minutes between consecutive messages
+                  const timeDiff = prevMsg?.createdAt && msg.createdAt
+                    ? new Date(msg.createdAt).getTime() - new Date(prevMsg.createdAt).getTime()
+                    : 0;
+                  const isTimeGap = timeDiff > 2 * 60 * 1000;
+                  const showHeader = !isSameSender || isTimeGap;
 
                   return (
                     <ChatBubble
                       key={msg.id}
                       message={msg}
                       isOwn={isOwn}
-                      showSender={!isSameSender}
+                      showSender={showHeader}
                       isEditing={editingMessage?.id === msg.id}
                       editInput={editingMessage?.id === msg.id ? editInput : ""}
                       onEditInputChange={setEditInput}
@@ -1385,11 +1391,11 @@ function ChatBubble({
 }) {
   if (message.isDeleted) {
     return (
-      <div className={cn("flex mb-1", isOwn ? "justify-end" : "justify-start")}>
-        <div className="px-3 py-1.5 rounded-xl bg-muted/30 border border-border/20">
-          <p className="text-[12px] text-muted-foreground/40 italic flex items-center gap-1.5">
-            <Trash2 className="h-3 w-3" />
-            This message was deleted
+      <div className={cn("flex mb-[2px]", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
+        <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15">
+          <p className="text-[11px] text-muted-foreground/40 italic flex items-center gap-1.5">
+            <Trash2 className="h-2.5 w-2.5" />
+            Message deleted
           </p>
         </div>
       </div>
@@ -1399,27 +1405,27 @@ function ChatBubble({
   return (
     <div
       className={cn(
-        "group flex gap-2 mb-0.5",
+        "group flex gap-2",
         isOwn ? "justify-end" : "justify-start",
-        showSender && "mt-2"
+        showSender ? "mt-3 mb-0.5" : "mb-[2px]"
       )}
     >
       {/* Avatar for receiver (left side) */}
       {!isOwn && (
-        <div className="w-8 shrink-0 self-end mb-1">
+        <div className="w-7 shrink-0 self-end">
           {showSender ? (
-            <Avatar className="h-8 w-8 border border-border/30 shadow-sm">
+            <Avatar className="h-7 w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-              <AvatarFallback className="text-[9px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-[#0f2b7f]">
+              <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-[#0f2b7f]">
                 {getInitials(message.sender?.name)}
               </AvatarFallback>
             </Avatar>
-          ) : null}
+          ) : <div className="w-7" />}
         </div>
       )}
 
       {/* Bubble */}
-      <div className={cn("max-w-[75%] sm:max-w-[65%] relative", isOwn ? "items-end" : "items-start")}>
+      <div className={cn("max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
         {/* Sender name for group messages */}
         {showSender && !isOwn && (
           <p className="text-[11px] font-bold text-[#0f2b7f] mb-1 px-1 ml-1">
