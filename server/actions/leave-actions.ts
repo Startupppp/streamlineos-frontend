@@ -105,32 +105,28 @@ export async function initializeLeaveBalances(
   const currentYear = new Date().getFullYear();
   const targetYear = Math.max(joinDate.getFullYear(), currentYear);
 
-  for (const type of types) {
-    const existing = await db.query.leaveBalances.findFirst({
-      where: and(
-        eq(leaveBalances.userId, userId),
-        eq(leaveBalances.orgId, orgId),
-        eq(leaveBalances.leaveTypeId, type.id),
-        eq(leaveBalances.year, targetYear),
-      ),
-    });
+  // Batch: fetch all existing balances for this user+year in one query
+  const existingBalances = await db.query.leaveBalances.findMany({
+    where: and(
+      eq(leaveBalances.userId, userId),
+      eq(leaveBalances.orgId, orgId),
+      eq(leaveBalances.year, targetYear),
+    ),
+  });
+  const existingTypeIds = new Set(existingBalances.map((b) => b.leaveTypeId));
 
-    if (existing) continue;
-
-    const balance = resolveInitialBalance(
-      type.name,
-      type.daysPerYear,
-      joinDate,
-      targetYear,
-    );
-
-    await db.insert(leaveBalances).values({
+  const toInsert = types
+    .filter((type) => !existingTypeIds.has(type.id))
+    .map((type) => ({
       orgId,
       userId,
       leaveTypeId: type.id,
       year: targetYear,
-      balance: balance.toString(),
-    });
+      balance: resolveInitialBalance(type.name, type.daysPerYear, joinDate, targetYear).toString(),
+    }));
+
+  if (toInsert.length > 0) {
+    await db.insert(leaveBalances).values(toInsert).onConflictDoNothing();
   }
 }
 
@@ -225,35 +221,43 @@ export async function resetYearlyLeaveBalances() {
       with: { user: { columns: { id: true, joiningDate: true, isActive: true } } },
     });
 
-    for (const member of members) {
-      if (!member.user?.isActive) continue;
+    const activeMembers = members.filter((m) => m.user?.isActive);
+    if (activeMembers.length === 0 || types.length === 0) continue;
 
-      const joiningDate = member.user.joiningDate
+    // Batch: fetch ALL existing balances for this org+year in one query
+    const existingBalances = await db.query.leaveBalances.findMany({
+      where: and(
+        eq(leaveBalances.orgId, orgId),
+        eq(leaveBalances.year, newYear),
+      ),
+    });
+    const existingSet = new Set(
+      existingBalances.map((b) => `${b.userId}:${b.leaveTypeId}`)
+    );
+
+    // Build batch insert
+    const toInsert: typeof leaveBalances.$inferInsert[] = [];
+    for (const member of activeMembers) {
+      const joiningDate = member.user?.joiningDate
         ? new Date(member.user.joiningDate)
         : new Date();
 
       for (const type of types) {
-        const existing = await db.query.leaveBalances.findFirst({
-          where: and(
-            eq(leaveBalances.userId, member.userId),
-            eq(leaveBalances.orgId, orgId),
-            eq(leaveBalances.leaveTypeId, type.id),
-            eq(leaveBalances.year, newYear),
-          ),
-        });
-
-        if (existing) continue;
+        if (existingSet.has(`${member.userId}:${type.id}`)) continue;
         const balance = resolveInitialBalance(type.name, type.daysPerYear, joiningDate, newYear);
-
-        await db.insert(leaveBalances).values({
+        toInsert.push({
           orgId,
           userId: member.userId,
           leaveTypeId: type.id,
           year: newYear,
           balance: balance.toString(),
         });
-        resetCount++;
       }
+    }
+
+    if (toInsert.length > 0) {
+      await db.insert(leaveBalances).values(toInsert).onConflictDoNothing();
+      resetCount += toInsert.length;
     }
   }
 
