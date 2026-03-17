@@ -163,6 +163,9 @@ export default function ChatPage() {
   const [activeChannelId, setActiveChannelId] = useState<number | null>(null);
   const [showMobileList, setShowMobileList] = useState(true);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [emptyDMOpen, setEmptyDMOpen] = useState(false);
+  const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
+  const [showSearchFocus, setShowSearchFocus] = useState(false);
 
   const heartbeat = useChatHeartbeat();
   useEffect(() => {
@@ -212,7 +215,11 @@ export default function ChatPage() {
             showInfoPanel={showInfoPanel}
           />
         ) : (
-          <EmptyChatState />
+          <EmptyChatState
+            onNewDM={() => setEmptyDMOpen(true)}
+            onNewChannel={() => setEmptyGroupOpen(true)}
+            onSearch={() => { setShowMobileList(true); setShowSearchFocus(true); }}
+          />
         )}
       </div>
 
@@ -234,6 +241,10 @@ export default function ChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Page-level dialogs for empty state buttons */}
+      <NewDMDialog open={emptyDMOpen} onOpenChange={setEmptyDMOpen} onCreated={handleSelectChannel} hideTrigger />
+      <NewGroupDialog open={emptyGroupOpen} onOpenChange={setEmptyGroupOpen} onCreated={handleSelectChannel} hideTrigger />
     </div>
   );
 }
@@ -1773,10 +1784,12 @@ function NewDMDialog({
   open,
   onOpenChange,
   onCreated,
+  hideTrigger,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
+  hideTrigger?: boolean;
 }) {
   const { data: orgUsers, isLoading } = useChatOrgUsers();
   const { data: onlineUsers } = useChatOnlineUsers();
@@ -1799,11 +1812,13 @@ function NewDMDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Direct Message">
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Direct Message">
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3">
           <DialogTitle className="text-[16px]">New Direct Message</DialogTitle>
@@ -1880,10 +1895,12 @@ function NewGroupDialog({
   open,
   onOpenChange,
   onCreated,
+  hideTrigger,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
+  hideTrigger?: boolean;
 }) {
   const { data: orgUsers } = useChatOrgUsers();
   const createGroup = useCreateGroupChannel();
@@ -1967,11 +1984,13 @@ function NewGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Channel">
-          <Users className="h-3.5 w-3.5" />
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Channel">
+            <Users className="h-3.5 w-3.5" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3">
           <DialogTitle className="text-[16px]">
@@ -2204,7 +2223,15 @@ function EmojiGrid({ onSelect }: { onSelect: (emoji: string) => void }) {
 
 /* ─── Empty State ─── */
 
-function EmptyChatState() {
+function EmptyChatState({
+  onNewDM,
+  onNewChannel,
+  onSearch,
+}: {
+  onNewDM: () => void;
+  onNewChannel: () => void;
+  onSearch: () => void;
+}) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
       <div className="relative mb-4">
@@ -2219,25 +2246,25 @@ function EmptyChatState() {
       <p className="text-[13px] text-muted-foreground max-w-xs leading-relaxed">
         Select a conversation or start a new one.
       </p>
-      <div className="flex items-center gap-6 mt-5 text-muted-foreground/40">
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center">
-            <Plus className="h-4 w-4" />
+      <div className="flex items-center gap-6 mt-5">
+        <button onClick={onNewDM} className="flex flex-col items-center gap-1.5 group">
+          <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-[#bd882c]/10 group-hover:text-[#bd882c] text-muted-foreground transition-colors">
+            <Plus className="h-5 w-5" />
           </div>
-          <span className="text-[10px] font-medium">New DM</span>
-        </div>
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center">
-            <Hash className="h-4 w-4" />
+          <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">New DM</span>
+        </button>
+        <button onClick={onNewChannel} className="flex flex-col items-center gap-1.5 group">
+          <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-[#bd882c]/10 group-hover:text-[#bd882c] text-muted-foreground transition-colors">
+            <Hash className="h-5 w-5" />
           </div>
-          <span className="text-[10px] font-medium">Channel</span>
-        </div>
-        <div className="flex flex-col items-center gap-1.5">
-          <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center">
-            <Search className="h-4 w-4" />
+          <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">Channel</span>
+        </button>
+        <button onClick={onSearch} className="flex flex-col items-center gap-1.5 group">
+          <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-[#bd882c]/10 group-hover:text-[#bd882c] text-muted-foreground transition-colors">
+            <Search className="h-5 w-5" />
           </div>
-          <span className="text-[10px] font-medium">Search</span>
-        </div>
+          <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">Search</span>
+        </button>
       </div>
     </div>
   );
