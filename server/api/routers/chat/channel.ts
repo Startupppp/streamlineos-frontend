@@ -10,6 +10,20 @@ import {
 } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
 
+/** Verify user is a member of the channel. Throws FORBIDDEN if not. */
+async function verifyChannelMember(db: typeof import("@/lib/db").db, channelId: number, userId: string) {
+  const member = await db.query.chatChannelMembers.findFirst({
+    where: and(
+      eq(chatChannelMembers.channelId, channelId),
+      eq(chatChannelMembers.userId, userId)
+    ),
+  });
+  if (!member) {
+    throw new Error("You are not a member of this channel");
+  }
+  return member;
+}
+
 export const channelRouter = createTRPCRouter({
   getMyChannels: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.userId;
@@ -103,8 +117,10 @@ export const channelRouter = createTRPCRouter({
   getChannel: protectedProcedure
     .input(z.object({ channelId: z.number() }))
     .query(async ({ ctx, input }) => {
+      await verifyChannelMember(ctx.db, input.channelId, ctx.session.userId);
+
       const channel = await ctx.db.query.chatChannels.findFirst({
-        where: eq(chatChannels.id, input.channelId),
+        where: and(eq(chatChannels.id, input.channelId), eq(chatChannels.orgId, ctx.session.orgId)),
         with: {
           members: {
             with: { user: { columns: { id: true, name: true, image: true, email: true, role: true } } },
@@ -250,6 +266,9 @@ export const channelRouter = createTRPCRouter({
   addMembers: protectedProcedure
     .input(z.object({ channelId: z.number(), userIds: z.string().array() }))
     .mutation(async ({ ctx, input }) => {
+      const member = await verifyChannelMember(ctx.db, input.channelId, ctx.session.userId);
+      if (member.role !== "ADMIN") throw new Error("Only admins can add members");
+
       await ctx.db.insert(chatChannelMembers).values(
         input.userIds.map((uid) => ({
           channelId: input.channelId,
@@ -264,6 +283,12 @@ export const channelRouter = createTRPCRouter({
   removeMember: protectedProcedure
     .input(z.object({ channelId: z.number(), userId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const member = await verifyChannelMember(ctx.db, input.channelId, ctx.session.userId);
+      // Allow admins to remove anyone, or users to remove themselves
+      if (member.role !== "ADMIN" && input.userId !== ctx.session.userId) {
+        throw new Error("Only admins can remove other members");
+      }
+
       await ctx.db
         .delete(chatChannelMembers)
         .where(

@@ -8,16 +8,26 @@ import {
   chatChannelMembers,
 } from "@/lib/db/schema";
 
+async function verifyMember(db: typeof import("@/lib/db").db, channelId: number, userId: string) {
+  const m = await db.query.chatChannelMembers.findFirst({
+    where: and(eq(chatChannelMembers.channelId, channelId), eq(chatChannelMembers.userId, userId)),
+  });
+  if (!m) throw new Error("Not a member of this channel");
+  return m;
+}
+
 export const messageRouter = createTRPCRouter({
   getMessages: protectedProcedure
     .input(
       z.object({
         channelId: z.number(),
-        cursor: z.number().optional(), // message ID for cursor-based pagination
+        cursor: z.number().optional(),
         limit: z.number().min(1).max(100).default(50),
       })
     )
     .query(async ({ ctx, input }) => {
+      await verifyMember(ctx.db, input.channelId, ctx.session.userId);
+
       const conditions = [
         eq(chatMessages.channelId, input.channelId),
       ];
@@ -71,6 +81,8 @@ export const messageRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      await verifyMember(ctx.db, input.channelId, ctx.session.userId);
+
       if (!input.content?.trim() && (!input.attachments || input.attachments.length === 0)) {
         throw new Error("Message must have content or attachments");
       }
@@ -171,6 +183,7 @@ export const messageRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      await verifyMember(ctx.db, input.channelId, ctx.session.userId);
       const sinceDate = new Date(input.since);
 
       const newMessages = await ctx.db.query.chatMessages.findMany({
