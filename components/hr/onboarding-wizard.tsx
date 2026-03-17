@@ -117,7 +117,7 @@ export function OnboardingWizard() {
       joiningDate: new Date(),
       dateOfBirth: undefined,
       skills: "",
-      experienceYears: 0,
+      experienceYears: undefined,
       taxId: "",
       monthlySalary: undefined,
       bankDetails: {
@@ -584,11 +584,20 @@ export function OnboardingWizard() {
                                 <FormLabel>Years of Experience</FormLabel>
                                 <FormControl>
                                   <Input
-                                    type="number"
-                                    step="0.1"
+                                    type="text"
+                                    inputMode="decimal"
                                     placeholder="5.5"
-                                    value={field.value ?? ""}
-                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                    value={field.value != null ? String(field.value) : ""}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (v === "" || v === ".") {
+                                        field.onChange(v === "" ? undefined : 0);
+                                        return;
+                                      }
+                                      if (/^\d*\.?\d*$/.test(v)) {
+                                        field.onChange(Number(v));
+                                      }
+                                    }}
                                     onBlur={field.onBlur}
                                     name={field.name}
                                     ref={field.ref}
