@@ -54,7 +54,7 @@ export async function createEmployee(data: {
             where: eq(users.email, data.email)
         });
         if (existing) {
-            return { error: "User with this email already exists" };
+            return { error: "Unable to create user. Please check the details and try again." };
         }
 
         const rawPassword = data.initialPassword || crypto.randomUUID().slice(0, 16);

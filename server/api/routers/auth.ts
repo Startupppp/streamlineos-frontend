@@ -161,8 +161,8 @@ export const authRouter = createTRPCRouter({
 
       if (existingUser) {
         throw new TRPCError({
-          code: "CONFLICT",
-          message: "User with this email already exists",
+          code: "BAD_REQUEST",
+          message: "Invalid or expired invitation",
         });
       }
 
