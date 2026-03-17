@@ -178,7 +178,7 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-background">
       {/* Sidebar */}
       <div
         className={cn(
@@ -970,7 +970,7 @@ function MessagePanel({
             <p className="text-[13px] text-muted-foreground mt-3">Loading messages...</p>
           </div>
         ) : (
-          <div className="py-4 px-3 sm:px-6 max-w-[800px] mx-auto">
+          <div className="py-2 px-3 sm:px-5 max-w-[900px] mx-auto">
             {hasNextPage && (
               <div className="flex justify-center pb-4">
                 <Button
@@ -995,9 +995,9 @@ function MessagePanel({
             {groupedMessages.map((group) => (
               <Fragment key={group.date}>
                 {/* Date separator */}
-                <div className="flex items-center gap-3 my-6">
+                <div className="flex items-center gap-3 my-3">
                   <div className="flex-1 h-px bg-border/40" />
-                  <span className="text-[11px] font-semibold text-muted-foreground/70 bg-background px-3 py-1 rounded-full border border-border/30 shadow-sm">
+                  <span className="text-[10px] font-semibold text-muted-foreground/60 bg-background px-2.5 py-0.5 rounded-full border border-border/30">
                     {group.date}
                   </span>
                   <div className="flex-1 h-px bg-border/40" />
@@ -1038,16 +1038,16 @@ function MessagePanel({
             ))}
 
             {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#bd882c]/20 to-[#bd882c]/5 flex items-center justify-center mb-4">
-                  <MessageCircle className="h-7 w-7 text-[#bd882c]" />
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#bd882c]/15 to-[#bd882c]/5 flex items-center justify-center mb-3">
+                  <MessageCircle className="h-5 w-5 text-[#bd882c]" />
                 </div>
-                <h4 className="text-[15px] font-semibold mb-1">
+                <h4 className="text-[14px] font-semibold mb-0.5">
                   {channel?.type === "DIRECT"
                     ? `Start a conversation with ${displayName}`
                     : `Welcome to #${displayName}`}
                 </h4>
-                <p className="text-[13px] text-muted-foreground max-w-sm text-center">
+                <p className="text-[12px] text-muted-foreground max-w-xs text-center">
                   Send a message to get things started.
                 </p>
               </div>
@@ -1083,7 +1083,7 @@ function MessagePanel({
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-border/30 overflow-hidden bg-muted/20"
           >
-            <div className="flex items-center gap-3 px-4 py-2 max-w-[800px] mx-auto">
+            <div className="flex items-center gap-3 px-4 py-2 max-w-[900px] mx-auto">
               <div className="w-1 h-9 rounded-full bg-[#bd882c] shrink-0" />
               <Reply className="h-4 w-4 text-[#bd882c] shrink-0" />
               <div className="flex-1 min-w-0">
@@ -1101,8 +1101,8 @@ function MessagePanel({
       </AnimatePresence>
 
       {/* Composer */}
-      <div className="px-3 sm:px-6 py-3 border-t border-border/40 shrink-0 bg-card/50 relative">
-        <div className="max-w-[800px] mx-auto">
+      <div className="px-3 sm:px-5 py-2 border-t border-border/40 shrink-0 bg-card/50 relative">
+        <div className="max-w-[900px] mx-auto">
           {/* Mention dropdown */}
           <AnimatePresence>
             {showMentions && filteredMentions.length > 0 && (
@@ -1341,7 +1341,7 @@ function ChatBubble({
       className={cn(
         "group flex gap-2 mb-0.5",
         isOwn ? "justify-end" : "justify-start",
-        showSender && "mt-3"
+        showSender && "mt-2"
       )}
     >
       {/* Avatar for receiver (left side) */}
@@ -2049,37 +2049,37 @@ function EmojiGrid({ onSelect }: { onSelect: (emoji: string) => void }) {
 
 function EmptyChatState() {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-8">
-      <div className="relative mb-6">
-        <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-[#bd882c]/15 to-[#bd882c]/5 flex items-center justify-center shadow-lg">
-          <MessageCircle className="h-11 w-11 text-[#bd882c]" />
+    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+      <div className="relative mb-4">
+        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#bd882c]/15 to-[#bd882c]/5 flex items-center justify-center">
+          <MessageCircle className="h-7 w-7 text-[#bd882c]" />
         </div>
-        <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
         </div>
       </div>
-      <h3 className="text-xl font-bold mb-2">Welcome to Chat</h3>
-      <p className="text-[14px] text-muted-foreground max-w-sm leading-relaxed">
-        Select a conversation from the sidebar or start a new one to begin messaging your team.
+      <h3 className="text-lg font-bold mb-1">Welcome to Chat</h3>
+      <p className="text-[13px] text-muted-foreground max-w-xs leading-relaxed">
+        Select a conversation or start a new one.
       </p>
-      <div className="flex items-center gap-8 mt-8 text-muted-foreground/40">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-11 w-11 rounded-xl bg-muted/30 flex items-center justify-center">
-            <Plus className="h-5 w-5" />
+      <div className="flex items-center gap-6 mt-5 text-muted-foreground/40">
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center">
+            <Plus className="h-4 w-4" />
           </div>
-          <span className="text-[11px] font-medium">New DM</span>
+          <span className="text-[10px] font-medium">New DM</span>
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-11 w-11 rounded-xl bg-muted/30 flex items-center justify-center">
-            <Hash className="h-5 w-5" />
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center">
+            <Hash className="h-4 w-4" />
           </div>
-          <span className="text-[11px] font-medium">Channel</span>
+          <span className="text-[10px] font-medium">Channel</span>
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-11 w-11 rounded-xl bg-muted/30 flex items-center justify-center">
-            <Search className="h-5 w-5" />
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="h-9 w-9 rounded-lg bg-muted/30 flex items-center justify-center">
+            <Search className="h-4 w-4" />
           </div>
-          <span className="text-[11px] font-medium">Search</span>
+          <span className="text-[10px] font-medium">Search</span>
         </div>
       </div>
     </div>
