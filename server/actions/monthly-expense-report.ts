@@ -23,7 +23,7 @@ export async function generateAndSendMonthlyExpenseReport() {
   for (const org of allOrgs) {
     const members = await db.query.organizationMembers.findMany({
       where: eq(organizationMembers.orgId, org.id),
-      with: { user: true },
+      with: { user: { columns: { id: true, email: true, name: true } } },
     });
 
     const ownerAndAdminMembers = members.filter(
@@ -45,7 +45,7 @@ export async function generateAndSendMonthlyExpenseReport() {
         gte(expenses.expenseDate, startDate),
         lte(expenses.expenseDate, endDate)
       ),
-      with: { user: true },
+      with: { user: { columns: { id: true, name: true, firstName: true, lastName: true, email: true } } },
       orderBy: [desc(expenses.expenseDate)],
     });
 
