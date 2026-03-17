@@ -52,17 +52,27 @@ export async function generateAndSendWeeklyReport() {
       daysPresent: number;
     }[] = [];
 
+    // Batch: fetch ALL attendance records for this org + date range in ONE query
+    const allRecords = await db.query.attendance.findMany({
+      where: and(
+        eq(attendance.orgId, org.id),
+        gte(attendance.date, startDate),
+        lte(attendance.date, endDate)
+      ),
+    });
+
+    // Group records by userId in memory
+    const recordsByUser = new Map<string, typeof allRecords>();
+    for (const record of allRecords) {
+      const existing = recordsByUser.get(record.userId) || [];
+      existing.push(record);
+      recordsByUser.set(record.userId, existing);
+    }
+
     for (const member of activeMembers) {
       const user = member.user;
       if (!user) continue;
-      const records = await db.query.attendance.findMany({
-        where: and(
-          eq(attendance.userId, user.id),
-          eq(attendance.orgId, org.id),
-          gte(attendance.date, startDate),
-          lte(attendance.date, endDate)
-        ),
-      });
+      const records = recordsByUser.get(user.id) || [];
 
       let totalHours = 0;
       let autoCheckoutDays = 0;
