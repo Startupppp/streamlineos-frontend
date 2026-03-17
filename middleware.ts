@@ -80,7 +80,7 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
 };
 
 const RATE_LIMIT_WINDOW = 60_000;
-const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_MAX = 60;
 const RATE_LIMIT_CLEANUP_INTERVAL = 60_000;
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 let lastCleanup = Date.now();
@@ -134,6 +134,9 @@ function canAccessRoute(pathname: string, role: string): boolean {
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
+  // Skip rate limiting for read-only session checks
+  const isSessionCheck = pathname === "/api/auth/session";
+
   const RATE_LIMITED_PREFIXES = [
     "/api/auth/",
     "/api/trpc/auth.",
@@ -144,7 +147,7 @@ export default async function middleware(req: NextRequest) {
     "/api/ai/",
     "/api/chat",
   ];
-  if (RATE_LIMITED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+  if (!isSessionCheck && RATE_LIMITED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     if (!checkRateLimit(ip)) {
