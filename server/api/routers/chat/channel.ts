@@ -8,6 +8,7 @@ import {
   users,
   organizationMembers,
 } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 
 export const channelRouter = createTRPCRouter({
   getMyChannels: protectedProcedure.query(async ({ ctx }) => {
@@ -99,7 +100,7 @@ export const channelRouter = createTRPCRouter({
 
       return result;
     } catch (error) {
-      console.error("[chat.getMyChannels] Error:", error);
+      logger.error("[chat.getMyChannels]", { path: "chat.getMyChannels", error: error instanceof Error ? error.message : "Unknown error" });
       return [];
     }
   }),
@@ -292,7 +293,7 @@ export const channelRouter = createTRPCRouter({
 
       return total;
     } catch (error) {
-      console.error("[chat.getUnreadTotal] Error:", error);
+      logger.error("[chat.getUnreadTotal]", { path: "chat.getUnreadTotal", error: error instanceof Error ? error.message : "Unknown error" });
       return 0;
     }
   }),
