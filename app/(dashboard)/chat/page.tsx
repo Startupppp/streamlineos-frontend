@@ -523,7 +523,7 @@ function ChannelItem({
             {displayName}
           </p>
           {channel.lastMessage?.createdAt && (
-            <span className="text-[10px] text-muted-foreground/50 shrink-0">
+            <span className="text-[11px] text-muted-foreground/60 shrink-0">
               {formatChannelTime(channel.lastMessage.createdAt)}
             </span>
           )}
@@ -1479,17 +1479,17 @@ function ChatBubble({
             {/* Time + status */}
             <div className={cn("flex items-center gap-1.5 mt-1", isOwn ? "justify-end" : "justify-start")}>
               <span
-                className={cn("text-[10px]", isOwn ? "text-white/50" : "text-muted-foreground/50")}
+                className={cn("text-[11px]", isOwn ? "text-white/70" : "text-muted-foreground/70")}
                 title={formatMessageTimeFull(message.createdAt)}
               >
                 {formatMessageTime(message.createdAt)}
               </span>
               {message.isEdited && (
-                <span className={cn("text-[10px]", isOwn ? "text-white/35" : "text-muted-foreground/35")}>
+                <span className={cn("text-[11px]", isOwn ? "text-white/50" : "text-muted-foreground/50")}>
                   edited
                 </span>
               )}
-              {isOwn && <CheckCheck className={cn("h-3.5 w-3.5", "text-white/50")} />}
+              {isOwn && <CheckCheck className={cn("h-3.5 w-3.5", "text-white/60")} />}
             </div>
           </div>
         )}
