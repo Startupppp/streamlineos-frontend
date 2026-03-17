@@ -281,6 +281,7 @@ export const employeeRouter = createTRPCRouter({
             designation: input.designation,
             departmentId: finalDepartmentId,
             joiningDate: formatDateOnly(input.joiningDate),
+            dateOfBirth: input.dateOfBirth ? formatDateOnly(input.dateOfBirth) : null,
             experienceYears: input.experienceYears?.toString(),
             skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
             taxId: input.taxId,
