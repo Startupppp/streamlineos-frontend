@@ -200,10 +200,10 @@ export default function ChatPage() {
           showMobileList && "hidden md:flex"
         )}
       >
-        {activeChannelId ? (
+        {activeChannelId && currentUserId ? (
           <MessagePanel
             channelId={activeChannelId}
-            currentUserId={currentUserId ?? ""}
+            currentUserId={currentUserId}
             onBack={() => setShowMobileList(true)}
             onToggleInfo={() => setShowInfoPanel((p) => !p)}
             showInfoPanel={showInfoPanel}
@@ -523,7 +523,7 @@ function ChannelItem({
             {displayName}
           </p>
           {channel.lastMessage?.createdAt && (
-            <span className="text-[11px] text-muted-foreground/60 shrink-0">
+            <span className="text-[11px] text-muted-foreground shrink-0">
               {formatChannelTime(channel.lastMessage.createdAt)}
             </span>
           )}
@@ -635,10 +635,16 @@ function MessagePanel({
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
-  const messages: Message[] = useMemo(
-    () => (messagesData?.pages.flatMap((p) => p.messages) as Message[]) ?? [],
-    [messagesData]
-  );
+  const messages: Message[] = useMemo(() => {
+    const all = (messagesData?.pages.flatMap((p) => p.messages) as Message[]) ?? [];
+    // Deduplicate by message ID (poll invalidation can cause overlap between pages)
+    const seen = new Set<number>();
+    return all.filter((msg) => {
+      if (seen.has(msg.id)) return false;
+      seen.add(msg.id);
+      return true;
+    });
+  }, [messagesData]);
 
   const { data: polledMessages } = useChatPoll(channelId, lastPollTime, messages.length > 0);
 
@@ -1479,17 +1485,17 @@ function ChatBubble({
             {/* Time + status */}
             <div className={cn("flex items-center gap-1.5 mt-1", isOwn ? "justify-end" : "justify-start")}>
               <span
-                className={cn("text-[11px]", isOwn ? "text-white/70" : "text-muted-foreground/70")}
+                className={cn("text-[11px] font-medium", isOwn ? "text-white/80" : "text-muted-foreground")}
                 title={formatMessageTimeFull(message.createdAt)}
               >
                 {formatMessageTime(message.createdAt)}
               </span>
               {message.isEdited && (
-                <span className={cn("text-[11px]", isOwn ? "text-white/50" : "text-muted-foreground/50")}>
+                <span className={cn("text-[11px]", isOwn ? "text-white/60" : "text-muted-foreground/70")}>
                   edited
                 </span>
               )}
-              {isOwn && <CheckCheck className={cn("h-3.5 w-3.5", "text-white/60")} />}
+              {isOwn && <CheckCheck className={cn("h-3.5 w-3.5", "text-white/70")} />}
             </div>
           </div>
         )}
