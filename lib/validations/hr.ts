@@ -178,7 +178,7 @@ export const onboardEmployeeInputSchema = z.object({
   dateOfBirth: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),
   skills: z.string().optional(),
-  taxId: z.string().optional(),
+  taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
     accountNumber: z.string().min(1, "Account number is required"),

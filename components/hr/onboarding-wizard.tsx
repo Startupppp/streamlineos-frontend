@@ -625,7 +625,15 @@ export function OnboardingWizard() {
                               <FormItem>
                                 <FormLabel>PAN Number</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="ABCDE1234F" {...field} />
+                                  <Input
+                                    placeholder="ABCDE1234F"
+                                    maxLength={10}
+                                    {...field}
+                                    onChange={(e) => {
+                                      const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+                                      field.onChange(v.slice(0, 10));
+                                    }}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
