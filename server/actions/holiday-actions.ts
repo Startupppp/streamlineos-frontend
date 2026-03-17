@@ -94,21 +94,28 @@ export async function sendHolidayNotifications() {
         eq(holidays.notificationSent, false)
       ),
     });
+    // Cache org members to avoid duplicate fetches for holidays in the same org
+    const orgMembersCache = new Map<string, { userId: string; email: string | null; name: string | null }[]>();
+
     for (const holiday of upcomingHolidays) {
-      const members = await db
-        .select({
-          userId: organizationMembers.userId,
-          email: users.email,
-          name: users.name,
-        })
-        .from(organizationMembers)
-        .innerJoin(users, eq(organizationMembers.userId, users.id))
-        .where(
-          and(
-            eq(organizationMembers.orgId, holiday.orgId),
-            eq(users.isActive, true)
-          )
-        );
+      let members = orgMembersCache.get(holiday.orgId);
+      if (!members) {
+        members = await db
+          .select({
+            userId: organizationMembers.userId,
+            email: users.email,
+            name: users.name,
+          })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(
+            and(
+              eq(organizationMembers.orgId, holiday.orgId),
+              eq(users.isActive, true)
+            )
+          );
+        orgMembersCache.set(holiday.orgId, members);
+      }
 
       const emails = members
         .map((m) => m.email)
