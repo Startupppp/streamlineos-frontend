@@ -78,6 +78,11 @@
     "zod": "^4.1.13",
     "zustand": "^5.0.9"
   },
+  "pnpm": {
+    "overrides": {
+      "fast-xml-parser": ">=5.3.8"
+    }
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
