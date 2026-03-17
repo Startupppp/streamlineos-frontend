@@ -146,3 +146,19 @@ export function useChatSearch(query: string) {
     enabled: query.length >= 2,
   });
 }
+
+export function useSetTyping() {
+  return useMutation({
+    mutationFn: (input: { channelId: number }) =>
+      vaivammTrpcClient.chat.presence.setTyping.mutate(input),
+  });
+}
+
+export function useChatTyping(channelId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: vaivammKeys.chat.typing(channelId),
+    queryFn: () => vaivammTrpcClient.chat.presence.getTyping.query({ channelId }),
+    refetchInterval: 2_000,
+    enabled: enabled && channelId > 0,
+  });
+}

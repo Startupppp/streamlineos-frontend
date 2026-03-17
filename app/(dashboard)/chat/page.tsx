@@ -26,6 +26,8 @@ import {
   useChatOrgUsers,
   useDeleteMessage,
   useEditMessage,
+  useSetTyping,
+  useChatTyping,
 } from "@/lib/hooks/trpc-hooks";
 import { vaivammKeys } from "@/lib/hooks/trpc-keys";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -572,11 +574,22 @@ function MessagePanel({
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
   const { data: onlineUsers } = useChatOnlineUsers();
+  const setTyping = useSetTyping();
+  const { data: typingUsers } = useChatTyping(channelId, channelId > 0);
+  const lastTypingSent = useRef(0);
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
   );
+
+  const typingText = useMemo(() => {
+    if (!typingUsers || typingUsers.length === 0) return null;
+    const names = typingUsers.map((t: { name: string }) => t.name.split(" ")[0]);
+    if (names.length === 1) return `${names[0]} is typing...`;
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
+    return `${names[0]} and ${names.length - 1} others are typing...`;
+  }, [typingUsers]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -821,6 +834,12 @@ function MessagePanel({
     const el = e.target;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 160) + "px";
+
+    // Send typing indicator (throttled to once per 3s)
+    if (value.trim() && Date.now() - lastTypingSent.current > 3000) {
+      lastTypingSent.current = Date.now();
+      setTyping.mutate({ channelId });
+    }
 
     // Check for @mention trigger
     const cursorPos = el.selectionStart ?? value.length;
@@ -1169,6 +1188,14 @@ function MessagePanel({
                   <span className="text-[11px] text-muted-foreground">Uploading...</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {typingText && (
+            <div className="px-4 pb-1">
+              <span className="text-xs text-muted-foreground/70 italic animate-pulse">
+                {typingText}
+              </span>
             </div>
           )}
 

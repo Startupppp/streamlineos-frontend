@@ -131,6 +131,7 @@ export const vaivammKeys = {
     onlineUsers: () => [...chatBaseKey, "onlineUsers"] as const,
     orgUsers: () => [...chatBaseKey, "orgUsers"] as const,
     search: (query: string) => [...chatBaseKey, "search", { query }] as const,
+    typing: (channelId: number) => [...chatBaseKey, "typing", { channelId }] as const,
   },
 };
 
