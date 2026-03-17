@@ -548,7 +548,7 @@ export async function sendMonthlyExpenseReportEmail(
 
   const subject = `Monthly Expense Report - ${monthLabel}`;
   const html = getMonthlyExpenseReportTemplate(monthLabel, orgName, rows, summary);
-  const xlsxBuffer = generateMonthlyExpenseReportXlsx(monthLabel, orgName, rows, summary);
+  const xlsxBuffer = await generateMonthlyExpenseReportXlsx(monthLabel, orgName, rows, summary);
   const safeMonthLabel = monthLabel.replace(/\s+/g, "-");
   const xlsxFilename = `Monthly-Expense-Report-${safeMonthLabel}.xlsx`;
 

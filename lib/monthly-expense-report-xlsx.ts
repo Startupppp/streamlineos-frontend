@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type { MonthlyExpenseReportRow } from "./email-templates";
 
 export interface MonthlyExpenseReportSummary {
@@ -9,47 +9,45 @@ export interface MonthlyExpenseReportSummary {
   paidCount: number;
   rejectedCount: number;
 }
-export function generateMonthlyExpenseReportXlsx(
+export async function generateMonthlyExpenseReportXlsx(
   monthLabel: string,
   orgName: string,
   rows: MonthlyExpenseReportRow[],
   summary: MonthlyExpenseReportSummary
-): Buffer {
-  const workbook = XLSX.utils.book_new();
+): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
 
-  const headerRow = ["Date", "Employee", "Category", "Amount", "Status"];
-  const dataRows = rows.map((r) => [
-    r.date,
-    r.employeeName,
-    r.category,
-    r.currency === "INR" ? `₹ ${r.amount}` : r.amount,
-    r.status,
-  ]);
-  const sheetData = [headerRow, ...dataRows];
-
-  const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-  worksheet["!cols"] = [
-    { wch: 14 },
-    { wch: 22 },
-    { wch: 18 },
-    { wch: 14 },
-    { wch: 12 },
+  const worksheet = workbook.addWorksheet("Expenses");
+  worksheet.columns = [
+    { header: "Date", width: 14 },
+    { header: "Employee", width: 22 },
+    { header: "Category", width: 18 },
+    { header: "Amount", width: 14 },
+    { header: "Status", width: 12 },
   ];
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
+  for (const r of rows) {
+    worksheet.addRow([
+      r.date,
+      r.employeeName,
+      r.category,
+      r.currency === "INR" ? `₹ ${r.amount}` : r.amount,
+      r.status,
+    ]);
+  }
 
-  const summarySheetData = [
-    ["Summary"],
-    ["Total amount", `₹ ${summary.totalAmount}`],
-    ["Total expenses", summary.totalCount],
-    ["Pending", summary.pendingCount],
-    ["Approved", summary.approvedCount],
-    ["Paid", summary.paidCount],
-    ["Rejected", summary.rejectedCount],
+  const summarySheet = workbook.addWorksheet("Summary");
+  summarySheet.columns = [
+    { width: 18 },
+    { width: 16 },
   ];
-  const summarySheet = XLSX.utils.aoa_to_sheet(summarySheetData);
-  summarySheet["!cols"] = [{ wch: 18 }, { wch: 16 }];
-  XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+  summarySheet.addRow(["Summary"]);
+  summarySheet.addRow(["Total amount", `₹ ${summary.totalAmount}`]);
+  summarySheet.addRow(["Total expenses", summary.totalCount]);
+  summarySheet.addRow(["Pending", summary.pendingCount]);
+  summarySheet.addRow(["Approved", summary.approvedCount]);
+  summarySheet.addRow(["Paid", summary.paidCount]);
+  summarySheet.addRow(["Rejected", summary.rejectedCount]);
 
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
-  return Buffer.from(buffer);
+  const arrayBuffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(arrayBuffer);
 }

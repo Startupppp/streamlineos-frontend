@@ -25,7 +25,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { exportExpenses, ExportFilters, ExportResult } from "@/server/actions/expense-export";
 import { ExpenseFilters } from "@/server/actions/expense-query";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 type PdfData = NonNullable<Extract<ExportResult, { format: "pdf" }>["data"]>;
 
@@ -369,7 +369,7 @@ export function ExpenseExportDialog({
           downloadCSV(result.data, result.filename);
           break;
         case "xlsx":
-          downloadXLSX(result.data, result.filename);
+          await downloadXLSX(result.data, result.filename);
           break;
         case "pdf":
           downloadPDF(result.data, result.filename);
@@ -401,24 +401,34 @@ export function ExpenseExportDialog({
     window.URL.revokeObjectURL(url);
   };
 
-  const downloadXLSX = (
+  const downloadXLSX = async (
     data: NonNullable<Extract<ExportResult, { format: "xlsx" }>["data"]>,
     filename: string
   ) => {
-    const workbook = XLSX.utils.book_new();
+    const workbook = new ExcelJS.Workbook();
     data.sheets.forEach((sheet) => {
-      const worksheet = XLSX.utils.aoa_to_sheet(sheet.data);
+      const ws = workbook.addWorksheet(sheet.name);
       const colWidths = sheet.data[0]?.map((_, colIndex) => {
         const maxLength = Math.max(
           ...sheet.data.map((row) => String(row[colIndex] || "").length)
         );
-        return { wch: Math.min(Math.max(maxLength, 10), 50) };
-      });
-      worksheet["!cols"] = colWidths;
-
-      XLSX.utils.book_append_sheet(workbook, worksheet, sheet.name);
+        return Math.min(Math.max(maxLength, 10), 50);
+      }) || [];
+      ws.columns = colWidths.map((w) => ({ width: w }));
+      for (const row of sheet.data) {
+        ws.addRow(row);
+      }
     });
-    XLSX.writeFile(workbook, filename);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const pdfRef = useRef<HTMLDivElement>(null);
