@@ -86,7 +86,7 @@ export const rolesRouter = createTRPCRouter({
       if (input.name && !existing.isSystem) updateData.name = input.name;
       if (input.permissions) updateData.permissions = input.permissions;
 
-      await ctx.db.update(roles).set(updateData).where(eq(roles.id, input.id));
+      await ctx.db.update(roles).set(updateData).where(and(eq(roles.id, input.id), eq(roles.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 
@@ -109,7 +109,7 @@ export const rolesRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "System roles cannot be deleted" });
       }
 
-      await ctx.db.delete(roles).where(eq(roles.id, input.id));
+      await ctx.db.delete(roles).where(and(eq(roles.id, input.id), eq(roles.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 

@@ -7,12 +7,13 @@ import {
   chatChannels,
   chatChannelMembers,
 } from "@/lib/db/schema";
+import { TRPCError } from "@trpc/server";
 
 async function verifyMember(db: typeof import("@/lib/db").db, channelId: number, userId: string) {
   const m = await db.query.chatChannelMembers.findFirst({
     where: and(eq(chatChannelMembers.channelId, channelId), eq(chatChannelMembers.userId, userId)),
   });
-  if (!m) throw new Error("Not a member of this channel");
+  if (!m) throw new TRPCError({ code: "FORBIDDEN", message: "Not a member of this channel" });
   return m;
 }
 

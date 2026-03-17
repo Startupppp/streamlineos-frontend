@@ -9,6 +9,7 @@ import {
   organizationMembers,
 } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
+import { TRPCError } from "@trpc/server";
 
 /** Verify user is a member of the channel. Throws FORBIDDEN if not. */
 async function verifyChannelMember(db: typeof import("@/lib/db").db, channelId: number, userId: string) {
@@ -19,7 +20,7 @@ async function verifyChannelMember(db: typeof import("@/lib/db").db, channelId: 
     ),
   });
   if (!member) {
-    throw new Error("You are not a member of this channel");
+    throw new TRPCError({ code: "FORBIDDEN", message: "You are not a member of this channel" });
   }
   return member;
 }

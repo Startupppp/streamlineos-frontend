@@ -615,10 +615,12 @@ export const coreRouter = createTRPCRouter({
         await ctx.db.delete(timesheets).where(inArray(timesheets.ticketId, ticketIds));
         await ctx.db.delete(tickets).where(inArray(tickets.id, ticketIds));
       }
-      await ctx.db.delete(sprints).where(eq(sprints.projectId, input.projectId));
-      await ctx.db.delete(projectMembers).where(eq(projectMembers.projectId, input.projectId));
-      await ctx.db.delete(projectStatuses).where(eq(projectStatuses.projectId, input.projectId));
-      await ctx.db.delete(projects).where(eq(projects.id, input.projectId));
+      await ctx.db.transaction(async (tx) => {
+        await tx.delete(sprints).where(eq(sprints.projectId, input.projectId));
+        await tx.delete(projectMembers).where(eq(projectMembers.projectId, input.projectId));
+        await tx.delete(projectStatuses).where(eq(projectStatuses.projectId, input.projectId));
+        await tx.delete(projects).where(eq(projects.id, input.projectId));
+      });
 
       return { success: true };
     }),
