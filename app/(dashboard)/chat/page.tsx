@@ -28,6 +28,7 @@ import {
   useEditMessage,
   useSetTyping,
   useChatTyping,
+  useUpdateChannel,
 } from "@/lib/hooks/trpc-hooks";
 import { vaivammKeys } from "@/lib/hooks/trpc-keys";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -71,6 +72,8 @@ import {
   Copy,
   Loader2,
   ArrowDown,
+  Camera,
+  ImageIcon,
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -1205,7 +1208,7 @@ function MessagePanel({
             </div>
           )}
 
-          <div className="rounded-2xl border border-border/50 bg-background shadow-sm focus-within:border-[#bd882c]/30 focus-within:shadow-md transition-all">
+          <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-[#bd882c]/50 focus-within:shadow-lg transition-all">
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -1223,7 +1226,7 @@ function MessagePanel({
               onKeyDown={handleKeyDown}
               placeholder={`Message ${channel?.type === "DIRECT" ? displayName : "#" + displayName}...`}
               rows={1}
-              className="w-full bg-transparent text-[14px] resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/40 min-h-[40px] max-h-[160px]"
+              className="w-full bg-transparent text-[14px] resize-none px-4 pt-3 pb-1 focus:outline-none placeholder:text-muted-foreground/60 min-h-[40px] max-h-[160px]"
             />
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
@@ -1231,12 +1234,12 @@ function MessagePanel({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                   className={cn(
-                    "p-1.5 rounded-lg hover:bg-muted/50 transition-colors",
-                    uploading ? "text-[#bd882c] animate-pulse" : "text-muted-foreground/40 hover:text-foreground"
+                    "p-2 rounded-lg hover:bg-muted/60 transition-colors",
+                    uploading ? "text-[#bd882c] animate-pulse" : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Attach file (max 10MB)"
                 >
-                  <Paperclip className="h-4 w-4" />
+                  <Paperclip className="h-[18px] w-[18px]" />
                 </button>
                 <button
                   onClick={() => {
@@ -1244,12 +1247,12 @@ function MessagePanel({
                     setShowMentions(false);
                   }}
                   className={cn(
-                    "p-1.5 rounded-lg hover:bg-muted/50 transition-colors",
-                    showEmojiPicker ? "text-[#bd882c] bg-muted/50" : "text-muted-foreground/40 hover:text-foreground"
+                    "p-2 rounded-lg hover:bg-muted/60 transition-colors",
+                    showEmojiPicker ? "text-[#bd882c] bg-muted/50" : "text-muted-foreground/70 hover:text-foreground"
                   )}
                   title="Emoji"
                 >
-                  <Smile className="h-4 w-4" />
+                  <Smile className="h-[18px] w-[18px]" />
                 </button>
                 <button
                   onClick={() => {
@@ -1267,30 +1270,30 @@ function MessagePanel({
                       }, 0);
                     }
                   }}
-                  className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground/40 hover:text-foreground transition-colors"
+                  className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors"
                   title="Mention someone"
                 >
-                  <AtSign className="h-4 w-4" />
+                  <AtSign className="h-[18px] w-[18px]" />
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground/30 hidden sm:inline">
+                <span className="text-[10px] text-muted-foreground/50 hidden sm:inline">
                   Shift+Enter for new line
                 </span>
                 <button
                   onClick={handleSend}
                   disabled={(!messageInput.trim() && pendingAttachments.length === 0) || sendMessage.isPending}
                   className={cn(
-                    "h-8 w-8 rounded-xl flex items-center justify-center transition-all",
+                    "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                     (messageInput.trim() || pendingAttachments.length > 0)
-                      ? "bg-gradient-to-r from-[#bd882c] to-[#d4a544] text-white shadow-sm hover:shadow-md"
-                      : "bg-muted/30 text-muted-foreground/20 cursor-not-allowed"
+                      ? "bg-gradient-to-r from-[#bd882c] to-[#d4a544] text-white shadow-md hover:shadow-lg hover:scale-105"
+                      : "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
                   )}
                 >
                   {sendMessage.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-[18px] w-[18px] animate-spin" />
                   ) : (
-                    <Send className="h-4 w-4" />
+                    <Send className="h-[18px] w-[18px]" />
                   )}
                 </button>
               </div>
@@ -1555,10 +1558,60 @@ function ChannelInfoPanel({
 }) {
   const { data: channel } = useChatChannel(channelId);
   const { data: onlineUsers } = useChatOnlineUsers();
+  const updateChannel = useUpdateChannel();
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
     [onlineUsers]
   );
+
+  const isAdmin = channel?.members?.some(
+    (m) => m.user?.id === currentUserId && m.role === "ADMIN"
+  );
+  const isGroup = channel?.type === "GROUP";
+
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editAvatar, setEditAvatar] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const editAvatarRef = useRef<HTMLInputElement>(null);
+
+  const startEditing = () => {
+    setEditName(channel?.name ?? "");
+    setEditDesc(channel?.description ?? "");
+    setEditAvatar(channel?.avatarUrl ?? "");
+    setEditing(true);
+  };
+
+  const handleEditAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "chat-avatars");
+      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.url) setEditAvatar(data.url);
+      else toast.error("Upload failed");
+    } catch { toast.error("Upload failed"); }
+    finally { setUploadingAvatar(false); if (editAvatarRef.current) editAvatarRef.current.value = ""; }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateChannel.mutateAsync({
+        channelId,
+        name: editName.trim() || undefined,
+        description: editDesc.trim(),
+        avatarUrl: editAvatar,
+      });
+      setEditing(false);
+      toast.success("Channel updated");
+    } catch { toast.error("Failed to update channel"); }
+  };
 
   const otherMember =
     channel?.type === "DIRECT"
@@ -1571,13 +1624,56 @@ function ChannelInfoPanel({
     <div className="flex flex-col h-full w-80">
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
         <h3 className="text-[14px] font-bold">Details</h3>
-        <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
-          <X className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1">
+          {isGroup && isAdmin && !editing && (
+            <button onClick={startEditing} className="p-1.5 hover:bg-muted rounded-lg" title="Edit channel">
+              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
+          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-4">
+          {editing ? (
+            <div className="space-y-4 mb-6">
+              {/* Avatar edit */}
+              <div className="flex justify-center">
+                <input ref={editAvatarRef} type="file" accept="image/*" onChange={handleEditAvatarUpload} className="hidden" />
+                <button type="button" onClick={() => editAvatarRef.current?.click()} disabled={uploadingAvatar} className="relative group">
+                  {editAvatar ? (
+                    <div className="h-20 w-20 rounded-2xl overflow-hidden border-2 border-border/40">
+                      <img src={resolveImageUrl(editAvatar)} alt="Avatar" className="h-full w-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#0f2b7f]/10 to-[#0f2b7f]/5 flex items-center justify-center border border-[#0f2b7f]/10">
+                      {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <ImageIcon className="h-6 w-6 text-[#0f2b7f]/40" />}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="h-5 w-5 text-white" />
+                  </div>
+                </button>
+              </div>
+              <div>
+                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">Name</Label>
+                <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-8 text-[13px] bg-muted/30" />
+              </div>
+              <div>
+                <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">Description</Label>
+                <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} placeholder="Add a description..." className="h-8 text-[13px] bg-muted/30" />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="flex-1 h-8 text-[12px]">Cancel</Button>
+                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+                  {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+            </div>
+          ) : (
           <div className="flex flex-col items-center text-center mb-6">
             {channel?.type === "DIRECT" ? (
               <Avatar className="h-20 w-20 mb-3 border-2 border-border/30 shadow-md">
@@ -1586,6 +1682,10 @@ function ChannelInfoPanel({
                   {getInitials(otherMember?.name)}
                 </AvatarFallback>
               </Avatar>
+            ) : channel?.avatarUrl ? (
+              <div className="h-20 w-20 rounded-2xl overflow-hidden mb-3 border-2 border-border/30 shadow-md">
+                <img src={resolveImageUrl(channel.avatarUrl)} alt={channel.name} className="h-full w-full object-cover" />
+              </div>
             ) : (
               <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#0f2b7f]/10 to-[#0f2b7f]/5 flex items-center justify-center mb-3 border border-[#0f2b7f]/10">
                 <Hash className="h-8 w-8 text-[#0f2b7f]" />
@@ -1608,6 +1708,7 @@ function ChannelInfoPanel({
               )
             )}
           </div>
+          )}
 
           <div>
             <h5 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
@@ -1788,6 +1889,9 @@ function NewGroupDialog({
   const createGroup = useCreateGroupChannel();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [step, setStep] = useState<"info" | "members">("info");
@@ -1810,18 +1914,37 @@ function NewGroupDialog({
     });
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "chat-avatars");
+      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.url) setAvatarUrl(data.url);
+      else toast.error("Upload failed");
+    } catch { toast.error("Upload failed"); }
+    finally { setUploadingAvatar(false); if (avatarInputRef.current) avatarInputRef.current.value = ""; }
+  };
+
   const handleCreate = async () => {
     if (!name.trim() || selectedIds.size === 0) return;
     try {
       const channel = await createGroup.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
+        avatarUrl: avatarUrl || undefined,
         memberIds: Array.from(selectedIds),
       });
       onCreated(channel.id);
       onOpenChange(false);
       setName("");
       setDescription("");
+      setAvatarUrl("");
       setSelectedIds(new Set());
       setSearch("");
       setStep("info");
@@ -1835,6 +1958,7 @@ function NewGroupDialog({
       setStep("info");
       setName("");
       setDescription("");
+      setAvatarUrl("");
       setSelectedIds(new Set());
       setSearch("");
     }
@@ -1857,6 +1981,33 @@ function NewGroupDialog({
 
         {step === "info" ? (
           <div className="px-4 pb-4 space-y-4">
+            {/* Avatar upload */}
+            <div className="flex justify-center">
+              <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="relative group"
+              >
+                {avatarUrl ? (
+                  <div className="h-16 w-16 rounded-xl overflow-hidden border-2 border-border/40">
+                    <img src={resolveImageUrl(avatarUrl)} alt="Channel avatar" className="h-full w-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="h-16 w-16 rounded-xl bg-muted/40 border-2 border-dashed border-border/60 flex items-center justify-center">
+                    {uploadingAvatar ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Camera className="h-5 w-5 text-muted-foreground/50" />
+                    )}
+                  </div>
+                )}
+                <div className="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="h-4 w-4 text-white" />
+                </div>
+              </button>
+            </div>
             <div>
               <Label className="text-[12px] font-medium text-muted-foreground mb-1.5 block">
                 Channel name

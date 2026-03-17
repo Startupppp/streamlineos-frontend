@@ -110,6 +110,18 @@ export function useCreateGroupChannel() {
   });
 }
 
+export function useUpdateChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { channelId: number; name?: string; description?: string; avatarUrl?: string }) =>
+      vaivammTrpcClient.chat.channel.updateChannel.mutate(input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: vaivammKeys.chat.channel(variables.channelId) });
+      queryClient.invalidateQueries({ queryKey: vaivammKeys.chat.myChannels() });
+    },
+  });
+}
+
 export function useChatUnreadTotal() {
   return useQuery({
     queryKey: vaivammKeys.chat.unreadTotal(),

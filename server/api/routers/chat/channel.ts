@@ -185,6 +185,7 @@ export const channelRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1),
         description: z.string().optional(),
+        avatarUrl: z.string().optional(),
         memberIds: z.string().array().min(1),
       })
     )
@@ -199,6 +200,7 @@ export const channelRouter = createTRPCRouter({
           name: input.name,
           type: "GROUP",
           description: input.description,
+          avatarUrl: input.avatarUrl,
           createdBy: userId,
         })
         .returning();
@@ -213,6 +215,41 @@ export const channelRouter = createTRPCRouter({
       );
 
       return channel;
+    }),
+
+  updateChannel: protectedProcedure
+    .input(
+      z.object({
+        channelId: z.number(),
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        avatarUrl: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Only admins of the channel can update
+      const membership = await ctx.db.query.chatChannelMembers.findFirst({
+        where: and(
+          eq(chatChannelMembers.channelId, input.channelId),
+          eq(chatChannelMembers.userId, ctx.session.userId)
+        ),
+      });
+
+      if (!membership || membership.role !== "ADMIN") {
+        throw new Error("Only channel admins can update channel details");
+      }
+
+      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.description !== undefined) updateData.description = input.description;
+      if (input.avatarUrl !== undefined) updateData.avatarUrl = input.avatarUrl;
+
+      await ctx.db
+        .update(chatChannels)
+        .set(updateData)
+        .where(eq(chatChannels.id, input.channelId));
+
+      return { ok: true };
     }),
 
   addMembers: protectedProcedure
