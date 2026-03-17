@@ -95,6 +95,7 @@ export const organizationMembers = pgTable("organization_members", {
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uniq_org_members_user_org").on(table.userId, table.orgId),
+  index("idx_org_members_org_role").on(table.orgId, table.role),
 ]);
 export const accounts = pgTable("accounts", {
   userId: text("user_id").references(() => users.id).notNull(),
@@ -226,6 +227,7 @@ export const attendance = pgTable("attendance", {
   index("idx_attendance_user_id").on(table.userId),
   index("idx_attendance_org_date").on(table.orgId, table.date),
   index("idx_attendance_date").on(table.date),
+  index("idx_attendance_user_date").on(table.userId, table.date),
 ]);
 
 export const leaveTypes = pgTable("leave_types", {
@@ -245,6 +247,8 @@ export const leaveBalances = pgTable("leave_balances", {
   year: integer("year").notNull(),
 }, (table) => [
   index("idx_leave_balances_user_year").on(table.userId, table.year),
+  index("idx_leave_balances_org_year").on(table.orgId, table.year),
+  index("idx_leave_balances_type_org").on(table.leaveTypeId, table.orgId),
 ]);
 
 export const leaveRequests = pgTable("leave_requests", {
@@ -352,6 +356,8 @@ export const expenses = pgTable("expenses", {
 }, (table) => [
   index("idx_expenses_user_id").on(table.userId),
   index("idx_expenses_org_status").on(table.orgId, table.status),
+  index("idx_expenses_date").on(table.expenseDate),
+  index("idx_expenses_category").on(table.categoryId),
 ]);
 
 export const assets = pgTable("assets", {
@@ -1094,6 +1100,8 @@ export const leads = pgTable("leads", {
 }, (table) => [
   index("idx_leads_org_status").on(table.orgId, table.status),
   index("idx_leads_assigned_to").on(table.assignedToId),
+  index("idx_leads_created_at").on(table.orgId, table.createdAt),
+  index("idx_leads_source").on(table.source),
 ]);
 
 export const leadActivities = pgTable("lead_activities", {
@@ -1530,6 +1538,7 @@ export const chatChannelMembers = pgTable("chat_channel_members", {
 }, (table) => [
   uniqueIndex("uniq_channel_member").on(table.channelId, table.userId),
   index("idx_chat_members_user").on(table.userId),
+  index("idx_chat_members_channel").on(table.channelId),
 ]);
 
 export const chatMessages = pgTable("chat_messages", {
