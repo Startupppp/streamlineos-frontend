@@ -16,7 +16,6 @@ export const channelRouter = createTRPCRouter({
     const orgId = ctx.session.orgId;
 
     try {
-      // Get all channels the user is a member of
       const memberships = await ctx.db
         .select({ channelId: chatChannelMembers.channelId, lastReadAt: chatChannelMembers.lastReadAt })
         .from(chatChannelMembers)
@@ -27,6 +26,7 @@ export const channelRouter = createTRPCRouter({
       const channelIds = memberships.map((m) => m.channelId);
       const lastReadMap = new Map(memberships.map((m) => [m.channelId, m.lastReadAt]));
 
+      // 1. Fetch channels with members (single query)
       const channels = await ctx.db.query.chatChannels.findMany({
         where: and(
           eq(chatChannels.orgId, orgId),
@@ -41,64 +41,59 @@ export const channelRouter = createTRPCRouter({
         },
       });
 
-      // Get last message + unread count for each channel (sequential to avoid pool exhaustion)
-      const result = [];
-      for (const ch of channels) {
-        const lastReadAt = lastReadMap.get(ch.id) ?? new Date(0);
+      // 2. Batch unread counts in ONE query using CASE expressions
+      const unreadRows = await ctx.db
+        .select({
+          channelId: chatMessages.channelId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(chatMessages)
+        .where(
+          and(
+            inArray(chatMessages.channelId, channelIds),
+            ne(chatMessages.senderId, userId),
+            eq(chatMessages.isDeleted, false),
+            sql`${chatMessages.createdAt} > COALESCE((
+              SELECT last_read_at FROM chat_channel_members
+              WHERE channel_id = ${chatMessages.channelId} AND user_id = ${userId}
+            ), '1970-01-01'::timestamp)`
+          )
+        )
+        .groupBy(chatMessages.channelId);
 
-        let unreadCount = 0;
-        try {
-          const [unreadResult] = await ctx.db
-            .select({ count: sql<number>`count(*)::int` })
-            .from(chatMessages)
-            .where(
-              and(
-                eq(chatMessages.channelId, ch.id),
-                gt(chatMessages.createdAt, lastReadAt),
-                ne(chatMessages.senderId, userId),
-                eq(chatMessages.isDeleted, false)
-              )
-            );
-          unreadCount = unreadResult?.count ?? 0;
-        } catch {
-          // Fallback to 0
-        }
+      const unreadMap = new Map(unreadRows.map((r) => [r.channelId, r.count]));
 
-        let lastMessage: {
-          content: string | null;
-          senderName: string | null | undefined;
-          createdAt: Date | null;
-        } | null = null;
+      // 3. Batch last messages in ONE query using DISTINCT ON
+      const lastMessages = await ctx.db.execute<{
+        channel_id: number;
+        content: string | null;
+        sender_name: string | null;
+        created_at: Date | null;
+      }>(sql`
+        SELECT DISTINCT ON (m.channel_id)
+          m.channel_id,
+          m.content,
+          u.name AS sender_name,
+          m.created_at
+        FROM chat_messages m
+        LEFT JOIN users u ON u.id = m.sender_id
+        WHERE m.channel_id = ANY(${channelIds})
+          AND m.is_deleted = false
+        ORDER BY m.channel_id, m.created_at DESC
+      `);
 
-        try {
-          const msg = await ctx.db.query.chatMessages.findFirst({
-            where: and(
-              eq(chatMessages.channelId, ch.id),
-              eq(chatMessages.isDeleted, false)
-            ),
-            orderBy: [desc(chatMessages.createdAt)],
-            with: { sender: { columns: { id: true, name: true } } },
-          });
+      const lastMsgMap = new Map(
+        lastMessages.rows.map((r) => [
+          r.channel_id,
+          { content: r.content, senderName: r.sender_name, createdAt: r.created_at },
+        ])
+      );
 
-          if (msg) {
-            lastMessage = {
-              content: msg.content,
-              senderName: msg.sender?.name,
-              createdAt: msg.createdAt,
-            };
-          }
-        } catch {
-          // Fallback to null
-        }
-
-        result.push({
-          ...ch,
-          unreadCount,
-          lastMessage,
-        });
-      }
-
-      return result;
+      return channels.map((ch) => ({
+        ...ch,
+        unreadCount: unreadMap.get(ch.id) ?? 0,
+        lastMessage: lastMsgMap.get(ch.id) ?? null,
+      }));
     } catch (error) {
       logger.error("[chat.getMyChannels]", { path: "chat.getMyChannels", error: error instanceof Error ? error.message : "Unknown error" });
       return [];
@@ -300,35 +295,21 @@ export const channelRouter = createTRPCRouter({
     const userId = ctx.session.userId;
 
     try {
-      const memberships = await ctx.db
-        .select({ channelId: chatChannelMembers.channelId, lastReadAt: chatChannelMembers.lastReadAt })
-        .from(chatChannelMembers)
-        .where(eq(chatChannelMembers.userId, userId));
-
-      if (memberships.length === 0) return 0;
-
-      let total = 0;
-      for (const m of memberships) {
-        const lastReadAt = m.lastReadAt ?? new Date(0);
-        try {
-          const [result] = await ctx.db
-            .select({ count: sql<number>`count(*)::int` })
-            .from(chatMessages)
-            .where(
-              and(
-                eq(chatMessages.channelId, m.channelId),
-                gt(chatMessages.createdAt, lastReadAt),
-                ne(chatMessages.senderId, userId),
-                eq(chatMessages.isDeleted, false)
-              )
-            );
-          total += result?.count ?? 0;
-        } catch {
-          // Skip this channel
-        }
-      }
-
-      return total;
+      const [result] = await ctx.db.execute<{ total: number }>(sql`
+        SELECT COALESCE(SUM(unread), 0)::int AS total
+        FROM (
+          SELECT COUNT(m.id) AS unread
+          FROM chat_channel_members ccm
+          JOIN chat_messages m
+            ON m.channel_id = ccm.channel_id
+            AND m.created_at > COALESCE(ccm.last_read_at, '1970-01-01'::timestamp)
+            AND m.sender_id != ${userId}
+            AND m.is_deleted = false
+          WHERE ccm.user_id = ${userId}
+          GROUP BY ccm.channel_id
+        ) sub
+      `);
+      return result.rows[0]?.total ?? 0;
     } catch (error) {
       logger.error("[chat.getUnreadTotal]", { path: "chat.getUnreadTotal", error: error instanceof Error ? error.message : "Unknown error" });
       return 0;

@@ -37,7 +37,7 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
   return useQuery({
     queryKey: vaivammKeys.chat.poll(channelId, since),
     queryFn: () => vaivammTrpcClient.chat.message.poll.query({ channelId, since }),
-    refetchInterval: 3_000,
+    refetchInterval: 5_000,
     enabled: enabled && channelId > 0,
   });
 }
@@ -170,7 +170,7 @@ export function useChatTyping(channelId: number, enabled: boolean) {
   return useQuery({
     queryKey: vaivammKeys.chat.typing(channelId),
     queryFn: () => vaivammTrpcClient.chat.presence.getTyping.query({ channelId }),
-    refetchInterval: 2_000,
+    refetchInterval: 4_000,
     enabled: enabled && channelId > 0,
   });
 }

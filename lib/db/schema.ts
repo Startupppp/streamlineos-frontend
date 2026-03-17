@@ -1545,6 +1545,7 @@ export const chatMessages = pgTable("chat_messages", {
 }, (table) => [
   index("idx_chat_messages_channel").on(table.channelId, table.createdAt),
   index("idx_chat_messages_sender").on(table.senderId),
+  index("idx_chat_messages_unread").on(table.channelId, table.createdAt, table.senderId, table.isDeleted),
 ]);
 
 export const chatAttachments = pgTable("chat_attachments", {
@@ -1569,6 +1570,7 @@ export const chatUserPresence = pgTable("chat_user_presence", {
 }, (table) => [
   uniqueIndex("uniq_chat_presence_user").on(table.userId),
   index("idx_chat_presence_org").on(table.orgId, table.status),
+  index("idx_chat_presence_lastseen").on(table.orgId, table.lastSeenAt),
 ]);
 
 export const chatChannelsRelations = relations(chatChannels, ({ many, one }) => ({
