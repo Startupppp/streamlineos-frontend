@@ -13,7 +13,7 @@ export const updateProfileInputSchema = z.object({
   name: z.string().min(1).optional(),
   designation: z.string().optional(),
   departmentId: z.number().int().positive().optional(),
-  phone: z.string().optional(),
+  phone: z.string().regex(/^[\d+\s-]+$/, "Please enter a valid phone number").optional().or(z.literal("")),
   image: z.string().optional(),
 });
 
@@ -162,7 +162,7 @@ export const onboardEmployeeInputSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[\d+\s-]+$/, "Please enter a valid phone number"),
   whatsappSameAsPhone: z.boolean().default(true),
   whatsappNumber: z.string().regex(/^[\d+\s-]*$/, "Please enter a valid number").optional(),
   password: z.string().refine((val) => !val || val.length >= 8, {
