@@ -41,7 +41,20 @@ export async function sendDailyNotifications() {
       return { birthdayCount: 0, leaveCount: 0, anniversaryCount: 0 };
     }
 
-    // For each birthday person, find their org and notify all org members
+    // Cache org members to avoid duplicate fetches when multiple birthdays in same org
+    const orgMembersCache = new Map<string, { email: string; name: string | null }[]>();
+
+    async function getOrgMembers(orgId: string) {
+      if (orgMembersCache.has(orgId)) return orgMembersCache.get(orgId)!;
+      const members = await db
+        .select({ email: users.email, name: users.name })
+        .from(organizationMembers)
+        .innerJoin(users, eq(organizationMembers.userId, users.id))
+        .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)));
+      orgMembersCache.set(orgId, members);
+      return members;
+    }
+
     for (const birthdayUser of birthdayUsers) {
       const displayName =
         birthdayUser.firstName && birthdayUser.lastName
@@ -86,16 +99,7 @@ export async function sendDailyNotifications() {
 
         // Send birthday announcement emails to all active org members
         try {
-          const orgMembers = await db
-            .select({ email: users.email, name: users.name })
-            .from(organizationMembers)
-            .innerJoin(users, eq(organizationMembers.userId, users.id))
-            .where(
-              and(
-                eq(organizationMembers.orgId, membership.orgId),
-                eq(users.isActive, true)
-              )
-            );
+          const orgMembers = await getOrgMembers(membership.orgId);
 
           const emails = orgMembers
             .map((m) => m.email)
