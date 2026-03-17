@@ -163,9 +163,13 @@ function isImageMime(mime: string) {
   return mime.startsWith("image/");
 }
 
-function resolveFileUrl(url: string): string {
+function resolveFileUrl(url: string, mime?: string): string {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/")) return url;
+  // Images go through image proxy (streaming with cache), documents through download (attachment header)
+  if (mime && !mime.startsWith("image/")) {
+    return `/api/storage/download?key=${encodeURIComponent(url)}&attachment=1`;
+  }
   return `/api/storage/image?key=${encodeURIComponent(url)}`;
 }
 
@@ -1494,7 +1498,7 @@ function ChatBubble({
             {message.attachments.length > 0 && (
               <div className="mt-1.5 space-y-1.5">
                 {message.attachments.map((att) => {
-                  const url = resolveFileUrl(att.fileUrl);
+                  const url = resolveFileUrl(att.fileUrl, att.mimeType);
                   return isImageMime(att.mimeType) ? (
                     <a
                       key={att.id}
