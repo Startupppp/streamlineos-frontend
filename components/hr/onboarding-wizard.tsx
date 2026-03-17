@@ -335,7 +335,18 @@ export function OnboardingWizard() {
                               <FormItem>
                                 <FormLabel>WhatsApp Number</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="+91 9876543210" {...field} />
+                                  <Input
+                                    type="tel"
+                                    inputMode="numeric"
+                                    placeholder="+91 9876543210"
+                                    {...field}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (/^[\d+\s-]*$/.test(v)) {
+                                        field.onChange(v);
+                                      }
+                                    }}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

@@ -164,7 +164,7 @@ export const onboardEmployeeInputSchema = z.object({
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   whatsappSameAsPhone: z.boolean().default(true),
-  whatsappNumber: z.string().optional(),
+  whatsappNumber: z.string().regex(/^[\d+\s-]*$/, "Please enter a valid number").optional(),
   password: z.string().refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),
