@@ -40,6 +40,7 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   "/hr/devices": ["CEO", "HR"],
   "/hr/documents": ["CEO", "HR"],
   "/hr/work-logs": ["CEO", "HR"],
+  "/hr/performance": ["CEO", "HR"],
   "/hr/org-chart": ["CEO", "HR"],
 
   // Self-service HR — all roles (explicit override for sub-routes of /hr)
