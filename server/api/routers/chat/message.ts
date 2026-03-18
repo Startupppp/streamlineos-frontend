@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc, gt, ilike, sql } from "drizzle-orm";
+import { eq, and, desc, gt, ilike, sql, inArray } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import {
   chatMessages,
@@ -215,9 +215,23 @@ export const messageRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      const userId = ctx.session.userId;
+
+      if (input.channelId) {
+        await verifyMember(ctx.db, input.channelId, userId);
+      }
+
+      const myChannels = await ctx.db
+        .select({ channelId: chatChannelMembers.channelId })
+        .from(chatChannelMembers)
+        .where(eq(chatChannelMembers.userId, userId));
+      const myChannelIds = myChannels.map((c) => c.channelId);
+      if (myChannelIds.length === 0) return [];
+
       const conditions = [
         ilike(chatMessages.content, `%${input.query}%`),
         eq(chatMessages.isDeleted, false),
+        inArray(chatMessages.channelId, myChannelIds),
       ];
 
       if (input.channelId) {
