@@ -71,6 +71,7 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
 
   // Settings — CEO and HR
   "/settings": ["CEO", "HR"],
+  "/settings/roles": ["CEO", "HR"],
 
   // Billing & Invoices — CEO, HR
   "/billing": ["CEO", "HR"],

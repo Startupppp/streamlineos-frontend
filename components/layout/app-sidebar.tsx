@@ -36,6 +36,7 @@ import {
   Network,
   Ticket,
   MessageCircle,
+  Shield,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
@@ -137,6 +138,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Billing", icon: Receipt, href: "/billing" },
             { label: "Invoices", icon: FileText, href: "/billing/invoices" },
             { label: "Settings", icon: Settings, href: "/settings" },
+            { label: "Roles & Permissions", icon: Shield, href: "/settings/roles" },
           ],
         },
       ];
