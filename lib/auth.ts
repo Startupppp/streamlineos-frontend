@@ -41,13 +41,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+          return null;
+        }
+
         const isValid = await bcrypt.compare(
           credentials.password as string,
           user.password
         );
 
         if (!isValid) {
+          const attempts = (user.loginAttempts ?? 0) + 1;
+          const lockUpdate: Record<string, unknown> = { loginAttempts: attempts };
+          if (attempts >= 10) {
+            lockUpdate.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+          }
+          await db.update(users).set(lockUpdate).where(eq(users.id, user.id));
           return null;
+        }
+
+        if (user.loginAttempts && user.loginAttempts > 0) {
+          await db.update(users).set({ loginAttempts: 0, lockedUntil: null }).where(eq(users.id, user.id));
         }
 
         // Single-org auto-membership: ensure user belongs to the organization

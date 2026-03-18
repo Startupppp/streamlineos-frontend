@@ -68,23 +68,25 @@ export async function createEmployee(data: {
 
         const newUserId = crypto.randomUUID();
         
-        await db.insert(users).values({
-            id: newUserId,
-            email: data.email,
-            password: hashedPassword,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            name: `${data.firstName} ${data.lastName}`,
-            role: data.role,
-            gender: data.gender,
-            isPasswordChangeRequired: true,
-            emailVerified: null, 
-        });
+        await db.transaction(async (tx) => {
+            await tx.insert(users).values({
+                id: newUserId,
+                email: data.email,
+                password: hashedPassword,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                name: `${data.firstName} ${data.lastName}`,
+                role: data.role,
+                gender: data.gender,
+                isPasswordChangeRequired: true,
+                emailVerified: null,
+            });
 
-        await db.insert(organizationMembers).values({
-            userId: newUserId,
-            orgId: creatorOrg.orgId,
-            role: data.role,
+            await tx.insert(organizationMembers).values({
+                userId: newUserId,
+                orgId: creatorOrg.orgId,
+                role: data.role,
+            });
         });
 
         revalidatePath("/hr");

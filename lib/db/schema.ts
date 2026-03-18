@@ -191,6 +191,8 @@ export const users = pgTable("users", {
   employeeId: text("employee_id"),
   metadata: jsonb("metadata"),
   isPasswordChangeRequired: boolean("is_password_change_required").default(false),
+  loginAttempts: integer("login_attempts").default(0).notNull(),
+  lockedUntil: timestamp("locked_until"),
   isActive: boolean("is_active").default(true).notNull(),
   hasDashboardAccess: boolean("has_dashboard_access").default(false).notNull(),
   reportingTo: text("reporting_to"),
