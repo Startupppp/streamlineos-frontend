@@ -415,6 +415,10 @@ export async function processLeaveRequest(data: {
   });
   if (!request) return { error: "Request not found" };
 
+  if (request.userId === session.user.id) {
+    return { error: "You cannot approve or reject your own leave request" };
+  }
+
   if (request.approverId !== session.user.id) {
     const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id),

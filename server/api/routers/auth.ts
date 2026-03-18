@@ -132,7 +132,7 @@ export const authRouter = createTRPCRouter({
 
       await ctx.db
         .delete(passwordResetTokens)
-        .where(eq(passwordResetTokens.email, tokenRecord.email));
+        .where(eq(passwordResetTokens.token, input.token));
 
       return { success: true };
     }),

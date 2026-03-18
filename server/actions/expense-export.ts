@@ -227,7 +227,11 @@ function generateCSVContent(
   csvContent += headers.join(",") + "\n";
   csvContent += rows
     .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      row.map((cell) => {
+        let val = String(cell).replace(/"/g, '""');
+        if (/^[=+\-@\t\r]/.test(val)) val = `'${val}`;
+        return `"${val}"`;
+      }).join(",")
     )
     .join("\n");
   if (options.includeTotals !== false && stats) {
