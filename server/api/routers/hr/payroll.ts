@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { logger } from "../../../../lib/logger";
 import {
   payrolls,
   salaryStructures,
@@ -228,7 +229,7 @@ export const payrollRouter = createTRPCRouter({
             employeeName,
             monthName,
             netSalary.toLocaleString()
-          ).catch(() => {});
+          ).catch((err) => logger.warn("Failed to send payslip email", { error: err instanceof Error ? err.message : "Unknown" }));
         }
 
         return existing;
@@ -252,7 +253,7 @@ export const payrollRouter = createTRPCRouter({
           employeeName,
           monthName,
           netSalary.toLocaleString()
-        ).catch(() => {});
+        ).catch((err) => logger.warn("Failed to send payslip email", { error: err instanceof Error ? err.message : "Unknown" }));
       }
 
       return payroll;
