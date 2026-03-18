@@ -7,7 +7,7 @@ import {
   passwordResetTokens,
   verificationTokens,
 } from "../../../lib/db/schema";
-import { eq, and, gt, isNull } from "drizzle-orm";
+import { eq, and, gt, isNull, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
@@ -79,8 +79,9 @@ export const authRouter = createTRPCRouter({
   forgotPassword: publicProcedure
     .input(forgotPasswordSchema)
     .mutation(async ({ ctx, input }) => {
+      const normalizedEmail = input.email.toLowerCase().trim();
       const user = await ctx.db.query.users.findFirst({
-        where: eq(users.email, input.email),
+        where: sql`lower(${users.email}) = ${normalizedEmail}`,
       });
 
       if (!user) {
