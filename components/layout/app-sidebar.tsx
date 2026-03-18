@@ -128,12 +128,14 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Support",
           routes: [
             { label: "Tickets", icon: Ticket, href: "/support" },
+            { label: "Inbox", icon: MessageCircle, href: "/support/inbox" },
           ],
         },
         {
           label: "System",
           routes: [
             { label: "Billing", icon: Receipt, href: "/billing" },
+            { label: "Invoices", icon: FileText, href: "/billing/invoices" },
             { label: "Settings", icon: Settings, href: "/settings" },
           ],
         },

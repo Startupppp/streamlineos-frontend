@@ -1,0 +1,405 @@
+"use client";
+
+import { useState } from "react";
+import { api } from "@/trpc/react";
+import { format } from "date-fns";
+import {
+  Plus,
+  FileText,
+  Send,
+  Check,
+  Clock,
+  Ban,
+  Loader2,
+  MoreHorizontal,
+  Trash2,
+  Eye,
+  IndianRupee,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { DashboardGate } from "@/components/shared/dashboard-gate";
+
+const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof FileText }> = {
+  DRAFT: { label: "Draft", variant: "secondary", icon: FileText },
+  SENT: { label: "Sent", variant: "default", icon: Send },
+  PAID: { label: "Paid", variant: "default", icon: Check },
+  OVERDUE: { label: "Overdue", variant: "destructive", icon: Clock },
+  CANCELLED: { label: "Cancelled", variant: "outline", icon: Ban },
+};
+
+function formatCurrency(amount: number | string) {
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(amount));
+}
+
+export default function InvoicesPage() {
+  return (
+    <DashboardGate allowedRoles={["CEO", "HR"]}>
+      <InvoicesContent />
+    </DashboardGate>
+  );
+}
+
+function InvoicesContent() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const { data: invoicesData, isLoading } = api.invoice.list.useQuery(
+    statusFilter !== "all" ? { status: statusFilter as "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED" } : undefined
+  );
+  const { data: stats } = api.invoice.getStats.useQuery();
+  const utils = api.useUtils();
+
+  const updateStatus = api.invoice.updateStatus.useMutation({
+    onSuccess: () => {
+      utils.invoice.list.invalidate();
+      utils.invoice.getStats.invalidate();
+      toast.success("Invoice status updated");
+    },
+  });
+
+  const deleteInvoice = api.invoice.delete.useMutation({
+    onSuccess: () => {
+      utils.invoice.list.invalidate();
+      utils.invoice.getStats.invalidate();
+      toast.success("Invoice deleted");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const invoices = invoicesData?.items ?? [];
+
+  return (
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Invoices</h2>
+          <p className="text-sm text-muted-foreground">Manage and track all invoices</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+          <Plus className="h-4 w-4" /> New Invoice
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+            <IndianRupee className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats?.totalOutstanding ?? 0)}</div>
+            <p className="text-xs text-muted-foreground">{(stats?.sent ?? 0) + (stats?.overdue ?? 0)} invoices</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Paid</CardTitle>
+            <Check className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats?.totalPaid ?? 0)}</div>
+            <p className="text-xs text-muted-foreground">{stats?.paid ?? 0} invoices</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+            <Clock className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats?.overdue ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Need attention</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.draft ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Ready to send</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Filter status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="DRAFT">Draft</SelectItem>
+            <SelectItem value="SENT">Sent</SelectItem>
+            <SelectItem value="PAID">Paid</SelectItem>
+            <SelectItem value="OVERDUE">Overdue</SelectItem>
+            <SelectItem value="CANCELLED">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice #</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="w-10" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                </TableCell>
+              </TableRow>
+            ) : invoices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-12">
+                  <FileText className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                  <p className="text-sm text-muted-foreground">No invoices yet</p>
+                </TableCell>
+              </TableRow>
+            ) : (
+              invoices.map((inv) => {
+                const config = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG.DRAFT;
+                return (
+                  <TableRow key={inv.id}>
+                    <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
+                    <TableCell>{inv.client?.name ?? "—"}</TableCell>
+                    <TableCell className="font-semibold">{formatCurrency(inv.total)}</TableCell>
+                    <TableCell>
+                      <Badge variant={config.variant} className="gap-1 text-xs">
+                        <config.icon className="h-3 w-3" />
+                        {config.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{inv.dueDate ? format(new Date(inv.dueDate), "MMM d, yyyy") : "—"}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{inv.createdAt ? format(new Date(inv.createdAt), "MMM d") : ""}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {inv.status === "DRAFT" && (
+                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: inv.id, status: "SENT" })}>
+                              <Send className="h-3.5 w-3.5 mr-2" /> Mark as Sent
+                            </DropdownMenuItem>
+                          )}
+                          {(inv.status === "SENT" || inv.status === "OVERDUE") && (
+                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: inv.id, status: "PAID" })}>
+                              <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
+                            </DropdownMenuItem>
+                          )}
+                          {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
+                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: inv.id, status: "CANCELLED" })} className="text-destructive">
+                              <Ban className="h-3.5 w-3.5 mr-2" /> Cancel
+                            </DropdownMenuItem>
+                          )}
+                          {inv.status !== "PAID" && (
+                            <DropdownMenuItem onClick={() => deleteInvoice.mutate({ id: inv.id })} className="text-destructive">
+                              <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </div>
+  );
+}
+
+function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const utils = api.useUtils();
+  const createInvoice = api.invoice.create.useMutation({
+    onSuccess: () => {
+      utils.invoice.list.invalidate();
+      utils.invoice.getStats.invalidate();
+      onOpenChange(false);
+      setLineItems([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
+      toast.success("Invoice created");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const [lineItems, setLineItems] = useState([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
+  const [taxRate, setTaxRate] = useState(18);
+  const [discount, setDiscount] = useState(0);
+  const [dueDate, setDueDate] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const updateLineItem = (idx: number, field: string, value: string | number) => {
+    setLineItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== idx) return item;
+        const updated = { ...item, [field]: value };
+        if (field === "quantity" || field === "rate") {
+          updated.amount = Number(updated.quantity) * Number(updated.rate);
+        }
+        return updated;
+      })
+    );
+  };
+
+  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount - discount;
+
+  const handleSubmit = () => {
+    const validItems = lineItems.filter((i) => i.description.trim() && i.amount > 0);
+    if (validItems.length === 0) { toast.error("Add at least one line item"); return; }
+    createInvoice.mutate({
+      lineItems: validItems,
+      taxRate,
+      discount,
+      dueDate: dueDate || undefined,
+      notes: notes || undefined,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create Invoice</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <Label className="text-xs font-medium text-muted-foreground mb-2 block">Line Items</Label>
+            <div className="space-y-2">
+              {lineItems.map((item, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                  <Input
+                    className="col-span-5 h-9 text-sm"
+                    placeholder="Description"
+                    value={item.description}
+                    onChange={(e) => updateLineItem(idx, "description", e.target.value)}
+                  />
+                  <Input
+                    className="col-span-2 h-9 text-sm text-right"
+                    type="number"
+                    placeholder="Qty"
+                    value={item.quantity || ""}
+                    onChange={(e) => updateLineItem(idx, "quantity", Number(e.target.value))}
+                  />
+                  <Input
+                    className="col-span-2 h-9 text-sm text-right"
+                    type="number"
+                    placeholder="Rate"
+                    value={item.rate || ""}
+                    onChange={(e) => updateLineItem(idx, "rate", Number(e.target.value))}
+                  />
+                  <div className="col-span-2 text-sm font-medium text-right pr-1">
+                    {formatCurrency(item.amount)}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="col-span-1 h-8 w-8"
+                    onClick={() => setLineItems((prev) => prev.filter((_, i) => i !== idx))}
+                    disabled={lineItems.length === 1}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLineItems((prev) => [...prev, { description: "", quantity: 1, rate: 0, amount: 0 }])}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">Tax Rate (%)</Label>
+              <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="h-9 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Discount</Label>
+              <Input type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="h-9 mt-1" />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs">Due Date</Label>
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 mt-1" />
+          </div>
+
+          <div>
+            <Label className="text-xs">Notes</Label>
+            <Input placeholder="Payment terms, bank details, etc." value={notes} onChange={(e) => setNotes(e.target.value)} className="h-9 mt-1" />
+          </div>
+
+          <div className="border-t pt-3 space-y-1 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Tax ({taxRate}%)</span><span>{formatCurrency(taxAmount)}</span></div>
+            {discount > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Discount</span><span className="text-red-500">-{formatCurrency(discount)}</span></div>}
+            <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total</span><span>{formatCurrency(total)}</span></div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={createInvoice.isPending} className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+              {createInvoice.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
+              Create Invoice
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
