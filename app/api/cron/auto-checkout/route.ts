@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processAutoCheckout } from "@/server/actions/auto-checkout";
 import { logger } from "@/lib/logger";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronSecret(request.headers.get("authorization"));
+  if (authError) return authError;
 
   try {
     const result = await processAutoCheckout();
-
-    return NextResponse.json({
-      success: true,
-      ...result,
-    });
+    return NextResponse.json({ success: true, ...result });
   } catch (error) {
     logger.error("Auto-checkout cron failed", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

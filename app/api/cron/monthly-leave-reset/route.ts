@@ -4,14 +4,11 @@ import {
   resetYearlyLeaveBalances,
 } from "@/server/actions/leave-actions";
 import { logger } from "@/lib/logger";
+import { verifyCronSecret } from "@/lib/cron-auth";
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = verifyCronSecret(request.headers.get("authorization"));
+  if (authError) return authError;
 
   try {
     const now = new Date();
