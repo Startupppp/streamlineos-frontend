@@ -702,7 +702,7 @@ export default function PayrollPage() {
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <Image
-                src="/illustrations/empty-payroll.svg"
+                src="/illustrations/undraw-pay-online.svg"
                 alt="No payroll records"
                 width={200}
                 height={160}
