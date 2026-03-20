@@ -36,6 +36,7 @@ import {
   Network,
   Ticket,
   MessageCircle,
+  MessageSquareText,
   Shield,
 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
@@ -80,7 +81,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-            { label: "Chat", icon: MessageCircle, href: "/chat" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
             { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
           ],
         },
@@ -152,7 +153,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-            { label: "Chat", icon: MessageCircle, href: "/chat" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
         {
@@ -210,7 +211,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-            { label: "Chat", icon: MessageCircle, href: "/chat" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
         {
@@ -234,7 +235,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-            { label: "Chat", icon: MessageCircle, href: "/chat" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
         {
@@ -260,7 +261,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-            { label: "Chat", icon: MessageCircle, href: "/chat" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
         {
@@ -283,7 +284,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-            { label: "Chat", icon: MessageCircle, href: "/chat" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
         {
