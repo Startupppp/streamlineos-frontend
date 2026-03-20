@@ -117,6 +117,49 @@ export async function createExpense(data: CreateExpenseInput) {
   }
 }
 
+export async function updateExpense(expenseId: number, data: Partial<CreateExpenseInput>) {
+  const ctx = await getExpenseMember();
+  if (!ctx) return { error: "Unauthorized" };
+  const { session, member } = ctx;
+
+  try {
+    const existing = await db.query.expenses.findFirst({
+      where: and(
+        eq(expenses.id, expenseId),
+        eq(expenses.orgId, member.orgId),
+      ),
+    });
+
+    if (!existing) return { error: "Expense not found" };
+
+    const isOwner = existing.userId === session.user.id;
+    const isAdminRole = member.role === "CEO" || member.role === "ADMIN" || member.role === "HR";
+
+    if (!isOwner && !isAdminRole) return { error: "Permission denied" };
+    if (existing.status !== "PENDING" && !isAdminRole) return { error: "Can only edit pending expenses" };
+
+    await db.update(expenses)
+      .set({
+        ...(data.category && { category: data.category }),
+        ...(data.amount !== undefined && { amount: data.amount.toString() }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.merchant !== undefined && { merchant: data.merchant }),
+        ...(data.paymentMethod !== undefined && { paymentMethod: data.paymentMethod }),
+        ...(data.expenseDate && { expenseDate: data.expenseDate }),
+        ...(data.receiptUrl !== undefined && { receiptUrl: data.receiptUrl }),
+        ...(data.receiptFileName !== undefined && { receiptFileName: data.receiptFileName }),
+        updatedAt: new Date(),
+      })
+      .where(eq(expenses.id, expenseId));
+
+    revalidatePath("/hr/expenses");
+    return { success: true };
+  } catch (error) {
+    logger.error("Failed to update expense", error);
+    return { error: "Failed to update expense" };
+  }
+}
+
 export async function getExpenses(filters?: {
   userId?: string;
   status?: string;
@@ -219,7 +262,7 @@ export async function approveExpense(expenseId: number) {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN") {
+  if (member.role !== "CEO" && member.role !== "ADMIN" && member.role !== "HR") {
     return { error: "Permission denied" };
   }
 
@@ -258,7 +301,7 @@ export async function rejectExpense(expenseId: number, reason: string) {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN") {
+  if (member.role !== "CEO" && member.role !== "ADMIN" && member.role !== "HR") {
     return { error: "Permission denied" };
   }
 

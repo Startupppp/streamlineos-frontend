@@ -141,12 +141,13 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<import("./create-expense-dialog").ExpenseToEdit | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
+  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
   const {
     filters,
     setFilter,
@@ -589,9 +590,10 @@ export default function ExpensesPage() {
         </motion.div>
 
         <CreateExpenseDialog
-          open={isCreateOpen} onOpenChange={setIsCreateOpen}
-          onSuccess={() => { loadData(); setIsCreateOpen(false); }}
+          open={isCreateOpen} onOpenChange={(v) => { setIsCreateOpen(v); if (!v) setEditingExpense(null); }}
+          onSuccess={() => { loadData(); setIsCreateOpen(false); setEditingExpense(null); }}
           categories={EXPENSE_CATEGORIES} paymentMethods={PAYMENT_METHODS}
+          editExpense={editingExpense}
         />
       </div>
     );
@@ -821,8 +823,18 @@ export default function ExpensesPage() {
                                     size="icon"
                                     className="h-8 w-8 text-[#bd882c] hover:text-[#a67724]"
                                     onClick={() => {
+                                      setEditingExpense({
+                                        id: expense.id,
+                                        category: expense.category || "",
+                                        amount: expense.amount,
+                                        description: expense.description,
+                                        merchant: expense.merchant,
+                                        paymentMethod: expense.paymentMethod,
+                                        expenseDate: expense.expenseDate,
+                                        receiptUrl: expense.receiptUrl,
+                                        receiptFileName: expense.receiptFileName,
+                                      });
                                       setIsCreateOpen(true);
-                                      toast.info("Edit your expense claim and resubmit.");
                                     }}
                                   >
                                     <Pencil className="h-4 w-4" />

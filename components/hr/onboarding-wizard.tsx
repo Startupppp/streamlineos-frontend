@@ -159,8 +159,26 @@ export function OnboardingWizard() {
     setCurrentStep(prevStepNum);
   };
 
+  const toTitleCase = (str: string) =>
+    str.trim().replace(/\s+/g, " ").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+
+  const KNOWN_ACRONYMS = ["CEO", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"];
+
+  const formatDesignation = (str: string) => {
+    return str.trim().replace(/\s+/g, " ").split(" ").map(word => {
+      const upper = word.toUpperCase();
+      if (KNOWN_ACRONYMS.includes(upper)) return upper;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(" ");
+  };
+
   const onSubmit = (data: z.infer<typeof onboardEmployeeInputSchema>) => {
-    onboardEmployee.mutate(data);
+    onboardEmployee.mutate({
+      ...data,
+      firstName: toTitleCase(data.firstName),
+      lastName: toTitleCase(data.lastName),
+      designation: formatDesignation(data.designation),
+    });
   };
 
   const nextStepLabel = currentStep < STEPS.length ? STEPS[currentStep]?.label : "";

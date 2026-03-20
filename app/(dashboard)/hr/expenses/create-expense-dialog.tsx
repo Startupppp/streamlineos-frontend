@@ -39,7 +39,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { createExpense } from "@/server/actions/expense-actions";
+import { createExpense, updateExpense } from "@/server/actions/expense-actions";
 
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -52,12 +52,25 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+export interface ExpenseToEdit {
+  id: number;
+  category: string;
+  amount: number | string;
+  description?: string | null;
+  merchant?: string | null;
+  paymentMethod?: string | null;
+  expenseDate: string | Date;
+  receiptUrl?: string | null;
+  receiptFileName?: string | null;
+}
+
 interface CreateExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   categories: string[];
   paymentMethods: string[];
+  editExpense?: ExpenseToEdit | null;
 }
 
 export function CreateExpenseDialog({
@@ -66,22 +79,39 @@ export function CreateExpenseDialog({
   onSuccess,
   categories,
   paymentMethods,
+  editExpense,
 }: CreateExpenseDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const isEditMode = !!editExpense;
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      category: "",
-      amount: 0,
-      description: "",
-      merchant: "",
-      paymentMethod: "",
-      expenseDate: new Date(),
+      category: editExpense?.category || "",
+      amount: editExpense ? Number(editExpense.amount) : 0,
+      description: editExpense?.description || "",
+      merchant: editExpense?.merchant || "",
+      paymentMethod: editExpense?.paymentMethod || "",
+      expenseDate: editExpense?.expenseDate ? new Date(editExpense.expenseDate) : new Date(),
     },
+  });
+
+  // Reset form when editExpense changes
+  useState(() => {
+    if (open) {
+      form.reset({
+        category: editExpense?.category || "",
+        amount: editExpense ? Number(editExpense.amount) : 0,
+        description: editExpense?.description || "",
+        merchant: editExpense?.merchant || "",
+        paymentMethod: editExpense?.paymentMethod || "",
+        expenseDate: editExpense?.expenseDate ? new Date(editExpense.expenseDate) : new Date(),
+      });
+    }
   });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,7 +173,7 @@ export function CreateExpenseDialog({
         receiptFileName = receiptFile.name;
       }
 
-      const result = await createExpense({
+      const expenseData = {
         category: data.category,
         amount: data.amount,
         description: data.description,
@@ -152,10 +182,14 @@ export function CreateExpenseDialog({
         expenseDate: formatDateOnly(data.expenseDate),
         receiptUrl,
         receiptFileName,
-      });
+      };
+
+      const result = isEditMode
+        ? await updateExpense(editExpense!.id, expenseData)
+        : await createExpense(expenseData);
 
       if (result.success) {
-        toast.success("Expense submitted successfully");
+        toast.success(isEditMode ? "Expense updated successfully" : "Expense submitted successfully");
         form.reset();
         removeFile();
         onSuccess();
@@ -175,7 +209,7 @@ export function CreateExpenseDialog({
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-semibold flex items-center gap-2">
             <Receipt className="h-5 w-5 text-[#bd882c]" />
-            New Expense Claim
+            {isEditMode ? "Edit Expense Claim" : "New Expense Claim"}
           </SheetTitle>
         </SheetHeader>
 
@@ -399,7 +433,7 @@ export function CreateExpenseDialog({
                     {uploading ? "Uploading..." : "Submitting..."}
                   </>
                 ) : (
-                  "Submit Expense"
+                  isEditMode ? "Update Expense" : "Submit Expense"
                 )}
               </Button>
             </div>
