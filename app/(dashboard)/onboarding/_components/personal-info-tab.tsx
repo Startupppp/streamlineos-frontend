@@ -19,7 +19,7 @@ const personalSchema = z.object({
     .string()
     .regex(/^\+?[\d\s()-]+$/, "Only digits, spaces, parentheses, and hyphens allowed")
     .refine((val) => val.replace(/\D/g, "").length === 10, "Phone number must be exactly 10 digits"),
-  skills: z.string().min(3, "Add at least one skill"),
+  skills: z.string().min(3, "Add at least one skill").refine((val) => val.includes(","), "Please separate skills with commas (e.g., React, Node.js)"),
   experienceYears: z
     .string()
     .min(1, "Experience is required")

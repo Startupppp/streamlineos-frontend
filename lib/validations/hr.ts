@@ -177,7 +177,7 @@ export const onboardEmployeeInputSchema = z.object({
   joiningDate: z.date(),
   dateOfBirth: z.date(),
   experienceYears: z.coerce.number().min(0).optional(),
-  skills: z.string().optional(),
+  skills: z.string().refine((val) => !val || val.includes(","), "Please separate skills with commas (e.g., React, Node.js)").optional(),
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
