@@ -173,11 +173,14 @@ export function CreateExpenseDialog({
         receiptFileName = receiptFile.name;
       }
 
+      const capitalize = (s?: string) =>
+        s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+
       const expenseData = {
         category: data.category,
         amount: data.amount,
-        description: data.description,
-        merchant: data.merchant,
+        description: capitalize(data.description),
+        merchant: capitalize(data.merchant),
         paymentMethod: data.paymentMethod,
         expenseDate: formatDateOnly(data.expenseDate),
         receiptUrl,
