@@ -43,6 +43,7 @@ const formSchema = z.object({
   experienceYears: z.number().optional(),
   skills: z.string().optional(),
   taxId: z.string().optional(),
+  monthlySalary: z.number().min(0, "Salary cannot be negative").optional(),
   bankAccount: z.string().optional(),
   bankName: z.string().optional(),
   branch: z.string().optional(),
@@ -64,6 +65,7 @@ export interface EmployeeData {
     experienceYears: string | number | null;
     skills: string[] | string | null;
     taxId: string | null;
+    monthlySalary: string | number | null;
     bankDetails: {
         accountNumber?: string;
         bankName?: string;
@@ -100,6 +102,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       experienceYears: employee.experienceYears ? Number(employee.experienceYears) : 0,
       skills: Array.isArray(employee.skills) ? employee.skills.join(", ") : (employee.skills || ""),
       taxId: employee.taxId || "",
+      monthlySalary: employee.monthlySalary ? Number(employee.monthlySalary) : undefined,
       bankAccount: employee.bankDetails?.accountNumber || "",
       bankName: employee.bankDetails?.bankName || "",
       branch: employee.bankDetails?.branch || "",
@@ -125,6 +128,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
         experienceYears: values.experienceYears,
         skills: skillsArray,
         taxId: values.taxId,
+        monthlySalary: values.monthlySalary,
         bankDetails: values.bankAccount ? {
             accountNumber: values.bankAccount,
             bankName: values.bankName || "",
@@ -301,6 +305,24 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                                 <FormLabel>Designation</FormLabel>
                                 <FormControl>
                                 <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="monthlySalary"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Monthly Salary (₹)</FormLabel>
+                                <FormControl>
+                                <Input
+                                    type="number"
+                                    placeholder="0"
+                                    value={field.value ?? ""}
+                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                                />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

@@ -66,6 +66,7 @@ export async function updateEmployee(data: {
     skills?: string[];
     experienceYears?: number;
     taxId?: string;
+    monthlySalary?: number;
     bankDetails?: {
         accountNumber: string;
         bankName: string;
@@ -75,7 +76,7 @@ export async function updateEmployee(data: {
     };
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "ADMIN")) {
+    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "ADMIN" && session.user.role !== "HR")) {
         return { error: "Unauthorized" };
     }
 
@@ -109,6 +110,7 @@ export async function updateEmployee(data: {
                 skills: data.skills,
                 experienceYears: data.experienceYears ? String(data.experienceYears) : undefined,
                 taxId: data.taxId,
+                monthlySalary: data.monthlySalary !== undefined ? String(data.monthlySalary) : undefined,
                 bankDetails: data.bankDetails,
             })
             .where(eq(users.id, data.id));
