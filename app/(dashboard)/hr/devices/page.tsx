@@ -166,12 +166,12 @@ export default function DevicesPage() {
                 Add Device
               </Button>
             </SheetTrigger>
-            <SheetContent className="sm:max-w-lg overflow-y-auto">
-              <SheetHeader>
+            <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
+              <SheetHeader className="mb-6">
                 <SheetTitle>Add New Device</SheetTitle>
               </SheetHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                   <FormField
                     control={form.control}
                     name="userId"
@@ -298,7 +298,7 @@ export default function DevicesPage() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" disabled={createDeviceMutation.isPending}>
+                  <Button type="submit" className="w-full mt-2" disabled={createDeviceMutation.isPending}>
                     {createDeviceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Add Device
                   </Button>
