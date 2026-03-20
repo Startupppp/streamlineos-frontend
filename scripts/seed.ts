@@ -62,6 +62,41 @@ async function main() {
     role: "CEO",
   }).onConflictDoNothing();
 
+  // ─── HR User ───
+  const hrEmail = "chintakuntatarun@gmail.com";
+  const hrPasswordHash = await hash("Tarun@4321", 10);
+  const existingHr = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.email, hrEmail),
+  });
+
+  let hrUserId: string;
+  if (existingHr) {
+    hrUserId = existingHr.id;
+    await db.update(users).set({ role: "HR", isActive: true, hasDashboardAccess: true }).where(eq(users.id, hrUserId));
+  } else {
+    hrUserId = "user_" + nanoid();
+    await db.insert(users).values({
+      id: hrUserId,
+      email: hrEmail,
+      name: "Tarun HR",
+      firstName: "Tarun",
+      lastName: "HR",
+      password: hrPasswordHash,
+      role: "HR",
+      emailVerified: new Date(),
+      isActive: true,
+      hasDashboardAccess: true,
+      isPasswordChangeRequired: false,
+      image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${hrEmail}`,
+    });
+  }
+
+  await db.insert(organizationMembers).values({
+    userId: hrUserId,
+    orgId: orgId,
+    role: "HR",
+  }).onConflictDoNothing();
+
   // ─── Departments ───
   const departmentList = [
     "Engineering",
@@ -106,6 +141,7 @@ async function main() {
   console.log("Seed complete!");
   console.log(`  Organization: Vaivamm Capital (${orgId})`);
   console.log(`  Admin: ${adminEmail} (CEO) — email verified, dashboard access ON`);
+  console.log(`  HR: ${hrEmail} (HR) — email verified, dashboard access ON`);
   console.log(`  Departments: ${departmentList.length} created`);
   console.log(`  Roles: ${systemRoles.length} system roles created`);
 
