@@ -29,6 +29,7 @@ import {
   Pencil,
   RotateCcw,
 } from "lucide-react";
+import { viewFile, downloadFile } from "@/hooks/use-file-url";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,7 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -413,16 +414,46 @@ export default function ExpensesPage() {
                       return (
                         <div key={expense.id} className="flex items-start gap-5 px-6 py-5 hover:bg-muted/20 transition-colors">
                           {/* Receipt Thumbnail */}
-                          <div className="w-[100px] h-[80px] rounded-lg bg-gradient-to-br from-rose-100 to-rose-200 dark:from-rose-900/20 dark:to-rose-800/20 flex-shrink-0 flex items-center justify-center overflow-hidden border border-rose-200/50 dark:border-rose-800/30">
-                            {expense.receiptUrl ? (
-                              <img
-                                src={resolveImageUrl(expense.receiptUrl) || ""}
-                                alt="Receipt"
-                                className="w-full h-full object-cover rounded-lg"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                              />
-                            ) : (
-                              <Receipt className="h-7 w-7 text-rose-400" />
+                          <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
+                            <div
+                              className={cn(
+                                "w-[100px] h-[80px] rounded-lg bg-gradient-to-br from-rose-100 to-rose-200 dark:from-rose-900/20 dark:to-rose-800/20 flex items-center justify-center overflow-hidden border border-rose-200/50 dark:border-rose-800/30",
+                                expense.receiptUrl && "cursor-pointer hover:ring-2 hover:ring-[#bd882c]/40 transition-all"
+                              )}
+                              onClick={() => expense.receiptUrl && viewFile(expense.receiptUrl)}
+                            >
+                              {expense.receiptUrl ? (
+                                <img
+                                  src={resolveImageUrl(expense.receiptUrl) || ""}
+                                  alt="Receipt"
+                                  className="w-full h-full object-cover rounded-lg"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                />
+                              ) : (
+                                <Receipt className="h-7 w-7 text-rose-400" />
+                              )}
+                            </div>
+                            {expense.receiptUrl && (
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                  onClick={() => viewFile(expense.receiptUrl!)}
+                                  aria-label="View receipt"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                  onClick={() => downloadFile(expense.receiptUrl!, expense.receiptFileName || "receipt")}
+                                  aria-label="Download receipt"
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             )}
                           </div>
 
