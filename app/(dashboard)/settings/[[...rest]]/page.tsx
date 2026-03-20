@@ -187,6 +187,7 @@ export default function SettingsPage() {
   }, [currentPassword, newPassword, confirmPassword, changePassword]);
 
   const passwordValid = newPassword.length >= 8 &&
+    newPassword.length <= 15 &&
     /[a-z]/.test(newPassword) &&
     /[A-Z]/.test(newPassword) &&
     /\d/.test(newPassword) &&
@@ -473,7 +474,8 @@ export default function SettingsPage() {
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password"
+                    placeholder="8–15 characters"
+                    maxLength={15}
                     className="pr-10"
                   />
                   <button
@@ -485,10 +487,36 @@ export default function SettingsPage() {
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {newPassword && (() => {
+                  let score = 0;
+                  if (newPassword.length >= 8) score++;
+                  if (newPassword.length >= 12) score++;
+                  if (/[A-Z]/.test(newPassword)) score++;
+                  if (/[a-z]/.test(newPassword)) score++;
+                  if (/\d/.test(newPassword)) score++;
+                  if (/[@$!%*?&]/.test(newPassword)) score++;
+                  const level = score <= 2 ? 1 : score <= 4 ? 2 : score <= 5 ? 3 : 4;
+                  const label = level <= 1 ? "Weak" : level <= 2 ? "Medium" : level <= 3 ? "Strong" : "Very Strong";
+                  const barColor = level <= 1 ? "bg-red-500" : level <= 2 ? "bg-yellow-500" : level <= 3 ? "bg-green-500" : "bg-emerald-500";
+                  const textColor = level <= 1 ? "text-red-500" : level <= 2 ? "text-yellow-500" : "text-green-500";
+                  return (
+                    <div className="space-y-1.5">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((l) => (
+                          <div key={l} className={`h-1.5 flex-1 rounded-full transition-colors ${l <= level ? barColor : "bg-muted"}`} />
+                        ))}
+                      </div>
+                      <p className={`text-xs ${textColor}`}>{label}</p>
+                    </div>
+                  );
+                })()}
                 {newPassword && (
                   <div className="space-y-1 text-xs">
                     <p className={newPassword.length >= 8 ? "text-emerald-500" : "text-muted-foreground"}>
                       {newPassword.length >= 8 ? "✓" : "○"} At least 8 characters
+                    </p>
+                    <p className={newPassword.length <= 15 ? "text-emerald-500" : "text-destructive"}>
+                      {newPassword.length <= 15 ? "✓" : "✗"} At most 15 characters
                     </p>
                     <p className={/[A-Z]/.test(newPassword) ? "text-emerald-500" : "text-muted-foreground"}>
                       {/[A-Z]/.test(newPassword) ? "✓" : "○"} One uppercase letter
