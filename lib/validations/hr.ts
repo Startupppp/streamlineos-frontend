@@ -158,13 +158,13 @@ export const getWorkLogsInputSchema = z.object({
 });
 
 export const onboardEmployeeInputSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: z.string().min(1, "First name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
+  lastName: z.string().min(1, "Last name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
   email: z.string().email("Invalid email address"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[\d+\s-]+$/, "Please enter a valid phone number"),
+  phone: z.string().regex(/^[\d+\s-]+$/, "Please enter a valid phone number").refine((val) => val.replace(/\D/g, "").length === 10, "Phone number must be exactly 10 digits"),
   whatsappSameAsPhone: z.boolean().default(true),
-  whatsappNumber: z.string().regex(/^[\d+\s-]*$/, "Please enter a valid number").optional(),
+  whatsappNumber: z.string().regex(/^[\d+\s-]*$/, "Please enter a valid number").refine((val) => !val || val.replace(/\D/g, "").length === 10, "WhatsApp number must be exactly 10 digits").optional(),
   password: z.string().refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),

@@ -307,6 +307,7 @@ export function OnboardingWizard() {
                                 <Input
                                   type="tel"
                                   inputMode="numeric"
+                                  maxLength={10}
                                   placeholder="+91 9876543210"
                                   {...field}
                                   onChange={(e) => {
@@ -349,6 +350,7 @@ export function OnboardingWizard() {
                                   <Input
                                     type="tel"
                                     inputMode="numeric"
+                                    maxLength={10}
                                     placeholder="+91 9876543210"
                                     {...field}
                                     onChange={(e) => {

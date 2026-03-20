@@ -17,12 +17,8 @@ const MAX_EXPERIENCE_YEARS = 60;
 const personalSchema = z.object({
   phone: z
     .string()
-    .min(10, "Phone number must be at least 10 digits")
     .regex(/^\+?[\d\s()-]+$/, "Only digits, spaces, parentheses, and hyphens allowed")
-    .refine((val) => {
-      const digits = val.replace(/\D/g, "");
-      return digits.length >= 10 && digits.length <= 15;
-    }, "Must contain 10-15 digits"),
+    .refine((val) => val.replace(/\D/g, "").length === 10, "Phone number must be exactly 10 digits"),
   skills: z.string().min(3, "Add at least one skill"),
   experienceYears: z
     .string()
@@ -64,6 +60,7 @@ export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabPr
                   id="phone"
                   {...form.register("phone")}
                   placeholder="+91 98765 43210"
+                  maxLength={10}
                   inputMode="tel"
                   autoComplete="tel"
                   aria-required="true"
