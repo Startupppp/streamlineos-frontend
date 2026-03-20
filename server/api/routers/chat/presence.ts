@@ -52,7 +52,7 @@ export const presenceRouter = createTRPCRouter({
     }),
 
   getOnlineUsers: protectedProcedure.query(async ({ ctx }) => {
-    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const oneMinAgo = new Date(Date.now() - 60 * 1000);
 
     const online = await ctx.db
       .select({
@@ -67,7 +67,7 @@ export const presenceRouter = createTRPCRouter({
       .where(
         and(
           eq(chatUserPresence.orgId, ctx.session.orgId),
-          gt(chatUserPresence.lastSeenAt, twoMinAgo)
+          gt(chatUserPresence.lastSeenAt, oneMinAgo)
         )
       );
 

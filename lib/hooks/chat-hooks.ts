@@ -134,7 +134,8 @@ export function useChatOnlineUsers() {
   return useQuery({
     queryKey: vaivammKeys.chat.onlineUsers(),
     queryFn: () => vaivammTrpcClient.chat.presence.getOnlineUsers.query(),
-    refetchInterval: 15_000,
+    refetchInterval: 10_000,
+    staleTime: 5_000,
   });
 }
 

@@ -206,8 +206,20 @@ export default function ChatPage() {
     heartbeat.mutate();
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") heartbeat.mutate();
-    }, 30_000);
-    return () => clearInterval(interval);
+    }, 15_000);
+
+    // Mark offline on visibility change (tab hidden for extended time)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        heartbeat.mutate();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId]);
 
