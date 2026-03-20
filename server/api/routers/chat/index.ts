@@ -1,4 +1,4 @@
-import { createTRPCRouter } from "../../trpc";
+import { createTRPCRouter } from "@/server/api/trpc";
 import { channelRouter } from "./channel";
 import { messageRouter } from "./message";
 import { presenceRouter } from "./presence";

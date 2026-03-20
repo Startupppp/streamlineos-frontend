@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, gt } from "drizzle-orm";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { chatUserPresence, users } from "@/lib/db/schema";
 
 // In-memory typing state: channelId -> Map<userId, { name, expiresAt }>

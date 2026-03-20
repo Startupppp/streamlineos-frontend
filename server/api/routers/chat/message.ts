@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, desc, gt, ilike, sql, inArray } from "drizzle-orm";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   chatMessages,
   chatAttachments,
