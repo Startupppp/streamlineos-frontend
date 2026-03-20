@@ -869,3 +869,4 @@ export function EmptyLeaveIllustration({ className }: IllustrationProps) {
     </Wrapper>
   );
 }
+

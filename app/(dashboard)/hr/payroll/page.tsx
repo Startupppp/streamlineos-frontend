@@ -41,6 +41,7 @@ import { Separator } from "@/components/ui/separator";
 import { format, subMonths } from "date-fns";
 import { toast } from "sonner";
 import { PayrollListSkeleton } from "@/components/ui/payroll-skeleton";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DollarSign,
@@ -700,7 +701,13 @@ export default function PayrollPage() {
             </Table>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <Image
+                src="/illustrations/empty-payroll.svg"
+                alt="No payroll records"
+                width={200}
+                height={160}
+                className="mx-auto mb-4"
+              />
               <p>No payroll records for this month</p>
               <p className="text-sm">Click &quot;Generate All&quot; to create payroll for all employees</p>
             </div>

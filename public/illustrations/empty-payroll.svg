@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" fill="none">
+  <!-- Ground shadow -->
+  <ellipse cx="250" cy="370" rx="180" ry="14" fill="#0f2b7f" opacity="0.05"/>
+
+  <!-- Background clipboard -->
+  <rect x="155" y="40" width="190" height="260" rx="12" fill="white" stroke="#0f2b7f" stroke-width="2" opacity="0.9"/>
+  <rect x="210" y="28" width="80" height="24" rx="12" fill="#0f2b7f" opacity="0.15"/>
+  <circle cx="250" cy="40" r="6" fill="white" stroke="#0f2b7f" stroke-width="1.5"/>
+
+  <!-- Clipboard header band -->
+  <rect x="155" y="64" width="190" height="36" rx="0" fill="#0f2b7f" opacity="0.06"/>
+  <line x1="175" y1="78" x2="230" y2="78" stroke="#0f2b7f" stroke-width="2.5" stroke-linecap="round" opacity="0.3"/>
+  <line x1="175" y1="88" x2="210" y2="88" stroke="#bd882c" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+
+  <!-- Dollar circle -->
+  <circle cx="250" cy="140" r="28" fill="#bd882c" opacity="0.1" stroke="#bd882c" stroke-width="1.5"/>
+  <text x="250" y="149" text-anchor="middle" fill="#bd882c" font-size="28" font-weight="bold" font-family="Arial, sans-serif">$</text>
+
+  <!-- Row lines -->
+  <line x1="180" y1="190" x2="225" y2="190" stroke="#0f2b7f" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+  <line x1="235" y1="190" x2="320" y2="190" stroke="#bd882c" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+  <line x1="180" y1="208" x2="220" y2="208" stroke="#0f2b7f" stroke-width="2" stroke-linecap="round" opacity="0.14"/>
+  <line x1="230" y1="208" x2="320" y2="208" stroke="#bd882c" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+  <line x1="180" y1="226" x2="240" y2="226" stroke="#0f2b7f" stroke-width="2" stroke-linecap="round" opacity="0.14"/>
+  <line x1="250" y1="226" x2="320" y2="226" stroke="#bd882c" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+
+  <!-- Dashed separator -->
+  <line x1="180" y1="248" x2="320" y2="248" stroke="#0f2b7f" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.12"/>
+
+  <!-- Total line -->
+  <line x1="240" y1="268" x2="320" y2="268" stroke="#bd882c" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+
+  <!-- Person standing left -->
+  <circle cx="80" cy="195" r="22" fill="#ffb8b8"/>
+  <ellipse cx="80" cy="182" rx="18" ry="17" fill="#2f2e41"/>
+  <rect x="62" y="215" width="36" height="44" rx="10" fill="#0f2b7f"/>
+  <!-- Arms -->
+  <path d="M98 228 L130 218" stroke="#ffb8b8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M62 232 L48 260" stroke="#ffb8b8" stroke-width="7" stroke-linecap="round"/>
+  <!-- Legs -->
+  <rect x="67" y="259" width="10" height="36" rx="5" fill="#0f2b7f" opacity="0.75"/>
+  <rect x="83" y="259" width="10" height="36" rx="5" fill="#0f2b7f" opacity="0.75"/>
+  <!-- Shoes -->
+  <ellipse cx="72" cy="297" rx="12" ry="5" fill="#2f2e41"/>
+  <ellipse cx="88" cy="297" rx="12" ry="5" fill="#2f2e41"/>
+
+  <!-- Coin stack right -->
+  <ellipse cx="400" cy="296" rx="26" ry="8" fill="#bd882c" opacity="0.15"/>
+  <ellipse cx="400" cy="286" rx="26" ry="8" fill="#bd882c" opacity="0.2"/>
+  <ellipse cx="400" cy="276" rx="26" ry="8" fill="#bd882c" opacity="0.25" stroke="#bd882c" stroke-width="1"/>
+  <ellipse cx="400" cy="266" rx="26" ry="8" fill="#bd882c" opacity="0.3" stroke="#bd882c" stroke-width="1"/>
+
+  <!-- Small floating coins -->
+  <circle cx="390" cy="230" r="14" fill="#bd882c" opacity="0.12" stroke="#bd882c" stroke-width="1.2"/>
+  <text x="390" y="235" text-anchor="middle" fill="#bd882c" font-size="14" font-weight="bold" font-family="Arial, sans-serif" opacity="0.5">$</text>
+
+  <circle cx="420" cy="210" r="10" fill="#bd882c" opacity="0.1" stroke="#bd882c" stroke-width="1"/>
+  <text x="420" y="214" text-anchor="middle" fill="#bd882c" font-size="10" font-weight="bold" font-family="Arial, sans-serif" opacity="0.4">$</text>
+
+  <!-- Small decorative elements -->
+  <circle cx="130" cy="340" r="4" fill="#0f2b7f" opacity="0.08"/>
+  <circle cx="370" cy="350" r="6" fill="#bd882c" opacity="0.08"/>
+  <circle cx="440" cy="170" r="3" fill="#bd882c" opacity="0.12"/>
+  <circle cx="50" cy="140" r="5" fill="#0f2b7f" opacity="0.06"/>
+</svg>
