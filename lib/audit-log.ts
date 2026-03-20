@@ -22,7 +22,9 @@ export type AuditAction =
   | "project.deleted"
   | "expense.approved"
   | "expense.rejected"
-  | "settings.updated";
+  | "settings.updated"
+  | "file.upload"
+  | "file.download";
 
 interface AuditLogEntry {
   action: AuditAction;
@@ -46,6 +48,12 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
       ipAddress: entry.ipAddress ?? null,
     });
   } catch (error) {
-    logger.error("Failed to create audit log", { entry, error });
+    // Log at error level so monitoring can alert on audit failures
+    logger.error("AUDIT_FAILURE: Failed to create audit log — investigate immediately", {
+      action: entry.action,
+      userId: entry.userId,
+      targetId: entry.targetId,
+      error,
+    });
   }
 }
