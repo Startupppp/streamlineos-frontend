@@ -50,6 +50,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { formatCurrencyFull } from "@/lib/format-utils";
+
+const formatCurrency = (amount: number | string) => formatCurrencyFull(amount);
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof FileText }> = {
   DRAFT: { label: "Draft", variant: "secondary", icon: FileText },
@@ -58,10 +61,6 @@ const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secon
   OVERDUE: { label: "Overdue", variant: "destructive", icon: Clock },
   CANCELLED: { label: "Cancelled", variant: "outline", icon: Ban },
 };
-
-function formatCurrency(amount: number | string) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(amount));
-}
 
 export default function InvoicesPage() {
   return (
