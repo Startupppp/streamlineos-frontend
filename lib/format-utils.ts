@@ -1,13 +1,92 @@
 import { format } from "date-fns";
 
+/**
+ * Compact currency formatter for dashboard/CRM use (e.g. "$1.2M", "$50K").
+ * For full INR formatting, use {@link formatINR}.
+ */
 export function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
   return `$${value.toLocaleString()}`;
 }
 
-export function formatNumber(value: number): string {
+/**
+ * Full Intl-based currency formatter. Defaults to INR / en-IN.
+ * Use this for invoices, payroll, expenses — anywhere exact amounts matter.
+ */
+export function formatCurrencyFull(
+  amount: number | string,
+  currency: string = "INR",
+  locale: string = "en-IN",
+  maximumFractionDigits: number = 0,
+): string {
+  const num = Number(amount);
+  if (Number.isNaN(num)) return currency === "INR" ? "₹0" : "0";
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    maximumFractionDigits,
+  }).format(num);
+}
+
+export function formatNumber(value: number, decimals?: number): string {
+  if (decimals !== undefined) {
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  }
   return value.toLocaleString();
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 1440) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  const d = Math.floor(minutes / 1440);
+  const h = Math.floor((minutes % 1440) / 60);
+  return h > 0 ? `${d}d ${h}h` : `${d}d`;
+}
+
+export function formatPercent(value: number, total: number): string {
+  if (total === 0) return "0%";
+  return `${Math.round((value / total) * 100)}%`;
+}
+
+export function truncate(str: string, maxLength: number): string {
+  if (str.length <= maxLength) return str;
+  return str.slice(0, maxLength - 3) + "...";
+}
+
+export function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function capitalise(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+export function titleCase(str: string): string {
+  if (!str) return str;
+  return str
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export const getInitials = (
