@@ -265,7 +265,10 @@ export function OnboardingWizard() {
                             <FormItem>
                               <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
-                                <Input placeholder="John" {...field} />
+                                <Input placeholder="John" {...field} onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (/^[A-Za-z\s]*$/.test(v)) field.onChange(v);
+                                }} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -278,7 +281,10 @@ export function OnboardingWizard() {
                             <FormItem>
                               <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
-                                <Input placeholder="Doe" {...field} />
+                                <Input placeholder="Doe" {...field} onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (/^[A-Za-z\s]*$/.test(v)) field.onChange(v);
+                                }} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
