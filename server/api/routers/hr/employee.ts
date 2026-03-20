@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { logger } from "../../../../lib/logger";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { logger } from "@/lib/logger";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   departments,
   users,
@@ -11,20 +11,20 @@ import {
   onboardingSteps,
   roles,
   // notifications,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { format } from "date-fns";
-import { formatDateOnly, getTodayString } from "../../../../lib/date-utils";
+import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
   createDepartmentInputSchema,
   updateProfileInputSchema,
   changePasswordInputSchema,
   onboardEmployeeInputSchema,
-} from "../../../../lib/validations/hr";
+} from "@/lib/validations/hr";
 import bcrypt from "bcryptjs";
-import { sendWelcomeEmail } from "../../../../lib/email";
-import { initializeLeaveBalances } from "../../../actions/leave-actions";
+import { sendWelcomeEmail } from "@/lib/email";
+import { initializeLeaveBalances } from "@/server/actions/leave-actions";
 
 export const employeeRouter = createTRPCRouter({
   getDepartments: protectedProcedure.query(async ({ ctx }) => {

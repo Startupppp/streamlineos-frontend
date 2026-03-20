@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { attendance } from "../../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { attendance } from "@/lib/db/schema";
 import { eq, and, desc, isNull, gte, lte, asc } from "drizzle-orm";
-import { formatDateOnly, getTodayString } from "../../../../lib/date-utils";
+import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
-import { checkInInputSchema } from "../../../../lib/validations/attendance";
+import { checkInInputSchema } from "@/lib/validations/attendance";
 
 export const attendanceRouter = createTRPCRouter({
   getAttendanceStatus: protectedProcedure.query(async ({ ctx }) => {

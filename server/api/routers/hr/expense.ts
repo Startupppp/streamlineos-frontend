@@ -1,20 +1,20 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
-import { expenses } from "../../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { expenses } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
-import { formatDateOnly } from "../../../../lib/date-utils";
+import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
   createExpenseInputSchema,
   updateExpenseStatusInputSchema,
-} from "../../../../lib/validations/hr";
+} from "@/lib/validations/hr";
 import {
   createPaginatedResponse,
   getOffset,
   DEFAULT_PAGE,
   DEFAULT_LIMIT,
-} from "../../../../lib/pagination";
+} from "@/lib/pagination";
 
 export const expenseRouter = createTRPCRouter({
   getExpenses: protectedProcedure

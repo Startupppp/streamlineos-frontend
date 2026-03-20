@@ -1,15 +1,15 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, managerProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { createTRPCRouter, protectedProcedure, managerProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   documents,
   assets,
   employeeDevices,
   documentTypeEnum,
   organizationMembers,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { formatDateOnly } from "../../../../lib/date-utils";
+import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
   createDocumentInputSchema,
@@ -17,7 +17,7 @@ import {
   updateAssetInputSchema,
   createDeviceInputSchema,
   updateDeviceInputSchema,
-} from "../../../../lib/validations/hr";
+} from "@/lib/validations/hr";
 
 export const documentRouter = createTRPCRouter({
   getDocuments: protectedProcedure

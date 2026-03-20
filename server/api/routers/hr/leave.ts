@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   leaveRequests,
   leaveBalances,
@@ -9,16 +9,16 @@ import {
   attendance,
   wfhRequests,
   holidays,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, asc } from "drizzle-orm";
-import { formatDateOnly } from "../../../../lib/date-utils";
-import { ALLOWED_LEAVE_TYPE_NAMES, LEAVE_POLICY } from "../../../../lib/leave-policy";
+import { formatDateOnly } from "@/lib/date-utils";
+import { ALLOWED_LEAVE_TYPE_NAMES, LEAVE_POLICY } from "@/lib/leave-policy";
 import { TRPCError } from "@trpc/server";
-import { requestLeaveInputSchema } from "../../../../lib/validations/leave";
+import { requestLeaveInputSchema } from "@/lib/validations/leave";
 import {
   createWfhRequestInputSchema,
   processWfhRequestInputSchema,
-} from "../../../../lib/validations/hr";
+} from "@/lib/validations/hr";
 
 export const leaveRouter = createTRPCRouter({
   getLeaves: protectedProcedure.query(async ({ ctx }) => {

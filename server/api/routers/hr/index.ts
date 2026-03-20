@@ -1,4 +1,4 @@
-import { mergeRouters } from "../../trpc";
+import { mergeRouters } from "@/server/api/trpc";
 import { employeeRouter } from "./employee";
 import { attendanceRouter } from "./attendance";
 import { leaveRouter } from "./leave";

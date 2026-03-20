@@ -1,23 +1,23 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
-import { logger } from "../../../../lib/logger";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { logger } from "@/lib/logger";
 import {
   payrolls,
   salaryStructures,
   organizationMembers,
   users,
   attendance,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc, inArray, sql, gte, lte } from "drizzle-orm";
-import { formatDateOnly } from "../../../../lib/date-utils";
+import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
   generatePayrollInputSchema,
   createSalaryStructureInputSchema,
   generateEmployeePayslipInputSchema,
-} from "../../../../lib/validations/hr";
-import { sendPayslipGeneratedEmail } from "../../../../lib/email";
+} from "@/lib/validations/hr";
+import { sendPayslipGeneratedEmail } from "@/lib/email";
 
 export const payrollRouter = createTRPCRouter({
   getPayrolls: protectedProcedure.query(async ({ ctx }) => {

@@ -1,13 +1,13 @@
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { timesheets } from "../../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { timesheets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { formatDateOnly } from "../../../../lib/date-utils";
+import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   upsertWorkLogInputSchema,
   getWorkLogsInputSchema,
-} from "../../../../lib/validations/hr";
+} from "@/lib/validations/hr";
 
 export const workLogRouter = createTRPCRouter({
   getWorkLogs: protectedProcedure
