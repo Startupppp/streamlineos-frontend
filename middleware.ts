@@ -89,12 +89,13 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
 };
 
 const RATE_LIMIT_WINDOW = 60_000;
-const RATE_LIMIT_MAX = 60;
+const RATE_LIMIT_MAX_DEFAULT = 60;
+const RATE_LIMIT_MAX_AUTH = 15; // Stricter limit for auth endpoints
 const RATE_LIMIT_CLEANUP_INTERVAL = 60_000;
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 let lastCleanup = Date.now();
 
-function checkRateLimit(ip: string): boolean {
+function checkRateLimit(ip: string, maxRequests: number = RATE_LIMIT_MAX_DEFAULT): boolean {
   const now = Date.now();
 
   if (now - lastCleanup > RATE_LIMIT_CLEANUP_INTERVAL) {
@@ -109,7 +110,7 @@ function checkRateLimit(ip: string): boolean {
     rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
     return true;
   }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
+  if (entry.count >= maxRequests) return false;
   entry.count++;
   return true;
 }
@@ -159,7 +160,11 @@ export default async function middleware(req: NextRequest) {
   if (!isSessionCheck && RATE_LIMITED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    if (!checkRateLimit(ip)) {
+    // Use stricter rate limit for auth endpoints
+    const isAuthEndpoint = pathname.startsWith("/api/auth/") || pathname.startsWith("/api/trpc/auth.");
+    const limit = isAuthEndpoint ? RATE_LIMIT_MAX_AUTH : RATE_LIMIT_MAX_DEFAULT;
+    const rateLimitKey = isAuthEndpoint ? `auth:${ip}` : ip;
+    if (!checkRateLimit(rateLimitKey, limit)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 }
