@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { exportExpenses, ExportFilters, ExportResult } from "@/server/actions/expense-export";
 import { ExpenseFilters } from "@/server/actions/expense-query";
 import ExcelJS from "exceljs";
+import { formatCurrencyFull } from "@/lib/format-utils";
 
 type PdfData = NonNullable<Extract<ExportResult, { format: "pdf" }>["data"]>;
 
@@ -44,12 +45,7 @@ const SUMMARY_BORDER_COLORS: Record<string, string> = {
   rejected: "#ef4444",
 };
 
-const formatInr = (amount: number) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+const formatInr = (amount: number) => formatCurrencyFull(amount);
 
 const cellStyle: React.CSSProperties = {
   padding: "10px 8px",
