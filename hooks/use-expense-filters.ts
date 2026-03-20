@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useTransition } from "react";
+import { useState, useCallback, useMemo, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ExpenseFilters } from "@/server/actions/expense-query";
@@ -266,18 +266,5 @@ export function useExpenseFilters(
     isPending,
   };
 }
-export function useDebouncedValue<T>(value: T, delay: number = 300): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+// Re-export from standalone hook for backward compatibility
+export { useDebouncedValue } from "./use-debounce";
