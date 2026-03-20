@@ -1,0 +1,225 @@
+"use client";
+
+import { use, useState } from "react";
+import { trpc } from "@/trpc/client";
+import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Plus, Calendar, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import Link from "next/link";
+
+const createCycleSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  startDate: z.string().min(1, "Start date required"),
+  endDate: z.string().min(1, "End date required"),
+});
+type CreateCycleForm = z.infer<typeof createCycleSchema>;
+
+export default function CyclesPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const projectId = parseInt(id);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const utils = trpc.useUtils();
+  const { data: cycles, isLoading } = trpc.project.cyclesGetByProject.useQuery({ projectId });
+  const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
+  const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
+  const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const createMutation = trpc.project.cyclesCreate.useMutation({
+    onSuccess: () => {
+      utils.project.cyclesGetByProject.invalidate({ projectId });
+      setCreateOpen(false);
+      toast.success("Cycle created");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const form = useForm<CreateCycleForm>({
+    resolver: zodResolver(createCycleSchema),
+  });
+
+  const onSubmit = (data: CreateCycleForm) => {
+    createMutation.mutate({ ...data, projectId });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="flex-1 p-6 space-y-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
+        <ProjectSubNav projectId={projectId} />
+        <div className="flex items-center justify-between mt-4">
+          <h1 className="text-2xl font-bold">Cycles</h1>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" /> New Cycle
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Cycle</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" {...form.register("name")} />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" {...form.register("description")} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startDate">Start Date</Label>
+                    <Input id="startDate" type="date" {...form.register("startDate")} />
+                  </div>
+                  <div>
+                    <Label htmlFor="endDate">End Date</Label>
+                    <Input id="endDate" type="date" {...form.register("endDate")} />
+                  </div>
+                </div>
+                <Button type="submit" disabled={createMutation.isPending} className="w-full">
+                  {createMutation.isPending ? "Creating..." : "Create Cycle"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {activeCycles.length > 0 && (
+          <section>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Active</h2>
+            {activeCycles.map((cycle) => (
+              <Link key={cycle.id} href={`/projects/${projectId}/cycles/${cycle.id}`}>
+                <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{cycle.name}</CardTitle>
+                      <Badge variant="default">Active</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {new Date(cycle.startDate).toLocaleDateString()} — {new Date(cycle.endDate).toLocaleDateString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {cycle.completedItems}/{cycle.totalItems} done
+                      </span>
+                    </div>
+                    <Progress value={cycle.progress} className="h-2" />
+                    <span className="text-xs text-muted-foreground mt-1 block">{cycle.progress}% complete</span>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </section>
+        )}
+
+        {upcomingCycles.length > 0 && (
+          <section>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Upcoming</h2>
+            <div className="space-y-3">
+              {upcomingCycles.map((cycle) => (
+                <Link key={cycle.id} href={`/projects/${projectId}/cycles/${cycle.id}`}>
+                  <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+                    <CardContent className="py-4 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{cycle.name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(cycle.startDate).toLocaleDateString()} — {new Date(cycle.endDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">Draft</Badge>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {completedCycles.length > 0 && (
+          <section>
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 hover:text-foreground transition-colors"
+            >
+              Completed ({completedCycles.length}) {showCompleted ? "▼" : "▶"}
+            </button>
+            {showCompleted && (
+              <div className="space-y-3">
+                {completedCycles.map((cycle) => (
+                  <Link key={cycle.id} href={`/projects/${projectId}/cycles/${cycle.id}`}>
+                    <Card className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer">
+                      <CardContent className="py-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{cycle.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {cycle.completedItems}/{cycle.totalItems} items completed
+                          </p>
+                        </div>
+                        <Badge variant="outline">Completed</Badge>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {!cycles?.length && (
+          <div className="text-center py-16">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-1">No cycles yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">Create your first cycle to start planning work in time-boxed iterations.</p>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Create First Cycle
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -2,9 +2,15 @@
 
 import { useProject } from "@/lib/hooks/trpc-hooks";
 import { KanbanBoard } from "@/components/projects/kanban-board";
+import { ListView } from "@/components/projects/list-view";
+import { TableView } from "@/components/projects/table-view";
+import { CalendarView } from "@/components/projects/calendar-view";
+import { GanttView } from "@/components/projects/gantt-view";
+import { ViewSwitcher, type ViewType } from "@/components/projects/view-switcher";
 import { notFound } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -16,7 +22,6 @@ import { CheckCircle2, Search, X, Bug, Bookmark, Zap, CheckSquare } from "lucide
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 
-
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -25,10 +30,26 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const { id } = use(params);
   const projectId = parseInt(id);
   const { data, isLoading } = useProject(projectId);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const initialView = (searchParams.get("view") as ViewType) ?? "board";
+  const [activeView, setActiveView] = useState<ViewType>(initialView);
   const [hideCompleted, setHideCompleted] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterAssignees, setFilterAssignees] = useState<Set<string>>(new Set());
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
+
+  const handleViewChange = useCallback(
+    (view: ViewType) => {
+      setActiveView(view);
+      const params = new URLSearchParams(window.location.search);
+      params.set("view", view);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router]
+  );
 
   const allTickets = useMemo(() => {
     if (!data) return [];
@@ -43,6 +64,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
       ticketNumber: t.ticketNumber,
       order: t.order ?? undefined,
       epicId: t.epicId ?? undefined,
+      sequenceId: (t as Record<string, unknown>).sequenceId as string | null ?? null,
+      startDate: (t as Record<string, unknown>).startDate as string | null ?? null,
+      dueDate: (t as Record<string, unknown>).dueDate as string | null ?? null,
       assignee: t.assignee
         ? {
             id: t.assignee.id,
@@ -63,15 +87,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const uniqueAssignees = useMemo(() => {
     const map = new Map<string, { id: string; firstName?: string; lastName?: string; image?: string | null }>();
-    allTickets.forEach(t => {
+    allTickets.forEach((t) => {
       if (t.assignee) map.set(t.assignee.id, t.assignee);
     });
     return Array.from(map.values());
   }, [allTickets]);
-
-  const setHideCompletedAndStore = (value: boolean) => {
-    setHideCompleted(value);
-  };
 
   if (isLoading) {
     return (
@@ -87,22 +107,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
             </div>
           </div>
         </div>
-        <div className="flex-1 min-h-0 w-full relative" style={{ minWidth: 0, overflow: 'hidden' }}>
-          <div
-            className="h-full w-full"
-            style={{
-              overflowX: 'scroll',
-              overflowY: 'hidden',
-              scrollbarWidth: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              scrollbarColor: 'rgba(0, 0, 0, 0.3) transparent',
-              msOverflowStyle: 'scrollbar',
-              position: 'relative',
-              width: '100%',
-              height: '100%'
-            }}
-          >
-            <div className="inline-flex h-full pb-4 gap-3 sm:gap-4 md:gap-4" style={{ minWidth: 'max-content', paddingLeft: '12px', paddingRight: '12px' }}>
+        <div className="flex-1 min-h-0 w-full relative" style={{ minWidth: 0, overflow: "hidden" }}>
+          <div className="h-full w-full" style={{ overflowX: "scroll", overflowY: "hidden" }}>
+            <div className="inline-flex h-full pb-4 gap-3 sm:gap-4 md:gap-4" style={{ minWidth: "max-content", paddingLeft: "12px", paddingRight: "12px" }}>
               <KanbanBoardSkeleton />
             </div>
           </div>
@@ -113,39 +120,26 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   if (!data) return notFound();
 
-  const epics = allTickets.filter(t => t.type === "EPIC").map(t => ({ id: t.id, title: t.title }));
-
-  const statuses = "statuses" in data
-    ? (data.statuses as Array<{ id: number; name: string; color: string | null; order: number }>)
-    : undefined;
-
+  const epics = allTickets.filter((t) => t.type === "EPIC").map((t) => ({ id: t.id, title: t.title }));
+  const statuses = "statuses" in data ? (data.statuses as Array<{ id: number; name: string; color: string | null; order: number }>) : undefined;
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
-  let boardTickets = hideCompleted
-    ? allTickets.filter((t) => t.status !== "DONE")
-    : allTickets;
-
+  let boardTickets = hideCompleted ? allTickets.filter((t) => t.status !== "DONE") : allTickets;
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
-    boardTickets = boardTickets.filter(t => t.title.toLowerCase().includes(q));
+    boardTickets = boardTickets.filter((t) => t.title.toLowerCase().includes(q));
   }
-
-  if (filterType) {
-    boardTickets = boardTickets.filter(t => t.type === filterType);
-  }
-
-  if (filterAssignees.size > 0) {
-    boardTickets = boardTickets.filter(t => t.assignee && filterAssignees.has(t.assignee.id));
-  }
+  if (filterType) boardTickets = boardTickets.filter((t) => t.type === filterType);
+  if (filterAssignees.size > 0) boardTickets = boardTickets.filter((t) => t.assignee && filterAssignees.has(t.assignee.id));
 
   const hasActiveFilters = searchQuery.trim() || filterType || filterAssignees.size > 0;
   const activeFilterCount = (searchQuery.trim() ? 1 : 0) + (filterType ? 1 : 0) + filterAssignees.size;
 
-  const toggleAssignee = (id: string) => {
-    setFilterAssignees(prev => {
+  const toggleAssignee = (assigneeId: string) => {
+    setFilterAssignees((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(assigneeId)) next.delete(assigneeId);
+      else next.add(assigneeId);
       return next;
     });
   };
@@ -162,6 +156,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
     { type: "STORY", icon: Bookmark, label: "Story", color: "text-green-500" },
     { type: "EPIC", icon: Zap, label: "Epic", color: "text-purple-500" },
   ];
+
+  const handleTicketClick = (ticketId: number) => {
+    setSelectedTicketId(ticketId);
+  };
 
   return (
     <div className="h-full flex flex-col w-full relative">
@@ -180,7 +178,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-3 flex-wrap" role="search" aria-label="Filter tickets">
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <ViewSwitcher activeView={activeView} onViewChange={handleViewChange} />
+
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -188,7 +188,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
               className="h-8 w-40 pl-8 text-sm"
-              aria-label="Search tickets"
             />
           </div>
 
@@ -197,8 +196,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
               <button
                 key={type}
                 onClick={() => setFilterType(filterType === type ? null : type)}
-                aria-pressed={filterType === type}
-                aria-label={`Filter by ${label}`}
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors border",
                   filterType === type
@@ -218,8 +215,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 <button
                   key={a.id}
                   onClick={() => toggleAssignee(a.id)}
-                  aria-pressed={filterAssignees.has(a.id)}
-                  aria-label={`Filter by ${a.firstName || ""} ${a.lastName || ""}`.trim()}
                   className={cn(
                     "rounded-full transition-all",
                     filterAssignees.has(a.id) ? "ring-2 ring-primary ring-offset-1" : "opacity-70 hover:opacity-100"
@@ -247,51 +242,61 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 Clear ({activeFilterCount})
               </button>
             )}
-            {hasActiveFilters && (
-              <span className="text-xs text-muted-foreground">
-                {boardTickets.length} shown
-              </span>
-            )}
-            <Switch
-              id="hide-completed"
-              checked={hideCompleted}
-              onCheckedChange={setHideCompletedAndStore}
-            />
+            {hasActiveFilters && <span className="text-xs text-muted-foreground">{boardTickets.length} shown</span>}
+            <Switch id="hide-completed" checked={hideCompleted} onCheckedChange={setHideCompleted} />
             <Label htmlFor="hide-completed" className="text-xs font-normal cursor-pointer flex items-center gap-1">
               <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
               Hide done
-              {hideCompleted && doneCount > 0 && (
-                <span className="text-muted-foreground">({doneCount})</span>
-              )}
+              {hideCompleted && doneCount > 0 && <span className="text-muted-foreground">({doneCount})</span>}
             </Label>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 w-full relative" style={{ minWidth: 0, overflow: 'hidden' }}>
-        <div
-          className="h-full w-full kanban-scroll-container"
-          style={{
-            overflowX: 'scroll',
-            overflowY: 'hidden',
-            scrollbarWidth: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarColor: 'rgba(0, 0, 0, 0.3) transparent',
-            msOverflowStyle: 'scrollbar',
-            position: 'relative',
-            width: '100%',
-            height: '100%'
-          }}
-        >
-          <div className="inline-flex h-full pb-4 gap-3 sm:gap-4 md:gap-4" style={{ minWidth: 'max-content', paddingLeft: '24px', paddingRight: '12px' }}>
-            <KanbanBoard
-              tickets={boardTickets}
-              projectId={projectId}
-              statuses={statuses}
-              epics={epics}
-            />
+      <div className="flex-1 min-h-0 w-full relative overflow-hidden">
+        {activeView === "board" && (
+          <div
+            className="h-full w-full kanban-scroll-container"
+            style={{
+              overflowX: "scroll",
+              overflowY: "hidden",
+              scrollbarWidth: "auto",
+              WebkitOverflowScrolling: "touch",
+              scrollbarColor: "rgba(0, 0, 0, 0.3) transparent",
+              position: "relative",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <div className="inline-flex h-full pb-4 gap-3 sm:gap-4 md:gap-4" style={{ minWidth: "max-content", paddingLeft: "24px", paddingRight: "12px" }}>
+              <KanbanBoard tickets={boardTickets} projectId={projectId} statuses={statuses} epics={epics} />
+            </div>
           </div>
-        </div>
+        )}
+
+        {activeView === "list" && (
+          <div className="h-full overflow-y-auto">
+            <ListView tickets={boardTickets} onTicketClick={handleTicketClick} groupBy="status" />
+          </div>
+        )}
+
+        {activeView === "table" && (
+          <div className="h-full overflow-y-auto">
+            <TableView tickets={boardTickets} onTicketClick={handleTicketClick} />
+          </div>
+        )}
+
+        {activeView === "calendar" && (
+          <div className="h-full overflow-y-auto">
+            <CalendarView tickets={boardTickets} onTicketClick={handleTicketClick} />
+          </div>
+        )}
+
+        {activeView === "gantt" && (
+          <div className="h-full overflow-auto">
+            <GanttView tickets={boardTickets} onTicketClick={handleTicketClick} />
+          </div>
+        )}
       </div>
     </div>
   );

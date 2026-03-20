@@ -103,10 +103,13 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         {
           label: "CRM",
           routes: [
+            { label: "CRM Hub", icon: Contact2, href: "/crm" },
             { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
             { label: "Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
+            { label: "Organizations", icon: Network, href: "/crm/organizations" },
+            { label: "Analytics", icon: BarChart3, href: "/crm/analytics" },
             { label: "Targets", icon: Trophy, href: "/crm/targets" },
-            { label: "Reports", icon: BarChart3, href: "/crm/reports" },
             { label: "Clients", icon: UserCheck, href: "/crm/clients" },
           ],
         },
@@ -171,10 +174,13 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         {
           label: "CRM",
           routes: [
+            { label: "CRM Hub", icon: Contact2, href: "/crm" },
             { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
             { label: "Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
+            { label: "Organizations", icon: Network, href: "/crm/organizations" },
+            { label: "Analytics", icon: BarChart3, href: "/crm/analytics" },
             { label: "Targets", icon: Trophy, href: "/crm/targets" },
-            { label: "Reports", icon: BarChart3, href: "/crm/reports" },
             { label: "Clients", icon: UserCheck, href: "/crm/clients" },
           ],
         },

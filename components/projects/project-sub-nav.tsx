@@ -13,8 +13,12 @@ interface ProjectSubNavProps {
 const tabs = [
   { label: "Board", suffix: "" },
   { label: "Backlog", suffix: "/backlog" },
-  { label: "Sprints", suffix: "/sprints" },
-  { label: "Epics", suffix: "/epics" },
+  { label: "Cycles", suffix: "/cycles" },
+  { label: "Modules", suffix: "/modules" },
+  { label: "Pages", suffix: "/pages" },
+  { label: "Views", suffix: "/views" },
+  { label: "Intake", suffix: "/intake" },
+  { label: "Analytics", suffix: "/analytics" },
   { label: "Settings", suffix: "/settings" },
 ];
 

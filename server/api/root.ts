@@ -15,6 +15,13 @@ import { notificationsRouter } from "./routers/notifications";
 import { chatRouter } from "./routers/chat";
 import { invoiceRouter } from "./routers/invoice";
 import { supportRouter } from "./routers/support";
+import { leadDetailsRouter } from "./routers/lead-details";
+import { crmEmailTemplatesRouter } from "./routers/crm-email-templates";
+import { leadScoringRouter } from "./routers/lead-scoring";
+import { leadAssignmentRouter } from "./routers/lead-assignment";
+import { crmSlaRouter } from "./routers/crm-sla";
+import { contactsRouter } from "./routers/contacts";
+import { crmViewsRouter } from "./routers/crm-views";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -33,6 +40,13 @@ export const appRouter = createTRPCRouter({
   chat: chatRouter,
   invoice: invoiceRouter,
   support: supportRouter,
+  leadDetails: leadDetailsRouter,
+  crmEmailTemplates: crmEmailTemplatesRouter,
+  leadScoring: leadScoringRouter,
+  leadAssignment: leadAssignmentRouter,
+  crmSla: crmSlaRouter,
+  contacts: contactsRouter,
+  crmViews: crmViewsRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";

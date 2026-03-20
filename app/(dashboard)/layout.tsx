@@ -20,8 +20,9 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const isProjectPage = pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
+  const isCrmDetailPage = pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
   const isChatPage = pathname === "/chat";
-  const isFullHeightPage = isProjectPage || isChatPage;
+  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage;
 
   const role = session?.user?.role;
   const isAdminRole = role === "CEO" || role === "HR";

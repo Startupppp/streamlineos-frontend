@@ -28,7 +28,7 @@ async function main() {
   }
 
   // Hardcoded admin (CEO) — email already verified
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || "admin@example.com";
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || "tarunchintakunta@gmail.com";
   const existingAdmin = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.email, adminEmail),
   });

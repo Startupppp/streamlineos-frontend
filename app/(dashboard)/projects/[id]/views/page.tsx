@@ -1,0 +1,352 @@
+"use client";
+
+import { use, useState } from "react";
+import { trpc } from "@/trpc/client";
+import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  LayoutGrid,
+  List,
+  Kanban,
+  Pin,
+  PinOff,
+  ArrowRight,
+  Eye,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useForm, Controller, type Resolver } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+const LAYOUT_TYPES = ["board", "list", "table", "calendar", "gantt"] as const;
+const FILTER_FIELDS = ["status", "priority", "assignee", "label", "module", "cycle"] as const;
+const FILTER_OPERATORS = ["is", "is_not", "contains", "is_empty", "is_not_empty"] as const;
+
+const createViewSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  layoutType: z.enum(LAYOUT_TYPES).default("board"),
+});
+type CreateViewForm = z.infer<typeof createViewSchema>;
+
+const layoutIcons: Record<string, React.ReactNode> = {
+  board: <Kanban className="h-4 w-4" />,
+  list: <List className="h-4 w-4" />,
+  table: <LayoutGrid className="h-4 w-4" />,
+  calendar: <LayoutGrid className="h-4 w-4" />,
+  gantt: <LayoutGrid className="h-4 w-4" />,
+};
+
+export default function ViewsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const projectId = parseInt(id);
+  const [createOpen, setCreateOpen] = useState(false);
+  const router = useRouter();
+
+  const utils = trpc.useUtils();
+  const { data: views, isLoading } = trpc.project.viewsGetByProject.useQuery({
+    projectId,
+  });
+
+  const createMutation = trpc.project.viewsCreate.useMutation({
+    onSuccess: () => {
+      utils.project.viewsGetByProject.invalidate({ projectId });
+      setCreateOpen(false);
+      form.reset();
+      toast.success("View created");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const togglePinMutation = trpc.project.viewsUpdate.useMutation({
+    onSuccess: () => {
+      utils.project.viewsGetByProject.invalidate({ projectId });
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteMutation = trpc.project.viewsDelete.useMutation({
+    onSuccess: () => {
+      utils.project.viewsGetByProject.invalidate({ projectId });
+      toast.success("View deleted");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const form = useForm<CreateViewForm>({
+    resolver: zodResolver(createViewSchema) as unknown as Resolver<CreateViewForm>,
+    defaultValues: { layoutType: "board" },
+  });
+
+  const onSubmit = (data: CreateViewForm) => {
+    createMutation.mutate({ ...data, projectId });
+  };
+
+  const handleNavigateToView = (view: {
+    id: number;
+    layoutType: string;
+  }) => {
+    const params = new URLSearchParams();
+    params.set("viewId", view.id.toString());
+    params.set("view", view.layoutType);
+    router.push(`/projects/${projectId}?${params.toString()}`);
+  };
+
+  const handleTogglePin = (viewId: number, isPinned: boolean) => {
+    togglePinMutation.mutate({ id: viewId, isPinned });
+  };
+
+  const handleDelete = (viewId: number) => {
+    deleteMutation.mutate({ id: viewId });
+  };
+
+  const pinnedViews = (views ?? []).filter((v) => v.isPinned);
+  const unpinnedViews = (views ?? []).filter((v) => !v.isPinned);
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="flex-1 p-6 space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
+        <ProjectSubNav projectId={projectId} />
+        <div className="flex items-center justify-between mt-4">
+          <h1 className="text-2xl font-bold">Views</h1>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" /> New View
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create View</DialogTitle>
+              </DialogHeader>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <div>
+                  <Label htmlFor="view-name">Name</Label>
+                  <Input id="view-name" {...form.register("name")} />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.name.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label>Layout</Label>
+                  <Controller
+                    control={form.control}
+                    name="layoutType"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LAYOUT_TYPES.map((l) => (
+                            <SelectItem key={l} value={l}>
+                              <span className="flex items-center gap-2">
+                                {layoutIcons[l]}
+                                {l.charAt(0).toUpperCase() + l.slice(1)}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Filters can be applied from the board view after creation.
+                </p>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="w-full"
+                >
+                  {createMutation.isPending ? "Creating..." : "Create View"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {!views?.length ? (
+          <div className="text-center py-16">
+            <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-1">No saved views</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create custom views with saved filters and layouts.
+            </p>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Create First View
+            </Button>
+          </div>
+        ) : (
+          <>
+            {pinnedViews.length > 0 && (
+              <section>
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Pinned
+                </h2>
+                <div className="space-y-2">
+                  {pinnedViews.map((view) => (
+                    <Card
+                      key={view.id}
+                      className="hover:border-primary/50 transition-colors cursor-pointer"
+                      onClick={() => handleNavigateToView(view)}
+                    >
+                      <CardContent className="py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="shrink-0 text-muted-foreground">
+                            {layoutIcons[view.layoutType] ?? layoutIcons.board}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{view.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {view.layoutType.charAt(0).toUpperCase() +
+                                view.layoutType.slice(1)}{" "}
+                              {view.filters && Object.keys(view.filters).length > 0 &&
+                                `with ${Object.keys(view.filters).length} filter${Object.keys(view.filters).length > 1 ? "s" : ""}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className="flex items-center gap-1 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleTogglePin(view.id, false)
+                            }
+                          >
+                            <PinOff className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(view.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {unpinnedViews.length > 0 && (
+              <section>
+                {pinnedViews.length > 0 && (
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                    All Views
+                  </h2>
+                )}
+                <div className="space-y-2">
+                  {unpinnedViews.map((view) => (
+                    <Card
+                      key={view.id}
+                      className="hover:border-primary/50 transition-colors cursor-pointer"
+                      onClick={() => handleNavigateToView(view)}
+                    >
+                      <CardContent className="py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="shrink-0 text-muted-foreground">
+                            {layoutIcons[view.layoutType] ?? layoutIcons.board}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{view.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {view.layoutType.charAt(0).toUpperCase() +
+                                view.layoutType.slice(1)}{" "}
+                              {view.filters && Object.keys(view.filters).length > 0 &&
+                                `with ${Object.keys(view.filters).length} filter${Object.keys(view.filters).length > 1 ? "s" : ""}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className="flex items-center gap-1 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleTogglePin(view.id, true)
+                            }
+                          >
+                            <Pin className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(view.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -516,12 +516,19 @@ export const tickets = pgTable("tickets", {
   assigneeId: text("assignee_id").references(() => users.id),
   reporterId: text("reporter_id").references(() => users.id),
   points: integer("points"),
-  storyPoints: integer("story_points"), 
+  storyPoints: integer("story_points"),
   link: text("link"),
   order: integer("order").default(0),
   parentTicketId: integer("parent_ticket_id"),
-  originalEstimate: decimal("original_estimate"), 
+  originalEstimate: decimal("original_estimate"),
   timeSpent: decimal("time_spent").default("0"),
+  startDate: date("start_date"),
+  dueDate: date("due_date"),
+  stateId: integer("state_id"),
+  moduleId: integer("module_id"),
+  cycleId: integer("cycle_id"),
+  sequenceId: text("sequence_id"),
+  estimate: integer("estimate"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (t) => ({
@@ -819,10 +826,23 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
     references: [users.id],
     relationName: "reporter",
   }),
+  state: one(customStates, {
+    fields: [tickets.stateId],
+    references: [customStates.id],
+  }),
+  module: one(modules, {
+    fields: [tickets.moduleId],
+    references: [modules.id],
+  }),
+  cycle: one(cycles, {
+    fields: [tickets.cycleId],
+    references: [cycles.id],
+  }),
   comments: many(ticketComments),
   attachments: many(ticketAttachments),
   labels: many(ticketLabelMappings),
   assignees: many(ticketAssignees),
+  relations: many(workItemRelations),
 }));
 
 export const ticketAssigneesRelations = relations(ticketAssignees, ({ one }) => ({
@@ -1097,6 +1117,9 @@ export const leads = pgTable("leads", {
   city: text("city"),
   referredBy: text("referred_by"),
   tags: text("tags").array(),
+  score: integer("score").default(0),
+  slaDeadline: timestamp("sla_deadline"),
+  website: text("website"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -1104,6 +1127,7 @@ export const leads = pgTable("leads", {
   index("idx_leads_assigned_to").on(table.assignedToId),
   index("idx_leads_created_at").on(table.orgId, table.createdAt),
   index("idx_leads_source").on(table.source),
+  index("idx_leads_score").on(table.score),
 ]);
 
 export const leadActivities = pgTable("lead_activities", {
@@ -1184,6 +1208,9 @@ export const deals = pgTable("deals", {
   actualCloseDate: date("actual_close_date"),
   lostReason: text("lost_reason"),
   notes: text("notes"),
+  linkedLeadId: integer("linked_lead_id").references(() => leads.id),
+  linkedClientId: integer("linked_client_id").references(() => clients.id),
+  slaDeadline: timestamp("sla_deadline"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -1714,4 +1741,435 @@ export const supportTicketsRelations = relations(supportTickets, ({ one, many })
 export const supportTicketMessagesRelations = relations(supportTicketMessages, ({ one }) => ({
   ticket: one(supportTickets, { fields: [supportTicketMessages.ticketId], references: [supportTickets.id] }),
   author: one(users, { fields: [supportTicketMessages.authorId], references: [users.id] }),
+}));
+
+export const stateGroupEnum = pgEnum("state_group", ["backlog", "unstarted", "started", "completed", "cancelled"]);
+export const cycleStatusEnum = pgEnum("cycle_status", ["draft", "active", "completed"]);
+export const moduleStatusEnum = pgEnum("module_status", ["backlog", "planned", "in-progress", "completed", "paused", "cancelled"]);
+export const intakeStatusEnum = pgEnum("intake_status", ["pending", "accepted", "declined", "duplicate"]);
+export const intakeSourceEnum = pgEnum("intake_source", ["manual", "web_form", "email"]);
+export const workItemRelationTypeEnum = pgEnum("work_item_relation_type", ["blocks", "blocked_by", "duplicate_of", "relates_to"]);
+export const viewLayoutEnum = pgEnum("view_layout", ["board", "list", "table", "calendar", "gantt"]);
+export const leadEmailDirectionEnum = pgEnum("lead_email_direction", ["sent", "received"]);
+export const leadTaskStatusEnum = pgEnum("lead_task_status", ["open", "done"]);
+export const scoringOperatorEnum = pgEnum("scoring_operator", ["eq", "gt", "lt", "contains", "in"]);
+export const assignmentRuleTypeEnum = pgEnum("assignment_rule_type", ["assign_user", "round_robin"]);
+export const slaAppliesToEnum = pgEnum("sla_applies_to", ["lead", "deal", "both"]);
+export const slaPriorityEnum = pgEnum("sla_priority", ["low", "medium", "high", "urgent"]);
+export const orgSizeEnum = pgEnum("org_size", ["1-10", "11-50", "51-200", "201-1000", "1000+"]);
+
+export const customStates = pgTable("custom_states", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#3B82F6"),
+  group: stateGroupEnum("group").notNull(),
+  sequence: integer("sequence").notNull().default(0),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_custom_states_project").on(table.projectId),
+  index("idx_custom_states_org").on(table.orgId),
+]);
+
+export const customStatesRelations = relations(customStates, ({ one, many }) => ({
+  project: one(projects, { fields: [customStates.projectId], references: [projects.id] }),
+  organization: one(organizations, { fields: [customStates.orgId], references: [organizations.id] }),
+  tickets: many(tickets),
+}));
+
+export const cycles = pgTable("cycles", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: cycleStatusEnum("status").default("draft").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_cycles_project").on(table.projectId),
+  index("idx_cycles_org_status").on(table.orgId, table.status),
+]);
+
+export const cyclesRelations = relations(cycles, ({ one, many }) => ({
+  project: one(projects, { fields: [cycles.projectId], references: [projects.id] }),
+  organization: one(organizations, { fields: [cycles.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [cycles.createdBy], references: [users.id] }),
+  tickets: many(tickets),
+}));
+
+export const modules = pgTable("modules", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: moduleStatusEnum("status").default("backlog").notNull(),
+  leadId: text("lead_id").references(() => users.id),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_modules_project").on(table.projectId),
+  index("idx_modules_org").on(table.orgId),
+]);
+
+export const modulesRelations = relations(modules, ({ one, many }) => ({
+  project: one(projects, { fields: [modules.projectId], references: [projects.id] }),
+  organization: one(organizations, { fields: [modules.orgId], references: [organizations.id] }),
+  lead: one(users, { fields: [modules.leadId], references: [users.id], relationName: "moduleLead" }),
+  creator: one(users, { fields: [modules.createdBy], references: [users.id], relationName: "moduleCreator" }),
+  tickets: many(tickets),
+  links: many(moduleLinks),
+}));
+
+export const moduleLinks = pgTable("module_links", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("module_id").references(() => modules.id, { onDelete: "cascade" }).notNull(),
+  linkedModuleId: integer("linked_module_id").references(() => modules.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_module_links").on(table.moduleId, table.linkedModuleId),
+]);
+
+export const moduleLinksRelations = relations(moduleLinks, ({ one }) => ({
+  module: one(modules, { fields: [moduleLinks.moduleId], references: [modules.id] }),
+  linkedModule: one(modules, { fields: [moduleLinks.linkedModuleId], references: [modules.id] }),
+}));
+
+export const pages = pgTable("pages", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  content: jsonb("content"),
+  icon: text("icon"),
+  coverImage: text("cover_image"),
+  isPublic: boolean("is_public").default(false).notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  parentPageId: integer("parent_page_id"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_pages_project").on(table.projectId),
+  index("idx_pages_org").on(table.orgId),
+  foreignKey({ columns: [table.parentPageId], foreignColumns: [table.id] }),
+]);
+
+export const pagesRelations = relations(pages, ({ one, many }) => ({
+  project: one(projects, { fields: [pages.projectId], references: [projects.id] }),
+  organization: one(organizations, { fields: [pages.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [pages.createdBy], references: [users.id] }),
+  parent: one(pages, { fields: [pages.parentPageId], references: [pages.id], relationName: "parentPage" }),
+  children: many(pages, { relationName: "parentPage" }),
+}));
+
+export const intakeItems = pgTable("intake_items", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  description: jsonb("description"),
+  source: intakeSourceEnum("source").default("manual").notNull(),
+  status: intakeStatusEnum("status").default("pending").notNull(),
+  submitterEmail: text("submitter_email"),
+  linkedWorkItemId: integer("linked_work_item_id").references(() => tickets.id),
+  declineReason: text("decline_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_intake_items_project").on(table.projectId),
+  index("idx_intake_items_org_status").on(table.orgId, table.status),
+]);
+
+export const intakeItemsRelations = relations(intakeItems, ({ one }) => ({
+  project: one(projects, { fields: [intakeItems.projectId], references: [projects.id] }),
+  organization: one(organizations, { fields: [intakeItems.orgId], references: [organizations.id] }),
+  linkedWorkItem: one(tickets, { fields: [intakeItems.linkedWorkItemId], references: [tickets.id] }),
+}));
+
+export const workItemRelations = pgTable("work_item_relations", {
+  id: serial("id").primaryKey(),
+  workItemId: integer("work_item_id").references(() => tickets.id, { onDelete: "cascade" }).notNull(),
+  relatedWorkItemId: integer("related_work_item_id").references(() => tickets.id, { onDelete: "cascade" }).notNull(),
+  relationType: workItemRelationTypeEnum("relation_type").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_work_item_relation").on(table.workItemId, table.relatedWorkItemId),
+  index("idx_work_item_relations_item").on(table.workItemId),
+  index("idx_work_item_relations_related").on(table.relatedWorkItemId),
+]);
+
+export const workItemRelationsRelations = relations(workItemRelations, ({ one }) => ({
+  workItem: one(tickets, { fields: [workItemRelations.workItemId], references: [tickets.id] }),
+  relatedWorkItem: one(tickets, { fields: [workItemRelations.relatedWorkItemId], references: [tickets.id] }),
+}));
+
+export const projectViews = pgTable("project_views", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  filters: jsonb("filters").$type<Record<string, unknown>>().default({}),
+  groupBy: text("group_by"),
+  orderBy: text("order_by"),
+  layoutType: viewLayoutEnum("layout_type").default("board").notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_project_views_project").on(table.projectId),
+  index("idx_project_views_org").on(table.orgId),
+]);
+
+export const projectViewsRelations = relations(projectViews, ({ one }) => ({
+  project: one(projects, { fields: [projectViews.projectId], references: [projects.id] }),
+  organization: one(organizations, { fields: [projectViews.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [projectViews.createdBy], references: [users.id] }),
+}));
+
+export const leadNotes = pgTable("lead_notes", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  authorId: text("author_id").references(() => users.id).notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_notes_lead").on(table.leadId),
+]);
+
+export const leadNotesRelations = relations(leadNotes, ({ one }) => ({
+  lead: one(leads, { fields: [leadNotes.leadId], references: [leads.id] }),
+  author: one(users, { fields: [leadNotes.authorId], references: [users.id] }),
+}));
+
+export const leadTasks = pgTable("lead_tasks", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  dueDate: date("due_date"),
+  assigneeId: text("assignee_id").references(() => users.id),
+  status: leadTaskStatusEnum("status").default("open").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_tasks_lead").on(table.leadId),
+]);
+
+export const leadTasksRelations = relations(leadTasks, ({ one }) => ({
+  lead: one(leads, { fields: [leadTasks.leadId], references: [leads.id] }),
+  assignee: one(users, { fields: [leadTasks.assigneeId], references: [users.id] }),
+}));
+
+export const leadEmails = pgTable("lead_emails", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => leads.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  direction: leadEmailDirectionEnum("direction").notNull(),
+  subject: text("subject"),
+  body: text("body"),
+  fromEmail: text("from_email").notNull(),
+  toEmail: text("to_email").notNull(),
+  sentAt: timestamp("sent_at").defaultNow(),
+  messageId: text("message_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_emails_lead").on(table.leadId),
+]);
+
+export const leadEmailsRelations = relations(leadEmails, ({ one }) => ({
+  lead: one(leads, { fields: [leadEmails.leadId], references: [leads.id] }),
+}));
+
+export const crmEmailTemplates = pgTable("crm_email_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_crm_email_templates_org").on(table.orgId),
+]);
+
+export const crmEmailTemplatesRelations = relations(crmEmailTemplates, ({ one }) => ({
+  organization: one(organizations, { fields: [crmEmailTemplates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [crmEmailTemplates.createdBy], references: [users.id] }),
+}));
+
+export const leadScoringRules = pgTable("lead_scoring_rules", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  field: text("field").notNull(),
+  operator: scoringOperatorEnum("operator").notNull(),
+  value: text("value").notNull(),
+  points: integer("points").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_scoring_rules_org").on(table.orgId),
+]);
+
+export const leadScoringRulesRelations = relations(leadScoringRules, ({ one }) => ({
+  organization: one(organizations, { fields: [leadScoringRules.orgId], references: [organizations.id] }),
+}));
+
+export const leadAssignmentRules = pgTable("lead_assignment_rules", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  conditions: jsonb("conditions").$type<{ field: string; operator: string; value: string }[]>().default([]),
+  assignmentType: assignmentRuleTypeEnum("assignment_type").notNull(),
+  assignToUserId: text("assign_to_user_id").references(() => users.id),
+  roundRobinUserIds: jsonb("round_robin_user_ids").$type<string[]>().default([]),
+  priority: integer("priority").notNull().default(0),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_lead_assignment_rules_org").on(table.orgId),
+]);
+
+export const leadAssignmentRulesRelations = relations(leadAssignmentRules, ({ one }) => ({
+  organization: one(organizations, { fields: [leadAssignmentRules.orgId], references: [organizations.id] }),
+  assignToUser: one(users, { fields: [leadAssignmentRules.assignToUserId], references: [users.id] }),
+}));
+
+export const assignmentRuleState = pgTable("assignment_rule_state", {
+  id: serial("id").primaryKey(),
+  ruleId: integer("rule_id").references(() => leadAssignmentRules.id, { onDelete: "cascade" }).notNull().unique(),
+  lastAssignedIndex: integer("last_assigned_index").default(0).notNull(),
+});
+
+export const assignmentRuleStateRelations = relations(assignmentRuleState, ({ one }) => ({
+  rule: one(leadAssignmentRules, { fields: [assignmentRuleState.ruleId], references: [leadAssignmentRules.id] }),
+}));
+
+export const crmSla = pgTable("crm_sla_policies", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  appliesTo: slaAppliesToEnum("applies_to").notNull(),
+  priority: slaPriorityEnum("priority").notNull(),
+  firstResponseHours: integer("first_response_hours").notNull(),
+  resolutionHours: integer("resolution_hours").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_crm_sla_org").on(table.orgId),
+]);
+
+export const crmSlaRelations = relations(crmSla, ({ one }) => ({
+  organization: one(organizations, { fields: [crmSla.orgId], references: [organizations.id] }),
+}));
+
+export const crmViews = pgTable("crm_views", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  entityType: text("entity_type").notNull(),
+  filters: jsonb("filters").$type<Record<string, unknown>>().default({}),
+  sortBy: text("sort_by"),
+  sortDir: text("sort_dir").default("asc"),
+  isPublic: boolean("is_public").default(false).notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_crm_views_org").on(table.orgId),
+]);
+
+export const crmViewsRelations = relations(crmViews, ({ one }) => ({
+  organization: one(organizations, { fields: [crmViews.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [crmViews.createdBy], references: [users.id] }),
+}));
+
+export const contacts = pgTable("contacts", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  title: text("title"),
+  department: text("department"),
+  company: text("company"),
+  organizationId: integer("organization_id").references(() => crmOrganizations.id),
+  linkedinUrl: text("linkedin_url"),
+  twitterUrl: text("twitter_url"),
+  avatarUrl: text("avatar_url"),
+  leadId: integer("lead_id").references(() => leads.id),
+  dealId: integer("deal_id").references(() => deals.id),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_contacts_org").on(table.orgId),
+  index("idx_contacts_organization").on(table.organizationId),
+]);
+
+export const crmOrganizations = pgTable("crm_organizations", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  domain: text("domain"),
+  industry: text("industry"),
+  size: orgSizeEnum("size"),
+  website: text("website"),
+  linkedinUrl: text("linkedin_url"),
+  description: text("description"),
+  healthScore: integer("health_score"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_crm_organizations_org").on(table.orgId),
+]);
+
+export const contactsRelations = relations(contacts, ({ one }) => ({
+  organization: one(organizations, { fields: [contacts.orgId], references: [organizations.id] }),
+  crmOrganization: one(crmOrganizations, { fields: [contacts.organizationId], references: [crmOrganizations.id] }),
+  lead: one(leads, { fields: [contacts.leadId], references: [leads.id] }),
+  deal: one(deals, { fields: [contacts.dealId], references: [deals.id] }),
+}));
+
+export const crmOrganizationsRelations = relations(crmOrganizations, ({ one, many }) => ({
+  org: one(organizations, { fields: [crmOrganizations.orgId], references: [organizations.id] }),
+  contacts: many(contacts),
+}));
+
+export const invoiceAiExtractions = pgTable("invoice_ai_extractions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  invoiceId: integer("invoice_id").references(() => invoices.id),
+  fileUrl: text("file_url").notNull(),
+  extractedData: jsonb("extracted_data").$type<{
+    vendor: string;
+    invoiceNumber: string;
+    date: string;
+    dueDate: string;
+    lineItems: { description: string; qty: number; rate: number; amount: number }[];
+    subtotal: number;
+    tax: number;
+    total: number;
+    currency: string;
+  }>(),
+  status: text("status").default("pending").notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_invoice_ai_extractions_org").on(table.orgId),
+]);
+
+export const invoiceAiExtractionsRelations = relations(invoiceAiExtractions, ({ one }) => ({
+  organization: one(organizations, { fields: [invoiceAiExtractions.orgId], references: [organizations.id] }),
+  invoice: one(invoices, { fields: [invoiceAiExtractions.invoiceId], references: [invoices.id] }),
+  creator: one(users, { fields: [invoiceAiExtractions.createdBy], references: [users.id] }),
 }));

@@ -1,0 +1,350 @@
+"use client";
+
+import { useState, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Plus, Trash2, Pencil, Mail, Eye, Copy, Variable,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
+} from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
+
+const VARIABLES = [
+  "{{lead.name}}",
+  "{{lead.email}}",
+  "{{lead.phone}}",
+  "{{lead.company}}",
+  "{{lead.city}}",
+  "{{lead.source}}",
+  "{{lead.potentialValue}}",
+  "{{deal.name}}",
+  "{{deal.value}}",
+  "{{deal.stage}}",
+  "{{user.name}}",
+  "{{user.email}}",
+];
+
+const SAMPLE_DATA: Record<string, string> = {
+  "lead.name": "Rahul Sharma",
+  "lead.email": "rahul@example.com",
+  "lead.phone": "+919876543210",
+  "lead.company": "TechCorp India",
+  "lead.city": "Mumbai",
+  "lead.source": "referral",
+  "lead.potentialValue": "50,00,000",
+  "deal.name": "Enterprise License",
+  "deal.value": "25,00,000",
+  "deal.stage": "Proposal",
+  "user.name": "Priya Patel",
+  "user.email": "priya@vaivamm.com",
+};
+
+const templateSchema = z.object({
+  name: z.string().min(1, "Name required").max(100),
+  subject: z.string().min(1, "Subject required"),
+  body: z.string().min(1, "Body required"),
+});
+type TemplateForm = z.infer<typeof templateSchema>;
+
+function interpolate(text: string, data: Record<string, string>) {
+  let result = text;
+  for (const [key, value] of Object.entries(data)) {
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), value);
+  }
+  return result;
+}
+
+export default function EmailTemplatesPage() {
+  const utils = api.useUtils();
+  const { data: templates, isLoading } = api.crmEmailTemplates.getAll.useQuery({ limit: 50, offset: 0 });
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [previewId, setPreviewId] = useState<number | null>(null);
+
+  const createTemplate = api.crmEmailTemplates.create.useMutation({
+    onSuccess: () => {
+      utils.crmEmailTemplates.getAll.invalidate();
+      toast.success("Template created");
+      setCreateOpen(false);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateTemplate = api.crmEmailTemplates.update.useMutation({
+    onSuccess: () => {
+      utils.crmEmailTemplates.getAll.invalidate();
+      toast.success("Template updated");
+      setEditingId(null);
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteTemplate = api.crmEmailTemplates.delete.useMutation({
+    onSuccess: () => {
+      utils.crmEmailTemplates.getAll.invalidate();
+      toast.success("Template deleted");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const createForm = useForm<TemplateForm>({
+    resolver: zodResolver(templateSchema),
+    defaultValues: { name: "", subject: "", body: "" },
+  });
+
+  const editForm = useForm<TemplateForm>({
+    resolver: zodResolver(templateSchema),
+  });
+
+  const onCreateSubmit = useCallback((data: TemplateForm) => {
+    createTemplate.mutate(data);
+    createForm.reset();
+  }, [createTemplate, createForm]);
+
+  const onEditSubmit = useCallback((data: TemplateForm) => {
+    if (editingId === null) return;
+    updateTemplate.mutate({ id: editingId, ...data });
+  }, [editingId, updateTemplate]);
+
+  const startEdit = useCallback((template: { id: number; name: string; subject: string; body: string }) => {
+    setEditingId(template.id);
+    editForm.reset({ name: template.name, subject: template.subject, body: template.body });
+  }, [editForm]);
+
+  const insertVariable = useCallback((variable: string, formType: "create" | "edit") => {
+    const f = formType === "create" ? createForm : editForm;
+    const current = f.getValues("body");
+    f.setValue("body", current + variable);
+  }, [createForm, editForm]);
+
+  const previewTemplate = useMemo(() => {
+    if (previewId === null || !templates) return null;
+    return templates.find(t => t.id === previewId) ?? null;
+  }, [previewId, templates]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-10 w-48" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-40" />)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      className="space-y-6 p-6"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={fadeUp} className="flex items-center justify-between">
+        <PageHeader title="Email Templates" description="Manage reusable email templates with dynamic variables" />
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              New Template
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Email Template</DialogTitle>
+            </DialogHeader>
+            <Form {...createForm}>
+              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+                <FormField control={createForm.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Template Name</FormLabel>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome Email" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="subject" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subject</FormLabel>
+                    <FormControl><Input {...field} placeholder="e.g. Welcome to Vaivamm, {{lead.name}}" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={createForm.control} name="body" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Body</FormLabel>
+                    <FormControl><Textarea {...field} rows={8} placeholder="Write your email body..." /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Insert variable:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {VARIABLES.map(v => (
+                      <Button
+                        key={v}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-[10px] h-6 px-2"
+                        onClick={() => insertVariable(v, "create")}
+                      >
+                        {v}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createTemplate.isPending}>
+                  {createTemplate.isPending ? "Creating..." : "Create Template"}
+                </Button>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </motion.div>
+
+      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {templates && templates.length > 0 ? (
+          templates.map(template => (
+            <Card key={template.id} className="shadow-sm hover:shadow-md transition-all">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-sm truncate">{template.name}</CardTitle>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewId(previewId === template.id ? null : template.id)}>
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(template)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteTemplate.mutate({ id: template.id })}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Subject</p>
+                    <p className="text-xs truncate">{template.subject}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Body</p>
+                    <p className="text-xs line-clamp-3 whitespace-pre-wrap">{template.body}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card className="col-span-full shadow-sm">
+            <CardContent className="py-12 text-center text-muted-foreground">
+              <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No email templates</p>
+              <p className="text-xs mt-1">Create your first template</p>
+            </CardContent>
+          </Card>
+        )}
+      </motion.div>
+
+      {editingId !== null && (
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-sm border-[#bd882c]/30">
+            <CardHeader>
+              <CardTitle className="text-base">Edit Template</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...editForm}>
+                <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                  <FormField control={editForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Template Name</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={editForm.control} name="subject" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={editForm.control} name="body" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Body</FormLabel>
+                      <FormControl><Textarea {...field} rows={8} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Insert variable:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {VARIABLES.map(v => (
+                        <Button key={v} type="button" variant="outline" size="sm" className="text-[10px] h-6 px-2" onClick={() => insertVariable(v, "edit")}>
+                          {v}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <Button type="button" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                    <Button type="submit" className="bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={updateTemplate.isPending}>
+                      {updateTemplate.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {previewTemplate && (
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-sm border-emerald-500/30">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-emerald-400" />
+                  Preview: {previewTemplate.name}
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setPreviewId(null)}>Close</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 rounded-lg bg-muted/20 border border-border/30 space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Subject</p>
+                  <p className="text-sm font-medium">{interpolate(previewTemplate.subject, SAMPLE_DATA)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Body</p>
+                  <p className="text-sm whitespace-pre-wrap">{interpolate(previewTemplate.body, SAMPLE_DATA)}</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">Preview uses sample data for variable interpolation</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
