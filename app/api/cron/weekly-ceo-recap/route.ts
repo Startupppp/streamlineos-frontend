@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAndSendWeeklyCeoRecap } from "@/server/actions/weekly-ceo-recap";
 import { logger } from "@/lib/logger";
-import { verifyCronSecret } from "@/lib/cron-auth";
+import { verifyCronSecret, cronIdempotencyCheck } from "@/lib/cron-auth";
 
 export async function GET(request: NextRequest) {
   const authError = verifyCronSecret(request.headers.get("authorization"));
   if (authError) return authError;
+  const dupeCheck = cronIdempotencyCheck("weekly-ceo-recap");
+  if (dupeCheck) return dupeCheck;
 
   try {
     const result = await generateAndSendWeeklyCeoRecap();

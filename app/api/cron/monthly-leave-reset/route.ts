@@ -4,11 +4,13 @@ import {
   resetYearlyLeaveBalances,
 } from "@/server/actions/leave-actions";
 import { logger } from "@/lib/logger";
-import { verifyCronSecret } from "@/lib/cron-auth";
+import { verifyCronSecret, cronIdempotencyCheck } from "@/lib/cron-auth";
 
 export async function GET(request: NextRequest) {
   const authError = verifyCronSecret(request.headers.get("authorization"));
   if (authError) return authError;
+  const dupeCheck = cronIdempotencyCheck("monthly-leave-reset");
+  if (dupeCheck) return dupeCheck;
 
   try {
     const now = new Date();

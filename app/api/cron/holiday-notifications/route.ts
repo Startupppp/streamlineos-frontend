@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendHolidayNotifications } from "@/server/actions/holiday-actions";
 import { logger } from "@/lib/logger";
-import { verifyCronSecret } from "@/lib/cron-auth";
+import { verifyCronSecret, cronIdempotencyCheck } from "@/lib/cron-auth";
 
 export async function GET(request: NextRequest) {
   const authError = verifyCronSecret(request.headers.get("authorization"));
   if (authError) return authError;
+  const dupeCheck = cronIdempotencyCheck("holiday-notifications");
+  if (dupeCheck) return dupeCheck;
 
   try {
     const result = await sendHolidayNotifications();
