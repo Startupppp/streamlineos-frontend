@@ -12,6 +12,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { formatCurrencyFull as formatCurrency } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -119,14 +120,6 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   const exportToCSV = () => {
