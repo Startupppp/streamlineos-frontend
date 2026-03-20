@@ -181,11 +181,11 @@ export const onboardEmployeeInputSchema = z.object({
   taxId: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Invalid PAN format (e.g. ABCDE1234F)").optional().or(z.literal("")),
   monthlySalary: z.coerce.number().min(0).optional(),
   bankDetails: z.object({
-    accountNumber: z.string().min(1, "Account number is required"),
-    bankName: z.string().min(1, "Bank name is required"),
-    branch: z.string().min(1, "Branch name is required"),
-    ifsc: z.string().min(1, "IFSC code is required"),
-    accountHolder: z.string().min(1, "Account holder name is required"),
+    accountNumber: z.string().min(1, "Account number is required").regex(/^\d+$/, "Account number must contain only digits"),
+    bankName: z.string().min(1, "Bank name is required").regex(/^[A-Za-z\s]+$/, "Bank name must contain only letters"),
+    branch: z.string().min(1, "Branch name is required").regex(/^[A-Za-z\s]+$/, "Branch must contain only letters"),
+    ifsc: z.string().min(1, "IFSC code is required").regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC format (e.g., SBIN0001234)"),
+    accountHolder: z.string().min(1, "Account holder name is required").regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters"),
   }),
 });
 
