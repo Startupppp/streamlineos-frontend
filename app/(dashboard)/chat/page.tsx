@@ -9,6 +9,7 @@ import {
   Fragment,
 } from "react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -2318,14 +2319,13 @@ function EmptyChatState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="relative mb-4">
-        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#bd882c]/15 to-[#bd882c]/5 flex items-center justify-center">
-          <MessageCircle className="h-7 w-7 text-[#bd882c]" />
-        </div>
-        <div className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-        </div>
-      </div>
+      <Image
+        src="/illustrations/undraw-online-chat.svg"
+        alt="Welcome to Chat"
+        width={220}
+        height={170}
+        className="mb-6"
+      />
       <h3 className="text-lg font-bold mb-1">Welcome to Chat</h3>
       <p className="text-[13px] text-muted-foreground max-w-xs leading-relaxed">
         Select a conversation or start a new one.
