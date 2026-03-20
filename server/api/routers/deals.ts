@@ -11,6 +11,8 @@ export const dealsRouter = createTRPCRouter({
     .input(z.object({
       stage: z.enum(dealStageValues).optional(),
       assignedToId: z.string().optional(),
+      limit: z.number().min(1).max(100).default(50),
+      offset: z.number().min(0).default(0),
     }).optional())
     .query(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
@@ -26,6 +28,8 @@ export const dealsRouter = createTRPCRouter({
           client: { columns: { id: true, name: true } },
         },
         orderBy: [desc(deals.updatedAt)],
+        limit: input?.limit ?? 50,
+        offset: input?.offset ?? 0,
       });
     }),
 

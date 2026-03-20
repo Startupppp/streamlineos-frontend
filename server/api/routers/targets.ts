@@ -9,6 +9,8 @@ export const targetsRouter = createTRPCRouter({
     .input(z.object({
       userId: z.string().optional(),
       period: z.string().optional(),
+      limit: z.number().min(1).max(100).default(50),
+      offset: z.number().min(0).default(0),
     }).optional())
     .query(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
@@ -21,6 +23,8 @@ export const targetsRouter = createTRPCRouter({
         where: and(...filters),
         with: { user: { columns: { id: true, name: true, image: true } } },
         orderBy: [desc(targets.createdAt)],
+        limit: input?.limit ?? 50,
+        offset: input?.offset ?? 0,
       });
     }),
 

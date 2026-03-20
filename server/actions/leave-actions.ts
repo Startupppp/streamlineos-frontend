@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
-// import { createNotification, notifyAllMembers } from "./create-notification";
+import { createNotification, notifyAllMembers } from "./create-notification";
 import {
   DEFAULT_LEAVE_TYPES,
   LEAVE_POLICY,
@@ -383,16 +383,15 @@ export async function submitLeaveRequest(data: {
       );
     }
 
-    // In-app notifications disabled
-    // await createNotification({
-    //   orgId: member.orgId,
-    //   userId: data.approverId,
-    //   type: "WARNING",
-    //   title: "Leave Request Pending",
-    //   message: `${session.user.name || "An employee"} has requested ${leaveType?.name || "leave"} from ${data.startDate.toLocaleDateString()} to ${data.endDate.toLocaleDateString()}.`,
-    //   link: "/hr/leaves",
-    //   metadata: { leaveType: leaveType?.name, reason: data.reason },
-    // });
+    await createNotification({
+      orgId: member.orgId,
+      userId: data.approverId,
+      type: "WARNING",
+      title: "Leave Request Pending",
+      message: `${session.user.name || "An employee"} has requested ${leaveType?.name || "leave"} from ${data.startDate.toLocaleDateString()} to ${data.endDate.toLocaleDateString()}.`,
+      link: "/hr/leaves",
+      metadata: { leaveType: leaveType?.name, reason: data.reason },
+    });
 
     revalidatePath("/hr/leaves");
     return { success: true };
@@ -506,19 +505,23 @@ export async function processLeaveRequest(data: {
       );
     }
 
-    // In-app notifications disabled
-    // const statusLabel = data.status === "APPROVED" ? "approved" : "rejected";
-    // await createNotification({
-    //   orgId: request.orgId,
-    //   userId: request.userId,
-    //   type: data.status === "APPROVED" ? "SUCCESS" : "ERROR",
-    //   title: `Leave ${data.status === "APPROVED" ? "Approved" : "Rejected"}`,
-    //   message: `...`,
-    //   link: "/hr/leaves",
-    // });
-    // if (data.status === "APPROVED" && employee) {
-    //   await notifyAllMembers(request.orgId, { ... });
-    // }
+    await createNotification({
+      orgId: request.orgId,
+      userId: request.userId,
+      type: data.status === "APPROVED" ? "SUCCESS" : "ERROR",
+      title: `Leave ${data.status === "APPROVED" ? "Approved" : "Rejected"}`,
+      message: `Your leave request has been ${data.status === "APPROVED" ? "approved" : "rejected"} by ${approver?.name || "a manager"}.${data.rejectionReason ? ` Reason: ${data.rejectionReason}` : ""}`,
+      link: "/hr/leaves",
+    });
+    if (data.status === "APPROVED" && employee) {
+      await notifyAllMembers(request.orgId, {
+        type: "INFO",
+        title: "Team Member on Leave",
+        message: `${employee.name || "A team member"} will be on ${leaveType?.name || "leave"} from ${new Date(request.startDate).toLocaleDateString()} to ${new Date(request.endDate).toLocaleDateString()}.`,
+        link: "/hr/leaves",
+        excludeUserId: request.userId,
+      });
+    }
 
     await createAuditLog({
       action: data.status === "APPROVED" ? "hr.leave_approved" : "hr.leave_rejected",

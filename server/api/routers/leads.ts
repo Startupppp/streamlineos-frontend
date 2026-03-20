@@ -1,11 +1,12 @@
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { leads, leadActivities, /* notifications, */ tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "../../../lib/db/schema";
+import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "../../../lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "../../../lib/email";
 import { logger } from "../../../lib/logger";
+import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "./lead-auto-triggers";
 
 const leadStatusValues = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 const leadSourceValues = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"] as const;
@@ -117,10 +118,44 @@ export const leadsRouter = createTRPCRouter({
         assignedAt: input.assignedToId ? new Date() : null,
       }).returning();
 
-      // In-app notifications disabled
-      // if (input.assignedToId) {
-      //   await ctx.db.insert(notifications).values({...});
-      // }
+      if (input.assignedToId) {
+        await ctx.db.insert(notifications).values({
+          orgId,
+          userId: input.assignedToId,
+          type: "INFO",
+          title: "New Lead Assigned",
+          message: `You have been assigned a new lead: ${input.name}`,
+          link: `/crm/leads`,
+        });
+      }
+
+      // --- Auto-triggers (fire-and-forget; failures must not break lead creation) ---
+
+      // 1. Assignment rules – only when no explicit assignee was provided
+      if (!input.assignedToId) {
+        try {
+          const result = await evaluateAssignmentRules(ctx.db as any, orgId, newLead.id);
+          if (result.assigned) {
+            logger.info("Auto-assigned lead via rule", { leadId: newLead.id, userId: result.userId, rule: result.ruleName });
+          }
+        } catch (err) {
+          logger.error("Auto-trigger: assignment rules failed", { leadId: newLead.id, error: err });
+        }
+      }
+
+      // 2. Scoring rules
+      try {
+        await recalculateLeadScore(ctx.db as any, orgId, newLead.id);
+      } catch (err) {
+        logger.error("Auto-trigger: lead scoring failed", { leadId: newLead.id, error: err });
+      }
+
+      // 3. SLA policy based on lead priority
+      try {
+        await applySlaPolicy(ctx.db as any, orgId, newLead.id);
+      } catch (err) {
+        logger.error("Auto-trigger: SLA policy failed", { leadId: newLead.id, error: err });
+      }
 
       return newLead;
     }),
@@ -152,6 +187,14 @@ export const leadsRouter = createTRPCRouter({
         .returning();
 
       if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // --- Auto-trigger: recalculate score when lead fields change ---
+      try {
+        await recalculateLeadScore(ctx.db as any, ctx.session.orgId, updated.id);
+      } catch (err) {
+        logger.error("Auto-trigger: lead scoring on update failed", { leadId: updated.id, error: err });
+      }
+
       return updated;
     }),
 
@@ -174,8 +217,14 @@ export const leadsRouter = createTRPCRouter({
 
       if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
 
-      // In-app notifications disabled
-      // await ctx.db.insert(notifications).values({...});
+      await ctx.db.insert(notifications).values({
+        orgId,
+        userId: input.assignedToId,
+        type: "INFO",
+        title: "Lead Assigned to You",
+        message: `You have been assigned lead: ${updated.name}`,
+        link: `/crm/leads/${updated.id}`,
+      });
 
       try {
         const assignee = await ctx.db.query.users.findFirst({
@@ -324,8 +373,14 @@ export const leadsRouter = createTRPCRouter({
           status: "active",
         });
 
-        // In-app notifications disabled
-        // await ctx.db.insert(notifications).values({...});
+        await ctx.db.insert(notifications).values({
+          orgId,
+          userId: updated.assignedToId || ctx.session.userId,
+          type: "SUCCESS",
+          title: "Lead Converted",
+          message: `Lead "${updated.name}" has been converted to a client.`,
+          link: `/crm/leads/${updated.id}`,
+        });
       }
 
       return updated;
