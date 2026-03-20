@@ -171,17 +171,17 @@ export function CreateExpenseDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
+        <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-semibold flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-violet-600" />
+            <Receipt className="h-5 w-5 text-[#bd882c]" />
             New Expense Claim
           </SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <FormField
                 control={form.control}
                 name="category"
@@ -228,7 +228,7 @@ export function CreateExpenseDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <FormField
                 control={form.control}
                 name="expenseDate"
@@ -327,16 +327,15 @@ export function CreateExpenseDialog({
               )}
             />
 
-            
             <div className="space-y-2">
               <label className="text-sm font-medium">Receipt</label>
               {!receiptFile ? (
-                <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg p-6 cursor-pointer hover:border-violet-400 hover:bg-violet-50/50 transition-colors">
-                  <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                  <span className="text-sm font-medium text-slate-600">
+                <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 cursor-pointer hover:border-[#bd882c]/50 hover:bg-[#bd882c]/5 transition-colors">
+                  <Upload className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                  <span className="text-sm font-medium text-foreground/70">
                     Upload receipt
                   </span>
-                  <span className="text-xs text-slate-400 mt-1">
+                  <span className="text-xs text-muted-foreground mt-1">
                     PDF, PNG, JPG up to 10MB
                   </span>
                   <input
@@ -347,7 +346,7 @@ export function CreateExpenseDialog({
                   />
                 </label>
               ) : (
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border">
+                <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
                   {receiptPreview ? (
                     <img
                       src={receiptPreview}
@@ -355,15 +354,15 @@ export function CreateExpenseDialog({
                       className="h-16 w-16 object-cover rounded"
                     />
                   ) : (
-                    <div className="h-16 w-16 flex items-center justify-center bg-violet-100 rounded">
-                      <Receipt className="h-6 w-6 text-violet-600" />
+                    <div className="h-16 w-16 flex items-center justify-center bg-[#bd882c]/10 rounded">
+                      <Receipt className="h-6 w-6 text-[#bd882c]" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
+                    <p className="text-sm font-medium text-foreground truncate">
                       {receiptFile.name}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {(receiptFile.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
@@ -380,7 +379,7 @@ export function CreateExpenseDialog({
               )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-6 mt-2 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -392,7 +391,7 @@ export function CreateExpenseDialog({
               <Button
                 type="submit"
                 disabled={isLoading || uploading}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+                className="bg-[#bd882c] hover:bg-[#a67724] text-white"
               >
                 {isLoading || uploading ? (
                   <>
