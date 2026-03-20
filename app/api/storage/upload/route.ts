@@ -90,6 +90,15 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await uploadFile(file, folder);
+
+    // Audit log file upload
+    const { createAuditLog } = await import("../../../../lib/audit-log");
+    createAuditLog({
+      action: "file.upload",
+      userId: session.user.id,
+      metadata: { fileKey: result.key, fileSize: result.size, mimeType: result.mimeType },
+    }).catch(() => {});
+
     return NextResponse.json(result);
   } catch (error) {
     logger.error("File upload failed", error);
