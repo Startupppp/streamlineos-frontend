@@ -177,12 +177,18 @@ export default function MyPayslipsPage() {
                 <SelectTrigger className="w-[200px]" aria-label="Select payslip month">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
-                <SelectContent>
-                  {availableMonths.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
+                <SelectContent className="z-50">
+                  {availableMonths.length > 0 ? (
+                    availableMonths.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                      No payslips available
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             }
