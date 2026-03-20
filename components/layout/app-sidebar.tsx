@@ -53,6 +53,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useChatUnreadTotal } from "@/lib/hooks/chat-hooks";
 
 interface NavRoute {
   label: string;
@@ -347,6 +348,15 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
     return () => { cancelled = true; clearInterval(interval); };
   }, [session, isAdmin]);
 
+  const { data: chatUnread } = useChatUnreadTotal();
+  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
+
+  // Update browser tab title with unread count
+  useEffect(() => {
+    const baseTitle = "Vaivamm CRM";
+    document.title = unreadChatCount > 0 ? `(${unreadChatCount}) ${baseTitle}` : baseTitle;
+  }, [unreadChatCount]);
+
   // Only show skeleton on very first load, never during navigation
   if (!hasEverLoadedRef.current && (status === "loading" || (status === "authenticated" && !role))) {
     return (
@@ -449,6 +459,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
                   const isExactMatch = pathname === route.href;
                   const isActive = isExactMatch || (route.isProjectsList && pathname.startsWith("/projects/"));
                   const showBadge = (route.badge === "leaves" && pendingLeaves > 0);
+                  const isChatRoute = route.href === "/chat";
+                  const chatBadgeCount = isChatRoute ? unreadChatCount : 0;
                   const isProjectsRoute = route.isProjectsList;
                   const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
 
@@ -498,6 +510,11 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
                       {!isCollapsed && (
                         <>
                           <span className="flex-1">{route.label}</span>
+                          {chatBadgeCount > 0 && (
+                            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                              {chatBadgeCount > 99 ? "99+" : chatBadgeCount}
+                            </span>
+                          )}
                           {showBadge && (
                             <span className="relative flex h-2 w-2">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
@@ -506,7 +523,12 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
                           )}
                         </>
                       )}
-                      {isCollapsed && showBadge && (
+                      {isCollapsed && chatBadgeCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">
+                          {chatBadgeCount > 9 ? "9+" : chatBadgeCount}
+                        </span>
+                      )}
+                      {isCollapsed && showBadge && !isChatRoute && (
                         <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
