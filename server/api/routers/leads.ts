@@ -1,11 +1,11 @@
-import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "../../../lib/db/schema";
+import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { sendEmail } from "../../../lib/email";
-import { logger } from "../../../lib/logger";
+import { sendEmail } from "@/lib/email";
+import { logger } from "@/lib/logger";
 import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "./lead-auto-triggers";
 
 const leadStatusValues = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
@@ -134,7 +134,7 @@ export const leadsRouter = createTRPCRouter({
       // 1. Assignment rules – only when no explicit assignee was provided
       if (!input.assignedToId) {
         try {
-          const result = await evaluateAssignmentRules(ctx.db as any, orgId, newLead.id);
+          const result = await evaluateAssignmentRules(ctx.db, orgId, newLead.id);
           if (result.assigned) {
             logger.info("Auto-assigned lead via rule", { leadId: newLead.id, userId: result.userId, rule: result.ruleName });
           }
@@ -145,14 +145,14 @@ export const leadsRouter = createTRPCRouter({
 
       // 2. Scoring rules
       try {
-        await recalculateLeadScore(ctx.db as any, orgId, newLead.id);
+        await recalculateLeadScore(ctx.db, orgId, newLead.id);
       } catch (err) {
         logger.error("Auto-trigger: lead scoring failed", { leadId: newLead.id, error: err });
       }
 
       // 3. SLA policy based on lead priority
       try {
-        await applySlaPolicy(ctx.db as any, orgId, newLead.id);
+        await applySlaPolicy(ctx.db, orgId, newLead.id);
       } catch (err) {
         logger.error("Auto-trigger: SLA policy failed", { leadId: newLead.id, error: err });
       }
@@ -190,7 +190,7 @@ export const leadsRouter = createTRPCRouter({
 
       // --- Auto-trigger: recalculate score when lead fields change ---
       try {
-        await recalculateLeadScore(ctx.db as any, ctx.session.orgId, updated.id);
+        await recalculateLeadScore(ctx.db, ctx.session.orgId, updated.id);
       } catch (err) {
         logger.error("Auto-trigger: lead scoring on update failed", { leadId: updated.id, error: err });
       }
@@ -305,6 +305,17 @@ export const leadsRouter = createTRPCRouter({
       if (input.status === "CONVERTED") updateData.convertedAt = new Date();
       if (input.status === "LOST" && input.lostReason) updateData.lostReason = input.lostReason;
 
+      // Prevent double conversion
+      if (input.status === "CONVERTED") {
+        const existing = await ctx.db.query.leads.findFirst({
+          where: and(eq(leads.id, input.leadId), eq(leads.orgId, orgId)),
+          columns: { status: true },
+        });
+        if (existing?.status === "CONVERTED") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Lead has already been converted" });
+        }
+      }
+
       const [updated] = await ctx.db.update(leads)
         .set(updateData)
         .where(and(eq(leads.id, input.leadId), eq(leads.orgId, orgId)))
@@ -335,51 +346,63 @@ export const leadsRouter = createTRPCRouter({
       }
 
       if (input.status === "CONVERTED") {
-        const firstProject = await ctx.db.query.projects.findFirst({
-          where: eq(projects.orgId, orgId),
-        });
-
-        if (firstProject) {
-          const ticketCountResult = await ctx.db
-            .select({ count: count() })
-            .from(tickets)
-            .where(eq(tickets.projectId, firstProject.id));
-          const nextTicketNumber = (ticketCountResult[0]?.count ?? 0) + 1;
-
-          await ctx.db.insert(tickets).values({
-            orgId,
-            title: `Onboard converted lead: ${updated.name}`,
-            description: `Lead "${updated.name}" has been converted.\nCompany: ${updated.company || "N/A"}\nEmail: ${updated.email || "N/A"}\nPhone: ${updated.phone || "N/A"}\nPotential Value: ${updated.potentialValue || "N/A"}\nInvestment Interest: ${updated.investmentInterest || "N/A"}`,
-            type: "TASK",
-            status: "TODO",
-            priority: "HIGH",
-            projectId: firstProject.id,
-            ticketNumber: nextTicketNumber,
-            reporterId: ctx.session.userId,
+        // Wrap conversion in a transaction to prevent orphaned records on failure
+        await ctx.db.transaction(async (tx) => {
+          const firstProject = await tx.query.projects.findFirst({
+            where: eq(projects.orgId, orgId),
           });
-        }
 
-        await ctx.db.insert(clients).values({
-          orgId,
-          leadId: updated.id,
-          name: updated.name,
-          email: updated.email,
-          phone: updated.phone,
-          company: updated.company,
-          designation: updated.designation,
-          city: updated.city,
-          investmentValue: updated.potentialValue,
-          accountManagerId: updated.assignedToId,
-          status: "active",
-        });
+          if (firstProject) {
+            // Use advisory lock to prevent ticket number collision
+            await tx.execute(sql`SELECT pg_advisory_xact_lock(${firstProject.id})`);
+            const ticketCountResult = await tx
+              .select({ count: count() })
+              .from(tickets)
+              .where(eq(tickets.projectId, firstProject.id));
+            const nextTicketNumber = (ticketCountResult[0]?.count ?? 0) + 1;
 
-        await ctx.db.insert(notifications).values({
-          orgId,
-          userId: updated.assignedToId || ctx.session.userId,
-          type: "SUCCESS",
-          title: "Lead Converted",
-          message: `Lead "${updated.name}" has been converted to a client.`,
-          link: `/crm/leads/${updated.id}`,
+            await tx.insert(tickets).values({
+              orgId,
+              title: `Onboard converted lead: ${updated.name}`,
+              description: `Lead "${updated.name}" has been converted.\nCompany: ${updated.company || "N/A"}\nEmail: ${updated.email || "N/A"}\nPhone: ${updated.phone || "N/A"}\nPotential Value: ${updated.potentialValue || "N/A"}\nInvestment Interest: ${updated.investmentInterest || "N/A"}`,
+              type: "TASK",
+              status: "TODO",
+              priority: "HIGH",
+              projectId: firstProject.id,
+              ticketNumber: nextTicketNumber,
+              reporterId: ctx.session.userId,
+            });
+          }
+
+          // Check if client already exists for this lead
+          const existingClient = await tx.query.clients.findFirst({
+            where: and(eq(clients.leadId, updated.id), eq(clients.orgId, orgId)),
+          });
+
+          if (!existingClient) {
+            await tx.insert(clients).values({
+              orgId,
+              leadId: updated.id,
+              name: updated.name,
+              email: updated.email,
+              phone: updated.phone,
+              company: updated.company,
+              designation: updated.designation,
+              city: updated.city,
+              investmentValue: updated.potentialValue,
+              accountManagerId: updated.assignedToId,
+              status: "active",
+            });
+          }
+
+          await tx.insert(notifications).values({
+            orgId,
+            userId: updated.assignedToId || ctx.session.userId,
+            type: "SUCCESS",
+            title: "Lead Converted",
+            message: `Lead "${updated.name}" has been converted to a client.`,
+            link: `/crm/leads/${updated.id}`,
+          });
         });
       }
 

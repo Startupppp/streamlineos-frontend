@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   leadNotes,
   leadTasks,
@@ -7,10 +7,10 @@ import {
   leadActivities,
   leads,
   users,
-} from "../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { sendEmail } from "../../../lib/email";
+import { sendEmail } from "@/lib/email";
 
 export const leadDetailsRouter = createTRPCRouter({
   getNotes: protectedProcedure

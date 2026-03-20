@@ -17,20 +17,15 @@ import {
   assignmentRuleState,
   leadScoringRules,
   crmSla,
-} from "../../../lib/db/schema";
-import { logger } from "../../../lib/logger";
+} from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
+import type { db as _db } from "@/lib/db";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-// Minimal db handle – mirrors what ctx.db exposes
-type DbHandle = {
-  select: (...args: any[]) => any;
-  insert: (...args: any[]) => any;
-  update: (...args: any[]) => any;
-  query: any;
-};
+type DbHandle = typeof _db;
 
 /* ------------------------------------------------------------------ */
 /*  1. Assignment-rule evaluation                                      */
