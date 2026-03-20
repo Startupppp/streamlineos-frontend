@@ -1,18 +1,18 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import {
   permissions,
   rolePermissions,
   userPermissions,
   users,
   organizationMembers,
-} from "../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import {
   PERMISSIONS,
   ROLE_DEFAULT_PERMISSIONS,
-} from "../../../lib/rbac/permissions";
-import { checkPermission } from "../../../lib/rbac/middleware";
+} from "@/lib/rbac/permissions";
+import { checkPermission } from "@/lib/rbac/middleware";
 import { TRPCError } from "@trpc/server";
 
 export const rbacRouter = createTRPCRouter({

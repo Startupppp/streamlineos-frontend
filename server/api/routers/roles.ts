@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { roles } from "../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { roles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { ROLE_DEFAULT_PERMISSIONS, PERMISSIONS } from "../../../lib/rbac/permissions";
-import { isAdminOrOwner } from "../../../lib/auth-helpers";
+import { ROLE_DEFAULT_PERMISSIONS, PERMISSIONS } from "@/lib/rbac/permissions";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 
 export const rolesRouter = createTRPCRouter({
   // List all roles for the current org

@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import {
   users,
   organizationMembers,
   invitations,
   passwordResetTokens,
   verificationTokens,
-} from "../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, gt, isNull, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
@@ -14,7 +14,7 @@ import { nanoid } from "nanoid";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
-} from "../../../lib/email";
+} from "@/lib/email";
 
 const verifyEmailSchema = z.object({
   token: z.string(),
@@ -29,6 +29,7 @@ const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(8)
+    .max(15, "Password must be at most 15 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     ),
@@ -39,6 +40,7 @@ const acceptInvitationSchema = z.object({
   password: z
     .string()
     .min(8)
+    .max(15, "Password must be at most 15 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     ),
@@ -84,7 +86,10 @@ export const authRouter = createTRPCRouter({
         where: sql`lower(${users.email}) = ${normalizedEmail}`,
       });
 
+      // Always perform similar work to prevent timing oracle (account enumeration)
       if (!user) {
+        // Simulate similar latency to the real path
+        await new Promise((r) => setTimeout(r, 50 + Math.random() * 100));
         return { success: true };
       }
 
@@ -99,7 +104,8 @@ export const authRouter = createTRPCRouter({
         expiresAt,
       });
 
-      await sendPasswordResetEmail(input.email, resetToken);
+      // Fire-and-forget to not block response
+      sendPasswordResetEmail(input.email, resetToken).catch(() => {});
 
       return { success: true };
     }),

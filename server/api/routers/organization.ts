@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure, sessionProcedure } from "../trpc";
-import { organizations, organizationMembers, invitations, users } from "../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure, publicProcedure, sessionProcedure } from "@/server/api/trpc";
+import { organizations, organizationMembers, invitations, users } from "@/lib/db/schema";
 import { eq, and, gt, desc, inArray, isNull } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
-import { sendInvitationEmail } from "../../../lib/email";
-import { createAuditLog } from "../../../lib/audit-log";
+import { sendInvitationEmail } from "@/lib/email";
+import { createAuditLog } from "@/lib/audit-log";
 
 const inviteUserSchema = z.object({
   email: z.string().email(),

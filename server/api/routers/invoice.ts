@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { invoices, clients, projects, users } from "@/lib/db/schema";
 import { TRPCError } from "@trpc/server";
 
 const lineItemSchema = z.object({
   description: z.string().min(1),
-  quantity: z.number().min(0),
-  rate: z.number().min(0),
-  amount: z.number().min(0),
+  quantity: z.number().min(1, "Quantity must be at least 1").max(999999),
+  rate: z.number().positive("Rate must be greater than 0").max(999999999.99),
+  amount: z.number().min(0).max(999999999.99),
 });
 
 export const invoiceRouter = createTRPCRouter({
@@ -81,33 +81,39 @@ export const invoiceRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
-      const subtotal = input.lineItems.reduce((sum, item) => sum + item.amount, 0);
-      const taxAmount = subtotal * (input.taxRate / 100);
-      const total = subtotal + taxAmount - input.discount;
+      const subtotal = Number(input.lineItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2));
+      const taxAmount = Number((subtotal * (input.taxRate / 100)).toFixed(2));
+      const total = Number((subtotal + taxAmount - input.discount).toFixed(2));
 
-      const [countResult] = await ctx.db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(invoices)
-        .where(eq(invoices.orgId, orgId));
-      const nextNum = (countResult?.count ?? 0) + 1;
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(nextNum).padStart(4, "0")}`;
+      // Use transaction + advisory lock to prevent invoice number collision
+      const [invoice] = await ctx.db.transaction(async (tx) => {
+        // Lock on orgId hash to serialize invoice number generation per org
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${orgId} || 'invoice'))`);
 
-      const [invoice] = await ctx.db.insert(invoices).values({
-        orgId,
-        clientId: input.clientId,
-        projectId: input.projectId,
-        invoiceNumber,
-        lineItems: input.lineItems,
-        subtotal: subtotal.toString(),
-        taxRate: input.taxRate.toString(),
-        taxAmount: taxAmount.toString(),
-        discount: input.discount.toString(),
-        total: total.toString(),
-        currency: input.currency,
-        dueDate: input.dueDate,
-        notes: input.notes,
-        createdBy: ctx.session.userId,
-      }).returning();
+        const [countResult] = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(invoices)
+          .where(eq(invoices.orgId, orgId));
+        const nextNum = (countResult?.count ?? 0) + 1;
+        const invoiceNumber = `INV-${new Date().getFullYear()}-${String(nextNum).padStart(4, "0")}`;
+
+        return tx.insert(invoices).values({
+          orgId,
+          clientId: input.clientId,
+          projectId: input.projectId,
+          invoiceNumber,
+          lineItems: input.lineItems,
+          subtotal: subtotal.toString(),
+          taxRate: input.taxRate.toString(),
+          taxAmount: taxAmount.toString(),
+          discount: input.discount.toString(),
+          total: total.toString(),
+          currency: input.currency,
+          dueDate: input.dueDate,
+          notes: input.notes,
+          createdBy: ctx.session.userId,
+        }).returning();
+      });
 
       return invoice;
     }),
@@ -139,11 +145,11 @@ export const invoiceRouter = createTRPCRouter({
       if (input.notes !== undefined) updateData.notes = input.notes;
 
       if (input.lineItems) {
-        const subtotal = input.lineItems.reduce((sum, item) => sum + item.amount, 0);
+        const subtotal = Number(input.lineItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2));
         const taxRate = input.taxRate ?? Number(existing.taxRate ?? 0);
         const discount = input.discount ?? Number(existing.discount ?? 0);
-        const taxAmount = subtotal * (taxRate / 100);
-        const total = subtotal + taxAmount - discount;
+        const taxAmount = Number((subtotal * (taxRate / 100)).toFixed(2));
+        const total = Number((subtotal + taxAmount - discount).toFixed(2));
 
         updateData.lineItems = input.lineItems;
         updateData.subtotal = subtotal.toString();

@@ -1,10 +1,10 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets } from "../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets } from "@/lib/db/schema";
 import { eq, and, sql, desc, or, inArray, count } from "drizzle-orm";
-import { getTodayString } from "../../../lib/date-utils";
+import { getTodayString } from "@/lib/date-utils";
 
 import { TRPCError } from "@trpc/server";
-import { isAdminOrOwner } from "../../../lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 
 export const dashboardRouter = createTRPCRouter({
   getStats: protectedProcedure.query(async ({ ctx }) => {

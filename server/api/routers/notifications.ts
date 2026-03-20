@@ -1,7 +1,7 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { notifications } from "../../../lib/db/schema";
+import { notifications } from "@/lib/db/schema";
 
 export const notificationsRouter = createTRPCRouter({
   getAll: protectedProcedure

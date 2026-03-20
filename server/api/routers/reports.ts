@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { isAdminOrOwner } from "../../../lib/auth-helpers";
-import { db } from "../../../lib/db";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { db } from "@/lib/db";
 import {
   attendance,
   payrolls,
@@ -9,10 +9,10 @@ import {
   tickets,
   timesheets,
   leaveRequests,
-} from "../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, sql, gte, lte, desc } from "drizzle-orm";
 import { format } from "date-fns";
-import { formatDateOnly, getTodayString } from "../../../lib/date-utils";
+import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 
 export const reportsRouter = createTRPCRouter({
