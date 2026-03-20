@@ -21,15 +21,10 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClients } from "@/lib/hooks/trpc-hooks";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { cn } from "@/lib/utils";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import { formatCurrency as formatCurrencyCompact } from "@/lib/format-utils";
 
-const formatCurrency = (v: string | number | null | undefined) => {
-  const n = Number(v ?? 0);
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
-  return `$${n.toFixed(0)}`;
-};
+const formatCurrency = (v: string | number | null | undefined) => formatCurrencyCompact(Number(v ?? 0));
 
 export default function ClientsPage() {
   const [search, setSearch] = useState("");
