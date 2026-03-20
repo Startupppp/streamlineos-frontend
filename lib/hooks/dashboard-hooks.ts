@@ -39,6 +39,8 @@ export const useTeamAvailability = (
   return useQuery<DashboardRouterOutputs["getTeamAvailability"], Error>({
     queryKey: vaivammKeys.dashboard.teamAvailability(),
     queryFn: () => vaivammTrpcClient.dashboard.getTeamAvailability.query(),
+    refetchInterval: 30_000,
+    staleTime: 15_000,
     ...options,
   });
 };
