@@ -52,6 +52,7 @@ import { Label } from "@/components/ui/label";
 
 import {
   MessageCircle,
+  MessageSquareText,
   Search,
   Plus,
   Hash,
@@ -75,6 +76,7 @@ import {
   ArrowDown,
   Camera,
   ImageIcon,
+  PanelLeftClose,
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -196,6 +198,7 @@ export default function ChatPage() {
   const [emptyDMOpen, setEmptyDMOpen] = useState(false);
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const heartbeat = useChatHeartbeat();
   useEffect(() => {
@@ -218,8 +221,9 @@ export default function ChatPage() {
       {/* Sidebar */}
       <div
         className={cn(
-          "w-full md:w-[300px] lg:w-[340px] flex flex-col shrink-0 border-r border-border/40 bg-card/50",
-          !showMobileList && "hidden md:flex"
+          "flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-all duration-300",
+          sidebarCollapsed ? "w-0 overflow-hidden md:w-0" : "w-full md:w-[300px] lg:w-[340px]",
+          !showMobileList && !sidebarCollapsed && "hidden md:flex"
         )}
       >
         <ChannelSidebar
@@ -228,16 +232,26 @@ export default function ChatPage() {
           currentUserId={currentUserId ?? ""}
           autoFocusSearch={showSearchFocus}
           onSearchFocused={() => setShowSearchFocus(false)}
+          onCollapse={() => setSidebarCollapsed(true)}
         />
       </div>
 
       {/* Messages */}
       <div
         className={cn(
-          "flex-1 flex flex-col min-w-0",
+          "flex-1 flex flex-col min-w-0 relative",
           showMobileList && "hidden md:flex"
         )}
       >
+        {sidebarCollapsed && (
+          <button
+            onClick={() => setSidebarCollapsed(false)}
+            className="absolute top-3 left-3 z-10 h-8 w-8 rounded-lg bg-muted/80 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors border border-border/50"
+            aria-label="Open conversations"
+          >
+            <MessageSquareText className="h-4 w-4" />
+          </button>
+        )}
         {activeChannelId && currentUserId ? (
           <MessagePanel
             channelId={activeChannelId}
@@ -289,12 +303,14 @@ function ChannelSidebar({
   currentUserId,
   autoFocusSearch,
   onSearchFocused,
+  onCollapse,
 }: {
   activeChannelId: number | null;
   onSelectChannel: (id: number) => void;
   currentUserId: string;
   autoFocusSearch?: boolean;
   onSearchFocused?: () => void;
+  onCollapse?: () => void;
 }) {
   const { data: rawChannels, isLoading } = useChatChannels();
   const channels = rawChannels as Channel[] | undefined;
@@ -345,7 +361,7 @@ function ChannelSidebar({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#bd882c] to-[#d4a544] flex items-center justify-center shadow-sm">
-              <MessageCircle className="h-4.5 w-4.5 text-white" />
+              <MessageSquareText className="h-4.5 w-4.5 text-white" />
             </div>
             <div>
               <h2 className="text-base font-bold leading-tight">Messages</h2>
@@ -365,6 +381,15 @@ function ChannelSidebar({
               onOpenChange={setNewGroupOpen}
               onCreated={onSelectChannel}
             />
+            {onCollapse && (
+              <button
+                onClick={onCollapse}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                aria-label="Close sidebar"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -445,17 +470,13 @@ function ChannelSidebar({
 
             {filteredChannels.length === 0 && (
               <div className="text-center py-10 px-4">
-                <svg className="w-32 h-28 mx-auto mb-4 text-muted-foreground/20" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="30" y="40" width="90" height="65" rx="12" fill="currentColor" opacity="0.15" />
-                  <rect x="80" y="60" width="90" height="65" rx="12" fill="currentColor" opacity="0.25" />
-                  <circle cx="70" cy="70" r="4" fill="currentColor" opacity="0.4" />
-                  <circle cx="82" cy="70" r="4" fill="currentColor" opacity="0.4" />
-                  <circle cx="94" cy="70" r="4" fill="currentColor" opacity="0.4" />
-                  <rect x="95" y="78" width="55" height="6" rx="3" fill="currentColor" opacity="0.3" />
-                  <rect x="95" y="90" width="40" height="6" rx="3" fill="currentColor" opacity="0.2" />
-                  <path d="M30 93 L22 105 L42 93" fill="currentColor" opacity="0.15" />
-                  <path d="M170 113 L178 125 L158 113" fill="currentColor" opacity="0.25" />
-                </svg>
+                <Image
+                  src="/illustrations/undraw-online-chat.svg"
+                  alt="No conversations"
+                  width={160}
+                  height={120}
+                  className="mx-auto mb-4 opacity-80"
+                />
                 <p className="text-[13px] text-muted-foreground font-medium">
                   {search ? "No results found" : "No conversations yet"}
                 </p>
