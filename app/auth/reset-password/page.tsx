@@ -26,12 +26,28 @@ import { PASSWORD_REGEX } from "@/lib/password-utils";
 const formSchema = z.object({
   password: z.string()
     .min(8, "Password must be at least 8 characters")
+    .max(15, "Password must be at most 15 characters")
     .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
 });
+
+function getPasswordStrength(password: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[@$!%*?&]/.test(password)) score++;
+
+  if (score <= 2) return { score: 1, label: "Weak", color: "bg-red-500" };
+  if (score <= 4) return { score: 2, label: "Medium", color: "bg-yellow-500" };
+  if (score <= 5) return { score: 3, label: "Strong", color: "bg-green-500" };
+  return { score: 4, label: "Very Strong", color: "bg-emerald-500" };
+}
 
 export default function ResetPasswordPage() {
   const { update } = useSession();
@@ -102,11 +118,12 @@ export default function ResetPasswordPage() {
                       <FormControl>
                         <div className="relative">
                           <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input 
-                            type={showPassword ? "text" : "password"} 
-                            placeholder="Enter your new password" 
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="8–15 characters"
+                            maxLength={15}
                             className="pl-10 pr-10 focus-visible:ring-primary"
-                            {...field} 
+                            {...field}
                           />
                           <button
                             type="button"
@@ -119,6 +136,29 @@ export default function ResetPasswordPage() {
                           </button>
                         </div>
                       </FormControl>
+                      {field.value && (
+                        <div className="space-y-1.5 mt-2">
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4].map((level) => (
+                              <div
+                                key={level}
+                                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                                  level <= getPasswordStrength(field.value).score
+                                    ? getPasswordStrength(field.value).color
+                                    : "bg-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className={`text-xs ${
+                            getPasswordStrength(field.value).score <= 1 ? "text-red-500" :
+                            getPasswordStrength(field.value).score <= 2 ? "text-yellow-500" :
+                            "text-green-500"
+                          }`}>
+                            {getPasswordStrength(field.value).label}
+                          </p>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
