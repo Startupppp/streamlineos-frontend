@@ -1,4 +1,4 @@
-import { mergeRouters } from "../../trpc";
+import { mergeRouters } from "@/server/api/trpc";
 import { coreRouter } from "./core";
 import { ticketRouter } from "./ticket";
 import { sprintRouter } from "./sprint";

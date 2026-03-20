@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { tickets, cycles, timesheets } from "../../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { tickets, cycles, timesheets } from "@/lib/db/schema";
 import { eq, and, count, sql, gte } from "drizzle-orm";
 
 export const projectAnalyticsRouter = createTRPCRouter({

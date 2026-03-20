@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { logger } from "../../../../lib/logger";
-import { createTRPCRouter, protectedProcedure, adminProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { logger } from "@/lib/logger";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   projects,
   tickets,
@@ -15,18 +15,18 @@ import {
   users,
   projectStatuses,
   projectMembers,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc, asc, sql, or, inArray, ilike, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import {
   updateProjectSettingsInputSchema,
   createProjectInputSchema,
-} from "../../../../lib/validations/project";
+} from "@/lib/validations/project";
 import {
   createPaginatedResponse,
   getOffset,
-} from "../../../../lib/pagination";
-import { sendProjectAssignmentEmail } from "../../../../lib/email";
+} from "@/lib/pagination";
+import { sendProjectAssignmentEmail } from "@/lib/email";
 
 export const coreRouter = createTRPCRouter({
   getProjects: protectedProcedure.query(async ({ ctx }) => {
@@ -602,20 +602,23 @@ export const coreRouter = createTRPCRouter({
       });
 
       if (!project) return;
-      const projectTickets = await ctx.db
-        .select({ id: tickets.id })
-        .from(tickets)
-        .where(eq(tickets.projectId, input.projectId));
 
-      const ticketIds = projectTickets.map((t) => t.id);
-      if (ticketIds.length > 0) {
-        await ctx.db.delete(ticketComments).where(inArray(ticketComments.ticketId, ticketIds));
-        await ctx.db.delete(ticketAttachments).where(inArray(ticketAttachments.ticketId, ticketIds));
-        await ctx.db.delete(ticketLabelMappings).where(inArray(ticketLabelMappings.ticketId, ticketIds));
-        await ctx.db.delete(timesheets).where(inArray(timesheets.ticketId, ticketIds));
-        await ctx.db.delete(tickets).where(inArray(tickets.id, ticketIds));
-      }
+      // Wrap entire deletion in one transaction to prevent orphaned records
       await ctx.db.transaction(async (tx) => {
+        const projectTickets = await tx
+          .select({ id: tickets.id })
+          .from(tickets)
+          .where(eq(tickets.projectId, input.projectId));
+
+        const ticketIds = projectTickets.map((t) => t.id);
+        if (ticketIds.length > 0) {
+          await tx.delete(ticketAssignees).where(inArray(ticketAssignees.ticketId, ticketIds));
+          await tx.delete(ticketComments).where(inArray(ticketComments.ticketId, ticketIds));
+          await tx.delete(ticketAttachments).where(inArray(ticketAttachments.ticketId, ticketIds));
+          await tx.delete(ticketLabelMappings).where(inArray(ticketLabelMappings.ticketId, ticketIds));
+          await tx.delete(timesheets).where(inArray(timesheets.ticketId, ticketIds));
+          await tx.delete(tickets).where(inArray(tickets.id, ticketIds));
+        }
         await tx.delete(sprints).where(eq(sprints.projectId, input.projectId));
         await tx.delete(projectMembers).where(eq(projectMembers.projectId, input.projectId));
         await tx.delete(projectStatuses).where(eq(projectStatuses.projectId, input.projectId));

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { pages } from "../../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { pages } from "@/lib/db/schema";
 import { eq, and, isNull, asc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

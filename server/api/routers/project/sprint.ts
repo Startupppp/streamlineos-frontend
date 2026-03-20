@@ -1,17 +1,17 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, adminProcedure } from "../../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import {
   sprints,
   timesheets,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { differenceInCalendarDays, addDays } from "date-fns";
-import { formatDateOnly } from "../../../../lib/date-utils";
+import { formatDateOnly } from "@/lib/date-utils";
 import {
   createSprintInputSchema,
   updateSprintInputSchema,
-} from "../../../../lib/validations/project";
+} from "@/lib/validations/project";
 
 export const sprintRouter = createTRPCRouter({
   getSprints: protectedProcedure

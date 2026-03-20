@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { logger } from "../../../../lib/logger";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { logger } from "@/lib/logger";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   projects,
   tickets,
@@ -12,7 +12,7 @@ import {
   ticketAssignees,
   users,
   projectMembers,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import {
@@ -22,18 +22,18 @@ import {
   addCommentInputSchema,
   addAttachmentInputSchema,
   createLabelInputSchema,
-} from "../../../../lib/validations/project";
+} from "@/lib/validations/project";
 import {
   createPaginatedResponse,
   getOffset,
   DEFAULT_PAGE,
   DEFAULT_LIMIT,
-} from "../../../../lib/pagination";
+} from "@/lib/pagination";
 import {
   sendTicketAssignmentEmail,
   sendTicketReviewRequestEmail,
   sendTicketChangesRequestedEmail,
-} from "../../../../lib/email";
+} from "@/lib/email";
 
 function normalizeTicketType(type: string): string {
   const upper = type.toUpperCase();
@@ -45,6 +45,9 @@ export const ticketRouter = createTRPCRouter({
     .input(createTicketInputSchema)
     .mutation(async ({ ctx, input }) => {
       const [ticket] = await ctx.db.transaction(async (tx) => {
+        // Advisory lock to prevent ticket number collision per project
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${input.projectId})`);
+
         const maxTicketResult = await tx
           .select({ maxTicketNumber: sql<number>`COALESCE(MAX(${tickets.ticketNumber}), 0)` })
           .from(tickets)

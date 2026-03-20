@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { workItemRelations, tickets } from "../../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { workItemRelations, tickets } from "@/lib/db/schema";
 import { eq, and, or, sql, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -84,6 +84,37 @@ export const relationsRouter = createTRPCRouter({
 
       if (bothExist.length !== 2) {
         throw new TRPCError({ code: "NOT_FOUND", message: "One or both work items not found in your organization." });
+      }
+
+      // Detect circular "blocks" dependencies (A blocks B blocks ... blocks A)
+      if (input.relationType === "blocks" || input.relationType === "blocked_by") {
+        const sourceId = input.relationType === "blocks" ? input.workItemId : input.relatedWorkItemId;
+        const targetId = input.relationType === "blocks" ? input.relatedWorkItemId : input.workItemId;
+
+        // BFS: walk the "blocks" chain from targetId to see if it reaches sourceId
+        const visited = new Set<number>();
+        const queue = [targetId];
+        while (queue.length > 0) {
+          const current = queue.shift()!;
+          if (current === sourceId) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Cannot create relation: this would create a circular dependency.",
+            });
+          }
+          if (visited.has(current)) continue;
+          visited.add(current);
+          const downstream = await ctx.db
+            .select({ relatedId: workItemRelations.relatedWorkItemId })
+            .from(workItemRelations)
+            .where(and(
+              eq(workItemRelations.workItemId, current),
+              eq(workItemRelations.relationType, "blocks")
+            ));
+          for (const d of downstream) {
+            if (!visited.has(d.relatedId)) queue.push(d.relatedId);
+          }
+        }
       }
 
       const [relation] = await ctx.db

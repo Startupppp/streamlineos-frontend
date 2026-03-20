@@ -1,25 +1,25 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../../trpc";
-import { isAdminOrOwner } from "../../../../lib/auth-helpers";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   projects,
   tickets,
   timesheets,
   users,
   projectMembers,
-} from "../../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { eq, and, desc, sql, inArray, gte, lte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { formatDateOnly } from "../../../../lib/date-utils";
+import { formatDateOnly } from "@/lib/date-utils";
 import {
   addTimeEntryInputSchema,
   updateTimeEntryInputSchema,
   deleteTimeEntryInputSchema,
-} from "../../../../lib/validations/project";
+} from "@/lib/validations/project";
 import {
   getOffset,
   DEFAULT_PAGE,
-} from "../../../../lib/pagination";
+} from "@/lib/pagination";
 
 export const timesheetRouter = createTRPCRouter({
   addTimeEntry: protectedProcedure
@@ -392,7 +392,7 @@ export const timesheetRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db
+      const result = await ctx.db
         .update(timesheets)
         .set({
           status: "APPROVED",
@@ -403,9 +403,15 @@ export const timesheetRouter = createTRPCRouter({
         .where(
           and(
             eq(timesheets.id, input.timesheetId),
-            eq(timesheets.orgId, ctx.session.orgId)
+            eq(timesheets.orgId, ctx.session.orgId),
+            eq(timesheets.status, "PENDING")
           )
-        );
+        )
+        .returning({ id: timesheets.id });
+
+      if (result.length === 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "Timesheet has already been reviewed" });
+      }
 
       return { success: true };
     }),
@@ -423,7 +429,7 @@ export const timesheetRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db
+      const result = await ctx.db
         .update(timesheets)
         .set({
           status: "REJECTED",
@@ -433,9 +439,15 @@ export const timesheetRouter = createTRPCRouter({
         .where(
           and(
             eq(timesheets.id, input.timesheetId),
-            eq(timesheets.orgId, ctx.session.orgId)
+            eq(timesheets.orgId, ctx.session.orgId),
+            eq(timesheets.status, "PENDING")
           )
-        );
+        )
+        .returning({ id: timesheets.id });
+
+      if (result.length === 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "Timesheet has already been reviewed" });
+      }
 
       return { success: true };
     }),
@@ -452,7 +464,7 @@ export const timesheetRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db
+      const result = await ctx.db
         .update(timesheets)
         .set({
           status: "APPROVED",
@@ -463,11 +475,13 @@ export const timesheetRouter = createTRPCRouter({
         .where(
           and(
             inArray(timesheets.id, input.timesheetIds),
-            eq(timesheets.orgId, ctx.session.orgId)
+            eq(timesheets.orgId, ctx.session.orgId),
+            eq(timesheets.status, "PENDING")
           )
-        );
+        )
+        .returning({ id: timesheets.id });
 
-      return { success: true, count: input.timesheetIds.length };
+      return { success: true, count: result.length };
     }),
 
   getBillingSummary: protectedProcedure
