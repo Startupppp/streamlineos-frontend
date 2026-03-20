@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
 import { ensureOrgMembership } from "@/lib/auth-helpers";
+import { createNotification, notifyByRoles } from "@/server/actions/create-notification";
 
 /** Get authenticated member, auto-creating org membership if needed */
 async function getExpenseMember() {
@@ -108,6 +109,19 @@ export async function createExpense(data: CreateExpenseInput) {
       expenseDate: data.expenseDate,
       status: "PENDING",
     }).returning();
+
+    try {
+      await notifyByRoles(member.orgId, ["CEO", "HR"], {
+        type: "INFO",
+        title: "New Expense Submitted",
+        message: `A new expense of ₹${data.amount.toLocaleString()} has been submitted for "${data.category}".`,
+        link: "/hr/expenses",
+        metadata: { expenseId: expense.id, amount: data.amount, category: data.category },
+        excludeUserId: session.user.id,
+      });
+    } catch (notifError) {
+      logger.error("Failed to send expense creation notification", notifError);
+    }
 
     revalidatePath("/hr/expenses");
     return { success: true, expense };
@@ -267,6 +281,12 @@ export async function approveExpense(expenseId: number) {
   }
 
   try {
+    const existing = await db.query.expenses.findFirst({
+      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, member.orgId)),
+    });
+
+    if (!existing) return { error: "Expense not found" };
+
     await db.update(expenses)
       .set({
         status: "APPROVED",
@@ -288,6 +308,20 @@ export async function approveExpense(expenseId: number) {
       targetType: "expense",
     });
 
+    try {
+      await createNotification({
+        orgId: member.orgId,
+        userId: existing.userId,
+        type: "SUCCESS",
+        title: "Expense Approved",
+        message: `Your expense of ₹${parseFloat(existing.amount || "0").toLocaleString()} for "${existing.category}" has been approved.`,
+        link: "/hr/expenses",
+        metadata: { expenseId, amount: existing.amount, category: existing.category },
+      });
+    } catch (notifError) {
+      logger.error("Failed to send expense approval notification", notifError);
+    }
+
     revalidatePath("/hr/expenses");
     return { success: true };
   } catch (error) {
@@ -306,6 +340,12 @@ export async function rejectExpense(expenseId: number, reason: string) {
   }
 
   try {
+    const existing = await db.query.expenses.findFirst({
+      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, member.orgId)),
+    });
+
+    if (!existing) return { error: "Expense not found" };
+
     await db.update(expenses)
       .set({
         status: "REJECTED",
@@ -328,6 +368,20 @@ export async function rejectExpense(expenseId: number, reason: string) {
       metadata: { reason },
     });
 
+    try {
+      await createNotification({
+        orgId: member.orgId,
+        userId: existing.userId,
+        type: "ERROR",
+        title: "Expense Rejected",
+        message: `Your expense of ₹${parseFloat(existing.amount || "0").toLocaleString()} for "${existing.category}" has been rejected.`,
+        link: "/hr/expenses",
+        metadata: { expenseId, amount: existing.amount, category: existing.category, rejectionReason: reason },
+      });
+    } catch (notifError) {
+      logger.error("Failed to send expense rejection notification", notifError);
+    }
+
     revalidatePath("/hr/expenses");
     return { success: true };
   } catch (error) {
@@ -346,6 +400,12 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
   }
 
   try {
+    const existing = await db.query.expenses.findFirst({
+      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, member.orgId)),
+    });
+
+    if (!existing) return { error: "Expense not found" };
+
     await db.update(expenses)
       .set({
         status: "PAID",
@@ -358,6 +418,20 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
         eq(expenses.orgId, member.orgId),
         eq(expenses.status, "APPROVED")
       ));
+
+    try {
+      await createNotification({
+        orgId: member.orgId,
+        userId: existing.userId,
+        type: "SUCCESS",
+        title: "Expense Paid",
+        message: `Your expense of ₹${parseFloat(existing.amount || "0").toLocaleString()} for "${existing.category}" has been paid.`,
+        link: "/hr/expenses",
+        metadata: { expenseId, amount: existing.amount, category: existing.category, transactionRef },
+      });
+    } catch (notifError) {
+      logger.error("Failed to send expense paid notification", notifError);
+    }
 
     revalidatePath("/hr/expenses");
     return { success: true };

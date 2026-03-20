@@ -7,8 +7,9 @@ import {
   salaryStructures,
   organizationMembers,
   users,
+  attendance,
 } from "../../../../lib/db/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, sql, gte, lte } from "drizzle-orm";
 import { formatDateOnly } from "../../../../lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
@@ -62,6 +63,54 @@ export const payrollRouter = createTRPCRouter({
       const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
       const existingPayrollUserIds = new Set(existingPayrolls.map((p) => p.userId));
 
+      // Calculate working days in the payroll month
+      const [yearStr, monthStr] = input.month.split("-");
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      // Count weekdays (Mon-Fri) in the month as total business days
+      let totalBusinessDays = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const day = new Date(year, month - 1, d).getDay();
+        if (day !== 0 && day !== 6) totalBusinessDays++;
+      }
+      // Fallback to 22 if calculation yields something unexpected
+      if (totalBusinessDays <= 0) totalBusinessDays = 22;
+
+      // Fetch attendance records for all employees in this payroll month
+      const monthStart = `${input.month}-01`;
+      const monthEnd = `${input.month}-${String(daysInMonth).padStart(2, "0")}`;
+
+      let attendanceMap = new Map<string, number>();
+      try {
+        const attendanceRecords = await ctx.db
+          .select({
+            userId: attendance.userId,
+            daysPresent: sql<number>`count(*)`.as("days_present"),
+          })
+          .from(attendance)
+          .where(
+            and(
+              eq(attendance.orgId, ctx.session.orgId),
+              inArray(attendance.userId, memberUserIds),
+              gte(attendance.date, monthStart),
+              lte(attendance.date, monthEnd),
+              sql`${attendance.status} IN ('PRESENT', 'HALF_DAY', 'LATE')`
+            )
+          )
+          .groupBy(attendance.userId);
+
+        for (const rec of attendanceRecords) {
+          attendanceMap.set(rec.userId, Number(rec.daysPresent));
+        }
+      } catch (err) {
+        logger.warn("Failed to fetch attendance data for payroll; proceeding without LOP", {
+          error: err instanceof Error ? err.message : "Unknown",
+          month: input.month,
+        });
+        // attendanceMap stays empty — no LOP will be applied
+      }
+
       const newPayrolls = memberUserIds
         .filter((uId) => !existingPayrollUserIds.has(uId))
         .map((uId) => {
@@ -70,9 +119,20 @@ export const payrollRouter = createTRPCRouter({
           const hraPercentage = salaryStructure ? parseFloat(salaryStructure.hraPercentage || "40") : 40;
           const hra = basic * (hraPercentage / 100);
           const allowances = salaryStructure ? parseFloat(salaryStructure.allowances || "0") : 5000;
-          const deductions = salaryStructure ? parseFloat(salaryStructure.deductions || "0") : 2000;
+          let deductions = salaryStructure ? parseFloat(salaryStructure.deductions || "0") : 2000;
           const gross = basic + hra + allowances;
-          const net = gross - deductions;
+
+          // Calculate LOP from attendance data
+          let lopDeduction = 0;
+          const daysAttended = attendanceMap.get(uId);
+          if (daysAttended !== undefined && daysAttended < totalBusinessDays) {
+            const dailySalary = gross / totalBusinessDays;
+            const absentDays = totalBusinessDays - daysAttended;
+            lopDeduction = Math.round(dailySalary * absentDays * 100) / 100;
+          }
+
+          const totalDeductions = deductions + lopDeduction;
+          const net = gross - totalDeductions;
 
           return {
             orgId: ctx.session.orgId,
@@ -81,7 +141,7 @@ export const payrollRouter = createTRPCRouter({
             basicSalary: basic.toString(),
             hra: hra.toString(),
             allowances: allowances.toString(),
-            deductions: deductions.toString(),
+            deductions: totalDeductions.toString(),
             grossSalary: gross.toString(),
             netSalary: net.toString(),
             status: "DRAFT" as const,
