@@ -225,6 +225,8 @@ export default function ChatPage() {
           activeChannelId={activeChannelId}
           onSelectChannel={handleSelectChannel}
           currentUserId={currentUserId ?? ""}
+          autoFocusSearch={showSearchFocus}
+          onSearchFocused={() => setShowSearchFocus(false)}
         />
       </div>
 
@@ -284,10 +286,14 @@ function ChannelSidebar({
   activeChannelId,
   onSelectChannel,
   currentUserId,
+  autoFocusSearch,
+  onSearchFocused,
 }: {
   activeChannelId: number | null;
   onSelectChannel: (id: number) => void;
   currentUserId: string;
+  autoFocusSearch?: boolean;
+  onSearchFocused?: () => void;
 }) {
   const { data: rawChannels, isLoading } = useChatChannels();
   const channels = rawChannels as Channel[] | undefined;
@@ -297,6 +303,14 @@ function ChannelSidebar({
   const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoFocusSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+      onSearchFocused?.();
+    }
+  }, [autoFocusSearch, onSearchFocused]);
 
   const onlineUserIds = useMemo(
     () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
@@ -356,6 +370,7 @@ function ChannelSidebar({
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
           <Input
+            ref={searchInputRef}
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
