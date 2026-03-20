@@ -2,11 +2,11 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { eq } from "drizzle-orm";
-import { auth } from "../../lib/auth";
-import { db } from "../../lib/db";
-import { users } from "../../lib/db/schema";
-import "../../lib/env";
-import { ensureOrgMembership, isAdminOrOwner } from "../../lib/auth-helpers";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import "@/lib/env";
+import { ensureOrgMembership, isAdminOrOwner } from "@/lib/auth-helpers";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth();
