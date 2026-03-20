@@ -92,7 +92,7 @@ export const channelRouter = createTRPCRouter({
           m.created_at
         FROM chat_messages m
         LEFT JOIN users u ON u.id = m.sender_id
-        WHERE m.channel_id = ANY(${channelIds})
+        WHERE m.channel_id = ANY(ARRAY[${sql.raw(channelIds.map(Number).join(","))}]::int[])
           AND m.is_deleted = false
         ORDER BY m.channel_id, m.created_at DESC
       `);
@@ -110,6 +110,7 @@ export const channelRouter = createTRPCRouter({
         lastMessage: lastMsgMap.get(ch.id) ?? null,
       }));
     } catch (error) {
+      console.error("[chat.getMyChannels] ERROR:", error instanceof Error ? error.message : error);
       logger.error("[chat.getMyChannels]", { path: "chat.getMyChannels", error: error instanceof Error ? error.message : "Unknown error" });
       return [];
     }
