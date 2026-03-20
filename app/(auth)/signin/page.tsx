@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Mail, Lock } from "lucide-react";
 
@@ -24,7 +23,6 @@ const signinSchema = z.object({
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const form = useForm<z.infer<typeof signinSchema>>({
     resolver: zodResolver(signinSchema),
@@ -46,7 +44,6 @@ export default function SignInPage() {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        rememberMe: rememberMe ? "true" : "false",
         callbackUrl,
         redirect: false,
       });
@@ -135,18 +132,6 @@ export default function SignInPage() {
               {form.formState.errors.password && (
                 <p id="password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               )}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked === true)}
-                disabled={signInMutation.isPending}
-              />
-              <Label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
-                Remember me for 30 days
-              </Label>
             </div>
 
             <Button type="submit" className="w-full" disabled={signInMutation.isPending}>
