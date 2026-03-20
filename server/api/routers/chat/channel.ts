@@ -98,7 +98,7 @@ export const channelRouter = createTRPCRouter({
       `);
 
       const lastMsgMap = new Map(
-        lastMessages.rows.map((r) => [
+        (lastMessages as unknown as { channel_id: number; content: string | null; sender_name: string | null; created_at: Date | null }[]).map((r) => [
           r.channel_id,
           { content: r.content, senderName: r.sender_name, createdAt: r.created_at },
         ])
@@ -335,7 +335,7 @@ export const channelRouter = createTRPCRouter({
           GROUP BY ccm.channel_id
         ) sub
       `);
-      return result.rows[0]?.total ?? 0;
+      return (result as { total: number } | undefined)?.total ?? 0;
     } catch (error) {
       logger.error("[chat.getUnreadTotal]", { path: "chat.getUnreadTotal", error: error instanceof Error ? error.message : "Unknown error" });
       return 0;

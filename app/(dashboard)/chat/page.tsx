@@ -78,7 +78,10 @@ import {
 
 /* ─── Types ─── */
 
-type Channel = NonNullable<ReturnType<typeof useChatChannels>["data"]>[number];
+type ChannelRaw = NonNullable<ReturnType<typeof useChatChannels>["data"]>[number];
+type Channel = Omit<ChannelRaw, "lastMessage"> & {
+  lastMessage?: { content?: string | null; senderName?: string | null; createdAt?: Date | string | null } | null;
+};
 type Message = {
   id: number;
   channelId: number;
@@ -286,7 +289,8 @@ function ChannelSidebar({
   onSelectChannel: (id: number) => void;
   currentUserId: string;
 }) {
-  const { data: channels, isLoading } = useChatChannels();
+  const { data: rawChannels, isLoading } = useChatChannels();
+  const channels = rawChannels as Channel[] | undefined;
   const { data: onlineUsers } = useChatOnlineUsers();
   const [search, setSearch] = useState("");
   const [newDMOpen, setNewDMOpen] = useState(false);

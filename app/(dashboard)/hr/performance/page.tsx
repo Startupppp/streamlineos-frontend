@@ -63,7 +63,7 @@ function PerformanceContent() {
 }
 
 function ReviewsTab() {
-  const { data: reviews, isLoading } = api.hr.getPerformanceReviews.useQuery(undefined, { retry: false });
+  const { data: reviews, isLoading } = api.hr.getPerformanceReviews.useQuery(void 0 as never, { retry: false });
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
@@ -119,7 +119,7 @@ function ReviewsTab() {
 }
 
 function GoalsTab() {
-  const { data: goals, isLoading } = api.hr.getGoals.useQuery(undefined, { retry: false });
+  const { data: goals, isLoading } = api.hr.getGoals.useQuery(void 0 as never, { retry: false });
 
   return (
     <>

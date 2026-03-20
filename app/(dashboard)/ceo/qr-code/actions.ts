@@ -8,6 +8,8 @@ import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { generateQRCodeWithLogo } from "@/lib/qr-code";
 import { uploadFile, deleteFile, getFileKeyFromUrl, getFileUrl, isStorageConfigured } from "@/lib/storage";
+import { join } from "path";
+import { existsSync } from "fs";
 import { auth } from "@/lib/auth";
 
 const generateSchema = z.object({
