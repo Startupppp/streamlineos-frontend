@@ -1,14 +1,15 @@
 import { Readable } from "stream";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../lib/auth";
-import { logger } from "../../../../lib/logger";
+import { auth } from "@/lib/auth";
+import { logger } from "@/lib/logger";
+import { createAuditLog } from "@/lib/audit-log";
 import {
   getFileUrl,
   getFileKeyFromUrl,
   getFileStream,
   getFileNameFromKey,
   isStorageConfigured,
-} from "../../../../lib/storage";
+} from "@/lib/storage";
 import path from "path";
 
 const MIME_MAP: Record<string, string> = {
@@ -21,6 +22,13 @@ const MIME_MAP: Record<string, string> = {
 function getMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   return MIME_MAP[ext] || "application/octet-stream";
+}
+
+/** Block path traversal and validate the key is not suspicious */
+function isValidFileKey(fileKey: string): boolean {
+  if (fileKey.includes("..") || fileKey.includes("\\") || fileKey.startsWith("/")) return false;
+  if (fileKey.includes("\0")) return false;
+  return true;
 }
 
 export async function GET(req: NextRequest) {
@@ -46,9 +54,17 @@ export async function GET(req: NextRequest) {
     }
 
     const fileKey = key || (url ? getFileKeyFromUrl(url) : "");
-    if (!fileKey) {
+    if (!fileKey || !isValidFileKey(fileKey)) {
       return NextResponse.json({ error: "Invalid file reference" }, { status: 400 });
     }
+
+    // Audit log file download
+    createAuditLog({
+      action: "file.download",
+      userId: session.user.id,
+      orgId: undefined,
+      metadata: { fileKey },
+    }).catch(() => {});
 
     if (attachment) {
       const { body, contentType } = await getFileStream(fileKey);
