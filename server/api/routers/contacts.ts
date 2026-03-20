@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { contacts, crmOrganizations } from "../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { contacts, crmOrganizations } from "@/lib/db/schema";
 import { eq, and, ilike, or, count, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

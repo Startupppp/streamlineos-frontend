@@ -1,4 +1,4 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, sql, desc, gte, count } from "drizzle-orm";
 import {
@@ -16,7 +16,7 @@ import {
   crmSupportTeamMembers,
   leads,
   leadActivities,
-} from "../../../lib/db/schema";
+} from "@/lib/db/schema";
 import { subDays } from "date-fns";
 
 export const crmRouter = createTRPCRouter({

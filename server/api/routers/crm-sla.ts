@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { crmSla, leads, deals } from "../../../lib/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { crmSla, leads, deals } from "@/lib/db/schema";
 import { eq, and, lt, sql, count } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 

@@ -1,7 +1,7 @@
-import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
-import { deals, users } from "../../../lib/db/schema";
+import { deals, users } from "@/lib/db/schema";
 import { TRPCError } from "@trpc/server";
 
 const dealStageValues = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"] as const;
