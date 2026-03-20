@@ -22,6 +22,7 @@ export const changePasswordInputSchema = z.object({
   newPassword: z
     .string()
     .min(8)
+    .max(15, "Password must be at most 15 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
       "Password must contain uppercase, lowercase, number, and special character"
@@ -165,7 +166,7 @@ export const onboardEmployeeInputSchema = z.object({
   phone: z.string().regex(/^[\d+\s-]+$/, "Please enter a valid phone number").refine((val) => val.replace(/\D/g, "").length === 10, "Phone number must be exactly 10 digits"),
   whatsappSameAsPhone: z.boolean().default(true),
   whatsappNumber: z.string().regex(/^[\d+\s-]*$/, "Please enter a valid number").refine((val) => !val || val.replace(/\D/g, "").length === 10, "WhatsApp number must be exactly 10 digits").optional(),
-  password: z.string().refine((val) => !val || val.length >= 8, {
+  password: z.string().max(15, "Password must be at most 15 characters").refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),
   designation: z.string().min(1, "Designation is required"),
