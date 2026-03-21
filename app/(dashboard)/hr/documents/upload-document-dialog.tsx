@@ -141,12 +141,17 @@ export function UploadDocumentDialog({
   };
 
   const addTag = () => {
-    if (tagInput && !tags.includes(tagInput.toLowerCase())) {
-      const newTags = [...tags, tagInput.toLowerCase()];
-      setTags(newTags);
-      form.setValue("tags", newTags);
+    const trimmed = tagInput.trim().toLowerCase();
+    if (!trimmed) return;
+    if (tags.includes(trimmed)) {
+      toast.error("Tag already exists");
       setTagInput("");
+      return;
     }
+    const newTags = [...tags, trimmed];
+    setTags(newTags);
+    form.setValue("tags", newTags);
+    setTagInput("");
   };
 
   const removeTag = (tagToRemove: string) => {
@@ -467,8 +472,14 @@ export function UploadDocumentDialog({
                   }}
                   className="flex-1"
                 />
-                <Button type="button" variant="outline" size="icon" onClick={addTag}>
-                  <Tags className="h-4 w-4" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={addTag}
+                  disabled={!tagInput.trim()}
+                >
+                  <Tags className="h-4 w-4 pointer-events-none" />
                 </Button>
               </div>
               {tags.length > 0 && (
