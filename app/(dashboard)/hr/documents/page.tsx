@@ -367,7 +367,7 @@ export default function DocumentsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 mt-4 md:mt-0">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" disabled>
             <FolderPlus className="h-4 w-4" />
             New Folder
           </Button>
@@ -395,7 +395,7 @@ export default function DocumentsPage() {
                 aria-label="Search documents"
               />
             </div>
-            <Button variant="outline" size="sm" className="gap-1.5 text-sm">
+            <Button variant="outline" size="sm" className="gap-1.5 text-sm" disabled>
               <Filter className="h-3.5 w-3.5" />
               Filter
             </Button>
