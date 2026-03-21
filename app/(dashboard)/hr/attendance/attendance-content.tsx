@@ -739,8 +739,27 @@ const DailyHistoryTable = memo(function DailyHistoryTable() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Daily History</CardTitle>
           <button
-            className="text-sm text-[#bd882c] hover:text-[#a67724] font-medium flex items-center gap-1.5 transition-colors"
-            onClick={() => toast.info("Report download coming soon")}
+            className="text-sm text-[#bd882c] hover:text-[#a67724] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            disabled={logs.length === 0}
+            onClick={() => {
+              const rows = logs.map((log) => ({
+                Date: log.date ? format(new Date(log.date), "yyyy-MM-dd") : "",
+                "Check In": log.checkIn ? format(new Date(log.checkIn), "hh:mm a") : "",
+                "Check Out": log.checkOut ? format(new Date(log.checkOut), "hh:mm a") : "",
+                "Total Hours": log.workHours || "",
+                Status: log.status || "PRESENT",
+              }));
+              const header = Object.keys(rows[0] || {}).join(",");
+              const csv = [header, ...rows.map((r) => Object.values(r).map((v) => `"${v}"`).join(","))].join("\n");
+              const blob = new Blob([csv], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `attendance-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+              toast.success("Report downloaded");
+            }}
           >
             <Download className="h-3.5 w-3.5" />
             Download Report
