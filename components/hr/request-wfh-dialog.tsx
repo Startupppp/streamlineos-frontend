@@ -93,8 +93,8 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="sm:max-w-[425px] overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
+        <SheetHeader className="mb-6">
           <SheetTitle className="flex items-center gap-2">
             <Home className="h-5 w-5 text-primary" />
             Work From Home Request
@@ -104,7 +104,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="date"
@@ -169,7 +169,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex justify-end gap-3 pt-5 border-t">
               <Button
                 type="button"
                 variant="outline"
