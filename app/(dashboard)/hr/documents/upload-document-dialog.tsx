@@ -242,24 +242,23 @@ export function UploadDocumentDialog({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-xl overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
+        <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-semibold flex items-center gap-2">
-            <Upload className="h-5 w-5 text-violet-600" />
+            <Upload className="h-5 w-5 text-primary" />
             Upload Document
           </SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            
             {!file ? (
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg p-8 cursor-pointer hover:border-violet-400 hover:bg-violet-50/50 transition-colors">
-                <Upload className="h-10 w-10 text-slate-400 mb-3" />
-                <span className="text-sm font-medium text-slate-700">
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
+                <Upload className="h-10 w-10 text-muted-foreground mb-3" />
+                <span className="text-sm font-medium text-foreground">
                   Click or drag to upload
                 </span>
-                <span className="text-xs text-slate-400 mt-1">
+                <span className="text-xs text-muted-foreground mt-1">
                   PDF, DOC, XLS, Images up to 25MB
                 </span>
                 <input
@@ -270,13 +269,13 @@ export function UploadDocumentDialog({
                 />
               </label>
             ) : (
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg border">
+              <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
                 <div className="text-3xl">{getFileIcon()}</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {file.name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {(file.size / 1024).toFixed(1)} KB • {file.type || "Unknown type"}
                   </p>
                 </div>
@@ -292,7 +291,7 @@ export function UploadDocumentDialog({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <FormField
                 control={form.control}
                 name="name"
@@ -453,9 +452,8 @@ export function UploadDocumentDialog({
               )}
             />
 
-            
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tags</label>
+              <FormLabel>Tags</FormLabel>
               <div className="flex gap-2">
                 <Input
                   placeholder="Add tag..."
@@ -469,17 +467,17 @@ export function UploadDocumentDialog({
                   }}
                   className="flex-1"
                 />
-                <Button type="button" variant="outline" onClick={addTag}>
+                <Button type="button" variant="outline" size="icon" onClick={addTag}>
                   <Tags className="h-4 w-4" />
                 </Button>
               </div>
               {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-2">
                   {tags.map((tag) => (
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="pl-2 pr-1 py-1 cursor-pointer hover:bg-slate-200"
+                      className="pl-2 pr-1 py-0.5 cursor-pointer hover:bg-muted"
                       onClick={() => removeTag(tag)}
                     >
                       {tag}
@@ -490,12 +488,11 @@ export function UploadDocumentDialog({
               )}
             </div>
 
-            
             <FormField
               control={form.control}
               name="isPublic"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3 bg-slate-50">
+                <FormItem className="flex items-center justify-between rounded-lg border p-3 bg-muted/50">
                   <div className="space-y-0.5">
                     <FormLabel className="flex items-center gap-2">
                       {field.value ? (
@@ -521,7 +518,7 @@ export function UploadDocumentDialog({
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-5 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -533,7 +530,6 @@ export function UploadDocumentDialog({
               <Button
                 type="submit"
                 disabled={isLoading || uploading || !file}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
               >
                 {isLoading || uploading ? (
                   <>
