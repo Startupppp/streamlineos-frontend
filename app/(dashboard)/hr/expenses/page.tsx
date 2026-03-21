@@ -374,10 +374,6 @@ export default function ExpensesPage() {
                   )}
                 </button>
               ))}
-              <button className="px-4 py-2 rounded-full text-sm font-medium border border-border bg-white dark:bg-background text-muted-foreground hover:bg-muted/50 flex items-center gap-1.5">
-                <Filter className="h-3.5 w-3.5" />
-                More Filters
-              </button>
             </div>
           </motion.div>
 
