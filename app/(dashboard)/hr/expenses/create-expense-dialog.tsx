@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -100,8 +100,8 @@ export function CreateExpenseDialog({
     },
   });
 
-  // Reset form when editExpense changes
-  useState(() => {
+  // Reset form when editExpense changes or dialog opens
+  useEffect(() => {
     if (open) {
       form.reset({
         category: editExpense?.category || "",
@@ -111,8 +111,14 @@ export function CreateExpenseDialog({
         paymentMethod: editExpense?.paymentMethod || "",
         expenseDate: editExpense?.expenseDate ? new Date(editExpense.expenseDate) : new Date(),
       });
+      if (editExpense?.receiptUrl) {
+        setReceiptPreview(editExpense.receiptUrl);
+      } else {
+        setReceiptPreview(null);
+      }
+      setReceiptFile(null);
     }
-  });
+  }, [open, editExpense, form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
