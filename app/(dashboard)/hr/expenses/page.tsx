@@ -836,7 +836,29 @@ export default function ExpensesPage() {
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                 ) : (
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    onClick={() => {
+                                      if (expense.receiptUrl) {
+                                        viewFile(expense.receiptUrl);
+                                      } else {
+                                        setEditingExpense({
+                                          id: expense.id,
+                                          category: expense.category || "",
+                                          amount: expense.amount,
+                                          description: expense.description,
+                                          merchant: expense.merchant,
+                                          paymentMethod: expense.paymentMethod,
+                                          expenseDate: expense.expenseDate,
+                                          receiptUrl: expense.receiptUrl,
+                                          receiptFileName: expense.receiptFileName,
+                                        });
+                                        setIsCreateOpen(true);
+                                      }
+                                    }}
+                                  >
                                     <Eye className="h-4 w-4" />
                                   </Button>
                                 )}
