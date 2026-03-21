@@ -368,7 +368,7 @@ export function ExpenseExportDialog({
           await downloadXLSX(result.data, result.filename);
           break;
         case "pdf":
-          downloadPDF(result.data, result.filename);
+          await downloadPDF(result.data, result.filename);
           break;
       }
 
@@ -493,15 +493,15 @@ export function ExpenseExportDialog({
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="sm:max-w-md overflow-y-auto p-6">
+        <SheetHeader className="mb-6">
           <SheetTitle>Export Expenses</SheetTitle>
           <SheetDescription>
             Export your filtered expenses to your preferred format.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6">
           
           <div className="space-y-3">
             <Label>Export Format</Label>
