@@ -24,12 +24,6 @@ export function verifyCronSecret(authHeader: string | null): NextResponse | null
 
   return null;
 }
-
-/**
- * In-memory idempotency guard for cron jobs.
- * Prevents double execution within the specified window (default: 5 minutes).
- * Note: This is per-instance — for multi-instance deploys, use a DB-based lock.
- */
 const cronLastRun = new Map<string, number>();
 
 export function cronIdempotencyCheck(jobName: string, windowMs: number = 5 * 60_000): NextResponse | null {
