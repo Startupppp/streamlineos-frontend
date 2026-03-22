@@ -82,9 +82,9 @@ export default function WorkLogsPage() {
         title="Work Logs"
         description="Track your daily tasks and activities."
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-              <SelectTrigger className="w-[120px]" aria-label="Select year">
+              <SelectTrigger className="w-[100px] md:w-[120px]" aria-label="Select year">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +95,7 @@ export default function WorkLogsPage() {
             </Select>
 
             <Select value={quarter.toString()} onValueChange={(v) => setQuarter(parseInt(v))}>
-              <SelectTrigger className="w-[180px]" aria-label="Select quarter">
+              <SelectTrigger className="w-[140px] md:w-[180px]" aria-label="Select quarter">
                 <SelectValue placeholder="Quarter" />
               </SelectTrigger>
               <SelectContent>
@@ -214,12 +214,12 @@ function DayLogEntry({
   return (
     <div
       className={cn(
-        "flex gap-4 p-4 rounded-lg border transition-colors",
+        "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-colors",
         isWeekendDay ? "bg-slate-50/50" : "bg-card",
         content ? "border-l-4 border-l-green-500" : "border-l-4 border-l-slate-200",
       )}
     >
-      <div className="w-32 flex-shrink-0 pt-2">
+      <div className="sm:w-28 md:w-32 flex-shrink-0 pt-1 sm:pt-2 flex sm:block items-center gap-2">
         <div className="font-bold text-lg">{format(date, "dd")}</div>
         <div className="text-muted-foreground text-sm uppercase">{format(date, "MMM, EEE")}</div>
         {isWeekendDay && (
