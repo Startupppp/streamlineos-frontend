@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { AppSidebar } from "../../components/layout/app-sidebar";
@@ -11,14 +11,46 @@ import { NotActivatedPage } from "../../components/auth/not-activated-page";
 import { CommandPalette } from "../../components/layout/command-palette";
 import { AISidebar } from "../../components/shared/ai-sidebar";
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+  const matchRef = useRef(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
+      matchRef.current = e.matches;
+      setMatches(e.matches);
+    };
+    handler(mql);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, [query]);
+
+  return matches;
+}
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1023px)");
+  const [isSidebarManuallyToggled, setIsSidebarManuallyToggled] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  // Auto-collapse sidebar on tablet, expand on desktop (unless user manually toggled)
+  useEffect(() => {
+    if (!isSidebarManuallyToggled) {
+      setIsSidebarCollapsed(isTablet);
+    }
+  }, [isTablet, isSidebarManuallyToggled]);
+
+  const handleToggleSidebar = () => {
+    setIsSidebarManuallyToggled(true);
+    setIsSidebarCollapsed((prev) => !prev);
+  };
+
   const isProjectPage = pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
   const isCrmDetailPage = pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
   const isChatPage = pathname === "/chat";
@@ -59,7 +91,7 @@ export default function DashboardLayout({
           <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 border-r bg-sidebar transition-all duration-300 ${isSidebarCollapsed ? 'md:w-20' : 'md:w-72'}`}>
             <AppSidebar
               isCollapsed={isSidebarCollapsed}
-              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              onToggleCollapse={handleToggleSidebar}
             />
           </div>
         )}
