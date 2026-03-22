@@ -31,6 +31,15 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
   Table,
   TableBody,
   TableCell,
@@ -124,8 +133,8 @@ const FOLDER_COLORS = [
   "bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400",
 ];
 
-/* Category filter tabs */
-const CATEGORY_TABS = ["All Files", "Contracts", "Policies", "Tax Forms", "Templates", "Payroll"];
+/* Category filter tabs (default set) */
+const DEFAULT_CATEGORY_TABS = ["All Files", "Contracts", "Policies", "Tax Forms", "Templates", "Payroll"];
 
 export default function DocumentsPage() {
   const { data: session } = useSession();
@@ -138,8 +147,16 @@ export default function DocumentsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Files");
   const [searchTerm, setSearchTerm] = useState("");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isNewFolderOpen, setIsNewFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 5;
+
+  const categoryTabs = useMemo(
+    () => [...DEFAULT_CATEGORY_TABS, ...customFolders],
+    [customFolders],
+  );
 
   const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
   const isAdminRef = useRef(isAdmin);
@@ -181,14 +198,21 @@ export default function DocumentsPage() {
 
       // Category filter
       if (selectedCategory !== "All Files") {
-        const docTypeLabel = DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "";
-        const categoryMatch =
+        // Built-in category matching
+        const builtInMatch =
           selectedCategory === "Contracts" && (doc.type === "CONTRACT" || doc.type === "OFFER_LETTER") ||
           selectedCategory === "Policies" && doc.type === "POLICY" ||
           selectedCategory === "Tax Forms" && (doc.type === "ID_PROOF" || doc.tags?.some(t => t.toLowerCase().includes("tax"))) ||
           selectedCategory === "Templates" && doc.tags?.some(t => t.toLowerCase().includes("template")) ||
           selectedCategory === "Payroll" && doc.type === "PAYSLIP";
-        if (!categoryMatch) return false;
+
+        // Custom folder matching — match by category name or tag
+        const customFolderMatch = customFolders.includes(selectedCategory) && (
+          doc.category?.toLowerCase() === selectedCategory.toLowerCase() ||
+          doc.tags?.some(t => t.toLowerCase() === selectedCategory.toLowerCase())
+        );
+
+        if (!builtInMatch && !customFolderMatch) return false;
       }
 
       return matchesSearch;
@@ -270,7 +294,7 @@ export default function DocumentsPage() {
               <Skeleton className="h-10 flex-1 min-w-[200px] max-w-md rounded-md" />
               <Skeleton className="h-9 w-[76px] rounded-md" />
               <div className="flex items-center gap-1">
-                {CATEGORY_TABS.map((tab) => (
+                {DEFAULT_CATEGORY_TABS.map((tab) => (
                   <Skeleton key={tab} className="h-8 rounded-full" style={{ width: `${tab.length * 9 + 24}px` }} />
                 ))}
               </div>
@@ -367,7 +391,7 @@ export default function DocumentsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 mt-4 md:mt-0">
-          <Button variant="outline" className="gap-2" disabled>
+          <Button variant="outline" className="gap-2" onClick={() => setIsNewFolderOpen(true)}>
             <FolderPlus className="h-4 w-4" />
             New Folder
           </Button>
@@ -399,8 +423,8 @@ export default function DocumentsPage() {
               <Filter className="h-3.5 w-3.5" />
               Filter
             </Button>
-            <div className="flex items-center gap-1">
-              {CATEGORY_TABS.map((cat) => (
+            <div className="flex items-center gap-1 flex-wrap">
+              {categoryTabs.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => { setSelectedCategory(cat); setPage(1); }}
@@ -618,9 +642,74 @@ export default function DocumentsPage() {
           setIsUploadOpen(false);
         }}
         documentTypes={DOCUMENT_TYPES}
-        categories={DOCUMENT_CATEGORIES}
+        categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
         isAdmin={isAdmin}
       />
+
+      {/* New Folder Dialog */}
+      <Dialog open={isNewFolderOpen} onOpenChange={setIsNewFolderOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderPlus className="h-5 w-5 text-primary" />
+              Create New Folder
+            </DialogTitle>
+            <DialogDescription>
+              Create a folder to organize your documents. Documents can be assigned to this folder by category or tag.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="folder-name">Folder Name</Label>
+              <Input
+                id="folder-name"
+                placeholder="e.g., Onboarding, Compliance 2026..."
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const trimmed = newFolderName.trim();
+                    if (!trimmed) return;
+                    if (categoryTabs.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
+                      toast.error("A folder with this name already exists");
+                      return;
+                    }
+                    setCustomFolders((prev) => [...prev, trimmed]);
+                    setSelectedCategory(trimmed);
+                    setNewFolderName("");
+                    setIsNewFolderOpen(false);
+                    toast.success(`Folder "${trimmed}" created`);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsNewFolderOpen(false); setNewFolderName(""); }}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!newFolderName.trim()}
+              onClick={() => {
+                const trimmed = newFolderName.trim();
+                if (!trimmed) return;
+                if (categoryTabs.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
+                  toast.error("A folder with this name already exists");
+                  return;
+                }
+                setCustomFolders((prev) => [...prev, trimmed]);
+                setSelectedCategory(trimmed);
+                setNewFolderName("");
+                setIsNewFolderOpen(false);
+                toast.success(`Folder "${trimmed}" created`);
+              }}
+            >
+              Create Folder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
