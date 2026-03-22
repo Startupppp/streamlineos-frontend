@@ -338,10 +338,10 @@ export default function ScoringRulesPage() {
             <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-[#bd882c]/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
               <span className="text-sm font-medium">Calculated Score</span>
               <Badge className={cn(
-                "text-lg px-4 py-1",
-                sampleScore <= 30 ? "bg-red-500/15 text-red-400" :
-                sampleScore <= 60 ? "bg-amber-500/15 text-amber-400" :
-                "bg-emerald-500/15 text-emerald-400"
+                "text-lg px-4 py-1 font-bold",
+                sampleScore <= 30 ? "bg-red-500/15 text-red-700 dark:text-red-400" :
+                sampleScore <= 60 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" :
+                "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
               )}>
                 {sampleScore} pts
               </Badge>
