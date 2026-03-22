@@ -392,10 +392,10 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   }
 
   return (
-    <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
+    <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300 relative", isCollapsed ? "w-20" : "w-72")}>
 
-      <div className="px-4 py-4 relative">
-        <Link href="/dashboard" className="flex items-center gap-3" onClick={onNavigate}>
+      <div className={cn("px-4 py-4 flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
+        <Link href="/dashboard" className="flex items-center gap-3 min-w-0" onClick={onNavigate}>
           <div className="relative w-8 h-8 bg-card rounded-lg border border-gold/20 flex items-center justify-center overflow-hidden shadow-noir shrink-0">
             <Image
               src="/logo.svg"
@@ -406,23 +406,31 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
             />
           </div>
           {!isCollapsed && (
-            <h1 className="text-xl font-bold font-serif gold-text">
+            <h1 className="text-xl font-bold font-serif gold-text truncate">
               Vaivamm
             </h1>
           )}
         </Link>
-        {onToggleCollapse && (
+        {onToggleCollapse && !isCollapsed && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="absolute top-4 right-2 h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            className="h-7 w-7 shrink-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            aria-label="Collapse sidebar"
           >
-            {isCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
+        {onToggleCollapse && isCollapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="absolute -right-3 top-5 z-10 h-6 w-6 rounded-full border bg-sidebar shadow-sm text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            aria-label="Expand sidebar"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         )}
       </div>
