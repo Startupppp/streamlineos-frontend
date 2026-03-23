@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, Pencil, Target, Zap } from "lucide-react";
+import { Plus, Trash2, Pencil, Zap } from "lucide-react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -309,9 +310,16 @@ export default function ScoringRulesPage() {
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No scoring rules defined</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <Image
+                  src="/illustrations/undraw-grading-papers.svg"
+                  alt="No scoring rules"
+                  width={200}
+                  height={200}
+                  className="mx-auto mb-4 opacity-80"
+                />
+                <p className="text-sm font-medium text-foreground">No scoring rules defined</p>
+                <p className="text-xs mt-1">Create your first rule to start scoring leads automatically.</p>
               </div>
             )}
           </CardContent>
