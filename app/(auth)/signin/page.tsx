@@ -40,17 +40,27 @@ export default function SignInPage() {
 
   const signInMutation = useMutation({
     mutationFn: async (data: z.infer<typeof signinSchema>) => {
-      const callbackUrl = getCallbackUrl();
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        callbackUrl,
-        redirect: false,
-      });
-      if (result?.error) {
-        throw new Error("Invalid email or password. Please check your credentials and try again.");
+      if (!navigator.onLine) {
+        throw new Error("No internet connection. Please check your network and try again.");
       }
-      return result;
+      const callbackUrl = getCallbackUrl();
+      try {
+        const result = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          callbackUrl,
+          redirect: false,
+        });
+        if (result?.error) {
+          throw new Error("Invalid email or password. Please check your credentials and try again.");
+        }
+        return result;
+      } catch (error) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          throw new Error("No internet connection. Please check your network and try again.");
+        }
+        throw error;
+      }
     },
     onSuccess: (result) => {
       toast.success("Sign in successful! Redirecting...");

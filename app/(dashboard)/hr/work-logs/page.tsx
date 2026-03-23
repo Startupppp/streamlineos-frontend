@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { format, eachDayOfInterval, isWeekend } from "date-fns";
+import { format, eachDayOfInterval, isWeekend, parse, isValid } from "date-fns";
 import { useGetWorkLogs, useUpsertWorkLog } from "@/lib/hooks/trpc-hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Search, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function WorkLogsPage() {
@@ -20,6 +21,7 @@ export default function WorkLogsPage() {
   const [year, setYear] = useState<number>(currentYear);
   const [quarter, setQuarter] = useState<number>(currentQuarter);
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState("");
 
   const toggleMonth = useCallback((monthKey: string) => {
     setCollapsedMonths((prev) => {
@@ -34,7 +36,7 @@ export default function WorkLogsPage() {
 
   const upsertLog = useUpsertWorkLog({
     onSuccess: () => {
-      toast.success("Saved");
+      toast.success("Work log saved successfully");
     },
     onError: () => {
       toast.error("Failed to save log");
@@ -76,6 +78,38 @@ export default function WorkLogsPage() {
     return counts;
   }, [logs, monthGroups]);
 
+  // Search filtering: match by keyword in description or by date
+  const filterDay = useCallback(
+    (date: Date) => {
+      if (!searchTerm.trim()) return true;
+      const term = searchTerm.trim().toLowerCase();
+      const dateStr = format(date, "yyyy-MM-dd");
+      const log = logs?.find((l) => l.date === dateStr);
+
+      // Check if search term matches the date display
+      const dateDisplay = format(date, "dd MMM yyyy EEEE").toLowerCase();
+      if (dateDisplay.includes(term)) return true;
+
+      // Try parsing as a date (e.g., "15 Jan 2026", "2026-01-15", "15/01/2026")
+      const dateFormats = ["d MMM yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "d MMMM yyyy"];
+      for (const fmt of dateFormats) {
+        const parsed = parse(term, fmt, new Date());
+        if (isValid(parsed) && format(parsed, "yyyy-MM-dd") === dateStr) return true;
+      }
+
+      // Check keyword in description
+      if (log?.description?.toLowerCase().includes(term)) return true;
+
+      return false;
+    },
+    [searchTerm, logs],
+  );
+
+  const hasSearchResults = useMemo(() => {
+    if (!searchTerm.trim()) return true;
+    return days.some(filterDay);
+  }, [days, filterDay, searchTerm]);
+
   return (
     <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
       <PageHeader
@@ -109,6 +143,27 @@ export default function WorkLogsPage() {
         }
       />
 
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <Input
+          placeholder="Search by date or keyword (e.g., 'meeting', '15 Jan 2026')..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9 pr-9 h-9 border-border bg-muted/50 focus-visible:bg-background"
+          aria-label="Search work logs"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
       {isLoading ? (
         <Card>
           <CardContent className="py-12">
@@ -117,13 +172,32 @@ export default function WorkLogsPage() {
             </div>
           </CardContent>
         </Card>
+      ) : !hasSearchResults ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <Search className="h-10 w-10 text-muted-foreground/50 mb-3" />
+              <h3 className="text-lg font-medium text-foreground">No results found</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
+              </p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setSearchTerm("")}>
+                Clear Search
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-4">
           {monthGroups.map((group) => {
+            const filteredDays = group.days.filter(filterDay);
+            if (searchTerm.trim() && filteredDays.length === 0) return null;
+
             const isCollapsed = collapsedMonths.has(group.monthKey);
             const filled = filledCounts[group.monthKey] ?? 0;
             const weekdays = group.days.filter((d) => !isWeekend(d)).length;
             const regionId = `month-content-${group.monthKey}`;
+            const displayDays = searchTerm.trim() ? filteredDays : group.days;
 
             return (
               <Card key={group.monthKey}>
@@ -151,14 +225,14 @@ export default function WorkLogsPage() {
                       <CardTitle className="text-base sm:text-lg truncate">{group.label}</CardTitle>
                     </div>
                     <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap shrink-0">
-                      {filled}/{weekdays} logged
+                      {searchTerm.trim() ? `${filteredDays.length} match${filteredDays.length !== 1 ? "es" : ""}` : `${filled}/${weekdays} logged`}
                     </span>
                   </div>
                 </CardHeader>
                 {!isCollapsed && (
                   <CardContent id={regionId} role="region" aria-label={`Work logs for ${group.label}`} className="px-3 sm:px-6">
                     <div className="space-y-2 sm:space-y-4">
-                      {group.days.map((date) => {
+                      {displayDays.map((date) => {
                         const dateStr = format(date, "yyyy-MM-dd");
                         const log = logs?.find((l) => l.date === dateStr);
                         return (
@@ -167,6 +241,8 @@ export default function WorkLogsPage() {
                             date={date}
                             initialContent={log?.description ?? ""}
                             onSave={(content) => upsertLog.mutate({ date, description: content })}
+                            isSaving={upsertLog.isPending}
+                            searchTerm={searchTerm}
                           />
                         );
                       })}
@@ -186,10 +262,14 @@ function DayLogEntry({
   date,
   initialContent,
   onSave,
+  isSaving,
+  searchTerm,
 }: {
   date: Date;
   initialContent: string;
   onSave: (c: string) => void;
+  isSaving: boolean;
+  searchTerm: string;
 }) {
   const [content, setContent] = useState(initialContent);
   const [prevInitial, setPrevInitial] = useState(initialContent);
@@ -202,21 +282,53 @@ function DayLogEntry({
     }
   }
 
-  const handleBlur = () => {
-    if (content !== initialContent) {
+  const hasUnsavedChanges = content !== initialContent;
+
+  const handleSave = () => {
+    if (hasUnsavedChanges) {
       onSave(content);
+      setIsDirty(false);
     }
+  };
+
+  const handleDiscard = () => {
+    setContent(initialContent);
+    setIsDirty(false);
   };
 
   const isWeekendDay = isWeekend(date);
   const dateLabel = format(date, "EEEE, MMMM d");
+
+  // Highlight matching text in description
+  const highlightMatch = (text: string) => {
+    if (!searchTerm.trim() || !text) return null;
+    const term = searchTerm.trim();
+    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const parts = text.split(regex);
+    if (parts.length === 1) return null;
+    return parts.map((part, i) =>
+      regex.test(part) ? (
+        <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
+          {part}
+        </mark>
+      ) : (
+        <span key={i}>{part}</span>
+      ),
+    );
+  };
+
+  const highlighted = highlightMatch(content);
 
   return (
     <div
       className={cn(
         "flex flex-col sm:flex-row gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg border transition-colors",
         isWeekendDay ? "bg-slate-50/50 dark:bg-slate-900/20" : "bg-card",
-        content ? "border-l-4 border-l-green-500" : "border-l-4 border-l-slate-200 dark:border-l-slate-700",
+        hasUnsavedChanges
+          ? "border-l-4 border-l-amber-500"
+          : content
+            ? "border-l-4 border-l-green-500"
+            : "border-l-4 border-l-slate-200 dark:border-l-slate-700",
       )}
     >
       <div className="sm:w-28 md:w-32 flex-shrink-0 flex sm:block items-center gap-2">
@@ -227,16 +339,20 @@ function DayLogEntry({
             Weekend
           </span>
         )}
+        {hasUnsavedChanges && (
+          <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-400 inline-block">
+            Draft
+          </span>
+        )}
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 space-y-2">
         <Textarea
           value={content}
           onChange={(e) => {
             setContent(e.target.value);
             setIsDirty(true);
           }}
-          onBlur={handleBlur}
           placeholder={isWeekendDay ? "Weekend..." : "What did you work on today?"}
           aria-label={`Work log for ${dateLabel}`}
           className={cn(
@@ -244,6 +360,39 @@ function DayLogEntry({
             isWeekendDay && !content ? "h-9 opacity-50" : "h-16 sm:h-24",
           )}
         />
+        {/* Highlighted search match preview */}
+        {highlighted && !hasUnsavedChanges && (
+          <p className="text-xs text-muted-foreground px-1 truncate">
+            {highlighted}
+          </p>
+        )}
+        {/* Save / Discard buttons */}
+        {hasUnsavedChanges && (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Save className="h-3 w-3" />
+              )}
+              Save
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-muted-foreground"
+              onClick={handleDiscard}
+              disabled={isSaving}
+            >
+              Discard
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

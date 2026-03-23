@@ -274,7 +274,7 @@ export function UploadDocumentDialog({
                 />
               </label>
             ) : (
-              <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
                 <div className="text-3xl">{getFileIcon()}</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">
@@ -458,8 +458,8 @@ export function UploadDocumentDialog({
             />
 
             <div className="space-y-2">
-              <FormLabel>Tags</FormLabel>
-              <div className="flex gap-2">
+              <label className="text-sm font-medium">Tags</label>
+              <div className="flex gap-3">
                 <Input
                   placeholder="Add tag..."
                   value={tagInput}
@@ -478,17 +478,19 @@ export function UploadDocumentDialog({
                   size="icon"
                   onClick={addTag}
                   disabled={!tagInput.trim()}
+                  title="Add tag"
+                  aria-label="Add tag"
                 >
-                  <Tags className="h-4 w-4 pointer-events-none" />
+                  <Tags className="h-4 w-4" />
                 </Button>
               </div>
               {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {tags.map((tag) => (
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="pl-2 pr-1 py-0.5 cursor-pointer hover:bg-muted"
+                      className="pl-2.5 pr-1.5 py-1 cursor-pointer hover:bg-muted"
                       onClick={() => removeTag(tag)}
                     >
                       {tag}
@@ -503,9 +505,9 @@ export function UploadDocumentDialog({
               control={form.control}
               name="isPublic"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3 bg-muted/50">
+                <FormItem className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
                   <div className="space-y-0.5">
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-sm font-medium">
                       {field.value ? (
                         <Globe className="h-4 w-4 text-emerald-600" />
                       ) : (
@@ -513,7 +515,7 @@ export function UploadDocumentDialog({
                       )}
                       {field.value ? "Public Document" : "Private Document"}
                     </FormLabel>
-                    <FormDescription>
+                    <FormDescription className="text-xs">
                       {field.value
                         ? "All employees can view this document"
                         : "Only admins and the owner can view this"}
@@ -529,7 +531,7 @@ export function UploadDocumentDialog({
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-5 border-t">
+            <div className="flex justify-end gap-3 pt-6 mt-2 border-t">
               <Button
                 type="button"
                 variant="outline"

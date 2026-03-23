@@ -405,9 +405,9 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* Search + Category Tabs */}
+      {/* Search + Filters */}
       <Card className="shadow-sm border">
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -419,39 +419,6 @@ export default function DocumentsPage() {
                 aria-label="Search documents"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5 text-sm">
-                  <Filter className="h-3.5 w-3.5" />
-                  {selectedType === "all" ? "Type" : DOCUMENT_TYPES.find((t) => t.value === selectedType)?.label || "Type"}
-                  {selectedType !== "all" && (
-                    <span className="ml-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">1</span>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem
-                  onClick={() => { setSelectedType("all"); setPage(1); }}
-                  className={selectedType === "all" ? "bg-accent font-medium" : ""}
-                >
-                  All Types
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {DOCUMENT_TYPES.map((type) => {
-                  const Icon = type.icon;
-                  return (
-                    <DropdownMenuItem
-                      key={type.value}
-                      onClick={() => { setSelectedType(type.value); setPage(1); }}
-                      className={selectedType === type.value ? "bg-accent font-medium" : ""}
-                    >
-                      <Icon className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                      {type.label}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
             <div className="flex items-center gap-1 flex-wrap">
               {categoryTabs.map((cat) => (
                 <button
@@ -467,6 +434,39 @@ export default function DocumentsPage() {
                 </button>
               ))}
             </div>
+          </div>
+          <div className="flex items-center gap-1.5 pt-1 border-t">
+            <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mr-1">
+              <Filter className="h-3 w-3" />
+              Type:
+            </span>
+            <button
+              onClick={() => { setSelectedType("all"); setPage(1); }}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                selectedType === "all"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              All
+            </button>
+            {DOCUMENT_TYPES.map((type) => {
+              const Icon = type.icon;
+              return (
+                <button
+                  key={type.value}
+                  onClick={() => { setSelectedType(type.value); setPage(1); }}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
+                    selectedType === type.value
+                      ? "bg-[#2563eb]/10 text-[#2563eb] dark:bg-[#2563eb]/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <Icon className="h-3 w-3" />
+                  {type.label}
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

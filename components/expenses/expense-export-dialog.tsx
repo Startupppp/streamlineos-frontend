@@ -14,7 +14,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -493,18 +492,20 @@ export function ExpenseExportDialog({
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md overflow-y-auto p-6">
+      <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
         <SheetHeader className="mb-6">
-          <SheetTitle>Export Expenses</SheetTitle>
+          <SheetTitle className="text-xl font-semibold flex items-center gap-2">
+            <Download className="h-5 w-5 text-primary" />
+            Export Expenses
+          </SheetTitle>
           <SheetDescription>
             Export your filtered expenses to your preferred format.
           </SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-6">
-          
+        <div className="space-y-5">
           <div className="space-y-3">
-            <Label>Export Format</Label>
+            <Label className="text-sm font-medium">Export Format</Label>
             <RadioGroup
               value={format}
               onValueChange={(v: string) => setFormat(v as ExportFormat)}
@@ -513,7 +514,7 @@ export function ExpenseExportDialog({
               {FORMAT_OPTIONS.map((option) => (
                 <label
                   key={option.value}
-                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
+                  className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
                     format === option.value
                       ? "border-primary bg-primary/5"
                       : "border-border"
@@ -523,9 +524,9 @@ export function ExpenseExportDialog({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <option.icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{option.label}</span>
+                      <span className="font-medium text-sm">{option.label}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {option.description}
                     </p>
                   </div>
@@ -534,12 +535,11 @@ export function ExpenseExportDialog({
             </RadioGroup>
           </div>
 
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
               <div className="space-y-0.5">
-                <Label>Include Header</Label>
-                <p className="text-sm text-muted-foreground">
+                <Label className="text-sm font-medium">Include Header</Label>
+                <p className="text-xs text-muted-foreground">
                   Add title, date, and filter information
                 </p>
               </div>
@@ -548,10 +548,10 @@ export function ExpenseExportDialog({
                 onCheckedChange={setIncludeHeader}
               />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
               <div className="space-y-0.5">
-                <Label>Include Totals</Label>
-                <p className="text-sm text-muted-foreground">
+                <Label className="text-sm font-medium">Include Totals</Label>
+                <p className="text-xs text-muted-foreground">
                   Add summary totals at the end
                 </p>
               </div>
@@ -562,11 +562,10 @@ export function ExpenseExportDialog({
             </div>
           </div>
 
-          
           {Object.values(exportFilters).some((v) => v !== undefined && v !== "") && (
-            <div className="p-3 bg-muted/50 rounded-lg text-sm">
-              <p className="font-medium mb-1">Applied Filters:</p>
-              <ul className="text-muted-foreground space-y-1">
+            <div className="p-4 bg-muted/30 rounded-lg border text-sm">
+              <p className="font-medium text-sm mb-2">Applied Filters:</p>
+              <ul className="text-muted-foreground space-y-1 text-xs">
                 {exportFilters.startDate && (
                   <li>
                     Date: {exportFilters.startDate}
@@ -583,14 +582,14 @@ export function ExpenseExportDialog({
                   <li>Payment: {exportFilters.paymentMethod}</li>
                 )}
                 {exportFilters.search && (
-                  <li>Search: "{exportFilters.search}"</li>
+                  <li>Search: &ldquo;{exportFilters.search}&rdquo;</li>
                 )}
               </ul>
             </div>
           )}
         </div>
 
-        <SheetFooter>
+        <div className="flex justify-end gap-3 pt-6 mt-2 border-t">
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
@@ -616,7 +615,7 @@ export function ExpenseExportDialog({
               </>
             )}
           </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
 
       {pdfData && (
