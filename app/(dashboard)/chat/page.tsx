@@ -9,7 +9,7 @@ import {
   Fragment,
 } from "react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import { useQueryClient } from "@tanstack/react-query";
 import { format, isToday, isYesterday, formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -482,13 +482,7 @@ function ChannelSidebar({
 
             {filteredChannels.length === 0 && (
               <div className="text-center py-10 px-4">
-                <Image
-                  src="/illustrations/undraw-online-chat.svg"
-                  alt="No conversations"
-                  width={160}
-                  height={120}
-                  className="mx-auto mb-4 opacity-80"
-                />
+                <EmptyMailIllustration className="mx-auto mb-4 w-32 h-32" />
                 <p className="text-[13px] text-muted-foreground font-medium">
                   {search ? "No results found" : "No conversations yet"}
                 </p>
@@ -2352,13 +2346,7 @@ function EmptyChatState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <Image
-        src="/illustrations/undraw-online-chat.svg"
-        alt="Welcome to Chat"
-        width={220}
-        height={170}
-        className="mb-6"
-      />
+      <EmptyMailIllustration className="mb-6 w-44 h-44" />
       <h3 className="text-lg font-bold mb-1">Welcome to Chat</h3>
       <p className="text-[13px] text-muted-foreground max-w-xs leading-relaxed">
         Select a conversation or start a new one.

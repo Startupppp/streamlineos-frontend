@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import { EmptyTargetIllustration, EmptyLeaderboardIllustration } from "@/components/illustrations";
 import {
   Trophy, Target, TrendingUp, Plus, Medal, Users,
   Zap, Phone, UserCheck, BarChart3, Calendar,
@@ -231,16 +231,7 @@ export default function TargetsPage() {
           <Card className="shadow-noir">
             <CardContent className="py-12">
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-full max-w-sm">
-                  <Image
-                    src="/illustrations/targets-empty.svg"
-                    alt="No targets illustration"
-                    width={400}
-                    height={260}
-                    className="mx-auto h-auto w-full"
-                    priority
-                  />
-                </div>
+                <EmptyTargetIllustration className="w-40 h-40" />
                 <div>
                   <p className="text-base font-medium text-foreground">No targets assigned yet</p>
                   <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
@@ -343,15 +334,7 @@ export default function TargetsPage() {
           <Card className="shadow-noir">
             <CardContent className="py-12">
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-full max-w-sm">
-                  <Image
-                    src="/illustrations/leaderboard-empty.svg"
-                    alt="No leaderboard data illustration"
-                    width={400}
-                    height={260}
-                    className="mx-auto h-auto w-full"
-                  />
-                </div>
+                <EmptyLeaderboardIllustration className="w-40 h-40" />
                 <div>
                   <p className="text-base font-medium text-foreground">No leaderboard data yet</p>
                   <p className="text-xs text-muted-foreground/70 mt-1 max-w-md mx-auto">
