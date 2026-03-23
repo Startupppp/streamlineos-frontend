@@ -419,10 +419,39 @@ export default function DocumentsPage() {
                 aria-label="Search documents"
               />
             </div>
-            <Button variant="outline" size="sm" className="gap-1.5 text-sm" disabled>
-              <Filter className="h-3.5 w-3.5" />
-              Filter
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 text-sm">
+                  <Filter className="h-3.5 w-3.5" />
+                  {selectedType === "all" ? "Type" : DOCUMENT_TYPES.find((t) => t.value === selectedType)?.label || "Type"}
+                  {selectedType !== "all" && (
+                    <span className="ml-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">1</span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => { setSelectedType("all"); setPage(1); }}
+                  className={selectedType === "all" ? "bg-accent font-medium" : ""}
+                >
+                  All Types
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {DOCUMENT_TYPES.map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={type.value}
+                      onClick={() => { setSelectedType(type.value); setPage(1); }}
+                      className={selectedType === type.value ? "bg-accent font-medium" : ""}
+                    >
+                      <Icon className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                      {type.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="flex items-center gap-1 flex-wrap">
               {categoryTabs.map((cat) => (
                 <button
