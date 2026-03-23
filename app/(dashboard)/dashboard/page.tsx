@@ -39,6 +39,7 @@ import { TeamCard } from "./_components/team-card";
 import { MyIssuesCard, type DashboardTicket } from "./_components/my-issues-card";
 import { RecentProjectsCard } from "./_components/recent-projects-card";
 import { RecentActivityCard } from "./_components/recent-activity-card";
+import { PublicDocumentsCard } from "./_components/public-documents-card";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -222,6 +223,11 @@ export default function DashboardPage() {
 
       <motion.div variants={fadeUp}>
         <QuickActions />
+      </motion.div>
+
+      {/* Public Documents — visible to all roles */}
+      <motion.div variants={fadeUp}>
+        <PublicDocumentsCard />
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}

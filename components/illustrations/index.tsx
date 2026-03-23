@@ -870,3 +870,104 @@ export function EmptyLeaveIllustration({ className }: IllustrationProps) {
   );
 }
 
+export function EmptyTicketIllustration({ className }: IllustrationProps) {
+  return (
+    <Wrapper className={className}>
+      {/* Background circle */}
+      <circle cx="100" cy="100" r="80" fill={BLUE} opacity="0.04" />
+
+      {/* Ticket / envelope */}
+      <rect x="55" y="65" width="70" height="50" rx="6" fill="white" stroke={GOLD} strokeWidth="2" />
+      <path d="M55 71 L90 95 L125 71" stroke={GOLD} strokeWidth="2" fill="none" />
+      <rect x="70" y="80" width="30" height="3" rx="1.5" fill={BLUE} opacity="0.15" />
+      <rect x="75" y="87" width="20" height="3" rx="1.5" fill={BLUE} opacity="0.1" />
+
+      {/* Cursor / pointer arrow */}
+      <path d="M130 100 L145 115 L140 115 L142 125 L137 125 L135 115 L130 115 Z" fill={GOLD} />
+
+      {/* Person */}
+      <circle cx="155" cy="75" r="12" fill={SKIN} />
+      <ellipse cx="155" cy="66" rx="10" ry="9" fill={HAIR} />
+      <rect x="145" y="85" width="20" height="24" rx="5" fill={BLUE} />
+      <rect x="147" y="109" width="6" height="18" rx="3" fill={BLUE} opacity="0.6" />
+      <rect x="157" y="109" width="6" height="18" rx="3" fill={BLUE} opacity="0.6" />
+
+      {/* Small decoration dots */}
+      <circle cx="45" cy="90" r="3" fill={GOLD} opacity="0.2" />
+      <circle cx="165" cy="135" r="4" fill={GOLD} opacity="0.15" />
+    </Wrapper>
+  );
+}
+
+export function EmptyPublicDocsIllustration({ className }: IllustrationProps) {
+  return (
+    <Wrapper className={className}>
+      {/* Background circle */}
+      <circle cx="100" cy="100" r="80" fill={BLUE} opacity="0.04" />
+
+      {/* Document stack */}
+      <rect x="55" y="55" width="55" height="70" rx="5" fill="white" stroke={BLUE} strokeWidth="1.5" opacity="0.5" transform="rotate(-5 82.5 90)" />
+      <rect x="60" y="52" width="55" height="70" rx="5" fill="white" stroke={GOLD} strokeWidth="2" />
+
+      {/* Document lines */}
+      <rect x="70" y="65" width="35" height="3" rx="1.5" fill={BLUE} opacity="0.2" />
+      <rect x="70" y="73" width="28" height="3" rx="1.5" fill={BLUE} opacity="0.15" />
+      <rect x="70" y="81" width="32" height="3" rx="1.5" fill={BLUE} opacity="0.1" />
+
+      {/* Globe / public icon */}
+      <circle cx="92" cy="100" r="10" fill="none" stroke={GOLD} strokeWidth="2" />
+      <ellipse cx="92" cy="100" rx="5" ry="10" fill="none" stroke={GOLD} strokeWidth="1.5" />
+      <line x1="82" y1="100" x2="102" y2="100" stroke={GOLD} strokeWidth="1.5" />
+
+      {/* Person */}
+      <circle cx="145" cy="80" r="12" fill={SKIN} />
+      <ellipse cx="145" cy="71" rx="10" ry="9" fill={HAIR} />
+      <rect x="135" y="90" width="20" height="24" rx="5" fill={GOLD} />
+      <line x1="135" y1="100" x2="120" y2="90" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
+      <rect x="137" y="114" width="6" height="18" rx="3" fill={BLUE} opacity="0.6" />
+      <rect x="147" y="114" width="6" height="18" rx="3" fill={BLUE} opacity="0.6" />
+
+      {/* Decoration */}
+      <circle cx="50" cy="130" r="3" fill={GOLD} opacity="0.2" />
+      <circle cx="160" cy="60" r="4" fill={BLUE} opacity="0.15" />
+    </Wrapper>
+  );
+}
+
+export function EmptyUploadIllustration({ className }: IllustrationProps) {
+  return (
+    <Wrapper className={className}>
+      {/* Background circle */}
+      <circle cx="100" cy="100" r="80" fill={BLUE} opacity="0.04" />
+
+      {/* Cloud shape */}
+      <ellipse cx="100" cy="80" rx="40" ry="25" fill="white" stroke={GOLD} strokeWidth="2" />
+      <ellipse cx="75" cy="85" rx="20" ry="15" fill="white" stroke={GOLD} strokeWidth="2" />
+      <ellipse cx="125" cy="85" rx="20" ry="15" fill="white" stroke={GOLD} strokeWidth="2" />
+      <rect x="60" y="80" width="80" height="20" fill="white" />
+
+      {/* Upload arrow */}
+      <path d="M100 105 L100 75" stroke={BLUE} strokeWidth="3" strokeLinecap="round" />
+      <path d="M90 85 L100 73 L110 85" stroke={BLUE} strokeWidth="3" strokeLinecap="round" fill="none" />
+
+      {/* Multiple file icons */}
+      <rect x="60" y="120" width="22" height="28" rx="3" fill="white" stroke={GOLD} strokeWidth="1.5" />
+      <rect x="65" y="126" width="12" height="2" rx="1" fill={BLUE} opacity="0.2" />
+      <rect x="65" y="131" width="8" height="2" rx="1" fill={BLUE} opacity="0.15" />
+
+      <rect x="90" y="118" width="22" height="28" rx="3" fill="white" stroke={GOLD} strokeWidth="1.5" />
+      <rect x="95" y="124" width="12" height="2" rx="1" fill={BLUE} opacity="0.2" />
+      <rect x="95" y="129" width="8" height="2" rx="1" fill={BLUE} opacity="0.15" />
+
+      <rect x="120" y="120" width="22" height="28" rx="3" fill="white" stroke={GOLD} strokeWidth="1.5" />
+      <rect x="125" y="126" width="12" height="2" rx="1" fill={BLUE} opacity="0.2" />
+      <rect x="125" y="131" width="8" height="2" rx="1" fill={BLUE} opacity="0.15" />
+
+      {/* Plus icon */}
+      <circle cx="155" cy="115" r="10" fill={GOLD} opacity="0.15" />
+      <line x1="150" y1="115" x2="160" y2="115" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
+      <line x1="155" y1="110" x2="155" y2="120" stroke={GOLD} strokeWidth="2" strokeLinecap="round" />
+    </Wrapper>
+  );
+}
+

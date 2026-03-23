@@ -199,6 +199,31 @@ export async function getCompanyPolicies() {
   });
 }
 
+export async function getPublicDocuments(limit: number = 6) {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+
+  if (!member) return [];
+
+  return await db.query.documents.findMany({
+    where: and(
+      eq(documents.orgId, member.orgId),
+      eq(documents.isActive, true),
+      eq(documents.isPublic, true)
+    ),
+    with: {
+      user: true,
+      uploader: true,
+    },
+    orderBy: [desc(documents.createdAt)],
+    limit,
+  });
+}
+
 export async function getExpiringDocuments(daysAhead: number = 30) {
   const session = await auth();
   if (!session?.user?.id) return [];

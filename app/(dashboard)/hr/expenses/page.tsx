@@ -554,7 +554,7 @@ export default function ExpensesPage() {
                 )}
 
                 {/* Pagination */}
-                {filteredExpenses.length > 0 && (
+                {pagination.total > 0 && totalPages > 1 && (
                   <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/10">
                     <span className="text-sm text-muted-foreground">
                       Showing <strong className="text-foreground">{startItem}</strong> to{" "}
@@ -566,7 +566,13 @@ export default function ExpensesPage() {
                         onClick={() => setFilter("page", pagination.page - 1)}>
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                      {(() => {
+                        const maxVisible = 5;
+                        let start = Math.max(1, pagination.page - Math.floor(maxVisible / 2));
+                        const end = Math.min(totalPages, start + maxVisible - 1);
+                        start = Math.max(1, end - maxVisible + 1);
+                        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+                      })().map((p) => (
                         <Button key={p} variant={p === pagination.page ? "default" : "outline"} size="icon"
                           className={`h-8 w-8 text-xs ${p === pagination.page ? "bg-[#2563eb] hover:bg-[#1d4ed8] text-white" : ""}`}
                           onClick={() => setFilter("page", p)}>
@@ -871,21 +877,26 @@ export default function ExpensesPage() {
                   </div>
 
                   {/* Pagination */}
-                  <div className="flex items-center justify-between px-6 py-4 border-t">
-                    <span className="text-sm text-muted-foreground">
-                      Showing {endItem} of {pagination.total} claims
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" className="h-8 text-xs"
-                        disabled={pagination.page <= 1} onClick={() => setFilter("page", pagination.page - 1)}>
-                        Previous
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-8 text-xs"
-                        disabled={pagination.page >= totalPages} onClick={() => setFilter("page", pagination.page + 1)}>
-                        Next
-                      </Button>
+                  {pagination.total > 0 && totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t">
+                      <span className="text-sm text-muted-foreground">
+                        Showing <strong>{startItem}</strong> to <strong>{endItem}</strong> of <strong>{pagination.total}</strong> claims
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="h-8 text-xs"
+                          disabled={pagination.page <= 1} onClick={() => setFilter("page", pagination.page - 1)}>
+                          Previous
+                        </Button>
+                        <span className="text-xs text-muted-foreground">
+                          Page {pagination.page} of {totalPages}
+                        </span>
+                        <Button variant="outline" size="sm" className="h-8 text-xs"
+                          disabled={pagination.page >= totalPages} onClick={() => setFilter("page", pagination.page + 1)}>
+                          Next
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               )}
             </CardContent>

@@ -185,7 +185,7 @@ export default function WorkLogsPage() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <Input
-          placeholder="Search by date or keyword (e.g., 'meeting', '15 Jan 2026')..."
+          placeholder="Search by date or keyword..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9 pr-9 h-9 border-border bg-muted/50 focus-visible:bg-background"

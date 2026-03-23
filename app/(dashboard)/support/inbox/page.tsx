@@ -40,6 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { EmptyInboxIllustration, EmptyTicketIllustration } from "@/components/illustrations";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-slate-100 text-slate-700",
@@ -136,8 +137,9 @@ function InboxContent() {
               </div>
             ) : tickets.length === 0 ? (
               <div className="text-center py-12 px-4">
-                <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                <p className="text-sm text-muted-foreground">No tickets found</p>
+                <EmptyInboxIllustration className="mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground">No tickets found</p>
+                <p className="text-xs text-muted-foreground mt-1">New tickets will appear here</p>
               </div>
             ) : (
               <div className="divide-y divide-border/30">
@@ -190,8 +192,9 @@ function InboxContent() {
           ) : (
             <div className="flex-1 flex items-center justify-center text-center px-6">
               <div>
-                <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground/20 mb-3" />
-                <p className="text-sm text-muted-foreground">Select a ticket to view details</p>
+                <EmptyTicketIllustration className="mx-auto mb-3 w-40 h-40" />
+                <p className="text-sm font-medium text-foreground">Select a ticket</p>
+                <p className="text-xs text-muted-foreground mt-1">Choose a ticket from the list to view its details</p>
               </div>
             </div>
           )}

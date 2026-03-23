@@ -54,7 +54,7 @@ import { uploadDocument } from "@/server/actions/document-actions";
 import { api } from "@/trpc/react";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Document name is required"),
+  name: z.string(),
   description: z.string().optional(),
   type: z.enum(["CONTRACT", "CERTIFICATE", "ID_PROOF", "PAYSLIP", "POLICY", "OFFER_LETTER", "RESUME", "OTHER"]),
   category: z.string().optional(),
@@ -84,8 +84,9 @@ export function UploadDocumentDialog({
   isAdmin,
 }: UploadDocumentDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
@@ -119,25 +120,33 @@ export function UploadDocumentDialog({
   });
 
   useEffect(() => {
-    if (file) {
-      form.setValue("name", file.name.replace(/\.[^/.]+$/, ""));
+    if (files.length === 1) {
+      form.setValue("name", files[0].name.replace(/\.[^/.]+$/, ""));
+    } else if (files.length > 1) {
+      form.setValue("name", `${files.length} files selected`);
     }
-  }, [file, form]);
+  }, [files, form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.size > 25 * 1024 * 1024) {
-        toast.error("File size must be less than 25MB");
-        return;
+    const selectedFiles = Array.from(e.target.files || []);
+    const validFiles: File[] = [];
+    for (const f of selectedFiles) {
+      if (f.size > 10 * 1024 * 1024) {
+        toast.error(`"${f.name}" exceeds 10MB limit`);
+        continue;
       }
-      setFile(selectedFile);
+      validFiles.push(f);
+    }
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
     }
   };
 
-  const removeFile = () => {
-    setFile(null);
-    form.setValue("name", "");
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    if (files.length <= 1) {
+      form.setValue("name", "");
+    }
   };
 
   const addTag = () => {
@@ -160,7 +169,7 @@ export function UploadDocumentDialog({
     form.setValue("tags", newTags);
   };
 
-  const uploadFile = async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
+  const uploadFileFn = async (file: File): Promise<{ url: string; size: number; mimeType: string } | null> => {
     try {
       setUploading(true);
       const formData = new FormData();
@@ -192,57 +201,79 @@ export function UploadDocumentDialog({
   };
 
   const onSubmit = async (data: FormData) => {
-    if (!file) {
-      toast.error("Please select a file to upload");
+    if (files.length === 0) {
+      toast.error("Please select at least one file to upload");
       return;
     }
 
     setIsLoading(true);
+    let successCount = 0;
+    let failCount = 0;
+
     try {
-      const uploaded = await uploadFile(file);
-      if (!uploaded) {
-        toast.error("Failed to upload file");
-        return;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadProgress(`Uploading ${i + 1} of ${files.length}: ${file.name}`);
+
+        const uploaded = await uploadFileFn(file);
+        if (!uploaded) {
+          failCount++;
+          continue;
+        }
+
+        const docName = files.length === 1
+          ? data.name
+          : file.name.replace(/\.[^/.]+$/, "");
+
+        const result = await uploadDocument({
+          name: docName,
+          description: data.description,
+          type: data.type,
+          category: data.category,
+          userId: data.userId,
+          isPublic: data.isPublic,
+          expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
+          tags: data.tags,
+          fileUrl: uploaded.url,
+          fileName: file.name,
+          fileSize: uploaded.size,
+          mimeType: uploaded.mimeType,
+        });
+
+        if (result.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
       }
 
-      const result = await uploadDocument({
-        name: data.name,
-        description: data.description,
-        type: data.type,
-        category: data.category,
-        userId: data.userId,
-        isPublic: data.isPublic,
-        expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
-        tags: data.tags,
-        fileUrl: uploaded.url,
-        fileName: file.name,
-        fileSize: uploaded.size,
-        mimeType: uploaded.mimeType,
-      });
-
-      if (result.success) {
-        toast.success("Document uploaded successfully");
+      if (successCount > 0) {
+        toast.success(
+          files.length === 1
+            ? "Document uploaded successfully"
+            : `${successCount} document${successCount > 1 ? "s" : ""} uploaded successfully${failCount > 0 ? `, ${failCount} failed` : ""}`,
+        );
         form.reset();
-        setFile(null);
+        setFiles([]);
         setTags([]);
         onSuccess();
       } else {
-        toast.error(result.error);
+        toast.error("Failed to upload documents");
       }
     } catch (error) {
-      toast.error("Failed to upload document");
+      toast.error("Failed to upload documents");
     } finally {
       setIsLoading(false);
+      setUploadProgress("");
     }
   };
 
-  const getFileIcon = () => {
-    if (!file) return <FileText className="h-8 w-8 text-slate-400" />;
-    if (file.type.startsWith("image/")) return "🖼️";
-    if (file.type === "application/pdf") return "📄";
-    if (file.type.includes("word")) return "📝";
-    if (file.type.includes("excel") || file.type.includes("spreadsheet")) return "📊";
-    return "📎";
+  const getFileIcon = (f: File) => {
+    if (f.type.startsWith("image/")) return <FileText className="h-5 w-5 text-amber-500" />;
+    if (f.type === "application/pdf") return <FileText className="h-5 w-5 text-red-500" />;
+    if (f.type.includes("word")) return <FileText className="h-5 w-5 text-blue-500" />;
+    if (f.type.includes("excel") || f.type.includes("spreadsheet")) return <FileText className="h-5 w-5 text-emerald-500" />;
+    return <FileText className="h-5 w-5 text-slate-400" />;
   };
 
   return (
@@ -251,65 +282,80 @@ export function UploadDocumentDialog({
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-semibold flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
-            Upload Document
+            Upload Document{files.length > 1 ? "s" : ""}
           </SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {!file ? (
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
-                <Upload className="h-10 w-10 text-muted-foreground mb-3" />
-                <span className="text-sm font-medium text-foreground">
-                  Click or drag to upload
-                </span>
-                <span className="text-xs text-muted-foreground mt-1">
-                  PDF, DOC, XLS, Images up to 25MB
-                </span>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif"
-                  onChange={handleFileChange}
-                />
-              </label>
-            ) : (
-              <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
-                <div className="text-3xl">{getFileIcon()}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {file.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {(file.size / 1024).toFixed(1)} KB • {file.type || "Unknown type"}
-                  </p>
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors">
+              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+              <span className="text-sm font-medium text-foreground">
+                {files.length > 0 ? "Add more files" : "Click or drag to upload"}
+              </span>
+              <span className="text-xs text-muted-foreground mt-1">
+                PDF, DOC, XLS, PNG, JPG up to 10MB {files.length === 0 && "• Multiple files supported"}
+              </span>
+              <input
+                type="file"
+                className="hidden"
+                multiple
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp"
+                onChange={handleFileChange}
+              />
+            </label>
+
+            {files.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {files.length} file{files.length > 1 ? "s" : ""} selected
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs text-muted-foreground"
+                    onClick={() => { setFiles([]); form.setValue("name", ""); }}
+                  >
+                    Clear all
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={removeFile}
-                  className="shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="max-h-[140px] overflow-y-auto space-y-1.5">
+                  {files.map((f, i) => (
+                    <div key={`${f.name}-${i}`} className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border">
+                      {getFileIcon(f)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{f.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {f.size < 1024 * 1024 ? `${(f.size / 1024).toFixed(0)} KB` : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}
+                        </p>
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeFile(i)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-5">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Document Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Employment Contract 2024" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {files.length <= 1 && (
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Document Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Employment Contract 2024" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -542,15 +588,15 @@ export function UploadDocumentDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading || uploading || !file}
+                disabled={isLoading || uploading || files.length === 0}
               >
                 {isLoading || uploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {uploading ? "Uploading..." : "Saving..."}
+                    {uploadProgress || "Uploading..."}
                   </>
                 ) : (
-                  "Upload Document"
+                  files.length > 1 ? `Upload ${files.length} Documents` : "Upload Document"
                 )}
               </Button>
             </div>
