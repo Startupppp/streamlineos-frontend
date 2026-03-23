@@ -202,6 +202,23 @@ export default function WorkLogsPage() {
         )}
       </div>
 
+      {/* Status Legend */}
+      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">Status:</span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-green-500 shrink-0" />
+          Logged
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-amber-500 shrink-0" />
+          Unsaved Draft
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-slate-200 dark:bg-slate-700 shrink-0" />
+          Empty
+        </span>
+      </div>
+
       {isLoading ? (
         <Card>
           <CardContent className="py-12">
@@ -340,6 +357,11 @@ function DayLogEntry({
 
   const isWeekendDay = isWeekend(date);
   const dateLabel = format(date, "EEEE, MMMM d");
+  const statusLabel = hasUnsavedChanges
+    ? "Unsaved draft — click Save to submit"
+    : content
+      ? "Logged — entry saved"
+      : "Empty — no entry yet";
 
   // Highlight matching text in description
   const highlightMatch = (text: string) => {
@@ -363,6 +385,7 @@ function DayLogEntry({
 
   return (
     <div
+      title={statusLabel}
       className={cn(
         "flex flex-col sm:flex-row gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg border transition-colors",
         isWeekendDay ? "bg-slate-50/50 dark:bg-slate-900/20" : "bg-card",
