@@ -205,6 +205,10 @@ export function UploadDocumentDialog({
       toast.error("Please select at least one file to upload");
       return;
     }
+    if (files.length === 1 && !data.name.trim()) {
+      toast.error("Document name is required");
+      return;
+    }
 
     setIsLoading(true);
     let successCount = 0;

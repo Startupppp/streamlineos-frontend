@@ -367,11 +367,12 @@ function DayLogEntry({
   const highlightMatch = (text: string) => {
     if (!searchTerm.trim() || !text) return null;
     const term = searchTerm.trim();
-    const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
-    const parts = text.split(regex);
+    const splitRegex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const testRegex = new RegExp(`^${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+    const parts = text.split(splitRegex);
     if (parts.length === 1) return null;
     return parts.map((part, i) =>
-      regex.test(part) ? (
+      testRegex.test(part) ? (
         <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
           {part}
         </mark>
