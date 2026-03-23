@@ -152,9 +152,9 @@ export function LeavesTabContent({
         <div className="lg:col-span-8">
           <Card className="border-border">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <CardTitle className="text-base font-semibold text-foreground">Request History</CardTitle>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 shrink-0">
                   <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <Filter className="h-3.5 w-3.5" />
                     Filter

@@ -387,8 +387,8 @@ function DayLogEntry({
     <div
       title={statusLabel}
       className={cn(
-        "flex flex-col sm:flex-row gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg border transition-colors",
-        isWeekendDay ? "bg-slate-50/50 dark:bg-slate-900/20" : "bg-card",
+        "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-colors",
+        isWeekendDay ? "bg-[#bd882c]/[0.03] dark:bg-[#bd882c]/[0.05]" : "bg-card",
         hasUnsavedChanges
           ? "border-l-4 border-l-amber-500"
           : content
@@ -396,19 +396,21 @@ function DayLogEntry({
             : "border-l-4 border-l-slate-200 dark:border-l-slate-700",
       )}
     >
-      <div className="sm:w-28 md:w-32 flex-shrink-0 flex sm:block items-center gap-2">
-        <span className="font-bold text-base sm:text-lg">{format(date, "dd")}</span>
-        <span className="text-muted-foreground text-xs sm:text-sm uppercase">{format(date, "MMM, EEE")}</span>
-        {isWeekendDay && (
-          <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400 inline-block">
-            Weekend
-          </span>
-        )}
-        {hasUnsavedChanges && (
-          <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-amber-700 dark:text-amber-400 inline-block">
-            Draft
-          </span>
-        )}
+      <div className="sm:w-32 md:w-36 flex-shrink-0 flex sm:flex-col items-center sm:items-start gap-1.5">
+        <span className="font-bold text-lg sm:text-xl text-foreground leading-none">{format(date, "dd")}</span>
+        <span className="text-muted-foreground text-xs font-medium">{format(date, "MMM, EEEE")}</span>
+        <div className="flex items-center gap-1.5">
+          {isWeekendDay && (
+            <span className="text-[10px] bg-[#bd882c]/10 dark:bg-[#bd882c]/20 px-1.5 py-0.5 rounded font-medium text-[#bd882c] dark:text-[#d4a84a] inline-block">
+              Weekend
+            </span>
+          )}
+          {hasUnsavedChanges && (
+            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded font-medium text-amber-700 dark:text-amber-400 inline-block">
+              Draft
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-w-0 space-y-2">
@@ -423,8 +425,8 @@ function DayLogEntry({
           placeholder={isWeekendDay ? "Weekend..." : readOnly ? "No entry" : "What did you work on today?"}
           aria-label={`Work log for ${dateLabel}`}
           className={cn(
-            "resize-none min-h-[0] focus-visible:ring-1 focus-visible:ring-offset-0 text-sm",
-            isWeekendDay && !content ? "h-9 opacity-50" : "h-16 sm:h-24",
+            "resize-none focus-visible:ring-1 focus-visible:ring-offset-0 text-sm",
+            isWeekendDay && !content ? "min-h-[36px] opacity-50" : "min-h-[60px]",
             readOnly && "cursor-default opacity-75",
           )}
         />

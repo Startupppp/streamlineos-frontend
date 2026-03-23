@@ -40,6 +40,10 @@ export const workLogRouter = createTRPCRouter({
     .input(upsertWorkLogInputSchema)
     .mutation(async ({ ctx, input }) => {
         const dateStr = formatDateOnly(input.date);
+        // Capitalize first letter of each sentence for consistency
+        const normalizedDescription = input.description
+          ? input.description.replace(/(^\s*\w|[.!?]\s+\w)/g, (c) => c.toUpperCase())
+          : input.description;
 
         const existing = await ctx.db.query.timesheets.findFirst({
             where: and(
@@ -52,7 +56,7 @@ export const workLogRouter = createTRPCRouter({
         if (existing) {
              const [updated] = await ctx.db.update(timesheets)
                 .set({
-                    description: input.description,
+                    description: normalizedDescription,
                     hours: input.hours?.toString() || existing.hours,
                 })
                 .where(eq(timesheets.id, existing.id))
@@ -63,7 +67,7 @@ export const workLogRouter = createTRPCRouter({
                  orgId: ctx.session.orgId,
                  userId: ctx.session.userId,
                  date: dateStr,
-                 description: input.description,
+                 description: normalizedDescription,
                  hours: input.hours?.toString() || "0",
              }).returning();
              return created;
