@@ -18,13 +18,14 @@ export function formatCurrencyFull(
   amount: number | string,
   currency: string = "INR",
   locale: string = "en-IN",
-  maximumFractionDigits: number = 0,
+  maximumFractionDigits: number = 2,
 ): string {
   const num = Number(amount);
-  if (Number.isNaN(num)) return currency === "INR" ? "₹0" : "0";
+  if (Number.isNaN(num)) return currency === "INR" ? "₹0.00" : "0.00";
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    minimumFractionDigits: 2,
     maximumFractionDigits,
   }).format(num);
 }

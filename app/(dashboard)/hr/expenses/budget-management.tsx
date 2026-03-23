@@ -320,9 +320,11 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
                 <Input
                   id="budgetLimit"
                   type="number"
+                  step="0.01"
+                  min="0"
                   value={newCategory.budgetLimit}
                   onChange={(e) => setNewCategory({ ...newCategory, budgetLimit: e.target.value })}
-                  placeholder="0"
+                  placeholder="0.00"
                 />
               </div>
               <div className="space-y-2">

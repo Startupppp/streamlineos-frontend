@@ -43,7 +43,7 @@ import { createExpense, updateExpense } from "@/server/actions/expense-actions";
 
 const formSchema = z.object({
   category: z.string().min(1, "Category is required"),
-  amount: z.number().min(1, "Amount must be greater than 0"),
+  amount: z.number().positive("Amount must be greater than 0"),
   description: z.string().optional(),
   merchant: z.string().optional(),
   paymentMethod: z.string().optional(),
@@ -259,9 +259,21 @@ export function CreateExpenseDialog({
                     <FormControl>
                       <Input
                         type="number"
+                        step="0.01"
+                        min="0.01"
                         placeholder="0.00"
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || val === ".") {
+                            field.onChange(0);
+                            return;
+                          }
+                          const parsed = parseFloat(val);
+                          if (!isNaN(parsed)) {
+                            field.onChange(Math.round(parsed * 100) / 100);
+                          }
+                        }}
                         className="text-right font-semibold"
                       />
                     </FormControl>
