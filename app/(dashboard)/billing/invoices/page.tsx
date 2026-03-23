@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/trpc/react";
 import { format } from "date-fns";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Plus,
   FileText,
@@ -193,8 +194,9 @@ function InvoicesContent() {
             ) : invoices.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12">
-                  <FileText className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-sm text-muted-foreground">No invoices yet</p>
+                  <EmptyDocumentsIllustration className="mx-auto mb-3 w-32 h-32" />
+                  <p className="text-sm font-medium text-foreground">No invoices yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Create your first invoice to get started</p>
                 </TableCell>
               </TableRow>
             ) : (

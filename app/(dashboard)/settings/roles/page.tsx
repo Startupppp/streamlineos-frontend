@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { api } from "@/trpc/react";
+import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
   Plus,
   Loader2,
@@ -179,8 +180,9 @@ function RolesContent() {
         ) : (
           <Card className="flex items-center justify-center min-h-[400px]">
             <div className="text-center px-6">
-              <Shield className="h-10 w-10 mx-auto text-muted-foreground/20 mb-3" />
-              <p className="text-sm text-muted-foreground">Select a role to view and edit permissions</p>
+              <EmptyApprovalIllustration className="mx-auto mb-3 w-40 h-40" />
+              <p className="text-sm font-medium text-foreground">Select a role</p>
+              <p className="text-xs text-muted-foreground mt-1">Choose a role from the list to view and edit permissions</p>
             </div>
           </Card>
         )}

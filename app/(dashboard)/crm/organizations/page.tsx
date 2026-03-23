@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { PageHeader } from "@/components/ui/page-header";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -260,8 +261,8 @@ export default function OrganizationsPage() {
 
       {data?.items.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          <Building2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">No organizations found</p>
+          <EmptyProjectsIllustration className="mx-auto mb-3 w-36 h-36" />
+          <p className="text-sm font-medium text-foreground">No organizations found</p>
           <p className="text-xs mt-1">Create your first organization</p>
         </div>
       )}
