@@ -10,10 +10,13 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ChevronDown, ChevronRight, Search, Save, X } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { api } from "@/trpc/react";
 
 export default function WorkLogsPage() {
+  const { data: session } = useSession();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
   const currentQuarter = Math.floor(currentMonth / 3) + 1;
@@ -22,6 +25,13 @@ export default function WorkLogsPage() {
   const [quarter, setQuarter] = useState<number>(currentQuarter);
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
+
+  const isAdminOrCeo = session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
+
+  const { data: employees } = api.hr.getEmployees.useQuery(undefined, {
+    enabled: isAdminOrCeo,
+  });
 
   const toggleMonth = useCallback((monthKey: string) => {
     setCollapsedMonths((prev) => {
@@ -32,7 +42,11 @@ export default function WorkLogsPage() {
     });
   }, []);
 
-  const { data: logs, isLoading } = useGetWorkLogs({ year, quarter });
+  const { data: logs, isLoading } = useGetWorkLogs({
+    year,
+    quarter,
+    ...(selectedUserId ? { userId: selectedUserId } : {}),
+  });
 
   const upsertLog = useUpsertWorkLog({
     onSuccess: () => {
@@ -114,9 +128,33 @@ export default function WorkLogsPage() {
     <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
       <PageHeader
         title="Work Logs"
-        description="Track your daily tasks and activities."
+        description={
+          selectedUserId && employees
+            ? `Viewing logs for ${employees.find((e) => e.id === selectedUserId)?.firstName ?? "employee"} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}.`
+            : "Track your daily tasks and activities."
+        }
         actions={
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            {isAdminOrCeo && employees && employees.length > 0 && (
+              <Select
+                value={selectedUserId || "self"}
+                onValueChange={(v) => setSelectedUserId(v === "self" ? undefined : v)}
+              >
+                <SelectTrigger className="w-[140px] sm:w-[180px] md:w-[200px] h-9" aria-label="Select employee">
+                  <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="self">My Logs</SelectItem>
+                  {employees.map((emp) => (
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.firstName} {emp.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
               <SelectTrigger className="w-[90px] sm:w-[100px] md:w-[120px] h-9" aria-label="Select year">
                 <SelectValue placeholder="Year" />
@@ -235,6 +273,7 @@ export default function WorkLogsPage() {
                       {displayDays.map((date) => {
                         const dateStr = format(date, "yyyy-MM-dd");
                         const log = logs?.find((l) => l.date === dateStr);
+                        const isViewingOther = !!selectedUserId;
                         return (
                           <DayLogEntry
                             key={dateStr}
@@ -243,6 +282,7 @@ export default function WorkLogsPage() {
                             onSave={(content) => upsertLog.mutate({ date, description: content })}
                             isSaving={upsertLog.isPending}
                             searchTerm={searchTerm}
+                            readOnly={isViewingOther}
                           />
                         );
                       })}
@@ -264,12 +304,14 @@ function DayLogEntry({
   onSave,
   isSaving,
   searchTerm,
+  readOnly = false,
 }: {
   date: Date;
   initialContent: string;
   onSave: (c: string) => void;
   isSaving: boolean;
   searchTerm: string;
+  readOnly?: boolean;
 }) {
   const [content, setContent] = useState(initialContent);
   const [prevInitial, setPrevInitial] = useState(initialContent);
@@ -350,14 +392,17 @@ function DayLogEntry({
         <Textarea
           value={content}
           onChange={(e) => {
+            if (readOnly) return;
             setContent(e.target.value);
             setIsDirty(true);
           }}
-          placeholder={isWeekendDay ? "Weekend..." : "What did you work on today?"}
+          readOnly={readOnly}
+          placeholder={isWeekendDay ? "Weekend..." : readOnly ? "No entry" : "What did you work on today?"}
           aria-label={`Work log for ${dateLabel}`}
           className={cn(
             "resize-none min-h-[0] focus-visible:ring-1 focus-visible:ring-offset-0 text-sm",
             isWeekendDay && !content ? "h-9 opacity-50" : "h-16 sm:h-24",
+            readOnly && "cursor-default opacity-75",
           )}
         />
         {/* Highlighted search match preview */}
@@ -367,7 +412,7 @@ function DayLogEntry({
           </p>
         )}
         {/* Save / Discard buttons */}
-        {hasUnsavedChanges && (
+        {hasUnsavedChanges && !readOnly && (
           <div className="flex items-center gap-2">
             <Button
               size="sm"
