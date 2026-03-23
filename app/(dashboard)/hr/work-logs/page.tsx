@@ -77,14 +77,14 @@ export default function WorkLogsPage() {
   }, [logs, monthGroups]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
       <PageHeader
         title="Work Logs"
         description="Track your daily tasks and activities."
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-              <SelectTrigger className="w-[100px] md:w-[120px]" aria-label="Select year">
+              <SelectTrigger className="w-[90px] sm:w-[100px] md:w-[120px] h-9" aria-label="Select year">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +95,7 @@ export default function WorkLogsPage() {
             </Select>
 
             <Select value={quarter.toString()} onValueChange={(v) => setQuarter(parseInt(v))}>
-              <SelectTrigger className="w-[140px] md:w-[180px]" aria-label="Select quarter">
+              <SelectTrigger className="flex-1 sm:flex-none sm:w-[140px] md:w-[180px] h-9" aria-label="Select quarter">
                 <SelectValue placeholder="Quarter" />
               </SelectTrigger>
               <SelectContent>
@@ -141,23 +141,23 @@ export default function WorkLogsPage() {
                     }
                   }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       {isCollapsed ? (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
                       )}
-                      <CardTitle className="text-lg">{group.label}</CardTitle>
+                      <CardTitle className="text-base sm:text-lg truncate">{group.label}</CardTitle>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {filled}/{weekdays} weekdays logged
+                    <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap shrink-0">
+                      {filled}/{weekdays} logged
                     </span>
                   </div>
                 </CardHeader>
                 {!isCollapsed && (
-                  <CardContent id={regionId} role="region" aria-label={`Work logs for ${group.label}`}>
-                    <div className="space-y-4">
+                  <CardContent id={regionId} role="region" aria-label={`Work logs for ${group.label}`} className="px-3 sm:px-6">
+                    <div className="space-y-2 sm:space-y-4">
                       {group.days.map((date) => {
                         const dateStr = format(date, "yyyy-MM-dd");
                         const log = logs?.find((l) => l.date === dateStr);
@@ -214,22 +214,22 @@ function DayLogEntry({
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-colors",
-        isWeekendDay ? "bg-slate-50/50" : "bg-card",
-        content ? "border-l-4 border-l-green-500" : "border-l-4 border-l-slate-200",
+        "flex flex-col sm:flex-row gap-2 sm:gap-4 p-2.5 sm:p-4 rounded-lg border transition-colors",
+        isWeekendDay ? "bg-slate-50/50 dark:bg-slate-900/20" : "bg-card",
+        content ? "border-l-4 border-l-green-500" : "border-l-4 border-l-slate-200 dark:border-l-slate-700",
       )}
     >
-      <div className="sm:w-28 md:w-32 flex-shrink-0 pt-1 sm:pt-2 flex sm:block items-center gap-2">
-        <div className="font-bold text-lg">{format(date, "dd")}</div>
-        <div className="text-muted-foreground text-sm uppercase">{format(date, "MMM, EEE")}</div>
+      <div className="sm:w-28 md:w-32 flex-shrink-0 flex sm:block items-center gap-2">
+        <span className="font-bold text-base sm:text-lg">{format(date, "dd")}</span>
+        <span className="text-muted-foreground text-xs sm:text-sm uppercase">{format(date, "MMM, EEE")}</span>
         {isWeekendDay && (
-          <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-600 mt-1 inline-block">
+          <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400 inline-block">
             Weekend
           </span>
         )}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <Textarea
           value={content}
           onChange={(e) => {
@@ -240,8 +240,8 @@ function DayLogEntry({
           placeholder={isWeekendDay ? "Weekend..." : "What did you work on today?"}
           aria-label={`Work log for ${dateLabel}`}
           className={cn(
-            "resize-none min-h-[0] focus-visible:ring-1 focus-visible:ring-offset-0",
-            isWeekendDay && !content ? "h-10 opacity-50" : "h-24",
+            "resize-none min-h-[0] focus-visible:ring-1 focus-visible:ring-offset-0 text-sm",
+            isWeekendDay && !content ? "h-9 opacity-50" : "h-16 sm:h-24",
           )}
         />
       </div>
