@@ -147,7 +147,7 @@ export default function SignInPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p className="text-xs">Vaivamm Capital &mdash; Admin access only</p>
+            <p className="text-xs">&copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.</p>
           </div>
         </CardContent>
       </Card>
