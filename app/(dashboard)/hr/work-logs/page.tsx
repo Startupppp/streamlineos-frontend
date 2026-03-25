@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { format, eachDayOfInterval, isWeekend, parse, isValid } from "date-fns";
-import { useGetWorkLogs, useUpsertWorkLog } from "@/lib/hooks/trpc-hooks";
+import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/hooks/trpc-hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
@@ -54,6 +54,15 @@ export default function WorkLogsPage() {
     },
     onError: () => {
       toast.error("Failed to save log");
+    },
+  });
+
+  const updateStatus = useUpdateWorkLogStatus({
+    onSuccess: () => {
+      toast.success("Work log status updated");
+    },
+    onError: () => {
+      toast.error("Failed to update status");
     },
   });
 
@@ -300,6 +309,11 @@ export default function WorkLogsPage() {
                             isSaving={upsertLog.isPending}
                             searchTerm={searchTerm}
                             readOnly={isViewingOther}
+                            status={log?.status ?? undefined}
+                            showApprovalActions={isViewingOther && isAdminOrCeo && log?.status === "PENDING" && !!log?.description}
+                            onApprove={log ? () => updateStatus.mutate({ id: log.id, status: "APPROVED" }) : undefined}
+                            onReject={log ? (reason) => updateStatus.mutate({ id: log.id, status: "REJECTED", rejectionReason: reason }) : undefined}
+                            isUpdatingStatus={updateStatus.isPending}
                           />
                         );
                       })}
@@ -322,6 +336,11 @@ function DayLogEntry({
   isSaving,
   searchTerm,
   readOnly = false,
+  status,
+  showApprovalActions = false,
+  onApprove,
+  onReject,
+  isUpdatingStatus = false,
 }: {
   date: Date;
   initialContent: string;
@@ -329,6 +348,11 @@ function DayLogEntry({
   isSaving: boolean;
   searchTerm: string;
   readOnly?: boolean;
+  status?: string;
+  showApprovalActions?: boolean;
+  onApprove?: () => void;
+  onReject?: (reason?: string) => void;
+  isUpdatingStatus?: boolean;
 }) {
   const [content, setContent] = useState(initialContent);
   const [prevInitial, setPrevInitial] = useState(initialContent);
@@ -411,6 +435,21 @@ function DayLogEntry({
               Draft
             </span>
           )}
+          {status === "PENDING" && initialContent && (
+            <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded font-medium text-amber-700 dark:text-amber-400 inline-block">
+              Pending
+            </span>
+          )}
+          {status === "APPROVED" && (
+            <span className="text-[10px] bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded font-medium text-green-700 dark:text-green-400 inline-block">
+              Approved
+            </span>
+          )}
+          {status === "REJECTED" && (
+            <span className="text-[10px] bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded font-medium text-red-700 dark:text-red-400 inline-block">
+              Rejected
+            </span>
+          )}
         </div>
       </div>
 
@@ -436,6 +475,43 @@ function DayLogEntry({
           <p className="text-xs text-muted-foreground px-1 truncate">
             {highlighted}
           </p>
+        )}
+        {/* Approve / Reject buttons for admin viewing other's logs */}
+        {showApprovalActions && (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1.5 bg-green-600 hover:bg-green-700 text-white"
+              onClick={onApprove}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Check className="h-3 w-3" />
+              )}
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => {
+                const reason = window.prompt("Rejection reason (optional):");
+                if (reason !== null) {
+                  onReject?.(reason || undefined);
+                }
+              }}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <XCircle className="h-3 w-3" />
+              )}
+              Reject
+            </Button>
+          </div>
         )}
         {/* Save / Discard buttons */}
         {hasUnsavedChanges && !readOnly && (

@@ -7,6 +7,7 @@ import { isAdminOrOwner } from "@/lib/auth-helpers";
 import {
   upsertWorkLogInputSchema,
   getWorkLogsInputSchema,
+  updateWorkLogStatusSchema,
 } from "@/lib/validations/hr";
 
 export const workLogRouter = createTRPCRouter({
@@ -72,5 +73,37 @@ export const workLogRouter = createTRPCRouter({
              }).returning();
              return created;
         }
+    }),
+
+  updateWorkLogStatus: protectedProcedure
+    .input(updateWorkLogStatusSchema)
+    .mutation(async ({ ctx, input }) => {
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
+      if (!isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can approve or reject work logs" });
+      }
+
+      const existing = await ctx.db.query.timesheets.findFirst({
+        where: and(
+          eq(timesheets.id, input.id),
+          eq(timesheets.orgId, ctx.session.orgId),
+        ),
+      });
+
+      if (!existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Work log not found" });
+      }
+
+      const [updated] = await ctx.db.update(timesheets)
+        .set({
+          status: input.status,
+          approvedBy: ctx.session.userId,
+          approvedAt: new Date(),
+          rejectionReason: input.status === "REJECTED" ? input.rejectionReason : null,
+        })
+        .where(eq(timesheets.id, input.id))
+        .returning();
+
+      return updated;
     }),
 });

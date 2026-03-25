@@ -751,3 +751,29 @@ export function useUpsertWorkLog(
     },
   });
 }
+
+export function useUpdateWorkLogStatus(
+  options?: UseMutationOptions<
+    RouterOutputs["hr"]["updateWorkLogStatus"],
+    unknown,
+    RouterInputs["hr"]["updateWorkLogStatus"]
+  >
+) {
+  const queryClient = useQueryClient();
+  const userOnSuccess = options?.onSuccess as
+    | MutationOnSuccess<
+        RouterOutputs["hr"]["updateWorkLogStatus"],
+        RouterInputs["hr"]["updateWorkLogStatus"],
+        unknown
+      >
+    | undefined;
+
+  return useMutation({
+    mutationFn: (input) => vaivammTrpcClient.hr.updateWorkLogStatus.mutate(input),
+    ...options,
+    onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries({ queryKey: vaivammKeys.hr.all });
+        if (userOnSuccess) userOnSuccess(data, variables, context);
+    },
+  });
+}

@@ -158,6 +158,12 @@ export const getWorkLogsInputSchema = z.object({
   userId: z.string().optional(),
 });
 
+export const updateWorkLogStatusSchema = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(["APPROVED", "REJECTED"]),
+  rejectionReason: z.string().max(500).optional(),
+});
+
 export const onboardEmployeeInputSchema = z.object({
   firstName: z.string().min(1, "First name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
   lastName: z.string().min(1, "Last name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
