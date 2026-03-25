@@ -13,18 +13,18 @@ export default function ProjectsLoading() {
         <Skeleton className="h-9 w-32" />
       </div>
 
-      {/* Search bar */}
-      <Skeleton className="h-10 w-full rounded-md" />
-
-      {/* Filter row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-16 rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
-          <Skeleton className="h-8 w-20 rounded-md" />
+      {/* Filter bar (search + status chips + view toggle) */}
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full rounded-md" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-8 w-16 rounded-md" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+            <Skeleton className="h-8 w-20 rounded-md" />
+          </div>
+          <Skeleton className="h-8 w-18 rounded-md" />
         </div>
-        <Skeleton className="h-8 w-18 rounded-md" />
       </div>
 
       {/* Card grid */}
