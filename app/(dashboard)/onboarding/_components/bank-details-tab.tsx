@@ -92,6 +92,7 @@ export function BankDetailsTab({ onComplete, onBack, defaultValues }: BankDetail
                   type="text"
                   {...form.register("accountNumber")}
                   placeholder="00000000000"
+                  maxLength={20}
                   inputMode="numeric"
                   autoComplete="off"
                   aria-required="true"
