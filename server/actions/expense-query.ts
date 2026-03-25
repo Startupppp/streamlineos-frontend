@@ -208,7 +208,12 @@ async function fetchExpensesWithPagination(
         expenseCategory: true,
         project: true,
       },
-      orderBy: [orderFn(sortColumn), desc(expenses.createdAt)],
+      orderBy: [
+        // PENDING first, then APPROVED, REJECTED, PAID
+        asc(sql`CASE ${expenses.status} WHEN 'PENDING' THEN 0 WHEN 'APPROVED' THEN 1 WHEN 'REJECTED' THEN 2 WHEN 'PAID' THEN 3 ELSE 4 END`),
+        orderFn(sortColumn),
+        desc(expenses.createdAt),
+      ],
       limit: pageSize,
       offset: offset,
     }),
