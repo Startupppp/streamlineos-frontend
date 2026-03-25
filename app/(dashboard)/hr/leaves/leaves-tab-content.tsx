@@ -40,6 +40,7 @@ import {
 
 import { submitLeaveRequest } from "@/server/actions/leave-actions";
 import { FileUpload } from "@/components/storage/file-upload";
+import ExcelJS from "exceljs";
 
 import type { LeaveBalance, LeaveType, Approver, LeaveRequest } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
@@ -123,6 +124,52 @@ export function LeavesTabContent({
     }
   }
 
+  const handleExportExcel = async () => {
+    if (myLeaveRequests.length === 0) {
+      toast.error("No leave requests to export");
+      return;
+    }
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet("Leave Requests");
+      ws.columns = [
+        { header: "Type", width: 15 },
+        { header: "From", width: 14 },
+        { header: "To", width: 14 },
+        { header: "Days", width: 8 },
+        { header: "Status", width: 12 },
+        { header: "Reason", width: 30 },
+        { header: "Requested On", width: 14 },
+      ];
+      // Style header row
+      ws.getRow(1).font = { bold: true };
+      for (const req of myLeaveRequests) {
+        ws.addRow([
+          req.leaveType?.name || "-",
+          req.startDate,
+          req.endDate,
+          "-",
+          req.status,
+          req.reason || "-",
+          req.createdAt ? format(new Date(req.createdAt), "yyyy-MM-dd") : "-",
+        ]);
+      }
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `leave-requests-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Leave requests exported!");
+    } catch {
+      toast.error("Failed to export");
+    }
+  };
+
   return (
     <>
       {/* ─── Overview Section ─── */}
@@ -159,7 +206,10 @@ export function LeavesTabContent({
                     <Filter className="h-3.5 w-3.5" />
                     Filter
                   </button>
-                  <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <button
+                    onClick={handleExportExcel}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     <Download className="h-3.5 w-3.5" />
                     Export
                   </button>
