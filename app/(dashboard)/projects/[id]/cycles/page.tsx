@@ -6,6 +6,7 @@ import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,14 +60,64 @@ export default function CyclesPage({ params }: { params: Promise<{ id: string }>
   if (isLoading) {
     return (
       <div className="h-full flex flex-col">
+        {/* Header: SubNav + title row */}
         <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-10 w-full" />
+          {/* SubNav tabs */}
+          <div className="flex items-center gap-4 mb-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-20" />
+            ))}
+          </div>
+          {/* Title + New Cycle button */}
+          <div className="flex items-center justify-between mt-4">
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="h-9 w-28 rounded-md" />
+          </div>
         </div>
-        <div className="flex-1 p-6 space-y-4">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
+
+        {/* Content: cycle sections */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Active section */}
+          <section>
+            <Skeleton className="h-4 w-16 mb-3" />
+            <Card className="mb-3">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-6 w-40" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-3">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+                <Skeleton className="h-3 w-24 mt-1" />
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Upcoming section */}
+          <section>
+            <Skeleton className="h-4 w-24 mb-3" />
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="py-4 flex items-center justify-between">
+                    <div>
+                      <Skeleton className="h-5 w-36 mb-1" />
+                      <Skeleton className="h-3 w-44" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-14 rounded-full" />
+                      <Skeleton className="h-4 w-4" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -211,7 +262,7 @@ export default function CyclesPage({ params }: { params: Promise<{ id: string }>
 
         {!cycles?.length && (
           <div className="text-center py-16">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <EmptyCalendarIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No cycles yet</h3>
             <p className="text-sm text-muted-foreground mb-4">Create your first cycle to start planning work in time-boxed iterations.</p>
             <Button onClick={() => setCreateOpen(true)}>

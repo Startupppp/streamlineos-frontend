@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import {
   Building2,
   Mail,
@@ -117,8 +118,9 @@ export default function ClientsPage() {
           <CardContent>
             {clients.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                <UserCircle className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                <p>No clients found. Convert leads to see them here.</p>
+                <EmptyPersonIllustration className="mx-auto mb-3 w-36 h-36" />
+                <p className="text-sm font-medium text-foreground">No clients found</p>
+                <p className="text-xs mt-1">Convert leads to see them here.</p>
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
