@@ -200,7 +200,8 @@ export const useSignIn = () => {
     },
     onSuccess: (_, variables) => {
       const callbackUrl = variables.callbackUrl || "/dashboard";
-      window.location.href = callbackUrl;
+      const safeUrl = callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/dashboard";
+      window.location.href = safeUrl;
     },
   });
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
 import {
   Download,
@@ -117,6 +118,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
       });
       setReportData(data);
     } catch {
+      toast.error("Failed to load expense report");
     } finally {
       setLoading(false);
     }

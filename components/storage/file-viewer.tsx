@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Download, Eye, File } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -35,6 +36,7 @@ export function FileViewer({
         window.open(data.url, "_blank");
       }
     } catch {
+      toast.error("Failed to download file");
     }
   };
 

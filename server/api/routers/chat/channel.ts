@@ -92,7 +92,7 @@ export const channelRouter = createTRPCRouter({
           m.created_at
         FROM chat_messages m
         LEFT JOIN users u ON u.id = m.sender_id
-        WHERE m.channel_id = ANY(ARRAY[${sql.raw(channelIds.map(Number).join(","))}]::int[])
+        WHERE m.channel_id = ANY(${channelIds.map(Number)})
           AND m.is_deleted = false
         ORDER BY m.channel_id, m.created_at DESC
       `);
