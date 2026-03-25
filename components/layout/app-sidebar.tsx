@@ -126,7 +126,6 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Projects",
           routes: [
             { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
             { label: "Team Timesheets", icon: Clock, href: "/timesheets/team" },
           ],
         },

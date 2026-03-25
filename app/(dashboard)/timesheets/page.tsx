@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   format,
@@ -105,6 +107,10 @@ function getProjectDotColor(name: string): string {
 type ViewMode = "current" | "history";
 
 export default function TimesheetsPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const isCEO = session?.user?.role === "CEO";
+
   const [selectedProject, setSelectedProject] = useState("all");
   const [dateRange, setDateRange] = useState("this-quarter");
   const [startDate, setStartDate] = useState("");
@@ -221,6 +227,12 @@ export default function TimesheetsPage() {
     if (page >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
     return [page - 2, page - 1, page, page + 1, page + 2];
   }, [page, totalPages]);
+
+  // CEO should not access personal timesheets — redirect to team view
+  if (isCEO) {
+    router.replace("/timesheets/team");
+    return null;
+  }
 
   return (
     <div className="space-y-6">
