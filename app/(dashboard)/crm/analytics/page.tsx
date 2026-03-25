@@ -23,20 +23,29 @@ import {
 } from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { api } from "@/trpc/react";
+import ExcelJS from "exceljs";
 
 const COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444", "#0EA5E9", "#EC4899", "#6366F1"];
 
-function downloadCSV(data: Record<string, unknown>[], filename: string) {
+async function downloadXLSX(data: Record<string, unknown>[], filename: string) {
   if (data.length === 0) return;
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet("Data");
   const headers = Object.keys(data[0]);
-  const rows = data.map(row => headers.map(h => String(row[h] ?? "")).join(","));
-  const csv = [headers.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
+  ws.columns = headers.map(h => ({ header: h, key: h, width: Math.max(h.length + 4, 12) }));
+  ws.getRow(1).font = { bold: true };
+  for (const row of data) {
+    ws.addRow(headers.map(h => row[h] ?? ""));
+  }
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${filename}.csv`;
+  a.download = `${filename}.xlsx`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
@@ -188,7 +197,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Pipeline Funnel</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(funnelData, "pipeline-funnel")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(funnelData, "pipeline-funnel")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -214,7 +223,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Lead Volume Trend (12 weeks)</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(leadVolumeTrend, "lead-volume-trend")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(leadVolumeTrend, "lead-volume-trend")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -236,7 +245,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Lead Source Breakdown</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(sourceBreakdown, "lead-sources")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(sourceBreakdown, "lead-sources")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -259,7 +268,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Rep Performance</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV((leaderboard ?? []).map(l => ({ name: l.name, score: l.score, converted: l.leadsConverted, calls: l.totalCalls })), "rep-performance")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX((leaderboard ?? []).map(l => ({ name: l.name, score: l.score, converted: l.leadsConverted, calls: l.totalCalls })), "rep-performance")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -304,7 +313,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Won vs Lost</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(wonLostReasons, "won-vs-lost")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(wonLostReasons, "won-vs-lost")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -328,7 +337,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Deal Value by Stage</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(dealsByStageValue, "deal-value-by-stage")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(dealsByStageValue, "deal-value-by-stage")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -350,7 +359,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">SLA Compliance Rate</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(slaComplianceTrend, "sla-compliance")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(slaComplianceTrend, "sla-compliance")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -388,7 +397,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Score Distribution</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadCSV(scoreDistribution, "score-distribution")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(scoreDistribution, "score-distribution")}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
