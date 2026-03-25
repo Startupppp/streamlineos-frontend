@@ -5,6 +5,7 @@ import { trpc } from "@/trpc/client";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { BarChart3 } from "lucide-react";
 import {
   BarChart,
@@ -160,7 +161,7 @@ export default function AnalyticsPage({
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center py-16">
-            <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <EmptyActivityIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No data yet</h3>
             <p className="text-sm text-muted-foreground">
               Analytics will appear once your project has work items.

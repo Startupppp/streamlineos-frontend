@@ -5,6 +5,7 @@ import { trpc } from "@/trpc/client";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Dialog,
   DialogContent,
@@ -306,7 +307,7 @@ export default function PagesPage({
       {!pages?.length ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center py-16">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <EmptyDocumentsIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No pages yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Create your first page to start documenting your project.
@@ -384,8 +385,9 @@ export default function PagesPage({
             ) : (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
-                  <FileText className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Select a page to start editing</p>
+                  <EmptyDocumentsIllustration className="mx-auto mb-3 w-32 h-32" />
+                  <p className="text-sm font-medium text-foreground">Select a page</p>
+                  <p className="text-xs text-muted-foreground mt-1">Choose a page from the list to start editing</p>
                 </div>
               </div>
             )}

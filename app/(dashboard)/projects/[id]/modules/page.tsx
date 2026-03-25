@@ -6,6 +6,7 @@ import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import {
   Dialog,
   DialogContent,
@@ -255,7 +256,7 @@ export default function ModulesPage({
       <div className="flex-1 overflow-y-auto p-6">
         {!modules?.length ? (
           <div className="text-center py-16">
-            <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <EmptyTasksIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No modules yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Create your first module to organize work into feature areas.

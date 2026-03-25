@@ -6,6 +6,7 @@ import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptySearchIllustration } from "@/components/illustrations";
 import {
   Dialog,
   DialogContent,
@@ -220,7 +221,7 @@ export default function ViewsPage({
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {!views?.length ? (
           <div className="text-center py-16">
-            <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <EmptySearchIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No saved views</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Create custom views with saved filters and layouts.
