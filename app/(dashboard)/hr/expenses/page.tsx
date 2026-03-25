@@ -250,9 +250,10 @@ export default function ExpensesPage() {
     );
   }
 
-  const { expenses, pendingExpenses, stats, pagination } = pageData || {
+  const { expenses, pendingExpenses, stats, pagination, categories: expenseCategories } = pageData || {
     expenses: [], pendingExpenses: [], stats: null,
     pagination: { page: 1, pageSize: 5, total: 0, totalPages: 0 },
+    categories: [],
   };
 
   const filteredExpenses = statusFilter === "ALL"
@@ -277,6 +278,7 @@ export default function ExpensesPage() {
             <div className="flex items-center gap-3">
               <ExpenseExportDialog
                 filters={filters}
+                categories={expenseCategories}
                 trigger={
                   <Button variant="outline" className="gap-2">
                     <Download className="h-4 w-4" />
@@ -770,6 +772,7 @@ export default function ExpensesPage() {
               </Select>
               <ExpenseExportDialog
                 filters={filters}
+                categories={expenseCategories}
                 trigger={
                   <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Download report">
                     <Download className="h-4 w-4" />

@@ -12,6 +12,13 @@ import {
   CalendarIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -290,6 +297,8 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
 interface ExpenseExportDialogProps {
   filters: ExpenseFilters;
   trigger?: React.ReactNode;
+  categories?: { id: number; name: string }[];
+  paymentMethods?: string[];
 }
 
 type ExportFormat = "csv" | "xlsx" | "pdf";
@@ -314,9 +323,13 @@ const FORMAT_OPTIONS: {
   },
 ];
 
+const PAYMENT_METHODS = ["Cash", "Bank Transfer", "UPI", "Credit Card", "Debit Card", "Cheque", "Other"];
+
 export function ExpenseExportDialog({
   filters,
   trigger,
+  categories = [],
+  paymentMethods = PAYMENT_METHODS,
 }: ExpenseExportDialogProps) {
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<ExportFormat>("xlsx");
@@ -327,16 +340,21 @@ export function ExpenseExportDialog({
   const [exportComplete, setExportComplete] = useState(false);
   const [dateFrom, setDateFrom] = useState(filters.startDate || "");
   const [dateTo, setDateTo] = useState(filters.endDate || "");
+  const [exportCategory, setExportCategory] = useState("all");
+  const [exportPayment, setExportPayment] = useState("all");
+  const [exportStatus, setExportStatus] = useState(
+    filters.status && filters.status !== "all" ? String(filters.status) : "all"
+  );
 
   const exportFilters: ExportFilters = {
     startDate: dateFrom || filters.startDate,
     endDate: dateTo || filters.endDate,
     month: filters.month,
     categoryId: filters.categoryId,
-    category: filters.category,
-    status: filters.status,
+    category: exportCategory !== "all" ? exportCategory : filters.category,
+    status: exportStatus !== "all" ? exportStatus : filters.status,
     userId: filters.userId,
-    paymentMethod: filters.paymentMethod,
+    paymentMethod: exportPayment !== "all" ? exportPayment : filters.paymentMethod,
     minAmount: filters.minAmount,
     maxAmount: filters.maxAmount,
     search: filters.search,
@@ -579,6 +597,53 @@ export function ExpenseExportDialog({
                 Clear dates
               </button>
             )}
+          </div>
+
+          {/* Category, Status, Payment Method Filters */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
+              <Select value={exportStatus} onValueChange={setExportStatus}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
+                  <SelectItem value="PAID">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Category</Label>
+              <Select value={exportCategory} onValueChange={setExportCategory}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Payment</Label>
+              <Select value={exportPayment} onValueChange={setExportPayment}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  {paymentMethods.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-3">

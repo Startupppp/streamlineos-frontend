@@ -8,7 +8,7 @@ import { getAuthenticatedMember, isAdminOrOwner } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
 import { format } from "date-fns";
 import { getTodayString } from "@/lib/date-utils";
-import { users, organizationMembers } from "@/lib/db/schema";
+import { users, organizationMembers, organizations } from "@/lib/db/schema";
 import { sendMonthlyExpenseReportEmail } from "@/lib/email";
 import type { MonthlyExpenseReportRow } from "@/lib/email-templates";
 import { formatCurrencyFull } from "@/lib/format-utils";
@@ -604,7 +604,7 @@ export async function emailExpenseReport(
     if (recipientEmails.length === 0) return { success: false, error: "No CEO/HR email addresses found" };
 
     const org = await db.query.organizations.findFirst({
-      where: eq(organizationMembers.orgId, orgId),
+      where: eq(organizations.id, orgId),
     });
 
     const periodLabel = filters.startDate && filters.endDate
