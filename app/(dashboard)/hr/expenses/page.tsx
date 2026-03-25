@@ -147,7 +147,7 @@ export default function ExpensesPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<import("./create-expense-dialog").ExpenseToEdit | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [statusFilter, setStatusFilterState] = useState<StatusFilter>("ALL");
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -167,6 +167,10 @@ export default function ExpensesPage() {
     syncToUrl: true,
   });
   const debouncedSearch = useDebouncedValue(filters.search, 300);
+  const setStatusFilter = useCallback((s: StatusFilter) => {
+    setStatusFilterState(s);
+    setFilter("status", s === "ALL" ? "all" : s);
+  }, [setFilter]);
 
   const loadData = useCallback(async (currentFilters: typeof filters, showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);

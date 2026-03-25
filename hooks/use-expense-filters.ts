@@ -190,8 +190,11 @@ export function useExpenseFilters(
         if (key !== "page") {
           newFilters.page = 1;
         }
-        syncFiltersToUrl(newFilters);
-        onFiltersChange?.(newFilters);
+        // Defer URL sync to avoid interfering with React state update
+        queueMicrotask(() => {
+          syncFiltersToUrl(newFilters);
+          onFiltersChange?.(newFilters);
+        });
         return newFilters;
       });
     },
@@ -204,8 +207,10 @@ export function useExpenseFilters(
         if (!("page" in newFilters)) {
           updated.page = 1;
         }
-        syncFiltersToUrl(updated);
-        onFiltersChange?.(updated);
+        queueMicrotask(() => {
+          syncFiltersToUrl(updated);
+          onFiltersChange?.(updated);
+        });
         return updated;
       });
     },
