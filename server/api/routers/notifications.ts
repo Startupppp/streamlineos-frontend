@@ -59,4 +59,24 @@ export const notificationsRouter = createTRPCRouter({
       ));
     return { success: true };
   }),
+
+  deleteOne: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(notifications)
+        .where(and(
+          eq(notifications.id, input.id),
+          eq(notifications.userId, ctx.session.userId),
+        ));
+      return { success: true };
+    }),
+
+  clearAll: protectedProcedure.mutation(async ({ ctx }) => {
+    await ctx.db.delete(notifications)
+      .where(and(
+        eq(notifications.orgId, ctx.session.orgId),
+        eq(notifications.userId, ctx.session.userId),
+      ));
+    return { success: true };
+  }),
 });

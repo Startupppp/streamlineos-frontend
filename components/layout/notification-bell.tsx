@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Bell, CheckCheck, Info, AlertTriangle, CheckCircle2, XCircle, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -38,6 +38,20 @@ export function NotificationBell() {
     },
   });
 
+  const deleteOne = api.notifications.deleteOne.useMutation({
+    onSuccess: () => {
+      utils.notifications.getUnreadCount.invalidate();
+      utils.notifications.getAll.invalidate();
+    },
+  });
+
+  const clearAll = api.notifications.clearAll.useMutation({
+    onSuccess: () => {
+      utils.notifications.getUnreadCount.invalidate();
+      utils.notifications.getAll.invalidate();
+    },
+  });
+
   const unreadCount = countData?.count || 0;
 
   return (
@@ -55,17 +69,30 @@ export function NotificationBell() {
       <PopoverContent className="w-80 p-0 max-h-[70vh] flex flex-col" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <h4 className="text-sm font-semibold">Notifications</h4>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => markAllRead.mutate()}
-            >
-              <CheckCheck className="h-3.5 w-3.5 mr-1" />
-              Mark all read
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => markAllRead.mutate()}
+              >
+                <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                Read all
+              </Button>
+            )}
+            {(notifications?.length ?? 0) > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => clearAll.mutate()}
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain">
@@ -83,7 +110,7 @@ export function NotificationBell() {
                   <button
                     key={n.id}
                     className={cn(
-                      "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors",
+                      "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors group/notif",
                       !n.isRead && "bg-primary/5"
                     )}
                     onClick={() => {
@@ -107,9 +134,18 @@ export function NotificationBell() {
                           : ""}
                       </p>
                     </div>
-                    {!n.isRead && (
-                      <div className="mt-2 h-2 w-2 rounded-full bg-[#bd882c] flex-shrink-0" />
-                    )}
+                    <div className="flex flex-col items-center gap-1 shrink-0 ml-1">
+                      {!n.isRead && (
+                        <div className="h-2 w-2 rounded-full bg-[#bd882c]" />
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteOne.mutate({ id: n.id }); }}
+                        className="opacity-0 group-hover/notif:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 text-muted-foreground hover:text-red-500"
+                        aria-label="Delete notification"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
                   </button>
                 );
               })}
