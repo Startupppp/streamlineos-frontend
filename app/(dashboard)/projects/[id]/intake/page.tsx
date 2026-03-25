@@ -6,6 +6,7 @@ import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import {
   Dialog,
   DialogContent,
@@ -295,7 +296,7 @@ export default function IntakePage({
           <TabsContent value={activeTab} className="mt-4">
             {filteredItems.length === 0 ? (
               <div className="text-center py-16">
-                <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <EmptyInboxIllustration className="mx-auto mb-4 w-36 h-36" />
                 <h3 className="text-lg font-semibold mb-1">
                   {activeTab === "pending"
                     ? "No pending items"
