@@ -469,7 +469,7 @@ export async function processLeaveRequest(data: {
     const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id),
     });
-    if (request.orgId !== member?.orgId || member.role !== "CEO") {
+    if (!member || request.orgId !== member.orgId || (member.role !== "CEO" && member.role !== "HR" && member.role !== "ADMIN")) {
       return { error: "Not authorized to process this request" };
     }
   }
@@ -618,10 +618,15 @@ export async function getIncomingRequests() {
   });
   if (!member) return [];
 
+  const isAdminRole = member.role === "CEO" || member.role === "HR" || member.role === "ADMIN";
+
   return await db.query.leaveRequests.findMany({
     where: and(
-      eq(leaveRequests.approverId, session.user.id),
-      eq(leaveRequests.orgId, member.orgId),
+      // HR/CEO/Admin see all pending requests in the org, others see only their assigned ones
+      ...(isAdminRole
+        ? [eq(leaveRequests.orgId, member.orgId)]
+        : [eq(leaveRequests.approverId, session.user.id), eq(leaveRequests.orgId, member.orgId)]
+      ),
       eq(leaveRequests.status, "PENDING"),
     ),
     with: {
