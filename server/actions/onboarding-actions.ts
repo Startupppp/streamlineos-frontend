@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, documents, onboardingSteps, organizationMembers } from "@/lib/db/schema";
+import { users, documents, onboardingSteps, organizationMembers, leaveTypes, leaveBalances } from "@/lib/db/schema";
 
 import { eq, and } from "drizzle-orm";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
@@ -111,6 +111,7 @@ export async function submitOnboarding() {
     if (!userOrg) return { error: "No organization found" };
 
     await updateOnboardingStep(session.user.id, "Final Review", "COMPLETED", userOrg.orgId);
+    await allocateDefaultLeaves(session.user.id, userOrg.orgId);
 
     revalidatePath("/onboarding");
     revalidatePath("/dashboard");
@@ -150,4 +151,33 @@ async function updateOnboardingStep(userId: string, stepName: string, status: "P
             completedAt: status === 'COMPLETED' ? new Date() : null 
         });
     }
+}
+
+async function allocateDefaultLeaves(userId: string, orgId: string) {
+  const currentYear = new Date().getFullYear();
+
+  const existingBalances = await db.query.leaveBalances.findFirst({
+    where: and(
+      eq(leaveBalances.userId, userId),
+      eq(leaveBalances.year, currentYear)
+    ),
+  });
+
+  if (existingBalances) return;
+
+  const orgLeaveTypes = await db.query.leaveTypes.findMany({
+    where: eq(leaveTypes.orgId, orgId),
+  });
+
+  if (orgLeaveTypes.length === 0) return;
+
+  await db.insert(leaveBalances).values(
+    orgLeaveTypes.map((lt) => ({
+      orgId,
+      userId,
+      leaveTypeId: lt.id,
+      balance: String(lt.daysPerYear),
+      year: currentYear,
+    }))
+  );
 }

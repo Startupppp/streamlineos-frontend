@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { CheckCircle, ArrowLeft, ArrowRight, Check, Loader2, Send, type LucideIcon } from "lucide-react";
+import { CheckCircle, ArrowLeft, ArrowRight, Check, Loader2, Send, Shield, type LucideIcon } from "lucide-react";
 import { submitOnboarding } from "@/server/actions/onboarding-actions";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+
+const ROLE_LABELS: Record<string, string> = {
+  CEO: "CEO",
+  ADMIN: "Admin",
+  HR: "Human Resources",
+  ENGINEERING: "Engineering",
+  SALES: "Sales",
+  MARKETING: "Marketing",
+  FINANCE: "Finance",
+  OPERATIONS: "Operations",
+};
 
 interface Step {
   id: string;
@@ -25,8 +37,11 @@ interface ReviewTabProps {
 
 export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: ReviewTabProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const userRole = session?.user?.role || "ENGINEERING";
+  const roleLabel = ROLE_LABELS[userRole] || userRole;
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
 
@@ -83,6 +98,16 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
                   </div>
                 );
               })}
+
+              <div className="flex items-center gap-3 p-3 rounded-lg text-left bg-primary/10">
+                <Shield className="h-5 w-5 text-primary flex-shrink-0" aria-hidden="true" />
+                <span className="text-sm font-medium text-primary">
+                  Role: {roleLabel}
+                </span>
+                <span className="ml-auto text-xs text-primary">
+                  Assigned
+                </span>
+              </div>
             </motion.div>
 
             <motion.div variants={fadeUp} className="pt-4">
@@ -137,7 +162,21 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
                 </div>
               );
             })}
+
+            <div className="flex items-center gap-3 p-3 rounded-lg text-left bg-primary/10">
+              <Shield className="h-5 w-5 text-primary flex-shrink-0" aria-hidden="true" />
+              <span className="text-sm font-medium text-primary">
+                Role: {roleLabel}
+              </span>
+              <span className="ml-auto text-xs text-primary">
+                Assigned
+              </span>
+            </div>
           </motion.div>
+
+          <motion.p variants={fadeUp} className="text-sm text-muted-foreground italic pt-2">
+            Default leave balances will be allocated upon submission
+          </motion.p>
 
           <motion.div variants={fadeUp} className="flex gap-3 pt-4">
             <Button variant="outline" onClick={onBack}>
