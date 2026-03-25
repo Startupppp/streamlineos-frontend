@@ -217,7 +217,7 @@ export default function DocumentsPage() {
 
       return matchesSearch;
     });
-  }, [documents, searchTerm, selectedCategory]);
+  }, [documents, searchTerm, selectedCategory, customFolders]);
 
   // Pagination
   const totalFiltered = filteredDocuments.length;

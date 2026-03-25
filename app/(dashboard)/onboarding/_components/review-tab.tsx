@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { CheckCircle, ArrowLeft, ArrowRight, Check, type LucideIcon } from "lucide-react";
+import { CheckCircle, ArrowLeft, ArrowRight, Check, Loader2, Send, type LucideIcon } from "lucide-react";
+import { submitOnboarding } from "@/server/actions/onboarding-actions";
+import { toast } from "sonner";
 
 interface Step {
   id: string;
@@ -22,8 +25,77 @@ interface ReviewTabProps {
 
 export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: ReviewTabProps) {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const res = await submitOnboarding();
+      if (res.success) {
+        toast.success("Onboarding submitted successfully!");
+        setIsSubmitted(true);
+      } else {
+        toast.error(res.error || "Failed to submit onboarding");
+      }
+    } catch {
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isSubmitted) {
+    return (
+      <Card className="shadow-noir border-border text-center py-10">
+        <CardContent className="flex flex-col items-center space-y-4">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-col items-center space-y-4"
+          >
+            <motion.div variants={fadeUp} className="bg-green-500/15 p-4 rounded-full">
+              <CheckCircle className="h-16 w-16 text-green-500" aria-hidden="true" />
+            </motion.div>
+            <motion.h2 variants={fadeUp} className="text-2xl font-bold">You&apos;re All Set!</motion.h2>
+            <motion.p variants={fadeUp} className="text-muted-foreground max-w-md">
+              Your onboarding information has been submitted. The HR team will verify your documents and approve your profile soon.
+            </motion.p>
+
+            <motion.div variants={fadeUp} className="w-full max-w-sm space-y-2 pt-4">
+              {dataSteps.map((step) => {
+                const StepIcon = step.icon;
+                return (
+                  <div
+                    key={step.id}
+                    className="flex items-center gap-3 p-3 rounded-lg text-left bg-green-500/10"
+                  >
+                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-sm font-medium text-green-600">
+                      {step.label}
+                    </span>
+                    <span className="ml-auto text-xs text-green-600">
+                      Completed
+                    </span>
+                  </div>
+                );
+              })}
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="pt-4">
+              <Button onClick={() => router.push("/dashboard")}>
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </motion.div>
+          </motion.div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-noir border-border text-center py-10">
@@ -34,12 +106,12 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
           animate="visible"
           className="flex flex-col items-center space-y-4"
         >
-          <motion.div variants={fadeUp} className="bg-green-500/15 p-4 rounded-full">
-            <CheckCircle className="h-16 w-16 text-green-500" aria-hidden="true" />
+          <motion.div variants={fadeUp} className="bg-primary/10 p-4 rounded-full">
+            <Send className="h-12 w-12 text-primary" aria-hidden="true" />
           </motion.div>
-          <motion.h2 variants={fadeUp} className="text-2xl font-bold">You&apos;re All Set!</motion.h2>
+          <motion.h2 variants={fadeUp} className="text-2xl font-bold">Review & Submit</motion.h2>
           <motion.p variants={fadeUp} className="text-muted-foreground max-w-md">
-            Your onboarding information has been submitted. The HR team will verify your documents and approve your profile soon.
+            Please review your completed steps below. When you&apos;re ready, click Submit to finalize your onboarding.
           </motion.p>
 
           <motion.div variants={fadeUp} className="w-full max-w-sm space-y-2 pt-4">
@@ -72,9 +144,15 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-            <span title={!allDataStepsComplete ? "Complete all steps before proceeding" : undefined}>
-              <Button onClick={() => router.push("/dashboard")} disabled={!allDataStepsComplete} aria-describedby={!allDataStepsComplete ? "review-hint" : undefined}>
-                Go to Dashboard
+            <span title={!allDataStepsComplete ? "Complete all steps before submitting" : undefined}>
+              <Button
+                onClick={handleSubmit}
+                disabled={!allDataStepsComplete || isSubmitting}
+                aria-busy={isSubmitting}
+                aria-describedby={!allDataStepsComplete ? "review-hint" : undefined}
+              >
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Submit
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </span>

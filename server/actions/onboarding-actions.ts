@@ -99,6 +99,27 @@ export async function uploadOnboardingDocument(formData: FormData) {
     return { error: "Failed to upload document" };
   }
 }
+export async function submitOnboarding() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    const userOrg = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, session.user.id),
+    });
+
+    if (!userOrg) return { error: "No organization found" };
+
+    await updateOnboardingStep(session.user.id, "Final Review", "COMPLETED", userOrg.orgId);
+
+    revalidatePath("/onboarding");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to submit onboarding" };
+  }
+}
+
 async function updateOnboardingStep(userId: string, stepName: string, status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED", orgId?: string) {
     let targetOrgId = orgId;
     if (!targetOrgId) {
