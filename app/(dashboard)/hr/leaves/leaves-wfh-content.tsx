@@ -67,7 +67,10 @@ export function LeavesWfhContent({
     >
       {/* ─── Page Header ─── */}
       <motion.div variants={fadeUp}>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">My Leaves</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Leaves & Time Off</h1>
+          <p className="text-sm text-muted-foreground">Manage your leave requests, work from home, and approvals.</p>
+        </div>
       </motion.div>
 
       {/* ─── Who's Out Banner ─── */}
@@ -122,21 +125,21 @@ export function LeavesWfhContent({
 
       {/* ─── Tabs ─── */}
       <motion.div variants={fadeUp}>
-        <Tabs defaultValue="my-leaves" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="my-leaves">My Leaves</TabsTrigger>
-            <TabsTrigger value="wfh">Work From Home</TabsTrigger>
+        <Tabs defaultValue="my-leaves" className="space-y-5">
+          <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
+            <TabsTrigger value="my-leaves" className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
+              My Leaves
+            </TabsTrigger>
+            <TabsTrigger value="wfh" className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
+              Work From Home
+            </TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="approvals" className="relative">
+              <TabsTrigger value="approvals" className="relative data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
                 Approvals
                 {totalPendingApprovals > 0 && (
-                  <span
-                    className="absolute -top-1 -right-1 flex h-2.5 w-2.5"
-                    aria-label={`${totalPendingApprovals} pending approvals`}
-                  >
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-                  </span>
+                  <Badge className="ml-2 h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-bold border-0">
+                    {totalPendingApprovals}
+                  </Badge>
                 )}
               </TabsTrigger>
             )}
