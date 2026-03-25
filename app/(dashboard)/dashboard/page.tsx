@@ -141,12 +141,12 @@ export default function DashboardPage() {
           <Skeleton className="h-14 w-32 rounded-lg" />
         </div>
         <DashboardStatsSkeleton />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4 bg-card border-border">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="md:col-span-1 lg:col-span-4 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
-          <Card className="col-span-3 bg-card border-border">
+          <Card className="md:col-span-1 lg:col-span-3 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
@@ -208,7 +208,7 @@ export default function DashboardPage() {
         <ClockInWidget />
       </motion.div>
 
-      <motion.div variants={fadeUp} className={`grid gap-4 ${statCards.length >= 4 ? "md:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+      <motion.div variants={fadeUp} className={`grid gap-4 grid-cols-1 ${statCards.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"}`}>
         {statCards.map((stat, i) => (
           <StatCard
             key={stat.id}
@@ -231,23 +231,23 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}
-      <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-4">
+      <motion.div variants={fadeUp} className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+        <div className="md:col-span-1 lg:col-span-4">
           <MyIssuesCard
             tickets={sortedMyTickets}
             isLoading={ticketsLoading}
             error={ticketsError}
           />
         </div>
-        <div className="lg:col-span-3">
+        <div className="md:col-span-1 lg:col-span-3">
           <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
         </div>
       </motion.div>
 
       {/* Projects, Activity, Team — CEO/HR only */}
       {isAdmin && (
-        <motion.div variants={fadeUp} className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+        <motion.div variants={fadeUp} className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="md:col-span-1">
             <RecentProjectsCard
               projects={recentProjects}
               isLoading={projectsLoading}
@@ -255,14 +255,14 @@ export default function DashboardPage() {
               onCreateProject={handleGoToProjects}
             />
           </div>
-          <div className="lg:col-span-4">
+          <div className="md:col-span-1">
             <RecentActivityCard
               items={recentActivity}
               isLoading={activityLoading}
               error={activityError}
             />
           </div>
-          <div className="lg:col-span-4">
+          <div className="md:col-span-2 lg:col-span-1">
             <TeamCard members={teamAvailability} isLoading={teamLoading} />
           </div>
         </motion.div>
