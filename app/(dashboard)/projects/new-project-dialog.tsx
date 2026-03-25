@@ -75,7 +75,11 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const res = await createProject(values);
+    const capitalizedValues = {
+      ...values,
+      name: values.name.replace(/^\w/, (c) => c.toUpperCase()),
+    };
+    const res = await createProject(capitalizedValues);
     if (res.success) {
       toast.success("Project created successfully");
       setOpen(false);
