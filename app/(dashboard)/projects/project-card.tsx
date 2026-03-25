@@ -17,7 +17,6 @@ import {
   getColorSafe,
   projectStatusColors,
   projectStatusDisplayLabels,
-  projectProgressBarColors,
 } from "@/lib/theme-constants";
 import { format } from "date-fns";
 
@@ -44,7 +43,6 @@ interface ProjectCardProps {
 export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectCardProps) {
   const status = project.status ?? "ACTIVE";
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
-  const progressColor = projectProgressBarColors[status] ?? "bg-emerald-500";
   const statusColor = getColorSafe(projectStatusColors, status);
   const dateStr = project.startDate
     ? format(new Date(project.startDate), "MMM d, yyyy")
@@ -97,25 +95,6 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             <p className="text-xs text-muted-foreground mt-0.5">{project.key}</p>
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium text-foreground">{project.progress.percentage}%</span>
-            </div>
-            <div
-              className="h-1.5 w-full rounded-full bg-muted overflow-hidden"
-              role="progressbar"
-              aria-valuenow={project.progress.percentage}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuetext={`${project.progress.percentage}% complete — ${project.progress.done} of ${project.progress.total} tasks done`}
-            >
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
-                style={{ width: `${project.progress.percentage}%` }}
-              />
-            </div>
-          </div>
         </CardContent>
 
         <CardFooter className="justify-between pt-3 border-t border-border/50">

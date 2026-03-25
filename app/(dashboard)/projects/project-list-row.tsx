@@ -16,7 +16,6 @@ import {
   getColorSafe,
   projectStatusColors,
   projectStatusDisplayLabels,
-  projectProgressBarColors,
 } from "@/lib/theme-constants";
 import { format } from "date-fns";
 
@@ -35,7 +34,6 @@ interface ProjectListRowProps {
 export const ProjectListRow = React.memo(function ProjectListRow({ project }: ProjectListRowProps) {
   const status = project.status ?? "ACTIVE";
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
-  const progressColor = projectProgressBarColors[status] ?? "bg-emerald-500";
   const statusColor = getColorSafe(projectStatusColors, status);
   const dateStr = project.startDate
     ? format(new Date(project.startDate), "MMM d, yyyy")
@@ -58,24 +56,6 @@ export const ProjectListRow = React.memo(function ProjectListRow({ project }: Pr
             {project.name}
           </p>
           <p className="text-xs text-muted-foreground">{project.key}</p>
-        </div>
-
-        {/* Progress bar (inline) */}
-        <div className="hidden sm:flex items-center gap-2 w-36 shrink-0">
-          <div
-            className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden"
-            role="progressbar"
-            aria-valuenow={project.progress.percentage}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuetext={`${project.progress.percentage}% complete`}
-          >
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
-              style={{ width: `${project.progress.percentage}%` }}
-            />
-          </div>
-          <span className="text-xs font-medium text-foreground w-8 text-right">{project.progress.percentage}%</span>
         </div>
 
         {/* Avatar stack */}
