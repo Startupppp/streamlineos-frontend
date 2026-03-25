@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import {
   users,
@@ -105,7 +106,9 @@ export const authRouter = createTRPCRouter({
       });
 
       // Fire-and-forget to not block response
-      sendPasswordResetEmail(input.email, resetToken).catch(() => {});
+      sendPasswordResetEmail(input.email, resetToken).catch((err) => {
+        logger.error("Failed to send password reset email", { error: err instanceof Error ? err.message : "Unknown", email: input.email });
+      });
 
       return { success: true };
     }),

@@ -64,7 +64,9 @@ export async function GET(req: NextRequest) {
       userId: session.user.id,
       orgId: undefined,
       metadata: { fileKey },
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.error("Failed to create audit log for file download", { error: err instanceof Error ? err.message : "Unknown" });
+    });
 
     if (attachment) {
       const { body, contentType } = await getFileStream(fileKey);

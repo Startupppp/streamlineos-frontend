@@ -97,7 +97,9 @@ export async function POST(req: NextRequest) {
       action: "file.upload",
       userId: session.user.id,
       metadata: { fileKey: result.key, fileSize: result.size, mimeType: result.mimeType },
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.error("Failed to create audit log for file upload", { error: err instanceof Error ? err.message : "Unknown" });
+    });
 
     return NextResponse.json(result);
   } catch (error) {

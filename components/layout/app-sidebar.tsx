@@ -339,7 +339,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
               setPendingLeaves(leavesCount);
             }
         } catch {
-          // non-critical
+          // Leave count fetch failed — default to 0
+          if (!cancelled) setPendingLeaves(0);
         }
     }
     fetchCounts();
