@@ -8,7 +8,10 @@ import {
   File,
   Loader2,
   CheckCircle2,
+  Mail,
+  CalendarIcon,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -22,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { exportExpenses, ExportFilters, ExportResult } from "@/server/actions/expense-export";
+import { exportExpenses, emailExpenseReport, ExportFilters, ExportResult } from "@/server/actions/expense-export";
 import { ExpenseFilters } from "@/server/actions/expense-query";
 import ExcelJS from "exceljs";
 import { formatCurrencyFull } from "@/lib/format-utils";
@@ -320,11 +323,14 @@ export function ExpenseExportDialog({
   const [includeHeader, setIncludeHeader] = useState(true);
   const [includeTotals, setIncludeTotals] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
+  const [dateFrom, setDateFrom] = useState(filters.startDate || "");
+  const [dateTo, setDateTo] = useState(filters.endDate || "");
 
   const exportFilters: ExportFilters = {
-    startDate: filters.startDate,
-    endDate: filters.endDate,
+    startDate: dateFrom || filters.startDate,
+    endDate: dateTo || filters.endDate,
     month: filters.month,
     categoryId: filters.categoryId,
     category: filters.category,
@@ -334,6 +340,22 @@ export function ExpenseExportDialog({
     minAmount: filters.minAmount,
     maxAmount: filters.maxAmount,
     search: filters.search,
+  };
+
+  const handleSendEmail = async () => {
+    setIsSendingEmail(true);
+    try {
+      const result = await emailExpenseReport(exportFilters);
+      if (result.success) {
+        toast.success("Expense report emailed to CEO & HR successfully!");
+      } else {
+        toast.error(result.error || "Failed to send email");
+      }
+    } catch {
+      toast.error("Failed to send email");
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const handleExport = async () => {
@@ -521,6 +543,44 @@ export function ExpenseExportDialog({
         </SheetHeader>
 
         <div className="space-y-5">
+          {/* Date Range Filter */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-1.5">
+              <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              Date Range
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  max={dateTo || undefined}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  min={dateFrom || undefined}
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => { setDateFrom(""); setDateTo(""); }}
+                className="text-xs text-primary hover:underline"
+              >
+                Clear dates
+              </button>
+            )}
+          </div>
+
           <div className="space-y-3">
             <Label className="text-sm font-medium">Export Format</Label>
             <RadioGroup
@@ -606,29 +666,49 @@ export function ExpenseExportDialog({
           )}
         </div>
 
-        <div className="flex justify-end gap-3 pt-6 mt-2 border-t">
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
+        <div className="flex flex-col gap-3 pt-6 mt-2 border-t">
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleExport}
+              disabled={isExporting || exportComplete || isSendingEmail}
+              className="gap-2"
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : exportComplete ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Done!
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export {format.toUpperCase()}
+                </>
+              )}
+            </Button>
+          </div>
           <Button
-            onClick={handleExport}
-            disabled={isExporting || exportComplete}
-            className="gap-2"
+            variant="outline"
+            onClick={handleSendEmail}
+            disabled={isSendingEmail || isExporting}
+            className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
           >
-            {isExporting ? (
+            {isSendingEmail ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Exporting...
-              </>
-            ) : exportComplete ? (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                Done!
+                Sending to CEO & HR...
               </>
             ) : (
               <>
-                <Download className="h-4 w-4" />
-                Export {format.toUpperCase()}
+                <Mail className="h-4 w-4" />
+                Email Report to CEO & HR
               </>
             )}
           </Button>

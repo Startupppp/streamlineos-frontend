@@ -4,10 +4,14 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { expenses, expenseStatusEnum } from "@/lib/db/schema";
 import { eq, and, desc, gte, lte, sql, inArray, like, or } from "drizzle-orm";
-import { getAuthenticatedMember } from "@/lib/auth-helpers";
+import { getAuthenticatedMember, isAdminOrOwner } from "@/lib/auth-helpers";
 import { isAuthError } from "@/lib/auth-types";
 import { format } from "date-fns";
 import { getTodayString } from "@/lib/date-utils";
+import { users, organizationMembers } from "@/lib/db/schema";
+import { sendMonthlyExpenseReportEmail } from "@/lib/email";
+import type { MonthlyExpenseReportRow } from "@/lib/email-templates";
+import { formatCurrencyFull } from "@/lib/format-utils";
 
 export interface ExportFilters {
   startDate?: string;
@@ -564,5 +568,81 @@ export async function exportExpenses(
   } catch (error) {
     logger.error("Expense export failed", error);
     return { success: false, error: "Failed to generate export" };
+  }
+}
+
+export async function emailExpenseReport(
+  filters: ExportFilters
+): Promise<{ success: boolean; error?: string }> {
+  const authResult = await getAuthenticatedMember();
+  if (isAuthError(authResult)) return { success: false, error: authResult.error };
+
+  const { isAdmin, userId, orgId } = authResult;
+  if (!isAdmin) return { success: false, error: "Only HR and CEO can send expense reports" };
+
+  try {
+    const conditions = buildExportConditions(filters, orgId, isAdmin, userId);
+    const [expenseList, stats] = await Promise.all([
+      fetchExpensesForExport(conditions),
+      fetchExportStats(conditions),
+    ]);
+
+    if (expenseList.length === 0) return { success: false, error: "No expenses found for the selected filters" };
+
+    // Get CEO and HR emails
+    const adminMembers = await db.query.organizationMembers.findMany({
+      where: and(
+        eq(organizationMembers.orgId, orgId),
+      ),
+      with: { user: true },
+    });
+    const recipientEmails = adminMembers
+      .filter((m) => m.role === "CEO" || m.role === "HR")
+      .map((m) => m.user?.email)
+      .filter((e): e is string => !!e);
+
+    if (recipientEmails.length === 0) return { success: false, error: "No CEO/HR email addresses found" };
+
+    const org = await db.query.organizations.findFirst({
+      where: eq(organizationMembers.orgId, orgId),
+    });
+
+    const periodLabel = filters.startDate && filters.endDate
+      ? `${filters.startDate} to ${filters.endDate}`
+      : filters.startDate
+        ? `From ${filters.startDate}`
+        : "All Time";
+
+    const rows: MonthlyExpenseReportRow[] = expenseList.map((e) => ({
+      employeeName: e.userName,
+      category: e.category,
+      amount: formatCurrencyFull(e.amount),
+      currency: "INR",
+      date: e.expenseDate,
+      status: e.status || "PENDING",
+      description: e.description || "-",
+    }));
+
+    const summary = {
+      totalAmount: formatCurrencyFull(stats?.totalAmount || 0),
+      totalCount: Number(stats?.totalCount) || 0,
+      pendingCount: expenseList.filter((e) => e.status === "PENDING").length,
+      approvedCount: expenseList.filter((e) => e.status === "APPROVED").length,
+      paidCount: expenseList.filter((e) => e.status === "PAID").length,
+      rejectedCount: expenseList.filter((e) => e.status === "REJECTED").length,
+    };
+
+    await sendMonthlyExpenseReportEmail(
+      periodLabel,
+      org?.name || "Vaivamm Capital",
+      rows,
+      summary,
+      recipientEmails,
+    );
+
+    return { success: true };
+  } catch (error) {
+    logger.error("Failed to email expense report", error);
+    return { success: false, error: "Failed to send email" };
   }
 }
