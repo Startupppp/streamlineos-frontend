@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { formatDistanceToNow } from "date-fns";
@@ -52,8 +52,8 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+      <PopoverContent className="w-80 p-0 max-h-[70vh] flex flex-col" align="end">
+        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <h4 className="text-sm font-semibold">Notifications</h4>
           {unreadCount > 0 && (
             <Button
@@ -68,7 +68,7 @@ export function NotificationBell() {
           )}
         </div>
 
-        <ScrollArea className="max-h-[60vh] sm:max-h-[400px]">
+        <div className="flex-1 overflow-y-auto overscroll-contain">
           {!notifications?.length ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No notifications yet
@@ -115,7 +115,7 @@ export function NotificationBell() {
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
