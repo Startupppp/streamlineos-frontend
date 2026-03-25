@@ -125,7 +125,7 @@ export default function WorkLogsPage() {
   }, [days, filterDay, searchTerm]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
+    <div className="space-y-3 sm:space-y-4 overflow-x-hidden">
       <PageHeader
         title="Work Logs"
         description={
@@ -388,7 +388,7 @@ function DayLogEntry({
     <div
       title={statusLabel}
       className={cn(
-        "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border transition-colors",
+        "flex flex-col sm:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border shadow-sm hover:shadow-md transition-all",
         isWeekendDay ? "bg-[#bd882c]/[0.03] dark:bg-[#bd882c]/[0.05]" : "bg-card",
         hasUnsavedChanges
           ? "border-l-4 border-l-amber-500"
