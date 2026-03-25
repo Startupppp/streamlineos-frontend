@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Download, CalendarDays, TrendingUp, Users,
-  BarChart3, PieChart as PieChartIcon, Activity, Target,
+  BarChart3, PieChart as PieChartIcon, Activity, Target, Filter,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -41,8 +41,15 @@ function downloadCSV(data: Record<string, unknown>[], filename: string) {
 }
 
 export default function CrmAnalyticsPage() {
+  const [draftDateFrom, setDraftDateFrom] = useState("");
+  const [draftDateTo, setDraftDateTo] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  const applyFilters = useCallback(() => {
+    setDateFrom(draftDateFrom);
+    setDateTo(draftDateTo);
+  }, [draftDateFrom, draftDateTo]);
 
   const { data: leadStats, isLoading: statsLoading } = api.leads.getStats.useQuery({
     dateFrom: dateFrom || undefined,
@@ -163,12 +170,16 @@ export default function CrmAnalyticsPage() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground">From</Label>
-            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 h-8 text-xs" />
+            <Input type="date" value={draftDateFrom} onChange={e => setDraftDateFrom(e.target.value)} readOnly={false} onKeyDown={e => e.preventDefault()} className="w-36 h-8 text-xs cursor-pointer" />
           </div>
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground">To</Label>
-            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 h-8 text-xs" />
+            <Input type="date" value={draftDateTo} onChange={e => setDraftDateTo(e.target.value)} readOnly={false} onKeyDown={e => e.preventDefault()} className="w-36 h-8 text-xs cursor-pointer" />
           </div>
+          <Button size="sm" className="h-8 bg-[#bd882c] hover:bg-[#a67724] text-white" onClick={applyFilters}>
+            <Filter className="mr-1.5 h-3.5 w-3.5" />
+            Apply
+          </Button>
         </div>
       </motion.div>
 
