@@ -8,6 +8,10 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendBulkHolidayAnnouncement } from "@/lib/email";
 
+function capitalizeWords(str: string): string {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export async function addHoliday(data: {
   name: string;
   date: Date;
@@ -26,7 +30,7 @@ export async function addHoliday(data: {
   try {
     await db.insert(holidays).values({
       orgId: member.orgId,
-      name: data.name,
+      name: capitalizeWords(data.name),
       date: data.date.toISOString().split('T')[0],
       message: data.message,
       notificationSent: false,
@@ -180,7 +184,7 @@ export async function bulkAddHolidays(holidayList: Array<{
   try {
     const holidayRecords = holidayList.map(h => ({
       orgId: member.orgId,
-      name: h.name,
+      name: capitalizeWords(h.name),
       date: h.date,
       message: h.message,
       notificationSent: false,
