@@ -572,7 +572,8 @@ export async function exportExpenses(
 }
 
 export async function emailExpenseReport(
-  filters: ExportFilters
+  filters: ExportFilters,
+  sendTo: "CEO" | "HR" | "BOTH" = "BOTH"
 ): Promise<{ success: boolean; error?: string }> {
   const authResult = await getAuthenticatedMember();
   if (isAuthError(authResult)) return { success: false, error: authResult.error };
@@ -597,7 +598,11 @@ export async function emailExpenseReport(
       with: { user: true },
     });
     const recipientEmails = adminMembers
-      .filter((m) => m.role === "CEO" || m.role === "HR")
+      .filter((m) => {
+        if (sendTo === "CEO") return m.role === "CEO";
+        if (sendTo === "HR") return m.role === "HR";
+        return m.role === "CEO" || m.role === "HR";
+      })
       .map((m) => m.user?.email)
       .filter((e): e is string => !!e);
 

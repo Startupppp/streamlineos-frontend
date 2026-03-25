@@ -337,6 +337,7 @@ export function ExpenseExportDialog({
   const [includeTotals, setIncludeTotals] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<"CEO" | "HR" | "BOTH">("BOTH");
   const [exportComplete, setExportComplete] = useState(false);
   const [dateFrom, setDateFrom] = useState(filters.startDate || "");
   const [dateTo, setDateTo] = useState(filters.endDate || "");
@@ -363,9 +364,10 @@ export function ExpenseExportDialog({
   const handleSendEmail = async () => {
     setIsSendingEmail(true);
     try {
-      const result = await emailExpenseReport(exportFilters);
+      const result = await emailExpenseReport(exportFilters, emailTarget);
+      const targetLabel = emailTarget === "BOTH" ? "CEO & HR" : emailTarget;
       if (result.success) {
-        toast.success("Expense report emailed to CEO & HR successfully!");
+        toast.success(`Expense report emailed to ${targetLabel} successfully!`);
       } else {
         toast.error(result.error || "Failed to send email");
       }
@@ -759,24 +761,37 @@ export function ExpenseExportDialog({
               )}
             </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleSendEmail}
-            disabled={isSendingEmail || isExporting}
-            className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-          >
-            {isSendingEmail ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Sending to CEO & HR...
-              </>
-            ) : (
-              <>
-                <Mail className="h-4 w-4" />
-                Email Report to CEO & HR
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={emailTarget} onValueChange={(v) => setEmailTarget(v as "CEO" | "HR" | "BOTH")}>
+              <SelectTrigger className="h-9 w-[130px] text-xs shrink-0">
+                <Mail className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CEO">CEO Only</SelectItem>
+                <SelectItem value="HR">HR Only</SelectItem>
+                <SelectItem value="BOTH">CEO & HR</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={handleSendEmail}
+              disabled={isSendingEmail || isExporting}
+              className="flex-1 gap-2 border-primary/30 text-primary hover:bg-primary/5"
+            >
+              {isSendingEmail ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4" />
+                  Send Email
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </SheetContent>
 
