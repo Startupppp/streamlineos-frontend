@@ -264,6 +264,7 @@ export function LeavesTabContent({
                               type="date"
                               className="text-sm"
                               min={format(startOfDay(new Date()), "yyyy-MM-dd")}
+                              max="9999-12-31"
                               {...field}
                             />
                           </FormControl>
@@ -285,6 +286,7 @@ export function LeavesTabContent({
                                 leaveForm.watch("startDate") ||
                                 format(startOfDay(new Date()), "yyyy-MM-dd")
                               }
+                              max="9999-12-31"
                               {...field}
                             />
                           </FormControl>
