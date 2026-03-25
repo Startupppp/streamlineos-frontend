@@ -450,7 +450,7 @@ export async function submitLeaveRequest(data: {
 
 export async function processLeaveRequest(data: {
   requestId: number;
-  status: "APPROVED" | "REJECTED";
+  status: "APPROVED" | "REJECTED" | "PENDING";
   rejectionReason?: string;
 }) {
   const session = await auth();
@@ -480,17 +480,42 @@ export async function processLeaveRequest(data: {
         .update(leaveRequests)
         .set({
           status: data.status,
-          rejectionReason: data.rejectionReason,
+          rejectionReason: data.status === "REJECTED" ? data.rejectionReason : null,
         })
-        .where(
-          and(
-            eq(leaveRequests.id, data.requestId),
-            eq(leaveRequests.status, "PENDING")
-          )
-        )
+        .where(eq(leaveRequests.id, data.requestId))
         .returning({ id: leaveRequests.id });
       if (updated.length === 0) {
-        throw new Error("Leave request has already been processed");
+        throw new Error("Leave request not found");
+      }
+
+      // If reverting from APPROVED back to PENDING, restore the leave balance
+      if (data.status === "PENDING" && request.status === "APPROVED" && request.leaveTypeId) {
+        const leaveType = await tx.query.leaveTypes.findFirst({
+          where: eq(leaveTypes.id, request.leaveTypeId),
+          columns: { name: true },
+        });
+        if (leaveType?.name !== LEAVE_POLICY.UNPAID.name) {
+          const start = new Date(request.startDate);
+          const end = new Date(request.endDate);
+          let diffDays = 0;
+          const cursor = new Date(start);
+          while (cursor <= end) {
+            const day = cursor.getDay();
+            if (day !== 0 && day !== 6) diffDays++;
+            cursor.setDate(cursor.getDate() + 1);
+          }
+          const balanceRecord = await tx.query.leaveBalances.findFirst({
+            where: and(
+              eq(leaveBalances.userId, request.userId),
+              eq(leaveBalances.leaveTypeId, request.leaveTypeId),
+              eq(leaveBalances.year, new Date().getFullYear()),
+            ),
+          });
+          if (balanceRecord) {
+            const restored = Number(balanceRecord.balance) + diffDays;
+            await tx.update(leaveBalances).set({ balance: restored.toString() }).where(eq(leaveBalances.id, balanceRecord.id));
+          }
+        }
       }
 
       if (data.status === "APPROVED" && request.leaveTypeId) {
@@ -539,7 +564,7 @@ export async function processLeaveRequest(data: {
       db.query.users.findFirst({ where: eq(users.id, session.user.id) }),
     ]);
 
-    if (employee?.email) {
+    if (employee?.email && (data.status === "APPROVED" || data.status === "REJECTED")) {
       await sendLeaveStatusUpdateEmail(
         employee.email,
         employee.name || "Employee",
@@ -552,11 +577,16 @@ export async function processLeaveRequest(data: {
       );
     }
 
+    const notifTitle = data.status === "PENDING"
+      ? "Leave Reverted to Pending"
+      : `Leave ${data.status === "APPROVED" ? "Approved" : "Rejected"}`;
+    const notifType = data.status === "APPROVED" ? "SUCCESS" : data.status === "REJECTED" ? "ERROR" : "INFO";
+
     await createNotification({
       orgId: request.orgId,
       userId: request.userId,
-      type: data.status === "APPROVED" ? "SUCCESS" : "ERROR",
-      title: `Leave ${data.status === "APPROVED" ? "Approved" : "Rejected"}`,
+      type: notifType,
+      title: notifTitle,
       message: `Your leave request has been ${data.status === "APPROVED" ? "approved" : "rejected"} by ${approver?.name || "a manager"}.${data.rejectionReason ? ` Reason: ${data.rejectionReason}` : ""}`,
       link: "/hr/leaves",
     });

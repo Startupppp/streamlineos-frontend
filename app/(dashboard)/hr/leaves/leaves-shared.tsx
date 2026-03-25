@@ -24,7 +24,11 @@ import {
   Info,
   MoreVertical,
   Eye,
+  Check,
+  X,
+  RotateCcw,
 } from "lucide-react";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 import { resolveImageUrl } from "@/lib/utils";
 import { getColorSafe, wfhStatusColors } from "@/lib/theme-constants";
@@ -276,8 +280,16 @@ export const StatsCard = React.memo(function StatsCard({
 
 export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   request,
+  isAdmin = false,
+  onApprove,
+  onReject,
+  onRevert,
 }: {
   request: LeaveRequest;
+  isAdmin?: boolean;
+  onApprove?: (id: number) => void;
+  onReject?: (id: number, reason?: string) => void;
+  onRevert?: (id: number) => void;
 }) {
   const status = request.status ?? "PENDING";
   const typeName = request.leaveType?.name ?? "Leave";
@@ -349,6 +361,40 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
               <Eye className="mr-2 h-4 w-4" />
               View Details
             </DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                {status !== "APPROVED" && (
+                  <DropdownMenuItem
+                    onClick={() => onApprove?.(request.id)}
+                    className="text-emerald-600"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Approve
+                  </DropdownMenuItem>
+                )}
+                {status !== "REJECTED" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const reason = window.prompt("Rejection reason (optional):");
+                      if (reason !== null) onReject?.(request.id, reason || undefined);
+                    }}
+                    className="text-red-600"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Reject
+                  </DropdownMenuItem>
+                )}
+                {(status === "APPROVED" || status === "REJECTED") && (
+                  <DropdownMenuItem
+                    onClick={() => onRevert?.(request.id)}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Revert to Pending
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </td>

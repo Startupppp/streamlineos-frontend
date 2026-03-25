@@ -38,8 +38,9 @@ import {
   Download,
 } from "lucide-react";
 
-import { submitLeaveRequest } from "@/server/actions/leave-actions";
+import { submitLeaveRequest, processLeaveRequest } from "@/server/actions/leave-actions";
 import { FileUpload } from "@/components/storage/file-upload";
+import { useSession } from "next-auth/react";
 import ExcelJS from "exceljs";
 
 import type { LeaveBalance, LeaveType, Approver, LeaveRequest } from "./leaves-shared";
@@ -77,8 +78,20 @@ export function LeavesTabContent({
   myLeaveRequests,
 }: LeavesTabContentProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
   const [leaveFormLoading, setLeaveFormLoading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+
+  const handleStatusChange = async (requestId: number, status: "APPROVED" | "REJECTED" | "PENDING", rejectionReason?: string) => {
+    const result = await processLeaveRequest({ requestId, status, rejectionReason });
+    if (result && "error" in result) {
+      toast.error(result.error);
+    } else {
+      toast.success(`Leave request ${status.toLowerCase()}`);
+      router.refresh();
+    }
+  };
 
   const currentYear = new Date().getFullYear();
 
@@ -240,7 +253,14 @@ export function LeavesTabContent({
                       </thead>
                       <tbody>
                         {myLeaveRequests.slice(0, 5).map((req) => (
-                          <RequestHistoryRow key={req.id} request={req} />
+                          <RequestHistoryRow
+                            key={req.id}
+                            request={req}
+                            isAdmin={isAdmin}
+                            onApprove={(id) => handleStatusChange(id, "APPROVED")}
+                            onReject={(id, reason) => handleStatusChange(id, "REJECTED", reason)}
+                            onRevert={(id) => handleStatusChange(id, "PENDING")}
+                          />
                         ))}
                       </tbody>
                     </table>
