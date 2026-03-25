@@ -60,7 +60,7 @@ export async function createEmployee(data: {
             return { error: "Unable to create user. Please check the details and try again." };
         }
 
-        const rawPassword = data.initialPassword || crypto.randomUUID().slice(0, 16);
+        const rawPassword = data.initialPassword || "12345678";
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
         const creatorOrg = await db.query.organizationMembers.findFirst({
