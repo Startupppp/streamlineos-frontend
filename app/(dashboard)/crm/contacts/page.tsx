@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,11 @@ import Link from "next/link";
 import {
   Plus, Search, Users, Mail, Phone, Building2,
   ChevronLeft, ChevronRight, Linkedin, Twitter, Tag,
+  MoreHorizontal, Eye, Pencil, Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +27,7 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
@@ -30,22 +35,40 @@ import { toast } from "sonner";
 const PAGE_SIZE = 20;
 
 const createContactSchema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
+  name: z.string().min(1, "Name is required").max(200).regex(/^[a-zA-Z\s.'-]+$/, "Name must contain only letters"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string().regex(/^[\d+\-\s()]*$/, "Phone must contain only numbers").optional().or(z.literal("")),
   title: z.string().optional(),
   department: z.string().optional(),
   company: z.string().optional(),
-  linkedinUrl: z.string().optional(),
-  twitterUrl: z.string().optional(),
+  linkedinUrl: z.string().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+  twitterUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 type CreateContactForm = z.infer<typeof createContactSchema>;
 
+function capitalize(s: string) {
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function ContactsPage() {
   const utils = api.useUtils();
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  // Debounce search — only trigger API after 300ms and min 3 chars (#119)
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const timer = setTimeout(() => {
+      if (searchInput.length >= 3 || searchInput.length === 0) {
+        setSearch(searchInput);
+      }
+    }, 300);
+    debounceRef.current = timer;
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data, isLoading } = api.contacts.getContacts.useQuery({
     search: search || undefined,
@@ -69,7 +92,7 @@ export default function ContactsPage() {
 
   const onSubmit = useCallback((data: CreateContactForm) => {
     createContact.mutate({
-      name: data.name,
+      name: capitalize(data.name.trim()),
       email: data.email || undefined,
       phone: data.phone || undefined,
       title: data.title || undefined,
@@ -183,9 +206,9 @@ export default function ContactsPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search contacts..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+            placeholder="Search contacts (min 3 chars)..."
+            value={searchInput}
+            onChange={(e) => { setSearchInput(e.target.value); setPage(0); }}
             className="pl-9"
           />
         </div>
@@ -203,6 +226,19 @@ export default function ContactsPage() {
                   <p className="text-sm font-medium truncate group-hover:text-[#bd882c] transition-colors">{contact.name}</p>
                   {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem><Eye className="h-3.5 w-3.5 mr-2" />View</DropdownMenuItem>
+                    <DropdownMenuItem><Pencil className="h-3.5 w-3.5 mr-2" />Edit</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-600"><Trash2 className="h-3.5 w-3.5 mr-2" />Delete</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="mt-3 space-y-1.5">
@@ -253,8 +289,8 @@ export default function ContactsPage() {
 
       {data?.items.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
-          <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">No contacts found</p>
+          <EmptyTeamIllustration className="mx-auto mb-3 w-36 h-36" />
+          <p className="text-sm font-medium text-foreground">No contacts found</p>
           <p className="text-xs mt-1">Create your first contact to get started</p>
         </div>
       )}
