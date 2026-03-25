@@ -168,11 +168,11 @@ export default function ExpensesPage() {
   });
   const debouncedSearch = useDebouncedValue(filters.search, 300);
 
-  const loadData = useCallback(async (showRefresh = false) => {
+  const loadData = useCallback(async (currentFilters: typeof filters, showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
     else setLoading(true);
     try {
-      const result = await getExpensePageData({ ...filters, search: debouncedSearch });
+      const result = await getExpensePageData({ ...currentFilters, search: debouncedSearch });
       if ("error" in result) { toast.error(result.error); return; }
       setPageData(result);
     } catch {
@@ -181,9 +181,9 @@ export default function ExpensesPage() {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [filters, debouncedSearch]);
+  }, [debouncedSearch]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(filters); }, [filters, loadData]);
 
   const optimisticUpdate = (expenseId: number, updates: Partial<ExpenseWithRelations>) => {
     if (!pageData) return;
@@ -201,7 +201,7 @@ export default function ExpensesPage() {
     optimisticUpdate(expenseId, { status: "APPROVED" });
     const result = await approveExpense(expenseId);
     if (result.success) toast.success("Expense approved");
-    else { toast.error(result.error); loadData(); }
+    else { toast.error(result.error); loadData(filters); }
   };
 
   const handleReject = async (expenseId: number) => {
@@ -210,7 +210,7 @@ export default function ExpensesPage() {
     setRejectingId(null);
     const result = await rejectExpense(expenseId, rejectionReason);
     if (result.success) { toast.success("Expense rejected"); setRejectionReason(""); }
-    else { toast.error(result.error); loadData(); }
+    else { toast.error(result.error); loadData(filters); }
   };
 
   const handleDelete = async (expenseId: number) => {
@@ -225,7 +225,7 @@ export default function ExpensesPage() {
     });
     const result = await deleteExpense(expenseId);
     if (result.success) toast.success("Expense deleted");
-    else { toast.error(result.error); loadData(); }
+    else { toast.error(result.error); loadData(filters); }
   };
 
   /* ─── Loading State ─── */
@@ -622,7 +622,7 @@ export default function ExpensesPage() {
 
         <CreateExpenseDialog
           open={isCreateOpen} onOpenChange={(v) => { setIsCreateOpen(v); if (!v) setEditingExpense(null); }}
-          onSuccess={() => { loadData(); setIsCreateOpen(false); setEditingExpense(null); }}
+          onSuccess={() => { loadData(filters); setIsCreateOpen(false); setEditingExpense(null); }}
           categories={EXPENSE_CATEGORIES} paymentMethods={PAYMENT_METHODS}
           editExpense={editingExpense}
         />
@@ -959,7 +959,7 @@ export default function ExpensesPage() {
 
       <CreateExpenseDialog
         open={isCreateOpen} onOpenChange={setIsCreateOpen}
-        onSuccess={() => { loadData(); setIsCreateOpen(false); }}
+        onSuccess={() => { loadData(filters); setIsCreateOpen(false); }}
         categories={EXPENSE_CATEGORIES} paymentMethods={PAYMENT_METHODS}
       />
     </div>

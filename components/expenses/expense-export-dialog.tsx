@@ -505,6 +505,7 @@ export function ExpenseExportDialog({
   );
 
   return (
+    <>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         {trigger || (
@@ -640,15 +641,16 @@ export function ExpenseExportDialog({
         </div>
       </SheetContent>
 
-      {pdfData && (
-        <div
-          ref={pdfRef}
-          style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}
-          aria-hidden="true"
-        >
-          <ExpensePdfContent data={pdfData} />
-        </div>
-      )}
     </Sheet>
+    {pdfData && (
+      <div
+        ref={pdfRef}
+        style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1 }}
+        aria-hidden="true"
+      >
+        <ExpensePdfContent data={pdfData} />
+      </div>
+    )}
+    </>
   );
 }
