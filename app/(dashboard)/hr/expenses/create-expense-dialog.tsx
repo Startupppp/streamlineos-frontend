@@ -73,6 +73,43 @@ interface CreateExpenseDialogProps {
   editExpense?: ExpenseToEdit | null;
 }
 
+function AmountInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [display, setDisplay] = useState(value ? String(value) : "");
+  const [prevValue, setPrevValue] = useState(value);
+
+  // Sync from external value changes (e.g., form reset, edit mode)
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setDisplay(value ? String(value) : "");
+  }
+
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      placeholder="0.00"
+      value={display}
+      onChange={(e) => {
+        const raw = e.target.value;
+        // Allow only digits, one dot, and up to 2 decimal places
+        if (raw === "" || /^\d*\.?\d{0,2}$/.test(raw)) {
+          setDisplay(raw);
+          const num = parseFloat(raw);
+          onChange(isNaN(num) ? 0 : num);
+        }
+      }}
+      onBlur={() => {
+        // Format on blur: show 2 decimal places if has decimals
+        const num = parseFloat(display);
+        if (!isNaN(num) && num > 0) {
+          setDisplay(num % 1 === 0 ? String(num) : num.toFixed(2));
+        }
+      }}
+      className="text-right font-semibold"
+    />
+  );
+}
+
 export function CreateExpenseDialog({
   open,
   onOpenChange,
@@ -257,24 +294,9 @@ export function CreateExpenseDialog({
                   <FormItem>
                     <FormLabel>Amount (₹) *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        placeholder="0.00"
-                        value={field.value || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "" || val === ".") {
-                            field.onChange(0);
-                            return;
-                          }
-                          const parsed = parseFloat(val);
-                          if (!isNaN(parsed)) {
-                            field.onChange(Math.round(parsed * 100) / 100);
-                          }
-                        }}
-                        className="text-right font-semibold"
+                      <AmountInput
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />

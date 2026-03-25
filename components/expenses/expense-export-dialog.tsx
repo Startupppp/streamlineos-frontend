@@ -309,12 +309,6 @@ const FORMAT_OPTIONS: {
     description: "Microsoft Excel format with multiple sheets and formatting",
     icon: FileSpreadsheet,
   },
-  {
-    value: "pdf",
-    label: "PDF Report",
-    description: "Formatted report with summary, charts, and detailed expenses",
-    icon: FileText,
-  },
 ];
 
 export function ExpenseExportDialog({

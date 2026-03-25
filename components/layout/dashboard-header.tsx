@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { UserNav } from "./user-nav"
 import { NotificationBell } from "./notification-bell"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button"
 
 export function DashboardHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isMac, setIsMac] = useState(true)
+
+  useEffect(() => {
+    setIsMac(navigator.platform?.toUpperCase().includes("MAC") || navigator.userAgent?.includes("Mac"))
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-4 glass transition-colors duration-300">
@@ -40,12 +45,12 @@ export function DashboardHeader() {
           variant="outline"
           size="sm"
           className="hidden sm:flex items-center gap-2 text-muted-foreground h-8 w-48 justify-start"
-          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: isMac, ctrlKey: !isMac }))}
         >
           <Search className="h-3.5 w-3.5" />
           <span className="text-xs">Search...</span>
           <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-            <span className="text-xs">⌘</span>K
+            <span className="text-xs">{isMac ? "⌘" : "Ctrl"}</span>K
           </kbd>
         </Button>
         <NotificationBell />
