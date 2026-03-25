@@ -138,6 +138,30 @@ export function formatINR(amount: string | number): string {
   }).format(num);
 }
 
+/**
+ * Compact INR formatter for cards/dashboards.
+ * ₹999 → ₹999, ₹1,500 → ₹1.5K, ₹1,50,000 → ₹1.5L, ₹1,50,00,000 → ₹1.5Cr
+ */
+export function formatINRCompact(amount: string | number): string {
+  const num = Number(amount);
+  if (Number.isNaN(num)) return "₹0";
+  const abs = Math.abs(num);
+  const sign = num < 0 ? "-" : "";
+  if (abs >= 1_00_00_000) {
+    const val = abs / 1_00_00_000;
+    return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}Cr`;
+  }
+  if (abs >= 1_00_000) {
+    const val = abs / 1_00_000;
+    return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}L`;
+  }
+  if (abs >= 10_000) {
+    const val = abs / 1_000;
+    return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}K`;
+  }
+  return `${sign}₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(abs)}`;
+}
+
 export function numberToWords(num: number): string {
   const ones = [
     "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
