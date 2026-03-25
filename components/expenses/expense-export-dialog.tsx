@@ -431,17 +431,39 @@ export function ExpenseExportDialog({
 
   const downloadPDF = useCallback(
     async (data: PdfData, filename: string) => {
+      // Start loading dynamic imports in parallel with rendering
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const html2canvas = html2canvasModule.default;
+      const jsPDF = jsPDFModule.default;
+
+      // Set data to trigger render of ExpensePdfContent
       setPdfData(data);
 
-      await new Promise((r) => setTimeout(r, 100));
-
-      const container = pdfRef.current;
-      if (!container) return;
+      // Wait for React to render and populate the ref, polling with a timeout
+      const container = await new Promise<HTMLDivElement>((resolve, reject) => {
+        let elapsed = 0;
+        const interval = 50;
+        const maxWait = 3000;
+        const check = () => {
+          if (pdfRef.current) {
+            resolve(pdfRef.current);
+            return;
+          }
+          elapsed += interval;
+          if (elapsed >= maxWait) {
+            reject(new Error("PDF content failed to render in time"));
+            return;
+          }
+          setTimeout(check, interval);
+        };
+        // Use requestAnimationFrame for the first check to ensure paint
+        requestAnimationFrame(() => setTimeout(check, interval));
+      });
 
       try {
-        const html2canvas = (await import("html2canvas")).default;
-        const jsPDF = (await import("jspdf")).default;
-
         const canvas = await html2canvas(container, {
           scale: 2,
           backgroundColor: "#ffffff",
