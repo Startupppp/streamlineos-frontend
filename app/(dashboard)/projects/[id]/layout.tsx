@@ -6,8 +6,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { organizationMembers, projects } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Lock, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { AccessDeniedView } from "./access-denied-view";
 
 export default async function ProjectLayout({
     children,
@@ -17,42 +17,26 @@ export default async function ProjectLayout({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params;
+    const numId = Number(id);
+    if (isNaN(numId)) return notFound();
+
     const session = await auth();
-    
-    if (!session?.user?.id) {
-        return notFound();
-    }
+    if (!session?.user?.id) return notFound();
+
     const projectCheck = await db.query.projects.findFirst({
-        where: eq(projects.id, Number(id)),
+        where: eq(projects.id, numId),
         columns: { id: true, name: true, key: true, orgId: true, managerId: true }
     });
+    if (!projectCheck) return notFound();
 
-    if (!projectCheck) {
-        return notFound();
-    }
     const member = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id)
     });
+    if (!member || member.orgId !== projectCheck.orgId) return notFound();
 
-    if (!member || member.orgId !== projectCheck.orgId) {
-        return notFound();
-    }
-
-    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
-    const project = await getProjectById(Number(id));
+    const project = await getProjectById(numId);
     if (!project) {
-        if (isOwnerOrAdmin) {
-            return (
-                <div className="flex items-center justify-center h-full w-full p-8" role="alert">
-                    <EmptyState
-                        icon={Lock}
-                        title="Access Denied"
-                        description="You don't have permission to view this project. Please contact the project manager to request access."
-                    />
-                </div>
-            );
-        }
-        return notFound();
+        return <AccessDeniedView projectName={projectCheck.name} />;
     }
 
     return (
