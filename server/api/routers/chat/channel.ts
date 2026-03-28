@@ -97,8 +97,13 @@ export const channelRouter = createTRPCRouter({
         ORDER BY m.channel_id, m.created_at DESC
       `);
 
+      // drizzle 0.45+ db.execute returns { rows: T[] } instead of T[]
+      const lastMessageRows = (
+        Array.isArray(lastMessages) ? lastMessages : (lastMessages as { rows: unknown[] }).rows ?? []
+      ) as { channel_id: number; content: string | null; sender_name: string | null; created_at: Date | null }[];
+
       const lastMsgMap = new Map(
-        (lastMessages as unknown as { channel_id: number; content: string | null; sender_name: string | null; created_at: Date | null }[]).map((r) => [
+        lastMessageRows.map((r) => [
           r.channel_id,
           { content: r.content, senderName: r.sender_name, createdAt: r.created_at },
         ])

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, startOfDay } from "date-fns";
+import { format, startOfDay, differenceInCalendarDays } from "date-fns";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ import {
   Filter,
   CalendarDays,
   Download,
+  AlertCircle,
 } from "lucide-react";
 
 import { submitLeaveRequest, processLeaveRequest } from "@/server/actions/leave-actions";
@@ -45,7 +46,7 @@ import ExcelJS from "exceljs";
 
 import type { LeaveBalance, LeaveType, Approver, LeaveRequest } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
-import { ALLOWED_LEAVE_TYPE_NAMES } from "@/lib/leave-policy";
+import { ALLOWED_LEAVE_TYPE_NAMES, LEAVE_MAX_DAYS } from "@/lib/leave-policy";
 
 /* ─── Leave request form schema ─── */
 
@@ -107,8 +108,35 @@ export function LeavesTabContent({
     },
   });
 
+  /* ─── Issue #137: Leave day limit validation ─── */
+  const watchedLeaveTypeId = leaveForm.watch("leaveTypeId");
+  const watchedStartDate = leaveForm.watch("startDate");
+  const watchedEndDate = leaveForm.watch("endDate");
+  const watchedHalfDay = leaveForm.watch("halfDay");
+
+  const leaveDayLimitError = useMemo(() => {
+    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) return null;
+    const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
+    if (!selectedType) return null;
+    const maxDays = LEAVE_MAX_DAYS[selectedType.name];
+    if (maxDays === undefined) return null; // no limit for this type (e.g. Unpaid)
+    const days = watchedHalfDay
+      ? 0.5
+      : differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
+    if (days > maxDays) {
+      return `${selectedType.name} cannot exceed ${maxDays} days per year. You have selected ${days} day${days !== 1 ? "s" : ""}.`;
+    }
+    return null;
+  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes]);
+
   async function onLeaveSubmit(data: LeaveFormValues) {
     if (!data.startDate || !data.endDate) return;
+
+    // Issue #137: Block submission if day limit exceeded
+    if (leaveDayLimitError) {
+      toast.error(leaveDayLimitError);
+      return;
+    }
 
     const approverId = data.approverId || approvers[0]?.id;
     if (!approverId) {
@@ -417,11 +445,19 @@ export function LeavesTabContent({
                     />
                   </div>
 
+                  {/* Issue #137: Day limit warning */}
+                  {leaveDayLimitError && (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+                      <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
+                      <p className="text-xs text-red-600 dark:text-red-400">{leaveDayLimitError}</p>
+                    </div>
+                  )}
+
                   {/* Submit */}
                   <Button
                     type="submit"
                     className="w-full bg-gold hover:bg-gold/90 text-white"
-                    disabled={leaveFormLoading}
+                    disabled={leaveFormLoading || !!leaveDayLimitError}
                   >
                     {leaveFormLoading && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />

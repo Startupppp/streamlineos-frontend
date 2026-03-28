@@ -69,11 +69,73 @@ export default function TargetsPage() {
   if (targetsLoading || leaderboardLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32" />)}
+        {/* Header with Set Target button */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <Skeleton className="h-8 w-52" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <Skeleton className="h-10 w-28" />
         </div>
-        <Skeleton className="h-96" />
+
+        {/* My Targets section */}
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-28" />
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-8 w-8 rounded-lg" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-3 w-10" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-5 w-10 rounded-full" />
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <Skeleton className="h-7 w-8" />
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Team Leaderboard section */}
+        <div className="space-y-3">
+          <Skeleton className="h-6 w-36" />
+          <Card>
+            <CardContent className="p-4 space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="rounded-xl p-4 border border-border/50">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-24" />
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-10" />
+                          <Skeleton className="h-3 w-14" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-2 w-full rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -102,8 +164,8 @@ export default function TargetsPage() {
               <SheetHeader>
                 <SheetTitle>Set New Target</SheetTitle>
               </SheetHeader>
-              <form action={handleCreateTarget} className="space-y-4">
-                <div>
+              <form action={handleCreateTarget} className="space-y-6 pt-2">
+                <div className="space-y-2">
                   <Label htmlFor="metricType">Metric</Label>
                   <select
                     id="metricType"
@@ -117,11 +179,11 @@ export default function TargetsPage() {
                     <option value="deals">Deals Closed</option>
                   </select>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="targetValue">Target Value</Label>
                   <Input id="targetValue" name="targetValue" type="number" required placeholder="e.g. 10" />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="period">Period</Label>
                   <select
                     id="period"
@@ -134,16 +196,16 @@ export default function TargetsPage() {
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="startDate">Start Date</Label>
                     <Input id="startDate" name="startDate" type="date" required />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="endDate">End Date</Label>
                     <Input id="endDate" name="endDate" type="date" required />
                   </div>
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-3 pt-4">
                   <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
                   <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={createTarget.isPending}>
                     {createTarget.isPending ? "Creating..." : "Create Target"}

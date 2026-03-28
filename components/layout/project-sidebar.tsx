@@ -106,25 +106,6 @@ function ProjectSidebarContent({
                     );
                 })}
                  
-                <div className="my-4 border-t border-border/50 mx-2" />
-                 
-                {!isCollapsed && (
-                    <div className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Development
-                    </div>
-                )}
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={cn(
-                        "w-full justify-start text-muted-foreground font-normal",
-                        isCollapsed && "justify-center px-2"
-                    )}
-                    title={isCollapsed ? "Releases" : undefined}
-                >
-                    <div className={cn("h-4 w-4 border-2 border-dashed rounded-full", !isCollapsed && "mr-3")} />
-                    {!isCollapsed && <span>Releases</span>}
-                </Button>
             </div>
 
             {isCollapsed && (

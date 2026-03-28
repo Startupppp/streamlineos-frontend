@@ -232,7 +232,7 @@ export default function DevicesPage() {
                         <FormItem>
                           <FormLabel>Device Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="MacBook Pro 14" {...field} />
+                            <Input placeholder="MacBook Pro 14" className="capitalize" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -248,7 +248,7 @@ export default function DevicesPage() {
                         <FormItem>
                           <FormLabel>Brand</FormLabel>
                           <FormControl>
-                            <Input placeholder="Apple" {...field} />
+                            <Input placeholder="Apple" className="capitalize" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -262,7 +262,7 @@ export default function DevicesPage() {
                         <FormItem>
                           <FormLabel>Model</FormLabel>
                           <FormControl>
-                            <Input placeholder="M3 Pro" {...field} />
+                            <Input placeholder="M3 Pro" className="capitalize" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -277,7 +277,12 @@ export default function DevicesPage() {
                       <FormItem>
                         <FormLabel>Serial Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="SN123456789" {...field} />
+                          <Input
+                            placeholder="SN123456789"
+                            className="uppercase"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -291,7 +296,7 @@ export default function DevicesPage() {
                       <FormItem>
                         <FormLabel>Notes</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Any additional notes..." {...field} />
+                          <Textarea placeholder="Any additional notes..." className="capitalize" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

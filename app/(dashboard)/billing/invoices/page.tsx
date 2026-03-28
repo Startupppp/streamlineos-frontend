@@ -377,7 +377,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 
           <div>
             <Label className="text-xs">Due Date</Label>
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 mt-1" />
+            <Input type="date" max="9999-12-31" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 mt-1" />
           </div>
 
           <div>

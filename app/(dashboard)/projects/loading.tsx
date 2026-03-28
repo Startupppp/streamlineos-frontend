@@ -4,22 +4,22 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ProjectsLoading() {
   return (
     <div className="space-y-6">
-      {/* Page header */}
+      {/* Page header with New Project button */}
       <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-4 w-36" />
         </div>
         <Skeleton className="h-9 w-32" />
       </div>
 
-      {/* Filter bar (search + status chips + view toggle) */}
+      {/* Filter bar: search + status chips + view toggle */}
       <div className="space-y-3">
         <Skeleton className="h-10 w-full rounded-md" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-24 rounded-md" />
             <Skeleton className="h-8 w-16 rounded-md" />
+            <Skeleton className="h-8 w-20 rounded-md" />
             <Skeleton className="h-8 w-24 rounded-md" />
             <Skeleton className="h-8 w-20 rounded-md" />
           </div>
@@ -27,7 +27,7 @@ export default function ProjectsLoading() {
         </div>
       </div>
 
-      {/* Card grid */}
+      {/* Card grid (3 cols, matching ProjectCard layout) */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <Card key={i} className="h-full flex flex-col">

@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets } from "@/lib/db/schema";
-import { eq, and, sql, desc, or, inArray, count } from "drizzle-orm";
+import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets, leadActivities } from "@/lib/db/schema";
+import { eq, and, sql, desc, or, inArray, count, gte, lt } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
 
 import { TRPCError } from "@trpc/server";
@@ -283,5 +283,33 @@ export const dashboardRouter = createTRPCRouter({
         image: t.assignee.image,
       } : null,
     }));
+  }),
+
+  getTodayScheduledActivities: protectedProcedure.query(async ({ ctx }) => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const activities = await ctx.db
+      .select({
+        id: leadActivities.id,
+        type: leadActivities.type,
+        subject: leadActivities.subject,
+        date: leadActivities.date,
+        location: leadActivities.location,
+      })
+      .from(leadActivities)
+      .where(
+        and(
+          eq(leadActivities.orgId, ctx.session.orgId),
+          eq(leadActivities.userId, ctx.session.userId),
+          gte(leadActivities.date, todayStart),
+          lt(leadActivities.date, todayEnd),
+          inArray(leadActivities.type, ["meeting", "call"])
+        )
+      );
+
+    return activities;
   }),
 });

@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { sendLeaveRequestEmail, sendLeaveStatusUpdateEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
-import { createNotification, notifyAllMembers } from "./create-notification";
+import { createNotification, notifyAllMembers, notifyByRoles } from "./create-notification";
 import {
   DEFAULT_LEAVE_TYPES,
   LEAVE_POLICY,
@@ -438,6 +438,15 @@ export async function submitLeaveRequest(data: {
         link: "/hr/leaves",
         metadata: { leaveType: leaveType?.name, reason: data.reason },
       });
+
+      // Also notify all HR and CEO users about the leave request
+      await notifyByRoles(member.orgId, ["CEO", "HR"], {
+        type: "INFO",
+        title: "New Leave Request",
+        message: `${session.user.name || "An employee"} has requested ${leaveType?.name || "leave"} from ${data.startDate.toLocaleDateString()} to ${data.endDate.toLocaleDateString()}.`,
+        link: "/hr/leaves",
+        excludeUserId: session.user.id,
+      });
     }
 
     revalidatePath("/hr/leaves");
@@ -688,6 +697,33 @@ export async function getPendingApprovalCount() {
     );
 
   return Number(count[0]?.count || 0);
+}
+
+export async function getAllIncomingRequests() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const member = await db.query.organizationMembers.findFirst({
+    where: eq(organizationMembers.userId, session.user.id),
+  });
+  if (!member) return [];
+
+  const isAdminRole = member.role === "CEO" || member.role === "HR" || member.role === "ADMIN";
+
+  return await db.query.leaveRequests.findMany({
+    where: and(
+      ...(isAdminRole
+        ? [eq(leaveRequests.orgId, member.orgId)]
+        : [eq(leaveRequests.approverId, session.user.id), eq(leaveRequests.orgId, member.orgId)]
+      ),
+    ),
+    with: {
+      user: true,
+      leaveType: true,
+      approver: true,
+    },
+    orderBy: [desc(leaveRequests.createdAt)],
+  });
 }
 
 export async function getApprovedLeavesThisWeek() {

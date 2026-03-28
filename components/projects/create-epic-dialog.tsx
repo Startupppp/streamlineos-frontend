@@ -92,15 +92,15 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="sm:max-w-[500px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+      <SheetContent className="sm:max-w-[500px] overflow-y-auto p-6">
+        <SheetHeader className="mb-6">
+          <SheetTitle className="flex items-center gap-2 text-lg">
             <Layers className="h-5 w-5 text-purple-500" />
             Create New Epic
           </SheetTitle>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="title"
@@ -127,7 +127,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
                   <FormControl>
                     <Textarea
                       placeholder="Describe the epic goals and scope..."
-                      className="resize-none"
+                      className="resize-none min-h-[120px]"
                       rows={4}
                       {...field}
                     />
@@ -145,7 +145,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
                   <FormLabel>Priority</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
                     </FormControl>
@@ -161,7 +161,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex justify-end gap-3 pt-6 border-t">
               <Button
                 type="button"
                 variant="outline"

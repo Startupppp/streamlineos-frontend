@@ -62,6 +62,15 @@ function getInitials(name: string | null | undefined) {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
+function toTitleCase(str: string) {
+  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function toSentenceCase(str: string) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 export default function SupportInboxPage() {
   return (
     <DashboardGate allowedRoles={["CEO", "HR", "CUSTOMER_SUPPORT"]}>
@@ -82,7 +91,7 @@ function InboxContent() {
       ...(priorityFilter !== "all" ? { priority: priorityFilter as "LOW" } : {}),
     }
   );
-  const { data: stats } = api.support.getStats.useQuery();
+  const { data: stats, isLoading: statsLoading } = api.support.getStats.useQuery();
 
   const tickets = ticketsData?.items ?? [];
 
@@ -93,7 +102,7 @@ function InboxContent() {
           <div>
             <h2 className="text-xl font-bold">Support Inbox</h2>
             <p className="text-xs text-muted-foreground">
-              {stats ? `${(stats.open ?? 0) + (stats.in_progress ?? 0)} active tickets` : "Loading..."}
+              {statsLoading ? "Loading..." : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets`}
               {(stats?.sla_breached ?? 0) > 0 && (
                 <span className="text-red-500 font-medium ml-2">{stats?.sla_breached} SLA breached</span>
               )}
@@ -157,7 +166,7 @@ function InboxContent() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold truncate">{ticket.title}</p>
+                          <p className="text-[13px] font-semibold truncate">{toTitleCase(ticket.title)}</p>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
                             #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
                           </p>
@@ -248,7 +257,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={onBack} className="md:hidden h-7 px-2">Back</Button>
             <div>
-              <h3 className="text-sm font-bold">{ticket.title}</h3>
+              <h3 className="text-sm font-bold">{toTitleCase(ticket.title)}</h3>
               <p className="text-[11px] text-muted-foreground">#{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}</p>
             </div>
           </div>
@@ -271,7 +280,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
 
       <ScrollArea className="flex-1 px-4 py-3">
         {ticket.description && (
-          <div className="bg-muted/30 rounded-lg p-3 mb-4 text-sm">{ticket.description}</div>
+          <div className="bg-muted/30 rounded-lg p-3 mb-4 text-sm">{toSentenceCase(ticket.description)}</div>
         )}
         <div className="space-y-3">
           {messages.map((msg) => (

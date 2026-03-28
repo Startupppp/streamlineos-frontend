@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -30,6 +31,8 @@ import {
   XCircle,
   Loader2,
   CalendarDays,
+  Clock,
+  UserCheck,
 } from "lucide-react";
 
 import { resolveImageUrl } from "@/lib/utils";
@@ -37,6 +40,123 @@ import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
 import { WfhRequestItem } from "./leaves-shared";
+
+/* ─── Status Badge ─── */
+
+function LeaveStatusBadge({ status }: { status: string }) {
+  const config: Record<string, { label: string; className: string; icon: React.ElementType }> = {
+    PENDING: {
+      label: "Pending",
+      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",
+      icon: Clock,
+    },
+    APPROVED: {
+      label: "Approved",
+      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+      icon: CheckCircle2,
+    },
+    REJECTED: {
+      label: "Rejected",
+      className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+      icon: XCircle,
+    },
+  };
+
+  const c = config[status] ?? config.PENDING;
+  const Icon = c.icon;
+
+  return (
+    <Badge variant="outline" className={`text-xs flex items-center gap-1 ${c.className}`}>
+      <Icon className="h-3 w-3" aria-hidden="true" />
+      {c.label}
+    </Badge>
+  );
+}
+
+/* ─── LeaveApprovalItem (internal) ─── */
+
+function LeaveApprovalItem({
+  req,
+  processingId,
+  onProcess,
+}: {
+  req: LeaveRequest;
+  processingId: number | null;
+  onProcess: (requestId: number, status: "APPROVED" | "REJECTED") => void;
+}) {
+  const status = req.status ?? "PENDING";
+  const isPending = status === "PENDING";
+
+  return (
+    <div
+      className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border"
+      role="listitem"
+    >
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <Avatar className="h-9 w-9 shrink-0">
+          <AvatarImage src={resolveImageUrl(req.user?.image)} />
+          <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            {req.user?.firstName?.[0]}
+            {req.user?.lastName?.[0]}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-foreground">
+            {req.user?.firstName
+              ? `${req.user.firstName} ${req.user.lastName}`
+              : req.user?.email}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
+            {format(new Date(req.endDate), "MMM dd, yyyy")}
+          </p>
+          {req.reason && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
+          )}
+          {/* Issue #187: Show approver name for approved/rejected requests */}
+          {!isPending && req.approver?.name && (
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              <UserCheck className="h-3 w-3" aria-hidden="true" />
+              {status === "APPROVED" ? "Approved" : "Rejected"} by {req.approver.name}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0 ml-3">
+        {isPending ? (
+          <>
+            <Button
+              size="sm"
+              variant="default"
+              className="h-8"
+              disabled={processingId === req.id}
+              onClick={() => onProcess(req.id, "APPROVED")}
+            >
+              {processingId === req.id ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+              )}
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8"
+              disabled={processingId === req.id}
+              onClick={() => onProcess(req.id, "REJECTED")}
+            >
+              <XCircle className="h-3 w-3 mr-1" />
+              Reject
+            </Button>
+          </>
+        ) : (
+          <LeaveStatusBadge status={status} />
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ─── LeaveApprovalsList (internal) ─── */
 
@@ -59,63 +179,14 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
   }
 
   return (
-    <div className="space-y-4" role="list" aria-label="Pending leave approvals">
+    <div className="space-y-4" role="list" aria-label="Leave approvals">
       {requests.map((req) => (
-        <div
+        <LeaveApprovalItem
           key={req.id}
-          className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border"
-          role="listitem"
-        >
-          <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={resolveImageUrl(req.user?.image)} />
-              <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                {req.user?.firstName?.[0]}
-                {req.user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                {req.user?.firstName
-                  ? `${req.user.firstName} ${req.user.lastName}`
-                  : req.user?.email}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
-                {format(new Date(req.endDate), "MMM dd, yyyy")}
-              </p>
-              {req.reason && (
-                <p className="text-xs text-muted-foreground mt-0.5">{req.reason}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="default"
-              className="h-8"
-              disabled={processingId === req.id}
-              onClick={() => handleProcess(req.id, "APPROVED")}
-            >
-              {processingId === req.id ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-              )}
-              Approve
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8"
-              disabled={processingId === req.id}
-              onClick={() => handleProcess(req.id, "REJECTED")}
-            >
-              <XCircle className="h-3 w-3 mr-1" />
-              Reject
-            </Button>
-          </div>
-        </div>
+          req={req}
+          processingId={processingId}
+          onProcess={handleProcess}
+        />
       ))}
     </div>
   );
@@ -125,12 +196,14 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
 
 interface LeaveApprovalsContentProps {
   incomingLeaveRequests: LeaveRequest[];
+  allIncomingLeaveRequests: LeaveRequest[];
 }
 
 /* ─── Component ─── */
 
 export function LeaveApprovalsContent({
   incomingLeaveRequests,
+  allIncomingLeaveRequests,
 }: LeaveApprovalsContentProps) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
@@ -177,6 +250,16 @@ export function LeaveApprovalsContent({
     });
   }, [rejectingId, rejectionReason, processWfhRequest]);
 
+  /* ─── Issue #186: Filter requests by status ─── */
+  const approvedRequests = useMemo(
+    () => allIncomingLeaveRequests.filter((r) => r.status === "APPROVED"),
+    [allIncomingLeaveRequests]
+  );
+  const rejectedRequests = useMemo(
+    () => allIncomingLeaveRequests.filter((r) => r.status === "REJECTED"),
+    [allIncomingLeaveRequests]
+  );
+
   return (
     <>
       <div className="space-y-6">
@@ -184,24 +267,110 @@ export function LeaveApprovalsContent({
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
-              Pending Leave Requests
-              {incomingLeaveRequests.length > 0 && (
+              Leave Requests
+              {allIncomingLeaveRequests.length > 0 && (
                 <Badge variant="secondary" className="ml-1">
-                  {incomingLeaveRequests.length}
+                  {allIncomingLeaveRequests.length}
                 </Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {incomingLeaveRequests.length === 0 ? (
-              <EmptyState
-                illustration={<EmptyApprovalIllustration />}
-                title="No pending leave requests"
-                description="All leave requests have been processed."
-              />
-            ) : (
-              <LeaveApprovalsList requests={incomingLeaveRequests} />
-            )}
+            {/* Issue #186: Status filter tabs */}
+            <Tabs defaultValue="all" className="space-y-4">
+              <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
+                <TabsTrigger
+                  value="all"
+                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                >
+                  All
+                  <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
+                    {allIncomingLeaveRequests.length}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="pending"
+                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                >
+                  Pending
+                  {incomingLeaveRequests.length > 0 && (
+                    <Badge className="ml-1.5 h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-bold border-0">
+                      {incomingLeaveRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="approved"
+                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                >
+                  Approved
+                  {approvedRequests.length > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
+                      {approvedRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rejected"
+                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                >
+                  Rejected
+                  {rejectedRequests.length > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
+                      {rejectedRequests.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all">
+                {allIncomingLeaveRequests.length === 0 ? (
+                  <EmptyState
+                    illustration={<EmptyApprovalIllustration />}
+                    title="No leave requests"
+                    description="There are no leave requests to display."
+                  />
+                ) : (
+                  <LeaveApprovalsList requests={allIncomingLeaveRequests} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="pending">
+                {incomingLeaveRequests.length === 0 ? (
+                  <EmptyState
+                    illustration={<EmptyApprovalIllustration />}
+                    title="No pending leave requests"
+                    description="All leave requests have been processed."
+                  />
+                ) : (
+                  <LeaveApprovalsList requests={incomingLeaveRequests} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="approved">
+                {approvedRequests.length === 0 ? (
+                  <EmptyState
+                    illustration={<EmptyApprovalIllustration />}
+                    title="No approved leave requests"
+                    description="No leave requests have been approved yet."
+                  />
+                ) : (
+                  <LeaveApprovalsList requests={approvedRequests} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="rejected">
+                {rejectedRequests.length === 0 ? (
+                  <EmptyState
+                    illustration={<EmptyApprovalIllustration />}
+                    title="No rejected leave requests"
+                    description="No leave requests have been rejected."
+                  />
+                ) : (
+                  <LeaveApprovalsList requests={rejectedRequests} />
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 

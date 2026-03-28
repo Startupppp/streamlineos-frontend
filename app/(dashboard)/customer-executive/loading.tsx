@@ -10,7 +10,7 @@ export default function CustomerExecutiveLoading() {
         <Skeleton className="h-4 w-80" />
       </div>
 
-      {/* Metric cards */}
+      {/* 4 Metric cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i}>
@@ -28,43 +28,60 @@ export default function CustomerExecutiveLoading() {
         ))}
       </div>
 
-      {/* Health donut + Renewals */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+      {/* Client Health (5-col) + Upcoming Renewals (7-col) */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <Card className="lg:col-span-5 h-full">
           <CardHeader>
-            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-28" />
           </CardHeader>
-          <CardContent>
-            <Skeleton className="h-48 w-48 rounded-full mx-auto" />
+          <CardContent className="flex items-center justify-center py-4">
+            <Skeleton className="h-48 w-48 rounded-full" />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="lg:col-span-7 h-full">
           <CardHeader>
             <Skeleton className="h-5 w-40" />
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
+            {/* Table header */}
+            <div className="flex items-center gap-6 pb-2 mb-2 border-b border-border">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 w-14" />
+            </div>
+            {/* Table rows */}
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-md border">
-                <div className="space-y-1">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-                <Skeleton className="h-5 w-20" />
+              <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-16 rounded-full" />
               </div>
             ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Key accounts + Activity */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Key Accounts + Recent Interactions (2-col) */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <Skeleton className="h-5 w-28" />
           </CardHeader>
           <CardContent className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full" />
+              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0">
+                <Skeleton className="w-2 h-2 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+                <div className="text-right space-y-1">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-14 rounded-full" />
+                </div>
+              </div>
             ))}
           </CardContent>
         </Card>
@@ -74,8 +91,52 @@ export default function CustomerExecutiveLoading() {
           </CardHeader>
           <CardContent className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+              <div key={i} className="flex items-start gap-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
             ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Support + Retention + CSAT (3-col) */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Support Overview */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-36" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border p-3 text-center space-y-1">
+                  <Skeleton className="h-7 w-10 mx-auto" />
+                  <Skeleton className="h-3 w-20 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        {/* Retention Trend */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-32" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[180px] w-full" />
+          </CardContent>
+        </Card>
+        {/* CSAT Trend */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-24" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[180px] w-full" />
           </CardContent>
         </Card>
       </div>

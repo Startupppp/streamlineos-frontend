@@ -36,6 +36,12 @@ export const ALLOWED_LEAVE_TYPE_NAMES: ReadonlySet<string> = new Set([
   LEAVE_POLICY.UNPAID.name,
 ]);
 
+/** Maximum number of days allowed per single leave request, by leave type name */
+export const LEAVE_MAX_DAYS: Record<string, number> = {
+  [LEAVE_POLICY.SICK.name]: LEAVE_POLICY.SICK.daysPerYear,
+  [LEAVE_POLICY.CASUAL.name]: LEAVE_POLICY.CASUAL.daysPerYear,
+};
+
 export function calculateProratedCasualLeaves(
   joiningDate: Date | string,
   year: number,

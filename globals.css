@@ -49,40 +49,40 @@
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.99 0.002 258);
-  --foreground: oklch(0.15 0.02 260);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 260);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 260);
+  --background: #fbfbfe;
+  --foreground: #1a1c2e;
+  --card: #ffffff;
+  --card-foreground: #1a1c2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1c2e;
 
   --primary: #bd882c;
-  --primary-foreground: oklch(0.99 0.002 258);
+  --primary-foreground: #fbfbfe;
   --secondary: #0f2b7f;
-  --secondary-foreground: oklch(0.99 0.002 258);
-  --muted: oklch(0.97 0.005 250);
-  --muted-foreground: oklch(0.5 0.03 257);
+  --secondary-foreground: #fbfbfe;
+  --muted: #f3f3f8;
+  --muted-foreground: #71738a;
   --accent: #bd882c;
-  --accent-foreground: oklch(0.99 0.002 258);
-  --destructive: oklch(0.64 0.21 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.93 0.01 255);
-  --input: oklch(0.93 0.01 255);
+  --accent-foreground: #fbfbfe;
+  --destructive: #dc3545;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4ed;
+  --input: #e4e4ed;
   --ring: #bd882c;
 
   --chart-1: #bd882c;
   --chart-2: #bd882c;
-  --chart-3: oklch(0.62 0.19 260);
-  --chart-4: oklch(0.61 0.22 293);
-  --chart-5: oklch(0.66 0.21 354);
+  --chart-3: #3b5fc0;
+  --chart-4: #7b3fc0;
+  --chart-5: #c03b7b;
 
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.15 0.02 260);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1c2e;
   --sidebar-primary: #bd882c;
-  --sidebar-primary-foreground: oklch(0.99 0.002 258);
+  --sidebar-primary-foreground: #fbfbfe;
   --sidebar-accent: #bd882c;
-  --sidebar-accent-foreground: oklch(0.99 0.002 258);
-  --sidebar-border: oklch(0.93 0.01 255);
+  --sidebar-accent-foreground: #fbfbfe;
+  --sidebar-border: #e4e4ed;
   --sidebar-ring: #bd882c;
 
   --gold: #bd882c;
@@ -170,7 +170,7 @@
   background: radial-gradient(ellipse at 20% 50%, rgba(189, 136, 44, 0.05) 0%, transparent 50%),
               radial-gradient(ellipse at 80% 20%, rgba(15, 43, 127, 0.04) 0%, transparent 50%),
               radial-gradient(ellipse at 50% 80%, rgba(189, 136, 44, 0.03) 0%, transparent 50%),
-              oklch(0.97 0.005 250);
+              #f3f3f8;
 }
 
 @keyframes shimmer {

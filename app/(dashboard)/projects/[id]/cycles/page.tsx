@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -129,17 +129,17 @@ export default function CyclesPage({ params }: { params: Promise<{ id: string }>
         <ProjectSubNav projectId={projectId} />
         <div className="flex items-center justify-between mt-4">
           <h1 className="text-2xl font-bold">Cycles</h1>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+            <SheetTrigger asChild>
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-1" /> New Cycle
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Cycle</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            </SheetTrigger>
+            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Create Cycle</SheetTitle>
+              </SheetHeader>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
                 <div>
                   <Label htmlFor="name">Name</Label>
                   <Input id="name" {...form.register("name")} />
@@ -165,8 +165,8 @@ export default function CyclesPage({ params }: { params: Promise<{ id: string }>
                   {createMutation.isPending ? "Creating..." : "Create Cycle"}
                 </Button>
               </form>
-            </DialogContent>
-          </Dialog>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 

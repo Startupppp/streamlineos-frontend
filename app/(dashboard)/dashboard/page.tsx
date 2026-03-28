@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -29,7 +29,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "sonner";
 import { format } from "date-fns";
+import { api } from "@/trpc/react";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
@@ -63,6 +65,23 @@ export default function DashboardPage() {
   // Fetch tickets/sprint for project roles and admins
   const { data: myTicketsData, isLoading: ticketsLoading, error: ticketsError } = useEmployeeTickets(currentUserId ?? "");
   const { data: sprintSummary, isLoading: sprintLoading } = useActiveSprintSummary();
+
+  // Fetch today's scheduled meetings/calls
+  const { data: todayActivities } = api.dashboard.getTodayScheduledActivities.useQuery(undefined, {
+    enabled: !!currentUserId,
+  });
+  const shownMeetingToastRef = useRef(false);
+  useEffect(() => {
+    if (todayActivities && todayActivities.length > 0 && !shownMeetingToastRef.current) {
+      shownMeetingToastRef.current = true;
+      if (todayActivities.length === 1) {
+        const a = todayActivities[0];
+        toast.info(`You have a scheduled ${a.type} today: ${a.subject || "No subject"}`, { duration: 6000 });
+      } else {
+        toast.info(`You have ${todayActivities.length} scheduled meetings/calls today`, { duration: 6000 });
+      }
+    }
+  }, [todayActivities]);
 
   const greeting = useMemo(() => getGreeting(), []);
   const todayFormatted = useMemo(() => format(new Date(), "EEEE, MMMM do, yyyy"), []);
@@ -141,12 +160,12 @@ export default function DashboardPage() {
           <Skeleton className="h-14 w-32 rounded-lg" />
         </div>
         <DashboardStatsSkeleton />
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="md:col-span-1 lg:col-span-4 bg-card border-border">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
+          <Card className="lg:col-span-4 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
-          <Card className="md:col-span-1 lg:col-span-3 bg-card border-border">
+          <Card className="lg:col-span-3 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
@@ -231,23 +250,23 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}
-      <motion.div variants={fadeUp} className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
-        <div className="md:col-span-1 lg:col-span-4">
+      <motion.div variants={fadeUp} className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
+        <div className="lg:col-span-4">
           <MyIssuesCard
             tickets={sortedMyTickets}
             isLoading={ticketsLoading}
             error={ticketsError}
           />
         </div>
-        <div className="md:col-span-1 lg:col-span-3">
+        <div className="lg:col-span-3">
           <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
         </div>
       </motion.div>
 
       {/* Projects, Activity, Team — CEO/HR only */}
       {isAdmin && (
-        <motion.div variants={fadeUp} className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <div className="md:col-span-1">
+        <motion.div variants={fadeUp} className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="sm:col-span-1">
             <RecentProjectsCard
               projects={recentProjects}
               isLoading={projectsLoading}
@@ -255,14 +274,14 @@ export default function DashboardPage() {
               onCreateProject={handleGoToProjects}
             />
           </div>
-          <div className="md:col-span-1">
+          <div className="sm:col-span-1">
             <RecentActivityCard
               items={recentActivity}
               isLoading={activityLoading}
               error={activityError}
             />
           </div>
-          <div className="md:col-span-2 lg:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             <TeamCard members={teamAvailability} isLoading={teamLoading} />
           </div>
         </motion.div>

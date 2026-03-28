@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
@@ -133,8 +133,56 @@ export default function WorkLogsPage() {
     return days.some(filterDay);
   }, [days, filterDay, searchTerm]);
 
+  const handleExportWorkLogs = useCallback(async () => {
+    try {
+      const ExcelJS = (await import("exceljs")).default;
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Work Logs");
+
+      const employeeName = selectedUserId && employees
+        ? `${employees.find((e) => e.id === selectedUserId)?.firstName ?? ""} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}`.trim()
+        : "My";
+
+      sheet.columns = [
+        { header: "Date", key: "date", width: 15 },
+        { header: "Day", key: "day", width: 12 },
+        { header: "Description", key: "description", width: 50 },
+        { header: "Status", key: "status", width: 12 },
+      ];
+
+      const headerRow = sheet.getRow(1);
+      headerRow.font = { bold: true };
+      headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+
+      for (const date of days) {
+        const dateStr = format(date, "yyyy-MM-dd");
+        const log = logs?.find((l) => l.date === dateStr);
+        sheet.addRow({
+          date: format(date, "dd MMM yyyy"),
+          day: format(date, "EEEE"),
+          description: log?.description || "",
+          status: log?.status || (log?.description ? "PENDING" : ""),
+        });
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `work-logs-${employeeName}-Q${quarter}-${year}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Work logs exported successfully");
+    } catch {
+      toast.error("Failed to export work logs");
+    }
+  }, [days, logs, selectedUserId, employees, quarter, year]);
+
   return (
     <div className="space-y-3 sm:space-y-4 overflow-x-hidden">
+      <div className="sticky top-0 z-10 bg-background pb-3 space-y-3 sm:space-y-4 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-1">
       <PageHeader
         title="Work Logs"
         description={
@@ -186,6 +234,13 @@ export default function WorkLogsPage() {
                 <SelectItem value="4">Q4 (Oct - Dec)</SelectItem>
               </SelectContent>
             </Select>
+
+            {isAdminOrCeo && (
+              <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={handleExportWorkLogs}>
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            )}
           </div>
         }
       />
@@ -226,6 +281,7 @@ export default function WorkLogsPage() {
           <span className="w-3 h-3 rounded-sm bg-slate-200 dark:bg-slate-700 shrink-0" />
           Empty
         </span>
+      </div>
       </div>
 
       {isLoading ? (

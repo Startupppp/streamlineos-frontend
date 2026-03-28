@@ -221,12 +221,55 @@ export default function PayrollPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-9 w-48" />
-          <Skeleton className="h-10 w-56" />
+      <div className="space-y-6">
+        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <Skeleton className="h-8 w-44" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-[180px]" />
+            <Skeleton className="h-10 w-36" />
+            <Skeleton className="h-10 w-28" />
+          </div>
         </div>
-        <PayrollListSkeleton />
+        <div className="grid gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-7 w-32 mb-1" />
+                <Skeleton className="h-3 w-28" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-2 border-b border-border/50">
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -272,8 +315,8 @@ export default function PayrollPage() {
                   {showPreview ? `Payslip preview for ${selectedEmployeeData?.firstName ?? "employee"}` : ""}
                 </div>
                 {!showPreview ? (
-                  <div className="space-y-6 pt-4">
-                    
+                  <div className="space-y-6 pt-6">
+
                     <div className="space-y-2">
                       <Label>Select Employee</Label>
                       <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
@@ -293,8 +336,7 @@ export default function PayrollPage() {
                     {selectedEmployeeData && (
                       <>
                         <Separator />
-                        
-                        
+
                         <div className="space-y-4">
                           <h4 className="font-medium text-sm text-muted-foreground">Attendance Adjustments</h4>
                           <div className="grid grid-cols-2 gap-4">
@@ -323,11 +365,10 @@ export default function PayrollPage() {
                               />
                             </div>
                           </div>
-      </div>
+                        </div>
 
                         <Separator />
 
-                        
                         <div className="space-y-4">
                           <h4 className="font-medium text-sm text-muted-foreground">Additional Adjustments</h4>
                           <div className="grid grid-cols-2 gap-4">
@@ -358,7 +399,6 @@ export default function PayrollPage() {
 
                         <Separator />
 
-                        
                         <div className="space-y-4">
                           <h4 className="font-medium text-sm text-muted-foreground">Overtime</h4>
                           <div className="grid grid-cols-2 gap-4">
@@ -418,7 +458,7 @@ export default function PayrollPage() {
                       </>
                     )}
 
-                    <SheetFooter>
+                    <SheetFooter className="pt-4 gap-2 sm:gap-0">
                       <Button variant="outline" onClick={() => setGenerateSheetOpen(false)}>
                         Cancel
                       </Button>
@@ -429,29 +469,29 @@ export default function PayrollPage() {
                     </SheetFooter>
                   </div>
                 ) : (
-                  <div className="space-y-6 pt-4">
-                    
+                  <div className="space-y-6 pt-6">
+
                     <Card className="border-2">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div>
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="min-w-0">
                             <CardTitle className="text-lg">
                               {selectedEmployeeData?.firstName} {selectedEmployeeData?.lastName}
-              </CardTitle>
-                            <p className="text-sm text-muted-foreground">
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
                               {selectedEmployeeData?.designation || "Employee"}
                             </p>
                           </div>
-                          <Badge variant="outline">
+                          <Badge variant="outline" className="shrink-0">
                             {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
                           </Badge>
                         </div>
-            </CardHeader>
-                      <CardContent className="space-y-4">
-                        
-                <div>
-                          <h4 className="font-semibold text-sm mb-2 text-green-700">Earnings</h4>
-                          <div className="space-y-1 text-sm">
+                      </CardHeader>
+                      <CardContent className="space-y-5">
+
+                        <div>
+                          <h4 className="font-semibold text-sm mb-3 text-green-700">Earnings</h4>
+                          <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Basic Pay</span>
                               <span>₹{payslipPreview?.basicPay.toLocaleString()}</span>
@@ -488,9 +528,9 @@ export default function PayrollPage() {
                 </div>
 
                         
-                <div>
-                          <h4 className="font-semibold text-sm mb-2 text-red-700">Deductions</h4>
-                          <div className="space-y-1 text-sm">
+                        <div>
+                          <h4 className="font-semibold text-sm mb-3 text-red-700">Deductions</h4>
+                          <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Professional Tax</span>
                               <span className="text-red-600">-₹{payslipPreview?.professionalTax.toLocaleString()}</span>
@@ -536,20 +576,20 @@ export default function PayrollPage() {
                         </div>
 
                         
-                        <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                        <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Working Days</span>
                             <span>{payslipPreview?.workingDays}</span>
-                </div>
+                          </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Effective Days</span>
                             <span>{payslipPreview?.effectiveDays}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                    <SheetFooter>
+                    <SheetFooter className="pt-4 gap-2 sm:gap-0">
                       <Button variant="outline" onClick={() => setShowPreview(false)}>
                         <Calculator className="mr-2 h-4 w-4" />
                         Edit Details

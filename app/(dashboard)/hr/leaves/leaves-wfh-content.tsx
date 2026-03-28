@@ -35,6 +35,7 @@ interface LeavesWfhContentProps {
   approvers: Approver[];
   myLeaveRequests: LeaveRequest[];
   incomingLeaveRequests: LeaveRequest[];
+  allIncomingLeaveRequests: LeaveRequest[];
   approvedLeavesThisWeek: ApprovedLeave[];
 }
 
@@ -46,6 +47,7 @@ export function LeavesWfhContent({
   approvers,
   myLeaveRequests,
   incomingLeaveRequests,
+  allIncomingLeaveRequests,
   approvedLeavesThisWeek,
 }: LeavesWfhContentProps) {
   const { data: session } = useSession();
@@ -165,6 +167,7 @@ export function LeavesWfhContent({
             <TabsContent value="approvals">
               <LeaveApprovalsContent
                 incomingLeaveRequests={incomingLeaveRequests}
+                allIncomingLeaveRequests={allIncomingLeaveRequests}
               />
             </TabsContent>
           )}

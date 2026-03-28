@@ -34,6 +34,7 @@ import {
   sendTicketReviewRequestEmail,
   sendTicketChangesRequestedEmail,
 } from "@/lib/email";
+import { createNotification } from "@/server/actions/create-notification";
 
 function normalizeTicketType(type: string): string {
   const upper = type.toUpperCase();
@@ -131,6 +132,26 @@ export const ticketRouter = createTRPCRouter({
         }
       }
 
+      // Send in-app notifications for all assigned users
+      const allNotifyIds = new Set<string>();
+      if (input.assigneeId) allNotifyIds.add(input.assigneeId);
+      if (input.assigneeIds) input.assigneeIds.forEach(id => allNotifyIds.add(id));
+      for (const userId of allNotifyIds) {
+        if (userId === ctx.session.userId) continue;
+        try {
+          await createNotification({
+            orgId: ctx.session.orgId,
+            userId,
+            type: "INFO",
+            title: "Ticket Assigned to You",
+            message: `You have been assigned to ticket "${input.title}" (${input.type}).`,
+            link: `/projects/${input.projectId}`,
+          });
+        } catch (err) {
+          logger.error("Failed to create ticket assignment notification", { error: err });
+        }
+      }
+
       return ticket;
     }),
 
@@ -211,6 +232,35 @@ export const ticketRouter = createTRPCRouter({
               userId: newAssigneeId,
               assignedBy: ctx.session.userId,
             });
+          }
+        }
+
+        // Notify newly assigned users
+        const newAssigneeNotifyIds = new Set<string>();
+        if (updateData.assigneeIds !== undefined) {
+          updateData.assigneeIds.forEach(id => newAssigneeNotifyIds.add(id));
+        } else if (updateData.assigneeId && updateData.assigneeId !== "" && updateData.assigneeId !== "unassigned") {
+          newAssigneeNotifyIds.add(updateData.assigneeId);
+        }
+        if (newAssigneeNotifyIds.size > 0) {
+          const ticketData = await ctx.db.query.tickets.findFirst({
+            where: eq(tickets.id, ticketId),
+            columns: { title: true, projectId: true, type: true },
+          });
+          for (const userId of newAssigneeNotifyIds) {
+            if (userId === ctx.session.userId) continue;
+            try {
+              await createNotification({
+                orgId: ctx.session.orgId,
+                userId,
+                type: "INFO",
+                title: "Ticket Assigned to You",
+                message: `You have been assigned to ticket "${ticketData?.title || `#${ticketId}`}".`,
+                link: ticketData ? `/projects/${ticketData.projectId}` : undefined,
+              });
+            } catch (err) {
+              logger.error("Failed to create ticket assignment notification", { error: err });
+            }
           }
         }
 

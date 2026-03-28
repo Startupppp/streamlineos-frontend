@@ -122,7 +122,7 @@ export const deleteTimeEntryInputSchema = z.object({
 });
 
 export const addTimeEntryInputSchema = z.object({
-  ticketId: z.number().int().positive(),
+  ticketId: z.number({ error: "Please select a ticket" }).int().positive("Please select a ticket"),
   date: z.date().refine((d) => d <= new Date(), { message: "Cannot log time for future dates" }),
   hours: z.number().positive().max(24, "Cannot log more than 24 hours per entry"),
   description: z.string().optional(),

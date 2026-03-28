@@ -80,8 +80,11 @@ function OrgNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         transition={{ delay: depth * 0.05 }}
       >
         <Card className={cn(
-          "w-48 shadow-sm hover:shadow-md transition-shadow",
-          depth === 0 && "ring-2 ring-[#bd882c]/30"
+          "w-52 shadow-sm hover:shadow-md transition-shadow border-l-4",
+          depth === 0 ? "ring-2 ring-[#bd882c]/30 border-l-[#bd882c]" :
+          depth === 1 ? "border-l-blue-500" :
+          depth === 2 ? "border-l-purple-500" :
+          "border-l-gray-400"
         )}>
           <CardContent className="p-3 flex flex-col items-center text-center">
             <Avatar className="h-12 w-12 mb-2">
@@ -103,23 +106,23 @@ function OrgNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
 
       {node.children.length > 0 && (
         <div className="flex flex-col items-center">
-          <div className="w-px h-6 bg-border" />
-          <div className="relative flex gap-6">
+          <div className="w-0.5 h-8 bg-border" />
+          <div className="relative flex gap-8">
             {node.children.length > 1 && (
               <div
-                className="absolute top-0 h-px bg-border"
+                className="absolute top-0 h-0.5 bg-border"
                 style={{
-                  left: "50%",
-                  right: "50%",
-                  transform: `translateX(-${(node.children.length - 1) * 50}%)`,
-                  width: `${(node.children.length - 1) * 100}%`,
-                  marginLeft: `-${(node.children.length - 1) * 50}%`,
+                  left: `calc(50% / ${node.children.length})`,
+                  right: `calc(50% / ${node.children.length})`,
+                  width: `calc(100% - 100% / ${node.children.length})`,
+                  marginLeft: "auto",
+                  marginRight: "auto",
                 }}
               />
             )}
             {node.children.map((child) => (
-              <div key={child.employee.id} className="flex flex-col items-center">
-                <div className="w-px h-6 bg-border" />
+              <div key={child.employee.id} className="flex flex-col items-center relative">
+                <div className="w-0.5 h-8 bg-border" />
                 <OrgNode node={child} depth={depth + 1} />
               </div>
             ))}

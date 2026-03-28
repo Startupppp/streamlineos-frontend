@@ -48,8 +48,8 @@ const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
-  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [attachmentPreviews, setAttachmentPreviews] = useState<(string | null)[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -66,8 +66,8 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
           setOpen(false);
           form.reset();
           setSelectedProjectId(null);
-          setAttachmentFile(null);
-          setAttachmentPreview(null);
+          setAttachmentFiles([]);
+          setAttachmentPreviews([]);
           utils.project.getTimeEntries.invalidate();
       },
       onError: (err) => {
@@ -76,31 +76,49 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   });
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      toast.error("File too large (max 10MB)");
-      return;
-    }
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     const allowed = ACCEPT_ATTACHMENTS.split(",").map((t) => t.trim());
-    if (!allowed.includes(file.type)) {
-      toast.error("Please select an image (JPEG, PNG, GIF, WebP) or PDF");
-      return;
+    const newFiles: File[] = [];
+    const newPreviews: (string | null)[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > MAX_ATTACHMENT_SIZE) {
+        toast.error(`${file.name} is too large (max 10MB)`);
+        return;
+      }
+      if (!allowed.includes(file.type)) {
+        toast.error(`${file.name}: Only images (JPEG, PNG, GIF, WebP) or PDF allowed`);
+        return;
+      }
+      newFiles.push(file);
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAttachmentPreviews((prev) => {
+            const updated = [...prev];
+            const idx = attachmentFiles.length + newFiles.indexOf(file);
+            updated[idx] = reader.result as string;
+            return updated;
+          });
+        };
+        reader.readAsDataURL(file);
+        newPreviews.push(null); // placeholder, will be set by reader
+      } else {
+        newPreviews.push(null);
+      }
+    });
+
+    if (newFiles.length > 0) {
+      setAttachmentFiles((prev) => [...prev, ...newFiles]);
+      setAttachmentPreviews((prev) => [...prev, ...newPreviews]);
     }
-    setAttachmentFile(file);
-    if (file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => setAttachmentPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setAttachmentPreview(null);
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeAttachment = () => {
-    setAttachmentFile(null);
-    setAttachmentPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const removeAttachment = (index: number) => {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
+    setAttachmentPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const uploadAttachment = async (file: File): Promise<string | null> => {
@@ -133,6 +151,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   const form = useForm<z.infer<typeof addTimeEntryInputSchema>>({
     resolver: zodResolver(addTimeEntryInputSchema),
     defaultValues: {
+      ticketId: undefined as unknown as number,
       hours: 0,
       description: "",
       date: new Date(),
@@ -142,10 +161,15 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
 
   async function onSubmit(values: z.infer<typeof addTimeEntryInputSchema>) {
     let imageUrl: string | undefined;
-    if (attachmentFile) {
-      const url = await uploadAttachment(attachmentFile);
+    if (attachmentFiles.length > 0) {
+      // Upload the first file as the primary imageUrl (schema supports single)
+      const url = await uploadAttachment(attachmentFiles[0]);
       if (!url) return;
       imageUrl = url;
+      // Upload remaining files in the background
+      for (let i = 1; i < attachmentFiles.length; i++) {
+        await uploadAttachment(attachmentFiles[i]);
+      }
     }
     const submitValues = {
       ...values,
@@ -172,13 +196,13 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 }}
               >
                 <FormControl>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full capitalize">
                     <SelectValue placeholder="Select Project" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
                     {projects?.map((p: Project) => (
-                        <SelectItem key={p.id} value={p.id.toString()} className="truncate">
+                        <SelectItem key={p.id} value={p.id.toString()} className="truncate capitalize">
                             {p.name} ({p.key})
                         </SelectItem>
                     ))}
@@ -208,7 +232,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 <SelectContent className="max-w-[500px] w-[var(--radix-select-trigger-width)]">
                   {projectDetails?.tickets && projectDetails.tickets.length > 0 ? (
                     projectDetails.tickets.map((t: Ticket) => (
-                      <SelectItem key={t.id} value={t.id.toString()} className="truncate">
+                      <SelectItem key={t.id} value={t.id.toString()} className="truncate capitalize">
                         {`Ticket #${t.id}`}: {t.title || 'Untitled'}
                       </SelectItem>
                     ))
@@ -232,8 +256,9 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 <FormItem>
                 <FormLabel>Date</FormLabel>
                 <FormControl>
-                    <Input 
-                        type="date" 
+                    <Input
+                        type="date"
+                        max="9999-12-31"
                         value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                         onChange={(e) => field.onChange(e.target.valueAsDate)}
                     />
@@ -311,7 +336,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
           name="imageUrl"
           render={() => (
             <FormItem>
-              <FormLabel>Attachment (image or PDF)</FormLabel>
+              <FormLabel>Attachments (images or PDF)</FormLabel>
               <FormControl>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -323,7 +348,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                       disabled={uploading}
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      {uploading ? "Uploading..." : "Upload file"}
+                      {uploading ? "Uploading..." : "Upload files"}
                     </Button>
                     <Input
                       ref={fileInputRef}
@@ -331,37 +356,51 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                       className="hidden"
                       accept={ACCEPT_ATTACHMENTS}
                       onChange={handleAttachmentChange}
+                      multiple
                     />
                   </div>
-                  {attachmentFile && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                      {attachmentPreview ? (
-                        <img
-                          src={attachmentPreview}
-                          alt="Preview"
-                          className="h-12 w-12 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
-                          <FileText className="h-6 w-6 text-muted-foreground" />
+                  {attachmentFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {attachmentFiles.map((file, index) => (
+                        <div key={`${file.name}-${index}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                          {attachmentPreviews[index] ? (
+                            <img
+                              src={attachmentPreviews[index]!}
+                              alt="Preview"
+                              className="h-12 w-12 object-cover rounded"
+                            />
+                          ) : file.type === "application/pdf" ? (
+                            <div className="h-12 w-12 rounded bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-red-500" />
+                            </div>
+                          ) : (
+                            <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm truncate block">
+                              {file.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeAttachment(index)}
+                            aria-label={`Remove ${file.name}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                      )}
-                      <span className="text-sm truncate flex-1 min-w-0">
-                        {attachmentFile.name}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={removeAttachment}
-                        aria-label="Remove attachment"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      ))}
                     </div>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Images (JPEG, PNG, GIF, WebP) or PDF, max 10MB. Stored in R2.
+                    Images (JPEG, PNG, GIF, WebP) or PDF, max 10MB each. Multiple files allowed.
                   </p>
                 </div>
               </FormControl>

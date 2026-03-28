@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Calendar, MoreVertical, Settings, LayoutDashboard } from "lucide-react";
+import { Calendar, MoreVertical, Settings, LayoutDashboard, Trash2 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AvatarStack } from "@/components/ui/avatar-stack";
@@ -10,8 +10,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   getColorSafe,
@@ -19,6 +30,8 @@ import {
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { format } from "date-fns";
+import { useDeleteProject } from "@/lib/hooks/trpc-hooks";
+import { toast } from "sonner";
 
 interface ProjectCardProps {
   project: {
@@ -48,7 +61,19 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     ? format(new Date(project.startDate), "MMM d, yyyy")
     : null;
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const deleteProject = useDeleteProject({
+    onSuccess: () => {
+      toast.success("Project deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete project");
+    },
+  });
+
   return (
+    <>
     <Link href={`/projects/${project.id}`} aria-label={`${project.name} — ${displayLabel}`}>
       <Card
         className="hover:shadow-md transition-all cursor-pointer h-full flex flex-col group border-border"
@@ -83,6 +108,18 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   Settings
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDeleteDialogOpen(true);
+                }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Project
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </CardHeader>
@@ -108,5 +145,29 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         </CardFooter>
       </Card>
     </Link>
+
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Project</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete &quot;{project.name}&quot;? This will permanently
+            remove the project and all its tickets, sprints, and members. This action
+            cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => deleteProject.mutate({ projectId: project.id })}
+            disabled={deleteProject.isPending}
+          >
+            {deleteProject.isPending ? "Deleting..." : "Delete Project"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 });

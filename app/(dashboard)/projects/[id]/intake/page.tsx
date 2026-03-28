@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -210,19 +210,19 @@ export default function IntakePage({
             >
               <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
             </Button>
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
+            <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+              <SheetTrigger asChild>
                 <Button size="sm">
                   <Plus className="h-4 w-4 mr-1" /> New Item
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Intake Item</DialogTitle>
-                </DialogHeader>
+              </SheetTrigger>
+              <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Create Intake Item</SheetTitle>
+                </SheetHeader>
                 <form
                   onSubmit={createForm.handleSubmit(onCreateSubmit)}
-                  className="space-y-4"
+                  className="space-y-4 p-4"
                 >
                   <div>
                     <Label htmlFor="intake-title">Title</Label>
@@ -251,8 +251,8 @@ export default function IntakePage({
                     {createMutation.isPending ? "Creating..." : "Create Item"}
                   </Button>
                 </form>
-              </DialogContent>
-            </Dialog>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
@@ -383,14 +383,14 @@ export default function IntakePage({
         </Tabs>
       </div>
 
-      <Dialog open={acceptOpen} onOpenChange={setAcceptOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Accept Intake Item</DialogTitle>
-          </DialogHeader>
+      <Sheet open={acceptOpen} onOpenChange={setAcceptOpen}>
+        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Accept Intake Item</SheetTitle>
+          </SheetHeader>
           <form
             onSubmit={acceptForm.handleSubmit(onAcceptSubmit)}
-            className="space-y-4"
+            className="space-y-4 p-4"
           >
             <div>
               <Label>State</Label>
@@ -505,17 +505,17 @@ export default function IntakePage({
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog open={declineOpen} onOpenChange={setDeclineOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Decline Intake Item</DialogTitle>
-          </DialogHeader>
+      <Sheet open={declineOpen} onOpenChange={setDeclineOpen}>
+        <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Decline Intake Item</SheetTitle>
+          </SheetHeader>
           <form
             onSubmit={declineForm.handleSubmit(onDeclineSubmit)}
-            className="space-y-4"
+            className="space-y-4 p-4"
           >
             <div>
               <Label htmlFor="decline-reason">Reason</Label>
@@ -539,8 +539,8 @@ export default function IntakePage({
               {declineMutation.isPending ? "Declining..." : "Decline Item"}
             </Button>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

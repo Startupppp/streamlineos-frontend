@@ -268,6 +268,7 @@ export default function BacklogPage({ params }: PageProps) {
             <Input
               type="date"
               value={startDate}
+              max="9999-12-31"
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="From date"
               aria-label="Filter by start date"
@@ -279,6 +280,7 @@ export default function BacklogPage({ params }: PageProps) {
             <Input
               type="date"
               value={endDate}
+              max="9999-12-31"
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="To date"
               aria-label="Filter by end date"

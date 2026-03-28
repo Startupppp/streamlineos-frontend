@@ -3,18 +3,20 @@ import {
   getApprovers,
   getMyRequests,
   getIncomingRequests,
+  getAllIncomingRequests,
   getApprovedLeavesThisWeek,
 } from "@/server/actions/leave-actions";
 import { LeaveErrorState } from "./leaves-empty-states";
 import { LeavesWfhContent } from "./leaves-wfh-content";
 
 export default async function LeavesPage() {
-  const [context, approvers, myRequests, incomingRequests, approvedThisWeek] =
+  const [context, approvers, myRequests, incomingRequests, allIncomingRequests, approvedThisWeek] =
     await Promise.all([
       getLeaveContext(),
       getApprovers(),
       getMyRequests(),
       getIncomingRequests(),
+      getAllIncomingRequests(),
       getApprovedLeavesThisWeek(),
     ]);
 
@@ -33,6 +35,7 @@ export default async function LeavesPage() {
       approvers={approvers}
       myLeaveRequests={myRequests}
       incomingLeaveRequests={incomingRequests}
+      allIncomingLeaveRequests={allIncomingRequests}
       approvedLeavesThisWeek={approvedThisWeek}
     />
   );

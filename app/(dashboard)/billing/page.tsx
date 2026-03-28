@@ -64,6 +64,7 @@ export default function BillingPage() {
             <Input
                 type="date"
                 aria-label="Billing start date"
+                max="9999-12-31"
                 value={format(startDate, "yyyy-MM-dd")}
                 onChange={(e) => setStartDate(new Date(e.target.value))}
             />
@@ -73,6 +74,7 @@ export default function BillingPage() {
             <Input
                 type="date"
                 aria-label="Billing end date"
+                max="9999-12-31"
                 value={format(endDate, "yyyy-MM-dd")}
                 onChange={(e) => setEndDate(new Date(e.target.value))}
             />
@@ -84,6 +86,10 @@ export default function BillingPage() {
                 aria-label="Hourly billing rate in dollars"
                 value={hourlyRate}
                 onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
+                onBlur={(e) => {
+                  const cleaned = e.target.value.replace(/^0+(?=\d)/, '');
+                  setHourlyRate(parseFloat(cleaned) || 0);
+                }}
                 className="w-[150px]"
             />
           </div>

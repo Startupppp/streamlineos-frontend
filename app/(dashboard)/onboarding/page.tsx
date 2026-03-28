@@ -100,7 +100,7 @@ export default function OnboardingPage() {
 
   return (
     <motion.div
-      className="max-w-4xl mx-auto py-4 md:py-10"
+      className="max-w-4xl mx-auto py-4 md:py-10 px-4 sm:px-6 lg:px-0"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -121,7 +121,7 @@ export default function OnboardingPage() {
 
       <motion.div variants={fadeUp} className="mb-8">
         <nav aria-label="Onboarding steps">
-          <ol className="flex items-center justify-between">
+          <ol className="flex items-center justify-between overflow-x-auto gap-1 sm:gap-0">
             {ONBOARDING_STEPS.map((step, index) => {
               const StepIcon = step.icon;
               const isCompleted = completedSteps.has(step.id);
@@ -129,25 +129,25 @@ export default function OnboardingPage() {
               const isPast = index < currentStepIndex;
 
               return (
-                <li key={step.id} className="flex items-center flex-1 last:flex-initial">
+                <li key={step.id} className="flex items-center flex-1 last:flex-initial min-w-0">
                   <button
                     type="button"
                     onClick={() => setActiveTab(step.id)}
-                    className="flex flex-col items-center gap-1.5 group p-2 -m-2 rounded-lg"
+                    className="flex flex-col items-center gap-1 sm:gap-1.5 group p-1 sm:p-2 -m-1 sm:-m-2 rounded-lg min-w-0"
                     aria-current={isCurrent ? "step" : undefined}
                     aria-label={`${step.label}${isCompleted ? " (completed)" : ""}`}
                   >
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all ${
+                    <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center border-2 transition-all shrink-0 ${
                       isCompleted
                         ? "bg-green-500 border-green-500 text-white"
                         : isCurrent
                         ? "bg-primary border-primary text-primary-foreground"
                         : "bg-muted border-border text-muted-foreground group-hover:border-primary/50"
                     }`}>
-                      {isCompleted ? <Check className="h-5 w-5" /> : <StepIcon className="h-5 w-5" />}
+                      {isCompleted ? <Check className="h-4 w-4 sm:h-5 sm:w-5" /> : <StepIcon className="h-4 w-4 sm:h-5 sm:w-5" />}
                     </div>
                     <span
-                      className={`text-[10px] sm:text-xs font-medium ${
+                      className={`text-[9px] sm:text-xs font-medium text-center leading-tight truncate max-w-[60px] sm:max-w-none ${
                         isCurrent ? "text-primary" : isCompleted ? "text-green-600" : "text-muted-foreground"
                       }`}
                     >
@@ -155,7 +155,7 @@ export default function OnboardingPage() {
                     </span>
                   </button>
                   {index < ONBOARDING_STEPS.length - 1 && (
-                    <div className={`flex-1 h-0.5 mx-3 mt-[-1.25rem] ${isPast || isCompleted ? "bg-green-500" : "bg-border"}`} aria-hidden="true" />
+                    <div className={`flex-1 h-0.5 mx-1 sm:mx-3 mt-[-1.25rem] hidden sm:block ${isPast || isCompleted ? "bg-green-500" : "bg-border"}`} aria-hidden="true" />
                   )}
                 </li>
               );

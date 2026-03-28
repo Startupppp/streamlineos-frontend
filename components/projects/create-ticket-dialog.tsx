@@ -42,7 +42,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 
-const formSchema = createTicketInputSchema.omit({ projectId: true });
+const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
+  assigneeIds: z.array(z.string()).optional(),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -55,6 +57,7 @@ export function CreateTicketDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
   const { data: projectData } = useProject(projectId);
@@ -132,6 +135,7 @@ export function CreateTicketDialog({
     setOpen(false);
     form.reset();
     setFile(null);
+    setSelectedAssignees([]);
     queryClient.invalidateQueries({
       queryKey: vaivammKeys.project.project(projectId),
     });
@@ -146,6 +150,7 @@ export function CreateTicketDialog({
       priority: "MEDIUM",
       link: "",
       assigneeId: undefined,
+      assigneeIds: [],
     },
   });
 
@@ -155,7 +160,8 @@ export function CreateTicketDialog({
       projectId,
       type: values.type,
       link: values.link || undefined,
-      assigneeId: values.assigneeId === "unassigned" ? undefined : values.assigneeId, 
+      assigneeId: selectedAssignees[0] || undefined,
+      assigneeIds: selectedAssignees.length > 0 ? selectedAssignees : undefined,
     });
   };
 
@@ -271,26 +277,48 @@ export function CreateTicketDialog({
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-               <FormField
-                control={form.control}
-                name="assigneeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee</FormLabel>
+               <FormItem>
+                    <FormLabel>Assignees</FormLabel>
+                    {/* Selected assignees chips */}
+                    {selectedAssignees.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {selectedAssignees.map((id) => {
+                          const member = members?.find((m) => m.id === id);
+                          if (!member) return null;
+                          return (
+                            <div key={id} className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-0.5">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={resolveImageUrl(member.image)} />
+                                <AvatarFallback className="text-[8px]">{member.name?.[0] || "U"}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs truncate max-w-[100px]">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
+                              <button
+                                type="button"
+                                className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                                onClick={() => setSelectedAssignees((prev) => prev.filter((a) => a !== id))}
+                                aria-label={`Remove ${member.name}`}
+                              >
+                                <span className="text-xs font-bold">&times;</span>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {/* Add assignee dropdown */}
                     <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
+                      value=""
+                      onValueChange={(value) => {
+                        if (!value || value === "unassigned") return;
+                        if (selectedAssignees.includes(value)) return;
+                        setSelectedAssignees((prev) => [...prev, value]);
+                      }}
                     >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select assignee" />
-                        </SelectTrigger>
-                      </FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={selectedAssignees.length > 0 ? "+ Add another assignee" : "Select assignees"} />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="unassigned">
-                            <span className="text-muted-foreground">Unassigned</span>
-                        </SelectItem>
-                        {members?.map((member) => (
+                        {members?.filter((m) => !selectedAssignees.includes(m.id)).map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-2">
                                <Avatar className="h-7 w-7">
@@ -305,8 +333,6 @@ export function CreateTicketDialog({
                     </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
                <FormField
                 control={form.control}
                 name="link"

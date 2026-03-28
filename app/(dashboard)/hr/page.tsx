@@ -298,8 +298,8 @@ export default function HRDashboardPage() {
       {/* Search & Filters */}
       <Card className="border-border">
         <CardContent className="py-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[180px] sm:min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="Search by name, email, or role..."
@@ -311,7 +311,7 @@ export default function HRDashboardPage() {
             </div>
 
             <Select value={deptFilter} onValueChange={setDeptFilter}>
-              <SelectTrigger className="h-9 w-[130px] text-xs">
+              <SelectTrigger className="h-9 w-[110px] sm:w-[130px] text-xs">
                 <SelectValue placeholder="Dept: All" />
               </SelectTrigger>
               <SelectContent>
@@ -323,7 +323,7 @@ export default function HRDashboardPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-              <SelectTrigger className="h-9 w-[140px] text-xs">
+              <SelectTrigger className="h-9 w-[120px] sm:w-[140px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -334,7 +334,7 @@ export default function HRDashboardPage() {
             </Select>
 
             <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
-              <SelectTrigger className="h-9 w-[120px] text-xs">
+              <SelectTrigger className="h-9 w-[100px] sm:w-[120px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -511,8 +511,8 @@ export default function HRDashboardPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-              <p className="text-sm text-gold font-medium">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-border">
+              <p className="text-xs sm:text-sm text-gold font-medium">
                 Showing {showFrom}-{showTo} of {filteredEmployees.length} employees
               </p>
               <div className="flex items-center gap-2">
@@ -526,7 +526,7 @@ export default function HRDashboardPage() {
                 >
                   Previous
                 </Button>
-                <span className="text-xs text-muted-foreground" aria-current="page">
+                <span className="text-xs text-muted-foreground whitespace-nowrap" aria-current="page">
                   Page {page} of {totalPages}
                 </span>
                 <Button

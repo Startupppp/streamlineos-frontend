@@ -159,9 +159,31 @@ export default function CrmAnalyticsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-64" />)}
+        {/* Header + date filters */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-1">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+        </div>
+        {/* 2-col chart cards grid (8 cards) */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-7 w-7 rounded" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[280px] w-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );

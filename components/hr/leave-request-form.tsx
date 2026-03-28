@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRequestLeave } from "../../lib/hooks/trpc-hooks";
@@ -29,9 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { differenceInCalendarDays } from "date-fns";
+import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
 
 interface LeaveRequestFormProps {
   types?: { id: number; name: string }[];
@@ -91,7 +93,29 @@ export function LeaveRequestForm({ types = [] }: LeaveRequestFormProps) {
     },
   });
 
+  /* ─── Issue #137: Leave day limit validation ─── */
+  const watchedTypeId = form.watch("typeId");
+  const watchedStartDate = form.watch("startDate");
+  const watchedEndDate = form.watch("endDate");
+
+  const leaveDayLimitError = useMemo(() => {
+    if (!watchedTypeId || !watchedStartDate || !watchedEndDate) return null;
+    const selectedType = types.find((t) => t.id.toString() === watchedTypeId);
+    if (!selectedType) return null;
+    const maxDays = LEAVE_MAX_DAYS[selectedType.name];
+    if (maxDays === undefined) return null;
+    const days = differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
+    if (days > maxDays) {
+      return `${selectedType.name} cannot exceed ${maxDays} days per year. You have selected ${days} day${days !== 1 ? "s" : ""}.`;
+    }
+    return null;
+  }, [watchedTypeId, watchedStartDate, watchedEndDate, types]);
+
   const onSubmit = (values: FormValues) => {
+    if (leaveDayLimitError) {
+      toast.error(leaveDayLimitError);
+      return;
+    }
     requestLeaveMutation.mutate({
       typeId: parseInt(values.typeId),
       startDate: values.startDate,
@@ -184,8 +208,15 @@ export function LeaveRequestForm({ types = [] }: LeaveRequestFormProps) {
                 </FormItem>
               )}
             />
+            {/* Issue #137: Day limit warning */}
+            {leaveDayLimitError && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+                <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="text-xs text-red-600 dark:text-red-400">{leaveDayLimitError}</p>
+              </div>
+            )}
             <div className="flex justify-end">
-              <Button type="submit" disabled={requestLeaveMutation.isPending}>
+              <Button type="submit" disabled={requestLeaveMutation.isPending || !!leaveDayLimitError}>
                 {requestLeaveMutation.isPending
                   ? "Submitting..."
                   : "Submit Request"}
