@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -95,7 +96,7 @@ export function NotificationBell() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <ScrollArea className="flex-1" style={{ maxHeight: "calc(70vh - 52px)" }}>
           {!notifications?.length ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No notifications yet
@@ -151,7 +152,7 @@ export function NotificationBell() {
               })}
             </div>
           )}
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );
