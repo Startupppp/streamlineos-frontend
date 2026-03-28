@@ -4,6 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -56,45 +57,47 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
         ) : error ? (
           <p role="alert" className="text-sm text-destructive">Failed to load activity.</p>
         ) : items && items.length > 0 ? (
-          <div className="space-y-2 overflow-y-auto pr-2 max-h-full">
-            {items.map((item) => {
-              const TypeIcon = isTicketType(item.type) ? typeIcons[item.type] : DEFAULT_TICKET_ICON;
-              return (
-                <Link key={item.id} href={item.projectId ? `/projects/${item.projectId}` : "/projects"}>
-                  <div className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                    <TypeIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden="true" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {item.projectKey ?? "???"}-{item.ticketNumber ?? "?"}
-                        </span>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                          {item.status?.replaceAll("_", " ")}
-                        </Badge>
-                      </div>
-                      <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-muted-foreground">{item.projectName}</span>
-                        {item.updatedAt && (
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+          <ScrollArea className="max-h-[280px] md:max-h-[340px] pr-3">
+            <div className="space-y-2">
+              {items.map((item) => {
+                const TypeIcon = isTicketType(item.type) ? typeIcons[item.type] : DEFAULT_TICKET_ICON;
+                return (
+                  <Link key={item.id} href={item.projectId ? `/projects/${item.projectId}` : "/projects"}>
+                    <div className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                      <TypeIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden="true" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {item.projectKey ?? "???"}-{item.ticketNumber ?? "?"}
                           </span>
-                        )}
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {item.status?.replaceAll("_", " ")}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-muted-foreground">{item.projectName}</span>
+                          {item.updatedAt && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      {item.assignee && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={resolveImageUrl(item.assignee.image)} />
+                          <AvatarFallback className="text-[10px]">
+                            {getInitials(null, item.assignee.firstName, item.assignee.lastName)}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
-                    {item.assignee && (
-                      <Avatar className="h-8 w-8 flex-shrink-0">
-                        <AvatarImage src={resolveImageUrl(item.assignee.image)} />
-                        <AvatarFallback className="text-[10px]">
-                          {getInitials(null, item.assignee.firstName, item.assignee.lastName)}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </ScrollArea>
         ) : (
           <EmptyState
             illustration={<EmptyActivityIllustration />}
