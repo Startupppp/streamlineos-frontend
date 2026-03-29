@@ -130,11 +130,14 @@ export const calcPercent = (value: number, total: number, decimals = 1): string 
 };
 export function formatINR(amount: string | number): string {
   const num = Number(amount);
-  if (Number.isNaN(num)) return "₹0";
+  if (Number.isNaN(num)) return "₹0.00";
+  // Show paisa (2 decimal places) when present, otherwise whole number
+  const hasPaisa = num % 1 !== 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: hasPaisa ? 2 : 0,
+    maximumFractionDigits: 2,
   }).format(num);
 }
 
@@ -159,7 +162,8 @@ export function formatINRCompact(amount: string | number): string {
     const val = abs / 1_000;
     return `${sign}₹${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}K`;
   }
-  return `${sign}₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(abs)}`;
+  const hasPaisa = abs % 1 !== 0;
+  return `${sign}₹${new Intl.NumberFormat("en-IN", { minimumFractionDigits: hasPaisa ? 2 : 0, maximumFractionDigits: 2 }).format(abs)}`;
 }
 
 export function numberToWords(num: number): string {
