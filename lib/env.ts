@@ -3,7 +3,11 @@ import { z } from "zod";
 const serverSchema = z.object({
   DATABASE_URL: z.string().min(1),
   NEXTAUTH_URL: process.env.NODE_ENV === "production" ? z.string().url() : z.string().url().optional(),
-  NEXTAUTH_SECRET: z.string().min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
+  NEXTAUTH_SECRET: z.string().min(32, "NEXTAUTH_SECRET must be at least 32 characters")
+    .refine(
+      (val) => process.env.NODE_ENV !== "production" || val.length >= 44,
+      "In production, NEXTAUTH_SECRET must be at least 44 characters (256 bits base64)"
+    ),
   SENDGRID_API_KEY: z.string().optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
