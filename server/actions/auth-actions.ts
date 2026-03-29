@@ -18,12 +18,13 @@ export async function resetPassword(password: string) {
   if (password.length > 15) {
     return { error: "Password must be at most 15 characters" };
   }
-  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-    return { error: "Password must contain uppercase, lowercase, and a number" };
+  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!PASSWORD_REGEX.test(password)) {
+    return { error: "Password must contain uppercase, lowercase, a number, and a special character (@$!%*?&)" };
   }
 
   try {
-     const hashedPassword = await bcrypt.hash(password, 10);
+     const hashedPassword = await bcrypt.hash(password, 12);
      
      await db.update(users)
         .set({
@@ -60,8 +61,10 @@ export async function createEmployee(data: {
             return { error: "Unable to create user. Please check the details and try again." };
         }
 
-        const rawPassword = data.initialPassword || "12345678";
-        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+        if (!data.initialPassword || data.initialPassword.length < 8) {
+            return { error: "A secure initial password (8+ characters) is required" };
+        }
+        const hashedPassword = await bcrypt.hash(data.initialPassword, 12);
 
         const creatorOrg = await db.query.organizationMembers.findFirst({
             where: eq(organizationMembers.userId, session.user.id)

@@ -146,7 +146,7 @@ export const supportRouter = createTRPCRouter({
       if (input.status === "RESOLVED") updateData.resolvedAt = new Date();
       if (input.status === "CLOSED") updateData.closedAt = new Date();
 
-      await ctx.db.update(supportTickets).set(updateData).where(eq(supportTickets.id, input.id));
+      await ctx.db.update(supportTickets).set(updateData).where(and(eq(supportTickets.id, input.id), eq(supportTickets.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 
@@ -160,7 +160,7 @@ export const supportRouter = createTRPCRouter({
 
       await ctx.db.update(supportTickets)
         .set({ assigneeId: input.assigneeId, updatedAt: new Date() })
-        .where(eq(supportTickets.id, input.id));
+        .where(and(eq(supportTickets.id, input.id), eq(supportTickets.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 

@@ -159,7 +159,7 @@ export const invoiceRouter = createTRPCRouter({
         updateData.total = total.toString();
       }
 
-      await ctx.db.update(invoices).set(updateData).where(eq(invoices.id, input.id));
+      await ctx.db.update(invoices).set(updateData).where(and(eq(invoices.id, input.id), eq(invoices.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 
@@ -178,7 +178,7 @@ export const invoiceRouter = createTRPCRouter({
       if (input.status === "SENT") updateData.sentAt = new Date();
       if (input.status === "PAID") updateData.paidAt = new Date();
 
-      await ctx.db.update(invoices).set(updateData).where(eq(invoices.id, input.id));
+      await ctx.db.update(invoices).set(updateData).where(and(eq(invoices.id, input.id), eq(invoices.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 
@@ -191,7 +191,7 @@ export const invoiceRouter = createTRPCRouter({
       if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
       if (existing.status === "PAID") throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot delete paid invoices" });
 
-      await ctx.db.delete(invoices).where(eq(invoices.id, input.id));
+      await ctx.db.delete(invoices).where(and(eq(invoices.id, input.id), eq(invoices.orgId, ctx.session.orgId)));
       return { success: true };
     }),
 

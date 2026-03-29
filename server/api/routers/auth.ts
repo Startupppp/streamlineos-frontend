@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+// Security event logging is done via the shared logger
 import {
   users,
   organizationMembers,
@@ -76,6 +77,7 @@ export const authRouter = createTRPCRouter({
         .delete(verificationTokens)
         .where(eq(verificationTokens.token, input.token));
 
+      logger.info("Auth: email verified", { email: tokenRecord.identifier });
       return { success: true };
     }),
 
@@ -105,6 +107,8 @@ export const authRouter = createTRPCRouter({
         expiresAt,
       });
 
+      logger.info("Auth: password reset requested", { email: input.email });
+
       // Fire-and-forget to not block response
       sendPasswordResetEmail(input.email, resetToken).catch((err) => {
         logger.error("Failed to send password reset email", { error: err instanceof Error ? err.message : "Unknown", email: input.email });
@@ -130,7 +134,7 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const hashedPassword = await bcrypt.hash(input.password, 10);
+      const hashedPassword = await bcrypt.hash(input.password, 12);
 
       await ctx.db
         .update(users)
@@ -140,10 +144,12 @@ export const authRouter = createTRPCRouter({
         })
         .where(eq(users.email, tokenRecord.email));
 
+      // Invalidate ALL reset tokens for this email, not just the used one
       await ctx.db
         .delete(passwordResetTokens)
-        .where(eq(passwordResetTokens.token, input.token));
+        .where(eq(passwordResetTokens.email, tokenRecord.email));
 
+      logger.info("Auth: password reset completed", { email: tokenRecord.email });
       return { success: true };
     }),
 
@@ -176,7 +182,7 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      const hashedPassword = await bcrypt.hash(input.password, 10);
+      const hashedPassword = await bcrypt.hash(input.password, 12);
 
       const userId = nanoid();
       const fullName =
@@ -208,7 +214,8 @@ export const authRouter = createTRPCRouter({
           .where(eq(invitations.id, invitation.id));
       });
 
-      return { success: true, userId };
+      logger.info("Auth: invitation accepted", { email: invitation.email, orgId: invitation.orgId });
+      return { success: true };
     }),
 
   resendVerificationEmail: publicProcedure

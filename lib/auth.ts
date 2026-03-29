@@ -6,6 +6,7 @@ import { accounts, sessions, users, verificationTokens, organizationMembers, org
 import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
+import { logger } from "./logger";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -34,14 +35,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.password) {
+          logger.warn("Auth: login attempt for non-existent account", { email: normalizedEmail });
           return null;
         }
 
         if (user.isActive === false) {
+          logger.warn("Auth: login attempt on deactivated account", { userId: user.id, email: normalizedEmail });
+          return null;
+        }
+
+        if (!user.emailVerified) {
+          logger.warn("Auth: login attempt on unverified email", { userId: user.id, email: normalizedEmail });
           return null;
         }
 
         if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+          logger.warn("Auth: login attempt on locked account", { userId: user.id, email: normalizedEmail, lockedUntil: user.lockedUntil });
           return null;
         }
 
@@ -55,10 +64,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const lockUpdate: Record<string, unknown> = { loginAttempts: attempts };
           if (attempts >= 10) {
             lockUpdate.lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+            logger.warn("Auth: account locked after 10 failed attempts", { userId: user.id, email: normalizedEmail });
+          } else {
+            logger.warn("Auth: failed login attempt", { userId: user.id, email: normalizedEmail, attempt: attempts });
           }
           await db.update(users).set(lockUpdate).where(eq(users.id, user.id));
           return null;
         }
+
+        // Successful login
+        logger.info("Auth: successful login", { userId: user.id, email: normalizedEmail });
 
         if (user.loginAttempts && user.loginAttempts > 0) {
           await db.update(users).set({ loginAttempts: 0, lockedUntil: null }).where(eq(users.id, user.id));
