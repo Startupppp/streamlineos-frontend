@@ -1,5 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import {
+  checkRateLimit,
+  resolveTier,
+  isSuspiciousBot,
+} from "@/lib/rate-limit";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -88,33 +93,6 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   "/ceo": ["CEO"],
 };
 
-const RATE_LIMIT_WINDOW = 60_000;
-const RATE_LIMIT_MAX_DEFAULT = 60;
-const RATE_LIMIT_MAX_AUTH = 15; // Stricter limit for auth endpoints
-const RATE_LIMIT_CLEANUP_INTERVAL = 60_000;
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-let lastCleanup = Date.now();
-
-function checkRateLimit(ip: string, maxRequests: number = RATE_LIMIT_MAX_DEFAULT): boolean {
-  const now = Date.now();
-
-  if (now - lastCleanup > RATE_LIMIT_CLEANUP_INTERVAL) {
-    for (const [key, entry] of rateLimitMap) {
-      if (now > entry.resetTime) rateLimitMap.delete(key);
-    }
-    lastCleanup = now;
-  }
-
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  if (entry.count >= maxRequests) return false;
-  entry.count++;
-  return true;
-}
-
 function startsWithAny(pathname: string, routes: string[]): boolean {
   return routes.some((route) => pathname.startsWith(route));
 }
@@ -141,35 +119,77 @@ function canAccessRoute(pathname: string, role: string): boolean {
   return ROUTE_ROLE_MAP[bestMatch].includes(role);
 }
 
+/** Endpoints where automated bot User-Agents are blocked */
+const BOT_BLOCKED_PREFIXES = [
+  "/api/auth/",
+  "/api/trpc/auth.",
+  "/api/trpc/organization.",
+  "/api/chat",
+  "/api/ai/",
+  "/api/storage/",
+  "/api/expenses/",
+];
+
 export default async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
-  // Skip rate limiting for read-only session checks
-  const isSessionCheck = pathname === "/api/auth/session";
-
-  const RATE_LIMITED_PREFIXES = [
-    "/api/auth/",
-    "/api/trpc/auth.",
-    "/api/trpc/organization.inviteUser",
-    "/api/trpc/organization.createOrganization",
-    "/api/trpc/hr.employee.onboardEmployee",
-    "/api/storage/upload",
-    "/api/ai/",
-    "/api/chat",
-  ];
-  if (!isSessionCheck && RATE_LIMITED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+  // ── Rate limiting (tiered, per-bucket) ──────────────────────────────
+  const tier = resolveTier(pathname);
+  if (tier) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    // Use stricter rate limit for auth endpoints
-    const isAuthEndpoint = pathname.startsWith("/api/auth/") || pathname.startsWith("/api/trpc/auth.");
-    const limit = isAuthEndpoint ? RATE_LIMIT_MAX_AUTH : RATE_LIMIT_MAX_DEFAULT;
-    const rateLimitKey = isAuthEndpoint ? `auth:${ip}` : ip;
-    if (!checkRateLimit(rateLimitKey, limit)) {
+    const result = checkRateLimit(tier, ip);
+
+    if (!result.allowed) {
+      console.info(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "warn",
+        message: "Rate limit exceeded",
+        meta: { ip, path: pathname, tier, retryAfterSecs: result.retryAfterSecs },
+      }));
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
-        { status: 429 }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(result.retryAfterSecs),
+            "X-RateLimit-Tier": tier,
+          },
+        },
       );
     }
+  }
+
+  // ── Bot / scraper detection on sensitive endpoints ──────────────────
+  if (BOT_BLOCKED_PREFIXES.some((p) => pathname.startsWith(p))) {
+    const ua = req.headers.get("user-agent");
+    if (isSuspiciousBot(ua)) {
+      // Log blocked bot attempt for monitoring
+      console.info(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "warn",
+        message: "Blocked suspicious bot",
+        meta: {
+          ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown",
+          path: pathname,
+          userAgent: ua?.slice(0, 200),
+        },
+      }));
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 },
+      );
+    }
+  }
+
+  // ── Enforce HTTPS in production ─────────────────────────────────────
+  if (
+    process.env.NODE_ENV === "production" &&
+    req.headers.get("x-forwarded-proto") === "http"
+  ) {
+    const httpsUrl = req.nextUrl.clone();
+    httpsUrl.protocol = "https";
+    return NextResponse.redirect(httpsUrl, 301);
   }
 
   if (pathname.startsWith("/api/")) {
