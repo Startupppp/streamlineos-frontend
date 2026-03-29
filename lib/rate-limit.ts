@@ -112,7 +112,8 @@ function cleanup(now: number) {
 
 /** Extract tier name from composite key  "tierName:ip" */
 function keyToTier(compositeKey: string): RateLimitTier | undefined {
-  const tierName = compositeKey.split(":")[0];
+  const firstColon = compositeKey.indexOf(":");
+  const tierName = firstColon === -1 ? compositeKey : compositeKey.slice(0, firstColon);
   return RATE_LIMIT_TIERS[tierName];
 }
 
@@ -152,8 +153,6 @@ export function checkRateLimit(
 
   // Currently blocked?
   if (now < entry.blockedUntil) {
-    const retryAfterSecs = Math.ceil((entry.blockedUntil - now) / 1000);
-
     // Progressive: if they keep hitting while blocked, double the duration
     if (tier.progressive) {
       const maxBlock = tier.maxBlockMs ?? 30 * 60_000;
@@ -162,6 +161,7 @@ export function checkRateLimit(
       entry.blockedUntil = now + nextBlock;
     }
 
+    const retryAfterSecs = Math.ceil((entry.blockedUntil - now) / 1000);
     return { allowed: false, retryAfterSecs };
   }
 
@@ -170,18 +170,20 @@ export function checkRateLimit(
   entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
 
   if (entry.timestamps.length >= tier.maxRequests) {
-    // Rate limit exceeded — block
-    const initialBlock = tier.progressive ? tier.windowMs : tier.windowMs;
-    const blockMs = entry.currentBlockMs > 0
-      ? Math.min(entry.currentBlockMs * 2, tier.maxBlockMs ?? 30 * 60_000)
-      : initialBlock;
-
     if (tier.progressive) {
+      // Progressive: block and double duration on repeat violations
+      const blockMs = entry.currentBlockMs > 0
+        ? Math.min(entry.currentBlockMs * 2, tier.maxBlockMs ?? 30 * 60_000)
+        : tier.windowMs;
       entry.currentBlockMs = blockMs;
       entry.blockedUntil = now + blockMs;
+      const retryAfterSecs = Math.ceil(blockMs / 1000);
+      return { allowed: false, retryAfterSecs };
     }
 
-    const retryAfterSecs = Math.ceil(blockMs / 1000);
+    // Non-progressive: tell client when the oldest request in the window expires
+    const oldestInWindow = entry.timestamps[0];
+    const retryAfterSecs = Math.max(1, Math.ceil((oldestInWindow + tier.windowMs - now) / 1000));
     return { allowed: false, retryAfterSecs };
   }
 

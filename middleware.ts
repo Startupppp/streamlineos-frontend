@@ -153,7 +153,6 @@ export default async function middleware(req: NextRequest) {
           status: 429,
           headers: {
             "Retry-After": String(result.retryAfterSecs),
-            "X-RateLimit-Tier": tier,
           },
         },
       );

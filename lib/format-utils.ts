@@ -130,7 +130,7 @@ export const calcPercent = (value: number, total: number, decimals = 1): string 
 };
 export function formatINR(amount: string | number): string {
   const num = Number(amount);
-  if (Number.isNaN(num)) return "₹0.00";
+  if (Number.isNaN(num)) return "₹0";
   // Show paisa (2 decimal places) when present, otherwise whole number
   const hasPaisa = num % 1 !== 0;
   return new Intl.NumberFormat("en-IN", {

@@ -125,7 +125,7 @@ export const supportRouter = createTRPCRouter({
       if (ticket.status === "OPEN") {
         await ctx.db.update(supportTickets)
           .set({ status: "IN_PROGRESS", updatedAt: new Date() })
-          .where(eq(supportTickets.id, input.ticketId));
+          .where(and(eq(supportTickets.id, input.ticketId), eq(supportTickets.orgId, ctx.session.orgId)));
       }
 
       return message;

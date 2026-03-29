@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-// Security event logging is done via the shared logger
 import {
   users,
   organizationMembers,
@@ -102,7 +101,7 @@ export const authRouter = createTRPCRouter({
 
       await ctx.db.insert(passwordResetTokens).values({
         id: nanoid(),
-        email: input.email,
+        email: normalizedEmail,
         token: resetToken,
         expiresAt,
       });

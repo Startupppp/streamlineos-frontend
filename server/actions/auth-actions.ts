@@ -49,7 +49,7 @@ export async function createEmployee(data: {
     initialPassword?: string;
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "ADMIN")) {
+    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "HR")) {
         return { error: "Unauthorized: Insufficient permissions" };
     }
 
@@ -85,7 +85,7 @@ export async function createEmployee(data: {
                 role: data.role,
                 gender: data.gender,
                 isPasswordChangeRequired: true,
-                emailVerified: null,
+                emailVerified: new Date(),
             });
 
             await tx.insert(organizationMembers).values({
