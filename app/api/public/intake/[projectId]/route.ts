@@ -4,11 +4,19 @@ import { intakeItems, projects } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
+const MAX_TITLE_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 5000;
+
 const intakeSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().optional(),
+  title: z.string().min(1).max(MAX_TITLE_LENGTH),
+  description: z.string().max(MAX_DESCRIPTION_LENGTH).optional(),
   submitterEmail: z.string().email().optional(),
 });
+
+function sanitizeText(text: string): string {
+  // Strip leading formula injection characters
+  return text.replace(/^[=+\-@\t\r]+/, "");
+}
 
 export async function POST(
   request: NextRequest,
@@ -17,15 +25,21 @@ export async function POST(
   const { projectId } = await params;
   const pid = parseInt(projectId);
 
-  if (isNaN(pid)) {
-    return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+  if (isNaN(pid) || pid <= 0) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const parsed = intakeSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json({ error: "Validation failed" }, { status: 400 });
   }
 
   const [project] = await db
@@ -34,22 +48,28 @@ export async function POST(
     .where(eq(projects.id, pid));
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    // Return generic error to avoid leaking valid project IDs
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
+
+  const sanitizedTitle = sanitizeText(parsed.data.title);
+  const sanitizedDescription = parsed.data.description
+    ? sanitizeText(parsed.data.description)
+    : undefined;
 
   const [item] = await db
     .insert(intakeItems)
     .values({
       projectId: pid,
       orgId: project.orgId,
-      title: parsed.data.title,
-      description: parsed.data.description
+      title: sanitizedTitle,
+      description: sanitizedDescription
         ? {
             type: "doc",
             content: [
               {
                 type: "paragraph",
-                content: [{ type: "text", text: parsed.data.description }],
+                content: [{ type: "text", text: sanitizedDescription }],
               },
             ],
           }
