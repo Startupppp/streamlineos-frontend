@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { auth } from "../../../lib/auth";
 import { processChatWithGraph } from "../../../lib/ai/langchain-graph";
 import { z } from "zod";
@@ -23,18 +24,18 @@ export async function POST(req: Request) {
     const parsed = chatRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return new Response("Invalid request body", { status: 400 });
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
 
     const session = await auth();
 
     if (!session?.user?.id) {
-      return new Response("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const orgId = "orgId" in session && typeof session.orgId === "string" ? session.orgId : undefined;
     if (!orgId) {
-      return new Response("No organization context", { status: 403 });
+      return NextResponse.json({ error: "No organization context" }, { status: 403 });
     }
     const result = await processChatWithGraph(
       parsed.data.messages,
@@ -44,6 +45,6 @@ export async function POST(req: Request) {
     return result.toTextStreamResponse();
   } catch (error) {
     logger.error("Chat route error", error);
-    return new Response("Internal Server Error", { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

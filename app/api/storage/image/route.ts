@@ -36,16 +36,16 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const key = req.nextUrl.searchParams.get("key");
     if (!key || !isValidFileKey(key)) {
-      return new NextResponse("Invalid key parameter", { status: 400 });
+      return NextResponse.json({ error: "Invalid key parameter" }, { status: 400 });
     }
 
     if (!isStorageConfigured()) {
-      return new NextResponse("Storage not available", { status: 503 });
+      return NextResponse.json({ error: "Storage not available" }, { status: 503 });
     }
 
     // Verify user belongs to an organization
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       where: eq(organizationMembers.userId, session.user.id),
     });
     if (!member) {
-      return new NextResponse("Forbidden", { status: 403 });
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { body, contentType } = await getFileStream(key);
@@ -66,6 +66,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     logger.error("Image proxy error", { error: error instanceof Error ? error.message : "Unknown" });
-    return new NextResponse("Not found", { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 }
