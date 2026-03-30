@@ -221,12 +221,14 @@ export const useSignOut = () => {
 type OrgRouterInputs = RouterInputs["organization"];
 type OrgRouterOutputs = RouterOutputs["organization"];
 
-export const useGetOrganizations = () => {
+export const useGetOrganizations = (enabled = true) => {
   return useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
       return await vaivammTrpcClient.organization.getOrganizations.query();
     },
+    enabled,
+    staleTime: 60_000,
   });
 };
 export const useCreateOrganization = (

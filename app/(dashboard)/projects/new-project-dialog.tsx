@@ -177,7 +177,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                         <FormItem>
                             <FormLabel className="text-sm font-medium">Team Customization</FormLabel>
                             <FormControl>
-                                <Popover>
+                                <Popover onOpenChange={(open) => { if (!open) setMemberSearch(""); }}>
                                     <PopoverTrigger asChild>
                                         <Button variant="outline" className="w-full justify-between h-10 px-3 font-normal text-muted-foreground hover:text-foreground">
                                             {field.value?.length && field.value.length > 0 
@@ -186,7 +186,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                             <User className="h-4 w-4 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[450px] p-0" align="start">
+                                    <PopoverContent className="w-[450px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                                         <div className="p-3 border-b bg-muted/40 space-y-2">
                                             <h4 className="font-medium text-sm">Select Team Members</h4>
                                             <div className="relative">
@@ -195,6 +195,8 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                                     placeholder="Search by name or email..."
                                                     value={memberSearch}
                                                     onChange={(e) => setMemberSearch(e.target.value)}
+                                                    onKeyDown={(e) => e.stopPropagation()}
+                                                    autoFocus
                                                     className="pl-8 h-9 bg-background"
                                                 />
                                             </div>
