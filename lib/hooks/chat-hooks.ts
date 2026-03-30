@@ -123,20 +123,22 @@ export function useUpdateChannel() {
   });
 }
 
-export function useChatUnreadTotal() {
+export function useChatUnreadTotal(enabled = true) {
   return useQuery({
     queryKey: vaivammKeys.chat.unreadTotal(),
     queryFn: () => vaivammTrpcClient.chat.channel.getUnreadTotal.query(),
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
+    enabled,
   });
 }
 
-export function useChatOnlineUsers() {
+export function useChatOnlineUsers(enabled = true) {
   return useQuery({
     queryKey: vaivammKeys.chat.onlineUsers(),
     queryFn: () => vaivammTrpcClient.chat.presence.getOnlineUsers.query(),
-    refetchInterval: 10_000,
-    staleTime: 5_000,
+    refetchInterval: 30_000,
+    staleTime: 10_000,
+    enabled,
   });
 }
 
@@ -146,10 +148,11 @@ export function useChatHeartbeat() {
   });
 }
 
-export function useChatOrgUsers() {
+export function useChatOrgUsers(enabled = true) {
   return useQuery({
     queryKey: vaivammKeys.chat.orgUsers(),
     queryFn: () => vaivammTrpcClient.chat.channel.getOrgUsers.query(),
+    enabled,
   });
 }
 
