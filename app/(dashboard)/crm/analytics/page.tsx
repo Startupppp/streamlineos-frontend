@@ -68,7 +68,8 @@ export default function CrmAnalyticsPage() {
   const { data: allDeals, isLoading: dealsLoading } = api.deals.getAll.useQuery({});
   const { data: leaderboard, isLoading: leaderLoading } = api.leads.getSalesLeaderboard.useQuery();
   const { data: slaReport, isLoading: slaLoading } = api.crmSla.getSlaReport.useQuery();
-  const { data: allLeads, isLoading: leadsLoading } = api.leads.getAll.useQuery({ limit: 100 });
+  const { data: allLeadsResult, isLoading: leadsLoading } = api.leads.getAll.useQuery({ limit: 100 });
+  const allLeads = allLeadsResult?.leads;
 
   const isLoading = statsLoading || dealsLoading || leaderLoading || slaLoading || leadsLoading;
 

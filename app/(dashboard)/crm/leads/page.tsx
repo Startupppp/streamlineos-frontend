@@ -8,6 +8,7 @@ import {
   Phone, Mail, MessageSquare, MapPin, Calendar, Clock, Building2,
   ChevronRight, X, Edit2, UserCheck, ArrowRight, Zap, Eye,
   IndianRupee, User, Flame, Sun, Snowflake, StickyNote, Megaphone, Globe, Share2, Footprints, GripVertical,
+  LayoutGrid, TableIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
   useSelfAssignLead, useAssignLead, useLeadDetail, useLogLeadActivity,
 } from "@/lib/hooks/trpc-hooks";
 import { useDebouncedValue } from "@/hooks/use-debounce";
+import { api } from "@/trpc/react";
 import { toast } from "sonner";
 
 const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
@@ -118,6 +120,70 @@ export default function LeadsPipelinePage() {
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
+
+  // View toggle (table default)
+  const [view, setView] = useState<"table" | "kanban">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("leads-view") as "table" | "kanban") || "table";
+    }
+    return "table";
+  });
+
+  // Table view state
+  const [sortColumn, setSortColumn] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [tablePage, setTablePage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
+  const [sourceFilter, setSourceFilter] = useState<string | undefined>();
+
+  const { data: tableData, isLoading: tableLoading } = api.leads.getAll.useQuery({
+    search: debouncedSearchQuery || undefined,
+    sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
+    sortOrder: sortDirection,
+    page: tablePage,
+    limit: 50,
+    status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
+    priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
+    source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
+  }, { enabled: view === "table" });
+
+  const { data: teamCapacity } = api.leads.getSalesTeamCapacity.useQuery(undefined, { enabled: view === "table" });
+  const teamMembers = useMemo(() => (teamCapacity || []).map(m => ({ id: m.id, name: m.name, image: m.image })), [teamCapacity]);
+
+  const updateLeadMutation = api.leads.update.useMutation({
+    onSuccess: () => { refetchBoard(); },
+    onError: (err) => toast.error(err.message),
+  });
+  const assignLead = api.leads.assign.useMutation({
+    onSuccess: () => { refetchBoard(); toast.success("Lead assigned"); },
+    onError: (err) => toast.error(err.message),
+  });
+  const bulkUpdateMutation = api.leads.bulkUpdate.useMutation({
+    onSuccess: (data) => { refetchBoard(); toast.success(`${data.updated} leads updated`); },
+    onError: (err) => toast.error(err.message),
+  });
+  const bulkDeleteMutation = api.leads.bulkDelete.useMutation({
+    onSuccess: (data) => { refetchBoard(); toast.success(`${data.deleted} leads deleted`); },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleSort = useCallback((col: string) => {
+    if (sortColumn === col) {
+      setSortDirection(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(col);
+      setSortDirection("desc");
+    }
+    setTablePage(1);
+  }, [sortColumn]);
+
+  const handleViewChange = useCallback((v: "table" | "kanban") => {
+    setView(v);
+    localStorage.setItem("leads-view", v);
+  }, []);
+
+  const isAdmin = true; // HR/CEO check already handled by middleware
 
   const createLead = useCreateLead();
   const updateStatus = useUpdateLeadStatus();
@@ -231,6 +297,25 @@ export default function LeadsPipelinePage() {
           description="Track and manage your sales leads through the conversion funnel"
         />
         <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="flex items-center border border-border rounded-md">
+            <Button
+              variant={view === "table" ? "default" : "ghost"}
+              size="sm"
+              className={cn("rounded-r-none", view === "table" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+              onClick={() => handleViewChange("table")}
+            >
+              <TableIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === "kanban" ? "default" : "ghost"}
+              size="sm"
+              className={cn("rounded-l-none", view === "kanban" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+              onClick={() => handleViewChange("kanban")}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
           <Button variant="outline" size="sm" onClick={async () => {
             try {
               const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
@@ -324,8 +409,8 @@ export default function LeadsPipelinePage() {
         </motion.div>
       )}
 
-      <motion.div variants={fadeUp} className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <motion.div variants={fadeUp} className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search leads..."
@@ -334,8 +419,64 @@ export default function LeadsPipelinePage() {
             className="pl-9"
           />
         </div>
+        {view === "table" && (
+          <>
+            <Select value={statusFilter || "all"} onValueChange={(v) => { setStatusFilter(v === "all" ? undefined : v); setTablePage(1); }}>
+              <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">All Status</SelectItem>
+                {STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter || "all"} onValueChange={(v) => { setPriorityFilter(v === "all" ? undefined : v); setTablePage(1); }}>
+              <SelectTrigger className="w-[110px] h-9 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">All Priority</SelectItem>
+                {LEAD_PRIORITIES.map(p => <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter || "all"} onValueChange={(v) => { setSourceFilter(v === "all" ? undefined : v); setTablePage(1); }}>
+              <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Source" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">All Sources</SelectItem>
+                {LEAD_SOURCES.map(s => <SelectItem key={s} value={s} className="text-xs">{s.replace("_", " ")}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {(statusFilter || priorityFilter || sourceFilter) && (
+              <Button variant="ghost" size="sm" className="text-xs h-9" onClick={() => { setStatusFilter(undefined); setPriorityFilter(undefined); setSourceFilter(undefined); setTablePage(1); }}>
+                <X className="h-3.5 w-3.5 mr-1" /> Clear
+              </Button>
+            )}
+          </>
+        )}
       </motion.div>
 
+      {/* Table View */}
+      {view === "table" && (
+        <motion.div variants={fadeUp}>
+          <LeadTableView
+            leads={tableData?.leads || []}
+            totalCount={tableData?.totalCount || 0}
+            page={tableData?.page || 1}
+            totalPages={tableData?.totalPages || 1}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onPageChange={setTablePage}
+            onStatusChange={(id, status) => updateStatus.mutate({ leadId: id, status: status as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" })}
+            onPriorityChange={(id, priority) => updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" })}
+            onAssign={(id, userId) => assignLead.mutate({ leadId: id, assignedToId: userId })}
+            onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } })}
+            onBulkDelete={(ids) => bulkDeleteMutation.mutate({ leadIds: ids })}
+            teamMembers={teamMembers}
+            isLoading={tableLoading}
+            isAdmin={isAdmin}
+          />
+        </motion.div>
+      )}
+
+      {/* Kanban View */}
+      {view === "kanban" && (
       <motion.div variants={fadeUp} className="overflow-x-auto pb-4 -mx-2 px-2">
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="flex gap-3 min-w-[900px] lg:min-w-0">
@@ -511,6 +652,7 @@ export default function LeadsPipelinePage() {
           </div>
         </DragDropContext>
       </motion.div>
+      )}
 
       <LeadDetailSheet
         leadId={selectedLeadId}

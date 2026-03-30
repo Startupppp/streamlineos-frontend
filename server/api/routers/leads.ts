@@ -58,7 +58,8 @@ export const leadsRouter = createTRPCRouter({
       // Dynamic sort
       const sortCol = input?.sortBy ?? "createdAt";
       const sortDir = input?.sortOrder ?? "desc";
-      const colMap: Record<string, typeof leads.name> = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const colMap: Record<string, any> = {
         name: leads.name, email: leads.email, company: leads.company,
         status: leads.status, priority: leads.priority, source: leads.source,
         score: leads.score, potentialValue: leads.potentialValue, createdAt: leads.createdAt,
