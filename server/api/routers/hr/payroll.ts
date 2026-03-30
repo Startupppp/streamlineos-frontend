@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { logger } from "@/lib/logger";
+import { tryDecrypt, tryDecryptJSON } from "@/lib/encryption";
 import {
   payrolls,
   salaryStructures,
@@ -362,7 +363,22 @@ export const payrollRouter = createTRPCRouter({
           user: p.user ? { ...p.user, taxId: null, bankDetails: null } : p.user,
         }));
       }
-      return payslips;
+
+      // Decrypt PII fields for the user's own payslips
+      return payslips.map((p) => ({
+        ...p,
+        user: p.user
+          ? {
+              ...p.user,
+              taxId: tryDecrypt(p.user.taxId),
+              bankDetails: p.user.bankDetails
+                ? tryDecryptJSON<typeof p.user.bankDetails>(
+                    typeof p.user.bankDetails === "string" ? p.user.bankDetails : null
+                  ) ?? p.user.bankDetails
+                : null,
+            }
+          : p.user,
+      }));
     }),
 
   approvePayroll: protectedProcedure

@@ -25,6 +25,7 @@ import {
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email";
 import { initializeLeaveBalances } from "@/server/actions/leave-actions";
+import { encrypt, encryptJSON, isEncryptionConfigured } from "@/lib/encryption";
 
 export const employeeRouter = createTRPCRouter({
   getDepartments: protectedProcedure.query(async ({ ctx }) => {
@@ -300,8 +301,10 @@ export const employeeRouter = createTRPCRouter({
             dateOfBirth: input.dateOfBirth ? formatDateOnly(input.dateOfBirth) : null,
             experienceYears: input.experienceYears?.toString(),
             skills: input.skills ? input.skills.split(",").map(s => s.trim()) : [],
-            taxId: input.taxId,
-            bankDetails: input.bankDetails,
+            taxId: input.taxId && isEncryptionConfigured() ? encrypt(input.taxId) : input.taxId,
+            bankDetails: input.bankDetails && isEncryptionConfigured()
+              ? (encryptJSON(input.bankDetails) as unknown as typeof input.bankDetails)
+              : input.bankDetails,
             monthlySalary: input.monthlySalary?.toString(),
             employeeId: finalEmployeeId,
             password: hashedPassword,
