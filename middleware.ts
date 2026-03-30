@@ -102,16 +102,8 @@ function startsWithAny(pathname: string, routes: string[]): boolean {
  * Matches the most specific route first (longest prefix).
  */
 function canAccessRoute(pathname: string, role: string): boolean {
-  // CEO bypasses RBAC but we log access for audit trail
-  if (role === "CEO") {
-    console.info(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: "info",
-      message: "CEO route access",
-      meta: { pathname, role },
-    }));
-    return true;
-  }
+  // CEO bypasses everything
+  if (role === "CEO") return true;
 
   // Find the most specific matching route
   const matchingRoutes = Object.keys(ROUTE_ROLE_MAP)
@@ -199,16 +191,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(httpsUrl, 301);
   }
 
-  // Single getToken() call — reused for both API and page route checks
-  const PUBLIC_API_PREFIXES = [
-    "/api/auth/",
-    "/api/health",
-    "/api/public/",
-    "/api/trpc/auth.",
-  ];
-
-  // Public API endpoints skip auth entirely
-  if (pathname.startsWith("/api/") && PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))) {
+  if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
@@ -220,19 +203,6 @@ export default async function middleware(req: NextRequest) {
         ? "__Secure-authjs.session-token"
         : "authjs.session-token",
   });
-
-  // Protected API routes require authentication
-  if (pathname.startsWith("/api/")) {
-    if (!token) {
-      // Allow cron endpoints with valid CRON_SECRET header
-      const cronSecret = req.headers.get("authorization")?.replace("Bearer ", "");
-      if (pathname.startsWith("/api/cron/") && cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) {
-        return NextResponse.next();
-      }
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.next();
-  }
 
   const isAuthenticated = !!token;
   if (!isAuthenticated && startsWithAny(pathname, PROTECTED_ROUTES)) {
