@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, desc, sql, count } from "drizzle-orm";
-import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers } from "@/lib/db/schema";
+import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers, auditLogs } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "@/lib/email";
@@ -216,6 +216,24 @@ export const leadsRouter = createTRPCRouter({
         .returning();
 
       if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Audit log: record the assignment
+      try {
+        await ctx.db.insert(auditLogs).values({
+          action: "lead.assigned",
+          userId: ctx.session.userId,
+          orgId,
+          targetId: String(input.leadId),
+          targetType: "lead",
+          metadata: {
+            previousAssignee: updated.assignedToId,
+            newAssignee: input.assignedToId,
+            leadName: updated.name,
+          },
+        });
+      } catch (auditErr) {
+        logger.error("Failed to write lead assignment audit log", { leadId: input.leadId, error: auditErr });
+      }
 
       await ctx.db.insert(notifications).values({
         orgId,
