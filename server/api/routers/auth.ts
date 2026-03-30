@@ -30,7 +30,7 @@ const resetPasswordSchema = z.object({
   password: z
     .string()
     .min(8)
-    .max(15, "Password must be at most 15 characters")
+    .max(128, "Password must be at most 128 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     ),
@@ -41,7 +41,7 @@ const acceptInvitationSchema = z.object({
   password: z
     .string()
     .min(8)
-    .max(15, "Password must be at most 15 characters")
+    .max(128, "Password must be at most 128 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     ),

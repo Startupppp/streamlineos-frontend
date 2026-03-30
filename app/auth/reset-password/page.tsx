@@ -26,7 +26,7 @@ import { PASSWORD_REGEX } from "@/lib/password-utils";
 const formSchema = z.object({
   password: z.string()
     .min(8, "Password must be at least 8 characters")
-    .max(15, "Password must be at most 15 characters")
+    .max(128, "Password must be at most 128 characters")
     .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
