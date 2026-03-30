@@ -50,6 +50,20 @@
       "when": 1773144609031,
       "tag": "0006_magenta_night_nurse",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1774072680000,
+      "tag": "0007_add_projects_crm_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774082460000,
+      "tag": "0008_add_deal_activities",
+      "breakpoints": true
     }
   ]
 }
