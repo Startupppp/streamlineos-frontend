@@ -11,8 +11,8 @@ import * as schema from "./db/schema";
 
 export const client = postgres(connectionString, {
   prepare: false,
-  max: 30,
-  idle_timeout: 60,
-  connect_timeout: 10,
+  max: 75,
+  idle_timeout: 30,
+  connect_timeout: 15,
 });
 export const db = drizzle(client, { schema });
