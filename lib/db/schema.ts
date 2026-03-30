@@ -1218,6 +1218,26 @@ export const deals = pgTable("deals", {
   index("idx_deals_assigned_to").on(table.assignedToId),
 ]);
 
+/* ─── Deal Activities ─── */
+export const dealActivityTypeEnum = pgEnum("deal_activity_type", ["stage_change", "note", "call", "email", "meeting", "document"]);
+
+export const dealActivities = pgTable("deal_activities", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  dealId: integer("deal_id").references(() => deals.id, { onDelete: "cascade" }).notNull(),
+  type: dealActivityTypeEnum("type").notNull(),
+  previousValue: text("previous_value"),
+  newValue: text("new_value"),
+  subject: text("subject"),
+  notes: text("notes"),
+  duration: integer("duration"),
+  userId: text("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_deal_activities_deal").on(table.dealId),
+  index("idx_deal_activities_org").on(table.orgId),
+]);
+
 export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
 export const crmHealthEnum = pgEnum("crm_health", ["healthy", "at_risk", "critical"]);
 export const crmDealStageEnum = pgEnum("crm_deal_stage", ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]);
@@ -1518,7 +1538,7 @@ export const targetsRelations = relations(targets, ({ one }) => ({
   }),
 }));
 
-export const dealsRelations = relations(deals, ({ one }) => ({
+export const dealsRelations = relations(deals, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [deals.orgId],
     references: [organizations.id],
@@ -1533,6 +1553,18 @@ export const dealsRelations = relations(deals, ({ one }) => ({
   }),
   assignedTo: one(users, {
     fields: [deals.assignedToId],
+    references: [users.id],
+  }),
+  activities: many(dealActivities),
+}));
+
+export const dealActivitiesRelations = relations(dealActivities, ({ one }) => ({
+  deal: one(deals, {
+    fields: [dealActivities.dealId],
+    references: [deals.id],
+  }),
+  user: one(users, {
+    fields: [dealActivities.userId],
     references: [users.id],
   }),
 }));

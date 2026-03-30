@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, desc } from "drizzle-orm";
-import { deals, users } from "@/lib/db/schema";
+import { deals, dealActivities, users } from "@/lib/db/schema";
 import { TRPCError } from "@trpc/server";
 
 const dealStageValues = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"] as const;
@@ -126,6 +126,13 @@ export const dealsRouter = createTRPCRouter({
       stage: z.enum(dealStageValues),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Get old stage before updating
+      const existing = await ctx.db.query.deals.findFirst({
+        where: and(eq(deals.id, input.id), eq(deals.orgId, ctx.session.orgId)),
+        columns: { stage: true },
+      });
+      if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
+
       const updateData: Record<string, unknown> = {
         stage: input.stage,
         updatedAt: new Date(),
@@ -145,7 +152,67 @@ export const dealsRouter = createTRPCRouter({
         .returning();
 
       if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Log stage change activity
+      if (existing.stage !== input.stage) {
+        await ctx.db.insert(dealActivities).values({
+          orgId: ctx.session.orgId,
+          dealId: input.id,
+          type: "stage_change",
+          previousValue: existing.stage,
+          newValue: input.stage,
+          subject: `Stage changed from ${existing.stage} to ${input.stage}`,
+          userId: ctx.session.userId,
+        }).catch(() => { /* non-blocking */ });
+      }
+
       return updated;
+    }),
+
+  logActivity: protectedProcedure
+    .input(z.object({
+      dealId: z.number(),
+      type: z.enum(["note", "call", "email", "meeting", "document"]),
+      subject: z.string().optional(),
+      notes: z.string().optional(),
+      duration: z.number().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const deal = await ctx.db.query.deals.findFirst({
+        where: and(eq(deals.id, input.dealId), eq(deals.orgId, ctx.session.orgId)),
+        columns: { id: true },
+      });
+      if (!deal) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const [activity] = await ctx.db.insert(dealActivities).values({
+        orgId: ctx.session.orgId,
+        dealId: input.dealId,
+        type: input.type,
+        subject: input.subject || null,
+        notes: input.notes || null,
+        duration: input.duration || null,
+        userId: ctx.session.userId,
+      }).returning();
+      return activity;
+    }),
+
+  getActivities: protectedProcedure
+    .input(z.object({
+      dealId: z.number(),
+      limit: z.number().min(1).max(100).default(50),
+    }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.query.dealActivities.findMany({
+        where: and(
+          eq(dealActivities.dealId, input.dealId),
+          eq(dealActivities.orgId, ctx.session.orgId),
+        ),
+        with: {
+          user: { columns: { id: true, name: true, image: true } },
+        },
+        orderBy: [desc(dealActivities.createdAt)],
+        limit: input.limit,
+      });
     }),
 
   delete: adminProcedure
