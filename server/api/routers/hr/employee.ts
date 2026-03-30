@@ -308,6 +308,7 @@ export const employeeRouter = createTRPCRouter({
             monthlySalary: input.monthlySalary?.toString(),
             employeeId: finalEmployeeId,
             password: hashedPassword,
+            emailVerified: new Date(),
             isPasswordChangeRequired: true,
             image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
             createdAt: new Date(),
