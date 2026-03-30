@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  Plus, DollarSign, TrendingUp, Clock, Trophy,
+  Plus, DollarSign, TrendingUp, Clock, Trophy, Download,
   GripVertical, User, Calendar, MoreHorizontal, Pencil, Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -112,6 +112,42 @@ export default function DealsPage() {
     >
       <motion.div variants={fadeUp} className="flex items-center justify-between">
         <PageHeader title="Deals Pipeline" description="Track and manage your deals across stages" />
+        <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={async () => {
+          try {
+            const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+            const rows = (allDeals || []).map(d => ({
+              name: d.name,
+              value: d.value || "0",
+              stage: d.stage,
+              probability: `${d.probability ?? 0}%`,
+              contactPerson: d.contactPerson || "",
+              contactEmail: d.contactEmail || "",
+              assignedTo: d.assignedTo?.name || "Unassigned",
+              expectedClose: d.expectedCloseDate || "",
+              createdAt: d.createdAt ? new Date(d.createdAt).toLocaleDateString() : "",
+            }));
+            await downloadXlsx("deals-export.xlsx", [{
+              name: "Deals",
+              columns: [
+                { header: "Deal Name", key: "name", width: 25 },
+                { header: "Value (INR)", key: "value", width: 15 },
+                { header: "Stage", key: "stage", width: 14 },
+                { header: "Probability", key: "probability", width: 12 },
+                { header: "Contact Person", key: "contactPerson", width: 20 },
+                { header: "Contact Email", key: "contactEmail", width: 25 },
+                { header: "Assigned To", key: "assignedTo", width: 18 },
+                { header: "Expected Close", key: "expectedClose", width: 14 },
+                { header: "Created", key: "createdAt", width: 12 },
+              ],
+              rows,
+            }]);
+            toast.success("Deals exported");
+          } catch { toast.error("Export failed"); }
+        }}>
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
@@ -132,6 +168,7 @@ export default function DealsPage() {
             />
           </DialogContent>
         </Dialog>
+        </div>
       </motion.div>
 
       <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
