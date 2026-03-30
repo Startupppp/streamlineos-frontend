@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import { logger } from "../../../../lib/logger";
 import { getFileStream, isStorageConfigured } from "../../../../lib/storage";
+import { db } from "../../../../lib/db";
+import { organizationMembers } from "../../../../lib/db/schema";
+import { eq } from "drizzle-orm";
 import path from "path";
 
 const MIME_MAP: Record<string, string> = {
@@ -23,6 +26,12 @@ function getMimeType(filePath: string): string {
   return MIME_MAP[ext] || "application/octet-stream";
 }
 
+function isValidFileKey(key: string): boolean {
+  if (key.includes("..") || key.includes("\\") || key.startsWith("/")) return false;
+  if (key.includes("\0")) return false;
+  return true;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -31,12 +40,20 @@ export async function GET(req: NextRequest) {
     }
 
     const key = req.nextUrl.searchParams.get("key");
-    if (!key) {
-      return new NextResponse("Missing key parameter", { status: 400 });
+    if (!key || !isValidFileKey(key)) {
+      return new NextResponse("Invalid key parameter", { status: 400 });
     }
 
     if (!isStorageConfigured()) {
-      return new NextResponse("Cloud storage not configured", { status: 503 });
+      return new NextResponse("Storage not available", { status: 503 });
+    }
+
+    // Verify user belongs to an organization
+    const member = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, session.user.id),
+    });
+    if (!member) {
+      return new NextResponse("Forbidden", { status: 403 });
     }
 
     const { body, contentType } = await getFileStream(key);
@@ -48,7 +65,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error("Image proxy error", error);
+    logger.error("Image proxy error", { error: error instanceof Error ? error.message : "Unknown" });
     return new NextResponse("Not found", { status: 404 });
   }
 }

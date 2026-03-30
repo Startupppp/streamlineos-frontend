@@ -10,6 +10,9 @@ import {
   getFileNameFromKey,
   isStorageConfigured,
 } from "@/lib/storage";
+import { db } from "@/lib/db";
+import { organizationMembers } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import path from "path";
 
 const MIME_MAP: Record<string, string> = {
@@ -58,11 +61,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid file reference" }, { status: 400 });
     }
 
+    // Verify user belongs to an organization
+    const member = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, session.user.id),
+    });
+    if (!member) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     // Audit log file download
     createAuditLog({
       action: "file.download",
       userId: session.user.id,
-      orgId: undefined,
+      orgId: member.orgId,
       metadata: { fileKey },
     }).catch((err) => {
       logger.error("Failed to create audit log for file download", { error: err instanceof Error ? err.message : "Unknown" });
