@@ -43,7 +43,21 @@ export const employeeRouter = createTRPCRouter({
     return members
       .map((m) => m.user)
       .filter((u) => u.isActive !== false)
-      .map(({ password, bankDetails, taxId, ...safe }) => safe);
+      .map((u) => ({
+        id: u.id,
+        name: u.name,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        role: u.role,
+        designation: u.designation,
+        employeeId: u.employeeId,
+        departmentId: u.departmentId,
+        image: u.image,
+        isActive: u.isActive,
+        joiningDate: u.joiningDate,
+        hasDashboardAccess: u.hasDashboardAccess,
+      }));
   }),
 
   createDepartment: protectedProcedure
