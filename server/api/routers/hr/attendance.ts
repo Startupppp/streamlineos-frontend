@@ -90,122 +90,131 @@ export const attendanceRouter = createTRPCRouter({
     .input(checkInInputSchema)
     .mutation(async ({ ctx, input }) => {
       const today = getTodayString();
-      const existing = await ctx.db.query.attendance.findFirst({
-        where: and(
-          eq(attendance.userId, ctx.session.userId),
-          eq(attendance.date, today),
-          eq(attendance.orgId, ctx.session.orgId)
-        ),
-        orderBy: [desc(attendance.createdAt)],
-      });
+      await ctx.db.transaction(async (tx) => {
+        const result = await tx.select().from(attendance)
+          .where(and(
+            eq(attendance.userId, ctx.session.userId),
+            eq(attendance.date, today),
+            eq(attendance.orgId, ctx.session.orgId)
+          ))
+          .orderBy(desc(attendance.createdAt))
+          .limit(1)
+          .for('update');
+          
+        const existing = result[0];
 
-      if (existing) {
-        if (!existing.checkOut) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Already checked in",
-          });
+        if (existing) {
+          if (!existing.checkOut) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Already checked in",
+            });
+          }
+
+          const lastCheckOut = new Date(existing.checkOut);
+          const cooldownDiff = new Date().getTime() - lastCheckOut.getTime();
+          const diffMinutes = cooldownDiff / (1000 * 60);
+          if (diffMinutes < 2) {
+             throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Please wait 2 minutes before clocking in again.",
+            });
+          }
+
+          const now = new Date();
+          const gapMs = now.getTime() - lastCheckOut.getTime();
+          const gapHours = gapMs / (1000 * 60 * 60);
+
+          const currentBreaks = (existing.breaks as { start: string; end?: string }[]) || [];
+          const newBreaks = [
+            ...currentBreaks,
+            { start: lastCheckOut.toISOString(), end: now.toISOString() }
+          ];
+          const newBreakHours = (Number(existing.breakHours) || 0) + gapHours;
+
+          await tx
+            .update(attendance)
+            .set({
+              status: "PRESENT",
+              checkOut: null,
+              breaks: newBreaks,
+              breakHours: newBreakHours.toFixed(2),
+            })
+            .where(eq(attendance.id, existing.id));
+
+          return;
         }
 
-        const lastCheckOut = new Date(existing.checkOut);
-        const cooldownDiff = new Date().getTime() - lastCheckOut.getTime();
-        const diffMinutes = cooldownDiff / (1000 * 60);
-        if (diffMinutes < 2) {
-           throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Please wait 2 minutes before clocking in again.",
-          });
-        }
-
-        const now = new Date();
-        const gapMs = now.getTime() - lastCheckOut.getTime();
-        const gapHours = gapMs / (1000 * 60 * 60);
-
-        const currentBreaks = (existing.breaks as { start: string; end?: string }[]) || [];
-        const newBreaks = [
-          ...currentBreaks,
-          { start: lastCheckOut.toISOString(), end: now.toISOString() }
-        ];
-        const newBreakHours = (Number(existing.breakHours) || 0) + gapHours;
-
-        await ctx.db
-          .update(attendance)
-          .set({
-            status: "PRESENT",
-            checkOut: null,
-            breaks: newBreaks,
-            breakHours: newBreakHours.toFixed(2),
-          })
-          .where(eq(attendance.id, existing.id));
-
-        return;
-      }
-
-      await ctx.db.insert(attendance).values({
-        orgId: ctx.session.orgId,
-        userId: ctx.session.userId,
-        date: today,
-        checkIn: new Date(),
-        status: "PRESENT",
-        locationData: input.location,
+        await tx.insert(attendance).values({
+          orgId: ctx.session.orgId,
+          userId: ctx.session.userId,
+          date: today,
+          checkIn: new Date(),
+          status: "PRESENT",
+          locationData: input.location,
+        });
       });
     }),
 
   checkOut: protectedProcedure.mutation(async ({ ctx }) => {
     const today = getTodayString();
-    const log = await ctx.db.query.attendance.findFirst({
-      where: and(
-        eq(attendance.userId, ctx.session.userId),
-        eq(attendance.date, today),
-        eq(attendance.orgId, ctx.session.orgId),
-        isNull(attendance.checkOut)
-      ),
-    });
+    await ctx.db.transaction(async (tx) => {
+      const result = await tx.select().from(attendance)
+        .where(and(
+          eq(attendance.userId, ctx.session.userId),
+          eq(attendance.date, today),
+          eq(attendance.orgId, ctx.session.orgId),
+          isNull(attendance.checkOut)
+        ))
+        .orderBy(desc(attendance.createdAt))
+        .limit(1)
+        .for('update');
+        
+      const log = result[0];
 
-    if (!log)
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot check out" });
+      if (!log)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot check out" });
 
-
-
-    if (!log.checkIn) {
-      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Missing check-in time" });
-    }
-
-    const now = new Date();
-    const checkInTime = new Date(log.checkIn);
-    const durationMs = now.getTime() - checkInTime.getTime();
-    const sessionWorkHours = Math.max(
-      0,
-      durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0)
-    );
-
-    const todayLogs = await ctx.db.query.attendance.findMany({
-      where: and(
-        eq(attendance.userId, ctx.session.userId),
-        eq(attendance.date, today),
-        eq(attendance.orgId, ctx.session.orgId)
-      ),
-    });
-
-    let previousWorkHours = 0;
-    for (const l of todayLogs) {
-      if (l.id !== log.id) {
-        previousWorkHours += Number(l.workHours || 0);
+      if (!log.checkIn) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Missing check-in time" });
       }
-    }
 
-    const totalDailyWork = previousWorkHours + sessionWorkHours;
-    const isOvertime = totalDailyWork > 8;
+      const now = new Date();
+      const checkInTime = new Date(log.checkIn);
+      const durationMs = now.getTime() - checkInTime.getTime();
+      const sessionWorkHours = Math.max(
+        0,
+        durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0)
+      );
 
-    await ctx.db
-      .update(attendance)
-      .set({
-        checkOut: now,
-        status: "PRESENT",
-        workHours: sessionWorkHours.toFixed(2),
-        isOvertime,
-      })
-      .where(eq(attendance.id, log.id));
+      const todayLogs = await tx.query.attendance.findMany({
+        where: and(
+          eq(attendance.userId, ctx.session.userId),
+          eq(attendance.date, today),
+          eq(attendance.orgId, ctx.session.orgId)
+        ),
+      });
+
+      let previousWorkHours = 0;
+      for (const l of todayLogs) {
+        if (l.id !== log.id) {
+          previousWorkHours += Number(l.workHours || 0);
+        }
+      }
+
+      const totalDailyWork = previousWorkHours + sessionWorkHours;
+      const isOvertime = totalDailyWork > 8;
+
+      await tx
+        .update(attendance)
+        .set({
+          checkOut: now,
+          status: "PRESENT",
+          workHours: sessionWorkHours.toFixed(2),
+          isOvertime,
+        })
+        .where(eq(attendance.id, log.id));
+    });
   }),
 
   toggleBreak: protectedProcedure.mutation(async ({ ctx }) => {
