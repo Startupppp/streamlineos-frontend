@@ -79,6 +79,7 @@ export const channelRouter = createTRPCRouter({
       const unreadMap = new Map(unreadRows.map((r) => [r.channelId, r.count]));
 
       // 3. Batch last messages in ONE query using DISTINCT ON
+      const channelIdArray = channelIds.map(Number);
       const lastMessages = await ctx.db.execute<{
         channel_id: number;
         content: string | null;
@@ -92,7 +93,7 @@ export const channelRouter = createTRPCRouter({
           m.created_at
         FROM chat_messages m
         LEFT JOIN users u ON u.id = m.sender_id
-        WHERE m.channel_id = ANY(${channelIds.map(Number)})
+        WHERE m.channel_id = ANY(${sql`ARRAY[${sql.join(channelIdArray.map(id => sql`${id}`), sql`, `)}]::int[]`})
           AND m.is_deleted = false
         ORDER BY m.channel_id, m.created_at DESC
       `);
