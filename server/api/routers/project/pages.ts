@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { pages } from "@/lib/db/schema";
-import { eq, and, isNull, asc } from "drizzle-orm";
+import { eq, and, isNull, asc, or, count } from "drizzle-orm";
+import { safeIlike } from "@/lib/db/search-utils";
+import {
+  createPaginatedResponse,
+  getOffset,
+} from "@/lib/pagination";
 import { TRPCError } from "@trpc/server";
 
 export const pagesRouter = createTRPCRouter({
@@ -18,6 +23,50 @@ export const pagesRouter = createTRPCRouter({
           )
         )
         .orderBy(asc(pages.title));
+    }),
+
+  pagesGetByProjectPaginated: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, projectId } = input;
+      const offset = getOffset(page, limit);
+
+      const baseConditions = [
+        eq(pages.projectId, projectId),
+        eq(pages.orgId, ctx.session.orgId),
+      ];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            safeIlike(pages.title, search),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select()
+          .from(pages)
+          .where(and(...searchConditions))
+          .orderBy(asc(pages.title))
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(pages)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return createPaginatedResponse(dataResult, total, page, limit);
     }),
 
   pagesGetTree: protectedProcedure

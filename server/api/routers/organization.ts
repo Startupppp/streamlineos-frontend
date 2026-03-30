@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure, sessionProcedure } from "@/server/api/trpc";
 import { organizations, organizationMembers, invitations, users } from "@/lib/db/schema";
-import { eq, and, gt, desc, inArray, isNull } from "drizzle-orm";
+import { eq, and, gt, desc, inArray, isNull, or, count, ilike } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { sendInvitationEmail } from "@/lib/email";
@@ -99,6 +99,69 @@ export const organizationRouter = createTRPCRouter({
       });
     }
   }),
+
+  getMembersPaginated: protectedProcedure
+    .input(
+      z.object({
+        orgId: z.string(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, orgId } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [
+        eq(organizationMembers.orgId, orgId),
+      ];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              ilike(users.name, `%${search}%`),
+              ilike(users.email, `%${search}%`)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select({
+            userId: organizationMembers.userId,
+            role: organizationMembers.role,
+            joinedAt: organizationMembers.joinedAt,
+            name: users.name,
+            email: users.email,
+            image: users.image,
+          })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(and(...searchConditions))
+          .orderBy(users.name)
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    }),
 
   createOrganization: protectedProcedure
     .input(createOrganizationSchema)

@@ -4,7 +4,12 @@ import {
   sprints,
   timesheets,
 } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or, count } from "drizzle-orm";
+import { safeIlike } from "@/lib/db/search-utils";
+import {
+  createPaginatedResponse,
+  getOffset,
+} from "@/lib/pagination";
 import { TRPCError } from "@trpc/server";
 import { differenceInCalendarDays, addDays } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
@@ -32,6 +37,59 @@ export const sprintRouter = createTRPCRouter({
         },
         orderBy: [desc(sprints.startDate)],
       });
+    }),
+
+  getSprintsPaginated: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number().optional(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, projectId } = input;
+      const offset = getOffset(page, limit);
+
+      const baseConditions = [eq(sprints.orgId, ctx.session.orgId)];
+      if (projectId) {
+        baseConditions.push(eq(sprints.projectId, projectId));
+      }
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              safeIlike(sprints.name, search),
+              safeIlike(sprints.goal, search)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db.query.sprints.findMany({
+          where: and(...searchConditions),
+          with: {
+            tickets: {
+              with: {
+                assignee: true,
+              },
+            },
+          },
+          orderBy: [desc(sprints.startDate)],
+          limit,
+          offset,
+        }),
+        ctx.db
+          .select({ total: count() })
+          .from(sprints)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return createPaginatedResponse(dataResult, total, page, limit);
     }),
 
   createSprint: adminProcedure

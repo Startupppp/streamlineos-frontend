@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { projectViews } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or, count } from "drizzle-orm";
+import { safeIlike } from "@/lib/db/search-utils";
+import {
+  createPaginatedResponse,
+  getOffset,
+} from "@/lib/pagination";
 import { TRPCError } from "@trpc/server";
 
 export const viewsRouter = createTRPCRouter({
@@ -18,6 +23,50 @@ export const viewsRouter = createTRPCRouter({
           )
         )
         .orderBy(desc(projectViews.isPinned), projectViews.name);
+    }),
+
+  viewsGetByProjectPaginated: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, projectId } = input;
+      const offset = getOffset(page, limit);
+
+      const baseConditions = [
+        eq(projectViews.projectId, projectId),
+        eq(projectViews.orgId, ctx.session.orgId),
+      ];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            safeIlike(projectViews.name, search),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select()
+          .from(projectViews)
+          .where(and(...searchConditions))
+          .orderBy(desc(projectViews.isPinned), projectViews.name)
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(projectViews)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return createPaginatedResponse(dataResult, total, page, limit);
     }),
 
   viewsGetById: protectedProcedure

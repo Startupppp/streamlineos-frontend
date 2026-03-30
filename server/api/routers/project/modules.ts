@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { modules, moduleLinks, tickets } from "@/lib/db/schema";
-import { eq, and, count, sql } from "drizzle-orm";
+import { eq, and, count, sql, or } from "drizzle-orm";
+import { safeIlike } from "@/lib/db/search-utils";
+import {
+  createPaginatedResponse,
+  getOffset,
+} from "@/lib/pagination";
 import { TRPCError } from "@trpc/server";
 
 export const modulesRouter = createTRPCRouter({
@@ -45,6 +50,83 @@ export const modulesRouter = createTRPCRouter({
           progress: total > 0 ? Math.round((completed / total) * 100) : 0,
         };
       });
+    }),
+
+  modulesGetByProjectPaginated: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, projectId } = input;
+      const offset = getOffset(page, limit);
+
+      const baseConditions = [
+        eq(modules.projectId, projectId),
+        eq(modules.orgId, ctx.session.orgId),
+      ];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              safeIlike(modules.name, search),
+              safeIlike(modules.description, search)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select()
+          .from(modules)
+          .where(and(...searchConditions))
+          .orderBy(modules.name)
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(modules)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      // Enrich with ticket stats (same as non-paginated version)
+      if (dataResult.length > 0) {
+        const moduleIds = dataResult.map((m) => m.id);
+        const statsRows = await ctx.db
+          .select({
+            moduleId: tickets.moduleId,
+            total: count(),
+            completed: count(sql`CASE WHEN ${tickets.status} = 'DONE' THEN 1 END`),
+          })
+          .from(tickets)
+          .where(sql`${tickets.moduleId} IN (${sql.join(moduleIds.map((id) => sql`${id}`), sql`, `)})`)
+          .groupBy(tickets.moduleId);
+
+        const statsMap = new Map(statsRows.map((s) => [s.moduleId, s]));
+
+        const enriched = dataResult.map((mod) => {
+          const stats = statsMap.get(mod.id);
+          const totalItems = stats?.total ?? 0;
+          const completed = stats?.completed ?? 0;
+          return {
+            ...mod,
+            totalItems,
+            completedItems: completed,
+            progress: totalItems > 0 ? Math.round((completed / totalItems) * 100) : 0,
+          };
+        });
+
+        return createPaginatedResponse(enriched, total, page, limit);
+      }
+
+      return createPaginatedResponse([], total, page, limit);
     }),
 
   modulesGetById: protectedProcedure

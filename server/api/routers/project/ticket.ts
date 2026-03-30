@@ -13,7 +13,8 @@ import {
   users,
   projectMembers,
 } from "@/lib/db/schema";
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, or, count } from "drizzle-orm";
+import { safeIlike } from "@/lib/db/search-utils";
 import { TRPCError } from "@trpc/server";
 import {
   createTicketInputSchema,
@@ -368,6 +369,66 @@ export const ticketRouter = createTRPCRouter({
         .where(
           and(eq(tickets.id, input.ticketId), eq(tickets.orgId, ctx.session.orgId))
         );
+    }),
+
+  getTicketsPaginated: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, projectId } = input;
+      const offset = getOffset(page, limit);
+
+      const baseConditions = [
+        eq(tickets.orgId, ctx.session.orgId),
+        eq(tickets.projectId, projectId),
+      ];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              safeIlike(tickets.title, search),
+              safeIlike(tickets.description, search)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db.query.tickets.findMany({
+          where: and(...searchConditions),
+          with: {
+            assignee: true,
+            reporter: true,
+            assignees: {
+              with: {
+                user: true,
+              },
+            },
+            labels: {
+              with: {
+                label: true,
+              },
+            },
+          },
+          orderBy: [desc(tickets.updatedAt)],
+          limit,
+          offset,
+        }),
+        ctx.db
+          .select({ total: count() })
+          .from(tickets)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return createPaginatedResponse(dataResult, total, page, limit);
     }),
 
   getTicketDetails: protectedProcedure
