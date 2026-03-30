@@ -346,8 +346,6 @@ export const payrollRouter = createTRPCRouter({
               designation: true,
               email: true,
               joiningDate: true,
-              taxId: true,
-              bankDetails: true,
               employeeId: true,
             },
           },
