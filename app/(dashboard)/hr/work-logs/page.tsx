@@ -9,11 +9,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle, Download } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle, Download, Filter, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
+
+/* ─── Filter state type ─── */
+interface WorkLogFilters {
+  year: number;
+  quarter: number;
+  selectedUserId?: string;
+  departmentId?: string;
+  month?: number; // 0-11
+  dateFrom?: string; // yyyy-MM-dd
+  dateTo?: string; // yyyy-MM-dd
+}
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();
@@ -21,17 +45,52 @@ export default function WorkLogsPage() {
   const currentMonth = new Date().getMonth();
   const currentQuarter = Math.floor(currentMonth / 3) + 1;
 
-  const [year, setYear] = useState<number>(currentYear);
-  const [quarter, setQuarter] = useState<number>(currentQuarter);
+  const [filters, setFilters] = useState<WorkLogFilters>({
+    year: currentYear,
+    quarter: currentQuarter,
+  });
+  // Draft state for the filter sheet (applied on "Apply")
+  const [draftFilters, setDraftFilters] = useState<WorkLogFilters>({
+    year: currentYear,
+    quarter: currentQuarter,
+  });
+
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
+
+  // Keep backward-compatible aliases
+  const year = filters.year;
+  const quarter = filters.quarter;
+  const selectedUserId = filters.selectedUserId;
 
   const isAdminOrCeo = session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
 
   const { data: employees } = api.hr.getEmployees.useQuery(undefined, {
     enabled: isAdminOrCeo,
   });
+
+  const { data: departments } = api.hr.getDepartments.useQuery(undefined, {
+    enabled: isAdminOrCeo,
+  });
+
+  /* ─── Count active filters (beyond defaults) ─── */
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.selectedUserId) count++;
+    if (filters.departmentId) count++;
+    if (filters.month !== undefined) count++;
+    if (filters.dateFrom || filters.dateTo) count++;
+    if (filters.year !== currentYear) count++;
+    if (filters.quarter !== currentQuarter) count++;
+    return count;
+  }, [filters, currentYear, currentQuarter]);
+
+  /* ─── Filtered employee list by department ─── */
+  const filteredEmployees = useMemo(() => {
+    if (!employees) return [];
+    if (!filters.departmentId) return employees;
+    return employees.filter((e) => e.departmentId?.toString() === filters.departmentId);
+  }, [employees, filters.departmentId]);
 
   const toggleMonth = useCallback((monthKey: string) => {
     setCollapsedMonths((prev) => {
@@ -101,12 +160,20 @@ export default function WorkLogsPage() {
     return counts;
   }, [logs, monthGroups]);
 
-  // Search filtering: match by keyword in description or by date
+  // Filtering: month, date range, and search keyword
   const filterDay = useCallback(
     (date: Date) => {
+      // Month filter
+      if (filters.month !== undefined && date.getMonth() !== filters.month) return false;
+
+      // Date range filter
+      const dateStr = format(date, "yyyy-MM-dd");
+      if (filters.dateFrom && dateStr < filters.dateFrom) return false;
+      if (filters.dateTo && dateStr > filters.dateTo) return false;
+
+      // Search term filter
       if (!searchTerm.trim()) return true;
       const term = searchTerm.trim().toLowerCase();
-      const dateStr = format(date, "yyyy-MM-dd");
       const log = logs?.find((l) => l.date === dateStr);
 
       // Check if search term matches the date display
@@ -125,7 +192,7 @@ export default function WorkLogsPage() {
 
       return false;
     },
-    [searchTerm, logs],
+    [searchTerm, logs, filters.month, filters.dateFrom, filters.dateTo],
   );
 
   const hasSearchResults = useMemo(() => {
@@ -192,28 +259,9 @@ export default function WorkLogsPage() {
         }
         actions={
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-            {isAdminOrCeo && employees && employees.length > 0 && (
-              <Select
-                value={selectedUserId || "self"}
-                onValueChange={(v) => setSelectedUserId(v === "self" ? undefined : v)}
-              >
-                <SelectTrigger className="w-[140px] sm:w-[180px] md:w-[200px] h-9" aria-label="Select employee">
-                  <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground shrink-0" />
-                  <SelectValue placeholder="Employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="self">My Logs</SelectItem>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.firstName} {emp.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-              <SelectTrigger className="w-[90px] sm:w-[100px] md:w-[120px] h-9" aria-label="Select year">
+            {/* Quick quarter/year selectors stay visible */}
+            <Select value={year.toString()} onValueChange={(v) => { const y = parseInt(v); setFilters(p => ({ ...p, year: y })); setDraftFilters(p => ({ ...p, year: y })); }}>
+              <SelectTrigger className="w-[90px] sm:w-[100px] h-9" aria-label="Select year">
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
@@ -223,8 +271,8 @@ export default function WorkLogsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={quarter.toString()} onValueChange={(v) => setQuarter(parseInt(v))}>
-              <SelectTrigger className="flex-1 sm:flex-none sm:w-[140px] md:w-[180px] h-9" aria-label="Select quarter">
+            <Select value={quarter.toString()} onValueChange={(v) => { const q = parseInt(v); setFilters(p => ({ ...p, quarter: q })); setDraftFilters(p => ({ ...p, quarter: q })); }}>
+              <SelectTrigger className="w-[130px] sm:w-[150px] h-9" aria-label="Select quarter">
                 <SelectValue placeholder="Quarter" />
               </SelectTrigger>
               <SelectContent>
@@ -234,6 +282,191 @@ export default function WorkLogsPage() {
                 <SelectItem value="4">Q4 (Oct - Dec)</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Advanced Filters Sheet */}
+            <Sheet onOpenChange={(open) => { if (open) setDraftFilters({ ...filters }); }}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 gap-1.5 relative">
+                  <Filter className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {activeFilterCount > 0 && (
+                    <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-gold text-white border-0">
+                      {activeFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Advanced Filters</SheetTitle>
+                  <SheetDescription>Refine your work logs view</SheetDescription>
+                </SheetHeader>
+
+                <div className="space-y-6 py-6">
+                  {/* Year */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Year</Label>
+                    <Select value={draftFilters.year.toString()} onValueChange={(v) => setDraftFilters(p => ({ ...p, year: parseInt(v) }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                          <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Quarter */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Quarter</Label>
+                    <Select value={draftFilters.quarter.toString()} onValueChange={(v) => setDraftFilters(p => ({ ...p, quarter: parseInt(v) }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select quarter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Q1 (Jan - Mar)</SelectItem>
+                        <SelectItem value="2">Q2 (Apr - Jun)</SelectItem>
+                        <SelectItem value="3">Q3 (Jul - Sep)</SelectItem>
+                        <SelectItem value="4">Q4 (Oct - Dec)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Month (within selected quarter) */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Month</Label>
+                    <Select
+                      value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
+                      onValueChange={(v) => setDraftFilters(p => ({ ...p, month: v === "all" ? undefined : parseInt(v) }))}
+                    >
+                      <SelectTrigger className="w-full">
+                        <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                        <SelectValue placeholder="All months" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Months</SelectItem>
+                        {(() => {
+                          const startMonthIdx = (draftFilters.quarter - 1) * 3;
+                          return [0, 1, 2].map((offset) => {
+                            const monthIdx = startMonthIdx + offset;
+                            const monthName = format(new Date(draftFilters.year, monthIdx, 1), "MMMM");
+                            return (
+                              <SelectItem key={monthIdx} value={monthIdx.toString()}>
+                                {monthName}
+                              </SelectItem>
+                            );
+                          });
+                        })()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date Range */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Date Range</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">From</Label>
+                        <Input
+                          type="date"
+                          value={draftFilters.dateFrom || ""}
+                          onChange={(e) => setDraftFilters(p => ({ ...p, dateFrom: e.target.value || undefined }))}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">To</Label>
+                        <Input
+                          type="date"
+                          value={draftFilters.dateTo || ""}
+                          onChange={(e) => setDraftFilters(p => ({ ...p, dateTo: e.target.value || undefined }))}
+                          min={draftFilters.dateFrom || undefined}
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Department (admin only) */}
+                  {isAdminOrCeo && departments && departments.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Department</Label>
+                      <Select
+                        value={draftFilters.departmentId || "all"}
+                        onValueChange={(v) => setDraftFilters(p => ({
+                          ...p,
+                          departmentId: v === "all" ? undefined : v,
+                          // Clear employee selection when department changes
+                          selectedUserId: v === "all" ? p.selectedUserId : undefined,
+                        }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="All departments" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Departments</SelectItem>
+                          {departments.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.id.toString()}>
+                              {dept.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Assignees / Employee (admin only) */}
+                  {isAdminOrCeo && employees && employees.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Employee</Label>
+                      <Select
+                        value={draftFilters.selectedUserId || "self"}
+                        onValueChange={(v) => setDraftFilters(p => ({ ...p, selectedUserId: v === "self" ? undefined : v }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                          <SelectValue placeholder="Select employee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="self">My Logs</SelectItem>
+                          {(draftFilters.departmentId
+                            ? employees.filter((e) => e.departmentId?.toString() === draftFilters.departmentId)
+                            : employees
+                          ).map((emp) => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.firstName} {emp.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                <SheetFooter className="flex flex-row gap-2 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      const reset: WorkLogFilters = { year: currentYear, quarter: currentQuarter };
+                      setDraftFilters(reset);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <SheetClose asChild>
+                    <Button
+                      className="flex-1 bg-gold hover:bg-gold/90 text-white"
+                      onClick={() => setFilters({ ...draftFilters })}
+                    >
+                      Apply Filters
+                    </Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
 
             {isAdminOrCeo && (
               <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={handleExportWorkLogs}>
@@ -265,6 +498,51 @@ export default function WorkLogsPage() {
           </button>
         )}
       </div>
+
+      {/* Active Filter Chips */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium">Active filters:</span>
+          {filters.departmentId && departments && (
+            <Badge variant="secondary" className="text-xs gap-1 pr-1">
+              Dept: {departments.find((d) => d.id.toString() === filters.departmentId)?.name ?? "Unknown"}
+              <button onClick={() => { setFilters(p => ({ ...p, departmentId: undefined })); setDraftFilters(p => ({ ...p, departmentId: undefined })); }} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
+            </Badge>
+          )}
+          {filters.selectedUserId && employees && (
+            <Badge variant="secondary" className="text-xs gap-1 pr-1">
+              Employee: {employees.find((e) => e.id === filters.selectedUserId)?.firstName ?? "Selected"}
+              <button onClick={() => { setFilters(p => ({ ...p, selectedUserId: undefined })); setDraftFilters(p => ({ ...p, selectedUserId: undefined })); }} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
+            </Badge>
+          )}
+          {filters.month !== undefined && (
+            <Badge variant="secondary" className="text-xs gap-1 pr-1">
+              Month: {format(new Date(filters.year, filters.month, 1), "MMMM")}
+              <button onClick={() => { setFilters(p => ({ ...p, month: undefined })); setDraftFilters(p => ({ ...p, month: undefined })); }} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
+            </Badge>
+          )}
+          {(filters.dateFrom || filters.dateTo) && (
+            <Badge variant="secondary" className="text-xs gap-1 pr-1">
+              {filters.dateFrom && filters.dateTo
+                ? `${filters.dateFrom} — ${filters.dateTo}`
+                : filters.dateFrom
+                  ? `From ${filters.dateFrom}`
+                  : `Until ${filters.dateTo}`}
+              <button onClick={() => { setFilters(p => ({ ...p, dateFrom: undefined, dateTo: undefined })); setDraftFilters(p => ({ ...p, dateFrom: undefined, dateTo: undefined })); }} className="ml-0.5 hover:text-foreground"><X className="h-3 w-3" /></button>
+            </Badge>
+          )}
+          <button
+            onClick={() => {
+              const reset: WorkLogFilters = { year: currentYear, quarter: currentQuarter };
+              setFilters(reset);
+              setDraftFilters(reset);
+            }}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {/* Status Legend */}
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
