@@ -41,6 +41,13 @@ function normalizeTicketType(type: string): string {
   return upper === "FEATURE" ? "STORY" : upper;
 }
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  TODO: ["IN_PROGRESS"],
+  IN_PROGRESS: ["IN_REVIEW", "TODO"],
+  IN_REVIEW: ["DONE", "IN_PROGRESS"],
+  DONE: ["IN_PROGRESS"], // reopen
+};
+
 export const ticketRouter = createTRPCRouter({
   createTicket: protectedProcedure
     .input(createTicketInputSchema)
@@ -288,6 +295,18 @@ export const ticketRouter = createTRPCRouter({
           project: true,
         },
       });
+
+      if (!oldTicket) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Ticket not found" });
+      }
+
+      const allowed = VALID_TRANSITIONS[oldTicket.status] || [];
+      if (!allowed.includes(input.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot transition from ${oldTicket.status} to ${input.status}. Allowed: ${allowed.join(", ") || "none"}`,
+        });
+      }
 
       await ctx.db
         .update(tickets)
