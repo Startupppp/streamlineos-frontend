@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
+import { LeadTableView } from "@/components/crm/lead-table-view";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-utils";

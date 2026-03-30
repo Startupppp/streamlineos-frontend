@@ -80,8 +80,6 @@ function formatTimerSegment(val: number): string {
   return String(val).padStart(2, "0");
 }
 
-/* ─────────────────────── Timer Card ─────────────────────── */
-
 const TimerCard = memo(function TimerCard() {
   const [now, setNow] = useState(new Date());
   const [localCooldown, setLocalCooldown] = useState(0);
