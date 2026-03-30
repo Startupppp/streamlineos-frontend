@@ -34,7 +34,7 @@ export const payrollRouter = createTRPCRouter({
   generatePayroll: protectedProcedure
     .input(generatePayrollInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can generate payroll" });
       }
       const memberships = await ctx.db.query.organizationMembers.findMany({
@@ -177,7 +177,7 @@ export const payrollRouter = createTRPCRouter({
   createSalaryStructure: protectedProcedure
     .input(createSalaryStructureInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can manage salary structures" });
       }
       const [structure] = await ctx.db.transaction(async (tx) => {
@@ -215,7 +215,7 @@ export const payrollRouter = createTRPCRouter({
   generateEmployeePayslip: protectedProcedure
     .input(generateEmployeePayslipInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -325,9 +325,7 @@ export const payrollRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const targetUserId = input.userId || ctx.session.userId;
 
-      if (targetUserId !== ctx.session.userId &&
-          ctx.session.user.role !== "CEO" &&
-          ctx.session.user.role !== "HR") {
+      if (targetUserId !== ctx.session.userId && !isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -384,7 +382,7 @@ export const payrollRouter = createTRPCRouter({
   approvePayroll: protectedProcedure
     .input(z.object({ payrollId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -404,7 +402,7 @@ export const payrollRouter = createTRPCRouter({
   markPayrollPaid: protectedProcedure
     .input(z.object({ payrollId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
@@ -421,7 +419,7 @@ export const payrollRouter = createTRPCRouter({
   getAllPayrolls: protectedProcedure
     .input(z.object({ month: z.string().optional() }))
     .query(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 

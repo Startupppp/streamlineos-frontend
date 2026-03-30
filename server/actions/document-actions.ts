@@ -6,7 +6,7 @@ import { eq, and, desc, or, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
-import { ensureOrgMembership } from "@/lib/auth-helpers";
+import { ensureOrgMembership, isAdminOrOwner } from "@/lib/auth-helpers";
 
 type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
 
@@ -38,7 +38,7 @@ export async function uploadDocument(data: CreateDocumentInput) {
   });
   if (!member) return { error: "No organization found" };
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const targetUserId = (data.userId && isAdmin) ? data.userId : session.user.id;
 
   try {
@@ -85,7 +85,7 @@ export async function getDocuments(filters?: {
 
   if (!member) return [];
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const conditions = [
     eq(documents.orgId, member.orgId),
     eq(documents.isActive, true),
@@ -155,7 +155,7 @@ export async function getEmployeeDocuments(employeeId: string) {
 
   if (!member) return [];
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const isOwn = employeeId === session.user.id;
 
   if (!isAdmin && !isOwn) return [];
@@ -232,7 +232,7 @@ export async function getExpiringDocuments(daysAhead: number = 30) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (!member || !isAdminOrOwner(member.role)) {
     return [];
   }
 
@@ -272,7 +272,7 @@ export async function updateDocument(documentId: number, data: Partial<CreateDoc
 
   if (!existingDoc) return { error: "Document not found" };
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const isUploader = existingDoc.uploadedBy === session.user.id;
 
   if (!isAdmin && !isUploader) {
@@ -376,7 +376,7 @@ export async function deleteDocument(documentId: number) {
 
   if (!existingDoc) return { error: "Document not found" };
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const isUploader = existingDoc.uploadedBy === session.user.id;
 
   if (!isAdmin && !isUploader) {
@@ -406,7 +406,7 @@ export async function getDocumentStats() {
 
   if (!member) return null;
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const conditions = [
     eq(documents.orgId, member.orgId),
     eq(documents.isActive, true),

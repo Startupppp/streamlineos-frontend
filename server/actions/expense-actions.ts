@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
-import { ensureOrgMembership } from "@/lib/auth-helpers";
+import { ensureOrgMembership, isAdminOrOwner, isExpenseAdmin } from "@/lib/auth-helpers";
 import { createNotification, notifyByRoles } from "@/server/actions/create-notification";
 
 /** Get authenticated member, auto-creating org membership if needed */
@@ -147,7 +147,7 @@ export async function updateExpense(expenseId: number, data: Partial<CreateExpen
     if (!existing) return { error: "Expense not found" };
 
     const isOwner = existing.userId === session.user.id;
-    const isAdminRole = member.role === "CEO" || member.role === "ADMIN" || member.role === "HR";
+    const isAdminRole = isExpenseAdmin(member.role);
 
     if (!isOwner && !isAdminRole) return { error: "Permission denied" };
     if (existing.status !== "PENDING" && !isAdminRole) return { error: "Can only edit pending expenses" };
@@ -185,7 +185,7 @@ export async function getExpenses(filters?: {
   if (!ctx) return [];
   const { session, member } = ctx;
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
 
   const conditions = [eq(expenses.orgId, member.orgId)];
 
@@ -252,7 +252,7 @@ export async function getPendingExpenses() {
   if (!ctx) return [];
   const { member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN") {
+  if (!isAdminOrOwner(member.role)) {
     return [];
   }
 
@@ -276,7 +276,7 @@ export async function approveExpense(expenseId: number) {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN" && member.role !== "HR") {
+  if (!isExpenseAdmin(member.role)) {
     return { error: "Permission denied" };
   }
 
@@ -335,7 +335,7 @@ export async function rejectExpense(expenseId: number, reason: string) {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN" && member.role !== "HR") {
+  if (!isExpenseAdmin(member.role)) {
     return { error: "Permission denied" };
   }
 
@@ -395,7 +395,7 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN") {
+  if (!isAdminOrOwner(member.role)) {
     return { error: "Permission denied" };
   }
 
@@ -456,7 +456,7 @@ export async function deleteExpense(expenseId: number) {
   if (!expense) return { error: "Expense not found" };
 
   const isOwner = expense.userId === session.user.id;
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const isPending = expense.status === "PENDING";
 
   if (!isAdmin && (!isOwner || !isPending)) {
@@ -496,7 +496,7 @@ export async function createExpenseCategory(data: {
   if (!ctx) return { error: "Unauthorized" };
   const { session, member } = ctx;
 
-  if (member.role !== "CEO" && member.role !== "ADMIN") {
+  if (!isAdminOrOwner(member.role)) {
     return { error: "Permission denied" };
   }
 
@@ -521,9 +521,9 @@ export async function getExpenseStats() {
   if (!ctx) return null;
   const { session, member } = ctx;
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const conditions = [eq(expenses.orgId, member.orgId)];
-  
+
   if (!isAdmin) {
     conditions.push(eq(expenses.userId, session.user.id));
   }
@@ -557,7 +557,7 @@ export async function getCategorySpending() {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== "CEO" && member.role !== "ADMIN")) {
+  if (!member || !isAdminOrOwner(member.role)) {
     return [];
   }
 
@@ -603,7 +603,7 @@ export async function getExpenseReportData(filters: {
   if (!ctx) return null;
   const { session, member } = ctx;
 
-  const isAdmin = member.role === "CEO" || member.role === "ADMIN";
+  const isAdmin = isAdminOrOwner(member.role);
   const conditions = [
     eq(expenses.orgId, member.orgId),
     gte(expenses.expenseDate, filters.startDate),

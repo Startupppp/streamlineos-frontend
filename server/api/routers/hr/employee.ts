@@ -463,7 +463,7 @@ export const employeeRouter = createTRPCRouter({
     .input(z.object({ userId: z.string(), hasDashboardAccess: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const { user } = ctx.session;
-      if (user.role !== "CEO" && user.role !== "HR" && user.role !== "HR") {
+      if (!isAdminOrOwner(user.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only CEO, Admin, or HR can toggle dashboard access.",

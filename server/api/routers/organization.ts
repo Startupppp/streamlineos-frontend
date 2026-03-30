@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { sendInvitationEmail } from "@/lib/email";
 import { createAuditLog } from "@/lib/audit-log";
+import { isAdminOrOwner, isCEO } from "@/lib/auth-helpers";
 
 const inviteUserSchema = z.object({
   email: z.string().email(),
@@ -145,7 +146,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
+      if (!membership || !isAdminOrOwner(membership.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to invite users",
@@ -233,7 +234,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
+      if (!membership || !isAdminOrOwner(membership.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to view invitations",
@@ -270,7 +271,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
+      if (!membership || !isAdminOrOwner(membership.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to cancel invitations",
@@ -297,7 +298,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || membership.role !== "CEO") {
+      if (!membership || !isCEO(membership.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only organization owners can update member roles",
@@ -334,7 +335,7 @@ export const organizationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
       const { user } = ctx.session;
-      if (user.role !== "CEO" && user.role !== "HR") {
+      if (!isAdminOrOwner(user.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only Owners and Admins can update organization settings.",
@@ -395,7 +396,7 @@ export const organizationRouter = createTRPCRouter({
         ),
       });
 
-      if (!membership || (membership.role !== "HR" && membership.role !== "CEO")) {
+      if (!membership || !isAdminOrOwner(membership.role)) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have permission to remove members",

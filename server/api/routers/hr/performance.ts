@@ -34,7 +34,7 @@ export const performanceRouter = createTRPCRouter({
   createPerformanceReview: protectedProcedure
     .input(createPerformanceReviewInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can create performance reviews" });
       }
 
@@ -90,7 +90,7 @@ export const performanceRouter = createTRPCRouter({
   createGoal: protectedProcedure
     .input(createGoalInputSchema)
     .mutation(async ({ ctx, input }) => {
-      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can create goals" });
       }
       const [goal] = await ctx.db
