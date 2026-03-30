@@ -194,7 +194,11 @@ export default function DealsPage() {
                               ))}
                               <DropdownMenuItem
                                 className="text-destructive"
-                                onClick={() => deleteMutation.mutate({ id: deal.id })}
+                                onClick={() => {
+                                  if (window.confirm("Are you sure you want to delete this deal? This action cannot be undone.")) {
+                                    deleteMutation.mutate({ id: deal.id });
+                                  }
+                                }}
                               >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 Delete
