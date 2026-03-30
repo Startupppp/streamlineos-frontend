@@ -191,7 +191,34 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(httpsUrl, 301);
   }
 
+  // Allow explicitly public API endpoints through without auth
+  const PUBLIC_API_PREFIXES = [
+    "/api/auth/",
+    "/api/health",
+    "/api/public/",
+    "/api/trpc/auth.",
+  ];
   if (pathname.startsWith("/api/")) {
+    if (PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))) {
+      return NextResponse.next();
+    }
+    // Protected API routes require authentication
+    const apiToken = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+      cookieName:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
+    });
+    if (!apiToken) {
+      // Allow cron endpoints with valid CRON_SECRET header
+      const cronSecret = req.headers.get("authorization")?.replace("Bearer ", "");
+      if (pathname.startsWith("/api/cron/") && cronSecret && process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) {
+        return NextResponse.next();
+      }
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.next();
   }
 
