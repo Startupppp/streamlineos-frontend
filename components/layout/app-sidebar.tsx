@@ -128,18 +128,18 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
           ],
         },
-        {
-          label: "Support",
-          routes: [
-            { label: "Tickets", icon: Ticket, href: "/support" },
-            { label: "Inbox", icon: MessageCircle, href: "/support/inbox" },
-          ],
-        },
+        // {
+        //   label: "Support",
+        //   routes: [
+        //     { label: "Tickets", icon: Ticket, href: "/support" },
+        //     { label: "Inbox", icon: MessageCircle, href: "/support/inbox" },
+        //   ],
+        // },
         {
           label: "System",
           routes: [
-            { label: "Billing", icon: Receipt, href: "/billing" },
-            { label: "Invoices", icon: FileText, href: "/billing/invoices" },
+            // { label: "Billing", icon: Receipt, href: "/billing" },
+            // { label: "Invoices", icon: FileText, href: "/billing/invoices" },
             { label: "Settings", icon: Settings, href: "/settings" },
             { label: "Roles & Permissions", icon: Shield, href: "/settings/roles" },
           ],
@@ -191,12 +191,12 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
           ],
         },
-        {
-          label: "Support",
-          routes: [
-            { label: "Tickets", icon: Ticket, href: "/support" },
-          ],
-        },
+        // {
+        //   label: "Support",
+        //   routes: [
+        //     { label: "Tickets", icon: Ticket, href: "/support" },
+        //   ],
+        // },
         {
           label: "System",
           routes: [
@@ -218,9 +218,11 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Leads", icon: Contact2, href: "/crm/leads" },
+            { label: "My Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "My Targets", icon: Trophy, href: "/crm/targets" },
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-            { label: "Tickets", icon: Ticket, href: "/support" },
+            // { label: "Tickets", icon: Ticket, href: "/support" },
             // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -241,7 +243,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         {
           label: "My Work",
           routes: [
-            { label: "My Tickets", icon: Ticket, href: "/support" },
+            // { label: "My Tickets", icon: Ticket, href: "/support" },
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
             // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
@@ -269,7 +271,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-            { label: "Tickets", icon: Ticket, href: "/support" },
+            // { label: "Tickets", icon: Ticket, href: "/support" },
             // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -291,7 +293,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "Tickets", icon: Ticket, href: "/support" },
+            // { label: "Tickets", icon: Ticket, href: "/support" },
             // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -312,7 +314,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { data: organizations } = useGetOrganizations();
+  const isAuthenticated = status === "authenticated";
+  const { data: organizations } = useGetOrganizations(isAuthenticated);
   const role = session?.user?.role;
 
   // Preserve last known role so sidebar doesn't flash skeleton during transient session refreshes
@@ -348,7 +351,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
     return () => { cancelled = true; clearInterval(interval); };
   }, [session, isAdmin]);
 
-  const { data: chatUnread } = useChatUnreadTotal();
+  const { data: chatUnread } = useChatUnreadTotal(isAuthenticated);
   const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
 
   // Update browser tab title with unread count
