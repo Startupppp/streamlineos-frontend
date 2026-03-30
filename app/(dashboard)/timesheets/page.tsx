@@ -236,6 +236,7 @@ export default function TimesheetsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-4 px-4 md:-mx-8 md:px-8 space-y-6 border-b border-border/40">
       <PageHeader
         title="Daily Work Logs"
         description="Track and manage professional activity across projects."
@@ -251,7 +252,7 @@ export default function TimesheetsPage() {
         }
       />
 
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-4">
         {/* Inline filter chips */}
         <motion.div variants={fadeUp}>
           <div className="flex flex-wrap items-center gap-3">
@@ -343,7 +344,10 @@ export default function TimesheetsPage() {
             </button>
           </div>
         </motion.div>
+      </motion.div>
+      </div>
 
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
         {/* Summary bar */}
         {entries && entries.length > 0 && (
           <motion.div variants={fadeUp}>
