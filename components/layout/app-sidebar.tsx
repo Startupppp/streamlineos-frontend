@@ -315,7 +315,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
   const router = useRouter();
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
-  const { data: organizations } = useGetOrganizations(isAuthenticated);
+  const { data: organizations } = useGetOrganizations();
   const role = session?.user?.role;
 
   // Preserve last known role so sidebar doesn't flash skeleton during transient session refreshes
@@ -351,7 +351,7 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
     return () => { cancelled = true; clearInterval(interval); };
   }, [session, isAdmin]);
 
-  const { data: chatUnread } = useChatUnreadTotal(isAuthenticated);
+  const { data: chatUnread } = useChatUnreadTotal();
   const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
 
   // Update browser tab title with unread count
