@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, DollarSign, TrendingUp, Clock, Trophy, Download,
   GripVertical, User, Calendar, MoreHorizontal, Pencil, Trash2,
+  LayoutGrid, TableIcon,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/ui/page-header";
+import { DealTableView } from "@/components/crm/deal-table-view";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -52,6 +54,30 @@ export default function DealsPage() {
   const { data: allDeals, isLoading } = api.deals.getAll.useQuery();
   const { data: employees } = api.hr.getEmployees.useQuery();
   const [createOpen, setCreateOpen] = useState(false);
+
+  // View toggle
+  const [view, setView] = useState<"table" | "kanban">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("deals-view") as "table" | "kanban") || "table";
+    }
+    return "table";
+  });
+  const [dealSortCol, setDealSortCol] = useState("createdAt");
+  const [dealSortDir, setDealSortDir] = useState<"asc" | "desc">("desc");
+
+  const handleDealSort = useCallback((col: string) => {
+    if (dealSortCol === col) {
+      setDealSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setDealSortCol(col);
+      setDealSortDir("desc");
+    }
+  }, [dealSortCol]);
+
+  const handleViewChange = useCallback((v: "table" | "kanban") => {
+    setView(v);
+    localStorage.setItem("deals-view", v);
+  }, []);
 
   const updateStageMutation = api.deals.updateStage.useMutation({
     onSuccess: () => {
@@ -113,6 +139,18 @@ export default function DealsPage() {
       <motion.div variants={fadeUp} className="flex items-center justify-between">
         <PageHeader title="Deals Pipeline" description="Track and manage your deals across stages" />
         <div className="flex items-center gap-2">
+        <div className="flex items-center border border-border rounded-md">
+          <Button variant={view === "table" ? "default" : "ghost"} size="sm"
+            className={cn("rounded-r-none", view === "table" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+            onClick={() => handleViewChange("table")}>
+            <TableIcon className="h-4 w-4" />
+          </Button>
+          <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
+            className={cn("rounded-l-none", view === "kanban" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+            onClick={() => handleViewChange("kanban")}>
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
         <Button variant="outline" size="sm" onClick={async () => {
           try {
             const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
@@ -190,6 +228,22 @@ export default function DealsPage() {
         ))}
       </motion.div>
 
+      {/* Table View */}
+      {view === "table" && (
+        <motion.div variants={fadeUp}>
+          <DealTableView
+            deals={allDeals || []}
+            sortColumn={dealSortCol}
+            sortDirection={dealSortDir}
+            onSort={handleDealSort}
+            onStageChange={(id, stage) => updateStageMutation.mutate({ id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" })}
+            isLoading={isLoading}
+          />
+        </motion.div>
+      )}
+
+      {/* Kanban View */}
+      {view === "kanban" && (
       <motion.div variants={fadeUp} className="overflow-x-auto -mx-2 px-2">
         <div className="inline-flex gap-3 sm:gap-4 min-w-full pb-4">
           {STAGES.map(stage => {
@@ -302,6 +356,7 @@ export default function DealsPage() {
           })}
         </div>
       </motion.div>
+      )}
     </motion.div>
   );
 }
