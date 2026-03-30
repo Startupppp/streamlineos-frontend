@@ -178,14 +178,15 @@ export default function LeadsPipelinePage() {
     }
   }, [createLead]);
 
-  const handleMoveStatus = useCallback(async (leadId: number, status: LeadStatus) => {
+  const handleMoveStatus = useCallback(async (leadId: number, status: LeadStatus, expectedStatus?: LeadStatus) => {
     try {
-      await updateStatus.mutateAsync({ leadId, status });
+      await updateStatus.mutateAsync({ leadId, status, expectedStatus });
       toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
-    } catch {
-      toast.error("Failed to update status");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update status");
+      refetchBoard();
     }
-  }, [updateStatus]);
+  }, [updateStatus, refetchBoard]);
 
   const handleDragEnd = useCallback((result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -196,7 +197,7 @@ export default function LeadsPipelinePage() {
     const newStatus = destination.droppableId as LeadStatus;
 
     if (source.droppableId !== destination.droppableId) {
-      handleMoveStatus(leadId, newStatus);
+      handleMoveStatus(leadId, newStatus, source.droppableId as LeadStatus);
     }
   }, [handleMoveStatus]);
 
@@ -418,7 +419,7 @@ export default function LeadsPipelinePage() {
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      handleMoveStatus(lead.id, "LOST");
+                                                      handleMoveStatus(lead.id, "LOST", status);
                                                     }}
                                                     className="h-5 w-5 rounded flex items-center justify-center hover:bg-red-500/20 transition-colors"
                                                     aria-label="Mark as lost"
@@ -430,7 +431,7 @@ export default function LeadsPipelinePage() {
                                                       e.stopPropagation();
                                                       const nextIdx = STATUSES.indexOf(status) + 1;
                                                       if (nextIdx < STATUSES.length - 1) {
-                                                        handleMoveStatus(lead.id, STATUSES[nextIdx]);
+                                                        handleMoveStatus(lead.id, STATUSES[nextIdx], status);
                                                       }
                                                     }}
                                                     className="h-5 w-5 rounded flex items-center justify-center hover:bg-gold/20 transition-colors"

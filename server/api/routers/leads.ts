@@ -293,6 +293,7 @@ export const leadsRouter = createTRPCRouter({
     .input(z.object({
       leadId: z.number(),
       status: z.enum(leadStatusValues),
+      expectedStatus: z.enum(leadStatusValues).optional(),
       lostReason: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -318,10 +319,19 @@ export const leadsRouter = createTRPCRouter({
 
       const [updated] = await ctx.db.update(leads)
         .set(updateData)
-        .where(and(eq(leads.id, input.leadId), eq(leads.orgId, orgId)))
+        .where(and(
+          eq(leads.id, input.leadId),
+          eq(leads.orgId, orgId),
+          input.expectedStatus ? eq(leads.status, input.expectedStatus) : undefined
+        ))
         .returning();
 
-      if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!updated) {
+        throw new TRPCError({ 
+          code: "CONFLICT", 
+          message: "Lead status has been updated by someone else, or lead not found. Please refresh." 
+        });
+      }
 
       // Create a deal record when lead becomes INTERESTED or QUALIFIED
       if (input.status === "INTERESTED" || input.status === "QUALIFIED") {

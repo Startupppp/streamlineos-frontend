@@ -210,8 +210,12 @@ export default function LeadDetailPage({
   const callForm = useForm<CallForm>({ resolver: zodResolver(callSchema) });
 
   const handleStatusChange = useCallback((status: PipelineStatus) => {
-    updateStatus.mutate({ leadId, status });
-  }, [leadId, updateStatus]);
+    updateStatus.mutate({ 
+      leadId, 
+      status, 
+      expectedStatus: (lead as any)?.status as PipelineStatus 
+    });
+  }, [leadId, updateStatus, lead]);
 
   const onEditSubmit = useCallback((data: EditForm) => {
     updateLead.mutate({ id: leadId, ...data });
