@@ -44,7 +44,7 @@ export const payrollRouter = createTRPCRouter({
       const memberUserIds = memberships.map((m) => m.userId).filter(Boolean) as string[];
       if (memberUserIds.length === 0) return;
 
-      const [allSalaryStructures, existingPayrolls] = await Promise.all([
+      const [allSalaryStructures, existingPayrolls, allUsers] = await Promise.all([
         ctx.db.query.salaryStructures.findMany({
           where: and(
             inArray(salaryStructures.userId, memberUserIds),
@@ -59,9 +59,14 @@ export const payrollRouter = createTRPCRouter({
             eq(payrolls.orgId, ctx.session.orgId)
           ),
         }),
+        ctx.db.query.users.findMany({
+          where: inArray(users.id, memberUserIds),
+          columns: { id: true, monthlySalary: true },
+        }),
       ]);
 
       const salaryMap = new Map(allSalaryStructures.map((s) => [s.userId, s]));
+      const userMap = new Map(allUsers.map((u) => [u.id, u.monthlySalary]));
       const existingPayrollUserIds = new Set(existingPayrolls.map((p) => p.userId));
 
       // Calculate working days in the payroll month
@@ -116,11 +121,14 @@ export const payrollRouter = createTRPCRouter({
         .filter((uId) => !existingPayrollUserIds.has(uId))
         .map((uId) => {
           const salaryStructure = salaryMap.get(uId);
-          const basic = salaryStructure ? parseFloat(salaryStructure.basicSalary) : 50000;
+          const monthlySalaryStr = userMap.get(uId);
+          const monthlySalary = monthlySalaryStr ? parseFloat(monthlySalaryStr) : 0;
+          
+          const basic = salaryStructure ? parseFloat(salaryStructure.basicSalary) : monthlySalary * 0.5;
           const hraPercentage = salaryStructure ? parseFloat(salaryStructure.hraPercentage || "40") : 40;
-          const hra = basic * (hraPercentage / 100);
-          const allowances = salaryStructure ? parseFloat(salaryStructure.allowances || "0") : 5000;
-          let deductions = salaryStructure ? parseFloat(salaryStructure.deductions || "0") : 2000;
+          const hra = salaryStructure ? basic * (hraPercentage / 100) : monthlySalary * 0.5;
+          const allowances = salaryStructure ? parseFloat(salaryStructure.allowances || "0") : 0;
+          let deductions = salaryStructure ? parseFloat(salaryStructure.deductions || "0") : 0;
           const gross = basic + hra + allowances;
 
           // Calculate LOP from attendance data
