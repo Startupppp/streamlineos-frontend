@@ -91,23 +91,35 @@ export const expenseRouter = createTRPCRouter({
       if (!isAdminOrOwner(ctx.session.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can update expense status" });
       }
-      const result = await ctx.db
-        .update(expenses)
-        .set({
-          status: input.status,
-          approverId: ctx.session.userId,
-          rejectionReason: input.rejectionReason,
-        })
-        .where(
-          and(
-            eq(expenses.id, input.expenseId),
-            eq(expenses.orgId, ctx.session.orgId),
-            eq(expenses.status, "PENDING")
+
+      await ctx.db.transaction(async (tx) => {
+        const [expense] = await tx
+          .select()
+          .from(expenses)
+          .where(
+            and(
+              eq(expenses.id, input.expenseId),
+              eq(expenses.orgId, ctx.session.orgId)
+            )
           )
-        )
-        .returning({ id: expenses.id });
-      if (result.length === 0) {
-        throw new TRPCError({ code: "CONFLICT", message: "Expense has already been processed" });
-      }
+          .for("update");
+
+        if (!expense) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Expense not found" });
+        }
+
+        if (expense.status !== "PENDING") {
+          throw new TRPCError({ code: "CONFLICT", message: "Expense has already been processed" });
+        }
+
+        await tx
+          .update(expenses)
+          .set({
+            status: input.status,
+            approverId: ctx.session.userId,
+            rejectionReason: input.rejectionReason,
+          })
+          .where(eq(expenses.id, input.expenseId));
+      });
     }),
 });
