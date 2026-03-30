@@ -4,6 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { ListTodo } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -35,7 +36,7 @@ interface MyIssuesCardProps {
 
 export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full min-h-[360px] max-h-[420px]">
       <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <ListTodo className="h-5 w-5 text-gold" aria-hidden="true" />
@@ -55,7 +56,8 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
         ) : error ? (
           <p role="alert" className="text-sm text-destructive">Failed to load issues.</p>
         ) : tickets.length > 0 ? (
-          <div className="space-y-2 overflow-y-auto pr-2 max-h-full">
+          <ScrollArea className="h-full pr-3">
+          <div className="space-y-2">
             {tickets.slice(0, MAX_VISIBLE_TICKETS).map((ticket) => {
               const TypeIcon = isTicketType(ticket.type) ? typeIcons[ticket.type] : DEFAULT_TICKET_ICON;
               const project = ticket.project;
@@ -85,6 +87,7 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
               );
             })}
           </div>
+          </ScrollArea>
         ) : (
           <EmptyState
             illustration={<EmptyTasksIllustration />}

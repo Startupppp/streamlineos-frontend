@@ -4,6 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { Folder } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,8 +28,8 @@ interface RecentProjectsCardProps {
 
 export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, isLoading, error, onCreateProject }: RecentProjectsCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir">
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full min-h-[360px] max-h-[420px]">
+      <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Folder className="h-5 w-5 text-gold" aria-hidden="true" />
           Recent Projects
@@ -37,7 +38,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
           <Button variant="ghost" size="sm" className="hover:bg-gold/10 hover:text-gold" aria-label="View all projects">View All</Button>
         </Link>
       </CardHeader>
-      <CardContent aria-live="polite">
+      <CardContent className="flex-1 overflow-hidden" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -47,6 +48,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
         ) : error ? (
           <p role="alert" className="text-sm text-destructive">Failed to load projects.</p>
         ) : projects && projects.length > 0 ? (
+          <ScrollArea className="h-full pr-3">
           <div className="space-y-3">
             {projects.map((project) => (
               <Link key={project.id} href={`/projects/${project.id}`}>
@@ -67,6 +69,7 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
               </Link>
             ))}
           </div>
+          </ScrollArea>
         ) : (
           <EmptyState
             illustration={<EmptyProjectsIllustration />}

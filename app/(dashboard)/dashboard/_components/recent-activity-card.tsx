@@ -40,7 +40,7 @@ interface RecentActivityCardProps {
 
 export const RecentActivityCard = memo(function RecentActivityCard({ items, isLoading, error }: RecentActivityCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full min-h-[360px] max-h-[420px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Activity className="h-5 w-5 text-gold" aria-hidden="true" />
@@ -57,7 +57,7 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
         ) : error ? (
           <p role="alert" className="text-sm text-destructive">Failed to load activity.</p>
         ) : items && items.length > 0 ? (
-          <ScrollArea className="max-h-[280px] md:max-h-[340px] pr-3">
+          <ScrollArea className="h-full pr-3">
             <div className="space-y-2">
               {items.map((item) => {
                 const TypeIcon = isTicketType(item.type) ? typeIcons[item.type] : DEFAULT_TICKET_ICON;

@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { Clock, LogOut, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,7 +29,7 @@ interface TeamCardProps {
 
 export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col max-h-[360px] md:max-h-[420px]">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full min-h-[360px] max-h-[420px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Users className="h-5 w-5 text-gold" aria-hidden="true" />
@@ -43,7 +44,8 @@ export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardP
             ))}
           </div>
         ) : members && members.length > 0 ? (
-          <div className="space-y-3 overflow-y-auto pr-2 max-h-full">
+          <ScrollArea className="h-full pr-3">
+          <div className="space-y-3">
             {members.map((member) => (
               <div key={member.userId} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
@@ -81,6 +83,7 @@ export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardP
               </div>
             ))}
           </div>
+          </ScrollArea>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <EmptyState

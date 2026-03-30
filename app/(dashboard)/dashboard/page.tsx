@@ -265,8 +265,8 @@ export default function DashboardPage() {
 
       {/* Projects, Activity, Team — CEO/HR only */}
       {isAdmin && (
-        <motion.div variants={fadeUp} className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="sm:col-span-1">
+        <motion.div variants={fadeUp} className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
+          <div className="sm:col-span-1 flex">
             <RecentProjectsCard
               projects={recentProjects}
               isLoading={projectsLoading}
@@ -274,14 +274,14 @@ export default function DashboardPage() {
               onCreateProject={handleGoToProjects}
             />
           </div>
-          <div className="sm:col-span-1">
+          <div className="sm:col-span-1 flex">
             <RecentActivityCard
               items={recentActivity}
               isLoading={activityLoading}
               error={activityError}
             />
           </div>
-          <div className="sm:col-span-2 lg:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1 flex">
             <TeamCard members={teamAvailability} isLoading={teamLoading} />
           </div>
         </motion.div>
