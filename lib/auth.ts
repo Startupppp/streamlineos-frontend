@@ -121,7 +121,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: {
     strategy: "jwt",
-    maxAge: 8 * 60 * 60,
+    maxAge: 60 * 60, // 1 hour — appropriate for HR/financial data system
   },
   pages: {
     signIn: "/signin",
