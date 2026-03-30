@@ -9,6 +9,7 @@ import { z } from "zod";
 import {
   ArrowLeft, Calendar, User, Edit2, Trophy, XCircle,
   ChevronRight, Clock, Building2, Phone, Mail, StickyNote,
+  MessageSquare, PhoneCall, Video, FileText, ArrowRightLeft,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,9 +84,23 @@ export default function DealDetailPage({
     onError: (err) => toast.error(err.message),
   });
 
+  const { data: activities } = api.deals.getActivities.useQuery(
+    { dealId, limit: 30 },
+    { enabled: !!deal },
+  );
+
+  const logActivity = api.deals.logActivity.useMutation({
+    onSuccess: () => {
+      utils.deals.getActivities.invalidate({ dealId });
+      toast.success("Activity logged");
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const updateStage = api.deals.updateStage.useMutation({
     onSuccess: () => {
       utils.deals.getById.invalidate({ id: dealId });
+      utils.deals.getActivities.invalidate({ dealId });
       toast.success("Stage updated");
     },
     onError: (err) => toast.error(err.message),
@@ -476,6 +491,96 @@ export default function DealDetailPage({
                     <span>{new Date(d.value!).toLocaleDateString("en-IN")}</span>
                   </div>
                 ))}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="shadow-noir">
+            <CardHeader>
+              <CardTitle className="text-base">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "Log Call", icon: PhoneCall, type: "call" as const },
+                  { label: "Add Note", icon: StickyNote, type: "note" as const },
+                  { label: "Log Email", icon: Mail, type: "email" as const },
+                  { label: "Log Meeting", icon: Video, type: "meeting" as const },
+                ].map(action => (
+                  <Button
+                    key={action.type}
+                    variant="outline"
+                    size="sm"
+                    className="justify-start gap-2 text-xs"
+                    onClick={() => {
+                      const notes = prompt(`Enter ${action.label.toLowerCase()} details:`);
+                      if (notes) {
+                        logActivity.mutate({
+                          dealId,
+                          type: action.type,
+                          subject: action.label,
+                          notes,
+                        });
+                      }
+                    }}
+                  >
+                    <action.icon className="h-3.5 w-3.5" />
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Activity Timeline */}
+          <Card className="shadow-noir">
+            <CardHeader>
+              <CardTitle className="text-base">Activity Timeline</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!activities || activities.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No activities yet</p>
+              ) : (
+                <ScrollArea className="max-h-[400px]">
+                  <div className="space-y-3">
+                    {activities.map((activity) => {
+                      const actIcons: Record<string, typeof PhoneCall> = {
+                        stage_change: ArrowRightLeft,
+                        call: PhoneCall,
+                        note: StickyNote,
+                        email: Mail,
+                        meeting: Video,
+                        document: FileText,
+                      };
+                      const Icon = actIcons[activity.type] || MessageSquare;
+                      const isStageChange = activity.type === "stage_change";
+                      return (
+                        <div key={activity.id} className="flex gap-3">
+                          <div className={cn(
+                            "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                            isStageChange ? "bg-purple-500/10" : "bg-[#bd882c]/10",
+                          )}>
+                            <Icon className={cn("h-3.5 w-3.5", isStageChange ? "text-purple-400" : "text-[#bd882c]")} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">
+                              {isStageChange
+                                ? `${activity.previousValue} → ${activity.newValue}`
+                                : activity.subject || activity.type}
+                            </p>
+                            {activity.notes && (
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{activity.notes}</p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              {activity.user?.name ?? "System"} • {activity.createdAt ? new Date(activity.createdAt).toLocaleString("en-IN") : ""}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </motion.div>
