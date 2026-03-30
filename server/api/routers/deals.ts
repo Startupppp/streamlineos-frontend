@@ -51,7 +51,10 @@ export const dealsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({
       name: z.string().min(1),
-      value: z.string().optional(),
+      value: z.string().optional().refine(
+        (val) => !val || parseFloat(val) >= 0,
+        { message: "Deal value cannot be negative" }
+      ),
       stage: z.enum(dealStageValues).default("LEAD"),
       probability: z.number().min(0).max(100).optional(),
       contactPerson: z.string().optional(),
@@ -86,7 +89,10 @@ export const dealsRouter = createTRPCRouter({
     .input(z.object({
       id: z.number(),
       name: z.string().min(1).optional(),
-      value: z.string().optional(),
+      value: z.string().optional().refine(
+        (val) => !val || parseFloat(val) >= 0,
+        { message: "Deal value cannot be negative" }
+      ),
       stage: z.enum(dealStageValues).optional(),
       probability: z.number().min(0).max(100).optional(),
       contactPerson: z.string().optional(),
