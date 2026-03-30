@@ -11,8 +11,8 @@ import {
   isStorageConfigured,
 } from "@/lib/storage";
 import { db } from "@/lib/db";
-import { organizationMembers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { organizationMembers, documents } from "@/lib/db/schema";
+import { eq, ilike } from "drizzle-orm";
 import path from "path";
 
 const MIME_MAP: Record<string, string> = {
@@ -67,6 +67,14 @@ export async function GET(req: NextRequest) {
     });
     if (!member) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Verify file ownership (BUG-002 fix)
+    const fileRecord = await db.query.documents.findFirst({
+      where: ilike(documents.fileUrl, `%${fileKey}%`),
+    });
+    if (fileRecord && fileRecord.orgId !== member.orgId) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     // Audit log file download
