@@ -13,6 +13,7 @@ export const useDashboardStats = (
   return useQuery<DashboardRouterOutputs["getStats"], Error>({
     queryKey: vaivammKeys.dashboard.stats(),
     queryFn: () => vaivammTrpcClient.dashboard.getStats.query(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     ...options,
   });
 };
@@ -26,6 +27,7 @@ export const useRecentProjects = (
   return useQuery<DashboardRouterOutputs["getRecentProjects"], Error>({
     queryKey: vaivammKeys.dashboard.recentProjects(),
     queryFn: () => vaivammTrpcClient.dashboard.getRecentProjects.query(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     ...options,
   });
 };
@@ -54,6 +56,7 @@ export const useActiveSprintSummary = (
   return useQuery<DashboardRouterOutputs["getActiveSprintSummary"], Error>({
     queryKey: vaivammKeys.dashboard.activeSprintSummary(),
     queryFn: () => vaivammTrpcClient.dashboard.getActiveSprintSummary.query(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     ...options,
   });
 };
@@ -67,6 +70,7 @@ export const useRecentActivity = (
   return useQuery<DashboardRouterOutputs["getRecentActivity"], Error>({
     queryKey: vaivammKeys.dashboard.recentActivity(),
     queryFn: () => vaivammTrpcClient.dashboard.getRecentActivity.query(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     ...options,
   });
 };
