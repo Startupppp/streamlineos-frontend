@@ -524,9 +524,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
                             </span>
                           )}
                           {showBadge && (
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                              {pendingLeaves > 99 ? "99+" : pendingLeaves}
                             </span>
                           )}
                         </>
@@ -537,9 +536,8 @@ export function AppSidebar({ isCollapsed = false, onToggleCollapse, onNavigate }
                         </span>
                       )}
                       {isCollapsed && showBadge && !isChatRoute && (
-                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">
+                          {pendingLeaves > 9 ? "9+" : pendingLeaves}
                         </span>
                       )}
                     </Link>
