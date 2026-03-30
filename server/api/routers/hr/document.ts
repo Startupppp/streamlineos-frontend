@@ -7,8 +7,9 @@ import {
   employeeDevices,
   documentTypeEnum,
   organizationMembers,
+  users,
 } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike, or, count } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
@@ -226,5 +227,199 @@ export const documentRouter = createTRPCRouter({
         ));
 
       return { success: true };
+    }),
+
+  getDocumentsPaginated: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+        userId: z.string().optional(),
+        type: z.enum(documentTypeEnum.enumValues).optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
+      const { page, limit, search, userId, type } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [
+        eq(documents.orgId, ctx.session.orgId),
+        eq(documents.isActive, true),
+      ];
+
+      if (userId) {
+        if (userId !== ctx.session.userId && !isAdmin) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view other users' documents" });
+        }
+        baseConditions.push(eq(documents.userId, userId));
+      } else if (!isAdmin) {
+        baseConditions.push(eq(documents.userId, ctx.session.userId));
+      }
+
+      if (type) {
+        baseConditions.push(eq(documents.type, type));
+      }
+
+      const searchConditions = search
+        ? [...baseConditions, ilike(documents.name, `%${search}%`)]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db.query.documents.findMany({
+          where: and(...searchConditions),
+          orderBy: [desc(documents.createdAt)],
+          limit,
+          offset,
+        }),
+        ctx.db
+          .select({ total: count() })
+          .from(documents)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    }),
+
+  getAssetsPaginated: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [eq(assets.orgId, ctx.session.orgId)];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              ilike(assets.name, `%${search}%`),
+              ilike(assets.serialNumber, `%${search}%`),
+              ilike(assets.type, `%${search}%`)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db.query.assets.findMany({
+          where: and(...searchConditions),
+          orderBy: [desc(assets.createdAt)],
+          limit,
+          offset,
+        }),
+        ctx.db
+          .select({ total: count() })
+          .from(assets)
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    }),
+
+  getDevicesPaginated: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+        userId: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "CEO" && ctx.session.user.role !== "HR") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const { page, limit, search, userId } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [eq(employeeDevices.orgId, ctx.session.orgId)];
+      if (userId) {
+        baseConditions.push(eq(employeeDevices.userId, userId));
+      }
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              ilike(employeeDevices.deviceName, `%${search}%`),
+              ilike(employeeDevices.serialNumber, `%${search}%`),
+              ilike(employeeDevices.brand, `%${search}%`),
+              ilike(users.name, `%${search}%`)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select({
+            id: employeeDevices.id,
+            orgId: employeeDevices.orgId,
+            userId: employeeDevices.userId,
+            deviceType: employeeDevices.deviceType,
+            deviceName: employeeDevices.deviceName,
+            serialNumber: employeeDevices.serialNumber,
+            brand: employeeDevices.brand,
+            model: employeeDevices.model,
+            assignedDate: employeeDevices.assignedDate,
+            returnDate: employeeDevices.returnDate,
+            status: employeeDevices.status,
+            notes: employeeDevices.notes,
+            createdAt: employeeDevices.createdAt,
+            updatedAt: employeeDevices.updatedAt,
+            userName: users.name,
+            userEmail: users.email,
+          })
+          .from(employeeDevices)
+          .leftJoin(users, eq(employeeDevices.userId, users.id))
+          .where(and(...searchConditions))
+          .orderBy(desc(employeeDevices.createdAt))
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(employeeDevices)
+          .leftJoin(users, eq(employeeDevices.userId, users.id))
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     }),
 });

@@ -10,7 +10,7 @@ import {
   users,
   attendance,
 } from "@/lib/db/schema";
-import { eq, and, desc, inArray, sql, gte, lte } from "drizzle-orm";
+import { eq, and, desc, inArray, sql, gte, lte, ilike, or, count } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import {
@@ -459,5 +459,84 @@ export const payrollRouter = createTRPCRouter({
         ...r.payroll,
         user: r.user,
       }));
+    }),
+
+  getAllPayrollsPaginated: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+        month: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (!isAdminOrOwner(ctx.session.user.role)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
+      }
+
+      const { page, limit, search, month } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [eq(payrolls.orgId, ctx.session.orgId)];
+      if (month) {
+        baseConditions.push(eq(payrolls.month, month));
+      }
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              ilike(users.firstName, `%${search}%`),
+              ilike(users.lastName, `%${search}%`),
+              ilike(users.email, `%${search}%`),
+              ilike(users.employeeId, `%${search}%`)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select({
+            payroll: payrolls,
+            user: {
+              id: users.id,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
+              designation: users.designation,
+              employeeId: users.employeeId,
+              bankDetails: users.bankDetails,
+              joiningDate: users.joiningDate,
+              taxId: users.taxId,
+            },
+          })
+          .from(payrolls)
+          .leftJoin(users, eq(payrolls.userId, users.id))
+          .where(and(...searchConditions))
+          .orderBy(desc(payrolls.month))
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(payrolls)
+          .leftJoin(users, eq(payrolls.userId, users.id))
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult.map((r) => ({
+          ...r.payroll,
+          user: r.user,
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     }),
 });

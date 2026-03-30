@@ -1,6 +1,7 @@
+import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { timesheets } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { timesheets, users, organizationMembers } from "@/lib/db/schema";
+import { eq, and, desc, ilike, or, count, gte, lte, sql } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
@@ -105,5 +106,99 @@ export const workLogRouter = createTRPCRouter({
         .returning();
 
       return updated;
+    }),
+
+  getWorkLogsPaginated: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+        year: z.number().optional(),
+        quarter: z.number().min(1).max(4).optional(),
+        userId: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const isAdmin = isAdminOrOwner(ctx.session.user.role);
+      if (input.userId && input.userId !== ctx.session.userId && !isAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to view other users' work logs" });
+      }
+
+      const { page, limit, search, year, quarter, userId } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [eq(timesheets.orgId, ctx.session.orgId)];
+
+      // If not admin, restrict to own logs
+      if (!isAdmin) {
+        baseConditions.push(eq(timesheets.userId, ctx.session.userId));
+      } else if (userId) {
+        baseConditions.push(eq(timesheets.userId, userId));
+      }
+
+      // Date range filter
+      if (year && quarter) {
+        const startMonth = (quarter - 1) * 3;
+        const startDate = new Date(year, startMonth, 1);
+        const endDate = new Date(year, startMonth + 3, 0);
+        const startStr = formatDateOnly(startDate);
+        const endStr = formatDateOnly(endDate);
+        baseConditions.push(gte(timesheets.date, startStr));
+        baseConditions.push(lte(timesheets.date, endStr));
+      }
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              ilike(timesheets.description, `%${search}%`),
+              ilike(users.name, `%${search}%`),
+              ilike(users.email, `%${search}%`)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select({
+            id: timesheets.id,
+            orgId: timesheets.orgId,
+            userId: timesheets.userId,
+            date: timesheets.date,
+            hours: timesheets.hours,
+            description: timesheets.description,
+            status: timesheets.status,
+            approvedBy: timesheets.approvedBy,
+            approvedAt: timesheets.approvedAt,
+            rejectionReason: timesheets.rejectionReason,
+            createdAt: timesheets.createdAt,
+            userName: users.name,
+            userEmail: users.email,
+          })
+          .from(timesheets)
+          .leftJoin(users, eq(timesheets.userId, users.id))
+          .where(and(...searchConditions))
+          .orderBy(desc(timesheets.date))
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(timesheets)
+          .leftJoin(users, eq(timesheets.userId, users.id))
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     }),
 });

@@ -12,7 +12,7 @@ import {
   roles,
   // notifications,
 } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, ilike, or, count } from "drizzle-orm";
 import { format } from "date-fns";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { TRPCError } from "@trpc/server";
@@ -62,6 +62,79 @@ export const employeeRouter = createTRPCRouter({
         monthlySalary: u.monthlySalary,
       }));
   }),
+
+  getEmployeesPaginated: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search } = input;
+      const offset = (page - 1) * limit;
+
+      const baseConditions = [
+        eq(organizationMembers.orgId, ctx.session.orgId),
+        eq(users.isActive, true),
+      ];
+
+      const searchConditions = search
+        ? [
+            ...baseConditions,
+            or(
+              ilike(users.name, `%${search}%`),
+              ilike(users.email, `%${search}%`),
+              ilike(users.employeeId, `%${search}%`)
+            ),
+          ]
+        : baseConditions;
+
+      const [dataResult, countResult] = await Promise.all([
+        ctx.db
+          .select({
+            id: users.id,
+            name: users.name,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            role: users.role,
+            designation: users.designation,
+            employeeId: users.employeeId,
+            departmentId: users.departmentId,
+            image: users.image,
+            isActive: users.isActive,
+            joiningDate: users.joiningDate,
+            hasDashboardAccess: users.hasDashboardAccess,
+            reportingTo: users.reportingTo,
+            monthlySalary: users.monthlySalary,
+          })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(and(...searchConditions))
+          .orderBy(users.name)
+          .limit(limit)
+          .offset(offset),
+        ctx.db
+          .select({ total: count() })
+          .from(organizationMembers)
+          .innerJoin(users, eq(organizationMembers.userId, users.id))
+          .where(and(...searchConditions)),
+      ]);
+
+      const total = countResult[0]?.total ?? 0;
+
+      return {
+        data: dataResult,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    }),
 
   createDepartment: protectedProcedure
     .input(createDepartmentInputSchema)
@@ -209,8 +282,10 @@ export const employeeRouter = createTRPCRouter({
          });
        }
 
+       const normalizedEmail = input.email.toLowerCase().trim();
+
        const existingUser = await ctx.db.query.users.findFirst({
-         where: eq(users.email, input.email)
+         where: eq(users.email, normalizedEmail)
        });
 
        if (existingUser) {
@@ -286,7 +361,7 @@ export const employeeRouter = createTRPCRouter({
        const newUser = await ctx.db.transaction(async (tx) => {
          const [createdUser] = await tx.insert(users).values({
             id: userId,
-            email: input.email,
+            email: normalizedEmail,
             name: `${input.firstName} ${input.lastName}`,
             firstName: input.firstName,
             lastName: input.lastName,
@@ -309,6 +384,8 @@ export const employeeRouter = createTRPCRouter({
             employeeId: finalEmployeeId,
             password: hashedPassword,
             emailVerified: new Date(),
+            isActive: true,
+            hasDashboardAccess: true,
             isPasswordChangeRequired: true,
             image: `${process.env.NEXT_PUBLIC_AVATAR_SERVICE_URL || "https://api.dicebear.com/7.x/avataaars/svg"}?seed=${input.firstName}`,
             createdAt: new Date(),
@@ -368,23 +445,23 @@ export const employeeRouter = createTRPCRouter({
            }))
          );
 
+         await initializeLeaveBalances(
+           ctx.session.orgId,
+           createdUser.id,
+           input.joiningDate,
+         );
+
          return createdUser;
        });
 
-       await initializeLeaveBalances(
-         ctx.session.orgId,
-         newUser.id,
-         input.joiningDate,
-       );
-
        try {
          await sendWelcomeEmail(
-            input.email,
+            normalizedEmail,
             input.firstName,
             rawPassword
          );
        } catch (error) {
-         logger.error("Failed to send welcome email", { email: input.email, error });
+         logger.error("Failed to send welcome email", { email: normalizedEmail, error });
        }
 
        return { id: newUser.id, email: newUser.email, name: newUser.name, employeeId: newUser.employeeId };
