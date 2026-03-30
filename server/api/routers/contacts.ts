@@ -4,6 +4,10 @@ import { contacts, crmOrganizations } from "@/lib/db/schema";
 import { eq, and, ilike, or, count, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
+function escapeLikePattern(s: string): string {
+  return s.replace(/[%_\\]/g, "\\$&");
+}
+
 export const contactsRouter = createTRPCRouter({
   getContacts: protectedProcedure
     .input(
@@ -18,11 +22,12 @@ export const contactsRouter = createTRPCRouter({
       const conditions = [eq(contacts.orgId, ctx.session.orgId)];
       if (input.organizationId) conditions.push(eq(contacts.organizationId, input.organizationId));
       if (input.search) {
+        const escaped = escapeLikePattern(input.search);
         conditions.push(
           or(
-            ilike(contacts.name, `%${input.search}%`),
-            ilike(contacts.email, `%${input.search}%`),
-            ilike(contacts.company, `%${input.search}%`)
+            ilike(contacts.name, `%${escaped}%`),
+            ilike(contacts.email, `%${escaped}%`),
+            ilike(contacts.company, `%${escaped}%`)
           )!
         );
       }
@@ -74,7 +79,21 @@ export const contactsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [contact] = await ctx.db
         .insert(contacts)
-        .values({ ...input, orgId: ctx.session.orgId })
+        .values({
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
+          title: input.title,
+          department: input.department,
+          company: input.company,
+          organizationId: input.organizationId,
+          linkedinUrl: input.linkedinUrl,
+          twitterUrl: input.twitterUrl,
+          leadId: input.leadId,
+          dealId: input.dealId,
+          tags: input.tags,
+          orgId: ctx.session.orgId,
+        })
         .returning();
       return contact;
     }),
@@ -97,11 +116,23 @@ export const contactsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
       const [updated] = await ctx.db
         .update(contacts)
-        .set({ ...data, updatedAt: new Date() })
-        .where(and(eq(contacts.id, id), eq(contacts.orgId, ctx.session.orgId)))
+        .set({
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
+          title: input.title,
+          department: input.department,
+          company: input.company,
+          organizationId: input.organizationId,
+          linkedinUrl: input.linkedinUrl,
+          twitterUrl: input.twitterUrl,
+          avatarUrl: input.avatarUrl,
+          tags: input.tags,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(contacts.id, input.id), eq(contacts.orgId, ctx.session.orgId)))
         .returning();
       return updated;
     }),
@@ -125,10 +156,11 @@ export const contactsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const conditions = [eq(crmOrganizations.orgId, ctx.session.orgId)];
       if (input.search) {
+        const escaped = escapeLikePattern(input.search);
         conditions.push(
           or(
-            ilike(crmOrganizations.name, `%${input.search}%`),
-            ilike(crmOrganizations.domain, `%${input.search}%`)
+            ilike(crmOrganizations.name, `%${escaped}%`),
+            ilike(crmOrganizations.domain, `%${escaped}%`)
           )!
         );
       }
@@ -175,7 +207,16 @@ export const contactsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [org] = await ctx.db
         .insert(crmOrganizations)
-        .values({ ...input, orgId: ctx.session.orgId })
+        .values({
+          name: input.name,
+          domain: input.domain,
+          industry: input.industry,
+          size: input.size,
+          website: input.website,
+          linkedinUrl: input.linkedinUrl,
+          description: input.description,
+          orgId: ctx.session.orgId,
+        })
         .returning();
       return org;
     }),
@@ -195,11 +236,20 @@ export const contactsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
       const [updated] = await ctx.db
         .update(crmOrganizations)
-        .set({ ...data, updatedAt: new Date() })
-        .where(and(eq(crmOrganizations.id, id), eq(crmOrganizations.orgId, ctx.session.orgId)))
+        .set({
+          name: input.name,
+          domain: input.domain,
+          industry: input.industry,
+          size: input.size,
+          website: input.website,
+          linkedinUrl: input.linkedinUrl,
+          description: input.description,
+          healthScore: input.healthScore,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(crmOrganizations.id, input.id), eq(crmOrganizations.orgId, ctx.session.orgId)))
         .returning();
       return updated;
     }),
