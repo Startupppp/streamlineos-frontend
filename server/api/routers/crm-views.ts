@@ -33,7 +33,17 @@ export const crmViewsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [view] = await ctx.db
         .insert(crmViews)
-        .values({ ...input, orgId: ctx.session.orgId, createdBy: ctx.session.userId })
+        .values({
+          name: input.name,
+          entityType: input.entityType,
+          filters: input.filters,
+          sortBy: input.sortBy,
+          sortDir: input.sortDir,
+          isPublic: input.isPublic,
+          isPinned: input.isPinned,
+          orgId: ctx.session.orgId,
+          createdBy: ctx.session.userId,
+        })
         .returning();
       return view;
     }),

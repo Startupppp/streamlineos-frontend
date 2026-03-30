@@ -26,7 +26,14 @@ export const crmSlaRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [policy] = await ctx.db
         .insert(crmSla)
-        .values({ ...input, orgId: ctx.session.orgId })
+        .values({
+          name: input.name,
+          appliesTo: input.appliesTo,
+          priority: input.priority,
+          firstResponseHours: input.firstResponseHours,
+          resolutionHours: input.resolutionHours,
+          orgId: ctx.session.orgId,
+        })
         .returning();
       return policy;
     }),

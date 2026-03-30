@@ -25,7 +25,13 @@ export const leadScoringRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const [rule] = await ctx.db
         .insert(leadScoringRules)
-        .values({ ...input, orgId: ctx.session.orgId })
+        .values({
+          field: input.field,
+          operator: input.operator,
+          value: input.value,
+          points: input.points,
+          orgId: ctx.session.orgId,
+        })
         .returning();
       return rule;
     }),
