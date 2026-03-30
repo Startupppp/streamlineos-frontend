@@ -57,13 +57,14 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Projects"
-        description={description}
-        actions={<NewProjectDialog />}
-      />
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-6 px-6 pt-0 space-y-6 border-b border-border/40">
+        <PageHeader
+          title="Projects"
+          description={description}
+          actions={<NewProjectDialog />}
+        />
 
-      <ProjectFilterBar
+        <ProjectFilterBar
         search={search}
         onSearchChange={handleSearchChange}
         status={status}
@@ -71,6 +72,7 @@ export default function ProjectsPage() {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
+      </div>
 
       {/* SR live region for result count */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">

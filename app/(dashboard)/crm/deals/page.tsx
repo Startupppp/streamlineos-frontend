@@ -153,14 +153,14 @@ export default function DealsPage() {
         ))}
       </motion.div>
 
-      <motion.div variants={fadeUp} className="overflow-x-auto">
-        <div className="inline-flex gap-4 min-w-full pb-4">
+      <motion.div variants={fadeUp} className="overflow-x-auto -mx-2 px-2">
+        <div className="inline-flex gap-3 sm:gap-4 min-w-full pb-4">
           {STAGES.map(stage => {
             const stageDeals = dealsByStage[stage.key] || [];
             const stageValue = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
 
             return (
-              <div key={stage.key} className="w-72 flex-shrink-0">
+              <div key={stage.key} className="w-56 sm:w-64 md:w-72 flex-shrink-0">
                 <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />

@@ -41,9 +41,9 @@ const priorityColors: Record<string, string> = {
 export function TableView({ tickets, onTicketClick }: TableViewProps) {
   return (
     <div className="p-4">
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden overflow-x-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
               <TableHead className="w-16">ID</TableHead>
               <TableHead>Title</TableHead>

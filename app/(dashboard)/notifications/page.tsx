@@ -119,6 +119,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 space-y-4 border-b border-border/40">
       <PageHeader
         title="Notifications"
         description="Stay up to date with everything happening in your workspace"
@@ -168,6 +169,7 @@ export default function NotificationsPage() {
           <TabsTrigger value="ERROR">Error</TabsTrigger>
         </TabsList>
       </Tabs>
+      </div>
 
       {isLoading ? (
         <div className="space-y-3">

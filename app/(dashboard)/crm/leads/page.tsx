@@ -292,16 +292,16 @@ export default function LeadsPipelinePage() {
         </div>
       </motion.div>
 
-      <motion.div variants={fadeUp} className="overflow-x-auto pb-4">
+      <motion.div variants={fadeUp} className="overflow-x-auto pb-4 -mx-2 px-2">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-3 min-w-[1200px]">
+          <div className="flex gap-3 min-w-[900px] lg:min-w-0">
             {STATUSES.map((status) => {
               const config = STATUS_CONFIG[status];
               const StatusIcon = config.icon;
               const columnLeads: BoardLead[] = (filteredBoard as Record<string, BoardLead[]> | null)?.[status] ?? [];
 
               return (
-                <div key={status} className="flex-1 min-w-[200px]">
+                <div key={status} className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
                   <div className={cn("rounded-xl border h-full flex flex-col", config.border, "bg-muted/20")}>
                     {/* Column Header */}
                     <div className={cn("flex items-center justify-between px-3 py-2.5 rounded-t-xl border-b", config.border, config.bg)}>

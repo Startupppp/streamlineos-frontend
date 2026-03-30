@@ -44,19 +44,31 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     return d;
   }, [weekOffset]);
 
+  // Responsive: fewer days on smaller screens
+  const [numDays, setNumDays] = useState(28);
+  useMemo(() => {
+    if (typeof window !== "undefined") {
+      const w = window.innerWidth;
+      if (w < 640) setNumDays(14);
+      else if (w < 1024) setNumDays(21);
+      else setNumDays(28);
+    }
+  }, []);
+
   const days = useMemo(() => {
     const arr: Date[] = [];
-    for (let i = 0; i < 28; i++) {
+    for (let i = 0; i < numDays; i++) {
       const d = new Date(startOfWeek);
       d.setDate(d.getDate() + i);
       arr.push(d);
     }
     return arr;
-  }, [startOfWeek]);
+  }, [startOfWeek, numDays]);
 
-  const dayWidth = 40;
+  // Responsive dimensions
+  const dayWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 28 : typeof window !== "undefined" && window.innerWidth < 1024 ? 34 : 40;
   const rowHeight = 36;
-  const labelWidth = 240;
+  const labelWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 120 : typeof window !== "undefined" && window.innerWidth < 1024 ? 180 : 240;
 
   const toDateStr = (d: Date) => d.toISOString().split("T")[0];
   const today = toDateStr(new Date());
@@ -140,8 +152,8 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
             return (
               <g key={ticket.id} onClick={() => onTicketClick(ticket.id)} className="cursor-pointer">
                 <line x1={0} y1={y} x2={labelWidth + days.length * dayWidth} y2={y} className="stroke-border" strokeWidth={0.5} />
-                <text x={12} y={y + rowHeight / 2 + 4} className="fill-foreground" fontSize={11}>
-                  {(ticket.sequenceId ?? `#${ticket.ticketNumber}`)} {ticket.title.slice(0, 25)}{ticket.title.length > 25 ? "…" : ""}
+                <text x={8} y={y + rowHeight / 2 + 4} className="fill-foreground" fontSize={labelWidth < 180 ? 9 : 11}>
+                  {(ticket.sequenceId ?? `#${ticket.ticketNumber}`)} {ticket.title.slice(0, labelWidth < 180 ? 12 : 25)}{ticket.title.length > (labelWidth < 180 ? 12 : 25) ? "…" : ""}
                 </text>
                 {startDay <= days.length - 1 && endDay >= 0 && (
                   <rect

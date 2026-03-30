@@ -97,7 +97,7 @@ function InboxContent() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <div className="px-4 md:px-6 py-4 border-b border-border/40 shrink-0">
+      <div className="px-4 md:px-6 py-4 border-b border-border/40 shrink-0 sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-xl font-bold">Support Inbox</h2>
@@ -112,9 +112,9 @@ function InboxContent() {
             <Plus className="h-3.5 w-3.5" /> New Ticket
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="OPEN">Open</SelectItem>
@@ -125,7 +125,7 @@ function InboxContent() {
             </SelectContent>
           </Select>
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Priority</SelectItem>
               <SelectItem value="LOW">Low</SelectItem>

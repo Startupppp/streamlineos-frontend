@@ -106,7 +106,7 @@ export default function DashboardLayout({
                     {children}
                   </div>
                 ) : (
-                  <ScrollArea className="h-full w-full" style={{ overflowX: 'auto' }}>
+                  <ScrollArea className="h-full w-full">
                     <div className="p-4 md:p-8">
                       {children}
                     </div>

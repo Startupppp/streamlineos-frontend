@@ -80,7 +80,7 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
 
       <div className="grid grid-cols-7 border rounded-lg overflow-hidden">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="px-2 py-1.5 text-xs font-medium text-muted-foreground text-center bg-muted/50 border-b">
+          <div key={day} className="px-2 py-1.5 text-xs font-medium text-muted-foreground text-center bg-muted/50 border-b sticky top-0 z-10">
             {day}
           </div>
         ))}

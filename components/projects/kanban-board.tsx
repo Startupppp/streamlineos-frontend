@@ -287,8 +287,8 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div
-          className="flex h-full gap-3 sm:gap-4 md:gap-4 snap-x snap-mandatory"
-          style={{ minWidth: 'max-content', width: 'max-content' }}
+          className="flex h-full gap-3 sm:gap-4 md:gap-4 snap-x snap-mandatory overflow-x-auto pb-2"
+          style={{ minWidth: 'min-content' }}
         >
         {columns.map((col) => {
             const style = getColumnStyle(col.color);

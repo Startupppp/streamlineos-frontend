@@ -296,7 +296,7 @@ export default function HRDashboardPage() {
       />
 
       {/* Search & Filters */}
-      <Card className="border-border">
+      <Card className="border-border sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
         <CardContent className="py-3">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[180px] sm:min-w-[200px]">

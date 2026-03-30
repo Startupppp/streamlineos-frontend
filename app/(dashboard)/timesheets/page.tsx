@@ -370,7 +370,7 @@ export default function TimesheetsPage() {
                   <div className="overflow-x-auto" role="region" aria-label="Timesheets table" tabIndex={0}>
                     <Table>
                       <caption className="sr-only">Your daily work logs</caption>
-                      <TableHeader>
+                      <TableHeader className="sticky top-0 z-10">
                         <TableRow className="bg-muted/30">
                           <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Date</TableHead>
                           <TableHead scope="col" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-4">Project</TableHead>
