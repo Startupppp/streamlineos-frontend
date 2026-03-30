@@ -57,6 +57,8 @@ export const employeeRouter = createTRPCRouter({
         isActive: u.isActive,
         joiningDate: u.joiningDate,
         hasDashboardAccess: u.hasDashboardAccess,
+        reportingTo: u.reportingTo,
+        monthlySalary: u.monthlySalary,
       }));
   }),
 

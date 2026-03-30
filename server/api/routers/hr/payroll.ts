@@ -330,6 +330,8 @@ export const payrollRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
+      // Only include sensitive PII fields when user is viewing their own payslips
+      const isSelf = targetUserId === ctx.session.userId;
       return await ctx.db.query.payrolls.findMany({
         where: and(
           eq(payrolls.userId, targetUserId),
@@ -347,6 +349,7 @@ export const payrollRouter = createTRPCRouter({
               email: true,
               joiningDate: true,
               employeeId: true,
+              ...(isSelf ? { taxId: true, bankDetails: true } : {}),
             },
           },
         },
