@@ -10,8 +10,12 @@ async function main() {
   const { ROLE_DEFAULT_PERMISSIONS } = await import("../lib/rbac/permissions");
   const { eq } = await import("drizzle-orm");
 
-  // Admin password: Tarun@1234
-  const passwordHash = await hash("Tarun@1234", 10);
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!seedPassword) {
+    console.error("ERROR: SEED_ADMIN_PASSWORD environment variable is required.");
+    process.exit(1);
+  }
+  const passwordHash = await hash(seedPassword, 12);
   let orgId = "org_" + nanoid();
   const existingOrg = await db.query.organizations.findFirst({
       where: (orgs, { eq }) => eq(orgs.slug, "vaivamm-capital"),
@@ -51,7 +55,7 @@ async function main() {
       emailVerified: new Date(),
       isActive: true,
       hasDashboardAccess: true,
-      isPasswordChangeRequired: false,
+      isPasswordChangeRequired: true,
       image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${adminEmail}`,
     });
   }
@@ -63,8 +67,9 @@ async function main() {
   }).onConflictDoNothing();
 
   // ─── HR User ───
-  const hrEmail = "chintakuntatarun@gmail.com";
-  const hrPasswordHash = await hash("Tarun@4321", 10);
+  const hrEmail = process.env.SEED_HR_EMAIL || "hr@vaivammcapital.com";
+  const hrSeedPassword = process.env.SEED_HR_PASSWORD || seedPassword;
+  const hrPasswordHash = await hash(hrSeedPassword, 12);
   const existingHr = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.email, hrEmail),
   });
@@ -86,7 +91,7 @@ async function main() {
       emailVerified: new Date(),
       isActive: true,
       hasDashboardAccess: true,
-      isPasswordChangeRequired: false,
+      isPasswordChangeRequired: true,
       image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${hrEmail}`,
     });
   }
