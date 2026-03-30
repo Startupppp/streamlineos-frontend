@@ -25,9 +25,16 @@ const FILE_SIGNATURES: Record<string, number[][]> = {
 function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
   const signatures = FILE_SIGNATURES[mimeType];
   if (!signatures) return true;
-  return signatures.some((sig) =>
+  if (buffer.length < 12) return false;
+  const matchesSignature = signatures.some((sig) =>
     sig.every((byte, i) => buffer[i] === byte)
   );
+  if (!matchesSignature) return false;
+  // Extra check for WEBP: RIFF header must contain 'WEBP' at offset 8
+  if (mimeType === "image/webp") {
+    return buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
+  }
+  return true;
 }
 
 export async function POST(req: NextRequest) {
@@ -40,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     if (!isStorageConfigured()) {
       return NextResponse.json(
-        { error: "Cloud storage (R2) is not configured. Set R2_BUCKET_NAME, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_ENDPOINT environment variables." },
+        { error: "File storage is not available" },
         { status: 503 }
       );
     }
