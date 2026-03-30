@@ -24,7 +24,14 @@ export const leadsRouter = createTRPCRouter({
     }).optional())
     .query(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
+      const role = ctx.session.user.role;
+      const userId = ctx.session.userId;
       const filters = [eq(leads.orgId, orgId)];
+
+      // SALES role can only see their own assigned leads
+      if (role === "SALES") {
+        filters.push(eq(leads.assignedToId, userId));
+      }
 
       if (input?.status) filters.push(eq(leads.status, input.status));
       if (input?.assignedToId) filters.push(eq(leads.assignedToId, input.assignedToId));
@@ -443,8 +450,11 @@ export const leadsRouter = createTRPCRouter({
     const userId = ctx.session.userId;
 
     const filters = [eq(leads.orgId, orgId)];
-    const crmRoles = ["CEO", "HR", "SALES"];
-    if (!crmRoles.includes(role ?? "")) {
+
+    // SALES role: only see assigned leads
+    if (role === "SALES") {
+      filters.push(eq(leads.assignedToId, userId));
+    } else if (!["CEO", "HR"].includes(role ?? "")) {
       const teamLeadDepts = await ctx.db.query.departmentMembers.findMany({
         where: and(eq(departmentMembers.userId, userId), eq(departmentMembers.role, "lead")),
       });
@@ -494,8 +504,13 @@ export const leadsRouter = createTRPCRouter({
     }).optional())
     .query(async ({ ctx, input }) => {
     const orgId = ctx.session.orgId;
+    const role = ctx.session.user.role;
+    const userId = ctx.session.userId;
+    const statsFilters = [eq(leads.orgId, orgId)];
+    if (role === "SALES") statsFilters.push(eq(leads.assignedToId, userId));
+
     let allLeads = await ctx.db.query.leads.findMany({
-      where: eq(leads.orgId, orgId),
+      where: and(...statsFilters),
     });
 
     if (input?.dateFrom) {
@@ -655,14 +670,19 @@ export const leadsRouter = createTRPCRouter({
 
   getSlaAlerts: protectedProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
+    const role = ctx.session.user.role;
+    const userId = ctx.session.userId;
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+    const slaFilters = [
+      eq(leads.orgId, orgId),
+      sql`${leads.status} IN ('NEW', 'CONTACTED', 'INTERESTED', 'QUALIFIED')`,
+    ];
+    if (role === "SALES") slaFilters.push(eq(leads.assignedToId, userId));
+
     const allLeads = await ctx.db.query.leads.findMany({
-      where: and(
-        eq(leads.orgId, orgId),
-        sql`${leads.status} IN ('NEW', 'CONTACTED', 'INTERESTED', 'QUALIFIED')`
-      ),
+      where: and(...slaFilters),
       with: {
         assignedTo: { columns: { id: true, name: true } },
       },
@@ -707,7 +727,10 @@ export const leadsRouter = createTRPCRouter({
     }).optional())
     .query(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
+      const role = ctx.session.user.role;
+      const userId = ctx.session.userId;
       const filters = [eq(clients.orgId, orgId)];
+      if (role === "SALES") filters.push(eq(clients.accountManagerId, userId));
       if (input?.status) filters.push(eq(clients.status, input.status));
 
       let allClients = await ctx.db.query.clients.findMany({

@@ -16,7 +16,15 @@ export const dealsRouter = createTRPCRouter({
     }).optional())
     .query(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
+      const role = ctx.session.user.role;
+      const userId = ctx.session.userId;
       const filters = [eq(deals.orgId, orgId)];
+
+      // SALES role can only see their own deals
+      if (role === "SALES") {
+        filters.push(eq(deals.assignedToId, userId));
+      }
+
       if (input?.stage) filters.push(eq(deals.stage, input.stage));
       if (input?.assignedToId) filters.push(eq(deals.assignedToId, input.assignedToId));
 

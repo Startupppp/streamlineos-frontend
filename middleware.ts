@@ -56,8 +56,8 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
 
   // CRM — CEO, HR, SALES (sales sees filtered data)
   "/crm/leads": ["CEO", "HR", "SALES"],
-  "/crm/deals": ["CEO", "HR"],
-  "/crm/targets": ["CEO", "HR"],
+  "/crm/deals": ["CEO", "HR", "SALES"],
+  "/crm/targets": ["CEO", "HR", "SALES"],
   "/crm/reports": ["CEO", "HR"],
   "/crm/clients": ["CEO", "HR"],
 
