@@ -4,6 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { Zap, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,7 +33,7 @@ interface SprintCardProps {
 
 export const SprintCard = memo(function SprintCard({ summary, isLoading }: SprintCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col w-full">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Zap className="h-5 w-5 text-gold" aria-hidden="true" />
@@ -54,6 +55,7 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
             <Skeleton className="h-20 w-full" />
           </div>
         ) : summary ? (
+          <ScrollArea className="h-full pr-3">
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold text-foreground">{summary.name}</h3>
@@ -120,6 +122,7 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
               </div>
             </div>
           </div>
+          </ScrollArea>
         ) : (
           <EmptyState
             illustration={<EmptySprintIllustration />}

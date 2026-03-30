@@ -36,7 +36,7 @@ interface MyIssuesCardProps {
 
 export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col w-full">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <ListTodo className="h-5 w-5 text-gold" aria-hidden="true" />
