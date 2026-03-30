@@ -930,32 +930,147 @@ export const leadsRouter = createTRPCRouter({
     .input(z.object({
       leads: z.array(z.object({
         name: z.string().min(1, "Lead name is required"),
-        email: z.string().email().optional().or(z.literal("")),
+        email: z.string().optional().or(z.literal("")),
         phone: z.string().optional(),
         company: z.string().optional(),
         source: z.enum(leadSourceValues).optional(),
         notes: z.string().optional(),
-      })).min(1, "At least one lead is required").max(500, "Maximum 500 leads per import"),
+        city: z.string().optional(),
+        designation: z.string().optional(),
+        referredBy: z.string().optional(),
+        potentialValue: z.string().optional(),
+        investmentInterest: z.string().optional(),
+        whatsappNumber: z.string().optional(),
+        website: z.string().optional(),
+        priority: z.enum(leadPriorityValues).optional(),
+        tags: z.array(z.string()).optional(),
+      })).min(1, "At least one lead is required").max(1000, "Maximum 1000 leads per import"),
+      duplicateAction: z.enum(["skip", "update", "import"]).default("skip"),
     }))
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
       const userId = ctx.session.userId;
+      const CHUNK_SIZE = 100;
 
-      const valuesToInsert = input.leads.map(lead => ({
-        orgId,
-        name: lead.name,
-        email: lead.email || null,
-        phone: lead.phone || null,
-        company: lead.company || null,
-        source: lead.source || ("other" as const),
-        notes: lead.notes || null,
-        status: "NEW" as const,
-        priority: "WARM" as const,
-        assignedById: userId,
-      }));
+      // Collect emails/phones for duplicate check
+      const importEmails = input.leads.map(l => l.email).filter((e): e is string => !!e && e !== "");
+      const importPhones = input.leads.map(l => l.phone).filter((p): p is string => !!p);
 
-      const inserted = await ctx.db.insert(leads).values(valuesToInsert).returning({ id: leads.id });
+      // Batch duplicate lookup
+      const existingLeads = (importEmails.length > 0 || importPhones.length > 0)
+        ? await ctx.db.query.leads.findMany({
+            where: and(
+              eq(leads.orgId, orgId),
+              sql`(${leads.email} IN (${sql.join(importEmails.map(e => sql`${e}`), sql`, `)}) OR ${leads.phone} IN (${sql.join(importPhones.map(p => sql`${p}`), sql`, `)}))`,
+            ),
+            columns: { id: true, email: true, phone: true },
+          })
+        : [];
 
-      return { imported: inserted.length };
+      const dupEmails = new Set(existingLeads.map(l => l.email?.toLowerCase()).filter(Boolean));
+      const dupPhones = new Set(existingLeads.map(l => l.phone).filter(Boolean));
+
+      let imported = 0;
+      let skipped = 0;
+      let updated = 0;
+      const errors: { row: number; message: string }[] = [];
+
+      // Process in chunks
+      for (let i = 0; i < input.leads.length; i += CHUNK_SIZE) {
+        const chunk = input.leads.slice(i, i + CHUNK_SIZE);
+        const toInsert: typeof chunk = [];
+
+        for (let j = 0; j < chunk.length; j++) {
+          const lead = chunk[j];
+          const rowNum = i + j + 2; // +2 for 1-indexed + header row
+          const isDuplicate =
+            (lead.email && dupEmails.has(lead.email.toLowerCase())) ||
+            (lead.phone && dupPhones.has(lead.phone));
+
+          if (isDuplicate) {
+            if (input.duplicateAction === "skip") {
+              skipped++;
+              errors.push({ row: rowNum, message: `Duplicate (${lead.email || lead.phone})` });
+              continue;
+            } else if (input.duplicateAction === "update") {
+              // Find and update existing
+              try {
+                const matchField = lead.email && dupEmails.has(lead.email.toLowerCase())
+                  ? eq(leads.email, lead.email)
+                  : eq(leads.phone, lead.phone!);
+                await ctx.db.update(leads).set({
+                  name: lead.name,
+                  company: lead.company || null,
+                  notes: lead.notes || null,
+                  city: lead.city || null,
+                  designation: lead.designation || null,
+                  updatedAt: new Date(),
+                }).where(and(eq(leads.orgId, orgId), matchField));
+                updated++;
+              } catch {
+                errors.push({ row: rowNum, message: "Failed to update duplicate" });
+              }
+              continue;
+            }
+            // "import" action: fall through to insert
+          }
+
+          toInsert.push(lead);
+        }
+
+        if (toInsert.length > 0) {
+          try {
+            const values = toInsert.map(lead => ({
+              orgId,
+              name: lead.name,
+              email: lead.email || null,
+              phone: lead.phone || null,
+              company: lead.company || null,
+              source: lead.source || ("other" as const),
+              notes: lead.notes || null,
+              city: lead.city || null,
+              designation: lead.designation || null,
+              referredBy: lead.referredBy || null,
+              potentialValue: lead.potentialValue || null,
+              investmentInterest: lead.investmentInterest || null,
+              whatsappNumber: lead.whatsappNumber || null,
+              website: lead.website || null,
+              priority: lead.priority || ("WARM" as const),
+              tags: lead.tags || null,
+              status: "NEW" as const,
+              assignedById: userId,
+            }));
+            const result = await ctx.db.insert(leads).values(values).returning({ id: leads.id });
+            imported += result.length;
+          } catch (err) {
+            errors.push({ row: i + 2, message: `Chunk insert failed: ${err instanceof Error ? err.message : "unknown error"}` });
+          }
+        }
+      }
+
+      return { imported, skipped, updated, errors, duplicatesFound: existingLeads.length };
+    }),
+
+  checkDuplicates: adminProcedure
+    .input(z.object({
+      emails: z.array(z.string()),
+      phones: z.array(z.string()),
+    }))
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.session.orgId;
+      const conditions = [];
+      if (input.emails.length > 0) conditions.push(inArray(leads.email, input.emails));
+      if (input.phones.length > 0) conditions.push(inArray(leads.phone, input.phones));
+      if (conditions.length === 0) return { duplicateEmails: [] as string[], duplicatePhones: [] as string[] };
+
+      const existing = await ctx.db.query.leads.findMany({
+        where: and(eq(leads.orgId, orgId), sql`(${sql.join(conditions, sql` OR `)})`),
+        columns: { email: true, phone: true },
+      });
+
+      return {
+        duplicateEmails: existing.map(l => l.email).filter((e): e is string => !!e),
+        duplicatePhones: existing.map(l => l.phone).filter((p): p is string => !!p),
+      };
     }),
 });

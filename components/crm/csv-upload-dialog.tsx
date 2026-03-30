@@ -179,13 +179,23 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [fileName, setFileName] = useState("");
   const [isParsing, setIsParsing] = useState(false);
 
+  const [importResult, setImportResult] = useState<{
+    imported: number;
+    skipped: number;
+    updated: number;
+    errors: { row: number; message: string }[];
+    duplicatesFound: number;
+  } | null>(null);
+
   const bulkImport = api.leads.bulkImport.useMutation({
     onSuccess: (data) => {
-      toast.success(`Successfully imported ${data.imported} leads`);
-      setParsed(null);
-      setFileName("");
-      setOpen(false);
-      onSuccess?.();
+      setImportResult(data);
+      if (data.imported > 0) {
+        toast.success(`Imported ${data.imported} leads${data.skipped ? `, ${data.skipped} skipped` : ""}`);
+        onSuccess?.();
+      } else if (data.skipped > 0) {
+        toast.warning(`All ${data.skipped} leads were duplicates and skipped`);
+      }
     },
     onError: (err) => toast.error(err.message),
   });
@@ -272,6 +282,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setParseErrors([]);
     setFileName("");
     setIsParsing(false);
+    setImportResult(null);
   };
 
   return (
@@ -395,20 +406,45 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               </div>
             )}
 
-            <Button
-              className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white"
-              onClick={handleImport}
-              disabled={bulkImport.isPending || !parsed?.length}
-            >
-              {bulkImport.isPending ? (
-                "Importing..."
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Import {parsed?.length || 0} Leads
-                </>
-              )}
-            </Button>
+            {importResult ? (
+              <div className="space-y-3">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">Import Complete</p>
+                  <p className="text-xs text-muted-foreground">{importResult.imported} imported, {importResult.skipped} skipped, {importResult.updated} updated</p>
+                  {importResult.errors.length > 0 && (
+                    <div className="mt-2 space-y-0.5">
+                      {importResult.errors.slice(0, 5).map((err, i) => (
+                        <p key={i} className="text-xs text-destructive">Row {err.row}: {err.message}</p>
+                      ))}
+                      {importResult.errors.length > 5 && (
+                        <p className="text-xs text-muted-foreground">...and {importResult.errors.length - 5} more errors</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <Button className="w-full" variant="outline" onClick={() => { setOpen(false); reset(); }}>
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <Button
+                className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white"
+                onClick={handleImport}
+                disabled={bulkImport.isPending || !parsed?.length}
+              >
+                {bulkImport.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Importing...
+                  </span>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Import {parsed?.length || 0} Leads
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
