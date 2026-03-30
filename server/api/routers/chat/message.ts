@@ -229,7 +229,7 @@ export const messageRouter = createTRPCRouter({
       if (myChannelIds.length === 0) return [];
 
       const conditions = [
-        ilike(chatMessages.content, `%${input.query}%`),
+        ilike(chatMessages.content, `%${input.query.replace(/[%_\\]/g, "\\$&")}%`),
         eq(chatMessages.isDeleted, false),
         inArray(chatMessages.channelId, myChannelIds),
       ];
