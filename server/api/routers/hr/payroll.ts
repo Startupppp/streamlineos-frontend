@@ -330,9 +330,8 @@ export const payrollRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
-      // Only include sensitive PII fields when user is viewing their own payslips
       const isSelf = targetUserId === ctx.session.userId;
-      return await ctx.db.query.payrolls.findMany({
+      const payslips = await ctx.db.query.payrolls.findMany({
         where: and(
           eq(payrolls.userId, targetUserId),
           eq(payrolls.orgId, ctx.session.orgId)
@@ -349,11 +348,21 @@ export const payrollRouter = createTRPCRouter({
               email: true,
               joiningDate: true,
               employeeId: true,
-              ...(isSelf ? { taxId: true, bankDetails: true } : {}),
+              taxId: true,
+              bankDetails: true,
             },
           },
         },
       });
+
+      // Redact sensitive PII when admin is viewing another user's payslips
+      if (!isSelf) {
+        return payslips.map((p) => ({
+          ...p,
+          user: p.user ? { ...p.user, taxId: null, bankDetails: null } : p.user,
+        }));
+      }
+      return payslips;
     }),
 
   approvePayroll: protectedProcedure
