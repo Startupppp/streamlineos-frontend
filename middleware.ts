@@ -102,8 +102,16 @@ function startsWithAny(pathname: string, routes: string[]): boolean {
  * Matches the most specific route first (longest prefix).
  */
 function canAccessRoute(pathname: string, role: string): boolean {
-  // CEO bypasses everything
-  if (role === "CEO") return true;
+  // CEO bypasses RBAC but we log access for audit trail
+  if (role === "CEO") {
+    console.info(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: "info",
+      message: "CEO route access",
+      meta: { pathname, role },
+    }));
+    return true;
+  }
 
   // Find the most specific matching route
   const matchingRoutes = Object.keys(ROUTE_ROLE_MAP)
