@@ -11,7 +11,7 @@ import * as schema from "./db/schema";
 
 export const client = postgres(connectionString, {
   prepare: false,
-  max: 10,
+  max: 30,
   idle_timeout: 60,
   connect_timeout: 10,
 });

@@ -9,7 +9,7 @@ import { OrganizationGuard } from "../../components/auth/organization-guard";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { NotActivatedPage } from "../../components/auth/not-activated-page";
 import { CommandPalette } from "../../components/layout/command-palette";
-import { AISidebar } from "../../components/shared/ai-sidebar";
+
 
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
@@ -118,7 +118,7 @@ export default function DashboardLayout({
             <NotActivatedPage />
           )}
         </main>
-        {hasDashboardAccess && <AISidebar />}
+
       </div>
     </OrganizationGuard>
   );

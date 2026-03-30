@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -228,7 +229,7 @@ export function LeavesTabContent({
         </p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 mb-4" role="list" aria-label="Leave balances">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3 mb-4" role="list" aria-label="Leave balances">
         {balances
           .filter((bal) => bal.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(bal.typeName))
           .map((bal, index) => (
@@ -242,10 +243,10 @@ export function LeavesTabContent({
       </div>
 
       {/* ─── Request History + Form ─── */}
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-4 lg:grid-cols-12 auto-rows-[28rem]">
         {/* Request History Table (left) */}
-        <div className="lg:col-span-8">
-          <Card className="border-border">
+        <div className="lg:col-span-8 min-h-0">
+          <Card className="border-border h-full flex flex-col">
             <CardHeader className="pb-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <CardTitle className="text-base font-semibold text-foreground">Request History</CardTitle>
@@ -264,7 +265,7 @@ export function LeavesTabContent({
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0" aria-live="polite">
+            <CardContent className="pt-0 flex-1 overflow-hidden" aria-live="polite">
               {myLeaveRequests.length === 0 ? (
                 <EmptyState
                   illustration={<EmptyLeaveIllustration />}
@@ -272,7 +273,7 @@ export function LeavesTabContent({
                   description="You haven't submitted any leave requests yet."
                 />
               ) : (
-                <>
+                <ScrollArea className="h-full">
                   <div className="overflow-x-auto" role="region" aria-label="Leave requests table" tabIndex={0}>
                     <table className="w-full">
                       <caption className="sr-only">Your leave request history</caption>
@@ -307,15 +308,15 @@ export function LeavesTabContent({
                       </button>
                     </div>
                   )}
-                </>
+                </ScrollArea>
               )}
             </CardContent>
           </Card>
         </div>
 
         {/* New Request Form (right) */}
-        <div className="lg:col-span-4">
-          <Card className="border-border">
+        <div className="lg:col-span-4 min-h-0">
+          <Card className="border-border h-full flex flex-col">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -327,7 +328,8 @@ export function LeavesTabContent({
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 flex-1 overflow-hidden">
+              <ScrollArea className="h-full pr-2">
               <Form {...leaveForm}>
                 <form onSubmit={leaveForm.handleSubmit(onLeaveSubmit)} className="space-y-4">
                   {/* Leave Type */}
@@ -472,6 +474,7 @@ export function LeavesTabContent({
                   </Button>
                 </form>
               </Form>
+              </ScrollArea>
             </CardContent>
           </Card>
         </div>

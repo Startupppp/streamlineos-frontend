@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle, Download, Filter, CalendarDays } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { api } from "@/trpc/react";
@@ -56,6 +58,8 @@ export default function WorkLogsPage() {
 
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState("");
 
   // Keep backward-compatible aliases
   const year = filters.year;
@@ -90,6 +94,20 @@ export default function WorkLogsPage() {
     if (!filters.departmentId) return employees;
     return employees.filter((e) => e.departmentId?.toString() === filters.departmentId);
   }, [employees, filters.departmentId]);
+
+  const joiningYear = useMemo(() => {
+    if (!employees) return currentYear;
+    const targetId = draftFilters.selectedUserId || session?.user?.id;
+    const emp = employees.find(e => e.id === targetId);
+    if (emp?.joiningDate) return new Date(emp.joiningDate).getFullYear();
+    return currentYear;
+  }, [employees, draftFilters.selectedUserId, session?.user?.id, currentYear]);
+
+  const availableYears = useMemo(() => {
+    const years = [];
+    for (let y = joiningYear; y <= currentYear; y++) years.push(y);
+    return years.length > 0 ? years : [currentYear];
+  }, [joiningYear, currentYear]);
 
   const toggleMonth = useCallback((monthKey: string) => {
     setCollapsedMonths((prev) => {
@@ -247,8 +265,8 @@ export default function WorkLogsPage() {
   }, [days, logs, selectedUserId, employees, quarter, year]);
 
   return (
-    <div className="space-y-3 sm:space-y-4 overflow-x-hidden">
-      <div className="sticky top-0 z-10 bg-background pb-3 space-y-3 sm:space-y-4 -mx-4 px-4 sm:-mx-6 sm:px-6 pt-1">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-3 space-y-3 sm:space-y-4 pt-1 border-b border-border/40 shadow-sm overflow-x-hidden">
       <PageHeader
         title="Work Logs"
         description={
@@ -264,7 +282,7 @@ export default function WorkLogsPage() {
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
-                {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                {availableYears.map((y) => (
                   <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                 ))}
               </SelectContent>
@@ -295,22 +313,22 @@ export default function WorkLogsPage() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-                <SheetHeader>
+              <SheetContent className="w-full sm:max-w-sm overflow-y-auto p-5">
+                <SheetHeader className="pb-4">
                   <SheetTitle>Advanced Filters</SheetTitle>
                   <SheetDescription>Refine your work logs view</SheetDescription>
                 </SheetHeader>
 
-                <div className="space-y-6 py-6">
+                <div className="space-y-4">
                   {/* Year */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-sm font-medium">Year</Label>
                     <Select value={draftFilters.year.toString()} onValueChange={(v) => setDraftFilters(p => ({ ...p, year: parseInt(v) }))}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
                       <SelectContent>
-                        {[currentYear - 1, currentYear, currentYear + 1].map((y) => (
+                        {availableYears.map((y) => (
                           <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                         ))}
                       </SelectContent>
@@ -318,7 +336,7 @@ export default function WorkLogsPage() {
                   </div>
 
                   {/* Quarter */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-sm font-medium">Quarter</Label>
                     <Select value={draftFilters.quarter.toString()} onValueChange={(v) => setDraftFilters(p => ({ ...p, quarter: parseInt(v) }))}>
                       <SelectTrigger className="w-full">
@@ -334,7 +352,7 @@ export default function WorkLogsPage() {
                   </div>
 
                   {/* Month (within selected quarter) */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-sm font-medium">Month</Label>
                     <Select
                       value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
@@ -363,7 +381,7 @@ export default function WorkLogsPage() {
                   </div>
 
                   {/* Date Range */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label className="text-sm font-medium">Date Range</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -390,7 +408,7 @@ export default function WorkLogsPage() {
 
                   {/* Department (admin only) */}
                   {isAdminOrCeo && departments && departments.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label className="text-sm font-medium">Department</Label>
                       <Select
                         value={draftFilters.departmentId || "all"}
@@ -418,33 +436,74 @@ export default function WorkLogsPage() {
 
                   {/* Assignees / Employee (admin only) */}
                   {isAdminOrCeo && employees && employees.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label className="text-sm font-medium">Employee</Label>
-                      <Select
-                        value={draftFilters.selectedUserId || "self"}
-                        onValueChange={(v) => setDraftFilters(p => ({ ...p, selectedUserId: v === "self" ? undefined : v }))}
-                      >
-                        <SelectTrigger className="w-full">
-                          <Users className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                          <SelectValue placeholder="Select employee" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="self">My Logs</SelectItem>
-                          {(draftFilters.departmentId
-                            ? employees.filter((e) => e.departmentId?.toString() === draftFilters.departmentId)
-                            : employees
-                          ).map((emp) => (
-                            <SelectItem key={emp.id} value={emp.id}>
-                              {emp.firstName} {emp.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={employeeSearchOpen} onOpenChange={setEmployeeSearchOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={employeeSearchOpen}
+                            className="w-full justify-between font-normal"
+                          >
+                            <span className="flex items-center gap-1.5 truncate">
+                              <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              {draftFilters.selectedUserId
+                                ? (() => {
+                                    const emp = employees.find((e) => e.id === draftFilters.selectedUserId);
+                                    return emp ? `${emp.firstName} ${emp.lastName}` : "Select employee";
+                                  })()
+                                : "My Logs"}
+                            </span>
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search employee..."
+                              value={employeeSearch}
+                              onValueChange={setEmployeeSearch}
+                            />
+                            <CommandEmpty>No employee found.</CommandEmpty>
+                            <CommandGroup className="max-h-60 overflow-y-auto">
+                              <CommandItem
+                                value="My Logs"
+                                onSelect={() => {
+                                  setDraftFilters(p => ({ ...p, selectedUserId: undefined }));
+                                  setEmployeeSearchOpen(false);
+                                  setEmployeeSearch("");
+                                }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", !draftFilters.selectedUserId ? "opacity-100" : "opacity-0")} />
+                                My Logs
+                              </CommandItem>
+                              {(draftFilters.departmentId
+                                ? employees.filter((e) => e.departmentId?.toString() === draftFilters.departmentId)
+                                : employees
+                              ).map((emp) => (
+                                <CommandItem
+                                  key={emp.id}
+                                  value={`${emp.firstName} ${emp.lastName}`}
+                                  onSelect={() => {
+                                    setDraftFilters(p => ({ ...p, selectedUserId: emp.id }));
+                                    setEmployeeSearchOpen(false);
+                                    setEmployeeSearch("");
+                                  }}
+                                >
+                                  <Check className={cn("mr-2 h-4 w-4", draftFilters.selectedUserId === emp.id ? "opacity-100" : "opacity-0")} />
+                                  {emp.firstName} {emp.lastName}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   )}
                 </div>
 
-                <SheetFooter className="flex flex-row gap-2 sm:flex-row">
+                <SheetFooter className="flex flex-row gap-2 sm:flex-row pt-4">
                   <Button
                     variant="outline"
                     className="flex-1"

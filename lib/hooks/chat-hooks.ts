@@ -2,11 +2,12 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tansta
 import { vaivammTrpcClient } from "../trpc";
 import { vaivammKeys } from "./trpc-keys";
 
-export function useChatChannels() {
+export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: vaivammKeys.chat.myChannels(),
     queryFn: () => vaivammTrpcClient.chat.channel.getMyChannels.query(),
-    refetchInterval: 10_000,
+    refetchInterval: 30_000,
+    enabled,
   });
 }
 
