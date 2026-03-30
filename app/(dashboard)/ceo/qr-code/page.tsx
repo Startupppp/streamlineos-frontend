@@ -157,8 +157,8 @@ export default function CEOQRCodePage() {
   const [qrCodeToDelete, setQrCodeToDelete] = useState<number | null>(null);
 
   useEffect(() => {
-    if (session?.user?.role && session.user.role !== "CEO") {
-      toast.error("Access Denied: Only organization owners can access QR codes.");
+    if (session?.user?.role && session.user.role !== "CEO" && session.user.role !== "HR") {
+      toast.error("Access Denied: Only CEO and HR can access QR codes.");
       router.push("/dashboard");
     }
   }, [session, router]);

@@ -31,13 +31,13 @@ export async function generateQRCode(formData: FormData) {
 
     const validatedData = generateSchema.parse(rawData);
 
-    if (session.user.role !== "CEO") {
+    if (session.user.role !== "CEO" && session.user.role !== "HR") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
-      
-      if (!user || user.role !== "CEO") {
-        return { success: false, error: "Access Denied: Only organization owners can generate QR codes." };
+
+      if (!user || (user.role !== "CEO" && user.role !== "HR")) {
+        return { success: false, error: "Access Denied: Only CEO and HR can generate QR codes." };
       }
     }
 
@@ -145,13 +145,13 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "QR code not found" };
     }
 
-    if (session.user.role !== "CEO") {
+    if (session.user.role !== "CEO" && session.user.role !== "HR") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
-      
-      if (!user || user.role !== "CEO") {
-        return { success: false, error: "Access Denied: Only organization owners can delete QR codes." };
+
+      if (!user || (user.role !== "CEO" && user.role !== "HR")) {
+        return { success: false, error: "Access Denied: Only CEO and HR can delete QR codes." };
       }
     }
 

@@ -153,6 +153,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
+            { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
           ],
         },
         {

@@ -89,8 +89,8 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   // Notifications — all roles
   "/notifications": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
 
-  // CEO-only
-  "/ceo": ["CEO"],
+  // CEO and HR
+  "/ceo": ["CEO", "HR"],
 };
 
 function startsWithAny(pathname: string, routes: string[]): boolean {
