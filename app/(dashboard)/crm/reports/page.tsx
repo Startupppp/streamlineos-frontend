@@ -56,29 +56,46 @@ export default function CrmReportsPage() {
 
   const handleExportExcel = useCallback(async () => {
     try {
-      const XLSX = await import("xlsx");
+      const ExcelJS = (await import("exceljs")).default;
       if (!stats) return;
 
-      const pipelineData = Object.entries(stats.byStatus).map(([status, count]) => ({
-        Status: status,
-        Count: count,
-        Percentage: stats.total > 0 ? `${((count / stats.total) * 100).toFixed(1)}%` : "0%",
-      }));
+      const wb = new ExcelJS.Workbook();
 
-      const summaryData = [
-        { Metric: "Total Leads", Value: stats.total },
-        { Metric: "Conversion Rate", Value: `${stats.conversionRate}%` },
-        { Metric: "Total Potential Value", Value: `₹${stats.totalPotentialValue.toLocaleString("en-IN")}` },
-        { Metric: "Unassigned Leads", Value: stats.unassigned },
-        { Metric: "New This Month", Value: stats.thisMonth },
+      const ws1 = wb.addWorksheet("Summary");
+      ws1.columns = [
+        { header: "Metric", key: "metric", width: 30 },
+        { header: "Value", key: "value", width: 30 },
       ];
+      ws1.addRows([
+        { metric: "Total Leads", value: stats.total },
+        { metric: "Conversion Rate", value: `${stats.conversionRate}%` },
+        { metric: "Total Potential Value", value: `₹${stats.totalPotentialValue.toLocaleString("en-IN")}` },
+        { metric: "Unassigned Leads", value: stats.unassigned },
+        { metric: "New This Month", value: stats.thisMonth },
+      ]);
 
-      const wb = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.json_to_sheet(summaryData);
-      const ws2 = XLSX.utils.json_to_sheet(pipelineData);
-      XLSX.utils.book_append_sheet(wb, ws1, "Summary");
-      XLSX.utils.book_append_sheet(wb, ws2, "Pipeline");
-      XLSX.writeFile(wb, `crm-report-${new Date().toISOString().split("T")[0]}.xlsx`);
+      const ws2 = wb.addWorksheet("Pipeline");
+      ws2.columns = [
+        { header: "Status", key: "status", width: 20 },
+        { header: "Count", key: "count", width: 15 },
+        { header: "Percentage", key: "percentage", width: 15 },
+      ];
+      ws2.addRows(
+        Object.entries(stats.byStatus).map(([status, count]) => ({
+          status,
+          count,
+          percentage: stats.total > 0 ? `${((count / stats.total) * 100).toFixed(1)}%` : "0%",
+        }))
+      );
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `crm-report-${new Date().toISOString().split("T")[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
       toast.success("Excel report downloaded");
     } catch {
       toast.error("Failed to export Excel");
