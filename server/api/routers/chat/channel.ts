@@ -115,7 +115,6 @@ export const channelRouter = createTRPCRouter({
         lastMessage: lastMsgMap.get(ch.id) ?? null,
       }));
     } catch (error) {
-      console.error("[chat.getMyChannels] ERROR:", error instanceof Error ? error.message : error);
       logger.error("[chat.getMyChannels]", { path: "chat.getMyChannels", error: error instanceof Error ? error.message : "Unknown error" });
       return [];
     }
@@ -254,7 +253,7 @@ export const channelRouter = createTRPCRouter({
       });
 
       if (!membership || membership.role !== "ADMIN") {
-        throw new Error("Only channel admins can update channel details");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only channel admins can update channel details" });
       }
 
       const updateData: Record<string, unknown> = { updatedAt: new Date() };
@@ -274,7 +273,7 @@ export const channelRouter = createTRPCRouter({
     .input(z.object({ channelId: z.number(), userIds: z.string().array() }))
     .mutation(async ({ ctx, input }) => {
       const member = await verifyChannelMember(ctx.db, input.channelId, ctx.session.userId);
-      if (member.role !== "ADMIN") throw new Error("Only admins can add members");
+      if (member.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can add members" });
 
       await ctx.db.insert(chatChannelMembers).values(
         input.userIds.map((uid) => ({
@@ -293,7 +292,7 @@ export const channelRouter = createTRPCRouter({
       const member = await verifyChannelMember(ctx.db, input.channelId, ctx.session.userId);
       // Allow admins to remove anyone, or users to remove themselves
       if (member.role !== "ADMIN" && input.userId !== ctx.session.userId) {
-        throw new Error("Only admins can remove other members");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can remove other members" });
       }
 
       await ctx.db
