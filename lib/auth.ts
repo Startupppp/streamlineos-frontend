@@ -139,8 +139,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
       }
 
-      // Refresh critical fields from DB (with error handling to prevent auth crashes)
-      if (token.id) {
+      // Refresh critical fields from DB — throttled to avoid hammering DB on every request.
+      // Only refresh if >5 minutes since last DB check (or on first token creation).
+      const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+      const lastRefresh = (token.lastDbRefresh as number) || 0;
+      const now = Date.now();
+      if (token.id && (now - lastRefresh > REFRESH_INTERVAL_MS)) {
         try {
           const dbUser = await db.query.users.findFirst({
             where: eq(users.id, token.id as string),
@@ -167,9 +171,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               token.name = dbUser.name;
             }
           }
+          token.lastDbRefresh = now;
         } catch {
-          // DB query failed (likely pool exhaustion) — keep existing token values
-          // This prevents ClientFetchError when many concurrent requests hit auth
+          // DB query failed — keep existing token values
         }
       }
 
