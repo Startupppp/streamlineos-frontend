@@ -37,6 +37,7 @@ export default async function LeavesPage() {
       incomingLeaveRequests={incomingRequests}
       allIncomingLeaveRequests={allIncomingRequests}
       approvedLeavesThisWeek={approvedThisWeek}
+      joiningDate={context.joiningDate ?? null}
     />
   );
 }

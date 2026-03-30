@@ -37,6 +37,7 @@ interface LeavesWfhContentProps {
   incomingLeaveRequests: LeaveRequest[];
   allIncomingLeaveRequests: LeaveRequest[];
   approvedLeavesThisWeek: ApprovedLeave[];
+  joiningDate: string | null;
 }
 
 /* ─── Main Orchestrator ─── */
@@ -49,6 +50,7 @@ export function LeavesWfhContent({
   incomingLeaveRequests,
   allIncomingLeaveRequests,
   approvedLeavesThisWeek,
+  joiningDate,
 }: LeavesWfhContentProps) {
   const { data: session } = useSession();
   const isAdmin =
@@ -154,6 +156,7 @@ export function LeavesWfhContent({
               leaveTypes={leaveTypes}
               approvers={approvers}
               myLeaveRequests={myLeaveRequests}
+              joiningDate={joiningDate}
             />
           </TabsContent>
 

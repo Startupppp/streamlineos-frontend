@@ -283,6 +283,13 @@ export async function getLeaveContext() {
   });
   await ensureUserBalances(member.orgId, session.user.id, filteredTypes);
 
+  // Fetch user's joining date for date picker restrictions
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { joiningDate: true },
+  });
+  const joiningDate = user?.joiningDate ? new Date(user.joiningDate).toISOString() : null;
+
   const rawBalances = await db
     .select({
       id: leaveBalances.id,
@@ -308,7 +315,7 @@ export async function getLeaveContext() {
     return true;
   });
 
-  return { success: true, balances, types: filteredTypes };
+  return { success: true, balances, types: filteredTypes, joiningDate };
 }
 
 export async function getApprovers() {
@@ -356,6 +363,18 @@ export async function submitLeaveRequest(data: {
   if (!member) return { error: "No organization found" };
 
   if (data.startDate > data.endDate) return { error: "Invalid date range" };
+
+  // Reject leave requests that start before the employee's Date of Joining
+  const userRecord = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { joiningDate: true },
+  });
+  if (userRecord?.joiningDate) {
+    const doj = new Date(userRecord.joiningDate);
+    if (data.startDate < doj) {
+      return { error: "Leave dates cannot be before your Date of Joining" };
+    }
+  }
 
   const isCeo = member.role === "CEO";
 

@@ -68,6 +68,7 @@ interface LeavesTabContentProps {
   leaveTypes: LeaveType[];
   approvers: Approver[];
   myLeaveRequests: LeaveRequest[];
+  joiningDate: string | null;
 }
 
 /* ─── Component ─── */
@@ -77,12 +78,18 @@ export function LeavesTabContent({
   leaveTypes,
   approvers,
   myLeaveRequests,
+  joiningDate,
 }: LeavesTabContentProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
   const [leaveFormLoading, setLeaveFormLoading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
+
+  // Minimum selectable date: the employee's Date of Joining (DOJ)
+  const minDate = joiningDate
+    ? format(new Date(joiningDate), "yyyy-MM-dd")
+    : format(startOfDay(new Date()), "yyyy-MM-dd");
 
   const handleStatusChange = async (requestId: number, status: "APPROVED" | "REJECTED" | "PENDING", rejectionReason?: string) => {
     const result = await processLeaveRequest({ requestId, status, rejectionReason });
@@ -361,7 +368,7 @@ export function LeavesTabContent({
                             <Input
                               type="date"
                               className="text-sm"
-                              min={format(startOfDay(new Date()), "yyyy-MM-dd")}
+                              min={minDate}
                               max="9999-12-31"
                               {...field}
                             />
@@ -381,8 +388,7 @@ export function LeavesTabContent({
                               type="date"
                               className="text-sm"
                               min={
-                                leaveForm.watch("startDate") ||
-                                format(startOfDay(new Date()), "yyyy-MM-dd")
+                                leaveForm.watch("startDate") || minDate
                               }
                               max="9999-12-31"
                               {...field}
