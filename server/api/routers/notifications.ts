@@ -45,6 +45,7 @@ export const notificationsRouter = createTRPCRouter({
         .where(and(
           eq(notifications.id, input.id),
           eq(notifications.userId, ctx.session.userId),
+          eq(notifications.orgId, ctx.session.orgId),
         ));
       return { success: true };
     }),
@@ -67,6 +68,7 @@ export const notificationsRouter = createTRPCRouter({
         .where(and(
           eq(notifications.id, input.id),
           eq(notifications.userId, ctx.session.userId),
+          eq(notifications.orgId, ctx.session.orgId),
         ));
       return { success: true };
     }),
