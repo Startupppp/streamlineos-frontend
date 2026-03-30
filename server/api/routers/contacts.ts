@@ -1,12 +1,9 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { contacts, crmOrganizations } from "@/lib/db/schema";
-import { eq, and, ilike, or, count, desc } from "drizzle-orm";
+import { eq, and, or, count, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-
-function escapeLikePattern(s: string): string {
-  return s.replace(/[%_\\]/g, "\\$&");
-}
+import { safeIlike } from "@/lib/db/search-utils";
 
 export const contactsRouter = createTRPCRouter({
   getContacts: protectedProcedure
@@ -22,12 +19,11 @@ export const contactsRouter = createTRPCRouter({
       const conditions = [eq(contacts.orgId, ctx.session.orgId)];
       if (input.organizationId) conditions.push(eq(contacts.organizationId, input.organizationId));
       if (input.search) {
-        const escaped = escapeLikePattern(input.search);
         conditions.push(
           or(
-            ilike(contacts.name, `%${escaped}%`),
-            ilike(contacts.email, `%${escaped}%`),
-            ilike(contacts.company, `%${escaped}%`)
+            safeIlike(contacts.name, input.search),
+            safeIlike(contacts.email, input.search),
+            safeIlike(contacts.company, input.search)
           )!
         );
       }
@@ -156,11 +152,10 @@ export const contactsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const conditions = [eq(crmOrganizations.orgId, ctx.session.orgId)];
       if (input.search) {
-        const escaped = escapeLikePattern(input.search);
         conditions.push(
           or(
-            ilike(crmOrganizations.name, `%${escaped}%`),
-            ilike(crmOrganizations.domain, `%${escaped}%`)
+            safeIlike(crmOrganizations.name, input.search),
+            safeIlike(crmOrganizations.domain, input.search)
           )!
         );
       }

@@ -16,7 +16,8 @@ import {
   projectStatuses,
   projectMembers,
 } from "@/lib/db/schema";
-import { eq, and, desc, asc, sql, or, inArray, ilike, count } from "drizzle-orm";
+import { eq, and, desc, asc, sql, or, inArray, count } from "drizzle-orm";
+import { safeIlike } from "@/lib/db/search-utils";
 import { TRPCError } from "@trpc/server";
 import {
   updateProjectSettingsInputSchema,
@@ -95,9 +96,8 @@ export const coreRouter = createTRPCRouter({
       }
 
       if (search && search.trim()) {
-        const term = `%${search.trim()}%`;
         conditions.push(
-          or(ilike(projects.name, term), ilike(projects.key, term))!
+          or(safeIlike(projects.name, search), safeIlike(projects.key, search))!
         );
       }
 
