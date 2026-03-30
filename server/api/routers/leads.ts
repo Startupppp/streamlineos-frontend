@@ -926,6 +926,95 @@ export const leadsRouter = createTRPCRouter({
       };
     }),
 
+  /* ─── HR Review Queue ─── */
+  getUnverified: adminProcedure.query(async ({ ctx }) => {
+    return ctx.db.query.leads.findMany({
+      where: and(
+        eq(leads.orgId, ctx.session.orgId),
+        eq(leads.status, "NEW"),
+        sql`${leads.verifiedById} IS NULL`,
+      ),
+      with: {
+        assignedTo: { columns: { id: true, name: true, image: true } },
+      },
+      orderBy: [desc(leads.createdAt)],
+    });
+  }),
+
+  verifyLead: adminProcedure
+    .input(z.object({
+      leadId: z.number(),
+      priority: z.enum(leadPriorityValues).optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const updateData: Record<string, unknown> = {
+        verifiedById: ctx.session.userId,
+        updatedAt: new Date(),
+      };
+      if (input.priority) updateData.priority = input.priority;
+      if (input.notes) updateData.notes = input.notes;
+
+      const [updated] = await ctx.db.update(leads)
+        .set(updateData)
+        .where(and(eq(leads.id, input.leadId), eq(leads.orgId, ctx.session.orgId)))
+        .returning();
+      if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+      return updated;
+    }),
+
+  rejectLead: adminProcedure
+    .input(z.object({
+      leadId: z.number(),
+      reason: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const [updated] = await ctx.db.update(leads)
+        .set({
+          status: "LOST",
+          lostReason: input.reason || "Rejected during review",
+          verifiedById: ctx.session.userId,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(leads.id, input.leadId), eq(leads.orgId, ctx.session.orgId)))
+        .returning();
+      if (!updated) throw new TRPCError({ code: "NOT_FOUND" });
+      return updated;
+    }),
+
+  getSalesTeamCapacity: adminProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.session.orgId;
+    const salesMembers = await ctx.db.query.organizationMembers.findMany({
+      where: eq(organizationMembers.orgId, orgId),
+      with: { user: { columns: { id: true, name: true, image: true, role: true } } },
+    });
+    const salesUsers = salesMembers
+      .filter(m => m.user.role === "SALES")
+      .map(m => m.user);
+
+    // Get lead counts per sales person
+    const allLeads = await ctx.db.query.leads.findMany({
+      where: and(
+        eq(leads.orgId, orgId),
+        sql`${leads.status} NOT IN ('CONVERTED', 'LOST')`,
+        sql`${leads.assignedToId} IS NOT NULL`,
+      ),
+      columns: { assignedToId: true },
+    });
+
+    const countMap = new Map<string, number>();
+    for (const l of allLeads) {
+      if (l.assignedToId) countMap.set(l.assignedToId, (countMap.get(l.assignedToId) || 0) + 1);
+    }
+
+    return salesUsers.map(u => ({
+      id: u.id,
+      name: u.name,
+      image: u.image,
+      activeLeads: countMap.get(u.id) || 0,
+    }));
+  }),
+
   bulkImport: adminProcedure
     .input(z.object({
       leads: z.array(z.object({
