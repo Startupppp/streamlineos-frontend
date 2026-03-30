@@ -151,7 +151,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8" role="status" aria-live="polite" aria-label="Loading dashboard">
+      <div className="space-y-5" role="status" aria-live="polite" aria-label="Loading dashboard">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
@@ -160,7 +160,7 @@ export default function DashboardPage() {
           <Skeleton className="h-14 w-32 rounded-lg" />
         </div>
         <DashboardStatsSkeleton />
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
           <Card className="lg:col-span-4 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
@@ -209,7 +209,7 @@ export default function DashboardPage() {
 
   return (
     <motion.div
-      className="space-y-8"
+      className="space-y-5"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -250,7 +250,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}
-      <motion.div variants={fadeUp} className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
+      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-1 lg:grid-cols-7 items-start">
         <div className="lg:col-span-4">
           <MyIssuesCard
             tickets={sortedMyTickets}
@@ -265,8 +265,8 @@ export default function DashboardPage() {
 
       {/* Projects, Activity, Team — CEO/HR only */}
       {isAdmin && (
-        <motion.div variants={fadeUp} className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
-          <div className="sm:col-span-1 flex">
+        <motion.div variants={fadeUp} className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[24rem]">
+          <div className="sm:col-span-1 min-h-0">
             <RecentProjectsCard
               projects={recentProjects}
               isLoading={projectsLoading}
@@ -274,14 +274,14 @@ export default function DashboardPage() {
               onCreateProject={handleGoToProjects}
             />
           </div>
-          <div className="sm:col-span-1 flex">
+          <div className="sm:col-span-1 min-h-0">
             <RecentActivityCard
               items={recentActivity}
               isLoading={activityLoading}
               error={activityError}
             />
           </div>
-          <div className="sm:col-span-2 lg:col-span-1 flex">
+          <div className="sm:col-span-2 lg:col-span-1 min-h-0">
             <TeamCard members={teamAvailability} isLoading={teamLoading} />
           </div>
         </motion.div>

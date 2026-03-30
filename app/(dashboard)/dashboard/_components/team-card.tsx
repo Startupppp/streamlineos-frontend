@@ -29,7 +29,7 @@ interface TeamCardProps {
 
 export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col h-full min-h-[360px] max-h-[420px]">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Users className="h-5 w-5 text-gold" aria-hidden="true" />

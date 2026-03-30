@@ -28,7 +28,7 @@ interface RecentProjectsCardProps {
 
 export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, isLoading, error, onCreateProject }: RecentProjectsCardProps) {
   return (
-    <Card className="bg-card border-border shadow-noir flex flex-col h-full min-h-[360px] max-h-[420px]">
+    <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
         <CardTitle className="text-foreground flex items-center gap-2">
           <Folder className="h-5 w-5 text-gold" aria-hidden="true" />
