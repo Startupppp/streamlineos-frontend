@@ -32,6 +32,7 @@ import {
   useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,
   useSelfAssignLead, useAssignLead, useLeadDetail, useLogLeadActivity,
 } from "@/lib/hooks/trpc-hooks";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 
 const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
@@ -115,6 +116,7 @@ export default function LeadsPipelinePage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
 
   const createLead = useCreateLead();
   const updateStatus = useUpdateLeadStatus();
@@ -122,8 +124,8 @@ export default function LeadsPipelinePage() {
 
   const filteredBoard = useMemo(() => {
     if (!board) return null;
-    if (!searchQuery) return board;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedSearchQuery) return board;
+    const q = debouncedSearchQuery.toLowerCase();
     const filtered: Record<string, typeof board[keyof typeof board]> = {};
     for (const [status, leads] of Object.entries(board)) {
       filtered[status] = leads.filter((l: BoardLead) =>
@@ -134,7 +136,7 @@ export default function LeadsPipelinePage() {
       );
     }
     return filtered;
-  }, [board, searchQuery]);
+  }, [board, debouncedSearchQuery]);
 
   const handleCreateLead = useCallback(async (formData: FormData) => {
     const name = (formData.get("name") as string)?.trim();

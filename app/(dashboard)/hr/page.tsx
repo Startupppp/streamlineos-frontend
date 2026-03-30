@@ -55,6 +55,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 
 interface Employee {
   id: string;
@@ -121,6 +122,7 @@ export default function HRDashboardPage() {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [togglingAccess, setTogglingAccess] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
   const [deptFilter, setDeptFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Active");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
@@ -139,8 +141,8 @@ export default function HRDashboardPage() {
   const filteredEmployees = useMemo(() => {
     let result = employees;
 
-    if (searchTerm) {
-      const term = searchTerm.trim().toLowerCase();
+    if (debouncedSearchTerm) {
+      const term = debouncedSearchTerm.trim().toLowerCase();
       if (term) {
         result = result.filter((e) => {
           const name = getDisplayName(e).toLowerCase();
@@ -179,7 +181,7 @@ export default function HRDashboardPage() {
     }
 
     return result;
-  }, [employees, searchTerm, deptFilter, statusFilter, roleFilter]);
+  }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredEmployees.length / PAGE_SIZE);
@@ -189,7 +191,7 @@ export default function HRDashboardPage() {
   }, [filteredEmployees, page]);
 
   // Reset page on filter change
-  useEffect(() => { setPage(1); }, [searchTerm, deptFilter, statusFilter, roleFilter]);
+  useEffect(() => { setPage(1); }, [debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
 
   useEffect(() => {
     let cancelled = false;
