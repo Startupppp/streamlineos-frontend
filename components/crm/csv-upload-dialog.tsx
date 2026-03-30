@@ -20,48 +20,156 @@ interface ParsedLead {
   company?: string;
   source?: string;
   notes?: string;
+  city?: string;
+  designation?: string;
+  referredBy?: string;
+  potentialValue?: string;
+  investmentInterest?: string;
+  whatsappNumber?: string;
+  website?: string;
+  priority?: string;
+  tags?: string;
 }
 
 const VALID_SOURCES = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"];
+const VALID_PRIORITIES = ["HOT", "WARM", "COLD"];
+const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
+/* ─── Header alias map for auto-detection ─── */
+const HEADER_ALIASES: Record<string, string[]> = {
+  name: ["name", "lead name", "full name", "contact name", "lead"],
+  email: ["email", "e-mail", "email address", "mail"],
+  phone: ["phone", "mobile", "tel", "telephone", "contact number", "phone number", "mobile number"],
+  company: ["company", "organization", "org", "firm", "company name"],
+  source: ["source", "lead source", "channel"],
+  notes: ["notes", "remarks", "comments", "description"],
+  city: ["city", "location", "area"],
+  designation: ["designation", "title", "role", "position", "job title"],
+  referredBy: ["referred by", "referral", "referred", "referrer"],
+  potentialValue: ["potential value", "value", "deal value", "amount", "budget"],
+  investmentInterest: ["investment interest", "investment", "interest"],
+  whatsappNumber: ["whatsapp", "whatsapp number", "wa number"],
+  website: ["website", "url", "web"],
+  priority: ["priority", "lead priority", "urgency"],
+  tags: ["tags", "labels", "categories"],
+};
+
+function matchHeader(header: string): string | null {
+  const h = header.toLowerCase().trim().replace(/[_\-]/g, " ");
+  for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
+    if (aliases.includes(h)) return field;
+  }
+  return null;
+}
+
+function rowToLead(row: string[], headers: string[]): { lead: ParsedLead | null; error: string | null } {
+  const mapping: Record<string, number> = {};
+  headers.forEach((h, i) => {
+    const field = matchHeader(h);
+    if (field) mapping[field] = i;
+  });
+
+  if (mapping.name === undefined) return { lead: null, error: "No 'name' column found" };
+
+  const get = (field: string) => {
+    const idx = mapping[field];
+    return idx !== undefined ? row[idx]?.trim().replace(/^["']|["']$/g, "") || undefined : undefined;
+  };
+
+  const name = get("name");
+  if (!name) return { lead: null, error: "Missing name" };
+
+  const source = get("source")?.toLowerCase();
+  const priority = get("priority")?.toUpperCase();
+
+  return {
+    lead: {
+      name,
+      email: get("email"),
+      phone: get("phone"),
+      company: get("company"),
+      source: source && VALID_SOURCES.includes(source) ? source : undefined,
+      notes: get("notes"),
+      city: get("city"),
+      designation: get("designation"),
+      referredBy: get("referredBy"),
+      potentialValue: get("potentialValue"),
+      investmentInterest: get("investmentInterest"),
+      whatsappNumber: get("whatsappNumber"),
+      website: get("website"),
+      priority: priority && VALID_PRIORITIES.includes(priority) ? priority : undefined,
+      tags: get("tags"),
+    },
+    error: null,
+  };
+}
+
+/* ─── CSV Parser ─── */
 function parseCSV(text: string): { leads: ParsedLead[]; errors: string[] } {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  if (lines.length < 2) return { leads: [], errors: ["CSV must have a header row and at least one data row."] };
+  if (lines.length < 2) return { leads: [], errors: ["File must have a header row and at least one data row."] };
 
-  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/['"]/g, ""));
-  const nameIdx = headers.findIndex(h => h === "name" || h === "lead name");
-  if (nameIdx === -1) return { leads: [], errors: ["CSV must have a 'name' column."] };
-
-  const emailIdx = headers.findIndex(h => h === "email" || h === "e-mail");
-  const phoneIdx = headers.findIndex(h => h === "phone" || h === "mobile");
-  const companyIdx = headers.findIndex(h => h === "company" || h === "organization");
-  const sourceIdx = headers.findIndex(h => h === "source" || h === "lead source");
-  const notesIdx = headers.findIndex(h => h === "notes" || h === "remarks");
-
+  const headers = lines[0].split(",").map(h => h.trim().replace(/['"]/g, ""));
   const leads: ParsedLead[] = [];
   const errors: string[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",").map(c => c.trim().replace(/^["']|["']$/g, ""));
-    const name = cols[nameIdx]?.trim();
-    if (!name) {
-      errors.push(`Row ${i + 1}: Missing name, skipped.`);
-      continue;
+    const cols = lines[i].split(",").map(c => c.trim());
+    const { lead, error } = rowToLead(cols, headers);
+    if (lead) {
+      leads.push(lead);
+    } else {
+      errors.push(`Row ${i + 1}: ${error || "Invalid row"}, skipped.`);
     }
-
-    const source = sourceIdx >= 0 ? cols[sourceIdx]?.toLowerCase() : undefined;
-
-    leads.push({
-      name,
-      email: emailIdx >= 0 ? cols[emailIdx] || undefined : undefined,
-      phone: phoneIdx >= 0 ? cols[phoneIdx] || undefined : undefined,
-      company: companyIdx >= 0 ? cols[companyIdx] || undefined : undefined,
-      source: source && VALID_SOURCES.includes(source) ? source : undefined,
-      notes: notesIdx >= 0 ? cols[notesIdx] || undefined : undefined,
-    });
   }
 
   return { leads, errors };
+}
+
+/* ─── Excel Parser (ExcelJS) ─── */
+async function parseExcel(buffer: ArrayBuffer): Promise<{ leads: ParsedLead[]; errors: string[] }> {
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+
+  const sheet = workbook.worksheets[0];
+  if (!sheet || sheet.rowCount < 2) {
+    return { leads: [], errors: ["Excel file must have a header row and at least one data row."] };
+  }
+
+  // Extract headers from first row
+  const headerRow = sheet.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber - 1] = String(cell.value || "").trim();
+  });
+
+  const leads: ParsedLead[] = [];
+  const errors: string[] = [];
+
+  for (let rowIdx = 2; rowIdx <= sheet.rowCount; rowIdx++) {
+    const row = sheet.getRow(rowIdx);
+    const cols: string[] = [];
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cols[colNumber - 1] = String(cell.value || "").trim();
+    });
+
+    // Skip completely empty rows
+    if (cols.every(c => !c)) continue;
+
+    const { lead, error } = rowToLead(cols, headers);
+    if (lead) {
+      leads.push(lead);
+    } else {
+      errors.push(`Row ${rowIdx}: ${error || "Invalid row"}, skipped.`);
+    }
+  }
+
+  return { leads, errors };
+}
+
+function getFileExtension(name: string): string {
+  return name.slice(name.lastIndexOf(".")).toLowerCase();
 }
 
 export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
@@ -69,6 +177,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [parsed, setParsed] = useState<ParsedLead[] | null>(null);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [fileName, setFileName] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
 
   const bulkImport = api.leads.bulkImport.useMutation({
     onSuccess: (data) => {
@@ -81,25 +190,46 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     onError: (err) => toast.error(err.message),
   });
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
+    const ext = getFileExtension(file.name);
+    if (!ACCEPTED_EXTENSIONS.includes(ext)) {
+      toast.error("Unsupported file format. Use .csv, .xlsx, or .xls");
+      return;
+    }
+
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const { leads, errors } = parseCSV(text);
-      setParsed(leads);
-      setParseErrors(errors);
-    };
-    reader.readAsText(file);
+    setIsParsing(true);
+
+    try {
+      if (ext === ".csv") {
+        const text = await file.text();
+        const { leads, errors } = parseCSV(text);
+        setParsed(leads);
+        setParseErrors(errors);
+      } else {
+        const buffer = await file.arrayBuffer();
+        const { leads, errors } = await parseExcel(buffer);
+        setParsed(leads);
+        setParseErrors(errors);
+      }
+    } catch (err) {
+      toast.error("Failed to parse file. Please check the format.");
+      console.error("Parse error:", err);
+    } finally {
+      setIsParsing(false);
+    }
   }, []);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && (file.name.endsWith(".csv") || file.type === "text/csv")) {
-      handleFile(file);
-    } else {
-      toast.error("Please drop a .csv file");
+    if (file) {
+      const ext = getFileExtension(file.name);
+      if (ACCEPTED_EXTENSIONS.includes(ext)) {
+        handleFile(file);
+      } else {
+        toast.error("Please drop a .csv, .xlsx, or .xls file");
+      }
     }
   }, [handleFile]);
 
@@ -113,12 +243,21 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
         company: l.company,
         source: l.source as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
         notes: l.notes,
+        city: l.city,
+        designation: l.designation,
+        referredBy: l.referredBy,
+        potentialValue: l.potentialValue,
+        investmentInterest: l.investmentInterest,
+        whatsappNumber: l.whatsappNumber,
+        website: l.website,
+        priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
+        tags: l.tags ? l.tags.split(",").map(t => t.trim()) : undefined,
       })),
     });
   };
 
   const downloadTemplate = () => {
-    const csv = "name,email,phone,company,source,notes\nJohn Doe,john@example.com,+919876543210,Acme Corp,website,Interested in premium plan\n";
+    const csv = "name,email,phone,company,source,notes,city,designation,priority,potential value,referred by\nJohn Doe,john@example.com,+919876543210,Acme Corp,website,Interested in premium plan,Hyderabad,CEO,HOT,500000,Ravi Kumar\n";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -132,6 +271,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setParsed(null);
     setParseErrors([]);
     setFileName("");
+    setIsParsing(false);
   };
 
   return (
@@ -139,15 +279,15 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Upload className="h-4 w-4 mr-2" />
-          Import CSV
+          Import Leads
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Import Leads from CSV</DialogTitle>
+          <DialogTitle>Import Leads</DialogTitle>
         </DialogHeader>
 
-        {!parsed ? (
+        {!parsed && !isParsing ? (
           <div className="space-y-4">
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -155,19 +295,19 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-[#bd882c]/50 transition-colors"
             >
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm font-medium mb-1">Drop your CSV file here</p>
-              <p className="text-xs text-muted-foreground mb-3">or click to browse</p>
+              <p className="text-sm font-medium mb-1">Drop your file here</p>
+              <p className="text-xs text-muted-foreground mb-3">Supports .csv, .xlsx, and .xls</p>
               <input
                 type="file"
-                accept=".csv,text/csv"
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 className="hidden"
-                id="csv-upload"
+                id="lead-file-upload"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleFile(file);
                 }}
               />
-              <Button variant="outline" size="sm" onClick={() => document.getElementById("csv-upload")?.click()}>
+              <Button variant="outline" size="sm" onClick={() => document.getElementById("lead-file-upload")?.click()}>
                 <FileText className="h-4 w-4 mr-2" />
                 Browse Files
               </Button>
@@ -175,7 +315,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
 
             <div className="flex items-center justify-between px-1">
               <p className="text-xs text-muted-foreground">
-                Required: <code className="text-foreground">name</code>. Optional: email, phone, company, source, notes
+                Required: <code className="text-foreground">name</code>. Optional: email, phone, company, source, city, designation, priority, notes
               </p>
               <Button variant="ghost" size="sm" onClick={downloadTemplate}>
                 <Download className="h-3.5 w-3.5 mr-1" />
@@ -183,13 +323,18 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               </Button>
             </div>
           </div>
+        ) : isParsing ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="h-8 w-8 border-2 border-[#bd882c] border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-sm text-muted-foreground">Parsing {fileName}...</p>
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-[#bd882c]" />
                 <span className="text-sm font-medium">{fileName}</span>
-                <Badge variant="secondary">{parsed.length} leads</Badge>
+                <Badge variant="secondary">{parsed!.length} leads</Badge>
               </div>
               <Button variant="ghost" size="sm" onClick={reset}>
                 <X className="h-4 w-4 mr-1" />
@@ -206,10 +351,13 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 {parseErrors.slice(0, 5).map((err, i) => (
                   <p key={i} className="text-xs text-muted-foreground">{err}</p>
                 ))}
+                {parseErrors.length > 5 && (
+                  <p className="text-xs text-muted-foreground mt-1">...and {parseErrors.length - 5} more</p>
+                )}
               </div>
             )}
 
-            {parsed.length > 0 && (
+            {parsed && parsed.length > 0 && (
               <div className="border rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
                 <Table>
                   <TableHeader>
@@ -219,6 +367,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                       <TableHead className="text-xs">Phone</TableHead>
                       <TableHead className="text-xs">Company</TableHead>
                       <TableHead className="text-xs">Source</TableHead>
+                      <TableHead className="text-xs">Priority</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -230,6 +379,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                         <TableCell className="text-xs text-muted-foreground">{lead.company || "—"}</TableCell>
                         <TableCell className="text-xs">
                           {lead.source ? <Badge variant="outline" className="text-[10px]">{lead.source}</Badge> : "—"}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {lead.priority ? <Badge variant="outline" className="text-[10px]">{lead.priority}</Badge> : "—"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -246,14 +398,14 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             <Button
               className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white"
               onClick={handleImport}
-              disabled={bulkImport.isPending || parsed.length === 0}
+              disabled={bulkImport.isPending || !parsed?.length}
             >
               {bulkImport.isPending ? (
                 "Importing..."
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Import {parsed.length} Leads
+                  Import {parsed?.length || 0} Leads
                 </>
               )}
             </Button>
