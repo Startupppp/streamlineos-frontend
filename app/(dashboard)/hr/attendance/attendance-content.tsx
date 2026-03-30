@@ -41,6 +41,7 @@ import {
   PartyPopper,
 } from "lucide-react";
 
+
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 interface CalendarDay {
