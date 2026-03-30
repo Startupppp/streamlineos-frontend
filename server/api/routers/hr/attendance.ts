@@ -180,11 +180,23 @@ export const attendanceRouter = createTRPCRouter({
       }
 
       const now = new Date();
+      let totalBreakHours = Number(log.breakHours) || 0;
+      const breaks = (log.breaks as unknown as { start: string; end?: string }[]) || [];
+      const updatedBreaks = [...breaks];
+
+      const lastBreak = updatedBreaks[updatedBreaks.length - 1];
+      if (lastBreak && !lastBreak.end) {
+        lastBreak.end = now.toISOString();
+        const start = new Date(lastBreak.start);
+        const duration = (now.getTime() - start.getTime()) / (1000 * 60 * 60);
+        totalBreakHours += Math.max(0, duration);
+      }
+
       const checkInTime = new Date(log.checkIn);
-      const durationMs = now.getTime() - checkInTime.getTime();
+      const durationMs = Math.max(0, now.getTime() - checkInTime.getTime());
       const sessionWorkHours = Math.max(
         0,
-        durationMs / (1000 * 60 * 60) - (Number(log.breakHours) || 0)
+        (durationMs / (1000 * 60 * 60)) - totalBreakHours
       );
 
       const todayLogs = await tx.query.attendance.findMany({
@@ -211,6 +223,8 @@ export const attendanceRouter = createTRPCRouter({
           checkOut: now,
           status: "PRESENT",
           workHours: sessionWorkHours.toFixed(2),
+          breakHours: totalBreakHours.toFixed(2),
+          breaks: updatedBreaks,
           isOvertime,
         })
         .where(eq(attendance.id, log.id));
