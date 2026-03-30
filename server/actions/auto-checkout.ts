@@ -27,7 +27,7 @@ export async function processAutoCheckout() {
     const checkOutTime = new Date(checkInTime);
     checkOutTime.setHours(19, 0, 0, 0);
     if (checkInTime >= checkOutTime) {
-      await db
+      const result = await db
         .update(attendance)
         .set({
           checkOut: checkOutTime,
@@ -36,8 +36,10 @@ export async function processAutoCheckout() {
           autoCheckedOut: true,
           isOvertime: false,
         })
-        .where(eq(attendance.id, record.id));
-      processed++;
+        .where(and(eq(attendance.id, record.id), isNull(attendance.checkOut)))
+        .returning({ id: attendance.id });
+      
+      if (result.length > 0) processed++;
       continue;
     }
     const breaks = (record.breaks as { start: string; end?: string }[]) || [];
@@ -55,7 +57,7 @@ export async function processAutoCheckout() {
     const workHours = Math.max(0, durationMs / (1000 * 60 * 60) - totalBreakHours);
     const isOvertime = workHours > 8;
 
-    await db
+    const result = await db
       .update(attendance)
       .set({
         checkOut: checkOutTime,
@@ -66,9 +68,10 @@ export async function processAutoCheckout() {
         autoCheckedOut: true,
         isOvertime,
       })
-      .where(eq(attendance.id, record.id));
+      .where(and(eq(attendance.id, record.id), isNull(attendance.checkOut)))
+      .returning({ id: attendance.id });
 
-    processed++;
+    if (result.length > 0) processed++;
   }
 
   return {
