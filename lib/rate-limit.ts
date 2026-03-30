@@ -87,16 +87,31 @@ export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
 };
 
 // ---------------------------------------------------------------------------
-// Storage (in-process Map — fine for single-instance; swap for Redis later)
+// Storage — globalThis-persisted Map survives across warm invocations on
+// Vercel and hot reloads in development. Each serverless instance maintains
+// its own store, so rate limits are per-instance, not global. This provides
+// best-effort protection; for strict enforcement add @vercel/kv or Upstash.
 // ---------------------------------------------------------------------------
 
-const store = new Map<string, BucketEntry>();
-let lastCleanup = Date.now();
+const globalStore = globalThis as unknown as {
+  __rateLimitStore?: Map<string, BucketEntry>;
+  __rateLimitLastCleanup?: number;
+};
+
+if (!globalStore.__rateLimitStore) {
+  globalStore.__rateLimitStore = new Map<string, BucketEntry>();
+}
+if (!globalStore.__rateLimitLastCleanup) {
+  globalStore.__rateLimitLastCleanup = Date.now();
+}
+
+const store = globalStore.__rateLimitStore;
 const CLEANUP_INTERVAL = 60_000;
+const MAX_STORE_SIZE = 10_000; // Cap to prevent unbounded memory growth
 
 function cleanup(now: number) {
-  if (now - lastCleanup < CLEANUP_INTERVAL) return;
-  lastCleanup = now;
+  if (now - (globalStore.__rateLimitLastCleanup ?? 0) < CLEANUP_INTERVAL) return;
+  globalStore.__rateLimitLastCleanup = now;
   for (const [key, entry] of store) {
     // Remove entries whose window has fully expired AND are not blocked
     const windowEnd = entry.timestamps.length > 0
@@ -106,6 +121,15 @@ function cleanup(now: number) {
     const windowMs = tier?.windowMs ?? 60_000;
     if (now - windowEnd > windowMs && now > entry.blockedUntil) {
       store.delete(key);
+    }
+  }
+  // Hard cap: if store is still too large, evict oldest entries
+  if (store.size > MAX_STORE_SIZE) {
+    const excess = store.size - MAX_STORE_SIZE;
+    const keys = store.keys();
+    for (let i = 0; i < excess; i++) {
+      const { value } = keys.next();
+      if (value) store.delete(value);
     }
   }
 }
