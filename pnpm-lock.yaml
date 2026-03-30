@@ -205,9 +205,6 @@ importers:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@19.2.7)(immer@11.1.4)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
-      '@playwright/test':
-        specifier: ^1.58.2
-        version: 1.58.2
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.17
@@ -6490,6 +6487,7 @@ snapshots:
   '@playwright/test@1.58.2':
     dependencies:
       playwright: 1.58.2
+    optional: true
 
   '@radix-ui/number@1.1.1': {}
 
@@ -9663,13 +9661,15 @@ snapshots:
 
   picomatch@4.0.3: {}
 
-  playwright-core@1.58.2: {}
+  playwright-core@1.58.2:
+    optional: true
 
   playwright@1.58.2:
     dependencies:
       playwright-core: 1.58.2
     optionalDependencies:
       fsevents: 2.3.2
+    optional: true
 
   pngjs@5.0.0: {}
 
