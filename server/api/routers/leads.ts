@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { z } from "zod";
-import { eq, and, desc, sql, count } from "drizzle-orm";
+import { eq, and, desc, asc, sql, count, gte, lte, like, or } from "drizzle-orm";
 import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers, auditLogs } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -17,10 +17,16 @@ export const leadsRouter = createTRPCRouter({
   getAll: protectedProcedure
     .input(z.object({
       status: z.enum(leadStatusValues).optional(),
+      priority: z.enum(leadPriorityValues).optional(),
+      source: z.enum(leadSourceValues).optional(),
       assignedToId: z.string().optional(),
       search: z.string().optional(),
-      limit: z.number().min(1).max(100).default(50),
-      offset: z.number().min(0).default(0),
+      sortBy: z.enum(["name", "email", "company", "status", "priority", "source", "score", "potentialValue", "createdAt"]).default("createdAt"),
+      sortOrder: z.enum(["asc", "desc"]).default("desc"),
+      page: z.number().min(1).default(1),
+      limit: z.number().min(10).max(100).default(50),
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
     }).optional())
     .query(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
@@ -34,30 +40,60 @@ export const leadsRouter = createTRPCRouter({
       }
 
       if (input?.status) filters.push(eq(leads.status, input.status));
+      if (input?.priority) filters.push(eq(leads.priority, input.priority));
+      if (input?.source) filters.push(eq(leads.source, input.source));
       if (input?.assignedToId) filters.push(eq(leads.assignedToId, input.assignedToId));
-
-      let allLeads = await ctx.db.query.leads.findMany({
-        where: and(...filters),
-        with: {
-          assignedTo: { columns: { id: true, name: true, image: true } },
-          campaign: { columns: { id: true, name: true } },
-        },
-        orderBy: [desc(leads.createdAt)],
-        limit: input?.limit ?? 50,
-        offset: input?.offset ?? 0,
-      });
-
+      if (input?.dateFrom) filters.push(gte(leads.createdAt, new Date(input.dateFrom)));
+      if (input?.dateTo) filters.push(lte(leads.createdAt, new Date(input.dateTo)));
       if (input?.search) {
-        const s = input.search.toLowerCase();
-        allLeads = allLeads.filter(l =>
-          l.name.toLowerCase().includes(s) ||
-          l.email?.toLowerCase().includes(s) ||
-          l.phone?.includes(s) ||
-          l.company?.toLowerCase().includes(s)
-        );
+        const s = `%${input.search.toLowerCase()}%`;
+        filters.push(or(
+          sql`LOWER(${leads.name}) LIKE ${s}`,
+          sql`LOWER(${leads.email}) LIKE ${s}`,
+          sql`${leads.phone} LIKE ${s}`,
+          sql`LOWER(${leads.company}) LIKE ${s}`,
+        )!);
       }
 
-      return allLeads;
+      // Dynamic sort
+      const sortCol = input?.sortBy ?? "createdAt";
+      const sortDir = input?.sortOrder ?? "desc";
+      const colMap: Record<string, typeof leads.name> = {
+        name: leads.name, email: leads.email, company: leads.company,
+        status: leads.status, priority: leads.priority, source: leads.source,
+        score: leads.score, potentialValue: leads.potentialValue, createdAt: leads.createdAt,
+      };
+      const orderCol = colMap[sortCol] || leads.createdAt;
+      const orderFn = sortDir === "asc" ? asc(orderCol) : desc(orderCol);
+
+      const page = input?.page ?? 1;
+      const limit = input?.limit ?? 50;
+      const offset = (page - 1) * limit;
+
+      const whereClause = and(...filters);
+
+      const [allLeads, totalResult] = await Promise.all([
+        ctx.db.query.leads.findMany({
+          where: whereClause,
+          with: {
+            assignedTo: { columns: { id: true, name: true, image: true } },
+            campaign: { columns: { id: true, name: true } },
+          },
+          orderBy: [orderFn],
+          limit,
+          offset,
+        }),
+        ctx.db.select({ count: count() }).from(leads).where(whereClause),
+      ]);
+
+      const totalCount = totalResult[0]?.count ?? 0;
+
+      return {
+        leads: allLeads,
+        totalCount,
+        page,
+        totalPages: Math.ceil(totalCount / limit),
+      };
     }),
 
   getById: protectedProcedure
@@ -924,6 +960,47 @@ export const leadsRouter = createTRPCRouter({
         distributed: leadsToDistribute.length,
         salesPeople: salesPeople.length,
       };
+    }),
+
+  bulkUpdate: adminProcedure
+    .input(z.object({
+      leadIds: z.array(z.number()).min(1),
+      update: z.object({
+        status: z.enum(leadStatusValues).optional(),
+        priority: z.enum(leadPriorityValues).optional(),
+        assignedToId: z.string().optional(),
+      }),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { leadIds, update } = input;
+      const setData: Record<string, unknown> = { updatedAt: new Date() };
+      if (update.status) setData.status = update.status;
+      if (update.priority) setData.priority = update.priority;
+      if (update.assignedToId) {
+        setData.assignedToId = update.assignedToId;
+        setData.assignedAt = new Date();
+        setData.assignedById = ctx.session.userId;
+      }
+
+      await ctx.db.update(leads)
+        .set(setData)
+        .where(and(
+          eq(leads.orgId, ctx.session.orgId),
+          inArray(leads.id, leadIds),
+        ));
+
+      return { updated: leadIds.length };
+    }),
+
+  bulkDelete: adminProcedure
+    .input(z.object({ leadIds: z.array(z.number()).min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.delete(leads)
+        .where(and(
+          eq(leads.orgId, ctx.session.orgId),
+          inArray(leads.id, input.leadIds),
+        ));
+      return { deleted: input.leadIds.length };
     }),
 
   /* ─── HR Review Queue ─── */
