@@ -23,6 +23,7 @@ import { crmSlaRouter } from "./routers/crm-sla";
 import { contactsRouter } from "./routers/contacts";
 import { crmViewsRouter } from "./routers/crm-views";
 import { clientAccountsRouter } from "./routers/client-accounts";
+import { incentivesRouter } from "./routers/incentives";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -49,6 +50,7 @@ export const appRouter = createTRPCRouter({
   contacts: contactsRouter,
   crmViews: crmViewsRouter,
   clientAccounts: clientAccountsRouter,
+  incentives: incentivesRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
