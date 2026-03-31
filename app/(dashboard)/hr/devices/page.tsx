@@ -52,7 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2, Pencil, Eye } from "lucide-react";
+import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2, Pencil, Eye, Download } from "lucide-react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 
@@ -198,6 +198,39 @@ export default function DevicesPage() {
         title="Device Management"
         description="Track devices assigned to employees"
         actions={
+          <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={async () => {
+            try {
+              const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+              await downloadXlsx("devices-export.xlsx", [{
+                name: "Devices",
+                columns: [
+                  { header: "Device Name", key: "deviceName", width: 20 },
+                  { header: "Type", key: "deviceType", width: 12 },
+                  { header: "Brand", key: "brand", width: 12 },
+                  { header: "Model", key: "model", width: 12 },
+                  { header: "Serial Number", key: "serialNumber", width: 18 },
+                  { header: "Assigned To", key: "assignedTo", width: 20 },
+                  { header: "Assigned Date", key: "assignedDate", width: 14 },
+                  { header: "Status", key: "status", width: 12 },
+                ],
+                rows: (devices || []).map(d => ({
+                  deviceName: d.deviceName,
+                  deviceType: d.deviceType,
+                  brand: d.brand || "",
+                  model: d.model || "",
+                  serialNumber: d.serialNumber || "",
+                  assignedTo: d.user ? `${d.user.firstName} ${d.user.lastName}` : "",
+                  assignedDate: d.assignedDate ? format(new Date(d.assignedDate), "yyyy-MM-dd") : "",
+                  status: d.status || "ACTIVE",
+                })),
+              }]);
+              toast.success("Devices exported");
+            } catch { toast.error("Export failed"); }
+          }} disabled={!devices?.length}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button aria-label="Add new device">
@@ -350,6 +383,7 @@ export default function DevicesPage() {
               </Form>
             </SheetContent>
           </Sheet>
+          </div>
         }
       />
 
