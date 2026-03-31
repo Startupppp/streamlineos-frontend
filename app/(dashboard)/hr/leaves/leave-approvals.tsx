@@ -446,25 +446,29 @@ export function LeaveApprovalsContent({
 
       {/* ─── Reject WFH Dialog ─── */}
       <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <SheetContent className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Reject WFH Request</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-4 py-4">
+        <SheetContent className="sm:max-w-sm p-0 flex flex-col">
+          <SheetHeader className="p-5 pb-4 border-b">
+            <SheetTitle className="text-base">Reject WFH Request</SheetTitle>
             <p className="text-sm text-muted-foreground">
               Provide a reason for rejecting this request (optional).
             </p>
-            <Textarea
-              placeholder="Enter rejection reason..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              rows={3}
-              className="resize-none"
-            />
+          </SheetHeader>
+          <div className="flex-1 p-5 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Rejection Reason</label>
+              <Textarea
+                placeholder="E.g. Not enough prior notice, project deadline..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex gap-2 p-5 pt-4 border-t">
             <Button
               variant="outline"
+              className="flex-1"
               onClick={() => {
                 setRejectDialogOpen(false);
                 setRejectionReason("");
@@ -475,6 +479,7 @@ export function LeaveApprovalsContent({
             </Button>
             <Button
               variant="destructive"
+              className="flex-1"
               onClick={handleWfhRejectConfirm}
               disabled={processWfhRequest.isPending}
             >
