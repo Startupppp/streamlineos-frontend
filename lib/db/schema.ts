@@ -2258,3 +2258,21 @@ export const invoiceAiExtractionsRelations = relations(invoiceAiExtractions, ({ 
   invoice: one(invoices, { fields: [invoiceAiExtractions.invoiceId], references: [invoices.id] }),
   creator: one(users, { fields: [invoiceAiExtractions.createdBy], references: [users.id] }),
 }));
+
+/* ─── Branches (Multi-branch hierarchy) ─── */
+export const branches = pgTable('branches', {
+  id: serial('id').primaryKey(),
+  orgId: text('org_id').notNull().references(() => organizations.id),
+  name: text('name').notNull(),
+  code: text('code').notNull(),
+  city: text('city'),
+  address: text('address'),
+  branchManagerId: text('branch_manager_id').references(() => users.id),
+  branchHrId: text('branch_hr_id').references(() => users.id),
+  status: branchStatusEnum('status').notNull().default('ACTIVE'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_branches_org').on(table.orgId),
+  uniqueIndex('uniq_branch_code_org').on(table.orgId, table.code),
+]);
