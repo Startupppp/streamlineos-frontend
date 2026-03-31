@@ -126,7 +126,18 @@ export async function initializeLeaveBalances(
     }));
 
   if (toInsert.length > 0) {
-    await db.insert(leaveBalances).values(toInsert).onConflictDoNothing();
+    try {
+      await db.insert(leaveBalances).values(toInsert);
+    } catch (err) {
+      // If bulk insert fails (e.g., race condition), insert one-by-one
+      for (const row of toInsert) {
+        try {
+          await db.insert(leaveBalances).values(row);
+        } catch {
+          // Skip duplicates silently
+        }
+      }
+    }
   }
 }
 
@@ -351,6 +362,7 @@ export async function submitLeaveRequest(data: {
   startDate: Date;
   endDate: Date;
   reason: string;
+  priority?: string;
   approverId: string;
   attachmentUrl?: string;
 }) {
@@ -379,6 +391,9 @@ export async function submitLeaveRequest(data: {
   const isCeo = member.role === "CEO";
 
   try {
+    const validPriorities = new Set(["LOW", "MEDIUM", "HIGH"]);
+    const priority = data.priority && validPriorities.has(data.priority) ? data.priority : "MEDIUM";
+
     await db.insert(leaveRequests).values({
       orgId: member.orgId,
       userId: session.user.id,
@@ -386,6 +401,7 @@ export async function submitLeaveRequest(data: {
       startDate: data.startDate.toISOString(),
       endDate: data.endDate.toISOString(),
       reason: data.reason,
+      priority,
       approverId: isCeo ? session.user.id : data.approverId,
       attachmentUrl: data.attachmentUrl || null,
       status: isCeo ? "APPROVED" : "PENDING",

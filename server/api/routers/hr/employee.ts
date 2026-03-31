@@ -445,14 +445,19 @@ export const employeeRouter = createTRPCRouter({
            }))
          );
 
-         await initializeLeaveBalances(
-           ctx.session.orgId,
-           createdUser.id,
-           input.joiningDate,
-         );
-
          return createdUser;
        });
+
+       // Initialize leave balances outside transaction (uses global db, non-blocking)
+       try {
+         await initializeLeaveBalances(
+           ctx.session.orgId,
+           newUser.id,
+           input.joiningDate,
+         );
+       } catch (leaveErr) {
+         logger.error("Failed to initialize leave balances", { userId: newUser.id, error: leaveErr instanceof Error ? leaveErr.message : String(leaveErr) });
+       }
 
        try {
          await sendWelcomeEmail(
