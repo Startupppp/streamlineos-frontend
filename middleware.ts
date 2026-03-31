@@ -20,6 +20,8 @@ const PROTECTED_ROUTES = [
   "/support",
   "/crm",
   "/chat",
+  "/digital-marketing",
+  "/reports",
 ];
 
 const AUTH_ROUTES = [
