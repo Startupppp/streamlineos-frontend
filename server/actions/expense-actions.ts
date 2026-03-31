@@ -281,13 +281,8 @@ export async function approveExpense(expenseId: number) {
   }
 
   try {
-    const existing = await db.query.expenses.findFirst({
-      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, member.orgId)),
-    });
-
-    if (!existing) return { error: "Expense not found" };
-
-    await db.update(expenses)
+    // BUG-007 fix: atomic update with row count check to prevent double-approval
+    const [updated] = await db.update(expenses)
       .set({
         status: "APPROVED",
         approverId: session.user.id,
@@ -298,7 +293,12 @@ export async function approveExpense(expenseId: number) {
         eq(expenses.id, expenseId),
         eq(expenses.orgId, member.orgId),
         eq(expenses.status, "PENDING")
-      ));
+      ))
+      .returning();
+
+    if (!updated) {
+      return { error: "Expense is no longer pending or was not found" };
+    }
 
     await createAuditLog({
       action: "expense.approved",
@@ -311,12 +311,12 @@ export async function approveExpense(expenseId: number) {
     try {
       await createNotification({
         orgId: member.orgId,
-        userId: existing.userId,
+        userId: updated.userId,
         type: "SUCCESS",
         title: "Expense Approved",
-        message: `Your expense of ₹${parseFloat(existing.amount || "0").toLocaleString()} for "${existing.category}" has been approved.`,
+        message: `Your expense of ₹${parseFloat(updated.amount || "0").toLocaleString()} for "${updated.category}" has been approved.`,
         link: "/hr/expenses",
-        metadata: { expenseId, amount: existing.amount, category: existing.category },
+        metadata: { expenseId, amount: updated.amount, category: updated.category },
       });
     } catch (notifError) {
       logger.error("Failed to send expense approval notification", notifError);
@@ -340,13 +340,8 @@ export async function rejectExpense(expenseId: number, reason: string) {
   }
 
   try {
-    const existing = await db.query.expenses.findFirst({
-      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, member.orgId)),
-    });
-
-    if (!existing) return { error: "Expense not found" };
-
-    await db.update(expenses)
+    // BUG-007 fix: atomic update with row count check
+    const [rejected] = await db.update(expenses)
       .set({
         status: "REJECTED",
         approverId: session.user.id,
@@ -357,7 +352,12 @@ export async function rejectExpense(expenseId: number, reason: string) {
         eq(expenses.id, expenseId),
         eq(expenses.orgId, member.orgId),
         eq(expenses.status, "PENDING")
-      ));
+      ))
+      .returning();
+
+    if (!rejected) {
+      return { error: "Expense is no longer pending or was not found" };
+    }
 
     await createAuditLog({
       action: "expense.rejected",
@@ -371,12 +371,12 @@ export async function rejectExpense(expenseId: number, reason: string) {
     try {
       await createNotification({
         orgId: member.orgId,
-        userId: existing.userId,
+        userId: rejected.userId,
         type: "ERROR",
         title: "Expense Rejected",
-        message: `Your expense of ₹${parseFloat(existing.amount || "0").toLocaleString()} for "${existing.category}" has been rejected.`,
+        message: `Your expense of ₹${parseFloat(rejected.amount || "0").toLocaleString()} for "${rejected.category}" has been rejected.`,
         link: "/hr/expenses",
-        metadata: { expenseId, amount: existing.amount, category: existing.category, rejectionReason: reason },
+        metadata: { expenseId, amount: rejected.amount, category: rejected.category, rejectionReason: reason },
       });
     } catch (notifError) {
       logger.error("Failed to send expense rejection notification", notifError);
@@ -400,13 +400,7 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
   }
 
   try {
-    const existing = await db.query.expenses.findFirst({
-      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, member.orgId)),
-    });
-
-    if (!existing) return { error: "Expense not found" };
-
-    await db.update(expenses)
+    const [paid] = await db.update(expenses)
       .set({
         status: "PAID",
         paidAt: new Date(),
@@ -417,17 +411,22 @@ export async function markExpenseAsPaid(expenseId: number, transactionRef?: stri
         eq(expenses.id, expenseId),
         eq(expenses.orgId, member.orgId),
         eq(expenses.status, "APPROVED")
-      ));
+      ))
+      .returning();
+
+    if (!paid) {
+      return { error: "Expense is not approved or was not found" };
+    }
 
     try {
       await createNotification({
         orgId: member.orgId,
-        userId: existing.userId,
+        userId: paid.userId,
         type: "SUCCESS",
         title: "Expense Paid",
-        message: `Your expense of ₹${parseFloat(existing.amount || "0").toLocaleString()} for "${existing.category}" has been paid.`,
+        message: `Your expense of ₹${parseFloat(paid.amount || "0").toLocaleString()} for "${paid.category}" has been paid.`,
         link: "/hr/expenses",
-        metadata: { expenseId, amount: existing.amount, category: existing.category, transactionRef },
+        metadata: { expenseId, amount: paid.amount, category: paid.category, transactionRef },
       });
     } catch (notifError) {
       logger.error("Failed to send expense paid notification", notifError);

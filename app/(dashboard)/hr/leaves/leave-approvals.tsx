@@ -39,7 +39,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
-import { WfhRequestItem } from "./leaves-shared";
+import { WfhRequestItem, priorityConfig } from "./leaves-shared";
 
 /* ─── Status Badge ─── */
 
@@ -86,6 +86,8 @@ function LeaveApprovalItem({
 }) {
   const status = req.status ?? "PENDING";
   const isPending = status === "PENDING";
+  const priority = req.priority || "MEDIUM";
+  const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
 
   return (
     <div
@@ -101,11 +103,17 @@ function LeaveApprovalItem({
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">
-            {req.user?.firstName
-              ? `${req.user.firstName} ${req.user.lastName}`
-              : req.user?.email}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-foreground">
+              {req.user?.firstName
+                ? `${req.user.firstName} ${req.user.lastName}`
+                : req.user?.email}
+            </p>
+            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 gap-1 ${pConfig.textColor} border-current/20`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${pConfig.dotColor}`} />
+              {pConfig.label}
+            </Badge>
+          </div>
           <p className="text-xs text-muted-foreground">
             {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
             {format(new Date(req.endDate), "MMM dd, yyyy")}
@@ -113,7 +121,6 @@ function LeaveApprovalItem({
           {req.reason && (
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
           )}
-          {/* Issue #187: Show approver name for approved/rejected requests */}
           {!isPending && req.approver?.name && (
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
               <UserCheck className="h-3 w-3" aria-hidden="true" />

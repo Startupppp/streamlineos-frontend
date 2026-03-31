@@ -118,12 +118,18 @@ export const payrollRouter = createTRPCRouter({
       }
 
       const newPayrolls = memberUserIds
-        .filter((uId) => !existingPayrollUserIds.has(uId))
+        .filter((uId) => {
+          if (existingPayrollUserIds.has(uId)) return false;
+          // BUG-006 fix: skip employees with no salary data
+          const hasSalaryStructure = salaryMap.has(uId);
+          const hasMonthlySalary = userMap.has(uId) && parseFloat(userMap.get(uId) || "0") > 0;
+          return hasSalaryStructure || hasMonthlySalary;
+        })
         .map((uId) => {
           const salaryStructure = salaryMap.get(uId);
           const monthlySalaryStr = userMap.get(uId);
           const monthlySalary = monthlySalaryStr ? parseFloat(monthlySalaryStr) : 0;
-          
+
           const basic = salaryStructure ? parseFloat(salaryStructure.basicSalary) : monthlySalary * 0.5;
           const hraPercentage = salaryStructure ? parseFloat(salaryStructure.hraPercentage || "40") : 40;
           const hra = salaryStructure ? basic * (hraPercentage / 100) : monthlySalary * 0.5;

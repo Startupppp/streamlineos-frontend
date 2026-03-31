@@ -62,6 +62,7 @@ export interface LeaveRequest {
   startDate: string | Date;
   endDate: string | Date;
   status: string | null;
+  priority: string | null;
   reason: string | null;
   createdAt?: string | Date | null;
   leaveType: { name: string } | null;
@@ -118,6 +119,14 @@ export const statusIconMap: Record<string, React.ElementType> = {
   PENDING: Clock,
   APPROVED: CheckCircle2,
   REJECTED: XCircle,
+};
+
+/* ─── Priority config ─── */
+
+export const priorityConfig: Record<string, { label: string; dotColor: string; textColor: string }> = {
+  HIGH: { label: "High", dotColor: "bg-red-500", textColor: "text-red-600 dark:text-red-400" },
+  MEDIUM: { label: "Medium", dotColor: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
+  LOW: { label: "Low", dotColor: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
 };
 
 /* ─── Balance Card ─── */
@@ -312,6 +321,9 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
       ? "bg-emerald-500"
       : "bg-red-500";
 
+  const priority = request.priority || "MEDIUM";
+  const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
+
   return (
     <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
       <td className="py-3.5 px-3">
@@ -334,6 +346,14 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
       </td>
       <td className="py-3.5 px-3 text-sm text-foreground text-center">
         {days}
+      </td>
+      <td className="py-3.5 px-3">
+        <div className="flex items-center gap-1.5">
+          <span className={`h-2 w-2 rounded-full ${pConfig.dotColor}`} />
+          <span className={`text-xs font-medium ${pConfig.textColor}`}>
+            {pConfig.label}
+          </span>
+        </div>
       </td>
       <td className="py-3.5 px-3">
         <div className="flex items-center gap-1.5">

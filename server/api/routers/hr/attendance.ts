@@ -36,7 +36,10 @@ export const attendanceRouter = createTRPCRouter({
          const netWork = durationHours - (Number(log.breakHours) || 0);
          dailyWorkHours += Math.max(0, netWork);
       } else {
-         dailyWorkHours += Number(log.workHours || 0);
+         // BUG-005 fix: subtract break hours from stored work hours
+         const rawWork = Number(log.workHours || 0);
+         const breakHrs = Number(log.breakHours || 0);
+         dailyWorkHours += Math.max(0, rawWork - breakHrs);
       }
 
       if (log.isOvertime) isDailyOvertime = true;

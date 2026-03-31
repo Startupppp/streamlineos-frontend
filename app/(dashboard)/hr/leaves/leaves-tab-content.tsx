@@ -56,6 +56,7 @@ const leaveFormSchema = z.object({
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   halfDay: z.boolean(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
   reason: z.string().min(1, "Reason is required"),
   approverId: z.string().optional(),
 });
@@ -111,6 +112,7 @@ export function LeavesTabContent({
       startDate: "",
       endDate: "",
       halfDay: false,
+      priority: "MEDIUM" as const,
       reason: "",
       approverId: "",
     },
@@ -158,6 +160,7 @@ export function LeavesTabContent({
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
       reason: data.reason,
+      priority: data.priority,
       approverId,
       attachmentUrl: attachmentUrl || undefined,
     });
@@ -186,6 +189,7 @@ export function LeavesTabContent({
         { header: "From", width: 14 },
         { header: "To", width: 14 },
         { header: "Days", width: 8 },
+        { header: "Priority", width: 10 },
         { header: "Status", width: 12 },
         { header: "Reason", width: 30 },
         { header: "Requested On", width: 14 },
@@ -198,6 +202,7 @@ export function LeavesTabContent({
           req.startDate,
           req.endDate,
           "-",
+          req.priority || "Medium",
           req.status,
           req.reason || "-",
           req.createdAt ? format(new Date(req.createdAt), "yyyy-MM-dd") : "-",
@@ -283,6 +288,7 @@ export function LeavesTabContent({
                           <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Date Requested</th>
                           <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Period</th>
                           <th className="text-center text-xs font-medium text-muted-foreground py-2.5 px-3">Days</th>
+                          <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Priority</th>
                           <th className="text-left text-xs font-medium text-muted-foreground py-2.5 px-3">Status</th>
                           <th className="text-right text-xs font-medium text-muted-foreground py-2.5 px-3">Action</th>
                         </tr>
@@ -417,6 +423,45 @@ export function LeavesTabContent({
                         <FormLabel className="text-xs font-normal text-muted-foreground !mt-0">
                           Half Day Request
                         </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Priority */}
+                  <FormField
+                    control={leaveForm.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">Priority</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="LOW">
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                Low
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="MEDIUM">
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                                Medium
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="HIGH">
+                              <span className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-red-500" />
+                                High
+                              </span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
