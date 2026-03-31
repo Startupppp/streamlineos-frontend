@@ -2436,6 +2436,14 @@ export const clientAccountActivitiesRelations = relations(clientAccountActivitie
   user: one(users, { fields: [clientAccountActivities.userId], references: [users.id] }),
 }));
 
+export const dmLeadsRelations = relations(dmLeads, ({ one }) => ({
+  organization: one(organizations, { fields: [dmLeads.orgId], references: [organizations.id] }),
+  campaign: one(crmCampaigns, { fields: [dmLeads.campaignId], references: [crmCampaigns.id] }),
+  verifier: one(users, { fields: [dmLeads.verifiedBy], references: [users.id], relationName: "dmLeadVerifier" }),
+  importedLead: one(leads, { fields: [dmLeads.importedLeadId], references: [leads.id] }),
+  creator: one(users, { fields: [dmLeads.createdBy], references: [users.id], relationName: "dmLeadCreator" }),
+}));
+
 export const incentivesRelations = relations(incentives, ({ one }) => ({
   organization: one(organizations, { fields: [incentives.orgId], references: [organizations.id] }),
   clientAccount: one(clientAccounts, { fields: [incentives.clientAccountId], references: [clientAccounts.id] }),
