@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
 import { LeadTableView } from "@/components/crm/lead-table-view";
+import { LeadExportDialog } from "@/components/crm/lead-export-dialog";
 import { resolveImageUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format-utils";
@@ -317,46 +318,7 @@ export default function LeadsPipelinePage() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={async () => {
-            try {
-              const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-              const allLeadsFlat = Object.values(board || {}).flat();
-              const rows = allLeadsFlat.map(l => ({
-                name: l.name,
-                email: l.email || "",
-                phone: l.phone || "",
-                company: l.company || "",
-                source: l.source || "",
-                status: l.status,
-                priority: l.priority || "",
-                potentialValue: l.potentialValue || "",
-                city: l.city || "",
-                assignedTo: l.assignedTo?.name || "Unassigned",
-                createdAt: l.createdAt ? new Date(l.createdAt).toLocaleDateString() : "",
-              }));
-              await downloadXlsx("leads-export.xlsx", [{
-                name: "Leads",
-                columns: [
-                  { header: "Name", key: "name", width: 20 },
-                  { header: "Email", key: "email", width: 25 },
-                  { header: "Phone", key: "phone", width: 15 },
-                  { header: "Company", key: "company", width: 20 },
-                  { header: "Source", key: "source", width: 12 },
-                  { header: "Status", key: "status", width: 12 },
-                  { header: "Priority", key: "priority", width: 10 },
-                  { header: "Potential Value", key: "potentialValue", width: 15 },
-                  { header: "City", key: "city", width: 15 },
-                  { header: "Assigned To", key: "assignedTo", width: 18 },
-                  { header: "Created", key: "createdAt", width: 12 },
-                ],
-                rows,
-              }]);
-              toast.success("Leads exported");
-            } catch { toast.error("Export failed"); }
-          }}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <LeadExportDialog />
           <CsvUploadDialog onSuccess={() => refetchBoard()} />
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
