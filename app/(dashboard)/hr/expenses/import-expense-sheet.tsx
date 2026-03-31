@@ -115,21 +115,28 @@ export function ImportExpenseSheet({
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
-  /* ─── Download CSV template ─── */
-  const handleDownloadTemplate = () => {
-    const header = TEMPLATE_COLUMNS.join(",");
-    const rows = SAMPLE_ROWS.map((row) => row.join(","));
-    const csv = [header, ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `expense_import_template_${format(new Date(), "yyyy-MM-dd")}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Template downloaded");
+  /* ─── Download Excel template ─── */
+  const handleDownloadTemplate = async () => {
+    try {
+      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+      const rows = SAMPLE_ROWS.map((row) => {
+        const obj: Record<string, string> = {};
+        TEMPLATE_COLUMNS.forEach((col, i) => { obj[col] = row[i] || ""; });
+        return obj;
+      });
+      await downloadXlsx(`expense_import_template_${format(new Date(), "yyyy-MM-dd")}.xlsx`, [{
+        name: "Expenses",
+        columns: TEMPLATE_COLUMNS.map((col) => ({
+          header: col.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+          key: col,
+          width: 18,
+        })),
+        rows,
+      }]);
+      toast.success("Template downloaded");
+    } catch {
+      toast.error("Failed to download template");
+    }
   };
 
   /* ─── Parse uploaded file (client-side preview) ─── */
@@ -316,7 +323,7 @@ export function ImportExpenseSheet({
               <Label className="text-sm font-semibold">Download Template</Label>
             </div>
             <p className="text-xs text-muted-foreground pl-8">
-              Download the CSV template to ensure your data is in the correct format.
+              Download the Excel template to ensure your data is in the correct format.
               The template includes sample rows to guide you.
             </p>
             <div className="pl-8">
@@ -327,7 +334,7 @@ export function ImportExpenseSheet({
                 onClick={handleDownloadTemplate}
               >
                 <Download className="h-3.5 w-3.5" />
-                Download Template (.csv)
+                Download Template (.xlsx)
               </Button>
             </div>
             <div className="pl-8">
