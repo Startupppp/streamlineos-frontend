@@ -38,38 +38,42 @@ const ALLOW_AUTHENTICATED = [
 // Route → allowed roles. CEO always has access (hardcoded bypass).
 // Routes not listed here are accessible to all authenticated users.
 const ROUTE_ROLE_MAP: Record<string, string[]> = {
-  // HR Management — CEO and HR only
-  "/hr": ["CEO", "HR"],
-  "/hr/onboarding": ["CEO", "HR"],
-  "/hr/payroll": ["CEO", "HR"],
-  "/hr/devices": ["CEO", "HR"],
-  "/hr/documents": ["CEO", "HR"],
-  "/hr/work-logs": ["CEO", "HR"],
-  "/hr/performance": ["CEO", "HR"],
+  // HR Management — CEO, HR, and branch roles (branch-scoped access)
+  "/hr": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/onboarding": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/payroll": ["CEO", "HR", "BRANCH_HR"],
+  "/hr/devices": ["CEO", "HR", "BRANCH_HR"],
+  "/hr/documents": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/work-logs": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/performance": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/org-chart": ["CEO", "HR"],
+  "/hr/incentives": ["CEO", "HR"],
 
   // Self-service HR — all roles (explicit override for sub-routes of /hr)
-  "/hr/my-payslips": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
-  "/hr/leaves": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
-  "/hr/expenses": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
-  "/hr/attendance": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
+  "/hr/my-payslips": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/leaves": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/expenses": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/attendance": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
 
-  // CRM — CEO, HR, SALES (sales sees filtered data)
-  "/crm/leads": ["CEO", "HR", "SALES"],
-  "/crm/deals": ["CEO", "HR", "SALES"],
-  "/crm/targets": ["CEO", "HR", "SALES"],
+  // CRM — CEO, HR, SALES, BRANCH_MANAGER (sales/branch see filtered data)
+  "/crm/leads": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
+  "/crm/deals": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
+  "/crm/targets": ["CEO", "HR", "SALES", "BRANCH_MANAGER"],
   "/crm/reports": ["CEO", "HR"],
-  "/crm/clients": ["CEO", "HR"],
+  "/crm/clients": ["CEO", "HR", "CUSTOMER_SUPPORT", "SALES"],
+
+  // Digital Marketing
+  "/digital-marketing": ["CEO", "HR", "DIGITAL_MARKETING"],
 
   // Projects & Timesheets — all roles
-  "/projects": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
-  "/timesheets": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
+  "/projects": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/timesheets": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
 
   // Support/Tickets — all roles
-  "/support": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
+  "/support": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
 
   // Chat — all roles
-  "/chat": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
+  "/chat": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
 
   "/sales": ["CEO", "HR", "SALES"],
   "/customer-executive": ["CEO", "HR", "CUSTOMER_SUPPORT"],
@@ -78,6 +82,7 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   // Settings — CEO and HR
   "/settings": ["CEO", "HR"],
   "/settings/roles": ["CEO", "HR"],
+  "/settings/branches": ["CEO", "HR"],
 
   // Billing & Invoices — CEO, HR
   "/billing": ["CEO", "HR"],
