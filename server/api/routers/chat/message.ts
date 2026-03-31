@@ -6,6 +6,8 @@ import {
   chatAttachments,
   chatChannels,
   chatChannelMembers,
+  leads,
+  notifications,
 } from "@/lib/db/schema";
 import { TRPCError } from "@trpc/server";
 
@@ -249,5 +251,102 @@ export const messageRouter = createTRPCRouter({
       });
 
       return results;
+    }),
+
+  // Lead submission via chat
+  submitLead: protectedProcedure
+    .input(z.object({
+      channelId: z.number(),
+      clientName: z.string().min(1),
+      phone: z.string().optional(),
+      email: z.string().optional(),
+      company: z.string().optional(),
+      howTheyKnow: z.string().optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await verifyMember(ctx.db, input.channelId, ctx.session.userId);
+
+      const metadata = {
+        clientName: input.clientName,
+        phone: input.phone,
+        email: input.email,
+        company: input.company,
+        howTheyKnow: input.howTheyKnow,
+        notes: input.notes,
+      };
+
+      const [message] = await ctx.db.insert(chatMessages).values({
+        channelId: input.channelId,
+        senderId: ctx.session.userId,
+        content: `Lead submission: ${input.clientName}`,
+        messageType: "lead_submission",
+        metadata,
+        actionStatus: "pending",
+      }).returning();
+
+      await ctx.db.update(chatChannels)
+        .set({ lastMessageAt: new Date(), updatedAt: new Date() })
+        .where(eq(chatChannels.id, input.channelId));
+
+      return message;
+    }),
+
+  // HR imports a lead from chat submission
+  importLeadFromChat: protectedProcedure
+    .input(z.object({ messageId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const role = ctx.session.user.role ?? "";
+      if (!["HR", "CEO"].includes(role)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only HR/CEO can import leads from chat" });
+      }
+
+      const message = await ctx.db.query.chatMessages.findFirst({
+        where: eq(chatMessages.id, input.messageId),
+        with: { sender: { columns: { id: true, name: true } } },
+      });
+
+      if (!message || message.messageType !== "lead_submission") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid lead submission message" });
+      }
+
+      if (message.actionStatus === "imported") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Lead already imported" });
+      }
+
+      const meta = message.metadata as { clientName: string; phone?: string; email?: string; company?: string; notes?: string };
+
+      const [newLead] = await ctx.db.insert(leads).values({
+        orgId: ctx.session.orgId,
+        name: meta.clientName,
+        phone: meta.phone,
+        email: meta.email,
+        company: meta.company,
+        notes: meta.notes,
+        source: "referral",
+        subSource: `Employee: ${(message.sender as { name?: string })?.name || "Unknown"}`,
+      }).returning();
+
+      await ctx.db.update(chatMessages)
+        .set({ actionStatus: "imported", updatedAt: new Date() })
+        .where(eq(chatMessages.id, input.messageId));
+
+      return newLead;
+    }),
+
+  // HR dismisses a lead from chat
+  dismissLeadFromChat: protectedProcedure
+    .input(z.object({ messageId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const role = ctx.session.user.role ?? "";
+      if (!["HR", "CEO"].includes(role)) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      await ctx.db.update(chatMessages)
+        .set({ actionStatus: "dismissed", updatedAt: new Date() })
+        .where(eq(chatMessages.id, input.messageId));
+
+      return { success: true };
     }),
 });
