@@ -28,6 +28,7 @@ import { dmLeadsRouter } from "./routers/dm-leads";
 import { dmCampaignsRouter } from "./routers/dm-campaigns";
 import { socialMediaRouter } from "./routers/social-media";
 import { branchesRouter } from "./routers/branches";
+import { crmEmailRouter } from "./routers/crm-email";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
@@ -59,6 +60,7 @@ export const appRouter = createTRPCRouter({
   dmCampaigns: dmCampaignsRouter,
   socialMedia: socialMediaRouter,
   branches: branchesRouter,
+  crmEmail: crmEmailRouter,
 });
 
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
