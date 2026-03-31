@@ -2384,3 +2384,24 @@ export const dmLeads = pgTable('dm_leads', {
   index('idx_dm_leads_status').on(table.status),
   index('idx_dm_leads_platform').on(table.sourcePlatform),
 ]);
+
+/* ─── Social Media Stats (Social tracking) ─── */
+export const socialMediaStats = pgTable('social_media_stats', {
+  id: serial('id').primaryKey(),
+  orgId: text('org_id').notNull().references(() => organizations.id),
+  platform: socialPlatformEnum('platform').notNull(),
+  date: date('date').notNull(),
+  postsPublished: integer('posts_published').default(0),
+  storiesReels: integer('stories_reels').default(0),
+  followersTotal: integer('followers_total').default(0),
+  engagementRate: decimal('engagement_rate', { precision: 5, scale: 2 }),
+  impressions: integer('impressions').default(0),
+  reach: integer('reach').default(0),
+  linkClicks: integer('link_clicks').default(0),
+  profileVisits: integer('profile_visits').default(0),
+  enteredBy: text('entered_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  unique('uniq_social_stats_org_platform_date').on(table.orgId, table.platform, table.date),
+]);
