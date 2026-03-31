@@ -368,6 +368,34 @@ export const PERMISSIONS: Permission[] = [
     action: "payslips",
     description: "View own payslips",
   },
+  // DM Dashboard permissions
+  { name: "dm:leads:create", resource: "dm:leads", action: "create", description: "Capture DM leads" },
+  { name: "dm:leads:read", resource: "dm:leads", action: "read", description: "View DM leads" },
+  { name: "dm:leads:update", resource: "dm:leads", action: "update", description: "Update DM leads" },
+  { name: "dm:leads:delete", resource: "dm:leads", action: "delete", description: "Delete DM leads" },
+  { name: "dm:leads:export", resource: "dm:leads", action: "export", description: "Export DM leads" },
+  { name: "dm:campaigns:create", resource: "dm:campaigns", action: "create", description: "Create campaigns" },
+  { name: "dm:campaigns:read", resource: "dm:campaigns", action: "read", description: "View campaigns" },
+  { name: "dm:campaigns:update", resource: "dm:campaigns", action: "update", description: "Update campaigns" },
+  { name: "dm:social:read", resource: "dm:social", action: "read", description: "View social stats" },
+  { name: "dm:social:create", resource: "dm:social", action: "create", description: "Enter social stats" },
+  // Client accounts
+  { name: "crm:clients:read", resource: "crm:clients", action: "read", description: "View client accounts" },
+  { name: "crm:clients:update", resource: "crm:clients", action: "update", description: "Update client accounts" },
+  // Incentives
+  { name: "crm:incentives:read", resource: "crm:incentives", action: "read", description: "View incentives" },
+  { name: "crm:incentives:approve", resource: "crm:incentives", action: "approve", description: "Approve incentives" },
+  { name: "crm:incentives:config", resource: "crm:incentives", action: "config", description: "Configure incentive rates" },
+  // Branches
+  { name: "branch:create", resource: "branch", action: "create", description: "Create branches" },
+  { name: "branch:read", resource: "branch", action: "read", description: "View branches" },
+  { name: "branch:update", resource: "branch", action: "update", description: "Update branches" },
+  { name: "branch:manage_targets", resource: "branch", action: "manage_targets", description: "Manage branch targets" },
+  // Reports
+  { name: "reports:generate", resource: "reports", action: "generate", description: "Generate reports" },
+  { name: "reports:schedule", resource: "reports", action: "schedule", description: "Schedule reports" },
+  // Chat
+  { name: "chat:submit_lead", resource: "chat", action: "submit_lead", description: "Submit leads via chat" },
 ];
 
 // Self-service permissions every employee gets (own data only)
