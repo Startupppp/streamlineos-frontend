@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, pgEnum, foreignKey, index, uniqueIndex, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 // Dynamic roles table — predefined: CEO, HR, SALES, ENGINEERING, DESIGN, etc.
 // Admins can create additional roles at runtime
@@ -34,6 +34,31 @@ export const reviewStatusEnum = pgEnum("review_status", ["DRAFT", "IN_PROGRESS",
 export const notificationTypeEnum = pgEnum("notification_type", ["INFO", "SUCCESS", "WARNING", "ERROR"]);
 export const workflowStatusEnum = pgEnum("workflow_status", ["ACTIVE", "INACTIVE"]);
 export const onboardingStatusEnum = pgEnum("onboarding_status", ["PENDING", "IN_PROGRESS", "COMPLETED", "REJECTED"]);
+
+// CRM Pipeline enums
+export const clientAccountStatusEnum = pgEnum('client_account_status', [
+  'ACCOUNT_OPENING', 'QUERIES', 'PLAN_SELECTED', 'INVESTED'
+]);
+
+export const incentiveStatusEnum = pgEnum('incentive_status', [
+  'PENDING', 'APPROVED', 'REJECTED', 'ADDED_TO_PAYROLL'
+]);
+
+export const chatMessageTypeEnum = pgEnum('chat_message_type', [
+  'text', 'lead_submission', 'system'
+]);
+
+export const branchStatusEnum = pgEnum('branch_status', [
+  'ACTIVE', 'INACTIVE'
+]);
+
+export const dmLeadStatusEnum = pgEnum('dm_lead_status', [
+  'pending_review', 'verified', 'sent_to_hr', 'imported_to_pipeline'
+]);
+
+export const socialPlatformEnum = pgEnum('social_platform', [
+  'instagram', 'twitter', 'linkedin', 'facebook', 'youtube'
+]);
 
 export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
