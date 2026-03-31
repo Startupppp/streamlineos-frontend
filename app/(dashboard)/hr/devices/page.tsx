@@ -52,7 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2 } from "lucide-react";
+import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2, Pencil } from "lucide-react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 
@@ -79,6 +79,10 @@ import { getColorSafe, deviceStatusColors, isDeviceStatus } from "@/lib/theme-co
 
 export default function DevicesPage() {
   const [open, setOpen] = useState(false);
+  const [editDevice, setEditDevice] = useState<{
+    id: number; userId: string; deviceType: string; deviceName: string;
+    serialNumber?: string | null; brand?: string | null; model?: string | null; notes?: string | null;
+  } | null>(null);
   const [deleteDeviceId, setDeleteDeviceId] = useState<number | null>(null);
 
   const { data: devices, isLoading, refetch } = api.hr.getDevices.useQuery({});
@@ -99,12 +103,46 @@ export default function DevicesPage() {
   const updateDeviceMutation = api.hr.updateDevice.useMutation({
     onSuccess: () => {
       toast.success("Device updated");
+      setEditDevice(null);
+      editForm.reset();
       refetch();
     },
     onError: (error) => {
       toast.error(error.message);
     },
   });
+
+  const editForm = useForm<DeviceFormValues>({
+    resolver: zodResolver(deviceSchema),
+  });
+
+  const handleEdit = (device: typeof editDevice) => {
+    if (!device) return;
+    setEditDevice(device);
+    editForm.reset({
+      userId: device.userId,
+      deviceType: device.deviceType,
+      deviceName: device.deviceName,
+      serialNumber: device.serialNumber || "",
+      brand: device.brand || "",
+      model: device.model || "",
+      notes: device.notes || "",
+    });
+  };
+
+  const onEditSubmit = (values: DeviceFormValues) => {
+    if (!editDevice) return;
+    updateDeviceMutation.mutate({
+      deviceId: editDevice.id,
+      userId: values.userId,
+      deviceType: values.deviceType,
+      deviceName: values.deviceName,
+      serialNumber: values.serialNumber || undefined,
+      brand: values.brand || undefined,
+      model: values.model || undefined,
+      notes: values.notes || undefined,
+    });
+  };
 
   const deleteDeviceMutation = api.hr.deleteDevice.useMutation({
     onSuccess: () => {
@@ -382,15 +420,34 @@ export default function DevicesPage() {
                         </Select>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeleteDeviceId(device.id)}
-                          aria-label={`Remove ${device.deviceName}`}
-                        >
-                          <Trash2 className="h-4 w-4" aria-hidden="true" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit({
+                              id: device.id,
+                              userId: device.userId,
+                              deviceType: device.deviceType,
+                              deviceName: device.deviceName,
+                              serialNumber: device.serialNumber,
+                              brand: device.brand,
+                              model: device.model,
+                              notes: device.notes,
+                            })}
+                            aria-label={`Edit ${device.deviceName}`}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setDeleteDeviceId(device.id)}
+                            aria-label={`Remove ${device.deviceName}`}
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -408,6 +465,131 @@ export default function DevicesPage() {
       </Card>
 
       
+      {/* Edit Device Sheet */}
+      <Sheet open={editDevice !== null} onOpenChange={(o) => { if (!o) setEditDevice(null); }}>
+        <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
+          <SheetHeader className="mb-6">
+            <SheetTitle>Edit Device</SheetTitle>
+          </SheetHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-5">
+              <FormField
+                control={editForm.control}
+                name="userId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assigned Employee</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {employees?.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.firstName} {emp.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="deviceType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Device Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Laptop">Laptop</SelectItem>
+                          <SelectItem value="Phone">Phone</SelectItem>
+                          <SelectItem value="Monitor">Monitor</SelectItem>
+                          <SelectItem value="Keyboard">Keyboard</SelectItem>
+                          <SelectItem value="Mouse">Mouse</SelectItem>
+                          <SelectItem value="Headset">Headset</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="deviceName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Device Name</FormLabel>
+                      <FormControl><Input placeholder="MacBook Pro 14" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="brand"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <FormControl><Input placeholder="Apple" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="model"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Model</FormLabel>
+                      <FormControl><Input placeholder="M3 Pro" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={editForm.control}
+                name="serialNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Serial Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="SN123456789" className="uppercase"
+                        {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl><Textarea placeholder="Any additional notes..." {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full mt-2" disabled={updateDeviceMutation.isPending}>
+                {updateDeviceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </form>
+          </Form>
+        </SheetContent>
+      </Sheet>
+
       <AlertDialog open={deleteDeviceId !== null} onOpenChange={(open) => { if (!open) setDeleteDeviceId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

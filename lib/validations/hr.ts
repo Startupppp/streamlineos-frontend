@@ -221,6 +221,7 @@ export const createDeviceInputSchema = z.object({
 
 export const updateDeviceInputSchema = z.object({
   deviceId: z.number().int().positive(),
+  userId: z.string().optional(),
   deviceType: z.string().optional(),
   deviceName: z.string().optional(),
   serialNumber: z.string().optional(),

@@ -195,6 +195,7 @@ export const documentRouter = createTRPCRouter({
       const { deviceId, ...updateData } = input;
       await ctx.db.update(employeeDevices)
         .set({
+          ...(updateData.userId && { userId: updateData.userId }),
           ...(updateData.deviceType && { deviceType: updateData.deviceType }),
           ...(updateData.deviceName && { deviceName: updateData.deviceName }),
           ...(updateData.serialNumber !== undefined && { serialNumber: updateData.serialNumber }),
