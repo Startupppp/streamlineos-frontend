@@ -1,5 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets, leadActivities } from "@/lib/db/schema";
+import { projects, attendance, organizations, organizationMembers, users, projectMembers, sprints, tickets, leadActivities, leads, deals, targets } from "@/lib/db/schema";
 import { eq, and, sql, desc, or, inArray, count, gte, lt } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
 
@@ -322,5 +322,67 @@ export const dashboardRouter = createTRPCRouter({
       );
 
     return activities;
+  }),
+
+  getRoleStats: protectedProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.session.orgId;
+    const userId = ctx.session.userId;
+    const role = ctx.session.user.role ?? "";
+
+    const result: Record<string, unknown> = {};
+
+    if (role === "SALES") {
+      const [myLeads, myConverted, myDeals, myTargetsData] = await Promise.all([
+        ctx.db.select({ count: count() }).from(leads)
+          .where(and(eq(leads.orgId, orgId), eq(leads.assignedToId, userId))),
+        ctx.db.select({ count: count() }).from(leads)
+          .where(and(eq(leads.orgId, orgId), eq(leads.assignedToId, userId), eq(leads.status, "CONVERTED"))),
+        ctx.db.select({ count: count() }).from(deals)
+          .where(and(eq(deals.orgId, orgId), eq(deals.assignedToId, userId))),
+        ctx.db.query.targets.findMany({
+          where: and(eq(targets.orgId, orgId), eq(targets.userId, userId)),
+          columns: { targetValue: true, currentValue: true, metricType: true },
+        }),
+      ]);
+
+      const totalTarget = myTargetsData.reduce((s, t) => s + Number(t.targetValue), 0);
+      const totalCurrent = myTargetsData.reduce((s, t) => s + Number(t.currentValue ?? 0), 0);
+
+      result.myLeads = Number(myLeads[0]?.count ?? 0);
+      result.myConverted = Number(myConverted[0]?.count ?? 0);
+      result.myDeals = Number(myDeals[0]?.count ?? 0);
+      result.targetProgress = totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
+    }
+
+    if (["ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "CUSTOMER_SUPPORT"].includes(role)) {
+      const memberOf = await ctx.db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, userId));
+      const projectIds = memberOf.map(m => m.projectId);
+
+      const [myProjectCount, myTicketsTotal, myTicketsDone, myTicketsInProgress] = await Promise.all([
+        Promise.resolve(projectIds.length),
+        projectIds.length > 0
+          ? ctx.db.select({ count: count() }).from(tickets)
+              .where(and(eq(tickets.orgId, orgId), eq(tickets.assigneeId, userId), inArray(tickets.projectId, projectIds)))
+          : Promise.resolve([{ count: 0 }]),
+        projectIds.length > 0
+          ? ctx.db.select({ count: count() }).from(tickets)
+              .where(and(eq(tickets.orgId, orgId), eq(tickets.assigneeId, userId), inArray(tickets.projectId, projectIds), eq(tickets.status, "DONE")))
+          : Promise.resolve([{ count: 0 }]),
+        projectIds.length > 0
+          ? ctx.db.select({ count: count() }).from(tickets)
+              .where(and(eq(tickets.orgId, orgId), eq(tickets.assigneeId, userId), inArray(tickets.projectId, projectIds), inArray(tickets.status, ["IN_PROGRESS", "IN_REVIEW"])))
+          : Promise.resolve([{ count: 0 }]),
+      ]);
+
+      result.myProjects = myProjectCount;
+      result.myTickets = Number(myTicketsTotal[0]?.count ?? 0);
+      result.myTicketsDone = Number(myTicketsDone[0]?.count ?? 0);
+      result.myTicketsInProgress = Number(myTicketsInProgress[0]?.count ?? 0);
+    }
+
+    return result;
   }),
 });

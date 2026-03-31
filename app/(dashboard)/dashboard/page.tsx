@@ -20,6 +20,11 @@ import {
   RefreshCw,
   Contact2,
   Ticket,
+  Target,
+  TrendingUp,
+  CheckCircle2,
+  ListChecks,
+  Zap,
 } from "lucide-react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -66,10 +71,33 @@ export default function DashboardPage() {
   const { data: myTicketsData, isLoading: ticketsLoading, error: ticketsError } = useEmployeeTickets(currentUserId ?? "");
   const { data: sprintSummary, isLoading: sprintLoading } = useActiveSprintSummary();
 
-  // Fetch today's scheduled meetings/calls
+  const { data: roleStats } = api.dashboard.getRoleStats.useQuery(undefined, {
+    enabled: !!currentUserId,
+  });
+
   const { data: todayActivities } = api.dashboard.getTodayScheduledActivities.useQuery(undefined, {
     enabled: !!currentUserId,
   });
+
+  const prevUnreadRef = useRef<number | null>(null);
+  const { data: unreadData } = api.notifications.getUnreadCount.useQuery(undefined, {
+    refetchInterval: 15000,
+  });
+  const { data: latestNotifications } = api.notifications.getAll.useQuery({ limit: 5, unreadOnly: true }, {
+    refetchInterval: 15000,
+  });
+
+  useEffect(() => {
+    if (unreadData === undefined) return;
+    const currentCount = unreadData.count ?? 0;
+    if (prevUnreadRef.current !== null && currentCount > prevUnreadRef.current && latestNotifications) {
+      const newOnes = latestNotifications.slice(0, currentCount - prevUnreadRef.current);
+      for (const n of newOnes) {
+        toast(n.title, { description: n.message, duration: 5000 });
+      }
+    }
+    prevUnreadRef.current = currentCount;
+  }, [unreadData, latestNotifications]);
   const shownMeetingToastRef = useRef(false);
   useEffect(() => {
     if (todayActivities && todayActivities.length > 0 && !shownMeetingToastRef.current) {
@@ -92,6 +120,7 @@ export default function DashboardPage() {
   // Role-specific stat cards
   const statCards = useMemo(() => {
     if (!stats) return [];
+    const rs = roleStats as Record<string, number> | undefined;
 
     switch (role) {
       case "CEO":
@@ -110,28 +139,34 @@ export default function DashboardPage() {
         ];
       case "SALES":
         return [
-          { id: "org", label: "Welcome", value: stats.orgName, icon: Building2 },
-          { id: "leads", label: "My Leads", value: "View", icon: Contact2, href: "/crm/leads" },
+          { id: "leads", label: "My Leads", value: rs?.myLeads ?? 0, icon: Contact2, href: "/crm/leads" },
+          { id: "converted", label: "Converted", value: rs?.myConverted ?? 0, icon: TrendingUp, href: "/crm/leads" },
+          { id: "deals", label: "My Deals", value: rs?.myDeals ?? 0, icon: Zap, href: "/crm/deals" },
+          { id: "target", label: "Target Progress", value: `${rs?.targetProgress ?? 0}%`, icon: Target, href: "/crm/targets" },
         ];
       case "CUSTOMER_SUPPORT":
         return [
-          { id: "org", label: "Welcome", value: stats.orgName, icon: Building2 },
-          { id: "tickets", label: "My Tickets", value: "View", icon: Ticket, href: "/support" },
+          { id: "projects", label: "My Projects", value: rs?.myProjects ?? 0, icon: Briefcase, href: "/projects" },
+          { id: "tickets", label: "My Tickets", value: rs?.myTickets ?? 0, icon: Ticket },
+          { id: "done", label: "Completed", value: rs?.myTicketsDone ?? 0, icon: CheckCircle2 },
+          { id: "inprogress", label: "In Progress", value: rs?.myTicketsInProgress ?? 0, icon: ListChecks },
         ];
       case "ENGINEERING":
       case "DESIGN":
       case "VIDEO_EDITOR":
       case "DIGITAL_MARKETING":
         return [
-          { id: "projects", label: "My Projects", value: stats.activeProjects, icon: Briefcase, href: "/projects" },
-          { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
+          { id: "projects", label: "My Projects", value: rs?.myProjects ?? 0, icon: Briefcase, href: "/projects" },
+          { id: "tickets", label: "My Tasks", value: rs?.myTickets ?? 0, icon: ListChecks },
+          { id: "done", label: "Completed", value: rs?.myTicketsDone ?? 0, icon: CheckCircle2 },
+          { id: "inprogress", label: "In Progress", value: rs?.myTicketsInProgress ?? 0, icon: Zap },
         ];
       default:
         return [
           { id: "org", label: "Organization", value: stats.orgName, icon: Building2 },
         ];
     }
-  }, [stats, role]);
+  }, [stats, role, roleStats]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
     const raw = myTicketsData?.data ?? [];
@@ -263,29 +298,28 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Projects, Activity, Team — CEO/HR only */}
-      {isAdmin && (
-        <motion.div variants={fadeUp} className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[24rem]">
-          <div className="sm:col-span-1 min-h-0">
-            <RecentProjectsCard
-              projects={recentProjects}
-              isLoading={projectsLoading}
-              error={projectsError}
-              onCreateProject={handleGoToProjects}
-            />
-          </div>
-          <div className="sm:col-span-1 min-h-0">
-            <RecentActivityCard
-              items={recentActivity}
-              isLoading={activityLoading}
-              error={activityError}
-            />
-          </div>
+      <motion.div variants={fadeUp} className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} auto-rows-[24rem]`}>
+        <div className="sm:col-span-1 min-h-0">
+          <RecentProjectsCard
+            projects={recentProjects}
+            isLoading={projectsLoading}
+            error={projectsError}
+            onCreateProject={handleGoToProjects}
+          />
+        </div>
+        <div className="sm:col-span-1 min-h-0">
+          <RecentActivityCard
+            items={recentActivity}
+            isLoading={activityLoading}
+            error={activityError}
+          />
+        </div>
+        {isAdmin && (
           <div className="sm:col-span-2 lg:col-span-1 min-h-0">
             <TeamCard members={teamAvailability} isLoading={teamLoading} />
           </div>
-        </motion.div>
-      )}
+        )}
+      </motion.div>
     </motion.div>
   );
 }
