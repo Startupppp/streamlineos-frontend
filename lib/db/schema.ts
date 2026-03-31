@@ -2320,3 +2320,40 @@ export const clientAccountActivities = pgTable('client_account_activities', {
   index('idx_client_account_activities_account').on(table.clientAccountId),
   index('idx_client_account_activities_user').on(table.userId),
 ]);
+
+/* ─── Incentive Config ─── */
+export const incentiveConfig = pgTable('incentive_config', {
+  id: serial('id').primaryKey(),
+  orgId: text('org_id').notNull().references(() => organizations.id),
+  branchId: integer('branch_id').references(() => branches.id),
+  incentiveRate: decimal('incentive_rate', { precision: 5, scale: 2 }).notNull(), // percentage
+  effectiveFrom: timestamp('effective_from').defaultNow().notNull(),
+  effectiveTo: timestamp('effective_to'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdBy: text('created_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/* ─── Incentives ─── */
+export const incentives = pgTable('incentives', {
+  id: serial('id').primaryKey(),
+  orgId: text('org_id').notNull().references(() => organizations.id),
+  branchId: integer('branch_id').references(() => branches.id),
+  clientAccountId: integer('client_account_id').notNull().references(() => clientAccounts.id),
+  salesRepId: text('sales_rep_id').notNull().references(() => users.id),
+  investmentAmount: decimal('investment_amount', { precision: 15, scale: 2 }).notNull(),
+  incentiveRate: decimal('incentive_rate', { precision: 5, scale: 2 }).notNull(),
+  calculatedAmount: decimal('calculated_amount', { precision: 15, scale: 2 }).notNull(),
+  approvedAmount: decimal('approved_amount', { precision: 15, scale: 2 }),
+  status: incentiveStatusEnum('status').notNull().default('PENDING'),
+  approvedBy: text('approved_by').references(() => users.id),
+  approvedAt: timestamp('approved_at'),
+  payrollId: integer('payroll_id').references(() => payrolls.id),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_incentives_org').on(table.orgId),
+  index('idx_incentives_sales_rep').on(table.salesRepId),
+  index('idx_incentives_status').on(table.status),
+]);
