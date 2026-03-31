@@ -1,7 +1,7 @@
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { eq, and, desc, asc, sql, count, gte, lte, like, or } from "drizzle-orm";
-import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers, auditLogs } from "@/lib/db/schema";
+import { leads, leadActivities, notifications, tickets, projects, users, departmentMembers, clients, deals, organizationMembers, auditLogs, leaveRequests } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "@/lib/email";
@@ -827,7 +827,10 @@ export const leadsRouter = createTRPCRouter({
   }),
 
   distributeToSales: protectedProcedure
-    .input(z.object({ leadIds: z.number().array().min(1) }))
+    .input(z.object({
+      leadIds: z.number().array().min(1),
+      skipAbsent: z.boolean().default(true), // true = skip absent, redistribute to present; false = assign anyway (queued)
+    }))
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
       const userRole = ctx.session.user.role ?? "";
@@ -868,6 +871,33 @@ export const leadsRouter = createTRPCRouter({
         });
       }
 
+      // Absence detection: check approved leaves for today
+      const today = new Date().toISOString().split("T")[0];
+      const approvedLeaves = await ctx.db.query.leaveRequests.findMany({
+        where: and(
+          eq(leaveRequests.orgId, orgId),
+          eq(leaveRequests.status, "APPROVED"),
+          lte(leaveRequests.startDate, today),
+          gte(leaveRequests.endDate, today),
+        ),
+        columns: { userId: true },
+      });
+      const absentUserIds = new Set(approvedLeaves.map(l => l.userId));
+
+      // Filter to present sales people if skipAbsent is enabled
+      let availableSalesPeople = salesPeople;
+      const absentSalesPeople = salesPeople.filter(sp => absentUserIds.has(sp.id));
+
+      if (input.skipAbsent && absentSalesPeople.length > 0) {
+        availableSalesPeople = salesPeople.filter(sp => !absentUserIds.has(sp.id));
+        if (availableSalesPeople.length === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "All sales team members are on leave today. Cannot distribute leads. Try again with 'Assign anyway' to queue leads.",
+          });
+        }
+      }
+
       // Verify leads belong to this org
       const leadsToDistribute = await ctx.db.query.leads.findMany({
         where: and(
@@ -880,14 +910,14 @@ export const leadsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "No valid leads found to distribute" });
       }
 
-      // Round-robin distribution
+      // Round-robin distribution using available sales people
       const assignments = new Map<string, typeof leadsToDistribute>();
-      for (const sp of salesPeople) {
+      for (const sp of availableSalesPeople) {
         assignments.set(sp.id, []);
       }
 
       for (let i = 0; i < leadsToDistribute.length; i++) {
-        const salesPerson = salesPeople[i % salesPeople.length];
+        const salesPerson = availableSalesPeople[i % availableSalesPeople.length];
         assignments.get(salesPerson.id)!.push(leadsToDistribute[i]);
       }
 
@@ -959,7 +989,15 @@ export const leadsRouter = createTRPCRouter({
 
       return {
         distributed: leadsToDistribute.length,
-        salesPeople: salesPeople.length,
+        salesPeople: availableSalesPeople.length,
+        totalSalesPeople: salesPeople.length,
+        absentCount: absentSalesPeople.length,
+        absentNames: absentSalesPeople.map(sp => sp.name || "Unknown"),
+        summary: [...assignments.entries()].map(([userId, assignedLeads]) => ({
+          userId,
+          name: availableSalesPeople.find(sp => sp.id === userId)?.name || "Unknown",
+          count: assignedLeads.length,
+        })),
       };
     }),
 

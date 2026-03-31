@@ -1,0 +1,208 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { PageHeader } from "@/components/ui/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
+import { LeadDistributionDialog } from "@/components/crm/lead-distribution-dialog";
+import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
+
+export default function LeadDistributionPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("NEW");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showDistribute, setShowDistribute] = useState(false);
+
+  const { data, isLoading, refetch } = api.leads.getAll.useQuery({
+    status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
+    search: searchQuery || undefined,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    limit: 100,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filteredLeads = (data?.leads || []) as any[];
+
+  const allSelected = filteredLeads.length > 0 && filteredLeads.every((l) => selectedIds.has(l.id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredLeads.map((l) => l.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const unassignedCount = useMemo(() =>
+    filteredLeads.filter((l) => !l.assignedTo?.id).length,
+  [filteredLeads]);
+
+  return (
+    <div className="space-y-6 p-4 md:p-6">
+      <PageHeader
+        title="Lead Distribution"
+        description="Upload leads and distribute to your sales team via round-robin"
+      />
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <FileSpreadsheet className="h-5 w-5 text-muted-foreground" />
+              <span className="text-2xl font-bold tabular-nums">{data?.totalCount || 0}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Total Leads</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <Users className="h-5 w-5 text-amber-400" />
+              <span className="text-2xl font-bold tabular-nums">{unassignedCount}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Unassigned</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <ArrowRight className="h-5 w-5 text-blue-400" />
+              <span className="text-2xl font-bold tabular-nums">{selectedIds.size}</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Selected</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex flex-col gap-2">
+            <CsvUploadDialog onSuccess={() => refetch()} />
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              disabled={selectedIds.size === 0}
+              onClick={() => setShowDistribute(true)}
+            >
+              <Users className="h-4 w-4 mr-1" /> Distribute ({selectedIds.size})
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 max-w-sm min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search leads..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="NEW" className="text-xs">New</SelectItem>
+            <SelectItem value="CONTACTED" className="text-xs">Contacted</SelectItem>
+            <SelectItem value="INTERESTED" className="text-xs">Interested</SelectItem>
+            <SelectItem value="QUALIFIED" className="text-xs">Qualified</SelectItem>
+          </SelectContent>
+        </Select>
+        {selectedIds.size > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+            Clear selection
+          </Button>
+        )}
+      </div>
+
+      {/* Leads Table */}
+      <Card>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10 px-3">
+                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+                </TableHead>
+                <TableHead className="text-xs">Name</TableHead>
+                <TableHead className="text-xs">Email</TableHead>
+                <TableHead className="text-xs">Phone</TableHead>
+                <TableHead className="text-xs">Source</TableHead>
+                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs">Assigned To</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={7} className="h-12">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredLeads.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                    No leads found. Upload leads or adjust filters.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredLeads.map((lead) => (
+                  <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-[#bd882c]/5" : ""}>
+                    <TableCell className="px-3">
+                      <Checkbox checked={selectedIds.has(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} />
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">{lead.name}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{lead.email || "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground font-mono">{lead.phone || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px]">{lead.source || "—"}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px]">{lead.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {lead.assignedTo?.name || <span className="text-muted-foreground">Unassigned</span>}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
+      {/* Distribution Dialog */}
+      <LeadDistributionDialog
+        open={showDistribute}
+        onOpenChange={setShowDistribute}
+        leadIds={[...selectedIds]}
+        onSuccess={() => { setSelectedIds(new Set()); refetch(); }}
+      />
+    </div>
+  );
+}
