@@ -2419,3 +2419,26 @@ export const socialMediaStats = pgTable('social_media_stats', {
 }, (table) => [
   unique('uniq_social_stats_org_platform_date').on(table.orgId, table.platform, table.date),
 ]);
+
+/* ─── Client Account Relations ─── */
+export const clientAccountsRelations = relations(clientAccounts, ({ one, many }) => ({
+  organization: one(organizations, { fields: [clientAccounts.orgId], references: [organizations.id] }),
+  branch: one(branches, { fields: [clientAccounts.branchId], references: [branches.id] }),
+  lead: one(leads, { fields: [clientAccounts.leadId], references: [leads.id] }),
+  salesRep: one(users, { fields: [clientAccounts.salesRepId], references: [users.id], relationName: "clientAccountSalesRep" }),
+  assignedCrm: one(users, { fields: [clientAccounts.assignedCrmId], references: [users.id], relationName: "clientAccountCrm" }),
+  activities: many(clientAccountActivities),
+  incentives: many(incentives),
+}));
+
+export const clientAccountActivitiesRelations = relations(clientAccountActivities, ({ one }) => ({
+  clientAccount: one(clientAccounts, { fields: [clientAccountActivities.clientAccountId], references: [clientAccounts.id] }),
+  user: one(users, { fields: [clientAccountActivities.userId], references: [users.id] }),
+}));
+
+export const incentivesRelations = relations(incentives, ({ one }) => ({
+  organization: one(organizations, { fields: [incentives.orgId], references: [organizations.id] }),
+  clientAccount: one(clientAccounts, { fields: [incentives.clientAccountId], references: [clientAccounts.id] }),
+  salesRep: one(users, { fields: [incentives.salesRepId], references: [users.id] }),
+  approver: one(users, { fields: [incentives.approvedBy], references: [users.id] }),
+}));
