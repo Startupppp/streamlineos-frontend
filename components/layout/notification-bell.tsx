@@ -67,7 +67,7 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 max-h-[70vh] flex flex-col" align="end">
+      <PopoverContent className="w-80 p-0 max-h-[70vh] flex flex-col overflow-hidden" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
           <h4 className="text-sm font-semibold">Notifications</h4>
           <div className="flex items-center gap-1">
@@ -96,7 +96,7 @@ export function NotificationBell() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1" style={{ maxHeight: "calc(70vh - 52px)" }}>
+        <ScrollArea className="flex-1 overflow-hidden max-h-[60vh]">
           {!notifications?.length ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No notifications yet
