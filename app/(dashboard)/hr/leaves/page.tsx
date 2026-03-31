@@ -10,15 +10,24 @@ import { LeaveErrorState } from "./leaves-empty-states";
 import { LeavesWfhContent } from "./leaves-wfh-content";
 
 export default async function LeavesPage() {
-  const [context, approvers, myRequests, incomingRequests, allIncomingRequests, approvedThisWeek] =
-    await Promise.all([
-      getLeaveContext(),
-      getApprovers(),
-      getMyRequests(),
-      getIncomingRequests(),
-      getAllIncomingRequests(),
-      getApprovedLeavesThisWeek(),
-    ]);
+  let context, approvers, myRequests, incomingRequests, allIncomingRequests, approvedThisWeek;
+  try {
+    [context, approvers, myRequests, incomingRequests, allIncomingRequests, approvedThisWeek] =
+      await Promise.all([
+        getLeaveContext(),
+        getApprovers(),
+        getMyRequests(),
+        getIncomingRequests(),
+        getAllIncomingRequests(),
+        getApprovedLeavesThisWeek(),
+      ]);
+  } catch {
+    return (
+      <div className="space-y-6">
+        <LeaveErrorState />
+      </div>
+    );
+  }
 
   if (!context.success || !context.balances) {
     return (
