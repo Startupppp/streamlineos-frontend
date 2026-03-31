@@ -2276,3 +2276,32 @@ export const branches = pgTable('branches', {
   index('idx_branches_org').on(table.orgId),
   uniqueIndex('uniq_branch_code_org').on(table.orgId, table.code),
 ]);
+
+/* ─── Client Accounts (Post-conversion tracking) ─── */
+export const clientAccounts = pgTable('client_accounts', {
+  id: serial('id').primaryKey(),
+  orgId: text('org_id').notNull().references(() => organizations.id),
+  branchId: integer('branch_id').references(() => branches.id),
+  leadId: integer('lead_id').notNull().references(() => leads.id),
+  salesRepId: text('sales_rep_id').notNull().references(() => users.id),
+  assignedCrmId: text('assigned_crm_id').references(() => users.id),
+  clientName: text('client_name').notNull(),
+  clientEmail: text('client_email'),
+  clientPhone: text('client_phone'),
+  clientWhatsapp: text('client_whatsapp'),
+  status: clientAccountStatusEnum('status').notNull().default('ACCOUNT_OPENING'),
+  investmentAmount: decimal('investment_amount', { precision: 15, scale: 2 }),
+  planName: text('plan_name'),
+  investmentDate: timestamp('investment_date'),
+  transactionRef: text('transaction_ref'),
+  conversionNotes: text('conversion_notes'),
+  estimatedInvestment: decimal('estimated_investment', { precision: 15, scale: 2 }),
+  convertedAt: timestamp('converted_at').defaultNow().notNull(),
+  investedAt: timestamp('invested_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_client_accounts_org').on(table.orgId),
+  index('idx_client_accounts_sales_rep').on(table.salesRepId),
+  index('idx_client_accounts_status').on(table.orgId, table.status),
+]);
