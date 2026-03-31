@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -24,6 +25,8 @@ import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-c
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CustomerExecutiveDashboardPage() {
+  const { data: session } = useSession();
+  const isCSRep = session?.user?.role === "CUSTOMER_SUPPORT";
   const { data, isLoading } = useCustomerExecutiveDashboard();
   const { data: slugMap } = useCrmPeopleSlugs();
 
@@ -86,9 +89,9 @@ export default function CustomerExecutiveDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Customer Executive Dashboard</h1>
+        <h1 className="text-2xl font-bold text-foreground">{isCSRep ? "My Support Hub" : "Customer Executive Dashboard"}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Client health, retention, and satisfaction overview
+          {isCSRep ? "Your client health, tickets, and satisfaction metrics" : "Client health, retention, and satisfaction overview"}
         </p>
       </div>
 

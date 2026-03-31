@@ -211,6 +211,7 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Sales Hub", icon: BarChart3, href: "/sales" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
@@ -222,8 +223,6 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Targets", icon: Trophy, href: "/crm/targets" },
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-            // { label: "Tickets", icon: Ticket, href: "/support" },
-            // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
@@ -237,16 +236,37 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Support Hub", icon: BarChart3, href: "/customer-executive" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
         {
           label: "My Work",
           routes: [
-            // { label: "My Tickets", icon: Ticket, href: "/support" },
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-            // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+            { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+            { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+          ],
+        },
+      ];
+
+    case "DIGITAL_MARKETING":
+      return [
+        {
+          label: "Core",
+          routes: [
+            { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Marketing Hub", icon: BarChart3, href: "/marketing" },
+            { label: "Chat", icon: MessageSquareText, href: "/chat" },
+          ],
+        },
+        {
+          label: "My Work",
+          routes: [
+            { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
@@ -257,7 +277,6 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
     case "ENGINEERING":
     case "DESIGN":
     case "VIDEO_EDITOR":
-    case "DIGITAL_MARKETING":
       return [
         {
           label: "Core",
@@ -271,8 +290,6 @@ function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-            // { label: "Tickets", icon: Ticket, href: "/support" },
-            // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },

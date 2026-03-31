@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useMarketingDashboard } from "@/lib/hooks/trpc-hooks";
 import { formatCurrency, formatNumber } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import {
   campaignStatusConfig,
@@ -44,6 +45,8 @@ const statusIcons: Record<string, React.ElementType> = {
 const formatMqlValue = (v: number) => v.toLocaleString();
 
 export default function MarketingDashboardPage() {
+  const { data: session } = useSession();
+  const isDM = session?.user?.role === "DIGITAL_MARKETING";
   const { data, isLoading } = useMarketingDashboard();
 
   const marketingStats = data?.marketingStats;
@@ -77,8 +80,8 @@ export default function MarketingDashboardPage() {
     >
       <motion.div variants={fadeUp}>
         <PageHeader
-          title="Marketing Dashboard"
-          description="Campaign performance, lead generation, and marketing ROI"
+          title={isDM ? "My Marketing Hub" : "Marketing Dashboard"}
+          description={isDM ? "Your campaigns, lead generation, and marketing ROI" : "Campaign performance, lead generation, and marketing ROI"}
         />
       </motion.div>
 

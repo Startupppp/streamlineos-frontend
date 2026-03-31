@@ -71,9 +71,9 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   // Chat — all roles
   "/chat": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING"],
 
-  // Dashboards — CEO, HR only
-  "/sales": ["CEO", "HR"],
-  "/customer-executive": ["CEO", "HR"],
+  "/sales": ["CEO", "HR", "SALES"],
+  "/customer-executive": ["CEO", "HR", "CUSTOMER_SUPPORT"],
+  "/marketing": ["CEO", "HR", "DIGITAL_MARKETING"],
 
   // Settings — CEO and HR
   "/settings": ["CEO", "HR"],

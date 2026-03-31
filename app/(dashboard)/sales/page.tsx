@@ -27,6 +27,7 @@ import { ActivityFeed } from "@/components/crm/activity-feed";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { useSalesDashboard, useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
+import { useSession } from "next-auth/react";
 import { staggerContainer, fadeUp, slideInLeft, scaleIn } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, stageColors, rankStyles, sparkColors } from "@/lib/theme-constants";
@@ -36,6 +37,8 @@ const DEFAULT_BAR_COLOR = "bg-muted-foreground/40";
 const formatRevenueValue = (v: number) => `$${(v / 1000).toFixed(0)}K`;
 
 export default function SalesDashboardPage() {
+  const { data: session } = useSession();
+  const isSalesRep = session?.user?.role === "SALES";
   const { data, isLoading } = useSalesDashboard();
   const { data: slugMap } = useCrmPeopleSlugs();
 
@@ -109,8 +112,8 @@ export default function SalesDashboardPage() {
     >
       <motion.div variants={fadeUp}>
         <PageHeader
-          title="Sales Dashboard"
-          description="Pipeline overview and sales performance metrics"
+          title={isSalesRep ? "My Sales Hub" : "Sales Dashboard"}
+          description={isSalesRep ? "Your pipeline, deals, and performance at a glance" : "Pipeline overview and sales performance metrics"}
         />
       </motion.div>
 
