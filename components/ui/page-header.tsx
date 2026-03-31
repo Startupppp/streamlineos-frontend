@@ -19,20 +19,20 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-1 md:flex-row md:items-center md:justify-between",
+        "flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between",
         className
       )}
     >
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <div className="space-y-0.5 min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground truncate">
           {title}
         </h1>
         {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-2 mt-4 md:mt-0">{actions}</div>
+        <div className="flex items-center gap-2 mt-3 sm:mt-0 shrink-0 flex-wrap">{actions}</div>
       )}
     </div>
   );

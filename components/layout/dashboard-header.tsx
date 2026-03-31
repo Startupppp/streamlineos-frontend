@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { usePathname } from "next/navigation"
 import { UserNav } from "./user-nav"
 import { NotificationBell } from "./notification-bell"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -8,9 +9,50 @@ import { Menu, Search } from "lucide-react"
 import { AppSidebar } from "./app-sidebar"
 import { Button } from "@/components/ui/button"
 
+const ROUTE_TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/hr": "Employees",
+  "/hr/leaves": "Leaves",
+  "/hr/expenses": "Expenses",
+  "/hr/attendance": "Attendance",
+  "/hr/payroll": "Payroll",
+  "/hr/devices": "Devices",
+  "/hr/documents": "Documents",
+  "/hr/onboarding": "Onboarding",
+  "/hr/work-logs": "Work Logs",
+  "/hr/org-chart": "Org Chart",
+  "/hr/performance": "Performance",
+  "/hr/my-payslips": "My Payslips",
+  "/crm/leads": "Lead Pipeline",
+  "/crm/deals": "Deals",
+  "/crm/targets": "Targets",
+  "/crm/analytics": "CRM Analytics",
+  "/crm/clients": "Clients",
+  "/crm/contacts": "Contacts",
+  "/crm/organizations": "Organizations",
+  "/projects": "Projects",
+  "/timesheets": "Timesheets",
+  "/settings": "Settings",
+  "/billing": "Billing",
+  "/sales": "Sales Dashboard",
+  "/customer-executive": "Customer Executive",
+  "/chat": "Chat",
+  "/support": "Support",
+}
+
 export function DashboardHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isMac, setIsMac] = useState(true)
+  const pathname = usePathname()
+
+  const pageTitle = useMemo(() => {
+    if (!pathname) return "Dashboard"
+    const sorted = Object.keys(ROUTE_TITLES).sort((a, b) => b.length - a.length)
+    for (const route of sorted) {
+      if (pathname === route || pathname.startsWith(route + "/")) return ROUTE_TITLES[route]
+    }
+    return "Dashboard"
+  }, [pathname])
 
   useEffect(() => {
     setIsMac(navigator.platform?.toUpperCase().includes("MAC") || navigator.userAgent?.includes("Mac"))
@@ -38,7 +80,7 @@ export function DashboardHeader() {
           </Sheet>
         </div>
 
-        <div className="font-semibold text-foreground">Dashboard</div>
+        <div className="font-semibold text-foreground">{pageTitle}</div>
       </div>
       <div className="flex items-center gap-2">
         <Button
