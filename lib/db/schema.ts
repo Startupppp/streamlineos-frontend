@@ -2305,3 +2305,18 @@ export const clientAccounts = pgTable('client_accounts', {
   index('idx_client_accounts_sales_rep').on(table.salesRepId),
   index('idx_client_accounts_status').on(table.orgId, table.status),
 ]);
+
+/* ─── Client Account Activities (CRM team logging) ─── */
+export const clientAccountActivities = pgTable('client_account_activities', {
+  id: serial('id').primaryKey(),
+  clientAccountId: integer('client_account_id').notNull().references(() => clientAccounts.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id),
+  activityType: text('activity_type').notNull(), // call, query, document, meeting, status_change, note
+  title: text('title').notNull(),
+  description: text('description'),
+  metadata: jsonb('metadata'), // duration, outcome, document_url, etc.
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_client_account_activities_account').on(table.clientAccountId),
+  index('idx_client_account_activities_user').on(table.userId),
+]);
