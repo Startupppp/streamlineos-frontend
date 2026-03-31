@@ -223,7 +223,7 @@ export const users = pgTable("users", {
   hasDashboardAccess: boolean("has_dashboard_access").default(false).notNull(),
   reportingTo: text("reporting_to"),
   team: text("team"),
-  branchId: integer("branch_id").references(() => branches.id),
+  branchId: integer("branch_id"),
   emergencyContact: jsonb("emergency_contact").$type<{
     name: string;
     relation: string;
@@ -2434,6 +2434,12 @@ export const clientAccountsRelations = relations(clientAccounts, ({ one, many })
 export const clientAccountActivitiesRelations = relations(clientAccountActivities, ({ one }) => ({
   clientAccount: one(clientAccounts, { fields: [clientAccountActivities.clientAccountId], references: [clientAccounts.id] }),
   user: one(users, { fields: [clientAccountActivities.userId], references: [users.id] }),
+}));
+
+export const branchesRelations = relations(branches, ({ one, many }) => ({
+  organization: one(organizations, { fields: [branches.orgId], references: [organizations.id] }),
+  branchManager: one(users, { fields: [branches.branchManagerId], references: [users.id], relationName: "branchManager" }),
+  branchHr: one(users, { fields: [branches.branchHrId], references: [users.id], relationName: "branchHr" }),
 }));
 
 export const dmLeadsRelations = relations(dmLeads, ({ one }) => ({
