@@ -468,10 +468,11 @@ export const employeeRouter = createTRPCRouter({
 
        } catch (error) {
          if (error instanceof TRPCError) throw error;
-         logger.error("Failed to onboard employee", { email: input.email, error });
+         const errMsg = error instanceof Error ? error.message : String(error);
+         logger.error("Failed to onboard employee", { email: input.email, error: errMsg });
          throw new TRPCError({
            code: "INTERNAL_SERVER_ERROR",
-           message: "Failed to create employee. Please check the details and try again.",
+           message: `Failed to create employee: ${errMsg}`,
          });
        }
     }),

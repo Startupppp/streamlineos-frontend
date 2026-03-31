@@ -179,6 +179,7 @@ export const users = pgTable("users", {
     branch: string;
     ifsc: string;
     accountHolder: string;
+    pfUanNumber?: string;
   }>(),
   image: text("image"),
   role: text("role").default("ENGINEERING").notNull(),
@@ -261,6 +262,7 @@ export const leaveRequests = pgTable("leave_requests", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   reason: text("reason"),
+  priority: text("priority").default("MEDIUM"),
   status: leaveStatusEnum("status").default("PENDING"),
   approverId: text("approver_id").references(() => users.id),
   rejectionReason: text("rejection_reason"),
