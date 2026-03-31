@@ -52,7 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2, Pencil } from "lucide-react";
+import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2, Pencil, Eye } from "lucide-react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 
@@ -83,6 +83,7 @@ export default function DevicesPage() {
     id: number; userId: string; deviceType: string; deviceName: string;
     serialNumber?: string | null; brand?: string | null; model?: string | null; notes?: string | null;
   } | null>(null);
+  const [viewDevice, setViewDevice] = useState<number | null>(null);
   const [deleteDeviceId, setDeleteDeviceId] = useState<number | null>(null);
 
   const { data: devices, isLoading, refetch } = api.hr.getDevices.useQuery({});
@@ -424,6 +425,14 @@ export default function DevicesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => setViewDevice(device.id)}
+                            aria-label={`View ${device.deviceName}`}
+                          >
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleEdit({
                               id: device.id,
                               userId: device.userId,
@@ -465,6 +474,52 @@ export default function DevicesPage() {
       </Card>
 
       
+      {/* View Device Sheet */}
+      <Sheet open={viewDevice !== null} onOpenChange={(o) => { if (!o) setViewDevice(null); }}>
+        <SheetContent className="sm:max-w-md p-6">
+          <SheetHeader className="mb-6">
+            <SheetTitle>Device Details</SheetTitle>
+          </SheetHeader>
+          {(() => {
+            const d = devices?.find((dev) => dev.id === viewDevice);
+            if (!d) return <p className="text-sm text-muted-foreground">Device not found</p>;
+            const Icon = deviceIcons[d.deviceType] || Laptop;
+            const rows = [
+              { label: "Device Name", value: d.deviceName },
+              { label: "Type", value: d.deviceType },
+              { label: "Brand", value: d.brand || "—" },
+              { label: "Model", value: d.model || "—" },
+              { label: "Serial Number", value: d.serialNumber || "—" },
+              { label: "Assigned To", value: d.user ? `${d.user.firstName} ${d.user.lastName}` : "—" },
+              { label: "Assigned Date", value: d.assignedDate ? format(new Date(d.assignedDate), "MMM d, yyyy") : "—" },
+              { label: "Status", value: d.status || "ACTIVE" },
+              { label: "Notes", value: d.notes || "—" },
+            ];
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 pb-4 border-b">
+                  <div className="h-12 w-12 rounded-lg bg-[#bd882c]/10 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-[#bd882c]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">{d.deviceName}</p>
+                    <p className="text-sm text-muted-foreground">{d.brand} {d.model}</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {rows.map((row) => (
+                    <div key={row.label} className="flex justify-between items-start">
+                      <span className="text-sm text-muted-foreground">{row.label}</span>
+                      <span className="text-sm font-medium text-right max-w-[60%]">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
       {/* Edit Device Sheet */}
       <Sheet open={editDevice !== null} onOpenChange={(o) => { if (!o) setEditDevice(null); }}>
         <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
