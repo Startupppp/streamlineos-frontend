@@ -380,7 +380,6 @@ export default function WorkLogsPage() {
                     </Select>
                   </div>
 
-                  {/* Date Range */}
                   <div className="space-y-1.5">
                     <Label className="text-sm font-medium">Date Range</Label>
                     <div className="grid grid-cols-2 gap-3">
@@ -389,8 +388,14 @@ export default function WorkLogsPage() {
                         <Input
                           type="date"
                           value={draftFilters.dateFrom || ""}
-                          onChange={(e) => setDraftFilters(p => ({ ...p, dateFrom: e.target.value || undefined }))}
-                          className="text-sm"
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val && new Date(val).getFullYear() > 2100) return;
+                            setDraftFilters(p => ({ ...p, dateFrom: val || undefined }));
+                          }}
+                          max={draftFilters.dateTo || new Date().toISOString().slice(0, 10)}
+                          onKeyDown={(e) => e.preventDefault()}
+                          className="text-sm cursor-pointer"
                         />
                       </div>
                       <div>
@@ -398,9 +403,15 @@ export default function WorkLogsPage() {
                         <Input
                           type="date"
                           value={draftFilters.dateTo || ""}
-                          onChange={(e) => setDraftFilters(p => ({ ...p, dateTo: e.target.value || undefined }))}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val && new Date(val).getFullYear() > 2100) return;
+                            setDraftFilters(p => ({ ...p, dateTo: val || undefined }));
+                          }}
                           min={draftFilters.dateFrom || undefined}
-                          className="text-sm"
+                          max={new Date().toISOString().slice(0, 10)}
+                          onKeyDown={(e) => e.preventDefault()}
+                          className="text-sm cursor-pointer"
                         />
                       </div>
                     </div>
