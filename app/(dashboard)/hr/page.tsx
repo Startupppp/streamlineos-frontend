@@ -264,23 +264,29 @@ export default function HRDashboardPage() {
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => {
-                const headers = ["Name", "Email", "Role", "Department", "Status"];
-                const rows = filteredEmployees.map((e) => [
-                  getDisplayName(e),
-                  e.email,
-                  e.designation ?? ROLE_LABELS[e.role] ?? e.role,
-                  e.department?.name ?? "",
-                  e.isActive !== false ? "Active" : "Inactive",
-                ]);
-                const csv = [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
-                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
+              onClick={async () => {
+                const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+                const rows = filteredEmployees.map((e) => ({
+                  name: getDisplayName(e),
+                  email: e.email,
+                  role: e.designation ?? ROLE_LABELS[e.role] ?? e.role,
+                  department: e.department?.name ?? "",
+                  status: e.isActive !== false ? "Active" : "Inactive",
+                }));
+                await downloadXlsx(
+                  `employees-${new Date().toISOString().slice(0, 10)}.xlsx`,
+                  [{
+                    name: "Employees",
+                    columns: [
+                      { header: "Name", key: "name", width: 25 },
+                      { header: "Email", key: "email", width: 30 },
+                      { header: "Role", key: "role", width: 20 },
+                      { header: "Department", key: "department", width: 20 },
+                      { header: "Status", key: "status", width: 12 },
+                    ],
+                    rows,
+                  }],
+                );
                 toast.success("Employees exported successfully");
               }}
             >

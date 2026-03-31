@@ -113,6 +113,7 @@ export const vaivammKeys = {
     list: (userId?: string) => [...targetsBaseKey, "list", { userId }] as const,
     myTargets: () => [...targetsBaseKey, "myTargets"] as const,
     leaderboard: (metricType?: string) => [...targetsBaseKey, "leaderboard", { metricType }] as const,
+    history: (targetId: number) => [...targetsBaseKey, "history", { targetId }] as const,
   },
 
   roles: {

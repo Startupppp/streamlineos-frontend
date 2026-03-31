@@ -24,7 +24,10 @@ export type AuditAction =
   | "expense.rejected"
   | "settings.updated"
   | "file.upload"
-  | "file.download";
+  | "file.download"
+  | "target.created"
+  | "target.updated"
+  | "target.deleted";
 
 interface AuditLogEntry {
   action: AuditAction;

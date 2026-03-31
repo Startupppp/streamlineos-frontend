@@ -1184,10 +1184,24 @@ export const targets = pgTable("targets", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   setById: text("set_by_id").references(() => users.id),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_targets_user_period").on(table.userId, table.period),
+]);
+
+export const targetHistory = pgTable("target_history", {
+  id: serial("id").primaryKey(),
+  targetId: integer("target_id").references(() => targets.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  changedById: text("changed_by_id").references(() => users.id).notNull(),
+  field: text("field").notNull(),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_target_history_target").on(table.targetId),
 ]);
 
 export const dealStageEnum = pgEnum("deal_stage", ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]);
@@ -1528,7 +1542,7 @@ export const clientsRelations = relations(clients, ({ one }) => ({
   }),
 }));
 
-export const targetsRelations = relations(targets, ({ one }) => ({
+export const targetsRelations = relations(targets, ({ one, many }) => ({
   user: one(users, {
     fields: [targets.userId],
     references: [users.id],
@@ -1537,6 +1551,18 @@ export const targetsRelations = relations(targets, ({ one }) => ({
     fields: [targets.setById],
     references: [users.id],
     relationName: "targetSetter",
+  }),
+  history: many(targetHistory),
+}));
+
+export const targetHistoryRelations = relations(targetHistory, ({ one }) => ({
+  target: one(targets, {
+    fields: [targetHistory.targetId],
+    references: [targets.id],
+  }),
+  changedBy: one(users, {
+    fields: [targetHistory.changedById],
+    references: [users.id],
   }),
 }));
 

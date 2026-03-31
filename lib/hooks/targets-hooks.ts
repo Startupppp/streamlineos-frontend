@@ -36,6 +36,18 @@ export function useTargetLeaderboard(
   });
 }
 
+export function useTargetHistory(
+  targetId: number,
+  options?: Partial<UseQueryOptions<TargetsRouterOutputs["getHistory"]>>
+) {
+  return useQuery<TargetsRouterOutputs["getHistory"]>({
+    queryKey: vaivammKeys.targets.history(targetId),
+    queryFn: () => vaivammTrpcClient.targets.getHistory.query({ targetId }),
+    enabled: targetId > 0,
+    ...options,
+  });
+}
+
 export function useCreateTarget() {
   const queryClient = useQueryClient();
   return useMutation({
