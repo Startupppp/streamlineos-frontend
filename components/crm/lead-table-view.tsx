@@ -15,15 +15,19 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  ArrowUpDown, ArrowUp, ArrowDown, Copy, Columns3,
-  Trash2, UserPlus, Flag, ChevronLeft, ChevronRight,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  ArrowUpDown, ArrowUp, ArrowDown, Columns3,
+  Trash2, ChevronLeft, ChevronRight,
   Download, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
 
 /* ─── Types ─── */
 interface Lead {
@@ -56,11 +60,13 @@ interface LeadTableViewProps {
   totalCount: number;
   page: number;
   totalPages: number;
+  pageSize: number;
   sortColumn: string;
   sortDirection: "asc" | "desc";
   onSort: (column: string) => void;
   onPageChange: (page: number) => void;
-  onStatusChange: (leadId: number, newStatus: string) => void;
+  onPageSizeChange: (size: number) => void;
+  onStatusChange: (leadId: number, newStatus: string, extra?: { conversionNotes?: string; investmentInterest?: string; estimatedAmount?: string; lostReason?: string; lostNotes?: string }) => void;
   onPriorityChange: (leadId: number, newPriority: string) => void;
   onAssign: (leadId: number, userId: string) => void;
   onBulkUpdate: (leadIds: number[], update: { status?: string; priority?: string; assignedToId?: string }) => void;
@@ -73,6 +79,18 @@ interface LeadTableViewProps {
 /* ─── Constants ─── */
 const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"];
 const PRIORITIES = ["HOT", "WARM", "COLD"];
+const PAGE_SIZES = [25, 50, 100];
+
+const LOST_REASONS = [
+  "Not interested",
+  "Budget constraints",
+  "Chose competitor",
+  "No response",
+  "Bad timing",
+  "Invalid lead",
+  "Duplicate",
+  "Other",
+];
 
 const STATUS_COLORS: Record<string, string> = {
   NEW: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -152,8 +170,8 @@ function copyToClipboard(text: string, label: string) {
 
 /* ─── Component ─── */
 export function LeadTableView({
-  leads, totalCount, page, totalPages,
-  sortColumn, sortDirection, onSort, onPageChange,
+  leads, totalCount, page, totalPages, pageSize,
+  sortColumn, sortDirection, onSort, onPageChange, onPageSizeChange,
   onStatusChange, onPriorityChange, onAssign,
   onBulkUpdate, onBulkDelete, teamMembers,
   isLoading, isAdmin,
@@ -162,6 +180,17 @@ export function LeadTableView({
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [editingCell, setEditingCell] = useState<{ leadId: number; column: string } | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(getStoredColumns);
+
+  // Conversion modal state
+  const [conversionModal, setConversionModal] = useState<{ leadId: number; leadName: string } | null>(null);
+  const [conversionNotes, setConversionNotes] = useState("");
+  const [investmentInterest, setInvestmentInterest] = useState("");
+  const [estimatedAmount, setEstimatedAmount] = useState("");
+
+  // Lost modal state
+  const [lostModal, setLostModal] = useState<{ leadId: number; leadName: string } | null>(null);
+  const [lostReason, setLostReason] = useState("");
+  const [lostNotes, setLostNotes] = useState("");
 
   const allSelected = leads.length > 0 && leads.every(l => selectedIds.has(l.id));
 
@@ -192,6 +221,50 @@ export function LeadTableView({
 
   const selectedArray = useMemo(() => [...selectedIds], [selectedIds]);
   const cols = useMemo(() => ALL_COLUMNS.filter(c => visibleColumns.has(c.key)), [visibleColumns]);
+
+  const handleStatusChange = useCallback((leadId: number, newStatus: string, leadName: string) => {
+    if (newStatus === "CONVERTED") {
+      setConversionModal({ leadId, leadName });
+      setConversionNotes("");
+      setInvestmentInterest("");
+      setEstimatedAmount("");
+      return;
+    }
+    if (newStatus === "LOST") {
+      setLostModal({ leadId, leadName });
+      setLostReason("");
+      setLostNotes("");
+      return;
+    }
+    onStatusChange(leadId, newStatus);
+  }, [onStatusChange]);
+
+  const handleConversionSubmit = useCallback(() => {
+    if (!conversionModal) return;
+    if (!conversionNotes.trim()) {
+      toast.error("Please add conversion notes");
+      return;
+    }
+    onStatusChange(conversionModal.leadId, "CONVERTED", {
+      conversionNotes: conversionNotes.trim(),
+      investmentInterest: investmentInterest.trim(),
+      estimatedAmount: estimatedAmount.trim(),
+    });
+    setConversionModal(null);
+  }, [conversionModal, conversionNotes, investmentInterest, estimatedAmount, onStatusChange]);
+
+  const handleLostSubmit = useCallback(() => {
+    if (!lostModal) return;
+    if (!lostReason) {
+      toast.error("Please select a loss reason");
+      return;
+    }
+    onStatusChange(lostModal.leadId, "LOST", {
+      lostReason,
+      lostNotes: lostNotes.trim(),
+    });
+    setLostModal(null);
+  }, [lostModal, lostReason, lostNotes, onStatusChange]);
 
   function SortIcon({ column }: { column: string }) {
     if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
@@ -251,7 +324,7 @@ export function LeadTableView({
       case "status":
         if (isEditing) {
           return (
-            <Select defaultValue={lead.status} onValueChange={(v) => { onStatusChange(lead.id, v); setEditingCell(null); }}>
+            <Select defaultValue={lead.status} onValueChange={(v) => { handleStatusChange(lead.id, v, lead.name); setEditingCell(null); }}>
               <SelectTrigger className="h-7 text-xs w-[120px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
@@ -368,25 +441,33 @@ export function LeadTableView({
       {/* Column visibility toggle */}
       <div className="flex items-center justify-between px-1 pb-2">
         <span className="text-xs text-muted-foreground">{totalCount} leads</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-xs">
-              <Columns3 className="h-3.5 w-3.5 mr-1" /> Columns
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {ALL_COLUMNS.map(col => (
-              <DropdownMenuCheckboxItem
-                key={col.key}
-                checked={visibleColumns.has(col.key)}
-                onCheckedChange={() => toggleColumn(col.key)}
-                className="text-xs"
-              >
-                {col.label}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+            <SelectTrigger className="h-7 w-[80px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZES.map(s => <SelectItem key={s} value={String(s)} className="text-xs">{s} / page</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-xs">
+                <Columns3 className="h-3.5 w-3.5 mr-1" /> Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {ALL_COLUMNS.map(col => (
+                <DropdownMenuCheckboxItem
+                  key={col.key}
+                  checked={visibleColumns.has(col.key)}
+                  onCheckedChange={() => toggleColumn(col.key)}
+                  className="text-xs"
+                >
+                  {col.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Table */}
@@ -545,6 +626,84 @@ export function LeadTableView({
           </Button>
         </div>
       )}
+
+      {/* Conversion Modal */}
+      <Dialog open={!!conversionModal} onOpenChange={(open) => !open && setConversionModal(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Convert Lead: {conversionModal?.leadName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="conversion-notes">Conversion Notes *</Label>
+              <Textarea
+                id="conversion-notes"
+                placeholder="Describe why this lead is being converted..."
+                value={conversionNotes}
+                onChange={(e) => setConversionNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="investment-interest">Investment Interest</Label>
+              <Input
+                id="investment-interest"
+                placeholder="e.g., Mutual Funds, SIP, Stocks"
+                value={investmentInterest}
+                onChange={(e) => setInvestmentInterest(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="estimated-amount">Estimated Investment Amount</Label>
+              <Input
+                id="estimated-amount"
+                type="number"
+                placeholder="e.g., 500000"
+                value={estimatedAmount}
+                onChange={(e) => setEstimatedAmount(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConversionModal(null)}>Cancel</Button>
+            <Button onClick={handleConversionSubmit} className="bg-emerald-600 hover:bg-emerald-700">Convert Lead</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lost Reason Modal */}
+      <Dialog open={!!lostModal} onOpenChange={(open) => !open && setLostModal(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark as Lost: {lostModal?.leadName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Loss Reason *</Label>
+              <Select value={lostReason} onValueChange={setLostReason}>
+                <SelectTrigger><SelectValue placeholder="Select reason..." /></SelectTrigger>
+                <SelectContent>
+                  {LOST_REASONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lost-notes">Additional Notes</Label>
+              <Textarea
+                id="lost-notes"
+                placeholder="Optional additional details..."
+                value={lostNotes}
+                onChange={(e) => setLostNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLostModal(null)}>Cancel</Button>
+            <Button onClick={handleLostSubmit} variant="destructive">Mark as Lost</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

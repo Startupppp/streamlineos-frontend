@@ -133,6 +133,7 @@ export default function LeadsPipelinePage() {
   const [sortColumn, setSortColumn] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [tablePage, setTablePage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
   const [sourceFilter, setSourceFilter] = useState<string | undefined>();
@@ -142,7 +143,7 @@ export default function LeadsPipelinePage() {
     sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
     sortOrder: sortDirection,
     page: tablePage,
-    limit: 50,
+    limit: pageSize,
     status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
     priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
     source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
@@ -459,11 +460,23 @@ export default function LeadsPipelinePage() {
             totalCount={tableData?.totalCount || 0}
             page={tableData?.page || 1}
             totalPages={tableData?.totalPages || 1}
+            pageSize={pageSize}
             sortColumn={sortColumn}
             sortDirection={sortDirection}
             onSort={handleSort}
             onPageChange={setTablePage}
-            onStatusChange={(id, status) => updateStatus.mutate({ leadId: id, status: status as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" })}
+            onPageSizeChange={(size) => { setPageSize(size); setTablePage(1); }}
+            onStatusChange={(id, status, extra) => {
+              if (status === "CONVERTED" && extra) {
+                // Save conversion details first, then update status
+                updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
+                updateStatus.mutate({ leadId: id, status: "CONVERTED" as const });
+              } else if (status === "LOST" && extra) {
+                updateStatus.mutate({ leadId: id, status: "LOST" as const, lostReason: extra.lostReason });
+              } else {
+                updateStatus.mutate({ leadId: id, status: status as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" });
+              }
+            }}
             onPriorityChange={(id, priority) => updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" })}
             onAssign={(id, userId) => assignLead.mutate({ leadId: id, assignedToId: userId })}
             onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } })}
