@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition, useRef } from "react";
+import { useState, useEffect, useCallback, useTransition } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import {
@@ -29,7 +29,6 @@ import {
   Eye,
   Pencil,
   RotateCcw,
-  Loader2,
 } from "lucide-react";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -73,6 +72,7 @@ import {
   ExpenseWithRelations,
 } from "@/server/actions/expense-query";
 import { CreateExpenseDialog } from "./create-expense-dialog";
+import { ImportExpenseSheet } from "./import-expense-sheet";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filters";
 import { useSession } from "next-auth/react";
@@ -153,8 +153,7 @@ export default function ExpensesPage() {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isPending, startTransition] = useTransition();
-  const [isImporting, setIsImporting] = useState(false);
-  const importFileRef = useRef<HTMLInputElement>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const isAdmin = session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
   const {
@@ -236,40 +235,8 @@ export default function ExpensesPage() {
     else { toast.error(result.error); loadData(filters); }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const validTypes = [
-      "text/csv",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-    if (!validTypes.includes(file.type) && !file.name.endsWith(".csv") && !file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      toast.error("Please select a CSV or Excel (.xlsx) file");
-      if (importFileRef.current) importFileRef.current.value = "";
-      return;
-    }
-    setIsImporting(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await fetch("/api/expenses/import", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json();
-      if (response.ok && result.success) {
-        toast.success(`Imported ${result.count ?? 0} expense(s) successfully`);
-        loadData(filters, true);
-      } else {
-        toast.error(result.error || "Failed to import expenses");
-      }
-    } catch {
-      toast.error("Failed to import expenses");
-    } finally {
-      setIsImporting(false);
-      if (importFileRef.current) importFileRef.current.value = "";
-    }
+  const handleImportSuccess = () => {
+    loadData(filters, true);
   };
 
   /* ─── Loading State ─── */
@@ -319,19 +286,11 @@ export default function ExpensesPage() {
               <Button
                 variant="outline"
                 className="gap-2"
-                onClick={() => importFileRef.current?.click()}
-                disabled={isImporting}
+                onClick={() => setIsImportOpen(true)}
               >
-                {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                <Upload className="h-4 w-4" />
                 Import
               </Button>
-              <input
-                ref={importFileRef}
-                type="file"
-                className="hidden"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleImport}
-              />
               <ExpenseExportDialog
                 filters={filters}
                 categories={expenseCategories}
@@ -687,6 +646,11 @@ export default function ExpensesPage() {
           onSuccess={() => { loadData(filters); setIsCreateOpen(false); setEditingExpense(null); }}
           categories={EXPENSE_CATEGORIES} paymentMethods={PAYMENT_METHODS}
           editExpense={editingExpense}
+        />
+        <ImportExpenseSheet
+          open={isImportOpen}
+          onOpenChange={setIsImportOpen}
+          onSuccess={handleImportSuccess}
         />
       </div>
     );
