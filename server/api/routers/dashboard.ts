@@ -248,11 +248,22 @@ export const dashboardRouter = createTRPCRouter({
 
     if (projectIds.length === 0) return [];
 
+    const ticketFilters = [
+      eq(tickets.orgId, ctx.session.orgId),
+      inArray(tickets.projectId, projectIds),
+    ];
+    // Non-admin users only see their own assigned/reported tickets
+    if (!isOwnerOrAdmin) {
+      ticketFilters.push(
+        or(
+          eq(tickets.assigneeId, ctx.session.userId),
+          eq(tickets.reporterId, ctx.session.userId),
+        )!,
+      );
+    }
+
     const recentTickets = await ctx.db.query.tickets.findMany({
-      where: and(
-        eq(tickets.orgId, ctx.session.orgId),
-        inArray(tickets.projectId, projectIds)
-      ),
+      where: and(...ticketFilters),
       orderBy: [desc(tickets.updatedAt)],
       limit: 10,
       with: {
