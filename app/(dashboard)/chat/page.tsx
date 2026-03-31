@@ -749,6 +749,7 @@ function MessagePanel({
   useEffect(() => {
     if (polledMessages && polledMessages.length > 0) {
       queryClient.invalidateQueries({ queryKey: vaivammKeys.chat.messages(channelId) });
+      queryClient.invalidateQueries({ queryKey: vaivammKeys.chat.myChannels() });
       setLastPollTime(new Date().toISOString());
     }
   }, [polledMessages, channelId, queryClient]);
