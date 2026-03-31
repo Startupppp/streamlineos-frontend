@@ -223,6 +223,7 @@ export const users = pgTable("users", {
   hasDashboardAccess: boolean("has_dashboard_access").default(false).notNull(),
   reportingTo: text("reporting_to"),
   team: text("team"),
+  branchId: integer("branch_id").references(() => branches.id),
   emergencyContact: jsonb("emergency_contact").$type<{
     name: string;
     relation: string;
@@ -697,6 +698,8 @@ export const notifications = pgTable("notifications", {
   link: text("link"),
   isRead: boolean("is_read").default(false),
   metadata: jsonb("metadata"),
+  channel: text("channel").default("in_app"), // in_app, email, both
+  sound: boolean("sound").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -1147,6 +1150,8 @@ export const leads = pgTable("leads", {
   score: integer("score").default(0),
   slaDeadline: timestamp("sla_deadline"),
   website: text("website"),
+  subSource: text("sub_source"), // e.g., "Employee: Ravi", "Instagram - Summer Campaign"
+  dmLeadId: integer("dm_lead_id").references(() => dmLeads.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -1209,11 +1214,15 @@ export const targets = pgTable("targets", {
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   setById: text("set_by_id").references(() => users.id),
+  branchId: integer("branch_id").references(() => branches.id),
+  parentTargetId: integer("parent_target_id"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_targets_user_period").on(table.userId, table.period),
+  index("idx_targets_branch").on(table.branchId),
+  foreignKey({ columns: [table.parentTargetId], foreignColumns: [table.id] }),
 ]);
 
 export const targetHistory = pgTable("target_history", {
@@ -1337,6 +1346,8 @@ export const crmCampaigns = pgTable("crm_campaigns", {
   leads: integer("leads").default(0),
   spend: decimal("spend").default("0"),
   roi: decimal("roi").default("0"),
+  budgetAllocated: decimal("budget_allocated", { precision: 15, scale: 2 }),
+  budgetSpent: decimal("budget_spent", { precision: 15, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 export const crmLeads = pgTable("crm_leads", {
@@ -1663,6 +1674,9 @@ export const chatMessages = pgTable("chat_messages", {
   replyToId: integer("reply_to_id"),
   isEdited: boolean("is_edited").default(false).notNull(),
   isDeleted: boolean("is_deleted").default(false).notNull(),
+  messageType: chatMessageTypeEnum("message_type").notNull().default("text"),
+  metadata: jsonb("metadata"), // structured data for lead_submission type
+  actionStatus: text("action_status"), // pending, imported, dismissed
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

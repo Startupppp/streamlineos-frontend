@@ -93,6 +93,9 @@ type Message = {
   replyToId: number | null;
   isEdited: boolean;
   isDeleted: boolean;
+  messageType: "text" | "lead_submission" | "system";
+  metadata: unknown;
+  actionStatus: string | null;
   createdAt: Date | null;
   updatedAt: Date | null;
   sender: { id: string; name: string | null; image: string | null } | null;
