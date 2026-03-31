@@ -119,11 +119,6 @@ export function ImportExpenseSheet({
   const handleDownloadTemplate = async () => {
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      const rows = SAMPLE_ROWS.map((row) => {
-        const obj: Record<string, string> = {};
-        TEMPLATE_COLUMNS.forEach((col, i) => { obj[col] = row[i] || ""; });
-        return obj;
-      });
       await downloadXlsx(`expense_import_template_${format(new Date(), "yyyy-MM-dd")}.xlsx`, [{
         name: "Expenses",
         columns: TEMPLATE_COLUMNS.map((col) => ({
@@ -131,7 +126,7 @@ export function ImportExpenseSheet({
           key: col,
           width: 18,
         })),
-        rows,
+        rows: [],
       }]);
       toast.success("Template downloaded");
     } catch {
