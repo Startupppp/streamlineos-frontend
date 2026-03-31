@@ -2357,3 +2357,30 @@ export const incentives = pgTable('incentives', {
   index('idx_incentives_sales_rep').on(table.salesRepId),
   index('idx_incentives_status').on(table.status),
 ]);
+
+/* ─── DM Leads (Digital Marketing lead capture) ─── */
+export const dmLeads = pgTable('dm_leads', {
+  id: serial('id').primaryKey(),
+  orgId: text('org_id').notNull().references(() => organizations.id),
+  name: text('name').notNull(),
+  phone: text('phone'),
+  email: text('email'),
+  whatsappNumber: text('whatsapp_number'),
+  sourcePlatform: text('source_platform').notNull(), // linkedin, instagram, facebook, google_ads, seo, website, whatsapp, email_campaign
+  campaignId: integer('campaign_id').references(() => crmCampaigns.id),
+  campaignType: text('campaign_type'), // organic, paid, referral, content
+  leadQuality: text('lead_quality').default('warm'), // hot, warm, cold
+  notes: text('notes'),
+  landingPageUrl: text('landing_page_url'),
+  dateCaptured: timestamp('date_captured').defaultNow().notNull(),
+  status: dmLeadStatusEnum('status').notNull().default('pending_review'),
+  verifiedBy: text('verified_by').references(() => users.id),
+  importedLeadId: integer('imported_lead_id').references(() => leads.id),
+  createdBy: text('created_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_dm_leads_org').on(table.orgId),
+  index('idx_dm_leads_status').on(table.status),
+  index('idx_dm_leads_platform').on(table.sourcePlatform),
+]);
