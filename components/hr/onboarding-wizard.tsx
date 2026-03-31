@@ -633,18 +633,21 @@ export function OnboardingWizard() {
                                 <FormLabel>Years of Experience</FormLabel>
                                 <FormControl>
                                   <Input
-                                    type="text"
+                                    type="number"
                                     inputMode="decimal"
-                                    placeholder="5.5"
-                                    value={field.value != null ? String(field.value) : ""}
+                                    step="0.1"
+                                    min="0"
+                                    max="50"
+                                    placeholder="e.g. 2.5"
+                                    value={field.value != null ? field.value : ""}
                                     onChange={(e) => {
                                       const v = e.target.value;
-                                      if (v === "" || v === ".") {
-                                        field.onChange(v === "" ? undefined : 0);
+                                      if (v === "") {
+                                        field.onChange(undefined);
                                         return;
                                       }
                                       if (/^\d*\.?\d*$/.test(v)) {
-                                        field.onChange(Number(v));
+                                        field.onChange(parseFloat(v) || 0);
                                       }
                                     }}
                                     onBlur={field.onBlur}
