@@ -193,6 +193,7 @@ export const onboardEmployeeInputSchema = z.object({
     branch: z.string().min(1, "Branch name is required").regex(/^[A-Za-z\s]+$/, "Branch must contain only letters"),
     ifsc: z.string().min(1, "IFSC code is required").regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC format (e.g., SBIN0001234)"),
     accountHolder: z.string().min(1, "Account holder name is required").regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters"),
+    pfUanNumber: z.string().regex(/^\d{12}$/, "UAN must be exactly 12 digits").optional().or(z.literal("")),
   }),
 });
 

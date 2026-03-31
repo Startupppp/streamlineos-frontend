@@ -125,7 +125,8 @@ export function OnboardingWizard() {
         bankName: "",
         branch: "",
         ifsc: "",
-        accountHolder: ""
+        accountHolder: "",
+        pfUanNumber: "",
       }
     };
     return base;
@@ -728,7 +729,7 @@ export function OnboardingWizard() {
                       </div>
                     )}
 
-                    {currentStep === 4 && (
+                    {currentStep === 4 && (<>
                       <div className="grid gap-5 md:grid-cols-2">
                         <FormField
                           control={form.control}
@@ -807,7 +808,34 @@ export function OnboardingWizard() {
                           )}
                         />
                       </div>
-                    )}
+
+                      {/* Statutory Details */}
+                      <div className="pt-2">
+                        <p className="text-sm font-medium text-muted-foreground mb-3">Statutory Details (Optional)</p>
+                        <FormField
+                          control={form.control}
+                          name="bankDetails.pfUanNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>PF / UAN Number</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="e.g. 100123456789"
+                                  {...field}
+                                  onChange={(e) => {
+                                    const v = e.target.value.replace(/\D/g, "");
+                                    if (v.length <= 12) field.onChange(v);
+                                  }}
+                                  maxLength={12}
+                                />
+                              </FormControl>
+                              <p className="text-xs text-muted-foreground mt-1">Optional: Required only if PF is applicable</p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </>)}
 
                     {currentStep === 5 && (
                       <div className="space-y-6">
