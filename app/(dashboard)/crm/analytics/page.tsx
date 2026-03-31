@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import {
   Download, CalendarDays, TrendingUp, Users,
   BarChart3, PieChart as PieChartIcon, Activity, Target, Filter,
+  DollarSign, Percent,
 } from "lucide-react";
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
+  BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
   FunnelChart, Funnel, LabelList,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
+import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +73,12 @@ export default function CrmAnalyticsPage() {
   const { data: allLeadsResult, isLoading: leadsLoading } = api.leads.getAll.useQuery({ limit: 100 });
   const allLeads = allLeadsResult?.leads;
 
-  const isLoading = statsLoading || dealsLoading || leaderLoading || slaLoading || leadsLoading;
+  const { data: analyticsSummary, isLoading: summaryLoading } = api.leads.getAnalyticsSummary.useQuery({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
+
+  const isLoading = statsLoading || dealsLoading || leaderLoading || slaLoading || leadsLoading || summaryLoading;
 
   const funnelData = useMemo(() => {
     if (!leadStats) return [];
@@ -214,6 +221,43 @@ export default function CrmAnalyticsPage() {
           </Button>
         </div>
       </motion.div>
+
+      {analyticsSummary && (
+        <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="Total Leads"
+            value={analyticsSummary.totalLeads}
+            icon={Users}
+            index={0}
+            trend={analyticsSummary.totalLeadsPrevPeriod > 0 ? {
+              value: Math.round(((analyticsSummary.totalLeads - analyticsSummary.totalLeadsPrevPeriod) / analyticsSummary.totalLeadsPrevPeriod) * 100),
+              isPositive: analyticsSummary.totalLeads >= analyticsSummary.totalLeadsPrevPeriod,
+            } : undefined}
+          />
+          <StatCard
+            label="Conversion Rate"
+            value={`${analyticsSummary.conversionRate}%`}
+            icon={Percent}
+            index={1}
+            trend={analyticsSummary.conversionRatePrevPeriod > 0 ? {
+              value: Math.abs(analyticsSummary.conversionRate - analyticsSummary.conversionRatePrevPeriod),
+              isPositive: analyticsSummary.conversionRate >= analyticsSummary.conversionRatePrevPeriod,
+            } : undefined}
+          />
+          <StatCard
+            label="Total Revenue"
+            value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`}
+            icon={DollarSign}
+            index={2}
+          />
+          <StatCard
+            label="Active Reps"
+            value={analyticsSummary.assignmentDistribution.length}
+            icon={Target}
+            index={3}
+          />
+        </motion.div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <motion.div variants={fadeUp}>
@@ -441,6 +485,89 @@ export default function CrmAnalyticsPage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {analyticsSummary && analyticsSummary.assignmentDistribution.length > 0 && (
+          <motion.div variants={fadeUp}>
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Lead Assignment Distribution</CardTitle>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.assignmentDistribution, "assignment-distribution")}>
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={analyticsSummary.assignmentDistribution} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} width={100} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Bar dataKey="count" fill="#3B82F6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {analyticsSummary && analyticsSummary.conversionBySource.length > 0 && (
+          <motion.div variants={fadeUp}>
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Conversion Rate by Source</CardTitle>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.conversionBySource, "conversion-by-source")}>
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={analyticsSummary.conversionBySource}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="source" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+                    <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                    <Bar dataKey="total" name="Total" fill="#94A3B8" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="converted" name="Converted" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    <Legend />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {analyticsSummary && analyticsSummary.monthlyRevenue.length > 0 && (
+          <motion.div variants={fadeUp}>
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Monthly Revenue Trend</CardTitle>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.monthlyRevenue, "monthly-revenue")}>
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={analyticsSummary.monthlyRevenue}>
+                    <defs>
+                      <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#bd882c" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#bd882c" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
+                      formatter={(value) => [`₹${(Number(value) / 100000).toFixed(1)}L`, "Revenue"]}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#bd882c" strokeWidth={2} fill="url(#revenueGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

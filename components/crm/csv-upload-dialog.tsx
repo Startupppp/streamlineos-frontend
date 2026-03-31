@@ -179,12 +179,16 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [fileName, setFileName] = useState("");
   const [isParsing, setIsParsing] = useState(false);
 
+  const [autoDistribute, setAutoDistribute] = useState(true);
+
   const [importResult, setImportResult] = useState<{
     imported: number;
     skipped: number;
     updated: number;
     errors: { row: number; message: string }[];
     duplicatesFound: number;
+    distributed?: number;
+    salesPeopleCount?: number;
   } | null>(null);
 
   const bulkImport = api.leads.bulkImport.useMutation({
@@ -224,7 +228,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
       }
     } catch (err) {
       toast.error("Failed to parse file. Please check the format.");
-      console.error("Parse error:", err);
     } finally {
       setIsParsing(false);
     }
@@ -263,6 +266,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
         priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
         tags: l.tags ? l.tags.split(",").map(t => t.trim()) : undefined,
       })),
+      autoDistribute,
     });
   };
 
@@ -283,6 +287,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setFileName("");
     setIsParsing(false);
     setImportResult(null);
+    setAutoDistribute(true);
   };
 
   return (
@@ -411,6 +416,11 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
                   <p className="text-sm font-medium text-green-700 dark:text-green-400">Import Complete</p>
                   <p className="text-xs text-muted-foreground">{importResult.imported} imported, {importResult.skipped} skipped, {importResult.updated} updated</p>
+                  {importResult.distributed && importResult.distributed > 0 && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      {importResult.distributed} leads distributed to {importResult.salesPeopleCount} sales rep{(importResult.salesPeopleCount ?? 0) > 1 ? "s" : ""} ({Math.floor(importResult.distributed / (importResult.salesPeopleCount || 1))} each)
+                    </p>
+                  )}
                   {importResult.errors.length > 0 && (
                     <div className="mt-2 space-y-0.5">
                       {importResult.errors.slice(0, 5).map((err, i) => (
@@ -427,23 +437,38 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 </Button>
               </div>
             ) : (
-              <Button
-                className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white"
-                onClick={handleImport}
-                disabled={bulkImport.isPending || !parsed?.length}
-              >
-                {bulkImport.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Importing...
-                  </span>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Import {parsed?.length || 0} Leads
-                  </>
-                )}
-              </Button>
+              <div className="space-y-3">
+                <label className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-3 py-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoDistribute}
+                    onChange={(e) => setAutoDistribute(e.target.checked)}
+                    className="h-4 w-4 rounded border-input accent-[#bd882c]"
+                  />
+                  <div>
+                    <p className="text-sm font-medium leading-none">Auto-distribute to sales team</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Evenly split imported leads across active sales reps</p>
+                  </div>
+                </label>
+
+                <Button
+                  className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  onClick={handleImport}
+                  disabled={bulkImport.isPending || !parsed?.length}
+                >
+                  {bulkImport.isPending ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Importing...
+                    </span>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Import {parsed?.length || 0} Leads
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         )}

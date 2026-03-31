@@ -1060,6 +1060,110 @@ export const leadsRouter = createTRPCRouter({
       return updated;
     }),
 
+  getAnalyticsSummary: protectedProcedure
+    .input(z.object({
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.session.orgId;
+      const filters = [eq(leads.orgId, orgId)];
+      if (input?.dateFrom) filters.push(gte(leads.createdAt, new Date(input.dateFrom)));
+      if (input?.dateTo) filters.push(lte(leads.createdAt, new Date(input.dateTo + "T23:59:59")));
+
+      const allLeadsData = await ctx.db.query.leads.findMany({
+        where: and(...filters),
+        columns: { id: true, status: true, source: true, assignedToId: true, createdAt: true, potentialValue: true },
+      });
+
+      const totalLeads = allLeadsData.length;
+      const converted = allLeadsData.filter(l => l.status === "CONVERTED").length;
+      const conversionRate = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
+
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+      const prevPeriodLeads = await ctx.db.query.leads.findMany({
+        where: and(
+          eq(leads.orgId, orgId),
+          gte(leads.createdAt, sixtyDaysAgo),
+          lte(leads.createdAt, thirtyDaysAgo),
+        ),
+        columns: { id: true, status: true },
+      });
+      const prevTotal = prevPeriodLeads.length;
+      const prevConverted = prevPeriodLeads.filter(l => l.status === "CONVERTED").length;
+      const prevConversionRate = prevTotal > 0 ? Math.round((prevConverted / prevTotal) * 100) : 0;
+
+      const wonDeals = await ctx.db.query.deals.findMany({
+        where: and(eq(deals.orgId, orgId), eq(deals.stage, "WON")),
+        columns: { value: true, createdAt: true },
+      });
+      const totalRevenue = wonDeals.reduce((sum, d) => sum + Number(d.value ?? 0), 0);
+
+      const conversionBySource: { source: string; total: number; converted: number; rate: number }[] = [];
+      const sourceMap = new Map<string, { total: number; converted: number }>();
+      for (const l of allLeadsData) {
+        const src = l.source ?? "other";
+        const entry = sourceMap.get(src) || { total: 0, converted: 0 };
+        entry.total++;
+        if (l.status === "CONVERTED") entry.converted++;
+        sourceMap.set(src, entry);
+      }
+      for (const [source, data] of sourceMap) {
+        conversionBySource.push({
+          source: source.replace(/_/g, " "),
+          total: data.total,
+          converted: data.converted,
+          rate: data.total > 0 ? Math.round((data.converted / data.total) * 100) : 0,
+        });
+      }
+
+      const monthlyRevenue: { month: string; revenue: number }[] = [];
+      const monthMap = new Map<string, number>();
+      for (const d of wonDeals) {
+        const date = d.createdAt;
+        if (!date) continue;
+        const m = new Date(date);
+        const key = `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, "0")}`;
+        monthMap.set(key, (monthMap.get(key) ?? 0) + Number(d.value ?? 0));
+      }
+      const sortedMonths = [...monthMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-6);
+      for (const [month, revenue] of sortedMonths) {
+        monthlyRevenue.push({ month, revenue });
+      }
+
+      const assignmentDistribution: { userId: string; name: string; count: number }[] = [];
+      const orgMembers = await ctx.db.query.organizationMembers.findMany({
+        where: eq(organizationMembers.orgId, orgId),
+        with: { user: { columns: { id: true, name: true, role: true } } },
+      });
+      const salesUsers = orgMembers.filter(m => m.user.role === "SALES").map(m => m.user);
+      const assignMap = new Map<string, number>();
+      for (const l of allLeadsData) {
+        if (l.assignedToId) assignMap.set(l.assignedToId, (assignMap.get(l.assignedToId) ?? 0) + 1);
+      }
+      for (const u of salesUsers) {
+        assignmentDistribution.push({
+          userId: u.id,
+          name: u.name ?? "Unknown",
+          count: assignMap.get(u.id) ?? 0,
+        });
+      }
+
+      return {
+        totalLeads,
+        totalLeadsPrevPeriod: prevTotal,
+        conversionRate,
+        conversionRatePrevPeriod: prevConversionRate,
+        totalRevenue,
+        conversionBySource,
+        monthlyRevenue,
+        assignmentDistribution,
+      };
+    }),
+
   getSalesTeamCapacity: adminProcedure.query(async ({ ctx }) => {
     const orgId = ctx.session.orgId;
     const salesMembers = await ctx.db.query.organizationMembers.findMany({
@@ -1113,17 +1217,16 @@ export const leadsRouter = createTRPCRouter({
         tags: z.array(z.string()).optional(),
       })).min(1, "At least one lead is required").max(1000, "Maximum 1000 leads per import"),
       duplicateAction: z.enum(["skip", "update", "import"]).default("skip"),
+      autoDistribute: z.boolean().default(true),
     }))
     .mutation(async ({ ctx, input }) => {
       const orgId = ctx.session.orgId;
       const userId = ctx.session.userId;
       const CHUNK_SIZE = 100;
 
-      // Collect emails/phones for duplicate check
       const importEmails = input.leads.map(l => l.email).filter((e): e is string => !!e && e !== "");
       const importPhones = input.leads.map(l => l.phone).filter((p): p is string => !!p);
 
-      // Batch duplicate lookup
       const existingLeads = (importEmails.length > 0 || importPhones.length > 0)
         ? await ctx.db.query.leads.findMany({
             where: and(
@@ -1140,16 +1243,16 @@ export const leadsRouter = createTRPCRouter({
       let imported = 0;
       let skipped = 0;
       let updated = 0;
+      const importedLeadIds: number[] = [];
       const errors: { row: number; message: string }[] = [];
 
-      // Process in chunks
       for (let i = 0; i < input.leads.length; i += CHUNK_SIZE) {
         const chunk = input.leads.slice(i, i + CHUNK_SIZE);
         const toInsert: typeof chunk = [];
 
         for (let j = 0; j < chunk.length; j++) {
           const lead = chunk[j];
-          const rowNum = i + j + 2; // +2 for 1-indexed + header row
+          const rowNum = i + j + 2;
           const isDuplicate =
             (lead.email && dupEmails.has(lead.email.toLowerCase())) ||
             (lead.phone && dupPhones.has(lead.phone));
@@ -1160,7 +1263,6 @@ export const leadsRouter = createTRPCRouter({
               errors.push({ row: rowNum, message: `Duplicate (${lead.email || lead.phone})` });
               continue;
             } else if (input.duplicateAction === "update") {
-              // Find and update existing
               try {
                 const matchField = lead.email && dupEmails.has(lead.email.toLowerCase())
                   ? eq(leads.email, lead.email)
@@ -1179,7 +1281,6 @@ export const leadsRouter = createTRPCRouter({
               }
               continue;
             }
-            // "import" action: fall through to insert
           }
 
           toInsert.push(lead);
@@ -1209,13 +1310,81 @@ export const leadsRouter = createTRPCRouter({
             }));
             const result = await ctx.db.insert(leads).values(values).returning({ id: leads.id });
             imported += result.length;
+            importedLeadIds.push(...result.map(r => r.id));
           } catch (err) {
             errors.push({ row: i + 2, message: `Chunk insert failed: ${err instanceof Error ? err.message : "unknown error"}` });
           }
         }
       }
 
-      return { imported, skipped, updated, errors, duplicatesFound: existingLeads.length };
+      let distributed = 0;
+      let salesPeopleCount = 0;
+
+      if (input.autoDistribute && importedLeadIds.length > 0) {
+        try {
+          const orgMembers = await ctx.db.query.organizationMembers.findMany({
+            where: eq(organizationMembers.orgId, orgId),
+            columns: { userId: true },
+          });
+          const orgMemberIds = orgMembers.map(m => m.userId);
+
+          const salesPeople = orgMemberIds.length > 0
+            ? await ctx.db.query.users.findMany({
+                where: and(
+                  inArray(users.id, orgMemberIds),
+                  eq(users.isActive, true),
+                  eq(users.hasDashboardAccess, true),
+                  inArray(users.role, ["SALES"]),
+                ),
+                columns: { id: true, name: true },
+              })
+            : [];
+
+          if (salesPeople.length > 0) {
+            salesPeopleCount = salesPeople.length;
+            const now = new Date();
+
+            const assignmentMap = new Map<string, number[]>();
+            for (const sp of salesPeople) assignmentMap.set(sp.id, []);
+
+            for (let i = 0; i < importedLeadIds.length; i++) {
+              const sp = salesPeople[i % salesPeople.length];
+              assignmentMap.get(sp.id)!.push(importedLeadIds[i]);
+            }
+
+            for (const [salesPersonId, leadIds] of assignmentMap) {
+              if (leadIds.length === 0) continue;
+              await ctx.db.update(leads)
+                .set({
+                  assignedToId: salesPersonId,
+                  assignedById: userId,
+                  assignedAt: now,
+                  updatedAt: now,
+                })
+                .where(and(inArray(leads.id, leadIds), eq(leads.orgId, orgId)));
+              distributed += leadIds.length;
+            }
+
+            const { createNotification } = await import("@/server/actions/create-notification");
+            for (const sp of salesPeople) {
+              const assignedCount = assignmentMap.get(sp.id)?.length ?? 0;
+              if (assignedCount === 0) continue;
+              createNotification({
+                orgId,
+                userId: sp.id,
+                type: "INFO",
+                title: "New leads assigned",
+                message: `${assignedCount} new lead${assignedCount > 1 ? "s" : ""} have been assigned to you via bulk import`,
+                link: "/crm/leads",
+              }).catch(() => {});
+            }
+          }
+        } catch (err) {
+          logger.error("Auto-distribute failed after bulk import", { error: err });
+        }
+      }
+
+      return { imported, skipped, updated, errors, duplicatesFound: existingLeads.length, distributed, salesPeopleCount };
     }),
 
   checkDuplicates: adminProcedure
