@@ -74,6 +74,8 @@ export const targetsRouter = createTRPCRouter({
       startDate: z.string(),
       endDate: z.string(),
       notes: z.string().optional(),
+      branchId: z.number().optional(),
+      parentTargetId: z.number().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const resolvedUserIds = input.userIds?.length
@@ -86,7 +88,45 @@ export const targetsRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "At least one user is required." });
       }
 
-      await assertCanManageTargets(ctx.db, ctx.session.user.role ?? "", ctx.session.userId, resolvedUserIds);
+      // BRANCH_MANAGER can set targets but only for their branch users
+      const role = ctx.session.user.role ?? "";
+      if (role === "BRANCH_MANAGER") {
+        // Verify target users are in the same branch
+        const branchUsers = await ctx.db.query.users.findMany({
+          where: and(inArray(users.id, resolvedUserIds)),
+          columns: { id: true, branchId: true },
+        });
+        const callerUser = await ctx.db.query.users.findFirst({
+          where: eq(users.id, ctx.session.userId),
+          columns: { branchId: true },
+        });
+        const invalid = branchUsers.some(u => u.branchId !== callerUser?.branchId);
+        if (invalid) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You can only set targets for your branch members." });
+        }
+      } else {
+        await assertCanManageTargets(ctx.db, role, ctx.session.userId, resolvedUserIds);
+      }
+
+      // If parentTargetId provided, validate sum doesn't exceed parent
+      if (input.parentTargetId) {
+        const parentTarget = await ctx.db.query.targets.findFirst({
+          where: eq(targets.id, input.parentTargetId),
+        });
+        if (parentTarget) {
+          const existingSiblings = await ctx.db.query.targets.findMany({
+            where: eq(targets.parentTargetId, input.parentTargetId),
+          });
+          const existingSum = existingSiblings.reduce((s, t) => s + parseFloat(t.targetValue), 0);
+          const newTotal = existingSum + parseFloat(input.targetValue) * resolvedUserIds.length;
+          if (newTotal > parseFloat(parentTarget.targetValue)) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Sum of individual targets (${newTotal}) exceeds branch target (${parentTarget.targetValue})`,
+            });
+          }
+        }
+      }
 
       const created = await ctx.db.insert(targets).values(
         resolvedUserIds.map((uid) => ({
@@ -99,6 +139,8 @@ export const targetsRouter = createTRPCRouter({
           endDate: input.endDate,
           notes: input.notes ?? null,
           setById: ctx.session.userId,
+          branchId: input.branchId,
+          parentTargetId: input.parentTargetId,
         }))
       ).returning();
 
