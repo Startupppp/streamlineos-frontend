@@ -378,6 +378,12 @@ export const organizationRouter = createTRPCRouter({
           )
         );
 
+      // Also update the user's role on the users table
+      await ctx.db
+        .update(users)
+        .set({ role: input.role })
+        .where(eq(users.id, input.userId));
+
       await createAuditLog({
         action: "org.member_role_changed",
         userId: ctx.session.user.id,
