@@ -18,6 +18,22 @@ const _axios = axios.create({
   withCredentials: true, // send httpOnly session cookie
 });
 
+// Normalize error responses: replace Axios's generic message with the API's
+// `error` field so every `onError` handler gets a human-readable string.
+_axios.interceptors.response.use(
+  (res) => res,
+  (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+      const apiMessage = (error.response?.data as { error?: string })?.error;
+      if (apiMessage) {
+        // Mutate the message so callers can use error.message directly
+        error.message = apiMessage;
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ─── Typed helpers that return T (not AxiosResponse<T>) ─────────────────────
 
 async function get<T>(url: string, params?: Record<string, unknown>, config?: AxiosRequestConfig): Promise<T> {

@@ -51,6 +51,7 @@
     "@trpc/server": "^11.8.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
+    "ably": "^2.21.0",
     "ai": "^5.0.108",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",

@@ -31,19 +31,19 @@ interface BucketEntry {
 
 export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
   login: {
-    maxRequests: 5,
+    maxRequests: 10,
     windowMs: 60_000,
     progressive: true,
     maxBlockMs: 30 * 60_000,
   },
   "auth-write": {
-    maxRequests: 5,
+    maxRequests: 20,
     windowMs: 5 * 60_000,
     progressive: true,
     maxBlockMs: 15 * 60_000,
   },
   "account-create": {
-    maxRequests: 5,
+    maxRequests: 10,
     windowMs: 5 * 60_000,
   },
   ai: {
@@ -245,8 +245,20 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/api/auth/", tier: "auth-write" },
 ];
 
+// NextAuth internal endpoints that must never be rate-limited.
+// These are called automatically on every page load (CSRF token, session, providers).
+// Rate-limiting them causes /api/auth/error redirects and broken sign-in flows.
+const NEXTAUTH_INTERNAL = new Set([
+  "/api/auth/session",
+  "/api/auth/csrf",
+  "/api/auth/providers",
+  "/api/auth/_log",
+]);
+
 export function resolveTier(pathname: string): string | null {
-  if (pathname === "/api/auth/session") return null;
+  if (NEXTAUTH_INTERNAL.has(pathname)) return null;
+  // Exclude all NextAuth OAuth callbacks (Google, GitHub, etc.) — not user-facing writes
+  if (pathname.startsWith("/api/auth/callback/") && pathname !== "/api/auth/callback/credentials") return null;
   if (!pathname.startsWith("/api/")) return null;
   for (const rule of ROUTE_RULES) {
     if (pathname.startsWith(rule.prefix)) return rule.tier;
