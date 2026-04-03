@@ -1,0 +1,57 @@
+/**
+ * Shared / cross-domain tables: notifications, audit logs.
+ */
+import { pgTable, text, serial, timestamp, boolean, jsonb, integer, index } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { notificationTypeEnum } from "./enums";
+import { organizations, users } from "./auth";
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id),
+  type: notificationTypeEnum("type").default("INFO"),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  link: text("link"),
+  isRead: boolean("is_read").default(false),
+  metadata: jsonb("metadata"),
+  channel: text("channel").default("in_app"),
+  sound: boolean("sound").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_notifications_user").on(table.userId),
+  index("idx_notifications_unread").on(table.userId, table.isRead),
+]);
+
+export const qrCodes = pgTable("qr_codes", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  targetUrl: text("target_url").notNull(),
+  slug: text("slug").notNull().unique(),
+  imageUrl: text("image_url").notNull(),
+  scanCount: integer("scan_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  action: text("action").notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  orgId: text("org_id").references(() => organizations.id),
+  targetId: text("target_id"),
+  targetType: text("target_type"),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_audit_logs_user_id").on(table.userId),
+  index("idx_audit_logs_org_id").on(table.orgId),
+  index("idx_audit_logs_action").on(table.action),
+  index("idx_audit_logs_created_at").on(table.createdAt),
+]);
+
+// ─── Shared Relations ───
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, { fields: [notifications.userId], references: [users.id] }),
+}));
