@@ -31,6 +31,7 @@ import {
   useChatOrgUsers,
 } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
+import { useChatRealtime } from "@/lib/api/hooks/chat-realtime";
 import { getInitials, getDateLabel } from "./chat-helpers";
 import type { Message } from "./chat-types";
 import { MessageList } from "./message-list";
@@ -80,6 +81,10 @@ export function MessagePanel({
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
     return `${names[0]} and ${names.length - 1} others are typing...`;
   }, [typingUsers]);
+
+  // Ably WebSocket subscription — delivers new messages instantly without polling.
+  // Falls back to useChatPoll (30 s interval) when Ably is unavailable.
+  useChatRealtime(channelId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);

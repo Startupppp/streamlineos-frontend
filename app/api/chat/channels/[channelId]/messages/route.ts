@@ -1,9 +1,10 @@
 /**
  * GET  /api/chat/channels/[id]/messages  — paginated messages (cursor-based)
- * POST /api/chat/channels/[id]/messages  — send a new message
+ * POST /api/chat/channels/[id]/messages  — send a new message (publishes via Ably)
  */
 
 import { type NextRequest } from "next/server";
+import Ably from "ably";
 import { withAuth, ok, err, parseBody, toNumber } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import {
@@ -113,6 +114,25 @@ export async function POST(
       .update(chatChannels)
       .set({ lastMessageAt: new Date(), updatedAt: new Date() })
       .where(eq(chatChannels.id, channelId));
+
+    // Publish the new message to Ably so all subscribers receive it in real time.
+    // Non-fatal: if Ably publish fails, the message is still persisted in the DB.
+    if (process.env.ABLY_API_KEY) {
+      try {
+        const rest = new Ably.Rest(process.env.ABLY_API_KEY);
+        const channelName = `chat:${session.orgId}:${channelId}`;
+        await rest.channels.get(channelName).publish("message", {
+          id: message.id,
+          channelId: message.channelId,
+          senderId: message.senderId,
+          content: message.content,
+          createdAt: message.createdAt,
+          replyToId: message.replyToId,
+        });
+      } catch {
+        // Swallow: delivery falls back to the polling mechanism in the client.
+      }
+    }
 
     return ok(message, 201);
   });

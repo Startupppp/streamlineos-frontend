@@ -57,6 +57,13 @@ export const notificationHandler = inngest.createFunction(
       });
     }
 
+    if (channels.includes("push")) {
+      await step.run("send-push-notification", async () => {
+        const { sendPushToUser } = await import("@/lib/web-push");
+        await sendPushToUser(userId, { title, body: message, url: link });
+      });
+    }
+
     return { success: true, channels };
   }
 );

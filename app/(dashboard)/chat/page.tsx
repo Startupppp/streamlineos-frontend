@@ -12,6 +12,7 @@ import { ChannelInfoPanel } from "./_components/channel-info-panel";
 import { EmptyChatState } from "./_components/empty-chat-state";
 import { NewDMDialog } from "./_components/new-dm-dialog";
 import { NewGroupDialog } from "./_components/new-group-dialog";
+import { ChatAblyProvider } from "./_components/ably-provider";
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -50,6 +51,7 @@ export default function ChatPage() {
   }, []);
 
   return (
+    <ChatAblyProvider>
     <div className="flex h-full overflow-hidden bg-background">
       {/* Sidebar */}
       <div
@@ -125,5 +127,6 @@ export default function ChatPage() {
       <NewDMDialog open={emptyDMOpen} onOpenChange={setEmptyDMOpen} onCreated={handleSelectChannel} hideTrigger />
       <NewGroupDialog open={emptyGroupOpen} onOpenChange={setEmptyGroupOpen} onCreated={handleSelectChannel} hideTrigger />
     </div>
+    </ChatAblyProvider>
   );
 }

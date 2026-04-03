@@ -70,8 +70,9 @@ export function useChatMessages(channelId: number) {
 }
 
 /**
- * Long-polling hook: fetches new messages since a given ISO timestamp.
- * Refetches every 3 s when enabled.
+ * Fallback polling hook: fetches new messages since a given ISO timestamp.
+ * Refetches every 30 s — used only when the Ably WebSocket connection is
+ * unavailable (e.g. ABLY_API_KEY not set, network issues, etc.).
  */
 export function useChatPoll(channelId: number, since: string, enabled: boolean) {
   return useQuery({
@@ -82,7 +83,7 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
         { since }
       ),
     enabled: enabled && channelId > 0,
-    refetchInterval: enabled ? 3_000 : false,
+    refetchInterval: enabled ? 30_000 : false,
   });
 }
 

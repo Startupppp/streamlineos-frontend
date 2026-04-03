@@ -9,6 +9,7 @@ import { CommandPalette } from "./command-palette";
 import { ScrollArea } from "../ui/scroll-area";
 import { NotActivatedPage } from "../auth/not-activated-page";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePushSubscription } from "@/hooks/use-push-subscription";
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
 
@@ -26,6 +27,7 @@ export function DashboardShell({ hasDashboardAccess, defaultCollapsed, children 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed);
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  usePushSubscription();
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => {
