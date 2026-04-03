@@ -1,6 +1,40 @@
 # Task 10: Email System Improvements
 
-## Priority: 🟡 MEDIUM
+## Priority: MEDIUM | Effort: 3-4 days | Dependencies: None | Status: NOT STARTED
+
+---
+
+## PRD
+
+### Problem Statement
+Email system exists (SendGrid + SMTP) but has gaps:
+1. Email templates are HTML strings in code, not type-safe components
+2. No appraisal/review cycle email templates
+3. Payslip emails don't include PDF attachment
+4. No email template preview/management UI for admins
+5. CRM follow-up emails not automated
+6. No email analytics (open/click tracking)
+
+### Goals
+- Create appraisal and CRM email templates
+- Add payslip PDF attachment to email
+- Build admin email template preview page
+- Automate CRM follow-up emails
+- Optionally migrate to Resend + React Email for type-safe templates
+
+### Non-Goals
+- Email marketing platform (Task 16)
+- Custom SMTP server setup
+- Email deliverability optimization
+
+### Success Criteria
+- Appraisal emails send on schedule
+- Payslip emails include downloadable PDF
+- Admin can preview all email templates
+- CRM follow-up reminders automated
+- All templates are type-safe and maintainable
+
+---
 
 ### 10.1 Migrate to Resend + React Email (If Approved)
 
@@ -65,9 +99,44 @@
 - Send test email button
 - Edit subject lines
 
-**Acceptance Criteria**:
-- All email templates are type-safe components
-- Appraisal emails send on schedule
-- CRM follow-up emails automated
-- Payslips have PDF attachments
-- Admin can preview all templates
+---
+
+## Rules to Follow
+
+1. **Template Reusability**: All emails use base layout template
+2. **Type Safety**: Template props fully typed with TypeScript
+3. **Preview First**: Every template must be previewable before deployment
+4. **Background Sending**: All email sending via background jobs (Inngest)
+5. **Error Handling**: Failed emails retry 3 times, then log and alert
+
+---
+
+## Checklist
+
+- [ ] Create appraisal email templates (5 types)
+- [ ] Create CRM email templates (5 types)
+- [ ] Generate payslip PDF with jspdf
+- [ ] Attach PDF to payslip email
+- [ ] Build email template preview page (`/settings/email-templates`)
+- [ ] Add "Send Test Email" functionality
+- [ ] Automate CRM follow-up reminders via Inngest
+- [ ] Evaluate and optionally migrate to Resend + React Email
+- [ ] Add email sending to all relevant notification events
+- [ ] `pnpm build` passes
+
+## Acceptance Criteria
+
+1. All email templates are type-safe and previewable
+2. Appraisal emails send on schedule
+3. CRM follow-up emails automated
+4. Payslip emails include PDF attachments
+5. Admin can preview and test all templates
+6. Failed emails retry automatically
+
+## Testing Plan
+
+1. **Templates**: Preview each template with test data, verify rendering
+2. **Send Test**: Send test email for each template, verify delivery
+3. **PDF**: Generate payslip PDF, verify content and formatting
+4. **Automation**: Trigger follow-up reminder, verify email sent
+5. **Retry**: Simulate email failure, verify retry mechanism works

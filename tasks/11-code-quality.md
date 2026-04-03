@@ -1,6 +1,42 @@
 # Task 11: Code Quality & Cleanup
 
-## Priority: 🟡 MEDIUM (Execute after tRPC removal)
+## Priority: MEDIUM | Effort: 2-3 days | Dependencies: Task 01 (Architecture) | Status: NOT STARTED
+
+---
+
+## PRD
+
+### Problem Statement
+Code quality issues that accumulate technical debt:
+1. 14 `eslint-disable` and `@ts-ignore` suppression comments
+2. 50KB illustrations file (single file with all SVGs)
+3. TODOs in production code (8 server files)
+4. Anonymous inline handlers in client components
+5. Loose typing (`Record<string, unknown>`, string roles)
+6. Potential Zod schema drift from DB schema
+7. Possible duplicate components across directories
+8. Dead files and unused code
+
+### Goals
+- Zero eslint-disable comments (fix underlying issues)
+- Zero TODO comments in production code
+- Zero anonymous inline handlers
+- All types strict and specific
+- Zod schemas verified against DB schema
+- No dead code or unused files
+
+### Non-Goals
+- Refactoring working business logic
+- Adding JSDoc comments (code should be self-documenting)
+- Changing file naming conventions
+
+### Success Criteria
+- `pnpm lint` passes with zero warnings
+- `pnpm build` passes with zero TypeScript errors
+- No suppression comments in codebase
+- Largest single file under 500 lines
+
+---
 
 ---
 

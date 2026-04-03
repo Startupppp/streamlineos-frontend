@@ -1,6 +1,43 @@
 # Task 12: Missing Features for Investment Platform
 
-## Priority: 🟢 FUTURE (After core fixes)
+## Priority: FUTURE | Effort: 10+ days | Dependencies: Tasks 02, 04 | Status: NOT STARTED
+
+---
+
+## PRD
+
+### Problem Statement
+As an investment platform, several domain-specific features are missing:
+1. No investor 360-degree view (complete profile with all interactions)
+2. No compliance/legal module (regulatory filings, audits, document management)
+3. No fund administration (capital calls, distributions, fund lifecycle)
+4. No portfolio management (valuations, performance tracking, cap tables)
+5. Reports module is basic (no investor reports, fund performance metrics)
+6. Global search (Cmd+K) doesn't search across all entity types
+7. Audit trail UI doesn't exist (table exists but no viewer)
+
+### Goals
+- Build investor 360-degree view with complete interaction history
+- Create compliance module with document tracking
+- Build fund administration with capital calls and distributions
+- Create portfolio management with valuations
+- Enhance reports with investment-specific analytics
+- Enhance global search across all entities
+- Build audit trail viewer page
+
+### Non-Goals
+- Replacing existing CRM features (enhance only)
+- Building a trading platform
+- Regulatory-specific compliance (generic framework)
+
+### Success Criteria
+- Investor profile shows complete 360-degree view
+- Compliance module tracks documents and filings
+- Fund lifecycle management from creation to close
+- Portfolio performance tracked with IRR/MOIC
+- Global search returns results from all entity types
+
+---
 
 ### 12.1 Investor 360° View
 

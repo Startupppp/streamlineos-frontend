@@ -1,6 +1,52 @@
 # Task 07: UI/UX Overhaul — Make It "Crazy Good"
 
-## Priority: 🟠 HIGH
+## Priority: HIGH | Effort: 6-8 days | Dependencies: Task 01 (Architecture) | Status: NOT STARTED
+
+---
+
+## PRD
+
+### Problem Statement
+The current UI is functional but lacks the premium, polished feel expected of an investment platform:
+1. Metric cards are plain with no visual hierarchy or animations
+2. Filter bars are basic dropdowns, not command-menu style
+3. DataTable is custom (not TanStack Table) and lacks advanced features
+4. Dashboard is one-size-fits-all, not role-optimized
+5. Status badges are plain text with background colors
+6. Loading states are basic skeletons, not matching page layout
+7. No dark mode despite `next-themes` being installed
+8. Empty states lack compelling illustrations and CTAs
+
+### Goals
+- Glassmorphic metric cards with animated counters and sparklines
+- Command-menu style filter bar with saved views
+- Enhanced DataTable with column pinning, export, inline editing
+- Role-specific dashboard widgets
+- Premium status badges with animations
+- Dark mode with full color system
+- Professional loading/empty states
+
+### Non-Goals
+- Complete redesign from scratch (enhance existing)
+- New color palette (keep gold/blue brand colors)
+- Custom icon library (keep Lucide)
+
+### Success Criteria
+- Visual quality matches top-tier SaaS products (Notion, Linear)
+- Every page has polished loading, error, and empty states
+- Dashboard loads role-specific widgets
+- Dark mode fully functional
+- Filter bar supports saved views with URL sync
+
+## Rules to Follow
+1. **Enhance, Don't Replace**: Build on existing components, don't create from scratch
+2. **Performance Budget**: Animations must not degrade Lighthouse score
+3. **Accessibility First**: All visual enhancements must maintain WCAG 2.1 AA
+4. **Consistent Design Tokens**: All colors from CSS variables, no hardcoded hex values
+5. **Mobile First**: Every enhancement must work on mobile
+6. **Use Existing Libraries**: Recharts for charts, Framer Motion for animations (already installed)
+
+---
 
 ### 7.1 Glassmorphic Metric Cards
 
@@ -154,10 +200,44 @@
 }
 ```
 
-**Acceptance Criteria**:
-- Metric cards have glassmorphic design with animations
-- Filter bar supports saved views and URL sync
-- DataTable supports column pinning, export, inline edit
-- Dashboard is role-specific with premium feel
-- Dark mode fully functional
-- All empty/loading states polished
+---
+
+## Checklist
+
+- [ ] Rewrite `MetricCard` with glassmorphic design, animated counters, sparklines
+- [ ] Create `FilterBar` with command-menu trigger, saved views, URL sync
+- [ ] Enhance `DataTable` with column pinning, visibility toggle, export
+- [ ] Add inline editing to DataTable for quick updates
+- [ ] Redesign dashboard with role-specific widget layout
+- [ ] Upgrade `StatusBadge` with pulse animations and icons
+- [ ] Add entity/branch switcher to sidebar
+- [ ] Add badge counts to sidebar items (notifications, approvals)
+- [ ] Upgrade all loading.tsx with layout-matching skeletons
+- [ ] Add top navigation progress bar during route transitions
+- [ ] Upgrade empty states with illustrated SVGs and CTAs
+- [ ] Implement dark mode CSS variables
+- [ ] Add dark mode toggle in user settings
+- [ ] Test all pages in dark mode
+- [ ] Test responsive design at 320px, 768px, 1024px, 1440px
+- [ ] Run Lighthouse audit, verify Performance > 90
+- [ ] `pnpm build` passes
+
+## Acceptance Criteria
+
+1. Metric cards have glassmorphic design with animated counters
+2. Filter bar supports saved views and URL sync
+3. DataTable supports column pinning, export, inline edit
+4. Dashboard shows role-specific widgets
+5. Dark mode fully functional across all pages
+6. All empty/loading states polished and consistent
+7. Lighthouse Performance score > 90
+
+## Testing Plan
+
+1. **Visual**: Screenshot all pages before/after, verify improvement
+2. **Dark Mode**: Toggle dark mode, verify all pages render correctly
+3. **Responsive**: Test all pages at 320px, 768px, 1024px, 1440px
+4. **Accessibility**: Run axe-core on all pages, verify zero critical issues
+5. **Performance**: Run Lighthouse, verify no regressions
+6. **Interactions**: Test all animations, hover effects, transitions
+7. **Saved Views**: Save a filter view, reload page, verify view persists
