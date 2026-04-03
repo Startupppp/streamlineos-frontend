@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { qrCodes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import { appUrl } from "@/lib/app-url";
 
 const MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
 
@@ -95,11 +96,8 @@ export async function GET(req: NextRequest) {
     const safeSlug = sanitizeFilename(slug);
 
     if (format === "svg") {
-      const trackingUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL
-        ? `${process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL}/qr/${slug}`
-        : process.env.NEXTAUTH_URL
-          ? `${process.env.NEXTAUTH_URL}/qr/${slug}`
-          : `http://localhost:3000/qr/${slug}`;
+      const qrBaseUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL || appUrl;
+      const trackingUrl = `${qrBaseUrl}/qr/${slug}`;
 
       const { default: QRCode } = await import("qrcode");
       const svgString = await QRCode.toString(trackingUrl, {
@@ -136,8 +134,7 @@ export async function GET(req: NextRequest) {
 
       let fetchUrl = finalUrl;
       if (finalUrl.startsWith("/")) {
-        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-        fetchUrl = `${baseUrl}${finalUrl}`;
+        fetchUrl = `${appUrl}${finalUrl}`;
       }
 
       if (!isAllowedUrl(fetchUrl)) {

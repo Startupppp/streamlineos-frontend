@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { generateQRCodeWithLogo } from "@/lib/qr-code";
 import { uploadFile, deleteFile, getFileKeyFromUrl, getFileUrl, isStorageConfigured } from "@/lib/storage";
+import { appUrl } from "@/lib/app-url";
 import { join } from "path";
 import { existsSync } from "fs";
 import { auth } from "@/lib/auth";
@@ -70,10 +71,7 @@ export async function generateQRCode(formData: FormData) {
       return { success: false, error: "Failed to generate unique slug" };
     }
 
-    const redirectBaseUrl =
-      process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL ||
-      process.env.NEXTAUTH_URL ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
+    const redirectBaseUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL || appUrl;
 
     if (!redirectBaseUrl) {
       return {

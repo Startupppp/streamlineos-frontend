@@ -7,6 +7,31 @@ import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
 import { logger } from "./logger";
+import { redis } from "./redis";
+
+interface UserSessionCache {
+  isActive: boolean | null;
+  hasDashboardAccess: boolean | null;
+  isPasswordChangeRequired: boolean | null;
+  image: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  name: string | null;
+  role: string | null;
+  orgId: string | null;
+}
+
+const USER_SESSION_TTL = 300;
+
+function userSessionKey(userId: string): string {
+  return `user:session:${userId}`;
+}
+
+export async function invalidateUserSession(userId: string): Promise<void> {
+  if (redis) {
+    await redis.del(userSessionKey(userId));
+  }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -137,30 +162,55 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.forceChangePassword = user.forceChangePassword;
         token.isActive = user.isActive;
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
+        token.orgId = null;
       }
 
-      // Refresh critical fields from DB (with error handling to prevent auth crashes)
+      // Refresh critical fields from cache/DB (with error handling to prevent auth crashes)
       if (token.id) {
         try {
-          const dbUser = await db.query.users.findFirst({
-            where: eq(users.id, token.id as string),
-            columns: {
-              isActive: true,
-              hasDashboardAccess: true,
-              isPasswordChangeRequired: true,
-              image: true,
-              firstName: true,
-              lastName: true,
-              name: true,
-              role: true,
-            },
-          });
+          const userId = token.id as string;
+          let dbUser: UserSessionCache | null = null;
+
+          if (redis) {
+            dbUser = await redis.get<UserSessionCache>(userSessionKey(userId));
+          }
+
+          if (!dbUser) {
+            const [fresh, membership] = await Promise.all([
+              db.query.users.findFirst({
+                where: eq(users.id, userId),
+                columns: {
+                  isActive: true,
+                  hasDashboardAccess: true,
+                  isPasswordChangeRequired: true,
+                  image: true,
+                  firstName: true,
+                  lastName: true,
+                  name: true,
+                  role: true,
+                },
+              }),
+              db.query.organizationMembers.findFirst({
+                where: eq(organizationMembers.userId, userId),
+                columns: { orgId: true },
+              }),
+            ]);
+            const cacheValue: UserSessionCache | null = fresh
+              ? { ...fresh, orgId: membership?.orgId ?? null }
+              : null;
+            if (cacheValue && redis) {
+              await redis.set(userSessionKey(userId), cacheValue, { ex: USER_SESSION_TTL });
+            }
+            dbUser = cacheValue;
+          }
+
           if (dbUser) {
             token.isActive = dbUser.isActive;
             token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
             token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
             token.role = dbUser.role || token.role;
             token.image = dbUser.image || null;
+            token.orgId = dbUser.orgId ?? null;
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
             } else if (dbUser.name) {
@@ -168,8 +218,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           }
         } catch {
-          // DB query failed (likely pool exhaustion) — keep existing token values
-          // This prevents ClientFetchError when many concurrent requests hit auth
+          // DB/cache query failed — keep existing token values
         }
       }
 

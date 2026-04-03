@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
+import { invalidateUserSession } from "@/lib/auth";
 
 export interface CreateOrganizationResult {
   success?: boolean;
@@ -56,6 +57,7 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
       role: "CEO",
     });
 
+    await invalidateUserSession(session.user.id);
     revalidatePath("/dashboard");
     revalidatePath("/settings/organization");
 

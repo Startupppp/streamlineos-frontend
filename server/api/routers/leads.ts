@@ -6,6 +6,7 @@ import { inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { appUrl } from "@/lib/app-url";
 import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "./lead-auto-triggers";
 
 const leadStatusValues = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
@@ -298,7 +299,7 @@ export const leadsRouter = createTRPCRouter({
           columns: { name: true },
         });
         if (assignee?.email) {
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+          const baseUrl = appUrl;
           await sendEmail({
             to: assignee.email,
             subject: `Lead Assigned: ${updated.name} — Vaivamm Capital`,
@@ -941,7 +942,7 @@ export const leadsRouter = createTRPCRouter({
       }
 
       // Send email notifications to each sales person
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl = appUrl;
       const assignerName = ctx.session.user.name || "A manager";
 
       for (const sp of salesPeople) {

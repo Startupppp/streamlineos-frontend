@@ -1,3 +1,5 @@
+import { appUrl } from "../app-url";
+
 export interface WeeklyCeoRecapData {
   weekRange: string;
   orgName: string;
@@ -100,7 +102,7 @@ export function getWeeklyCeoRecapTemplate(data: WeeklyCeoRecapData): string {
     }
 
     <div style="text-align: center; margin: 30px 0 10px;">
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard"
+      <a href="${appUrl}/dashboard"
          style="background: #0f2b7f; color: #bd882c; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
         Open Dashboard
       </a>

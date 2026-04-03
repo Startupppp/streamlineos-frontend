@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { appUrl } from "@/lib/app-url";
 
 export interface NotificationPayload {
   orgId: string;
@@ -51,7 +52,7 @@ export async function sendNotification(payload: NotificationPayload): Promise<vo
 
     // Send email for critical events
     if (shouldEmail && payload.recipientEmail) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl = appUrl;
       try {
         await sendEmail({
           to: payload.recipientEmail,

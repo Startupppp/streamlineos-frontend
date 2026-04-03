@@ -21,6 +21,9 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
+import {
+  Dialog, DialogContent, DialogHeader as DlgHeader, DialogTitle as DlgTitle, DialogFooter as DlgFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, ChevronDown, ChevronRight, Search, Save, X, Users, Check, XCircle, Download, Filter, CalendarDays } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -760,6 +763,8 @@ function DayLogEntry({
   const [content, setContent] = useState(initialContent);
   const [prevInitial, setPrevInitial] = useState(initialContent);
   const [isDirty, setIsDirty] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   if (initialContent !== prevInitial) {
     setPrevInitial(initialContent);
@@ -812,6 +817,7 @@ function DayLogEntry({
   const highlighted = highlightMatch(content);
 
   return (
+    <>
     <div
       title={statusLabel}
       className={cn(
@@ -899,12 +905,7 @@ function DayLogEntry({
               size="sm"
               variant="destructive"
               className="h-7 text-xs gap-1.5"
-              onClick={() => {
-                const reason = window.prompt("Rejection reason (optional):");
-                if (reason !== null) {
-                  onReject?.(reason || undefined);
-                }
-              }}
+              onClick={() => { setRejectReason(""); setRejectDialogOpen(true); }}
               disabled={isUpdatingStatus}
             >
               {isUpdatingStatus ? (
@@ -945,5 +946,28 @@ function DayLogEntry({
         )}
       </div>
     </div>
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DlgHeader>
+            <DlgTitle>Rejection reason</DlgTitle>
+          </DlgHeader>
+          <Textarea
+            placeholder="Reason (optional)"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="min-h-[80px]"
+          />
+          <DlgFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => { setRejectDialogOpen(false); onReject?.(rejectReason || undefined); }}
+            >
+              Reject
+            </Button>
+          </DlgFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

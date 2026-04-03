@@ -1,324 +1,538 @@
-# Task 11: Code Quality & Cleanup
+# Task 11: Code Quality, Refactoring & Best Practices
 
-## Priority: MEDIUM | Effort: 2-3 days | Dependencies: Task 01 (Architecture) | Status: NOT STARTED
+## Priority: HIGH | Effort: 4-5 days | Dependencies: None | Status: NOT STARTED
 
 ---
 
 ## PRD
 
 ### Problem Statement
-Code quality issues that accumulate technical debt:
-1. 14 `eslint-disable` and `@ts-ignore` suppression comments
-2. 50KB illustrations file (single file with all SVGs)
-3. TODOs in production code (8 server files)
-4. Anonymous inline handlers in client components
-5. Loose typing (`Record<string, unknown>`, string roles)
-6. Potential Zod schema drift from DB schema
-7. Possible duplicate components across directories
-8. Dead files and unused code
+The codebase has accumulated technical debt and violates several React/Next.js best practices:
+
+1. **Large files** — Multiple files exceed 500+ lines, reducing readability and maintainability
+2. **Unnecessary hooks** — `useEffect` for auth checks (should use middleware), redundant state
+3. **Poor code reusability** — Functions repeated across files instead of centralized utilities
+4. **Naming inconsistencies** — Files and functions don't follow consistent naming patterns
+5. **Navigation anti-patterns** — `<a>` tags instead of Next.js `<Link>` component
+6. **Layout violations** — Shell-like wrappers instead of proper Next.js layouts
+7. **Dead code** — Unused variables, functions, imports, and components
+8. **Type safety issues** — `as any[]`, `Record<string, unknown>`, loose typing
+9. **Anonymous handlers** — Inline arrow functions instead of named handlers
+10. **eslint-disable comments** — Suppressing errors instead of fixing them
 
 ### Goals
-- Zero eslint-disable comments (fix underlying issues)
-- Zero TODO comments in production code
-- Zero anonymous inline handlers
-- All types strict and specific
-- Zod schemas verified against DB schema
-- No dead code or unused files
+- **Max 500 lines per file** — Split large files into logical modules
+- **Zero unnecessary hooks** — Remove redundant `useEffect`/`useState`, use middleware for auth
+- **Centralized utilities** — Extract reusable functions to `lib/utils/`
+- **Consistent naming** — `kebab-case` for files, `camelCase` for functions, `PascalCase` for components
+- **Next.js patterns** — Use `<Link>`, proper layouts, Server Components, middleware
+- **Zero dead code** — No unused variables, functions, imports, files
+- **Zero comments** — Code should be self-documenting, no explanatory comments
+- **Strict typing** — No `any`, proper interfaces, Zod schemas matching DB
+- **Named handlers** — No inline anonymous functions in JSX
+- **Zero suppressions** — Fix underlying issues, don't suppress eslint
 
 ### Non-Goals
-- Refactoring working business logic
-- Adding JSDoc comments (code should be self-documenting)
-- Changing file naming conventions
+- Rewriting business logic
+- Changing database schema
+- Adding new features
 
 ### Success Criteria
+- No file exceeds 500 lines
+- Zero `useEffect` for route protection (use middleware)
+- All reusable logic extracted to utilities
 - `pnpm lint` passes with zero warnings
 - `pnpm build` passes with zero TypeScript errors
-- No suppression comments in codebase
-- Largest single file under 500 lines
 
 ---
 
 ## Implementation Steps
 
-### 11.1 Files to DELETE
+### 11.1 Split Large Files (>500 lines)
 
-**Already deleted** (verify): `task` (root), `test-drizzle.ts`, `audit/REPORT.md`, `lib/email-templates.ts`, `env.example`
+**Files to split**:
 
-**Orphan components to delete** (24 files never imported):
+| File | Lines | Action |
+|------|-------|--------|
+| `app/(dashboard)/chat/page.tsx` | 2000+ | Split into: `chat-sidebar.tsx`, `chat-messages.tsx`, `chat-input.tsx`, `chat-header.tsx`, `chat-dialogs.tsx` |
+| `app/(dashboard)/crm/leads/page.tsx` | 1500+ | Split into: `leads-table.tsx`, `leads-filters.tsx`, `leads-dialogs.tsx`, `leads-kanban.tsx` |
+| `app/(dashboard)/crm/deals/page.tsx` | 1200+ | Split into: `deals-table.tsx`, `deals-filters.tsx`, `deals-dialogs.tsx`, `deals-pipeline.tsx` |
+| `app/(dashboard)/hr/employees/page.tsx` | 1000+ | Split into: `employees-table.tsx`, `employees-filters.tsx`, `employee-dialogs.tsx` |
+| `app/(dashboard)/hr/leaves/page.tsx` | 900+ | Split into: `leaves-calendar.tsx`, `leaves-list.tsx`, `leave-request-dialog.tsx` |
+| `app/(dashboard)/hr/expenses/page.tsx` | 800+ | Split into: `expenses-table.tsx`, `expense-filters.tsx`, `expense-dialogs.tsx` |
+| `app/(dashboard)/projects/[id]/page.tsx` | 800+ | Split into: `project-header.tsx`, `project-board.tsx`, `project-dialogs.tsx` |
+| `components/illustrations/index.tsx` | 50KB | Split each illustration into its own file |
+| `server/api/routers/leads.ts` | 800+ | Split into: `leads-queries.ts`, `leads-mutations.ts` |
+| `server/api/routers/hr/employee.ts` | 700+ | Split into: `employee-queries.ts`, `employee-mutations.ts` |
 
-| File | Reason |
-|------|--------|
-| `components/shared/command-palette.tsx` | Duplicate — `layout/command-palette.tsx` is the used one |
-| `components/shared/empty-state.tsx` | Duplicate — `ui/empty-state.tsx` is the used one |
-| `components/shared/metric-card.tsx` | Duplicate — `crm/metric-card.tsx` is the used one |
-| `components/shared/page-header.tsx` | Duplicate — `ui/page-header.tsx` is the used one |
-| `components/ai/assistant-bot.tsx` | Never imported |
-| `components/ai/task-suggestions.tsx` | Never imported |
-| `components/attendance/daily-log.tsx` | Never imported |
-| `components/attendance/monthly-log.tsx` | Never imported |
-| `components/crm/mini-bar-chart.tsx` | Never imported |
-| `components/expenses/expense-filter-bar.tsx` | Never imported |
-| `components/expenses/expense-pagination.tsx` | Never imported |
-| `components/expenses/receipt-viewer.tsx` | Never imported |
-| `components/hr/attendance-page-client.tsx` | Never imported |
-| `components/hr/employee-profile-form.tsx` | Never imported |
-| `components/hr/leave-request-form.tsx` | Never imported |
-| `components/hr/salary-structure-form.tsx` | Never imported |
-| `components/projects/epic-view.tsx` | Never imported |
-| `components/projects/sprint-board.tsx` | Never imported |
-| `components/projects/time-tracking.tsx` | Never imported |
-| `components/shared/ai-sidebar.tsx` | Never imported |
-| `components/shared/data-table.tsx` | Never imported |
-| `components/shared/section-card.tsx` | Never imported |
-| `components/shared/status-badge.tsx` | Never imported |
-| `components/storage/file-viewer.tsx` | Never imported |
-| `components/ui/leaves-skeleton.tsx` | Never imported |
-| `components/ui/project-skeleton.tsx` | Never imported |
-| `components/ui/section-header.tsx` | Never imported |
+**Pattern for splitting page components**:
 
-**Note**: `lib/hooks/` contains 47 actively imported files — do NOT delete unless migrating during tRPC removal (Task 01b)
-
----
-
-### 11.2 Update `drizzle.config.ts` After Schema Split
-
-**Current**: `schema: "./lib/db/schema.ts"`
-
-**After split**: `schema: "./lib/db/schema/index.ts"` or `schema: "./lib/db/schema/*.ts"`
-
----
-
-### 11.3 Remove ALL `eslint-disable` Comments
-
-**Found in 12 files**:
-- `server/api/routers/leads.ts` (will be deleted in tRPC removal)
-- `components/crm/lead-export-dialog.tsx`
-- `app/(dashboard)/settings/branches/page.tsx`
-- `app/(dashboard)/hr/incentives/page.tsx`
-- `app/(dashboard)/digital-marketing/social/page.tsx`
-- `app/(dashboard)/digital-marketing/leads/page.tsx`
-- `app/(dashboard)/digital-marketing/campaigns/page.tsx`
-- `app/(dashboard)/crm/leads/distribute/page.tsx`
-- `app/(dashboard)/crm/clients/page.tsx`
-- `app/(dashboard)/crm/clients/[id]/page.tsx`
-- `app/(dashboard)/chat/page.tsx`
-
-**Action**: Fix the underlying lint issues instead of suppressing them.
-
----
-
-### 11.4 Refactor `components/illustrations/index.tsx` (50KB)
-
-This 50KB file IS used (imported across many pages for empty states). It's too large for a single file.
-
-**Action**:
-- Split into individual illustration components
-- Each illustration in its own file: `components/illustrations/no-data.tsx`, `no-leads.tsx`, etc.
-- Re-export from `index.ts`
-
----
-
-### 11.5 Remove Comments and TODOs from Production Code
-
-**TODOs found in 8 server files**:
-- `server/api/routers/reports.ts`
-- `server/api/routers/project/ticket.ts`
-- `server/api/routers/project/custom-states.ts`
-- `server/api/routers/project/core.ts`
-- `server/api/routers/leads.ts`
-- `server/api/routers/hr/helpdesk.ts`
-- `server/api/routers/dashboard.ts`
-- `server/actions/project-actions.ts`
-
-Most of these will be deleted with tRPC removal, but `project-actions.ts` needs review.
-
----
-
-### 11.6 Replace Anonymous Inline Handlers
-
-Scan all `"use client"` components for:
-```diff
-- onClick={() => handleDelete(id)}
-+ onClick={handleDeleteClick}
+```
+app/(dashboard)/crm/leads/
+├── page.tsx           # Main page (under 200 lines) - composition only
+├── _components/
+│   ├── leads-table.tsx
+│   ├── leads-filters.tsx
+│   ├── leads-kanban.tsx
+│   ├── lead-dialogs.tsx
+│   └── index.ts       # Barrel export
+└── _hooks/
+    └── use-leads-filters.ts
 ```
 
 ---
 
-### 11.7 Remove Unused Imports
+### 11.2 Remove Unnecessary useEffect Hooks
 
-Run: `pnpm lint --fix`
-
----
-
-### 11.8 Type Safety Audit
-
-Find and fix:
-- `Record<string, unknown>` → create specific interfaces
-- Loose `string` type for roles → use `Role` union type (Task 04)
-- Missing return types on exported functions
-- `jsonb().$type<...>()` types should have dedicated interfaces
-
----
-
-### 11.9 Verify Zod Schemas Match DB Schema
-
-Cross-reference:
-- `lib/validations/hr.ts` ↔ HR schema tables
-- `lib/validations/project.ts` ↔ Project schema tables
-- `lib/validations/leave.ts` ↔ Leave schema tables
-- `lib/validations/attendance.ts` ↔ Attendance schema
-
-Ensure: field optionality, string lengths, enum values all match.
-
----
-
-### 11.10 Clean Up Unused Routes
-
-**Check if these are dead code**:
-- `app/qr/[slug]/` — QR code redirect page (verify if used)
-- `app/(dashboard)/ceo/` — Should be merged into role-specific dashboard
-- `app/(dashboard)/onboarding/` — Keep (first-time user flow)
-
----
-
-### 11.11 Duplicate Component Audit
-
-Check for duplicate components across directories:
-- `components/ui/` vs `components/shared/` — any overlap?
-- `components/crm/` vs `app/(dashboard)/crm/*` — inline components vs shared?
-
----
-
-### 11.12 Missing `key` Props in Lists
-
-Scan for list renders missing unique `key` props — this is a common React anti-pattern in large codebases.
-
-### 11.13 Fix `as any[]` Type Assertions (9 instances)
-
-**Files with `as any[]` that need proper typing**:
-- `app/(dashboard)/crm/clients/page.tsx`
-- `app/(dashboard)/crm/leads/distribute/page.tsx`
-- `app/(dashboard)/digital-marketing/campaigns/page.tsx`
-- `app/(dashboard)/digital-marketing/leads/page.tsx`
-- `app/(dashboard)/hr/incentives/page.tsx` (2 instances)
-- `app/(dashboard)/settings/branches/page.tsx`
-- `components/crm/lead-export-dialog.tsx`
-
-**Fix**: Replace `as any[]` with proper typed arrays using Drizzle inferred types.
-
-### 11.14 Centralize Hardcoded Constants
-
-**Scattered constants** that should be centralized:
-- Lead pipeline stages: `["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]` repeated in multiple files
-- Deal stages: `["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]` hardcoded in crm.ts
-- Stage colors: hardcoded hex strings in `server/api/routers/crm.ts`
-
-**Fix**: Create `lib/constants/pipeline.ts` with all stage/status/color constants.
-
-### 11.15 Fix Date/Timezone Handling
-
-**264 instances of `new Date()`** throughout codebase without timezone consideration.
-- Create centralized date utility using `date-fns` (already installed)
-- Handle organization timezone settings
-- Ensure consistent date formatting across all modules
-
-### 11.16 Remove Unused Dependencies
-
-| Package | Reason | Status |
-|---------|--------|--------|
-| `zustand@5.0.9` | Zero stores exist in codebase | DELETED |
-| `@ai-sdk/react` | Never imported (AI uses `@ai-sdk/google` and `ai` packages) | DELETED |
-| ~~`tw-animate-css`~~ | KEEP — imported in `globals.css`, 67 files use `animate-` classes | N/A |
-
-```bash
-pnpm remove zustand @ai-sdk/react
+**Anti-pattern to fix**:
+```tsx
+// BAD: Using useEffect for auth check
+useEffect(() => {
+  if (!session) {
+    router.push('/signin');
+  }
+}, [session, router]);
 ```
 
-### 11.17 Fix Env Var Naming Mismatches
+**Fix**: Remove and use middleware (already implemented in `middleware.ts`)
 
-| `.env.example` Name | Code Uses | Fix |
-|---------------------|-----------|-----|
-| `SMTP_PASSWORD` | `process.env.SMTP_PASS` | Align names |
-| `SMTP_FROM` | `process.env.SMTP_FROM_EMAIL` | Align names |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Never referenced in code | Remove from `.env.example` |
+**Files to audit for unnecessary useEffect**:
+- All page components in `app/(dashboard)/`
+- All client components checking session/auth
 
-**Missing from `.env.example`** (used in code):
-- `SENDGRID_FROM_EMAIL`
-- `SMTP_FROM_NAME`
-- `VERCEL_URL`
+**Other useEffect removals**:
+```tsx
+// BAD: Derived state in useEffect
+useEffect(() => {
+  setFilteredData(data.filter(item => item.status === status));
+}, [data, status]);
 
-### 11.18 Fix Dead/Unreachable Routes
-
-10 pages exist but have no sidebar link and are unreachable through normal navigation:
-- `/crm/settings/assignment-rules`
-- `/crm/settings/email-templates`
-- `/crm/settings/scoring-rules`
-- `/crm/settings/sla`
-- `/hr/performance`
-- `/hr/incentives`
-- `/reports`
-- `/settings/members`
-- `/settings/organization`
-- `/settings/branches`
-
-**Fix**: Either add sidebar links or delete if truly dead
+// GOOD: Compute directly
+const filteredData = useMemo(() => 
+  data.filter(item => item.status === status), 
+  [data, status]
+);
+```
 
 ---
 
-## Rules to Follow
+### 11.3 Replace `<a>` Tags with Next.js `<Link>`
 
-1. **Fix, Don't Suppress**: Fix the underlying issue, don't add eslint-disable
-2. **Type, Don't Cast**: Use proper types instead of `as any`
-3. **Centralize, Don't Repeat**: Extract repeated constants/patterns
-4. **Delete, Don't Comment**: Remove dead code, don't comment it out
-5. **Verify, Don't Assume**: Run build + lint after every change
+**Search and replace**:
+```tsx
+// BAD
+<a href="/dashboard">Dashboard</a>
+
+// GOOD
+<Link href="/dashboard">Dashboard</Link>
+```
+
+**Files to check**:
+- All components in `components/`
+- All pages in `app/`
+- Email templates (keep `<a>` for emails only)
+
+---
+
+### 11.4 Use Proper Next.js Layouts Instead of Shell Wrappers
+
+**Anti-pattern**:
+```tsx
+// BAD: Shell component wrapping content
+export default function Page() {
+  return (
+    <DashboardShell>
+      <PageContent />
+    </DashboardShell>
+  );
+}
+```
+
+**Fix**: Use `layout.tsx` for shared shells:
+```tsx
+// app/(dashboard)/layout.tsx handles the shell
+export default function Page() {
+  return <PageContent />;
+}
+```
+
+---
+
+### 11.5 Extract Reusable Utility Functions
+
+**Create `lib/utils/` with**:
+
+| File | Purpose |
+|------|---------|
+| `lib/utils/format-date.ts` | Centralized date formatting with timezone support |
+| `lib/utils/format-currency.ts` | Currency formatting with locale |
+| `lib/utils/format-number.ts` | Number formatting (compact, percentage) |
+| `lib/utils/debounce.ts` | Debounce utility |
+| `lib/utils/throttle.ts` | Throttle utility |
+| `lib/utils/file-size.ts` | Human-readable file sizes |
+| `lib/utils/validation.ts` | Common validation functions |
+| `lib/utils/array.ts` | Array utilities (groupBy, unique, chunk) |
+| `lib/utils/string.ts` | String utilities (truncate, slugify, capitalize) |
+| `lib/utils/export.ts` | Export to CSV/Excel utilities |
+
+**Example extraction**:
+```typescript
+// lib/utils/format-date.ts
+import { format, formatDistanceToNow, parseISO } from "date-fns";
+
+export function formatDate(date: Date | string, pattern = "PPP"): string {
+  const d = typeof date === "string" ? parseISO(date) : date;
+  return format(d, pattern);
+}
+
+export function formatRelativeTime(date: Date | string): string {
+  const d = typeof date === "string" ? parseISO(date) : date;
+  return formatDistanceToNow(d, { addSuffix: true });
+}
+
+export function formatDateRange(start: Date, end: Date): string {
+  return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+}
+```
+
+---
+
+### 11.6 Fix File & Function Naming
+
+**File naming conventions**:
+- Components: `kebab-case.tsx` (e.g., `lead-card.tsx`, `expense-dialog.tsx`)
+- Hooks: `use-kebab-case.ts` (e.g., `use-debounce.ts`, `use-disclosure.ts`)
+- Utilities: `kebab-case.ts` (e.g., `format-date.ts`, `cn.ts`)
+- Types: `kebab-case.ts` (e.g., `api.ts`, `next-auth.d.ts`)
+- Constants: `kebab-case.ts` (e.g., `roles.ts`, `pipeline.ts`)
+
+**Function naming conventions**:
+- Event handlers: `handle{Event}` (e.g., `handleClick`, `handleSubmit`)
+- Callbacks: `on{Event}` for props (e.g., `onClick`, `onSubmit`)
+- Getters: `get{Thing}` (e.g., `getUser`, `getLeadById`)
+- Setters: `set{Thing}` (e.g., `setStatus`, `updateLead`)
+- Booleans: `is{Condition}` / `has{Thing}` / `can{Action}` (e.g., `isLoading`, `hasAccess`, `canEdit`)
+- Async: `{verb}{Noun}` (e.g., `fetchLeads`, `createUser`, `deleteExpense`)
+
+**Files to rename**:
+- `lib/db.ts` → `lib/db/client.ts` (for clarity)
+- `lib/auth.ts` → split into `lib/auth/config.ts`, `lib/auth/helpers.ts`
+
+---
+
+### 11.7 Replace Anonymous Inline Handlers
+
+**Anti-pattern**:
+```tsx
+// BAD: Anonymous inline handler
+<Button onClick={() => handleDelete(item.id)}>Delete</Button>
+
+// Also BAD: Complex inline logic
+<Button onClick={() => {
+  setLoading(true);
+  handleDelete(item.id).finally(() => setLoading(false));
+}}>
+  Delete
+</Button>
+```
+
+**Fix**: Named handler functions
+```tsx
+// GOOD: Named handler
+const handleDeleteClick = useCallback(() => {
+  handleDelete(item.id);
+}, [item.id, handleDelete]);
+
+<Button onClick={handleDeleteClick}>Delete</Button>
+```
+
+**For lists**: Use data attributes
+```tsx
+// GOOD: Data attribute pattern for lists
+const handleItemClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+  const id = e.currentTarget.dataset.id;
+  if (id) handleDelete(id);
+}, [handleDelete]);
+
+{items.map(item => (
+  <Button key={item.id} data-id={item.id} onClick={handleItemClick}>
+    Delete
+  </Button>
+))}
+```
+
+---
+
+### 11.8 Remove Dead Code & Files
+
+**Files to DELETE** (never imported):
+- `components/shared/command-palette.tsx` (duplicate)
+- `components/shared/empty-state.tsx` (duplicate)
+- `components/shared/metric-card.tsx` (duplicate)
+- `components/shared/page-header.tsx` (duplicate)
+- `components/ai/assistant-bot.tsx`
+- `components/ai/task-suggestions.tsx`
+- `components/attendance/daily-log.tsx`
+- `components/attendance/monthly-log.tsx`
+- `components/crm/mini-bar-chart.tsx`
+- `components/expenses/expense-filter-bar.tsx`
+- `components/expenses/expense-pagination.tsx`
+- `components/expenses/receipt-viewer.tsx`
+- `components/hr/attendance-page-client.tsx`
+- `components/hr/employee-profile-form.tsx`
+- `components/hr/leave-request-form.tsx`
+- `components/hr/salary-structure-form.tsx`
+- `components/projects/epic-view.tsx`
+- `components/projects/sprint-board.tsx`
+- `components/projects/time-tracking.tsx`
+- `components/shared/ai-sidebar.tsx`
+- `components/shared/data-table.tsx`
+- `components/shared/section-card.tsx`
+- `components/shared/status-badge.tsx`
+- `components/storage/file-viewer.tsx`
+- `components/ui/leaves-skeleton.tsx`
+- `components/ui/project-skeleton.tsx`
+- `components/ui/section-header.tsx`
+
+**Code patterns to remove**:
+```typescript
+const unusedVar = "never used";
+
+import { Something } from "./module";
+
+console.log("debug:", data);
+
+// Any comment like this - DELETE
+/* Block comments - DELETE */
+/** JSDoc comments - DELETE (unless for public API) */
+// TODO: something - DELETE
+// FIXME: something - DELETE
+// HACK: something - DELETE
+```
+
+**No comments policy**:
+- Code should be self-documenting through clear naming
+- If code needs a comment to explain, refactor to be clearer
+- Exception: Complex algorithms or business logic that cannot be simplified
+
+---
+
+### 11.9 Fix Type Safety Issues
+
+**Replace `as any[]`** (9 instances):
+```typescript
+// BAD
+const data = result as any[];
+
+// GOOD
+type LeadRow = InferSelectModel<typeof leads>;
+const data: LeadRow[] = result;
+```
+
+**Replace `Record<string, unknown>`**:
+```typescript
+// BAD
+metadata: Record<string, unknown>;
+
+// GOOD
+interface NotificationMetadata {
+  entityId?: string;
+  entityType?: "lead" | "deal" | "ticket";
+  actionUrl?: string;
+}
+metadata: NotificationMetadata;
+```
+
+**Use strict role types**:
+```typescript
+// BAD
+role: string;
+
+// GOOD
+import { Role } from "@/lib/constants/roles";
+role: Role;
+```
+
+---
+
+### 11.10 Fix eslint-disable Comments
+
+**Files with suppressions to fix**:
+1. `server/api/routers/leads.ts` — will be deleted in tRPC removal
+2. `components/crm/lead-export-dialog.tsx` — fix type issues
+3. `app/(dashboard)/settings/branches/page.tsx` — fix type issues
+4. `app/(dashboard)/hr/incentives/page.tsx` — fix type issues
+5. `app/(dashboard)/digital-marketing/social/page.tsx` — fix type issues
+6. `app/(dashboard)/digital-marketing/leads/page.tsx` — fix type issues
+7. `app/(dashboard)/digital-marketing/campaigns/page.tsx` — fix type issues
+8. `app/(dashboard)/crm/leads/distribute/page.tsx` — fix type issues
+9. `app/(dashboard)/crm/clients/page.tsx` — fix type issues
+10. `app/(dashboard)/crm/clients/[id]/page.tsx` — fix type issues
+11. `app/(dashboard)/chat/page.tsx` — fix type issues
+
+---
+
+### 11.11 Server Components vs Client Components
+
+**Principle**: Default to Server Components, only use `"use client"` when necessary
+
+**When to use `"use client"`**:
+- useState, useEffect, useContext hooks
+- Browser-only APIs (window, document)
+- Event handlers (onClick, onChange)
+- Third-party client libraries
+
+**Pattern for mixed components**:
+```tsx
+// page.tsx (Server Component - data fetching)
+export default async function LeadsPage() {
+  const leads = await getLeads(); // Server-side fetch
+  return <LeadsClient initialLeads={leads} />;
+}
+
+// leads-client.tsx (Client Component - interactivity)
+"use client";
+export function LeadsClient({ initialLeads }: Props) {
+  const [leads, setLeads] = useState(initialLeads);
+  // Client-side interactivity
+}
+```
+
+---
+
+### 11.12 Proper Error Boundaries & Loading States
+
+**Every route should have**:
+```
+app/(dashboard)/crm/leads/
+├── page.tsx
+├── loading.tsx    # Skeleton UI
+├── error.tsx      # Error boundary
+└── not-found.tsx  # 404 state (if dynamic route)
+```
+
+---
+
+### 11.13 Centralize Constants
+
+**Already created**: `lib/constants/pipeline.ts`
+
+**Additional constants to centralize**:
+
+```typescript
+// lib/constants/status.ts
+export const EXPENSE_STATUS = ["pending", "approved", "rejected", "reimbursed"] as const;
+export const LEAVE_STATUS = ["PENDING", "APPROVED", "REJECTED"] as const;
+export const TICKET_STATUS = ["backlog", "todo", "in_progress", "in_review", "done", "cancelled"] as const;
+
+// lib/constants/colors.ts
+export const STATUS_COLORS = {
+  success: "hsl(142, 71%, 45%)",
+  warning: "hsl(38, 92%, 50%)",
+  error: "hsl(0, 84%, 60%)",
+  info: "hsl(217, 91%, 60%)",
+} as const;
+```
 
 ---
 
 ## Checklist
 
-- [ ] Verify already-deleted files are gone: `task`, `test-drizzle.ts`, `audit/REPORT.md`, `lib/email-templates.ts`, `env.example`
-- [ ] Delete 24+ orphan components (never imported anywhere)
-- [ ] Delete 4 duplicate component pairs (shared/ versions)
-- [ ] Update `drizzle.config.ts` schema path if needed
-- [ ] Fix ALL 14 `eslint-disable` comments (fix underlying issues)
-- [ ] Fix ALL 9 `as any[]` type assertions with proper types
-- [ ] Split `components/illustrations/index.tsx` (50KB) into individual files
-- [ ] Remove ALL TODO/FIXME comments from production code (8 server files)
+### File Size & Organization
+- [ ] Split all files over 500 lines
+- [ ] Create `_components/` folders for page-specific components
+- [ ] Create `_hooks/` folders for page-specific hooks
+- [ ] Split `components/illustrations/index.tsx` into individual files
+
+### React Best Practices
+- [ ] Remove unnecessary `useEffect` hooks (auth checks, derived state)
+- [ ] Replace `useMemo`/`useCallback` anti-patterns
+- [ ] Use `memo()` only where profiling shows benefit
 - [ ] Replace anonymous inline handlers with named functions
-- [ ] Run `pnpm lint --fix` to clean unused imports
-- [ ] Create specific interfaces for `Record<string, unknown>` usages
-- [ ] Use `Role` union type everywhere instead of loose `string`
-- [ ] Verify Zod schemas match DB schema (hr, project, leave, attendance)
-- [ ] Centralize pipeline stage constants
-- [ ] Centralize stage color constants
-- [ ] Audit and fix timezone handling (264 `new Date()` instances)
-- [ ] Remove unused dependencies: `zustand`, `tw-animate-css`, `@ai-sdk/react`
-- [ ] Fix env var naming mismatches (SMTP_PASSWORD vs SMTP_PASS, etc.)
-- [ ] Remove dead Google OAuth env vars from `.env.example`
-- [ ] Add missing env vars to `.env.example` (SENDGRID_FROM_EMAIL, SMTP_FROM_NAME)
-- [ ] Scan for missing `key` props in list renders
-- [ ] Fix 10 dead/unreachable routes (add sidebar links or delete)
+- [ ] Add proper `key` props to all list renders
+
+### Next.js Best Practices
+- [ ] Replace all `<a>` tags with `<Link>` (except email templates)
+- [ ] Use layouts instead of shell wrapper components
+- [ ] Maximize Server Components, minimize `"use client"`
+- [ ] Add `loading.tsx` to all route segments
+- [ ] Add `error.tsx` to all route segments
+- [ ] Use middleware for auth, not client-side redirects
+
+### Code Reusability
+- [ ] Extract date formatting to `lib/utils/format-date.ts`
+- [ ] Extract currency formatting to `lib/utils/format-currency.ts`
+- [ ] Extract array utilities to `lib/utils/array.ts`
+- [ ] Extract string utilities to `lib/utils/string.ts`
+- [ ] Centralize all constants in `lib/constants/`
+
+### Naming Conventions
+- [ ] Rename files to kebab-case
+- [ ] Rename functions to follow conventions
+- [ ] Use consistent handler naming (handle*, on*)
+
+### Dead Code Removal
+- [ ] Delete 26+ orphan component files
+- [ ] Remove unused imports in all files
+- [ ] Remove unused variables
+- [ ] Remove ALL comments (code should be self-documenting)
+- [ ] Remove commented code blocks
+- [ ] Remove console.log statements
+- [ ] Remove TODO/FIXME/HACK comments
+
+### Type Safety
+- [ ] Fix all `as any[]` assertions (9 instances)
+- [ ] Replace `Record<string, unknown>` with specific interfaces
+- [ ] Use `Role` type everywhere instead of `string`
+- [ ] Verify Zod schemas match DB schema
+
+### Lint & Build
+- [ ] Fix all `eslint-disable` comments (11 files)
+- [ ] Run `pnpm lint --fix`
 - [ ] `pnpm build` passes with zero errors
 - [ ] `pnpm lint` passes with zero warnings
 
+---
+
 ## Acceptance Criteria
 
-1. Zero `eslint-disable` or `@ts-ignore` comments
-2. Zero `as any` type assertions
-3. Zero TODO/FIXME comments in production code
-4. Zero anonymous inline handlers
-5. Zero unused dependencies
-6. All Zod schemas verified against DB schema
-7. Largest single file under 500 lines
-8. `pnpm build` and `pnpm lint` pass with zero warnings
+1. **No file exceeds 500 lines** (excluding auto-generated)
+2. **Zero `useEffect` for auth checks** — middleware handles it
+3. **Zero `<a>` tags** — all use `<Link>` (except emails)
+4. **Zero anonymous inline handlers** — all named
+5. **Zero `eslint-disable` comments**
+6. **Zero `as any` type assertions**
+7. **Zero unused code** — imports, variables, files
+8. **Zero comments** — no inline comments, no block comments, no TODOs
+9. **All utilities centralized** — no repeated logic
+10. **Consistent naming** — files, functions, variables
+11. `pnpm build` and `pnpm lint` pass with zero warnings
+
+---
 
 ## Testing Plan
 
-1. Run `pnpm lint` — must pass with zero warnings
-2. Run `pnpm build` — must pass with zero errors
-3. Run `pnpm tsc --noEmit` — must pass with zero type errors
-4. Search codebase for `eslint-disable` — must find zero
-5. Search codebase for `as any` — must find zero
-6. Search codebase for `TODO|FIXME|HACK` — must find zero
-7. Verify all pages still render correctly after changes
+1. After each file split, verify page still renders
+2. After removing useEffect, verify auth still works
+3. After replacing `<a>` with `<Link>`, verify navigation works
+4. Run `pnpm lint` after every batch of changes
+5. Run `pnpm build` after completing each major section
+6. Manual test all affected pages
+7. Verify no console errors in browser
+8. Search for remaining comments: `grep -r "// " --include="*.tsx" --include="*.ts" | grep -v node_modules`
+9. Search for TODO/FIXME: `grep -rE "TODO|FIXME|HACK" --include="*.tsx" --include="*.ts"`
+
+---
+
+## File Size Reference Commands
+
+```bash
+# Find files over 500 lines
+find . -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 500' | sort -rn
+
+# Find largest files
+find . -name "*.tsx" -o -name "*.ts" | xargs wc -l | sort -rn | head -20
+
+# Count lines in specific directory
+find app -name "*.tsx" | xargs wc -l | sort -rn | head -20
+```

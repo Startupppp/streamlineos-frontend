@@ -15,6 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/ui/page-header";
 import { DealTableView } from "@/components/crm/deal-table-view";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -54,6 +58,7 @@ export default function DealsPage() {
   const { data: allDeals, isLoading } = api.deals.getAll.useQuery();
   const { data: employees } = api.hr.getEmployees.useQuery();
   const [createOpen, setCreateOpen] = useState(false);
+  const [dealToDelete, setDealToDelete] = useState<string | null>(null);
 
   // View toggle
   const [view, setView] = useState<"table" | "kanban">(() => {
@@ -285,11 +290,7 @@ export default function DealsPage() {
                               ))}
                               <DropdownMenuItem
                                 className="text-destructive"
-                                onClick={() => {
-                                  if (window.confirm("Are you sure you want to delete this deal? This action cannot be undone.")) {
-                                    deleteMutation.mutate({ id: deal.id });
-                                  }
-                                }}
+                                onClick={() => setDealToDelete(deal.id)}
                               >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 Delete
@@ -357,6 +358,25 @@ export default function DealsPage() {
         </div>
       </motion.div>
       )}
+      <AlertDialog open={dealToDelete !== null} onOpenChange={(open) => { if (!open) setDealToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete deal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (dealToDelete) deleteMutation.mutate({ id: dealToDelete }); setDealToDelete(null); }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }

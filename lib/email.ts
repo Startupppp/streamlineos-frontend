@@ -1,5 +1,6 @@
 import sgMail from "@sendgrid/mail";
 import { logger } from "./logger";
+import { appUrl } from "./app-url";
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
@@ -27,7 +28,7 @@ import {
 import type { MonthlyExpenseReportRow } from "./email-templates";
 import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+const baseUrl = appUrl;
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);

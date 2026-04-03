@@ -1,4 +1,6 @@
-export const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+import { appUrl } from "../app-url";
+
+export const baseUrl = appUrl;
 
 export const logoUrl = `${baseUrl}/logo.png`;
 

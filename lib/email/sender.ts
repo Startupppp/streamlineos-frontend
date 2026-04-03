@@ -1,10 +1,11 @@
 import sgMail from "@sendgrid/mail";
 import { logger } from "../logger";
+import { appUrl } from "../app-url";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
 
-export const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+export const baseUrl = appUrl;
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);

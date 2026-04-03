@@ -147,7 +147,7 @@ export default async function middleware(req: NextRequest) {
   if (tier) {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const result = checkRateLimit(tier, ip);
+    const result = await checkRateLimit(tier, ip);
 
     if (!result.allowed) {
       console.info(JSON.stringify({
@@ -266,6 +266,19 @@ export default async function middleware(req: NextRequest) {
   ) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  // Org guard — redirect to onboarding if user has no organization
+  if (
+    isAuthenticated &&
+    token?.orgId === null &&
+    startsWithAny(pathname, PROTECTED_ROUTES) &&
+    !pathname.startsWith("/onboarding")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/onboarding";
     url.search = "";
     return NextResponse.redirect(url);
   }

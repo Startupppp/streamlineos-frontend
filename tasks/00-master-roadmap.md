@@ -150,14 +150,20 @@ Phase 5: Production Readiness
 ## Global Rules (Apply to ALL Tasks)
 
 ### Code Rules
-1. No `any` type - use `unknown` + type guards or proper generics
-2. No `@ts-ignore` or `@ts-expect-error` - fix the underlying type issue
-3. No `eslint-disable` - fix the lint error properly
-4. No anonymous inline handlers - extract named handler functions
-5. No comments in production code - code should be self-documenting
-6. No dead code - remove unused imports, variables, functions, files
-7. No hardcoded values - use constants, env vars, or config
-8. Strict TypeScript everywhere - no type coercion
+1. **Max 500 lines per file** - Split large files into focused modules
+2. No `any` type - use `unknown` + type guards or proper generics
+3. No `@ts-ignore` or `@ts-expect-error` - fix the underlying type issue
+4. No `eslint-disable` - fix the lint error properly
+5. No anonymous inline handlers - extract named handler functions
+6. No unnecessary hooks - remove redundant `useEffect`/`useState`, use middleware for auth
+7. **No comments** - code must be self-documenting through clear naming; remove ALL comments including inline, block, TODO, FIXME, HACK
+8. No dead code - remove unused imports, variables, functions, files
+9. No hardcoded values - use constants, env vars, or config
+10. Strict TypeScript everywhere - no type coercion
+11. Use `<Link>` not `<a>` for internal navigation
+12. Use layouts for shells, not wrapper components
+13. Extract reusable logic to `lib/utils/`
+14. Consistent naming: `kebab-case` files, `camelCase` functions, `PascalCase` components
 
 ### Architecture Rules
 1. Server Components by default - `"use client"` only for interactivity
@@ -246,7 +252,7 @@ Every task file follows this structure:
 | 08 | Calendar Module | MEDIUM | 3-4 days | Task 02 | Not Started |
 | 09 | AI Integration | MEDIUM | 4-5 days | Task 05 | Not Started |
 | 10 | Email System | MEDIUM | 3-4 days | None | Not Started |
-| 11 | Code Quality | MEDIUM | 2-3 days | Task 01 | Not Started |
+| 11 | Code Quality & Refactoring | HIGH | 4-5 days | Task 01 | Not Started |
 | 12 | Missing Features | FUTURE | 10+ days | Tasks 02, 04 | Not Started |
 | 13 | Testing Strategy | HIGH | 4-5 days | None | Not Started |
 | 14 | Security Hardening | HIGH | 3-4 days | Task 04 | Not Started |
@@ -274,7 +280,7 @@ Every task file follows this structure:
 
 ### THEN (User Experience)
 8. **Task 07: UI/UX Overhaul** - Cards, filters, dark mode (6-8 days)
-9. **Task 11: Code Quality** - Dead code cleanup, type safety (2-3 days)
+9. **Task 11: Code Quality & Refactoring** - Max 500 lines/file, best practices, cleanup (4-5 days)
 10. **Task 08: Calendar Module** - Unified event view (3-4 days)
 
 ### FUTURE (Advanced Features)

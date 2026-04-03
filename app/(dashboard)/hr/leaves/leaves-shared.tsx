@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { format, differenceInCalendarDays } from "date-fns";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +31,10 @@ import {
 import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 import { resolveImageUrl } from "@/lib/utils";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { getColorSafe, wfhStatusColors } from "@/lib/theme-constants";
 
 /* ─── Types ─── */
@@ -300,6 +304,9 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   onReject?: (id: number, reason?: string) => void;
   onRevert?: (id: number) => void;
 }) {
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
   const status = request.status ?? "PENDING";
   const typeName = request.leaveType?.name ?? "Leave";
   const config = balanceCardConfig[typeName] ?? DEFAULT_CARD_CONFIG;
@@ -395,10 +402,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
                 )}
                 {status !== "REJECTED" && (
                   <DropdownMenuItem
-                    onClick={() => {
-                      const reason = window.prompt("Rejection reason (optional):");
-                      if (reason !== null) onReject?.(request.id, reason || undefined);
-                    }}
+                    onClick={() => { setRejectReason(""); setRejectDialogOpen(true); }}
                     className="text-red-600"
                   >
                     <X className="mr-2 h-4 w-4" />
@@ -418,6 +422,28 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
           </DropdownMenuContent>
         </DropdownMenu>
       </td>
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejection reason</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Reason (optional)"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="min-h-[80px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => { setRejectDialogOpen(false); onReject?.(request.id, rejectReason || undefined); }}
+            >
+              Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </tr>
   );
 });
