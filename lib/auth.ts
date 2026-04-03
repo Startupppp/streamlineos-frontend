@@ -205,7 +205,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           if (dbUser) {
-            token.isActive = dbUser.isActive;
+            token.isActive = dbUser.isActive ?? undefined;
             token.hasDashboardAccess = dbUser.hasDashboardAccess ?? true;
             token.forceChangePassword = dbUser.isPasswordChangeRequired || false;
             token.role = dbUser.role || token.role;

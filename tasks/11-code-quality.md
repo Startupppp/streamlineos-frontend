@@ -7,255 +7,397 @@
 ## PRD
 
 ### Problem Statement
-The codebase has accumulated technical debt and violates several React/Next.js best practices:
-
-1. **Large files** — Multiple files exceed 500+ lines, reducing readability and maintainability
-2. **Unnecessary hooks** — `useEffect` for auth checks (should use middleware), redundant state
-3. **Poor code reusability** — Functions repeated across files instead of centralized utilities
-4. **Naming inconsistencies** — Files and functions don't follow consistent naming patterns
-5. **Navigation anti-patterns** — `<a>` tags instead of Next.js `<Link>` component
-6. **Layout violations** — Shell-like wrappers instead of proper Next.js layouts
-7. **Dead code** — Unused variables, functions, imports, and components
-8. **Type safety issues** — `as any[]`, `Record<string, unknown>`, loose typing
-9. **Anonymous handlers** — Inline arrow functions instead of named handlers
-10. **eslint-disable comments** — Suppressing errors instead of fixing them
+The codebase violates React/Next.js best practices and has accumulated technical debt that impacts performance, maintainability, and developer experience.
 
 ### Goals
 - **Max 500 lines per file** — Split large files into logical modules
-- **Zero unnecessary hooks** — Remove redundant `useEffect`/`useState`, use middleware for auth
-- **Centralized utilities** — Extract reusable functions to `lib/utils/`
-- **Consistent naming** — `kebab-case` for files, `camelCase` for functions, `PascalCase` for components
-- **Next.js patterns** — Use `<Link>`, proper layouts, Server Components, middleware
-- **Zero dead code** — No unused variables, functions, imports, files
-- **Zero comments** — Code should be self-documenting, no explanatory comments
-- **Strict typing** — No `any`, proper interfaces, Zod schemas matching DB
-- **Named handlers** — No inline anonymous functions in JSX
-- **Zero suppressions** — Fix underlying issues, don't suppress eslint
-
-### Non-Goals
-- Rewriting business logic
-- Changing database schema
-- Adding new features
+- **Zero unnecessary hooks** — Remove redundant `useEffect`/`useState`
+- **Zero comments** — Code should be self-documenting
+- **Strict typing** — No `any`, proper interfaces
+- **Next.js patterns** — Use all Next.js features correctly
+- **React best practices** — Follow all React conventions
 
 ### Success Criteria
 - No file exceeds 500 lines
-- Zero `useEffect` for route protection (use middleware)
-- All reusable logic extracted to utilities
 - `pnpm lint` passes with zero warnings
 - `pnpm build` passes with zero TypeScript errors
+- All rules below are followed
 
 ---
 
-## Implementation Steps
+## NEXT.JS RULES (Must Follow)
 
-### 11.1 Split Large Files (>500 lines)
+### Rule 1: Use `<Link>` Instead of `<a>` for Internal Navigation
 
-**Files to split**:
+```tsx
+// ❌ BAD - Uses native anchor tag
+<a href="/dashboard">Go to Dashboard</a>
+<a href="/crm/leads">View Leads</a>
+<a href={`/users/${user.id}`}>View Profile</a>
 
-| File | Lines | Action |
-|------|-------|--------|
-| `app/(dashboard)/chat/page.tsx` | 2000+ | Split into: `chat-sidebar.tsx`, `chat-messages.tsx`, `chat-input.tsx`, `chat-header.tsx`, `chat-dialogs.tsx` |
-| `app/(dashboard)/crm/leads/page.tsx` | 1500+ | Split into: `leads-table.tsx`, `leads-filters.tsx`, `leads-dialogs.tsx`, `leads-kanban.tsx` |
-| `app/(dashboard)/crm/deals/page.tsx` | 1200+ | Split into: `deals-table.tsx`, `deals-filters.tsx`, `deals-dialogs.tsx`, `deals-pipeline.tsx` |
-| `app/(dashboard)/hr/employees/page.tsx` | 1000+ | Split into: `employees-table.tsx`, `employees-filters.tsx`, `employee-dialogs.tsx` |
-| `app/(dashboard)/hr/leaves/page.tsx` | 900+ | Split into: `leaves-calendar.tsx`, `leaves-list.tsx`, `leave-request-dialog.tsx` |
-| `app/(dashboard)/hr/expenses/page.tsx` | 800+ | Split into: `expenses-table.tsx`, `expense-filters.tsx`, `expense-dialogs.tsx` |
-| `app/(dashboard)/projects/[id]/page.tsx` | 800+ | Split into: `project-header.tsx`, `project-board.tsx`, `project-dialogs.tsx` |
-| `components/illustrations/index.tsx` | 50KB | Split each illustration into its own file |
-| `server/api/routers/leads.ts` | 800+ | Split into: `leads-queries.ts`, `leads-mutations.ts` |
-| `server/api/routers/hr/employee.ts` | 700+ | Split into: `employee-queries.ts`, `employee-mutations.ts` |
+// ✅ GOOD - Uses Next.js Link component
+import Link from "next/link";
 
-**Pattern for splitting page components**:
+<Link href="/dashboard">Go to Dashboard</Link>
+<Link href="/crm/leads">View Leads</Link>
+<Link href={`/users/${user.id}`}>View Profile</Link>
+
+// ✅ GOOD - Link with custom styling
+<Link href="/dashboard" className="text-blue-500 hover:underline">
+  Dashboard
+</Link>
+
+// ✅ GOOD - Link wrapping a button
+<Link href="/create">
+  <Button>Create New</Button>
+</Link>
+
+// ⚠️ EXCEPTION - Keep <a> for external links and email templates
+<a href="https://external-site.com" target="_blank" rel="noopener noreferrer">
+  External Link
+</a>
+```
+
+**Why**: `<Link>` enables client-side navigation, prefetching, and faster page transitions.
+
+---
+
+### Rule 2: Use `layout.tsx` Instead of Shell/Wrapper Components
+
+```tsx
+// ❌ BAD - Shell wrapper component in page
+export default function DashboardPage() {
+  return (
+    <DashboardShell>
+      <Sidebar />
+      <main>
+        <Header />
+        <PageContent />
+      </main>
+    </DashboardShell>
+  );
+}
+
+// ❌ BAD - Repeating layout structure in every page
+export default function LeadsPage() {
+  return (
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-1">
+        <Header />
+        <LeadsContent />
+      </div>
+    </div>
+  );
+}
+
+// ✅ GOOD - Use layout.tsx for shared structure
+// app/(dashboard)/layout.tsx
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-1">
+        <Header />
+        <main>{children}</main>
+      </div>
+    </div>
+  );
+}
+
+// app/(dashboard)/leads/page.tsx - Clean, focused page
+export default function LeadsPage() {
+  return <LeadsContent />;
+}
+```
+
+**Why**: Layouts persist across navigation, preserve state, and avoid unnecessary re-renders.
+
+---
+
+### Rule 3: Use Middleware for Auth, NOT useEffect
+
+```tsx
+// ❌ BAD - Client-side auth redirect with useEffect
+"use client";
+export default function ProtectedPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+  }, [status, router]);
+
+  if (status === "loading") return <Loading />;
+  if (!session) return null;
+
+  return <PageContent />;
+}
+
+// ❌ BAD - Conditional rendering based on session
+"use client";
+export default function Dashboard() {
+  const { data: session } = useSession();
+
+  if (!session) {
+    return <Redirect to="/signin" />;
+  }
+
+  return <DashboardContent />;
+}
+
+// ✅ GOOD - Middleware handles auth (already implemented in middleware.ts)
+// middleware.ts
+export default function middleware(req: NextRequest) {
+  const token = await getToken({ req });
+  if (!token && isProtectedRoute(req.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL("/signin", req.url));
+  }
+  return NextResponse.next();
+}
+
+// page.tsx - No auth check needed, middleware already handled it
+export default function ProtectedPage() {
+  return <PageContent />;
+}
+
+// For server components - use auth() directly
+export default async function DashboardPage() {
+  const session = await auth();
+  return <DashboardContent user={session.user} />;
+}
+```
+
+**Why**: Middleware runs before the page loads, preventing flash of unauthenticated content.
+
+---
+
+### Rule 4: Server Components by Default
+
+```tsx
+// ❌ BAD - Unnecessary "use client" on data-fetching page
+"use client";
+export default function LeadsPage() {
+  const { data } = useQuery(...);
+  return <LeadsList leads={data} />;
+}
+
+// ✅ GOOD - Server Component for data fetching
+export default async function LeadsPage() {
+  const leads = await getLeads();
+  return <LeadsClient initialLeads={leads} />;
+}
+
+// ✅ GOOD - Only client component for interactivity
+"use client";
+export function LeadsClient({ initialLeads }: Props) {
+  const [leads, setLeads] = useState(initialLeads);
+  return <LeadsList leads={leads} />;
+}
+```
+
+**When to use `"use client"`**:
+- `useState`, `useEffect`, `useContext`, `useReducer`
+- Event handlers (`onClick`, `onChange`, `onSubmit`)
+- Browser APIs (`window`, `document`, `localStorage`)
+- Third-party client libraries (charts, drag-and-drop)
+
+---
+
+### Rule 5: Use Next.js Image Instead of `<img>`
+
+```tsx
+// ❌ BAD - Native img tag
+<img src="/logo.png" alt="Logo" width="100" height="100" />
+<img src={user.avatar} alt={user.name} className="rounded-full" />
+
+// ✅ GOOD - Next.js Image component
+import Image from "next/image";
+
+<Image src="/logo.png" alt="Logo" width={100} height={100} />
+<Image 
+  src={user.avatar || "/default-avatar.png"} 
+  alt={user.name}
+  width={40}
+  height={40}
+  className="rounded-full"
+/>
+
+// ✅ GOOD - Fill mode for responsive images
+<div className="relative h-48 w-full">
+  <Image src="/hero.jpg" alt="Hero" fill className="object-cover" />
+</div>
+```
+
+**Why**: Automatic optimization, lazy loading, and responsive images.
+
+---
+
+### Rule 6: Every Route Must Have loading.tsx and error.tsx
 
 ```
 app/(dashboard)/crm/leads/
-├── page.tsx           # Main page (under 200 lines) - composition only
-├── _components/
-│   ├── leads-table.tsx
-│   ├── leads-filters.tsx
-│   ├── leads-kanban.tsx
-│   ├── lead-dialogs.tsx
-│   └── index.ts       # Barrel export
-└── _hooks/
-    └── use-leads-filters.ts
+├── page.tsx       # Page content
+├── loading.tsx    # Skeleton UI while loading
+├── error.tsx      # Error boundary
+└── not-found.tsx  # 404 state (for dynamic routes)
 ```
 
----
-
-### 11.2 Remove Unnecessary useEffect Hooks
-
-**Anti-pattern to fix**:
 ```tsx
-// BAD: Using useEffect for auth check
-useEffect(() => {
-  if (!session) {
-    router.push('/signin');
-  }
-}, [session, router]);
-```
+// loading.tsx
+import { Skeleton } from "@/components/ui/skeleton";
 
-**Fix**: Remove and use middleware (already implemented in `middleware.ts`)
-
-**Files to audit for unnecessary useEffect**:
-- All page components in `app/(dashboard)/`
-- All client components checking session/auth
-
-**Other useEffect removals**:
-```tsx
-// BAD: Derived state in useEffect
-useEffect(() => {
-  setFilteredData(data.filter(item => item.status === status));
-}, [data, status]);
-
-// GOOD: Compute directly
-const filteredData = useMemo(() => 
-  data.filter(item => item.status === status), 
-  [data, status]
-);
-```
-
----
-
-### 11.3 Replace `<a>` Tags with Next.js `<Link>`
-
-**Search and replace**:
-```tsx
-// BAD
-<a href="/dashboard">Dashboard</a>
-
-// GOOD
-<Link href="/dashboard">Dashboard</Link>
-```
-
-**Files to check**:
-- All components in `components/`
-- All pages in `app/`
-- Email templates (keep `<a>` for emails only)
-
----
-
-### 11.4 Use Proper Next.js Layouts Instead of Shell Wrappers
-
-**Anti-pattern**:
-```tsx
-// BAD: Shell component wrapping content
-export default function Page() {
+export default function Loading() {
   return (
-    <DashboardShell>
-      <PageContent />
-    </DashboardShell>
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-[400px] w-full" />
+    </div>
+  );
+}
+
+// error.tsx
+"use client";
+
+export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-6">
+      <h2>Something went wrong</h2>
+      <Button onClick={reset}>Try again</Button>
+    </div>
   );
 }
 ```
 
-**Fix**: Use `layout.tsx` for shared shells:
+---
+
+### Rule 7: Use Server Actions for Mutations
+
 ```tsx
-// app/(dashboard)/layout.tsx handles the shell
-export default function Page() {
-  return <PageContent />;
+// ❌ BAD - Client-side fetch for mutations
+"use client";
+async function handleSubmit(data: FormData) {
+  await fetch("/api/leads", { method: "POST", body: data });
+}
+
+// ✅ GOOD - Server Action
+// actions.ts
+"use server";
+export async function createLead(formData: FormData) {
+  const data = Object.fromEntries(formData);
+  await db.insert(leads).values(data);
+  revalidatePath("/crm/leads");
+}
+
+// page.tsx
+import { createLead } from "./actions";
+
+export default function CreateLeadPage() {
+  return (
+    <form action={createLead}>
+      <input name="name" />
+      <button type="submit">Create</button>
+    </form>
+  );
 }
 ```
 
 ---
 
-### 11.5 Extract Reusable Utility Functions
+### Rule 8: Use Route Handlers for API, Not Pages
 
-**Create `lib/utils/` with**:
-
-| File | Purpose |
-|------|---------|
-| `lib/utils/format-date.ts` | Centralized date formatting with timezone support |
-| `lib/utils/format-currency.ts` | Currency formatting with locale |
-| `lib/utils/format-number.ts` | Number formatting (compact, percentage) |
-| `lib/utils/debounce.ts` | Debounce utility |
-| `lib/utils/throttle.ts` | Throttle utility |
-| `lib/utils/file-size.ts` | Human-readable file sizes |
-| `lib/utils/validation.ts` | Common validation functions |
-| `lib/utils/array.ts` | Array utilities (groupBy, unique, chunk) |
-| `lib/utils/string.ts` | String utilities (truncate, slugify, capitalize) |
-| `lib/utils/export.ts` | Export to CSV/Excel utilities |
-
-**Example extraction**:
-```typescript
-// lib/utils/format-date.ts
-import { format, formatDistanceToNow, parseISO } from "date-fns";
-
-export function formatDate(date: Date | string, pattern = "PPP"): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
-  return format(d, pattern);
+```tsx
+// ❌ BAD - API logic in page component
+export default function ApiPage() {
+  // This is wrong
 }
 
-export function formatRelativeTime(date: Date | string): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
-  return formatDistanceToNow(d, { addSuffix: true });
+// ✅ GOOD - Route handler in app/api/
+// app/api/leads/route.ts
+export async function GET(request: Request) {
+  const leads = await getLeads();
+  return Response.json(leads);
 }
 
-export function formatDateRange(start: Date, end: Date): string {
-  return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+export async function POST(request: Request) {
+  const body = await request.json();
+  const lead = await createLead(body);
+  return Response.json(lead);
 }
 ```
 
 ---
 
-### 11.6 Fix File & Function Naming
+## REACT RULES (Must Follow)
 
-**File naming conventions**:
-- Components: `kebab-case.tsx` (e.g., `lead-card.tsx`, `expense-dialog.tsx`)
-- Hooks: `use-kebab-case.ts` (e.g., `use-debounce.ts`, `use-disclosure.ts`)
-- Utilities: `kebab-case.ts` (e.g., `format-date.ts`, `cn.ts`)
-- Types: `kebab-case.ts` (e.g., `api.ts`, `next-auth.d.ts`)
-- Constants: `kebab-case.ts` (e.g., `roles.ts`, `pipeline.ts`)
+### Rule 9: No Unnecessary useEffect
 
-**Function naming conventions**:
-- Event handlers: `handle{Event}` (e.g., `handleClick`, `handleSubmit`)
-- Callbacks: `on{Event}` for props (e.g., `onClick`, `onSubmit`)
-- Getters: `get{Thing}` (e.g., `getUser`, `getLeadById`)
-- Setters: `set{Thing}` (e.g., `setStatus`, `updateLead`)
-- Booleans: `is{Condition}` / `has{Thing}` / `can{Action}` (e.g., `isLoading`, `hasAccess`, `canEdit`)
-- Async: `{verb}{Noun}` (e.g., `fetchLeads`, `createUser`, `deleteExpense`)
+```tsx
+// ❌ BAD - useEffect for derived state
+const [filteredItems, setFilteredItems] = useState([]);
 
-**Files to rename**:
-- `lib/db.ts` → `lib/db/client.ts` (for clarity)
-- `lib/auth.ts` → split into `lib/auth/config.ts`, `lib/auth/helpers.ts`
+useEffect(() => {
+  setFilteredItems(items.filter(item => item.status === status));
+}, [items, status]);
+
+// ✅ GOOD - Compute directly or use useMemo
+const filteredItems = useMemo(
+  () => items.filter(item => item.status === status),
+  [items, status]
+);
+
+// ❌ BAD - useEffect for formatting
+useEffect(() => {
+  setFormattedDate(format(date, "PPP"));
+}, [date]);
+
+// ✅ GOOD - Compute directly
+const formattedDate = format(date, "PPP");
+
+// ❌ BAD - useEffect for initial data transformation
+useEffect(() => {
+  if (data) {
+    setProcessedData(transformData(data));
+  }
+}, [data]);
+
+// ✅ GOOD - Transform during render or in useMemo
+const processedData = useMemo(() => data ? transformData(data) : null, [data]);
+```
 
 ---
 
-### 11.7 Replace Anonymous Inline Handlers
+### Rule 10: No Anonymous Inline Handlers
 
-**Anti-pattern**:
 ```tsx
-// BAD: Anonymous inline handler
+// ❌ BAD - Anonymous inline handler
 <Button onClick={() => handleDelete(item.id)}>Delete</Button>
 
-// Also BAD: Complex inline logic
+// ❌ BAD - Complex inline logic
 <Button onClick={() => {
   setLoading(true);
-  handleDelete(item.id).finally(() => setLoading(false));
+  deleteItem(item.id).finally(() => setLoading(false));
 }}>
   Delete
 </Button>
-```
 
-**Fix**: Named handler functions
-```tsx
-// GOOD: Named handler
+// ✅ GOOD - Named handler with useCallback
 const handleDeleteClick = useCallback(() => {
   handleDelete(item.id);
-}, [item.id, handleDelete]);
+}, [item.id]);
 
 <Button onClick={handleDeleteClick}>Delete</Button>
-```
 
-**For lists**: Use data attributes
-```tsx
-// GOOD: Data attribute pattern for lists
-const handleItemClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+// ✅ GOOD - For lists, use data attributes
+const handleItemDelete = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
   const id = e.currentTarget.dataset.id;
-  if (id) handleDelete(id);
-}, [handleDelete]);
+  if (id) deleteItem(id);
+}, [deleteItem]);
 
 {items.map(item => (
-  <Button key={item.id} data-id={item.id} onClick={handleItemClick}>
+  <Button key={item.id} data-id={item.id} onClick={handleItemDelete}>
     Delete
   </Button>
 ))}
@@ -263,13 +405,320 @@ const handleItemClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => 
 
 ---
 
-### 11.8 Remove Dead Code & Files
+### Rule 11: Proper Key Props in Lists
 
-**Files to DELETE** (never imported):
-- `components/shared/command-palette.tsx` (duplicate)
-- `components/shared/empty-state.tsx` (duplicate)
-- `components/shared/metric-card.tsx` (duplicate)
-- `components/shared/page-header.tsx` (duplicate)
+```tsx
+// ❌ BAD - Using index as key
+{items.map((item, index) => (
+  <ListItem key={index} item={item} />
+))}
+
+// ❌ BAD - Missing key
+{items.map(item => (
+  <ListItem item={item} />
+))}
+
+// ✅ GOOD - Unique identifier as key
+{items.map(item => (
+  <ListItem key={item.id} item={item} />
+))}
+
+// ✅ GOOD - Composite key when needed
+{items.map(item => (
+  <ListItem key={`${item.type}-${item.id}`} item={item} />
+))}
+```
+
+---
+
+### Rule 12: No Prop Drilling (3+ Levels)
+
+```tsx
+// ❌ BAD - Prop drilling through multiple levels
+<Parent user={user}>
+  <Child user={user}>
+    <GrandChild user={user}>
+      <GreatGrandChild user={user} />
+    </GrandChild>
+  </Child>
+</Parent>
+
+// ✅ GOOD - Use Context for deeply shared state
+const UserContext = createContext<User | null>(null);
+
+function Parent({ user }: { user: User }) {
+  return (
+    <UserContext.Provider value={user}>
+      <Child />
+    </UserContext.Provider>
+  );
+}
+
+function GreatGrandChild() {
+  const user = useContext(UserContext);
+  return <div>{user?.name}</div>;
+}
+
+// ✅ GOOD - Use composition pattern
+<Parent>
+  <Child>
+    <GrandChild>
+      <UserDisplay user={user} />
+    </GrandChild>
+  </Child>
+</Parent>
+```
+
+---
+
+## STATE MANAGEMENT RULES
+
+### Rule 13: Remove Zustand (Unused)
+
+```bash
+# Zustand is installed but NEVER used in codebase - DELETE
+pnpm remove zustand
+```
+
+**Use instead**:
+- React Query for server state
+- React Context for shared UI state
+- URL state for filters/pagination
+- Local state for component-specific state
+
+---
+
+### Rule 14: Use URL State for Filters/Pagination
+
+```tsx
+// ❌ BAD - useState for filters (lost on refresh)
+const [status, setStatus] = useState("all");
+const [page, setPage] = useState(1);
+
+// ✅ GOOD - URL state with searchParams
+import { useSearchParams, useRouter } from "next/navigation";
+
+function LeadsFilters() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const status = searchParams.get("status") || "all";
+  const page = parseInt(searchParams.get("page") || "1");
+
+  function updateFilters(key: string, value: string) {
+    const params = new URLSearchParams(searchParams);
+    params.set(key, value);
+    router.push(`?${params.toString()}`);
+  }
+
+  return (
+    <Select value={status} onValueChange={(v) => updateFilters("status", v)}>
+      ...
+    </Select>
+  );
+}
+```
+
+---
+
+### Rule 15: Use localStorage/sessionStorage Correctly
+
+```tsx
+// ❌ BAD - Direct access (crashes on server)
+const theme = localStorage.getItem("theme");
+
+// ❌ BAD - useEffect just to read storage
+useEffect(() => {
+  setTheme(localStorage.getItem("theme"));
+}, []);
+
+// ✅ GOOD - Safe storage access with hook
+function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    if (typeof window === "undefined") return initialValue;
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+
+// ✅ GOOD - Use existing next-themes for theme
+import { useTheme } from "next-themes";
+const { theme, setTheme } = useTheme();
+```
+
+---
+
+## CODE ORGANIZATION RULES
+
+### Rule 16: Max 500 Lines Per File
+
+**Files to split**:
+
+| File | Lines | Split Into |
+|------|-------|------------|
+| `chat/page.tsx` | 2000+ | `chat-sidebar.tsx`, `chat-messages.tsx`, `chat-input.tsx`, `chat-header.tsx` |
+| `crm/leads/page.tsx` | 1500+ | `leads-table.tsx`, `leads-filters.tsx`, `leads-kanban.tsx`, `lead-dialogs.tsx` |
+| `crm/deals/page.tsx` | 1200+ | `deals-table.tsx`, `deals-filters.tsx`, `deals-pipeline.tsx` |
+| `hr/employees/page.tsx` | 1000+ | `employees-table.tsx`, `employees-filters.tsx`, `employee-dialogs.tsx` |
+| `illustrations/index.tsx` | 50KB | Individual files per illustration |
+
+**Pattern**:
+```
+app/(dashboard)/crm/leads/
+├── page.tsx              # Under 200 lines - composition only
+├── _components/
+│   ├── leads-table.tsx
+│   ├── leads-filters.tsx
+│   ├── leads-kanban.tsx
+│   └── index.ts
+└── _hooks/
+    └── use-leads-filters.ts
+```
+
+---
+
+### Rule 17: Consistent File Naming
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | `kebab-case.tsx` | `lead-card.tsx`, `expense-dialog.tsx` |
+| Hooks | `use-kebab-case.ts` | `use-debounce.ts`, `use-disclosure.ts` |
+| Utilities | `kebab-case.ts` | `format-date.ts`, `cn.ts` |
+| Constants | `kebab-case.ts` | `roles.ts`, `pipeline.ts` |
+| Types | `kebab-case.ts` | `api.ts`, `next-auth.d.ts` |
+
+---
+
+### Rule 18: Consistent Function Naming
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Event handlers | `handle{Event}` | `handleClick`, `handleSubmit`, `handleDelete` |
+| Callback props | `on{Event}` | `onClick`, `onSubmit`, `onChange` |
+| Getters | `get{Thing}` | `getUser`, `getLeadById`, `getSession` |
+| Async fetchers | `fetch{Thing}` | `fetchLeads`, `fetchUser` |
+| Mutations | `{verb}{Noun}` | `createLead`, `updateUser`, `deleteExpense` |
+| Booleans | `is/has/can/should` | `isLoading`, `hasAccess`, `canEdit`, `shouldRefetch` |
+
+---
+
+### Rule 19: Extract Reusable Utilities
+
+**Create centralized utilities**:
+
+```typescript
+// lib/utils/format-date.ts
+export function formatDate(date: Date | string, pattern = "PPP"): string
+export function formatRelativeTime(date: Date | string): string
+export function formatDateRange(start: Date, end: Date): string
+
+// lib/utils/format-currency.ts
+export function formatCurrency(amount: number, currency = "INR"): string
+export function formatCompactNumber(num: number): string
+
+// lib/utils/array.ts
+export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]>
+export function unique<T>(arr: T[]): T[]
+export function chunk<T>(arr: T[], size: number): T[][]
+
+// lib/utils/string.ts
+export function truncate(str: string, length: number): string
+export function slugify(str: string): string
+export function capitalize(str: string): string
+```
+
+---
+
+## CLEANUP RULES
+
+### Rule 20: No Comments
+
+```typescript
+// ❌ BAD - Any comments
+// This function fetches leads
+function fetchLeads() { ... }
+
+/* Set the user state */
+setUser(data);
+
+// TODO: Fix this later
+// FIXME: This is a hack
+// HACK: Temporary solution
+
+// ✅ GOOD - Self-documenting code (no comments needed)
+function fetchLeadsForOrganization(orgId: string) { ... }
+
+// Code should be clear from naming alone
+const activeLeads = leads.filter(lead => lead.status === "ACTIVE");
+```
+
+**Exception**: Complex algorithms that cannot be simplified
+
+---
+
+### Rule 21: No Dead Code
+
+```typescript
+// ❌ BAD - Remove all of these
+const unusedVariable = "never used";
+import { UnusedComponent } from "./unused";
+// const oldCode = something;
+console.log("debug:", data);
+
+function neverCalledFunction() { ... }
+```
+
+---
+
+### Rule 22: No Type Assertions
+
+```typescript
+// ❌ BAD
+const data = result as any[];
+const user = response as User;
+
+// ✅ GOOD - Proper typing
+type LeadRow = InferSelectModel<typeof leads>;
+const data: LeadRow[] = result;
+
+// ✅ GOOD - Type guards
+function isUser(obj: unknown): obj is User {
+  return typeof obj === "object" && obj !== null && "id" in obj;
+}
+```
+
+---
+
+### Rule 23: No eslint-disable Comments
+
+```typescript
+// ❌ BAD - Never suppress errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any = result;
+
+/* eslint-disable */
+// Bad code here
+/* eslint-enable */
+
+// ✅ GOOD - Fix the underlying issue
+const data: LeadData[] = result;
+```
+
+---
+
+## FILES TO DELETE
+
+**Orphan components** (never imported):
+- `components/shared/command-palette.tsx`
+- `components/shared/empty-state.tsx`
+- `components/shared/metric-card.tsx`
+- `components/shared/page-header.tsx`
 - `components/ai/assistant-bot.tsx`
 - `components/ai/task-suggestions.tsx`
 - `components/attendance/daily-log.tsx`
@@ -294,245 +743,60 @@ const handleItemClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => 
 - `components/ui/project-skeleton.tsx`
 - `components/ui/section-header.tsx`
 
-**Code patterns to remove**:
-```typescript
-const unusedVar = "never used";
-
-import { Something } from "./module";
-
-console.log("debug:", data);
-
-// Any comment like this - DELETE
-/* Block comments - DELETE */
-/** JSDoc comments - DELETE (unless for public API) */
-// TODO: something - DELETE
-// FIXME: something - DELETE
-// HACK: something - DELETE
-```
-
-**No comments policy**:
-- Code should be self-documenting through clear naming
-- If code needs a comment to explain, refactor to be clearer
-- Exception: Complex algorithms or business logic that cannot be simplified
-
 ---
 
-### 11.9 Fix Type Safety Issues
+## CHECKLIST
 
-**Replace `as any[]`** (9 instances):
-```typescript
-// BAD
-const data = result as any[];
+### Next.js
+- [ ] Replace all `<a>` tags with `<Link>` (except external/email)
+- [ ] Replace all `<img>` tags with `<Image>`
+- [ ] Use `layout.tsx` instead of shell wrappers
+- [ ] Remove all auth-related `useEffect` (middleware handles it)
+- [ ] Add `loading.tsx` to all routes
+- [ ] Add `error.tsx` to all routes
+- [ ] Use Server Components by default
+- [ ] Use Server Actions for mutations
 
-// GOOD
-type LeadRow = InferSelectModel<typeof leads>;
-const data: LeadRow[] = result;
-```
-
-**Replace `Record<string, unknown>`**:
-```typescript
-// BAD
-metadata: Record<string, unknown>;
-
-// GOOD
-interface NotificationMetadata {
-  entityId?: string;
-  entityType?: "lead" | "deal" | "ticket";
-  actionUrl?: string;
-}
-metadata: NotificationMetadata;
-```
-
-**Use strict role types**:
-```typescript
-// BAD
-role: string;
-
-// GOOD
-import { Role } from "@/lib/constants/roles";
-role: Role;
-```
-
----
-
-### 11.10 Fix eslint-disable Comments
-
-**Files with suppressions to fix**:
-1. `server/api/routers/leads.ts` — will be deleted in tRPC removal
-2. `components/crm/lead-export-dialog.tsx` — fix type issues
-3. `app/(dashboard)/settings/branches/page.tsx` — fix type issues
-4. `app/(dashboard)/hr/incentives/page.tsx` — fix type issues
-5. `app/(dashboard)/digital-marketing/social/page.tsx` — fix type issues
-6. `app/(dashboard)/digital-marketing/leads/page.tsx` — fix type issues
-7. `app/(dashboard)/digital-marketing/campaigns/page.tsx` — fix type issues
-8. `app/(dashboard)/crm/leads/distribute/page.tsx` — fix type issues
-9. `app/(dashboard)/crm/clients/page.tsx` — fix type issues
-10. `app/(dashboard)/crm/clients/[id]/page.tsx` — fix type issues
-11. `app/(dashboard)/chat/page.tsx` — fix type issues
-
----
-
-### 11.11 Server Components vs Client Components
-
-**Principle**: Default to Server Components, only use `"use client"` when necessary
-
-**When to use `"use client"`**:
-- useState, useEffect, useContext hooks
-- Browser-only APIs (window, document)
-- Event handlers (onClick, onChange)
-- Third-party client libraries
-
-**Pattern for mixed components**:
-```tsx
-// page.tsx (Server Component - data fetching)
-export default async function LeadsPage() {
-  const leads = await getLeads(); // Server-side fetch
-  return <LeadsClient initialLeads={leads} />;
-}
-
-// leads-client.tsx (Client Component - interactivity)
-"use client";
-export function LeadsClient({ initialLeads }: Props) {
-  const [leads, setLeads] = useState(initialLeads);
-  // Client-side interactivity
-}
-```
-
----
-
-### 11.12 Proper Error Boundaries & Loading States
-
-**Every route should have**:
-```
-app/(dashboard)/crm/leads/
-├── page.tsx
-├── loading.tsx    # Skeleton UI
-├── error.tsx      # Error boundary
-└── not-found.tsx  # 404 state (if dynamic route)
-```
-
----
-
-### 11.13 Centralize Constants
-
-**Already created**: `lib/constants/pipeline.ts`
-
-**Additional constants to centralize**:
-
-```typescript
-// lib/constants/status.ts
-export const EXPENSE_STATUS = ["pending", "approved", "rejected", "reimbursed"] as const;
-export const LEAVE_STATUS = ["PENDING", "APPROVED", "REJECTED"] as const;
-export const TICKET_STATUS = ["backlog", "todo", "in_progress", "in_review", "done", "cancelled"] as const;
-
-// lib/constants/colors.ts
-export const STATUS_COLORS = {
-  success: "hsl(142, 71%, 45%)",
-  warning: "hsl(38, 92%, 50%)",
-  error: "hsl(0, 84%, 60%)",
-  info: "hsl(217, 91%, 60%)",
-} as const;
-```
-
----
-
-## Checklist
-
-### File Size & Organization
-- [ ] Split all files over 500 lines
-- [ ] Create `_components/` folders for page-specific components
-- [ ] Create `_hooks/` folders for page-specific hooks
-- [ ] Split `components/illustrations/index.tsx` into individual files
-
-### React Best Practices
-- [ ] Remove unnecessary `useEffect` hooks (auth checks, derived state)
-- [ ] Replace `useMemo`/`useCallback` anti-patterns
-- [ ] Use `memo()` only where profiling shows benefit
+### React
+- [ ] Remove unnecessary `useEffect` hooks
 - [ ] Replace anonymous inline handlers with named functions
-- [ ] Add proper `key` props to all list renders
+- [ ] Add proper `key` props to all lists
+- [ ] Fix prop drilling with Context or composition
+- [ ] Remove Zustand dependency (unused)
+- [ ] Use URL state for filters/pagination
 
-### Next.js Best Practices
-- [ ] Replace all `<a>` tags with `<Link>` (except email templates)
-- [ ] Use layouts instead of shell wrapper components
-- [ ] Maximize Server Components, minimize `"use client"`
-- [ ] Add `loading.tsx` to all route segments
-- [ ] Add `error.tsx` to all route segments
-- [ ] Use middleware for auth, not client-side redirects
+### Code Organization
+- [ ] Split all files over 500 lines
+- [ ] Follow naming conventions (files, functions)
+- [ ] Extract reusable utilities to `lib/utils/`
+- [ ] Centralize constants in `lib/constants/`
 
-### Code Reusability
-- [ ] Extract date formatting to `lib/utils/format-date.ts`
-- [ ] Extract currency formatting to `lib/utils/format-currency.ts`
-- [ ] Extract array utilities to `lib/utils/array.ts`
-- [ ] Extract string utilities to `lib/utils/string.ts`
-- [ ] Centralize all constants in `lib/constants/`
+### Cleanup
+- [ ] Remove ALL comments
+- [ ] Remove dead code and unused files
+- [ ] Fix all `as any` type assertions
+- [ ] Fix all `eslint-disable` comments
+- [ ] Remove `console.log` statements
 
-### Naming Conventions
-- [ ] Rename files to kebab-case
-- [ ] Rename functions to follow conventions
-- [ ] Use consistent handler naming (handle*, on*)
-
-### Dead Code Removal
-- [ ] Delete 26+ orphan component files
-- [ ] Remove unused imports in all files
-- [ ] Remove unused variables
-- [ ] Remove ALL comments (code should be self-documenting)
-- [ ] Remove commented code blocks
-- [ ] Remove console.log statements
-- [ ] Remove TODO/FIXME/HACK comments
-
-### Type Safety
-- [ ] Fix all `as any[]` assertions (9 instances)
-- [ ] Replace `Record<string, unknown>` with specific interfaces
-- [ ] Use `Role` type everywhere instead of `string`
-- [ ] Verify Zod schemas match DB schema
-
-### Lint & Build
-- [ ] Fix all `eslint-disable` comments (11 files)
-- [ ] Run `pnpm lint --fix`
-- [ ] `pnpm build` passes with zero errors
+### Verification
+- [ ] `pnpm build` passes
 - [ ] `pnpm lint` passes with zero warnings
+- [ ] All pages render correctly
+- [ ] No console errors in browser
 
 ---
 
-## Acceptance Criteria
+## ACCEPTANCE CRITERIA
 
-1. **No file exceeds 500 lines** (excluding auto-generated)
-2. **Zero `useEffect` for auth checks** — middleware handles it
-3. **Zero `<a>` tags** — all use `<Link>` (except emails)
-4. **Zero anonymous inline handlers** — all named
-5. **Zero `eslint-disable` comments**
-6. **Zero `as any` type assertions**
-7. **Zero unused code** — imports, variables, files
-8. **Zero comments** — no inline comments, no block comments, no TODOs
-9. **All utilities centralized** — no repeated logic
-10. **Consistent naming** — files, functions, variables
-11. `pnpm build` and `pnpm lint` pass with zero warnings
-
----
-
-## Testing Plan
-
-1. After each file split, verify page still renders
-2. After removing useEffect, verify auth still works
-3. After replacing `<a>` with `<Link>`, verify navigation works
-4. Run `pnpm lint` after every batch of changes
-5. Run `pnpm build` after completing each major section
-6. Manual test all affected pages
-7. Verify no console errors in browser
-8. Search for remaining comments: `grep -r "// " --include="*.tsx" --include="*.ts" | grep -v node_modules`
-9. Search for TODO/FIXME: `grep -rE "TODO|FIXME|HACK" --include="*.tsx" --include="*.ts"`
-
----
-
-## File Size Reference Commands
-
-```bash
-# Find files over 500 lines
-find . -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 500' | sort -rn
-
-# Find largest files
-find . -name "*.tsx" -o -name "*.ts" | xargs wc -l | sort -rn | head -20
-
-# Count lines in specific directory
-find app -name "*.tsx" | xargs wc -l | sort -rn | head -20
-```
+1. **No file exceeds 500 lines**
+2. **Zero `<a>` tags** for internal navigation
+3. **Zero `<img>` tags** (use Next.js Image)
+4. **Zero shell wrapper components** (use layouts)
+5. **Zero `useEffect` for auth/session checks**
+6. **Zero anonymous inline handlers**
+7. **Zero comments** (except complex algorithms)
+8. **Zero dead code**
+9. **Zero `as any` assertions**
+10. **Zero `eslint-disable` comments**
+11. **Zero `console.log` statements**
+12. `pnpm build` and `pnpm lint` pass with zero warnings

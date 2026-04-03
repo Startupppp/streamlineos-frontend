@@ -1,77 +1,71 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { AppSidebar } from "./app-sidebar";
 import { DashboardHeader } from "./dashboard-header";
 import { CommandPalette } from "./command-palette";
 import { ScrollArea } from "../ui/scroll-area";
 import { NotActivatedPage } from "../auth/not-activated-page";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(false);
-  const matchRef = useRef(false);
+const SIDEBAR_COOKIE = "sidebar-collapsed";
 
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
-      matchRef.current = e.matches;
-      setMatches(e.matches);
-    };
-    handler(mql);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, [query]);
-
-  return matches;
+function setSidebarCookie(collapsed: boolean) {
+  document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
 interface DashboardShellProps {
   hasDashboardAccess: boolean;
+  defaultCollapsed: boolean;
   children: React.ReactNode;
 }
 
-export function DashboardShell({ hasDashboardAccess, children }: DashboardShellProps) {
-  const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1023px)");
-  const [isSidebarManuallyToggled, setIsSidebarManuallyToggled] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+export function DashboardShell({ hasDashboardAccess, defaultCollapsed, children }: DashboardShellProps) {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed);
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    if (!isSidebarManuallyToggled) {
-      setIsSidebarCollapsed(isTablet);
-    }
-  }, [isTablet, isSidebarManuallyToggled]);
-
-  const handleToggleSidebar = () => {
-    setIsSidebarManuallyToggled(true);
-    setIsSidebarCollapsed((prev) => !prev);
-  };
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      setSidebarCookie(next);
+      return next;
+    });
+  }, []);
 
   const isProjectPage = pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
   const isCrmDetailPage = pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
   const isChatPage = pathname === "/chat";
   const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage;
 
+  const sidebarWidth = isSidebarCollapsed ? "md:w-20" : "md:w-72";
+  const mainPadding = hasDashboardAccess
+    ? isSidebarCollapsed ? "md:pl-20" : "md:pl-72"
+    : "";
+
   return (
     <div className="h-screen relative bg-background overflow-hidden">
-      <a
+      <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
       >
         Skip to content
-      </a>
-      {hasDashboardAccess && (
-        <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 border-r bg-sidebar transition-all duration-300 ${isSidebarCollapsed ? "md:w-20" : "md:w-72"}`}>
+      </Link>
+
+      {hasDashboardAccess && !isMobile && (
+        <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 border-r bg-sidebar transition-all duration-300 ${sidebarWidth}`}>
           <AppSidebar
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={handleToggleSidebar}
           />
         </div>
       )}
+
       <main
         id="dashboard-content"
-        className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${hasDashboardAccess ? (isSidebarCollapsed ? "md:pl-20" : "md:pl-72") : ""}`}
+        className={`h-screen flex flex-col overflow-hidden transition-all duration-300 ${mainPadding}`}
       >
         {hasDashboardAccess ? (
           <>

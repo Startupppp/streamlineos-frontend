@@ -195,9 +195,9 @@ export default async function HomePage() {
                   { label: "Contact", href: "/contact" },
                 ].map((item) => (
                   <li key={item.label}>
-                    <a href={item.href} className="text-sm text-white/40 hover:text-gold transition-colors duration-200">
+                    <Link href={item.href} className="text-sm text-white/40 hover:text-gold transition-colors duration-200">
                       {item.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -212,9 +212,9 @@ export default async function HomePage() {
                   { label: "Cookie Policy", href: "/cookies" },
                 ].map((item) => (
                   <li key={item.label}>
-                    <a href={item.href} className="text-sm text-white/40 hover:text-gold transition-colors duration-200">
+                    <Link href={item.href} className="text-sm text-white/40 hover:text-gold transition-colors duration-200">
                       {item.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -229,9 +229,9 @@ export default async function HomePage() {
                   { label: "Help Center", href: "/help" },
                 ].map((item) => (
                   <li key={item.label}>
-                    <a href={item.href} className="text-sm text-white/40 hover:text-gold transition-colors duration-200">
+                    <Link href={item.href} className="text-sm text-white/40 hover:text-gold transition-colors duration-200">
                       {item.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

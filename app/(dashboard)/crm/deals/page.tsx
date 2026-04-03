@@ -58,7 +58,7 @@ export default function DealsPage() {
   const { data: allDeals, isLoading } = api.deals.getAll.useQuery();
   const { data: employees } = api.hr.getEmployees.useQuery();
   const [createOpen, setCreateOpen] = useState(false);
-  const [dealToDelete, setDealToDelete] = useState<string | null>(null);
+  const [dealToDelete, setDealToDelete] = useState<number | null>(null);
 
   // View toggle
   const [view, setView] = useState<"table" | "kanban">(() => {
