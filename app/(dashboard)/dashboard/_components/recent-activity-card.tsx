@@ -41,13 +41,13 @@ interface RecentActivityCardProps {
 export const RecentActivityCard = memo(function RecentActivityCard({ items, isLoading, error }: RecentActivityCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
-      <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-foreground flex items-center gap-2">
-          <Activity className="h-5 w-5 text-gold" aria-hidden="true" />
+      <CardHeader className="flex-shrink-0 px-4 py-3">
+        <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+          <Activity className="h-4 w-4 text-gold" aria-hidden="true" />
           Recent Activity
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden" aria-live="polite">
+      <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -57,13 +57,13 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
         ) : error ? (
           <p role="alert" className="text-sm text-destructive">Failed to load activity.</p>
         ) : items && items.length > 0 ? (
-          <ScrollArea className="h-full pr-3">
-            <div className="space-y-2">
+          <ScrollArea className="h-full pr-2">
+            <div className="space-y-1.5">
               {items.map((item) => {
                 const TypeIcon = isTicketType(item.type) ? typeIcons[item.type] : DEFAULT_TICKET_ICON;
                 return (
                   <Link key={item.id} href={item.projectId ? `/projects/${item.projectId}` : "/projects"}>
-                    <div className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                       <TypeIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden="true" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">

@@ -34,9 +34,9 @@ interface SprintCardProps {
 export const SprintCard = memo(function SprintCard({ summary, isLoading }: SprintCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
-      <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between">
-        <CardTitle className="text-foreground flex items-center gap-2">
-          <Zap className="h-5 w-5 text-gold" aria-hidden="true" />
+      <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
+        <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+          <Zap className="h-4 w-4 text-gold" aria-hidden="true" />
           Active Sprint
         </CardTitle>
         {summary?.projectId && (
@@ -47,7 +47,7 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
           </Link>
         )}
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden" aria-live="polite">
+      <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-6 w-48" />

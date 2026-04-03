@@ -30,13 +30,13 @@ interface TeamCardProps {
 export const TeamCard = memo(function TeamCard({ members, isLoading }: TeamCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
-      <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-foreground flex items-center gap-2">
-          <Users className="h-5 w-5 text-gold" aria-hidden="true" />
+      <CardHeader className="flex-shrink-0 px-4 py-3">
+        <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+          <Users className="h-4 w-4 text-gold" aria-hidden="true" />
           Team Availability
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden flex flex-col" aria-live="polite">
+      <CardContent className="flex-1 overflow-hidden flex flex-col px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3 overflow-y-auto">
             {[1, 2, 3].map((i) => (

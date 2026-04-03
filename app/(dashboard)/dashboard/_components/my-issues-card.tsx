@@ -37,16 +37,16 @@ interface MyIssuesCardProps {
 export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, error }: MyIssuesCardProps) {
   return (
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
-      <CardHeader className="flex flex-row items-center justify-between flex-shrink-0">
-        <CardTitle className="text-foreground flex items-center gap-2">
-          <ListTodo className="h-5 w-5 text-gold" aria-hidden="true" />
+      <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 px-4 py-3">
+        <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
+          <ListTodo className="h-4 w-4 text-gold" aria-hidden="true" />
           My Issues
         </CardTitle>
         <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">
           {tickets.length} open
         </Badge>
       </CardHeader>
-      <CardContent className="flex-1 overflow-hidden" aria-live="polite">
+      <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -56,14 +56,14 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
         ) : error ? (
           <p role="alert" className="text-sm text-destructive">Failed to load issues.</p>
         ) : tickets.length > 0 ? (
-          <ScrollArea className="h-full pr-3">
-          <div className="space-y-2">
+          <ScrollArea className="h-full pr-2">
+          <div className="space-y-1.5">
             {tickets.slice(0, MAX_VISIBLE_TICKETS).map((ticket) => {
               const TypeIcon = isTicketType(ticket.type) ? typeIcons[ticket.type] : DEFAULT_TICKET_ICON;
               const project = ticket.project;
               return (
                 <Link key={ticket.id} href={project?.id ? `/projects/${project.id}` : "/projects"}>
-                  <div className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 hover:border-gold/30 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3 p-2 rounded-lg border border-border hover:bg-muted/50 hover:border-gold/30 transition-colors cursor-pointer">
                     <TypeIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

@@ -176,18 +176,6 @@ export function AppSidebar({
           )}
         </div>
 
-        {/* Expand button — only in collapsed mode */}
-        {onToggleCollapse && isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-label="Expand sidebar"
-            className="absolute -right-3 top-[3.25rem] z-10 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground/90 transition-colors"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </button>
-        )}
-
         {/* ── Navigation ── */}
         <ScrollArea className="flex-1 min-h-0">
           <nav
@@ -209,6 +197,23 @@ export function AppSidebar({
             ))}
           </nav>
         </ScrollArea>
+
+        {/* ── Collapse / expand toggle ── */}
+        {onToggleCollapse && isCollapsed && (
+          <div className="border-t border-sidebar-border px-2 py-2">
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              aria-label="Expand sidebar"
+              className={cn(
+                "w-full h-8 rounded-lg flex items-center justify-center",
+                "text-sidebar-foreground/40 hover:text-sidebar-foreground/80 hover:bg-white/5 transition-colors"
+              )}
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* ── User menu ── */}
         <SidebarUserMenu isCollapsed={isCollapsed} isAdmin={isAdmin} />

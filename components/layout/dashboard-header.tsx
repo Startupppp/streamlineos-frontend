@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { UserNav } from "./user-nav";
 import { NotificationBell } from "./notification-bell";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Menu, Search } from "lucide-react";
@@ -113,8 +112,8 @@ export function DashboardHeader() {
           </SheetContent>
         </Sheet>
 
-        {/* Page title */}
-        <span className="text-sm font-semibold text-foreground hidden md:block">
+        {/* Page title — mobile only (desktop has PageWrapper h1) */}
+        <span className="text-sm font-semibold text-foreground md:hidden">
           {pageTitle}
         </span>
       </div>
@@ -140,7 +139,6 @@ export function DashboardHeader() {
         </button>
 
         <NotificationBell />
-        <UserNav />
       </div>
     </header>
   );
