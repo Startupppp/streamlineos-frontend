@@ -84,7 +84,7 @@
 - [ ] `/notifications` and `/marketing` missing from PROTECTED_ROUTES in middleware
 - [ ] Env var naming mismatches (SMTP_PASSWORD vs SMTP_PASS, SMTP_FROM vs SMTP_FROM_EMAIL)
 - [ ] Dead Google OAuth env vars in `.env.example` (never used in code)
-- [ ] 3 unused dependencies: `zustand`, `tw-animate-css`, `@ai-sdk/react`
+- [x] 2 unused dependencies removed: `zustand`, `@ai-sdk/react` (tw-animate-css IS used)
 - [ ] 10 dead/unreachable routes with no sidebar links
 - [ ] 181 hardcoded hex colors in TSX files
 - [ ] 7 `<img>` tags without alt attributes (accessibility violation)
@@ -200,10 +200,9 @@ Phase 5: Production Readiness
 |------|--------|--------|
 | `env.example` | Duplicate of `.env.example` | DELETED |
 | Legacy CRM tables in schema | Demo data tables, not used by real pipeline | Pending (verify first) |
-| `zustand` in package.json | Installed but never used anywhere | Pending |
-| `tw-animate-css` in package.json | Zero references in codebase | Pending |
-| `@ai-sdk/react` in package.json | Never imported (AI uses other packages) | Pending |
-| 24+ orphan components | Never imported by any file | Pending (see Task 11) |
+| `zustand` in package.json | Installed but never used anywhere | DELETED |
+| `@ai-sdk/react` in package.json | Never imported (AI uses other packages) | DELETED |
+| 27 orphan components | Never imported by any file | DELETED |
 | `GOOGLE_CLIENT_ID/SECRET` in .env.example | No Google OAuth configured | Pending |
 
 ---
@@ -255,3 +254,42 @@ Every task file follows this structure:
 | 16 | Marketing Module | MEDIUM | 4-5 days | Task 07 | Not Started |
 | 17 | Billing & Invoicing | MEDIUM | 4-5 days | Task 03 | Not Started |
 | 18 | Multi-Tenant & Entity Mgmt | HIGH | 5-6 days | Task 04 | Not Started |
+| 19 | AI Agent & Tools (Composio) | MEDIUM | 4-5 days | Tasks 05, 06 | Not Started |
+| 20 | Desktop Push Notifications | HIGH | 2-3 days | Task 06 | Not Started |
+
+---
+
+## Quick Start - Priority Order
+
+### IMMEDIATE (Do First - Unblocks Everything)
+1. **Task 06: Infrastructure** - Redis + Inngest setup (2-3 days)
+2. **Task 02: Database Schema** - Fix audit columns, soft delete, indexes (3-4 days)
+3. **Task 01: Architecture Fixes** - Server components, split monoliths (3-5 days)
+
+### NEXT (Core Security & Performance)
+4. **Task 04: RBAC Upgrade** - Permission checks, branch isolation (3-4 days)
+5. **Task 20: Desktop Push** - Web Push API notifications (2-3 days)
+6. **Task 05: Notification System** - User preferences, channels (5-6 days)
+7. **Task 03: API Optimizations** - Caching, pagination, split routers (4-5 days)
+
+### THEN (User Experience)
+8. **Task 07: UI/UX Overhaul** - Cards, filters, dark mode (6-8 days)
+9. **Task 11: Code Quality** - Dead code cleanup, type safety (2-3 days)
+10. **Task 08: Calendar Module** - Unified event view (3-4 days)
+
+### FUTURE (Advanced Features)
+11. **Task 09: AI Integration** - Smart scoring, drafts (4-5 days)
+12. **Task 19: AI Agent Tools** - WhatsApp, SMS, Composio (4-5 days)
+13. **Task 10: Email System** - Templates, appraisal emails (3-4 days)
+14. **Task 12: Missing Features** - Fund admin, compliance, portfolio (10+ days)
+
+### PRODUCTION (Before Launch)
+15. **Task 13: Testing** - 60%+ coverage (4-5 days)
+16. **Task 14: Security** - MFA, input sanitization, session mgmt (3-4 days)
+17. **Task 15: DevOps** - Sentry, logging, monitoring (2-3 days)
+18. **Task 18: Multi-Tenant** - Entity switcher, data isolation (5-6 days)
+
+### LATER (Enhancements)
+19. **Task 16: Marketing Module** (4-5 days)
+20. **Task 17: Billing Enhancement** (4-5 days)
+21. **Task 01b: tRPC Removal** - EVALUATE FIRST (8-10 days)

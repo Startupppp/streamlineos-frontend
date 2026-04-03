@@ -224,14 +224,14 @@ Scan for list renders missing unique `key` props — this is a common React anti
 
 ### 11.16 Remove Unused Dependencies
 
-| Package | Reason |
-|---------|--------|
-| `zustand@5.0.9` | Zero stores exist in codebase |
-| `tw-animate-css` | Zero references anywhere in codebase |
-| `@ai-sdk/react` | Never imported (AI uses `@ai-sdk/google` and `ai` packages) |
+| Package | Reason | Status |
+|---------|--------|--------|
+| `zustand@5.0.9` | Zero stores exist in codebase | DELETED |
+| `@ai-sdk/react` | Never imported (AI uses `@ai-sdk/google` and `ai` packages) | DELETED |
+| ~~`tw-animate-css`~~ | KEEP — imported in `globals.css`, 67 files use `animate-` classes | N/A |
 
 ```bash
-pnpm remove zustand tw-animate-css @ai-sdk/react
+pnpm remove zustand @ai-sdk/react
 ```
 
 ### 11.17 Fix Env Var Naming Mismatches
