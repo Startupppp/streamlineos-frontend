@@ -36,6 +36,8 @@ Email system exists (SendGrid + SMTP) but has gaps:
 
 ---
 
+## Implementation Steps
+
 ### 10.1 Migrate to Resend + React Email (If Approved)
 
 **Install**: `pnpm add resend @react-email/components`

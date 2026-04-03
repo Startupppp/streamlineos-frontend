@@ -39,6 +39,8 @@ As an investment platform, several domain-specific features are missing:
 
 ---
 
+## Implementation Steps
+
 ### 12.1 Investor 360° View
 
 **New page**: `app/(dashboard)/crm/leads/[id]/page.tsx` (enhance existing)

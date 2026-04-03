@@ -36,6 +36,8 @@ There is no dedicated calendar page that aggregates events across all modules:
 
 ---
 
+## Implementation Steps
+
 ### 8.1 Calendar Page
 
 **New files**:

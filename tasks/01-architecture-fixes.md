@@ -1,10 +1,52 @@
 # Task 01: Architecture Fixes (Remove Mistakes)
 
-## Priority: 🔴 CRITICAL — Execute After Task 06 (Infrastructure)
+## Priority: CRITICAL | Effort: 3-5 days | Dependencies: Task 06 (Redis) | Status: NOT STARTED
 
 > Per user directive: If there's an architecture mistake, **remove it** — don't just document or work around it.
 
 ---
+
+## PRD
+
+### Problem Statement
+The application has fundamental architecture mistakes that harm performance, scalability, and developer experience:
+1. **Dashboard layout is `"use client"`** — forces ALL child pages to be client components, defeating Next.js App Router's RSC model
+2. **JWT callback queries DB on every request** — ~70% of all DB queries are auth lookups with no caching
+3. **In-memory rate limiting** — resets on every cold start, doesn't share across serverless instances
+4. **Large monolithic components** — Chat page (2,380 lines), Leads page (1,450 lines), Expenses page (994 lines) are unmaintainable
+5. **Dead/duplicate files** — orphan components, duplicate command-palette/empty-state/metric-card/page-header
+6. **Missing loading/error states** — 20+ pages lack loading.tsx, 25+ lack error.tsx
+7. **Browser dialogs** — `window.confirm()`/`prompt()` used in 4 files instead of proper UI components
+8. **Hardcoded localhost** — 7 files use `http://localhost:3000` fallback instead of env vars
+9. **Dual tRPC client systems** — `trpc/react.tsx` (67 imports) and `lib/trpc.ts` (47 imports) serve overlapping purposes
+
+### Goals
+- Convert dashboard layout to Server Component (unlock RSC for all pages)
+- Cache JWT session in Redis (<10ms auth checks)
+- Replace in-memory rate limiting with Redis-backed
+- Split all files >500 lines into focused sub-components
+- Delete dead files and orphan components
+- Add loading/error states to all pages
+- Replace all browser dialogs with AlertDialog
+- Remove hardcoded URLs
+
+### Non-Goals
+- Removing tRPC (separate task 01b)
+- UI redesign (Task 07)
+- New features (only fix existing architecture)
+
+### Success Criteria
+- No `"use client"` on layout files
+- JWT callback <10ms (cached)
+- Rate limits survive restarts
+- No file exceeds 500 lines
+- Every page has loading.tsx and error.tsx
+- Zero `window.confirm()`/`prompt()` calls
+- Zero hardcoded localhost URLs
+
+---
+
+## Implementation Steps
 
 ### 1.1 Convert Dashboard Layout to Server Component
 
@@ -134,7 +176,24 @@
 - Report button
 - Fallback UI matching the page layout
 
-### 1.8 Fix Missing Loading/Error States (20+ pages)
+### 1.8 Split Chat Page Monolith (2,380 lines)
+
+**File**: `app/(dashboard)/chat/page.tsx` — **largest file in codebase**
+
+**Split into**:
+- `components/chat/chat-sidebar.tsx` — Channel list, DM list, search
+- `components/chat/chat-messages.tsx` — Message list, scroll, load more
+- `components/chat/chat-input.tsx` — Message composer, file upload
+- `components/chat/chat-header.tsx` — Channel name, members, settings
+- `components/chat/message-item.tsx` — Individual message rendering
+- `app/(dashboard)/chat/page.tsx` — Orchestrator (under 200 lines)
+
+**Also split other oversized files**:
+- `app/(dashboard)/hr/expenses/page.tsx` (994 lines)
+- `app/(dashboard)/hr/work-logs/page.tsx` (949 lines)
+- `app/(dashboard)/hr/attendance/attendance-content.tsx` (855 lines)
+
+### 1.9 Fix Missing Loading/Error States (20+ pages)
 
 **Pages missing `loading.tsx`**:
 - `app/(auth)/forgot-password/`
@@ -154,15 +213,18 @@
 - `app/(dashboard)/hr/payroll/`
 - `app/(dashboard)/hr/work-logs/`
 
-### 1.9 Replace browser confirm()/prompt() with AlertDialog
+### 1.10 Replace browser confirm()/prompt() with AlertDialog
 
-**Files using anti-pattern**:
+**Files using anti-pattern** (4 files, not 2):
 - `app/(dashboard)/crm/deals/page.tsx` — uses `window.confirm()` for deal deletion
 - `app/(dashboard)/crm/deals/[dealId]/page.tsx` — uses `prompt()` for user input
+- `app/(dashboard)/hr/leaves/leaves-shared.tsx` — uses `window.prompt()`
+- `app/(dashboard)/hr/work-logs/page.tsx` — uses `window.prompt()`
+- `components/crm/lead-table-view.tsx` — uses `confirm()`
 
 Replace with shadcn `AlertDialog` component for proper UX.
 
-### 1.10 Centralize Hardcoded localhost Fallbacks
+### 1.11 Centralize Hardcoded localhost Fallbacks
 
 **7 files** use `http://localhost:3000` as fallback instead of throwing:
 - `app/(dashboard)/ceo/qr-code/actions.ts`
@@ -194,10 +256,12 @@ Replace with shadcn `AlertDialog` component for proper UX.
 
 - [ ] Dashboard layout converted to server component
 - [ ] `DashboardShell` client component extracted
-- [ ] Leads page split into 6+ sub-components (each under 500 lines)
+- [ ] Chat page (2,380 lines) split into 5+ sub-components
+- [ ] Leads page (1,450 lines) split into 6+ sub-components
+- [ ] Expenses page (994 lines) split into sub-components
+- [ ] Work Logs page (949 lines) split into sub-components
+- [ ] Attendance content (855 lines) split into sub-components
 - [ ] Deals page split into sub-components
-- [ ] Chat page split into sub-components
-- [ ] Leaves page split into sub-components
 - [ ] Rate limiting migrated to Redis (requires Task 06)
 - [ ] Cron idempotency migrated to Redis (requires Task 06)
 - [ ] JWT callback uses Redis cache (requires Task 06)
@@ -206,7 +270,7 @@ Replace with shadcn `AlertDialog` component for proper UX.
 - [ ] Missing error.tsx files created (25+ pages)
 - [ ] Heavy components use dynamic imports
 - [ ] `zustand` removed from package.json
-- [ ] `window.confirm()` and `prompt()` replaced with AlertDialog
+- [ ] `window.confirm()` and `prompt()` replaced with AlertDialog (5 files)
 - [ ] Hardcoded localhost URLs replaced with env vars
 - [ ] No single component file exceeds 500 lines
 - [ ] Build passes with no errors

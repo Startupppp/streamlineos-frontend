@@ -1,6 +1,46 @@
 # Task 02: Database & Schema Cleanup
 
-## Priority: 🔴 CRITICAL
+## Priority: CRITICAL | Effort: 3-4 days | Dependencies: None | Status: NOT STARTED
+
+---
+
+## PRD
+
+### Problem Statement
+The database schema has structural issues that affect data integrity, security, and feature development:
+1. **Missing audit columns** — `updated_by` absent on most mutable tables, no tracking of who modified data
+2. **No soft delete** — Business-critical records (leads, deals, payrolls) are hard-deleted, no recovery possible
+3. **12 duplicate/legacy CRM tables** — Demo/seed data tables (crm_people, crm_companies, etc.) pollute the schema
+4. **Missing indexes** — Frequently filtered columns lack indexes, degrading query performance
+5. **Organizations table incomplete** — Missing logo, website, timezone, currency, fiscal year settings
+6. **Dead schema** — `workflows` table defined but never used anywhere in the codebase
+7. **Empty cron stubs** — `scheduled-reports` has 3 TODO blocks with zero implementation
+8. **No push subscription or calendar tables** — Required by Tasks 05 and 08
+
+### Goals
+- Add audit columns (`updated_by`, `created_by`) to all mutable tables
+- Add soft delete to business-critical tables
+- Remove duplicate/legacy CRM tables
+- Add performance indexes to frequently queried columns
+- Enhance organizations table for multi-tenant settings
+- Create required tables for push notifications and calendar
+- Remove dead schema and fix empty cron stubs
+
+### Non-Goals
+- Data migration of existing records (backfill is separate)
+- PostgreSQL RLS policies (application-level enforcement)
+- Schema normalization beyond what's needed
+
+### Success Criteria
+- All mutable tables have audit columns
+- Soft delete pattern working on business-critical tables
+- Legacy CRM tables removed (after verification)
+- Query performance improved on indexed columns
+- New tables created for push notifications and calendar
+
+---
+
+## Implementation Steps
 
 ### 2.1 Add Audit Columns to All Mutable Tables
 

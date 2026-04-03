@@ -43,6 +43,8 @@
 
 ---
 
+## Implementation Steps
+
 ### 4.1 Create Type-Safe Role Constants
 
 **File**: `lib/rbac/roles.ts`
@@ -124,6 +126,14 @@ const branchScopeMiddleware = t.middleware(async ({ ctx, next }) => {
 
 **Fix**: Generate from permissions config. Dynamic route protection.
 
+### 4.5 Fix Missing PROTECTED_ROUTES (Security Gap)
+
+**File**: `middleware.ts`
+
+**Problem**: `/notifications` and `/marketing` routes have entries in `ROUTE_ROLE_MAP` (RBAC) but are NOT listed in `PROTECTED_ROUTES`. This means unauthenticated users can access these routes without being redirected to signin.
+
+**Fix**: Add `/notifications` and `/marketing` to the `PROTECTED_ROUTES` array.
+
 ---
 
 ## Checklist
@@ -146,6 +156,7 @@ const branchScopeMiddleware = t.middleware(async ({ ctx, next }) => {
 - [ ] Wrap sensitive UI elements with `<PermissionGate>`
 - [ ] Add permission-denied audit logging
 - [ ] Replace all inline role string checks with constants
+- [ ] Add `/notifications` and `/marketing` to PROTECTED_ROUTES
 - [ ] `pnpm build` passes
 
 ## Acceptance Criteria

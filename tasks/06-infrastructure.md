@@ -41,6 +41,8 @@
 
 ---
 
+## Implementation Steps
+
 ### 6.1 Add Upstash Redis
 
 **Install**: `pnpm add @upstash/redis @upstash/ratelimit`

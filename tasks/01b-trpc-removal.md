@@ -51,6 +51,8 @@ The app uses tRPC as its data layer (28 router files, 14 hooks). While tRPC work
 
 ---
 
+## Implementation Steps
+
 ## Phase 1: Create the Replacement Layer
 
 ### 1.1 Create `server/queries/` Directory

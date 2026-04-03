@@ -38,17 +38,45 @@ Code quality issues that accumulate technical debt:
 
 ---
 
----
+## Implementation Steps
 
 ### 11.1 Files to DELETE
 
+**Already deleted** (verify): `task` (root), `test-drizzle.ts`, `audit/REPORT.md`, `lib/email-templates.ts`, `env.example`
+
+**Orphan components to delete** (24 files never imported):
+
 | File | Reason |
 |------|--------|
-| `task` (root) | Prompt file, not code |
-| `test-drizzle.ts` (root) | Debug file at root |
-| `audit/REPORT.md` | Old audit, replaced by `/tasks/` |
-| `lib/email-templates.ts` | Empty (just `export {}`) — real templates in `lib/email-templates/` dir |
-| `lib/hooks/` (entire directory) | Deleted during tRPC removal — all hooks were tRPC-dependent |
+| `components/shared/command-palette.tsx` | Duplicate — `layout/command-palette.tsx` is the used one |
+| `components/shared/empty-state.tsx` | Duplicate — `ui/empty-state.tsx` is the used one |
+| `components/shared/metric-card.tsx` | Duplicate — `crm/metric-card.tsx` is the used one |
+| `components/shared/page-header.tsx` | Duplicate — `ui/page-header.tsx` is the used one |
+| `components/ai/assistant-bot.tsx` | Never imported |
+| `components/ai/task-suggestions.tsx` | Never imported |
+| `components/attendance/daily-log.tsx` | Never imported |
+| `components/attendance/monthly-log.tsx` | Never imported |
+| `components/crm/mini-bar-chart.tsx` | Never imported |
+| `components/expenses/expense-filter-bar.tsx` | Never imported |
+| `components/expenses/expense-pagination.tsx` | Never imported |
+| `components/expenses/receipt-viewer.tsx` | Never imported |
+| `components/hr/attendance-page-client.tsx` | Never imported |
+| `components/hr/employee-profile-form.tsx` | Never imported |
+| `components/hr/leave-request-form.tsx` | Never imported |
+| `components/hr/salary-structure-form.tsx` | Never imported |
+| `components/projects/epic-view.tsx` | Never imported |
+| `components/projects/sprint-board.tsx` | Never imported |
+| `components/projects/time-tracking.tsx` | Never imported |
+| `components/shared/ai-sidebar.tsx` | Never imported |
+| `components/shared/data-table.tsx` | Never imported |
+| `components/shared/section-card.tsx` | Never imported |
+| `components/shared/status-badge.tsx` | Never imported |
+| `components/storage/file-viewer.tsx` | Never imported |
+| `components/ui/leaves-skeleton.tsx` | Never imported |
+| `components/ui/project-skeleton.tsx` | Never imported |
+| `components/ui/section-header.tsx` | Never imported |
+
+**Note**: `lib/hooks/` contains 47 actively imported files — do NOT delete unless migrating during tRPC removal (Task 01b)
 
 ---
 
@@ -194,12 +222,46 @@ Scan for list renders missing unique `key` props — this is a common React anti
 - Handle organization timezone settings
 - Ensure consistent date formatting across all modules
 
-### 11.16 Remove Unused `zustand` Dependency
+### 11.16 Remove Unused Dependencies
 
-`zustand@5.0.9` is in `package.json` but zero Zustand stores exist in the codebase. Remove it:
+| Package | Reason |
+|---------|--------|
+| `zustand@5.0.9` | Zero stores exist in codebase |
+| `tw-animate-css` | Zero references anywhere in codebase |
+| `@ai-sdk/react` | Never imported (AI uses `@ai-sdk/google` and `ai` packages) |
+
 ```bash
-pnpm remove zustand
+pnpm remove zustand tw-animate-css @ai-sdk/react
 ```
+
+### 11.17 Fix Env Var Naming Mismatches
+
+| `.env.example` Name | Code Uses | Fix |
+|---------------------|-----------|-----|
+| `SMTP_PASSWORD` | `process.env.SMTP_PASS` | Align names |
+| `SMTP_FROM` | `process.env.SMTP_FROM_EMAIL` | Align names |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Never referenced in code | Remove from `.env.example` |
+
+**Missing from `.env.example`** (used in code):
+- `SENDGRID_FROM_EMAIL`
+- `SMTP_FROM_NAME`
+- `VERCEL_URL`
+
+### 11.18 Fix Dead/Unreachable Routes
+
+10 pages exist but have no sidebar link and are unreachable through normal navigation:
+- `/crm/settings/assignment-rules`
+- `/crm/settings/email-templates`
+- `/crm/settings/scoring-rules`
+- `/crm/settings/sla`
+- `/hr/performance`
+- `/hr/incentives`
+- `/reports`
+- `/settings/members`
+- `/settings/organization`
+- `/settings/branches`
+
+**Fix**: Either add sidebar links or delete if truly dead
 
 ---
 
@@ -215,8 +277,9 @@ pnpm remove zustand
 
 ## Checklist
 
-- [ ] Delete dead files: `task` (root), `test-drizzle.ts`, `audit/REPORT.md`, `lib/email-templates.ts`
-- [ ] Remove `env.example` (duplicate — already deleted)
+- [ ] Verify already-deleted files are gone: `task`, `test-drizzle.ts`, `audit/REPORT.md`, `lib/email-templates.ts`, `env.example`
+- [ ] Delete 24+ orphan components (never imported anywhere)
+- [ ] Delete 4 duplicate component pairs (shared/ versions)
 - [ ] Update `drizzle.config.ts` schema path if needed
 - [ ] Fix ALL 14 `eslint-disable` comments (fix underlying issues)
 - [ ] Fix ALL 9 `as any[]` type assertions with proper types
@@ -230,10 +293,12 @@ pnpm remove zustand
 - [ ] Centralize pipeline stage constants
 - [ ] Centralize stage color constants
 - [ ] Audit and fix timezone handling (264 `new Date()` instances)
-- [ ] Remove `zustand` from package.json
-- [ ] Audit duplicate components across directories
+- [ ] Remove unused dependencies: `zustand`, `tw-animate-css`, `@ai-sdk/react`
+- [ ] Fix env var naming mismatches (SMTP_PASSWORD vs SMTP_PASS, etc.)
+- [ ] Remove dead Google OAuth env vars from `.env.example`
+- [ ] Add missing env vars to `.env.example` (SENDGRID_FROM_EMAIL, SMTP_FROM_NAME)
 - [ ] Scan for missing `key` props in list renders
-- [ ] Check `app/qr/[slug]/` and `app/(dashboard)/ceo/` for dead routes
+- [ ] Fix 10 dead/unreachable routes (add sidebar links or delete)
 - [ ] `pnpm build` passes with zero errors
 - [ ] `pnpm lint` passes with zero warnings
 

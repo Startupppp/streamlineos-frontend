@@ -37,6 +37,8 @@ AI capabilities exist (Google Gemini via Vercel AI SDK + LangChain) but are unde
 
 ---
 
+## Implementation Steps
+
 ### 9.1 Enhance Existing AI Chat
 
 **Current**: `lib/ai/automation.ts` + `lib/ai/langchain-graph.ts` + `app/api/ai/`

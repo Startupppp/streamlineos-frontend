@@ -77,6 +77,20 @@
 - [ ] Hardcoded pipeline stages/colors repeated across multiple files
 - [ ] No Sentry/error tracking integration
 - [ ] No structured logging (console.log in production)
+- [ ] Chat page is 2,380 lines (largest file in codebase)
+- [ ] Dual tRPC client systems (`trpc/react.tsx` + `lib/trpc.ts`) creating confusion
+- [ ] 24+ orphan components never imported anywhere
+- [ ] 4 duplicate component pairs (command-palette, empty-state, metric-card, page-header)
+- [ ] `/notifications` and `/marketing` missing from PROTECTED_ROUTES in middleware
+- [ ] Env var naming mismatches (SMTP_PASSWORD vs SMTP_PASS, SMTP_FROM vs SMTP_FROM_EMAIL)
+- [ ] Dead Google OAuth env vars in `.env.example` (never used in code)
+- [ ] 3 unused dependencies: `zustand`, `tw-animate-css`, `@ai-sdk/react`
+- [ ] 10 dead/unreachable routes with no sidebar links
+- [ ] 181 hardcoded hex colors in TSX files
+- [ ] 7 `<img>` tags without alt attributes (accessibility violation)
+- [ ] 14 form inputs without labels/ARIA attributes
+- [ ] Raw `<img>` tags used instead of Next.js `<Image>` in 7 files
+- [ ] `window.confirm()`/`prompt()` used in 5 files (not 2 as originally found)
 
 ---
 
@@ -184,9 +198,13 @@ Phase 5: Production Readiness
 
 | File | Reason | Status |
 |------|--------|--------|
-| `env.example` | Duplicate of `.env.example` | Pending |
+| `env.example` | Duplicate of `.env.example` | DELETED |
 | Legacy CRM tables in schema | Demo data tables, not used by real pipeline | Pending (verify first) |
 | `zustand` in package.json | Installed but never used anywhere | Pending |
+| `tw-animate-css` in package.json | Zero references in codebase | Pending |
+| `@ai-sdk/react` in package.json | Never imported (AI uses other packages) | Pending |
+| 24+ orphan components | Never imported by any file | Pending (see Task 11) |
+| `GOOGLE_CLIENT_ID/SECRET` in .env.example | No Google OAuth configured | Pending |
 
 ---
 

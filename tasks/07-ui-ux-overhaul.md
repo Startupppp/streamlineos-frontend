@@ -48,6 +48,8 @@ The current UI is functional but lacks the premium, polished feel expected of an
 
 ---
 
+## Implementation Steps
+
 ### 7.1 Glassmorphic Metric Cards
 
 **File**: `components/shared/metric-card.tsx` (rewrite)
@@ -200,6 +202,42 @@ The current UI is functional but lacks the premium, polished feel expected of an
 }
 ```
 
+### 7.10 Accessibility Fixes
+
+**Images without `alt` attributes** (7 `<img>` tags):
+- `app/(dashboard)/chat/page.tsx`
+- `app/(dashboard)/hr/expenses/create-expense-dialog.tsx`
+- `app/(dashboard)/hr/expenses/page.tsx`
+- `components/projects/ticket-details-dialog.tsx`
+- `components/timesheets/log-time-dialog.tsx`
+
+**5 Next.js `<Image>` components also lack `alt`**:
+- `app/(dashboard)/ceo/qr-code/page.tsx`
+- `app/not-found.tsx`
+- `app/page.tsx`
+- `components/layout/app-sidebar.tsx`
+- `components/timesheets/time-entry-detail-sheet.tsx`
+
+**Raw `<img>` tags to migrate to `next/image`**:
+- `app/(dashboard)/chat/page.tsx` — 4 instances
+- `app/(dashboard)/hr/expenses/create-expense-dialog.tsx`
+- `components/projects/ticket-details-dialog.tsx`
+- `components/timesheets/log-time-dialog.tsx`
+
+**14 form inputs without labels/ARIA**:
+- File upload inputs and hidden inputs need `aria-label` for screen readers
+- Key files: `chat/page.tsx`, `hr/expenses/`, `csv-upload-dialog.tsx`, `create-ticket-dialog.tsx`
+
+**Non-interactive elements with onClick (2 files)**:
+- `app/(dashboard)/projects/[id]/epics/page.tsx` — `<div onClick>` needs `role="button"` + `tabIndex`
+- `components/expenses/receipt-viewer.tsx` — `<div onClick>` needs keyboard handler
+
+### 7.11 Replace 181 Hardcoded Hex Colors
+
+TSX files contain 181 hardcoded hex colors (e.g., `#3B82F6`, `#10B981`, `#EF4444` in Recharts, inline styles).
+
+**Fix**: Create CSS variable mappings in `globals.css` and reference via `var(--chart-1)` etc.
+
 ---
 
 ## Checklist
@@ -218,6 +256,11 @@ The current UI is functional but lacks the premium, polished feel expected of an
 - [ ] Implement dark mode CSS variables
 - [ ] Add dark mode toggle in user settings
 - [ ] Test all pages in dark mode
+- [ ] Add `alt` attributes to all `<img>` and `<Image>` tags (12 files)
+- [ ] Migrate raw `<img>` to `next/image` where applicable (7 files)
+- [ ] Add `aria-label` to all form inputs without labels (14 inputs)
+- [ ] Fix non-interactive `<div onClick>` with proper roles + keyboard handlers
+- [ ] Replace 181 hardcoded hex colors with CSS variables
 - [ ] Test responsive design at 320px, 768px, 1024px, 1440px
 - [ ] Run Lighthouse audit, verify Performance > 90
 - [ ] `pnpm build` passes

@@ -43,6 +43,8 @@
 
 ---
 
+## Implementation Steps
+
 ### 5.1 Desktop Push Notifications (Web Push API)
 
 **New files**:
