@@ -90,8 +90,8 @@ export function DealTableView({
   function SortIcon({ column }: { column: string }) {
     if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
     return sortDirection === "asc"
-      ? <ArrowUp className="h-3 w-3 ml-1 text-[#bd882c]" />
-      : <ArrowDown className="h-3 w-3 ml-1 text-[#bd882c]" />;
+      ? <ArrowUp className="h-3 w-3 ml-1 text-gold" />
+      : <ArrowDown className="h-3 w-3 ml-1 text-gold" />;
   }
 
   return (
@@ -146,7 +146,7 @@ export function DealTableView({
                     >
                       <TableCell className="px-3 py-2">
                         <button
-                          className="font-medium text-sm hover:text-[#bd882c] hover:underline text-left truncate max-w-[200px]"
+                          className="font-medium text-sm hover:text-gold hover:underline text-left truncate max-w-[200px]"
                           onClick={() => router.push(`/crm/deals/${deal.id}`)}
                         >
                           {deal.name}

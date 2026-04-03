@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { LucideIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import Link from "next/link";
 
 interface StatCardProps {
@@ -13,11 +12,22 @@ interface StatCardProps {
   trend?: {
     value: number;
     isPositive: boolean;
+    label?: string;
   };
   href?: string;
   className?: string;
   index?: number;
+  /** Accent color for the icon bg. Defaults to gold. */
+  color?: "gold" | "blue" | "green" | "red" | "purple";
 }
+
+const colorMap = {
+  gold:   { bg: "bg-gold/10",   icon: "text-gold",          bar: "bg-gold" },
+  blue:   { bg: "bg-blue/10",   icon: "text-blue",          bar: "bg-blue" },
+  green:  { bg: "bg-emerald-500/10", icon: "text-emerald-600", bar: "bg-emerald-500" },
+  red:    { bg: "bg-red-500/10", icon: "text-red-600",       bar: "bg-red-500" },
+  purple: { bg: "bg-violet-500/10", icon: "text-violet-600", bar: "bg-violet-500" },
+};
 
 export function StatCard({
   label,
@@ -27,51 +37,65 @@ export function StatCard({
   href,
   className,
   index = 0,
+  color = "gold",
 }: StatCardProps) {
+  const c = colorMap[color];
+
   const content = (
-    <Card
+    <div
       className={cn(
-        "relative overflow-hidden border-border transition-all duration-200",
-        href && "hover:shadow-md hover:border-gold/40 cursor-pointer",
+        "relative group rounded-xl border border-border bg-card p-4 overflow-hidden transition-all duration-200",
+        href && "hover:border-gold/30 hover:shadow-soft cursor-pointer",
         className
       )}
-      style={{
-        animation: `fade-up 0.4s ease-out ${index * 0.1}s both`,
-      }}
+      style={{ animation: `fade-up 0.3s ease-out ${index * 0.07}s both` }}
     >
-      
-      <div className="absolute left-0 top-0 bottom-0 w-[3px] gold-gradient" />
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {label}
-        </CardTitle>
-        <div className="h-8 w-8 rounded-lg bg-gold/10 flex items-center justify-center">
-          <Icon className="h-4 w-4 text-gold" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className={cn(
-          "font-bold text-foreground truncate",
-          typeof value === "string" && value.length > 10 ? "text-lg" : "text-2xl"
-        )}>{value}</div>
-        {trend && (
-          <p
-            className={cn(
-              "text-xs mt-1",
-              trend.isPositive ? "text-emerald-600" : "text-red-600"
-            )}
-          >
-            {trend.isPositive ? "+" : "-"}
-            {Math.abs(trend.value)}% from last period
+      {/* Top accent bar */}
+      <div className={cn("absolute top-0 left-0 right-0 h-[2px]", c.bar, "opacity-60")} />
+
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+          <p className={cn(
+            "font-semibold text-foreground mt-1 truncate leading-none",
+            typeof value === "string" && value.length > 8 ? "text-xl" : "text-2xl"
+          )}>
+            {value}
           </p>
-        )}
-      </CardContent>
-    </Card>
+
+          {trend && (
+            <div className="flex items-center gap-1 mt-2">
+              {trend.isPositive ? (
+                <TrendingUp className="h-3 w-3 text-emerald-500" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-red-500" />
+              )}
+              <span
+                className={cn(
+                  "text-[11px] font-medium",
+                  trend.isPositive ? "text-emerald-600" : "text-red-600"
+                )}
+              >
+                {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}%
+              </span>
+              {trend.label && (
+                <span className="text-[11px] text-muted-foreground">{trend.label}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className={cn(
+          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200",
+          c.bg,
+          href && "group-hover:scale-110"
+        )}>
+          <Icon className={cn("h-4 w-4", c.icon)} />
+        </div>
+      </div>
+    </div>
   );
 
-  if (href) {
-    return <Link href={href}>{content}</Link>;
-  }
-
+  if (href) return <Link href={href}>{content}</Link>;
   return content;
 }

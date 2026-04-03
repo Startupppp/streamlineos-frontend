@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AttendanceContent } from "./attendance-content";
 import { MyWfhRequests, PendingWfhApprovals } from "@/components/hr/wfh-requests-list";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
@@ -18,7 +18,7 @@ export default function AttendancePage() {
 
   if (status === "loading") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 px-4 sm:px-6 py-5">
         <Skeleton className="h-10 w-64" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-6">
@@ -41,40 +41,38 @@ export default function AttendancePage() {
     session?.user?.role === "CEO" || session?.user?.role === "ADMIN";
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Attendance"
-        description="Track your work hours, breaks, and work from home requests."
-        actions={
-          <div className="flex items-center gap-2 rounded-full bg-muted p-1" role="tablist" aria-label="Attendance view">
-            <button
-              role="tab"
-              aria-selected={activeTab === "attendance"}
-              onClick={() => setActiveTab("attendance")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                activeTab === "attendance"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Attendance
-            </button>
-            <button
-              role="tab"
-              aria-selected={activeTab === "wfh"}
-              onClick={() => setActiveTab("wfh")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                activeTab === "wfh"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              WFH Requests
-            </button>
-          </div>
-        }
-      />
-
+    <PageWrapper
+      title="Attendance"
+      subtitle="Track your work hours, breaks, and work from home requests."
+      actions={
+        <div className="flex items-center gap-2 rounded-full bg-muted p-1" role="tablist" aria-label="Attendance view">
+          <button
+            role="tab"
+            aria-selected={activeTab === "attendance"}
+            onClick={() => setActiveTab("attendance")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              activeTab === "attendance"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Attendance
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "wfh"}
+            onClick={() => setActiveTab("wfh")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              activeTab === "wfh"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            WFH Requests
+          </button>
+        </div>
+      }
+    >
       {activeTab === "attendance" ? (
         <AttendanceContent userId={userId} isAdmin={isAdmin} />
       ) : (
@@ -97,6 +95,6 @@ export default function AttendancePage() {
           )}
         </motion.div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

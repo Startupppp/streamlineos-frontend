@@ -15,10 +15,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Plus, Megaphone, IndianRupee, TrendingUp, Users, Target,
+  Plus, Megaphone, IndianRupee, TrendingUp, Target,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDmCampaigns, useDmCampaignStats, useCreateDmCampaign } from "@/lib/api/hooks/dm";
@@ -45,75 +45,78 @@ export default function CampaignsPage() {
   const campaigns = data?.campaigns ?? [];
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <PageHeader title="Campaign Management" description="Manage marketing campaigns and track ROI" />
+    <PageWrapper
+      title="Campaign Management"
+      subtitle="Manage marketing campaigns and track ROI"
+      actions={
         <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> New Campaign</Button>
-      </div>
-
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {[
-          { label: "Active Campaigns", value: stats?.active ?? 0, icon: Megaphone, color: "text-emerald-400" },
-          { label: "Total Budget", value: formatINR(stats?.totalBudget), icon: IndianRupee, color: "text-blue-400" },
-          { label: "Total Spent", value: formatINR(stats?.totalSpent), icon: TrendingUp, color: "text-amber-400" },
-          { label: "Avg CPL", value: formatINR(stats?.avgCpl), icon: Target, color: "text-purple-400" },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <s.icon className={cn("h-5 w-5", s.color)} />
-                <span className={cn("text-xl font-bold tabular-nums", s.color)}>{s.value}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Campaign</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs">Budget</TableHead>
-                <TableHead className="text-xs">Spent</TableHead>
-                <TableHead className="text-xs">Leads</TableHead>
-                <TableHead className="text-xs">CPL</TableHead>
-                <TableHead className="text-xs">ROI</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={7} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
-                ))
-              ) : campaigns.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No campaigns yet</TableCell></TableRow>
-              ) : (
-                campaigns.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="text-sm font-medium">{c.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[10px]",
-                        c.status === "active" && "text-emerald-400 bg-emerald-500/10",
-                        c.status === "paused" && "text-amber-400 bg-amber-500/10",
-                        c.status === "completed" && "text-muted-foreground",
-                      )}>{c.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs font-mono">{formatINR(c.budgetAllocated)}</TableCell>
-                    <TableCell className="text-xs font-mono">{formatINR(c.budgetSpent || c.spend)}</TableCell>
-                    <TableCell className="text-xs font-mono">{c.leadsGenerated}</TableCell>
-                    <TableCell className="text-xs font-mono">{c.costPerLead ? formatINR(c.costPerLead) : "—"}</TableCell>
-                    <TableCell className="text-xs font-mono">{c.roi ? `${c.roi}%` : "—"}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+      }
+    >
+      <div className="space-y-6">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          {[
+            { label: "Active Campaigns", value: stats?.active ?? 0, icon: Megaphone, color: "text-emerald-400" },
+            { label: "Total Budget", value: formatINR(stats?.totalBudget), icon: IndianRupee, color: "text-blue-400" },
+            { label: "Total Spent", value: formatINR(stats?.totalSpent), icon: TrendingUp, color: "text-amber-400" },
+            { label: "Avg CPL", value: formatINR(stats?.avgCpl), icon: Target, color: "text-purple-400" },
+          ].map(s => (
+            <Card key={s.label}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <s.icon className={cn("h-5 w-5", s.color)} />
+                  <span className={cn("text-xl font-bold tabular-nums", s.color)}>{s.value}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </Card>
+
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Campaign</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Budget</TableHead>
+                  <TableHead className="text-xs">Spent</TableHead>
+                  <TableHead className="text-xs">Leads</TableHead>
+                  <TableHead className="text-xs">CPL</TableHead>
+                  <TableHead className="text-xs">ROI</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <TableRow key={i}><TableCell colSpan={7} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
+                  ))
+                ) : campaigns.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No campaigns yet</TableCell></TableRow>
+                ) : (
+                  campaigns.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="text-sm font-medium">{c.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-[10px]",
+                          c.status === "active" && "text-emerald-400 bg-emerald-500/10",
+                          c.status === "paused" && "text-amber-400 bg-amber-500/10",
+                          c.status === "completed" && "text-muted-foreground",
+                        )}>{c.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs font-mono">{formatINR(c.budgetAllocated)}</TableCell>
+                      <TableCell className="text-xs font-mono">{formatINR(c.budgetSpent || c.spend)}</TableCell>
+                      <TableCell className="text-xs font-mono">{c.leadsGenerated}</TableCell>
+                      <TableCell className="text-xs font-mono">{c.costPerLead ? formatINR(c.costPerLead) : "—"}</TableCell>
+                      <TableCell className="text-xs font-mono">{c.roi ? `${c.roi}%` : "—"}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      </div>
 
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="sm:max-w-md">
@@ -145,6 +148,6 @@ export default function CampaignsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageWrapper>
   );
 }

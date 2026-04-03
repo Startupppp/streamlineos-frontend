@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -117,17 +117,13 @@ export default function ContactsPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-between">
-        <PageHeader title="Contacts" description={`${data?.total ?? 0} contacts`} />
+    <PageWrapper
+      title="Contacts"
+      subtitle={`${data?.total ?? 0} contacts`}
+      actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+            <Button className="bg-gold hover:bg-gold/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Contact
             </Button>
@@ -191,16 +187,15 @@ export default function ContactsPage() {
                     </FormItem>
                   )} />
                 </div>
-                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createContactMutation.isPending}>
+                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createContactMutation.isPending}>
                   {createContactMutation.isPending ? "Creating..." : "Create Contact"}
                 </Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
+      }
+      filters={
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -210,18 +205,24 @@ export default function ContactsPage() {
             className="pl-9"
           />
         </div>
-      </motion.div>
-
+      }
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
       <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {data?.items.map(contact => (
-          <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-[#bd882c]/40 cursor-pointer group">
+          <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-[#bd882c]/10 flex items-center justify-center text-sm font-semibold text-[#bd882c] shrink-0">
+                <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
                   {contact.name[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate group-hover:text-[#bd882c] transition-colors">{contact.name}</p>
+                  <p className="text-sm font-medium truncate group-hover:text-gold transition-colors">{contact.name}</p>
                   {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
                 </div>
                 <DropdownMenu>
@@ -316,6 +317,7 @@ export default function ContactsPage() {
           </Button>
         </motion.div>
       )}
-    </motion.div>
+      </motion.div>
+    </PageWrapper>
   );
 }

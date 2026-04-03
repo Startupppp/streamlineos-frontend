@@ -187,7 +187,7 @@ export function LeadTableView({
                     key={lead.id}
                     className={cn(
                       idx % 2 === 1 && "bg-muted/20",
-                      selectedIds.has(lead.id) && "bg-[#bd882c]/5",
+                      selectedIds.has(lead.id) && "bg-gold/5",
                       "hover:bg-muted/40 transition-colors",
                     )}
                   >

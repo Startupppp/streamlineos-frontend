@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -143,17 +143,13 @@ export default function AssignmentRulesPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-between">
-        <PageHeader title="Assignment Rules" description="Auto-assign leads based on conditions" />
+    <PageWrapper
+      title="Assignment Rules"
+      subtitle="Auto-assign leads based on conditions"
+      actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+            <Button className="bg-gold hover:bg-gold/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Rule
             </Button>
@@ -250,98 +246,105 @@ export default function AssignmentRulesPage() {
                   )} />
                 )}
 
-                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createRule.isPending}>
+                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createRule.isPending}>
                   {createRule.isPending ? "Creating..." : "Create Rule"}
                 </Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-      </motion.div>
-
-      <motion.div variants={fadeUp} className="space-y-3">
-        {rules && rules.length > 0 ? (
-          rules.map((rule, index) => {
-            const conditions = rule.conditions as { field: string; operator: string; value: string }[];
-            return (
-              <Card key={rule.id} className={cn("shadow-sm transition-all", !rule.isActive && "opacity-60")}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col gap-0.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5"
-                        disabled={index === 0}
-                        onClick={() => moveRule(index, "up")}
-                        aria-label="Move rule up"
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5"
-                        disabled={index === (rules?.length ?? 0) - 1}
-                        onClick={() => moveRule(index, "down")}
-                        aria-label="Move rule down"
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium truncate">{rule.name}</h3>
-                        <Badge variant="secondary" className="text-[10px]">
-                          Priority {rule.priority}
-                        </Badge>
-                        <Badge
-                          variant={rule.assignmentType === "round_robin" ? "default" : "secondary"}
-                          className="text-[10px]"
+      }
+    >
+      <motion.div
+        className="space-y-3"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={fadeUp} className="space-y-3">
+          {rules && rules.length > 0 ? (
+            rules.map((rule, index) => {
+              const conditions = rule.conditions as { field: string; operator: string; value: string }[];
+              return (
+                <Card key={rule.id} className={cn("shadow-sm transition-all", !rule.isActive && "opacity-60")}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          disabled={index === 0}
+                          onClick={() => moveRule(index, "up")}
+                          aria-label="Move rule up"
                         >
-                          {rule.assignmentType === "round_robin" ? "Round Robin" : "Direct Assign"}
-                        </Badge>
+                          <ChevronUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          disabled={index === (rules?.length ?? 0) - 1}
+                          onClick={() => moveRule(index, "down")}
+                          aria-label="Move rule down"
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
                       </div>
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {conditions.map((c, ci) => (
-                          <Badge key={ci} variant="outline" className="text-[10px]">
-                            {FIELDS.find(f => f.value === c.field)?.label ?? c.field} {c.operator} {c.value}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Switch
-                        checked={rule.isActive}
-                        onCheckedChange={() => toggleActive(rule.id, rule.isActive)}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive"
-                        onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })}
-                        aria-label="Delete rule"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-medium truncate">{rule.name}</h3>
+                          <Badge variant="secondary" className="text-[10px]">
+                            Priority {rule.priority}
+                          </Badge>
+                          <Badge
+                            variant={rule.assignmentType === "round_robin" ? "default" : "secondary"}
+                            className="text-[10px]"
+                          >
+                            {rule.assignmentType === "round_robin" ? "Round Robin" : "Direct Assign"}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {conditions.map((c, ci) => (
+                            <Badge key={ci} variant="outline" className="text-[10px]">
+                              {FIELDS.find(f => f.value === c.field)?.label ?? c.field} {c.operator} {c.value}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Switch
+                          checked={rule.isActive}
+                          onCheckedChange={() => toggleActive(rule.id, rule.isActive)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })}
+                          aria-label="Delete rule"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        ) : (
-          <Card className="shadow-sm">
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No assignment rules defined</p>
-              <p className="text-xs mt-1">Create rules to auto-assign leads</p>
-            </CardContent>
-          </Card>
-        )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <Card className="shadow-sm">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No assignment rules defined</p>
+                <p className="text-xs mt-1">Create rules to auto-assign leads</p>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </PageWrapper>
   );
 }

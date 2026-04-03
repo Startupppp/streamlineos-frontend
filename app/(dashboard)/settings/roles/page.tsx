@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog,
   DialogContent,
@@ -105,17 +106,15 @@ function RolesContent() {
   const permissionGroups = useMemo(() => groupPermissions(PERMISSIONS), []);
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Roles &amp; Permissions</h2>
-          <p className="text-sm text-muted-foreground">Manage system roles and their access levels</p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+    <PageWrapper
+      title="Roles & Permissions"
+      subtitle="Configure access controls for each role"
+      actions={
+        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="h-4 w-4" /> New Role
         </Button>
-      </div>
-
+      }
+    >
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <Card className="h-fit">
           <CardHeader className="pb-3">
@@ -136,7 +135,7 @@ function RolesContent() {
                     onClick={() => setSelectedRole(role)}
                     className={cn(
                       "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between",
-                      selectedRole?.id === role.id && "bg-muted/50 border-l-2 border-[#bd882c]"
+                      selectedRole?.id === role.id && "bg-muted/50 border-l-2 border-primary"
                     )}
                   >
                     <div>
@@ -206,7 +205,7 @@ function RolesContent() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -407,7 +406,7 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
             <Button
               onClick={handleCreate}
               disabled={!name.trim() || !slug.trim() || create.isPending}
-              className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Role

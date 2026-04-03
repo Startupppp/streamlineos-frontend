@@ -186,7 +186,7 @@ export function NewGroupDialog({
             <Button
               onClick={() => setStep("members")}
               disabled={!name.trim()}
-              className="w-full bg-[#bd882c] hover:bg-[#bd882c]/90 text-white h-9"
+              className="w-full bg-gold hover:bg-gold/90 text-white h-9"
             >
               Next: Add Members
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -212,10 +212,10 @@ export function NewGroupDialog({
                     return (
                       <span
                         key={id}
-                        className="inline-flex items-center gap-1 bg-[#bd882c]/10 text-[#bd882c] rounded-full px-2 py-0.5 text-[11px] font-medium"
+                        className="inline-flex items-center gap-1 bg-gold/10 text-gold rounded-full px-2 py-0.5 text-[11px] font-medium"
                       >
                         {user?.name?.split(" ")[0]}
-                        <button onClick={() => toggleUser(id)} className="hover:bg-[#bd882c]/20 rounded-full p-0.5">
+                        <button onClick={() => toggleUser(id)} className="hover:bg-gold/20 rounded-full p-0.5">
                           <X className="h-2.5 w-2.5" />
                         </button>
                       </span>
@@ -234,13 +234,13 @@ export function NewGroupDialog({
                       onClick={() => toggleUser(user.id)}
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-                        selected && "bg-[#bd882c]/5"
+                        selected && "bg-gold/5"
                       )}
                     >
                       <div
                         className={cn(
                           "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                          selected ? "bg-[#bd882c] border-[#bd882c] text-white" : "border-border/60"
+                          selected ? "bg-gold border-gold text-white" : "border-border/60"
                         )}
                       >
                         {selected && <Check className="h-3 w-3" />}
@@ -262,7 +262,7 @@ export function NewGroupDialog({
               <Button
                 onClick={handleCreate}
                 disabled={selectedIds.size === 0 || createGroup.isPending}
-                className="flex-1 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white h-9"
+                className="flex-1 bg-gold hover:bg-gold/90 text-white h-9"
               >
                 {createGroup.isPending ? (
                   <>

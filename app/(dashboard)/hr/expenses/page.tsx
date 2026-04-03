@@ -22,7 +22,7 @@ import { ImportExpenseSheet } from "./import-expense-sheet";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filters";
 import { useSession } from "next-auth/react";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   EXPENSE_CATEGORIES,
@@ -150,7 +150,7 @@ export default function ExpensesPage() {
   /* ─── Loading State ─── */
   if (loading && !pageData) {
     return (
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-6 px-4 sm:px-6 py-5">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-40" />
@@ -185,41 +185,39 @@ export default function ExpensesPage() {
      ═══════════════════════════════════════════════════════════ */
   if (isAdmin) {
     return (
-      <div className="flex-1 space-y-6">
-        <PageHeader
-          title="Expense Approvals"
-          description="Review and manage pending employee expense claims."
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={() => setIsImportOpen(true)}
-              >
-                <Upload className="h-4 w-4" />
-                Import
-              </Button>
-              <ExpenseExportDialog
-                filters={filters}
-                categories={expenseCategories}
-                trigger={
-                  <Button variant="outline" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Export Report
-                  </Button>
-                }
-              />
-              <Button
-                className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-sm gap-2"
-                onClick={() => setIsCreateOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                New Policy
-              </Button>
-            </div>
-          }
-        />
-
+      <PageWrapper
+        title="Expense Approvals"
+        subtitle="Review and manage pending employee expense claims."
+        actions={
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsImportOpen(true)}
+            >
+              <Upload className="h-4 w-4" />
+              Import
+            </Button>
+            <ExpenseExportDialog
+              filters={filters}
+              categories={expenseCategories}
+              trigger={
+                <Button variant="outline" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export Report
+                </Button>
+              }
+            />
+            <Button
+              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-sm gap-2"
+              onClick={() => setIsCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              New Policy
+            </Button>
+          </div>
+        }
+      >
         <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
           {/* 4 Stats Cards */}
           <motion.div variants={fadeUp}>
@@ -269,7 +267,7 @@ export default function ExpensesPage() {
           onOpenChange={setIsImportOpen}
           onSuccess={handleImportSuccess}
         />
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -277,21 +275,19 @@ export default function ExpensesPage() {
      MEMBER VIEW — My Expenses (table-based)
      ═══════════════════════════════════════════════════════════ */
   return (
-    <div className="flex-1 space-y-6">
-      <PageHeader
-        title="My Expenses"
-        description="Track, manage, and submit your expense claims for reimbursement."
-        actions={
-          <Button
-            className="bg-[#bd882c] hover:bg-[#a67724] text-white font-bold shadow-sm gap-2 rounded-full px-6"
-            onClick={() => setIsCreateOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            Submit New Claim
-          </Button>
-        }
-      />
-
+    <PageWrapper
+      title="My Expenses"
+      subtitle="Track, manage, and submit your expense claims for reimbursement."
+      actions={
+        <Button
+          className="bg-gold hover:bg-gold/90 text-white font-bold shadow-sm gap-2 rounded-full px-6"
+          onClick={() => setIsCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Submit New Claim
+        </Button>
+      }
+    >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
         {/* 3 Stats Cards */}
         <motion.div variants={fadeUp}>
@@ -334,6 +330,6 @@ export default function ExpensesPage() {
         onSuccess={() => { loadData(filters); setIsCreateOpen(false); }}
         categories={EXPENSE_CATEGORIES} paymentMethods={PAYMENT_METHODS}
       />
-    </div>
+    </PageWrapper>
   );
 }

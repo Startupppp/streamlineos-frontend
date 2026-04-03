@@ -6,7 +6,7 @@ import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { Loader2, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -256,87 +256,86 @@ export default function WorkLogsPage() {
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4">
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-3 space-y-3 sm:space-y-4 pt-1 border-b border-border/40 shadow-sm overflow-x-hidden">
-        <PageHeader
-          title="Work Logs"
-          description={
-            selectedUserId && employees.length
-              ? `Viewing logs for ${employees.find((e) => e.id === selectedUserId)?.firstName ?? "employee"} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}.`
-              : "Track your daily tasks and activities."
-          }
-          actions={
-            <WorkLogFilterActions
-              {...sharedFilterProps}
-              onExport={handleExportWorkLogs}
-            />
-          }
+    <PageWrapper
+      title="Work Logs"
+      subtitle={
+        selectedUserId && employees.length
+          ? `Viewing logs for ${employees.find((e) => e.id === selectedUserId)?.firstName ?? "employee"} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}.`
+          : "Track your daily tasks and activities."
+      }
+      actions={
+        <WorkLogFilterActions
+          {...sharedFilterProps}
+          onExport={handleExportWorkLogs}
         />
-
+      }
+      filters={
         <WorkLogFiltersPanel
           {...sharedFilterProps}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
         />
+      }
+    >
+      <div className="space-y-4">
+        {isLoading ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex justify-center" role="status" aria-label="Loading work logs">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : !hasSearchResults ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center text-center">
+                <Search className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <h3 className="text-lg font-medium text-foreground">No results found</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
+                </p>
+                <Button variant="outline" size="sm" className="mt-4" onClick={() => setSearchTerm("")}>
+                  Clear Search
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {monthGroups.map((group) => {
+              const filteredDays = group.days.filter(filterDay);
+              if (searchTerm.trim() && filteredDays.length === 0) return null;
+
+              const isCollapsed = collapsedMonths.has(group.monthKey);
+              const filled = filledCounts[group.monthKey] ?? 0;
+              const displayDays = searchTerm.trim() ? filteredDays : group.days;
+
+              return (
+                <WorkLogMonthGroup
+                  key={group.monthKey}
+                  monthKey={group.monthKey}
+                  label={group.label}
+                  allDays={group.days}
+                  displayDays={displayDays}
+                  isCollapsed={isCollapsed}
+                  onToggle={toggleMonth}
+                  filled={filled}
+                  searchTerm={searchTerm}
+                  logs={logs}
+                  selectedUserId={selectedUserId}
+                  isAdminOrCeo={isAdminOrCeo}
+                  onSave={(date, content) => upsertLog.mutate({ date, description: content })}
+                  isSaving={upsertLog.isPending}
+                  onApprove={(logId) => updateStatus.mutate({ id: logId, status: "APPROVED" })}
+                  onReject={(logId, reason) => updateStatus.mutate({ id: logId, status: "REJECTED", rejectionReason: reason })}
+                  isUpdatingStatus={updateStatus.isPending}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
-
-      {isLoading ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex justify-center" role="status" aria-label="Loading work logs">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
-            </div>
-          </CardContent>
-        </Card>
-      ) : !hasSearchResults ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center text-center">
-              <Search className="h-10 w-10 text-muted-foreground/50 mb-3" />
-              <h3 className="text-lg font-medium text-foreground">No results found</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
-              </p>
-              <Button variant="outline" size="sm" className="mt-4" onClick={() => setSearchTerm("")}>
-                Clear Search
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {monthGroups.map((group) => {
-            const filteredDays = group.days.filter(filterDay);
-            if (searchTerm.trim() && filteredDays.length === 0) return null;
-
-            const isCollapsed = collapsedMonths.has(group.monthKey);
-            const filled = filledCounts[group.monthKey] ?? 0;
-            const displayDays = searchTerm.trim() ? filteredDays : group.days;
-
-            return (
-              <WorkLogMonthGroup
-                key={group.monthKey}
-                monthKey={group.monthKey}
-                label={group.label}
-                allDays={group.days}
-                displayDays={displayDays}
-                isCollapsed={isCollapsed}
-                onToggle={toggleMonth}
-                filled={filled}
-                searchTerm={searchTerm}
-                logs={logs}
-                selectedUserId={selectedUserId}
-                isAdminOrCeo={isAdminOrCeo}
-                onSave={(date, content) => upsertLog.mutate({ date, description: content })}
-                isSaving={upsertLog.isPending}
-                onApprove={(logId) => updateStatus.mutate({ id: logId, status: "APPROVED" })}
-                onReject={(logId, reason) => updateStatus.mutate({ id: logId, status: "REJECTED", rejectionReason: reason })}
-                isUpdatingStatus={updateStatus.isPending}
-              />
-            );
-          })}
-        </div>
-      )}
-    </div>
+    </PageWrapper>
   );
 }

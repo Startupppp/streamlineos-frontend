@@ -48,7 +48,7 @@ export function LeadSidebar({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-[#bd882c]/10 flex items-center justify-center text-sm font-semibold text-[#bd882c]">
+              <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold">
                 {lead.assignedTo.name?.[0] ?? "?"}
               </div>
               <div>

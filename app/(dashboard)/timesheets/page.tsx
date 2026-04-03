@@ -21,7 +21,7 @@ import {
   useTimeEntries,
   useDeleteTimeEntry,
 } from "@/lib/api/hooks/projects";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -230,119 +230,113 @@ export default function TimesheetsPage() {
     return null;
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-4 px-4 md:-mx-8 md:px-8 space-y-6 border-b border-border/40">
-      <PageHeader
-        title="Daily Work Logs"
-        description="Track and manage professional activity across projects."
-        actions={
-          <LogTimeDialog
-            trigger={
-              <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white font-bold shadow-sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Log
-              </Button>
-            }
-          />
-        }
-      />
-
-      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-4">
-        {/* Inline filter chips */}
-        <motion.div variants={fadeUp}>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Project filter chip */}
-            <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Project:</span>
-              <Select value={selectedProject} onValueChange={(v) => { setSelectedProject(v); setPage(1); }}>
-                <SelectTrigger aria-label="Filter by project" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
-                  {projects?.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Period filter chip */}
-            <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Period:</span>
-              <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setPage(1); setViewMode(v === "all" ? "history" : "current"); }}>
-                <SelectTrigger aria-label="Filter by time period" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="this-quarter">{currentQuarter} {currentYear}</SelectItem>
-                  <SelectItem value="last-quarter">Last Quarter</SelectItem>
-                  <SelectItem value="this-week">This Week</SelectItem>
-                  <SelectItem value="last-week">Last Week</SelectItem>
-                  <SelectItem value="this-month">This Month</SelectItem>
-                  <SelectItem value="last-month">Last Month</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Custom date inputs */}
-            {dateRange === "custom" && (
-              <>
-                <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">From:</Label>
-                  <Input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-                    aria-label="From date"
-                    className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
-                  />
-                </div>
-                <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-                  <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">To:</Label>
-                  <Input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-                    aria-label="To date"
-                    className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Divider */}
-            <div className="h-7 w-px bg-border mx-1 hidden sm:block" />
-
-            {/* View mode tabs */}
-            <button
-              onClick={() => handleViewMode("current")}
-              className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
-                viewMode === "current"
-                  ? "bg-[#bd882c]/10 text-[#bd882c]"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Current Quarter
-            </button>
-            <button
-              onClick={() => handleViewMode("history")}
-              className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                viewMode === "history"
-                  ? "bg-[#bd882c]/10 text-[#bd882c]"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              History
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
+  const filtersBar = (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Project filter chip */}
+      <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Project:</span>
+        <Select value={selectedProject} onValueChange={(v) => { setSelectedProject(v); setPage(1); }}>
+          <SelectTrigger aria-label="Filter by project" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Projects</SelectItem>
+            {projects?.map((p) => (
+              <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
+      {/* Period filter chip */}
+      <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+        <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Period:</span>
+        <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setPage(1); setViewMode(v === "all" ? "history" : "current"); }}>
+          <SelectTrigger aria-label="Filter by time period" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="this-quarter">{currentQuarter} {currentYear}</SelectItem>
+            <SelectItem value="last-quarter">Last Quarter</SelectItem>
+            <SelectItem value="this-week">This Week</SelectItem>
+            <SelectItem value="last-week">Last Week</SelectItem>
+            <SelectItem value="this-month">This Month</SelectItem>
+            <SelectItem value="last-month">Last Month</SelectItem>
+            <SelectItem value="custom">Custom Range</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Custom date inputs */}
+      {dateRange === "custom" && (
+        <>
+          <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">From:</Label>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+              aria-label="From date"
+              className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
+            />
+          </div>
+          <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">To:</Label>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+              aria-label="To date"
+              className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Divider */}
+      <div className="h-7 w-px bg-border mx-1 hidden sm:block" />
+
+      {/* View mode tabs */}
+      <button
+        onClick={() => handleViewMode("current")}
+        className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
+          viewMode === "current"
+            ? "bg-gold/10 text-gold"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        Current Quarter
+      </button>
+      <button
+        onClick={() => handleViewMode("history")}
+        className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+          viewMode === "history"
+            ? "bg-gold/10 text-gold"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        History
+      </button>
+    </div>
+  );
+
+  return (
+    <PageWrapper
+      title="Daily Work Logs"
+      subtitle="Track and manage professional activity across projects."
+      actions={
+        <LogTimeDialog
+          trigger={
+            <Button className="bg-gold hover:bg-gold/90 text-white font-bold shadow-sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Log
+            </Button>
+          }
+        />
+      }
+      filters={filtersBar}
+    >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
         {/* Summary bar */}
         {entries && entries.length > 0 && (
@@ -502,7 +496,7 @@ export default function TimesheetsPage() {
                               size="icon"
                               className={`h-8 w-8 text-sm font-bold ${
                                 num === page
-                                  ? "bg-[#bd882c] hover:bg-[#a67724] text-white border-[#bd882c]"
+                                  ? "bg-gold hover:bg-gold/90 text-white border-gold"
                                   : ""
                               }`}
                               onClick={() => setPage(num)}
@@ -574,6 +568,6 @@ export default function TimesheetsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageWrapper>
   );
 }

@@ -24,6 +24,7 @@ import {
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity } from "@/lib/api/hooks/crm";
@@ -154,27 +155,22 @@ export default function DealDetailPage({
   const dealValue = Number(deal.value ?? 0);
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center gap-4 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")} aria-label="Back to deals">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold truncate">{deal.name}</h1>
-          <p className="text-lg font-bold text-[#bd882c] mt-0.5">{formatINR(dealValue)}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge
-            className="text-sm px-3 py-1"
-            style={{ backgroundColor: `${stageConfig.color}20`, color: stageConfig.color }}
-          >
-            {stageConfig.label}
-          </Badge>
+    <PageWrapper
+      title={deal.name}
+      subtitle={formatINR(dealValue)}
+      badge={
+        <Badge
+          className="text-sm px-3 py-1"
+          style={{ backgroundColor: `${stageConfig.color}20`, color: stageConfig.color }}
+        >
+          {stageConfig.label}
+        </Badge>
+      }
+      actions={
+        <>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")} aria-label="Back to deals">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           {deal.probability !== null && (
             <Badge variant="secondary" className="text-xs">{deal.probability}% probability</Badge>
           )}
@@ -202,366 +198,374 @@ export default function DealDetailPage({
               </Button>
             </>
           )}
-        </div>
-      </motion.div>
+        </>
+      }
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Stage pipeline strip */}
+        <motion.div variants={fadeUp} className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
+          {STAGES.map((stage, i) => {
+            const isActive = stage.key === deal.stage;
+            const isPast = i < currentStageIndex;
+            return (
+              <button
+                key={stage.key}
+                onClick={() => handleStageChange(stage.key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                  isActive ? cn(stage.bg, "ring-1 ring-current/20") :
+                  isPast ? "bg-muted/50 text-muted-foreground" :
+                  "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
+                )}
+                style={isActive ? { color: stage.color } : undefined}
+              >
+                {stage.label}
+                {i < STAGES.length - 1 && <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground/30" />}
+              </button>
+            );
+          })}
+        </motion.div>
 
-      <motion.div variants={fadeUp} className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
-        {STAGES.map((stage, i) => {
-          const isActive = stage.key === deal.stage;
-          const isPast = i < currentStageIndex;
-          return (
-            <button
-              key={stage.key}
-              onClick={() => handleStageChange(stage.key)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
-                isActive ? cn(stage.bg, "ring-1 ring-current/20") :
-                isPast ? "bg-muted/50 text-muted-foreground" :
-                "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
-              )}
-              style={isActive ? { color: stage.color } : undefined}
-            >
-              {stage.label}
-              {i < STAGES.length - 1 && <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground/30" />}
-            </button>
-          );
-        })}
-      </motion.div>
-
-      <div className="grid gap-6 lg:grid-cols-5">
-        <motion.div variants={fadeUp} className="lg:col-span-3 space-y-6">
-          {isEditing ? (
-            <Card className="shadow-noir">
-              <CardHeader>
-                <CardTitle className="text-base">Edit Deal</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...editForm}>
-                  <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2">
-                        <FormField control={editForm.control} name="name" render={({ field }) => (
+        <div className="grid gap-6 lg:grid-cols-5">
+          <motion.div variants={fadeUp} className="lg:col-span-3 space-y-6">
+            {isEditing ? (
+              <Card className="shadow-noir">
+                <CardHeader>
+                  <CardTitle className="text-base">Edit Deal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form {...editForm}>
+                    <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <FormField control={editForm.control} name="name" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Deal Name</FormLabel>
+                              <FormControl><Input {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <FormField control={editForm.control} name="value" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Deal Name</FormLabel>
+                            <FormLabel>Value (INR)</FormLabel>
+                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={editForm.control} name="stage" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Stage</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {STAGES.map(s => (
+                                  <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={editForm.control} name="probability" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Probability (%)</FormLabel>
+                            <FormControl><Input type="number" min={0} max={100} {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={editForm.control} name="expectedCloseDate" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Expected Close</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={editForm.control} name="contactPerson" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contact Person</FormLabel>
                             <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
-                      </div>
-                      <FormField control={editForm.control} name="value" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Value (INR)</FormLabel>
-                          <FormControl><Input type="number" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={editForm.control} name="stage" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Stage</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {STAGES.map(s => (
-                                <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={editForm.control} name="probability" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Probability (%)</FormLabel>
-                          <FormControl><Input type="number" min={0} max={100} {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={editForm.control} name="expectedCloseDate" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Expected Close</FormLabel>
-                          <FormControl><Input type="date" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={editForm.control} name="contactPerson" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Person</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={editForm.control} name="contactEmail" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Email</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={editForm.control} name="contactPhone" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Phone</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      {deal.stage === "LOST" && (
-                        <FormField control={editForm.control} name="lostReason" render={({ field }) => (
+                        <FormField control={editForm.control} name="contactEmail" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Lost Reason</FormLabel>
+                            <FormLabel>Contact Email</FormLabel>
                             <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
-                      )}
-                      <div className="col-span-2">
-                        <FormField control={editForm.control} name="notes" render={({ field }) => (
+                        <FormField control={editForm.control} name="contactPhone" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Notes</FormLabel>
-                            <FormControl><Textarea {...field} rows={3} /></FormControl>
+                            <FormLabel>Contact Phone</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-3">
-                      <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                      <Button type="submit" className="bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={updateDeal.isPending}>
-                        {updateDeal.isPending ? "Saving..." : "Save Changes"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="shadow-noir">
-              <CardHeader>
-                <CardTitle className="text-base">Deal Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { icon: User, label: "Contact Person", value: deal.contactPerson },
-                    { icon: Mail, label: "Contact Email", value: deal.contactEmail, href: deal.contactEmail ? `mailto:${deal.contactEmail}` : undefined },
-                    { icon: Phone, label: "Contact Phone", value: deal.contactPhone, href: deal.contactPhone ? `tel:${deal.contactPhone}` : undefined },
-                    { icon: Calendar, label: "Expected Close", value: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString("en-IN") : null },
-                    { icon: Calendar, label: "Actual Close", value: deal.actualCloseDate ? new Date(deal.actualCloseDate).toLocaleDateString("en-IN") : null },
-                    { icon: Clock, label: "Probability", value: `${deal.probability ?? 0}%` },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-start gap-2">
-                      <item.icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">{item.label}</p>
-                        {item.href ? (
-                          <a href={item.href} className="text-sm text-[#bd882c] hover:underline">{item.value || "\u2014"}</a>
-                        ) : (
-                          <p className="text-sm">{item.value || "\u2014"}</p>
+                        {deal.stage === "LOST" && (
+                          <FormField control={editForm.control} name="lostReason" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Lost Reason</FormLabel>
+                              <FormControl><Input {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
                         )}
+                        <div className="col-span-2">
+                          <FormField control={editForm.control} name="notes" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Notes</FormLabel>
+                              <FormControl><Textarea {...field} rows={3} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                      <div className="flex justify-end gap-3">
+                        <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                        <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updateDeal.isPending}>
+                          {updateDeal.isPending ? "Saving..." : "Save Changes"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="shadow-noir">
+                <CardHeader>
+                  <CardTitle className="text-base">Deal Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {[
+                      { icon: User, label: "Contact Person", value: deal.contactPerson },
+                      { icon: Mail, label: "Contact Email", value: deal.contactEmail, href: deal.contactEmail ? `mailto:${deal.contactEmail}` : undefined },
+                      { icon: Phone, label: "Contact Phone", value: deal.contactPhone, href: deal.contactPhone ? `tel:${deal.contactPhone}` : undefined },
+                      { icon: Calendar, label: "Expected Close", value: deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString("en-IN") : null },
+                      { icon: Calendar, label: "Actual Close", value: deal.actualCloseDate ? new Date(deal.actualCloseDate).toLocaleDateString("en-IN") : null },
+                      { icon: Clock, label: "Probability", value: `${deal.probability ?? 0}%` },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-start gap-2">
+                        <item.icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">{item.label}</p>
+                          {item.href ? (
+                            <a href={item.href} className="text-sm text-gold hover:underline">{item.value || "\u2014"}</a>
+                          ) : (
+                            <p className="text-sm">{item.value || "\u2014"}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-[#bd882c]/5 border border-border/50">
-                  <p className="text-xs text-muted-foreground">Deal Value</p>
-                  <p className="text-3xl font-bold text-[#bd882c]">{formatINR(dealValue)}</p>
-                  {deal.probability !== null && deal.probability > 0 && (
-                    <div className="mt-2">
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-[#bd882c]" style={{ width: `${deal.probability}%` }} />
+                  <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-gold/5 border border-border/50">
+                    <p className="text-xs text-muted-foreground">Deal Value</p>
+                    <p className="text-3xl font-bold text-gold">{formatINR(dealValue)}</p>
+                    {deal.probability !== null && deal.probability > 0 && (
+                      <div className="mt-2">
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-gold" style={{ width: `${deal.probability}%` }} />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Weighted: {formatINR(Math.round(dealValue * (deal.probability / 100)))}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">Weighted: {formatINR(Math.round(dealValue * (deal.probability / 100)))}</p>
+                    )}
+                  </div>
+
+                  {deal.notes && (
+                    <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
+                      <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                      <p className="text-sm whitespace-pre-wrap">{deal.notes}</p>
                     </div>
                   )}
-                </div>
 
-                {deal.notes && (
-                  <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
-                    <p className="text-xs text-muted-foreground mb-1">Notes</p>
-                    <p className="text-sm whitespace-pre-wrap">{deal.notes}</p>
+                  {deal.lostReason && (
+                    <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+                      <p className="text-xs text-red-400 mb-1">Lost Reason</p>
+                      <p className="text-sm">{deal.lostReason}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="lg:col-span-2 space-y-6">
+            {deal.assignedTo && (
+              <Card className="shadow-noir">
+                <CardHeader>
+                  <CardTitle className="text-base">Assigned To</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold">
+                      {deal.assignedTo.name?.[0] ?? "?"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{deal.assignedTo.name}</p>
+                    </div>
                   </div>
-                )}
+                </CardContent>
+              </Card>
+            )}
 
-                {deal.lostReason && (
-                  <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
-                    <p className="text-xs text-red-400 mb-1">Lost Reason</p>
-                    <p className="text-sm">{deal.lostReason}</p>
+            {deal.lead && (
+              <Card className="shadow-noir">
+                <CardHeader>
+                  <CardTitle className="text-base">Linked Lead</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Link href={`/crm/leads/${deal.lead.id}`} className="flex items-center gap-3 group">
+                    <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-400">
+                      {deal.lead.name?.[0] ?? "?"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium group-hover:text-gold transition-colors">{deal.lead.name}</p>
+                      {deal.lead.email && <p className="text-xs text-muted-foreground">{deal.lead.email}</p>}
+                      {deal.lead.phone && <p className="text-xs text-muted-foreground">{deal.lead.phone}</p>}
+                    </div>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
+            {deal.client && (
+              <Card className="shadow-noir">
+                <CardHeader>
+                  <CardTitle className="text-base">Linked Client</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400">
+                      {deal.client.name?.[0] ?? "?"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{deal.client.name}</p>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </motion.div>
+                </CardContent>
+              </Card>
+            )}
 
-        <motion.div variants={fadeUp} className="lg:col-span-2 space-y-6">
-          {deal.assignedTo && (
             <Card className="shadow-noir">
               <CardHeader>
-                <CardTitle className="text-base">Assigned To</CardTitle>
+                <CardTitle className="text-base">Key Dates</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-[#bd882c]/10 flex items-center justify-center text-sm font-semibold text-[#bd882c]">
-                    {deal.assignedTo.name?.[0] ?? "?"}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{deal.assignedTo.name}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {deal.lead && (
-            <Card className="shadow-noir">
-              <CardHeader>
-                <CardTitle className="text-base">Linked Lead</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Link href={`/crm/leads/${deal.lead.id}`} className="flex items-center gap-3 group">
-                  <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-400">
-                    {deal.lead.name?.[0] ?? "?"}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium group-hover:text-[#bd882c] transition-colors">{deal.lead.name}</p>
-                    {deal.lead.email && <p className="text-xs text-muted-foreground">{deal.lead.email}</p>}
-                    {deal.lead.phone && <p className="text-xs text-muted-foreground">{deal.lead.phone}</p>}
-                  </div>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-
-          {deal.client && (
-            <Card className="shadow-noir">
-              <CardHeader>
-                <CardTitle className="text-base">Linked Client</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400">
-                    {deal.client.name?.[0] ?? "?"}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{deal.client.name}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="shadow-noir">
-            <CardHeader>
-              <CardTitle className="text-base">Key Dates</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[
-                { label: "Created", value: deal.createdAt },
-                { label: "Updated", value: deal.updatedAt },
-                { label: "Expected Close", value: deal.expectedCloseDate },
-                { label: "Actual Close", value: deal.actualCloseDate },
-              ]
-                .filter(d => d.value)
-                .map(d => (
-                  <div key={d.label} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{d.label}</span>
-                    <span>{new Date(d.value!).toLocaleDateString("en-IN")}</span>
-                  </div>
-                ))}
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="shadow-noir">
-            <CardHeader>
-              <CardTitle className="text-base">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
+              <CardContent className="space-y-3">
                 {[
-                  { label: "Log Call", icon: PhoneCall, type: "call" as const },
-                  { label: "Add Note", icon: StickyNote, type: "note" as const },
-                  { label: "Log Email", icon: Mail, type: "email" as const },
-                  { label: "Log Meeting", icon: Video, type: "meeting" as const },
-                ].map(action => (
-                  <Button
-                    key={action.type}
-                    variant="outline"
-                    size="sm"
-                    className="justify-start gap-2 text-xs"
-                    onClick={() => {
-                      const notes = prompt(`Enter ${action.label.toLowerCase()} details:`);
-                      if (notes) {
-                        logActivity.mutate(
-                          { dealId, type: action.type, subject: action.label, notes },
-                          { onSuccess: () => toast.success("Activity logged"), onError: (err) => toast.error(err.message) }
-                        );
-                      }
-                    }}
-                  >
-                    <action.icon className="h-3.5 w-3.5" />
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  { label: "Created", value: deal.createdAt },
+                  { label: "Updated", value: deal.updatedAt },
+                  { label: "Expected Close", value: deal.expectedCloseDate },
+                  { label: "Actual Close", value: deal.actualCloseDate },
+                ]
+                  .filter(d => d.value)
+                  .map(d => (
+                    <div key={d.label} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{d.label}</span>
+                      <span>{new Date(d.value!).toLocaleDateString("en-IN")}</span>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
 
-          {/* Activity Timeline */}
-          <Card className="shadow-noir">
-            <CardHeader>
-              <CardTitle className="text-base">Activity Timeline</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!activities || activities.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No activities yet</p>
-              ) : (
-                <ScrollArea className="max-h-[400px]">
-                  <div className="space-y-3">
-                    {activities.map((activity) => {
-                      const actIcons: Record<string, typeof PhoneCall> = {
-                        stage_change: ArrowRightLeft,
-                        call: PhoneCall,
-                        note: StickyNote,
-                        email: Mail,
-                        meeting: Video,
-                        document: FileText,
-                      };
-                      const Icon = actIcons[activity.type] || MessageSquare;
-                      const isStageChange = activity.type === "stage_change";
-                      return (
-                        <div key={activity.id} className="flex gap-3">
-                          <div className={cn(
-                            "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                            isStageChange ? "bg-purple-500/10" : "bg-[#bd882c]/10",
-                          )}>
-                            <Icon className={cn("h-3.5 w-3.5", isStageChange ? "text-purple-400" : "text-[#bd882c]")} />
+            {/* Quick Actions */}
+            <Card className="shadow-noir">
+              <CardHeader>
+                <CardTitle className="text-base">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: "Log Call", icon: PhoneCall, type: "call" as const },
+                    { label: "Add Note", icon: StickyNote, type: "note" as const },
+                    { label: "Log Email", icon: Mail, type: "email" as const },
+                    { label: "Log Meeting", icon: Video, type: "meeting" as const },
+                  ].map(action => (
+                    <Button
+                      key={action.type}
+                      variant="outline"
+                      size="sm"
+                      className="justify-start gap-2 text-xs"
+                      onClick={() => {
+                        const notes = prompt(`Enter ${action.label.toLowerCase()} details:`);
+                        if (notes) {
+                          logActivity.mutate(
+                            { dealId, type: action.type, subject: action.label, notes },
+                            { onSuccess: () => toast.success("Activity logged"), onError: (err) => toast.error(err.message) }
+                          );
+                        }
+                      }}
+                    >
+                      <action.icon className="h-3.5 w-3.5" />
+                      {action.label}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Activity Timeline */}
+            <Card className="shadow-noir">
+              <CardHeader>
+                <CardTitle className="text-base">Activity Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!activities || activities.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No activities yet</p>
+                ) : (
+                  <ScrollArea className="max-h-[400px]">
+                    <div className="space-y-3">
+                      {activities.map((activity) => {
+                        const actIcons: Record<string, typeof PhoneCall> = {
+                          stage_change: ArrowRightLeft,
+                          call: PhoneCall,
+                          note: StickyNote,
+                          email: Mail,
+                          meeting: Video,
+                          document: FileText,
+                        };
+                        const Icon = actIcons[activity.type] || MessageSquare;
+                        const isStageChange = activity.type === "stage_change";
+                        return (
+                          <div key={activity.id} className="flex gap-3">
+                            <div className={cn(
+                              "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                              isStageChange ? "bg-purple-500/10" : "bg-gold/10",
+                            )}>
+                              <Icon className={cn("h-3.5 w-3.5", isStageChange ? "text-purple-400" : "text-gold")} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">
+                                {isStageChange
+                                  ? `${activity.previousValue} → ${activity.newValue}`
+                                  : activity.subject || activity.type}
+                              </p>
+                              {activity.notes && (
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{activity.notes}</p>
+                              )}
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                {activity.user?.name ?? "System"} • {activity.createdAt ? new Date(activity.createdAt).toLocaleString("en-IN") : ""}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">
-                              {isStageChange
-                                ? `${activity.previousValue} → ${activity.newValue}`
-                                : activity.subject || activity.type}
-                            </p>
-                            {activity.notes && (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{activity.notes}</p>
-                            )}
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              {activity.user?.name ?? "System"} • {activity.createdAt ? new Date(activity.createdAt).toLocaleString("en-IN") : ""}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    </motion.div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </motion.div>
+    </PageWrapper>
   );
 }

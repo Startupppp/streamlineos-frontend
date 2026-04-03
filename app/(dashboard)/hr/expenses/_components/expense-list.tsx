@@ -265,7 +265,7 @@ export function MemberExpenseList({
                 Show All Claims
               </Button>
             ) : (
-              <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white" onClick={onCreateNew}>
+              <Button className="bg-gold hover:bg-gold/80 text-white" onClick={onCreateNew}>
                 <Plus className="mr-2 h-4 w-4" />
                 Submit New Claim
               </Button>

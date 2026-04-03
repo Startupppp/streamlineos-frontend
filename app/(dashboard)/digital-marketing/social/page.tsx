@@ -11,7 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Plus, TrendingUp, TrendingDown, Users, Eye, MousePointerClick,
 } from "lucide-react";
@@ -43,73 +43,76 @@ export default function SocialMediaPage() {
   const platforms = latestData;
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <PageHeader title="Social Media Tracker" description="Track daily social media metrics across platforms" />
+    <PageWrapper
+      title="Social Media Tracker"
+      subtitle="Track daily social media metrics across platforms"
+      actions={
         <Button onClick={() => setShowEntry(true)}><Plus className="h-4 w-4 mr-1" /> Add Daily Stats</Button>
-      </div>
+      }
+    >
+      <div className="space-y-6">
+        {/* Platform Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {PLATFORMS.map(platform => {
+            const data = platforms?.[platform];
+            const latest = data?.latest;
+            const previous = data?.previous;
+            const newFollowers = latest && previous ? (latest.followersTotal || 0) - (previous.followersTotal || 0) : null;
 
-      {/* Platform Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {PLATFORMS.map(platform => {
-          const data = platforms?.[platform];
-          const latest = data?.latest;
-          const previous = data?.previous;
-          const newFollowers = latest && previous ? (latest.followersTotal || 0) - (previous.followersTotal || 0) : null;
-
-          return (
-            <Card key={platform}>
-              <CardHeader className="pb-3">
-                <CardTitle className={cn("text-sm capitalize", PLATFORM_COLORS[platform])}>
-                  {platform}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {latest ? (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Followers</p>
-                        <p className="text-lg font-bold">{(latest.followersTotal || 0).toLocaleString()}</p>
-                        {newFollowers !== null && (
-                          <p className={cn("text-xs flex items-center gap-0.5",
-                            newFollowers >= 0 ? "text-emerald-400" : "text-red-400"
-                          )}>
-                            {newFollowers >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                            {newFollowers >= 0 ? "+" : ""}{newFollowers}
-                          </p>
-                        )}
+            return (
+              <Card key={platform}>
+                <CardHeader className="pb-3">
+                  <CardTitle className={cn("text-sm capitalize", PLATFORM_COLORS[platform])}>
+                    {platform}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {latest ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Followers</p>
+                          <p className="text-lg font-bold">{(latest.followersTotal || 0).toLocaleString()}</p>
+                          {newFollowers !== null && (
+                            <p className={cn("text-xs flex items-center gap-0.5",
+                              newFollowers >= 0 ? "text-emerald-400" : "text-red-400"
+                            )}>
+                              {newFollowers >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                              {newFollowers >= 0 ? "+" : ""}{newFollowers}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Engagement</p>
+                          <p className="text-lg font-bold">{latest.engagementRate || "0"}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Eye className="h-3 w-3" /> Impressions</p>
+                          <p className="text-sm font-medium">{(latest.impressions || 0).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Reach</p>
+                          <p className="text-sm font-medium">{(latest.reach || 0).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Posts</p>
+                          <p className="text-sm font-medium">{latest.postsPublished || 0}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1"><MousePointerClick className="h-3 w-3" /> Link Clicks</p>
+                          <p className="text-sm font-medium">{(latest.linkClicks || 0).toLocaleString()}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Engagement</p>
-                        <p className="text-lg font-bold">{latest.engagementRate || "0"}%</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Eye className="h-3 w-3" /> Impressions</p>
-                        <p className="text-sm font-medium">{(latest.impressions || 0).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Reach</p>
-                        <p className="text-sm font-medium">{(latest.reach || 0).toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Posts</p>
-                        <p className="text-sm font-medium">{latest.postsPublished || 0}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1"><MousePointerClick className="h-3 w-3" /> Link Clicks</p>
-                        <p className="text-sm font-medium">{(latest.linkClicks || 0).toLocaleString()}</p>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">Last updated: {latest.date}</p>
-                  </>
-                ) : (
-                  <p className="text-xs text-muted-foreground py-4 text-center">No data yet. Add daily stats to get started.</p>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+                      <p className="text-[10px] text-muted-foreground">Last updated: {latest.date}</p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground py-4 text-center">No data yet. Add daily stats to get started.</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
       {/* Entry Dialog */}
@@ -167,6 +170,6 @@ export default function SocialMediaPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageWrapper>
   );
 }

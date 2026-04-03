@@ -155,8 +155,8 @@ export function MemberExpenseStats({ stats }: MemberExpenseStatsProps) {
       <Card className="shadow-sm hover:shadow-md transition-shadow border">
         <CardContent className="p-4 sm:p-6">
           <div className="flex justify-between items-start mb-4">
-            <div className="p-2.5 bg-[#bd882c]/10 rounded-lg">
-              <Clock className="h-5 w-5 text-[#bd882c]" />
+            <div className="p-2.5 bg-gold/10 rounded-lg">
+              <Clock className="h-5 w-5 text-gold" />
             </div>
             <span className="text-[11px] font-medium bg-muted px-2 py-1 rounded text-muted-foreground">Current</span>
           </div>

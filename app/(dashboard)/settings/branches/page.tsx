@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyTeamIllustration } from "@/components/illustrations";
@@ -48,12 +48,18 @@ export default function BranchManagementPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <PageHeader title="Branch Management" description="Manage organization branches and assign branch leaders" />
-        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> Add Branch</Button>
-      </div>
-
+    <PageWrapper
+      title="Branch Management"
+      subtitle="Manage your organization's branch offices"
+      badge={branches.length > 0 ? String(branches.length) : undefined}
+      actions={
+        <Button onClick={() => setShowCreate(true)} className="bg-gold hover:bg-gold/80 text-white">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Branch
+        </Button>
+      }
+    >
+      <div className="space-y-6">
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-48" />)}
@@ -69,7 +75,7 @@ export default function BranchManagementPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {branches.map((branch) => (
-            <Card key={branch.id} className="hover:border-[#bd882c]/30 transition-colors">
+            <Card key={branch.id} className="hover:border-gold/30 transition-colors">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
@@ -134,6 +140,7 @@ export default function BranchManagementPage() {
           ))}
         </div>
       )}
+      </div>
 
       {/* Create Branch Sheet */}
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
@@ -206,6 +213,6 @@ export default function BranchManagementPage() {
           </ScrollArea>
         </SheetContent>
       </Sheet>
-    </div>
+    </PageWrapper>
   );
 }

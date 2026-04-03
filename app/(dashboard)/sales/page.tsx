@@ -19,7 +19,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { MetricCard } from "@/components/crm/metric-card";
 import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { FunnelChart } from "@/components/crm/funnel-chart";
@@ -104,18 +104,16 @@ export default function SalesDashboardPage() {
   }
 
   return (
+    <PageWrapper
+      title={isSalesRep ? "My Sales Hub" : "Sales Dashboard"}
+      subtitle={isSalesRep ? "Your pipeline, deals, and performance at a glance" : "Pipeline overview and sales performance metrics"}
+    >
     <motion.div
       className="space-y-6"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={fadeUp}>
-        <PageHeader
-          title={isSalesRep ? "My Sales Hub" : "Sales Dashboard"}
-          description={isSalesRep ? "Your pipeline, deals, and performance at a glance" : "Pipeline overview and sales performance metrics"}
-        />
-      </motion.div>
 
       <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
@@ -484,5 +482,6 @@ export default function SalesDashboardPage() {
         </Card>
       </motion.div>
     </motion.div>
+    </PageWrapper>
   );
 }

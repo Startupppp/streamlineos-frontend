@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { fadeUp } from "@/lib/motion-variants";
 import { useLeadStats } from "@/lib/api/hooks/leads";
 import { useDeals } from "@/lib/api/hooks/crm";
 import { useContacts, useCrmOrganizations } from "@/lib/api/hooks/crm";
@@ -94,7 +94,7 @@ export default function CrmHubPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         <Skeleton className="h-10 w-48" />
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
@@ -107,81 +107,74 @@ export default function CrmHubPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp}>
-        <PageHeader title="CRM" description="Customer Relationship Management hub" />
-      </motion.div>
-
-      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {quickStats.map((stat, i) => (
-          <Card key={stat.label} className="shadow-sm" style={{ animation: `fade-up 0.4s ease-out ${i * 0.1}s both` }}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <stat.icon className={cn("h-5 w-5", stat.color)} />
-                <span className="text-2xl font-bold tabular-nums">{stat.value}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
-      {leadStats && (
-        <motion.div variants={fadeUp}>
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-6 flex-wrap text-sm">
-                <div>
-                  <span className="text-muted-foreground">Conversion Rate</span>
-                  <span className="ml-2 font-semibold text-emerald-400">{leadStats.conversionRate}%</span>
+    <PageWrapper title="CRM" subtitle="Customer Relationship Management hub">
+      <div className="space-y-6">
+        <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          {quickStats.map((stat, i) => (
+            <Card key={stat.label} className="shadow-sm" style={{ animation: `fade-up 0.4s ease-out ${i * 0.1}s both` }}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <stat.icon className={cn("h-5 w-5", stat.color)} />
+                  <span className="text-2xl font-bold tabular-nums">{stat.value}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Pipeline Value</span>
-                  <span className="ml-2 font-semibold text-[#bd882c]">{formatINR(leadStats.totalPotentialValue)}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">New This Month</span>
-                  <span className="ml-2 font-semibold">{leadStats.thisMonth}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Unassigned</span>
-                  <span className="ml-2 font-semibold text-rose-400">{leadStats.unassigned}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {NAV_CARDS.map(card => (
-          <Link key={card.href} href={card.href}>
-            <Card className="h-full shadow-sm hover:shadow-md transition-all hover:border-[#bd882c]/40 cursor-pointer group">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", card.bg)}>
-                    <card.icon className={cn("h-5 w-5", card.color)} />
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      {card.title}
-                      <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-[#bd882c]" />
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{card.description}</CardDescription>
+                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
               </CardContent>
             </Card>
-          </Link>
-        ))}
-      </motion.div>
-    </motion.div>
+          ))}
+        </motion.div>
+
+        {leadStats && (
+          <motion.div variants={fadeUp}>
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-6 flex-wrap text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Conversion Rate</span>
+                    <span className="ml-2 font-semibold text-emerald-400">{leadStats.conversionRate}%</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Pipeline Value</span>
+                    <span className="ml-2 font-semibold text-gold">{formatINR(leadStats.totalPotentialValue)}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">New This Month</span>
+                    <span className="ml-2 font-semibold">{leadStats.thisMonth}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Unassigned</span>
+                    <span className="ml-2 font-semibold text-rose-400">{leadStats.unassigned}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {NAV_CARDS.map(card => (
+            <Link key={card.href} href={card.href}>
+              <Card className="h-full shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", card.bg)}>
+                      <card.icon className={cn("h-5 w-5", card.color)} />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        {card.title}
+                        <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-gold" />
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>{card.description}</CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </motion.div>
+      </div>
+    </PageWrapper>
   );
 }

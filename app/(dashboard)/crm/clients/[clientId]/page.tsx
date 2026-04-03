@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Phone, Mail, MessageSquare, IndianRupee, CalendarDays,
   ClipboardList, FileCheck, Search, CheckCircle2,
@@ -128,29 +128,29 @@ export default function ClientAccountDetailPage() {
   const currentStep = STATUS_CONFIG[account.status]?.step ?? 0;
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <PageHeader
-        title={account.clientName}
-        description={`Client Account #${account.id}`}
-      />
-
+    <PageWrapper
+      title={account.clientName}
+      subtitle={`Client Account #${account.id}`}
+      actions={
+        account.status !== "INVESTED" ? (
+          <Select onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-[180px] h-8 text-xs">
+              <SelectValue placeholder="Change stage..." />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUSES.filter(s => s !== account.status).map(s => (
+                <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : undefined
+      }
+    >
       {/* Status Pipeline Tracker */}
-      <Card>
+      <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Account Pipeline</h3>
-            {account.status !== "INVESTED" && (
-              <Select onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-[180px] h-8 text-xs">
-                  <SelectValue placeholder="Change stage..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.filter(s => s !== account.status).map(s => (
-                    <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
           </div>
           <div className="flex items-center gap-2">
             {STATUSES.map((status, idx) => {
@@ -277,7 +277,7 @@ export default function ClientAccountDetailPage() {
       </div>
 
       {/* Activity Timeline */}
-      <Card>
+      <Card className="mt-6">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Activity Timeline</CardTitle>
@@ -395,6 +395,6 @@ export default function ClientAccountDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageWrapper>
   );
 }

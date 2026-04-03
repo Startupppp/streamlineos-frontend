@@ -4,11 +4,11 @@ import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
 import { LeadTableView } from "@/components/crm/lead-table-view";
 import { LeadExportDialog } from "@/components/crm/lead-export-dialog";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { fadeUp } from "@/lib/motion-variants";
 import {
   useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,
   useLeads, useSalesTeamCapacity, useUpdateLead, useAssignLead,
@@ -179,12 +179,11 @@ export default function LeadsPipelinePage() {
   }
 
   return (
-    <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader
-          title="Lead Pipeline"
-          description="Track and manage your sales leads through the conversion funnel"
-        />
+    <PageWrapper
+      title="Lead Pipeline"
+      subtitle="Track and manage leads through the conversion funnel"
+      badge={view === "table" && tableData ? String(tableData.totalCount) : undefined}
+      actions={
         <div className="flex items-center gap-2">
           <LeadExportDialog />
           <CsvUploadDialog onSuccess={() => refetchBoard()} />
@@ -195,15 +194,8 @@ export default function LeadsPipelinePage() {
             isPending={createLead.isPending}
           />
         </div>
-      </motion.div>
-
-      {stats && (
-        <motion.div variants={fadeUp}>
-          <LeadsStatsBar stats={stats} />
-        </motion.div>
-      )}
-
-      <motion.div variants={fadeUp}>
+      }
+      filters={
         <LeadsToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -217,61 +209,69 @@ export default function LeadsPipelinePage() {
           onSourceFilterChange={(v) => { setSourceFilter(v); setTablePage(1); }}
           onClearFilters={() => { setStatusFilter(undefined); setPriorityFilter(undefined); setSourceFilter(undefined); setTablePage(1); }}
         />
-      </motion.div>
+      }
+    >
+      <div className="space-y-6">
+        {stats && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <LeadsStatsBar stats={stats} />
+          </motion.div>
+        )}
 
-      {/* Table View */}
-      {view === "table" && (
-        <motion.div variants={fadeUp}>
-          <LeadTableView
-            leads={tableData?.leads || []}
-            totalCount={tableData?.totalCount || 0}
-            page={tableData?.page || 1}
-            totalPages={tableData?.totalPages || 1}
-            pageSize={pageSize}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            onPageChange={setTablePage}
-            onPageSizeChange={(size) => { setPageSize(size); setTablePage(1); }}
-            onStatusChange={(id, status, extra) => {
-              if (status === "CONVERTED" && extra) {
-                updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
-                updateStatus.mutate({ leadId: id, status: "CONVERTED" as const });
-              } else if (status === "LOST" && extra) {
-                updateStatus.mutate({ leadId: id, status: "LOST" as const, lostReason: extra.lostReason });
-              } else {
-                updateStatus.mutate({ leadId: id, status: status as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" });
-              }
-            }}
-            onPriorityChange={(id, priority) => updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" })}
-            onAssign={(id, userId) => assignLeadMutation.mutate({ leadId: id, assignedToId: userId }, { onSuccess: () => { refetchBoard(); toast.success("Lead assigned"); }, onError: (err) => toast.error(err.message) })}
-            onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.updated} leads updated`); }, onError: (err) => toast.error(err.message) })}
-            onBulkDelete={(ids) => bulkDeleteMutation.mutate({ leadIds: ids }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.deleted} leads deleted`); }, onError: (err) => toast.error(err.message) })}
-            teamMembers={teamMembers}
-            isLoading={tableLoading}
-            isAdmin={isAdmin}
-          />
-        </motion.div>
-      )}
+        {/* Table View */}
+        {view === "table" && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <LeadTableView
+              leads={tableData?.leads || []}
+              totalCount={tableData?.totalCount || 0}
+              page={tableData?.page || 1}
+              totalPages={tableData?.totalPages || 1}
+              pageSize={pageSize}
+              sortColumn={sortColumn}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+              onPageChange={setTablePage}
+              onPageSizeChange={(size) => { setPageSize(size); setTablePage(1); }}
+              onStatusChange={(id, status, extra) => {
+                if (status === "CONVERTED" && extra) {
+                  updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
+                  updateStatus.mutate({ leadId: id, status: "CONVERTED" as const });
+                } else if (status === "LOST" && extra) {
+                  updateStatus.mutate({ leadId: id, status: "LOST" as const, lostReason: extra.lostReason });
+                } else {
+                  updateStatus.mutate({ leadId: id, status: status as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" });
+                }
+              }}
+              onPriorityChange={(id, priority) => updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" })}
+              onAssign={(id, userId) => assignLeadMutation.mutate({ leadId: id, assignedToId: userId }, { onSuccess: () => { refetchBoard(); toast.success("Lead assigned"); }, onError: (err) => toast.error(err.message) })}
+              onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.updated} leads updated`); }, onError: (err) => toast.error(err.message) })}
+              onBulkDelete={(ids) => bulkDeleteMutation.mutate({ leadIds: ids }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.deleted} leads deleted`); }, onError: (err) => toast.error(err.message) })}
+              teamMembers={teamMembers}
+              isLoading={tableLoading}
+              isAdmin={isAdmin}
+            />
+          </motion.div>
+        )}
 
-      {/* Kanban View */}
-      {view === "kanban" && (
-        <motion.div variants={fadeUp}>
-          <LeadsKanban
-            filteredBoard={filteredBoard as Record<string, BoardLead[]> | null}
-            onDragEnd={handleDragEnd}
-            onOpenLead={setSelectedLeadId}
-            onMoveStatus={handleMoveStatus}
-          />
-        </motion.div>
-      )}
+        {/* Kanban View */}
+        {view === "kanban" && (
+          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+            <LeadsKanban
+              filteredBoard={filteredBoard as Record<string, BoardLead[]> | null}
+              onDragEnd={handleDragEnd}
+              onOpenLead={setSelectedLeadId}
+              onMoveStatus={handleMoveStatus}
+            />
+          </motion.div>
+        )}
 
-      <LeadDetailSheet
-        leadId={selectedLeadId}
-        open={!!selectedLeadId}
-        onClose={() => setSelectedLeadId(null)}
-        onMoveStatus={handleMoveStatus}
-      />
-    </motion.div>
+        <LeadDetailSheet
+          leadId={selectedLeadId}
+          open={!!selectedLeadId}
+          onClose={() => setSelectedLeadId(null)}
+          onMoveStatus={handleMoveStatus}
+        />
+      </div>
+    </PageWrapper>
   );
 }

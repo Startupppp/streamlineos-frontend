@@ -46,7 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -228,19 +228,20 @@ export default function DevicesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <PageWrapper title="Device Management" subtitle="Track devices assigned to employees">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Device Management"
-        description="Track devices assigned to employees"
-        actions={
-          <div className="flex items-center gap-2">
+    <PageWrapper
+      title="Device Management"
+      subtitle="Track devices assigned to employees"
+      actions={
+        <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExport} disabled={!devices?.length}>
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -397,130 +398,130 @@ export default function DevicesPage() {
               </Form>
             </SheetContent>
           </Sheet>
-          </div>
-        }
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>All Devices ({devices?.length || 0})</CardTitle>
-        </CardHeader>
-        <CardContent aria-live="polite">
-          {devices && devices.length > 0 ? (
-            <Table>
-              <caption className="sr-only">Company devices assigned to employees</caption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead scope="col">Device</TableHead>
-                  <TableHead scope="col">Assigned To</TableHead>
-                  <TableHead scope="col">Serial Number</TableHead>
-                  <TableHead scope="col">Assigned Date</TableHead>
-                  <TableHead scope="col">Status</TableHead>
-                  <TableHead scope="col" className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {devices.map((device) => {
-                  const Icon = deviceIcons[device.deviceType] || Laptop;
-                  return (
-                    <TableRow key={device.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Icon className="h-5 w-5 text-primary" />
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>All Devices ({devices?.length || 0})</CardTitle>
+          </CardHeader>
+          <CardContent aria-live="polite">
+            {devices && devices.length > 0 ? (
+              <Table>
+                <caption className="sr-only">Company devices assigned to employees</caption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Device</TableHead>
+                    <TableHead scope="col">Assigned To</TableHead>
+                    <TableHead scope="col">Serial Number</TableHead>
+                    <TableHead scope="col">Assigned Date</TableHead>
+                    <TableHead scope="col">Status</TableHead>
+                    <TableHead scope="col" className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {devices.map((device) => {
+                    const Icon = deviceIcons[device.deviceType] || Laptop;
+                    return (
+                      <TableRow key={device.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Icon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{device.deviceName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {device.brand} {device.model}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">{device.deviceName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {device.brand} {device.model}
-                            </p>
+                        </TableCell>
+                        <TableCell>
+                          {device.user ? (
+                            <span>{device.user.firstName} {device.user.lastName}</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm">{device.serialNumber || "-"}</span>
+                        </TableCell>
+                        <TableCell>
+                          {device.assignedDate ? format(new Date(device.assignedDate), "MMM d, yyyy") : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={device.status || "ACTIVE"}
+                            onValueChange={(val) => handleStatusChange(device.id, val)}
+                          >
+                            <SelectTrigger className="w-[120px]" aria-label={`Change status for ${device.deviceName}`}>
+                              <Badge variant="outline" className={getColorSafe(deviceStatusColors, device.status ?? "ACTIVE")}>
+                                {device.status || "ACTIVE"}
+                              </Badge>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ACTIVE">Active</SelectItem>
+                              <SelectItem value="INACTIVE">Inactive</SelectItem>
+                              <SelectItem value="LOST">Lost</SelectItem>
+                              <SelectItem value="RETURNED">Returned</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setViewDevice(device.id)}
+                              aria-label={`View ${device.deviceName}`}
+                            >
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit({
+                                id: device.id,
+                                userId: device.userId,
+                                deviceType: device.deviceType,
+                                deviceName: device.deviceName,
+                                serialNumber: device.serialNumber,
+                                brand: device.brand,
+                                model: device.model,
+                                notes: device.notes,
+                              })}
+                              aria-label={`Edit ${device.deviceName}`}
+                            >
+                              <Pencil className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setDeleteDeviceId(device.id)}
+                              aria-label={`Remove ${device.deviceName}`}
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                            </Button>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {device.user ? (
-                          <span>{device.user.firstName} {device.user.lastName}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{device.serialNumber || "-"}</span>
-                      </TableCell>
-                      <TableCell>
-                        {device.assignedDate ? format(new Date(device.assignedDate), "MMM d, yyyy") : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={device.status || "ACTIVE"}
-                          onValueChange={(val) => handleStatusChange(device.id, val)}
-                        >
-                          <SelectTrigger className="w-[120px]" aria-label={`Change status for ${device.deviceName}`}>
-                            <Badge variant="outline" className={getColorSafe(deviceStatusColors, device.status ?? "ACTIVE")}>
-                              {device.status || "ACTIVE"}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="ACTIVE">Active</SelectItem>
-                            <SelectItem value="INACTIVE">Inactive</SelectItem>
-                            <SelectItem value="LOST">Lost</SelectItem>
-                            <SelectItem value="RETURNED">Returned</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setViewDevice(device.id)}
-                            aria-label={`View ${device.deviceName}`}
-                          >
-                            <Eye className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit({
-                              id: device.id,
-                              userId: device.userId,
-                              deviceType: device.deviceType,
-                              deviceName: device.deviceName,
-                              serialNumber: device.serialNumber,
-                              brand: device.brand,
-                              model: device.model,
-                              notes: device.notes,
-                            })}
-                            aria-label={`Edit ${device.deviceName}`}
-                          >
-                            <Pencil className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setDeleteDeviceId(device.id)}
-                            aria-label={`Remove ${device.deviceName}`}
-                          >
-                            <Trash2 className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <EmptyDevicesIllustration className="mb-3 mx-auto" />
-              <p>No devices assigned yet</p>
-              <p className="text-sm">Click &quot;Add Device&quot; to assign devices to employees</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <EmptyDevicesIllustration className="mb-3 mx-auto" />
+                <p>No devices assigned yet</p>
+                <p className="text-sm">Click &quot;Add Device&quot; to assign devices to employees</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* View Device Sheet */}
       <Sheet open={viewDevice !== null} onOpenChange={(o) => { if (!o) setViewDevice(null); }}>
@@ -546,8 +547,8 @@ export default function DevicesPage() {
             return (
               <div className="space-y-4">
                 <div className="flex items-center gap-3 pb-4 border-b">
-                  <div className="h-12 w-12 rounded-lg bg-[#bd882c]/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-[#bd882c]" />
+                  <div className="h-12 w-12 rounded-lg bg-gold/10 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-gold" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">{d.deviceName}</p>
@@ -712,6 +713,6 @@ export default function DevicesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageWrapper>
   );
 }

@@ -25,6 +25,7 @@ import { EmptyMailIllustration } from "@/components/illustrations";
 import { Search, UserPlus, Shield } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 const ALL_ROLES = [
   { value: "CEO", label: "CEO" },
@@ -102,18 +103,18 @@ export default function MembersSettingsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Members</h2>
-          <p className="text-sm text-muted-foreground">Manage organization members, roles, and invitations</p>
-        </div>
-        <Button onClick={() => setShowInviteForm(!showInviteForm)} className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+    <PageWrapper
+      title="Members"
+      subtitle="Manage organization members, roles, and invitations"
+      badge={membersData ? String(membersData.pagination.total) : undefined}
+      actions={
+        <Button onClick={() => setShowInviteForm(!showInviteForm)} className="bg-gold hover:bg-gold/80 text-white">
           <UserPlus className="h-4 w-4 mr-2" />
           {showInviteForm ? "Cancel" : "Invite Member"}
         </Button>
-      </div>
-
+      }
+    >
+      <div className="space-y-6">
       {showInviteForm && (
         <Card>
           <CardHeader className="pb-4">
@@ -152,7 +153,7 @@ export default function MembersSettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-[#bd882c]" />
+                <Shield className="h-4 w-4 text-gold" />
                 Organization Members
                 {membersData && <Badge variant="secondary" className="ml-2 text-xs">{membersData.pagination.total}</Badge>}
               </CardTitle>
@@ -202,7 +203,7 @@ export default function MembersSettingsPage() {
                         <div className="flex items-center gap-2.5">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={resolveImageUrl(member.image)} />
-                            <AvatarFallback className="text-xs bg-[#bd882c]/10 text-[#bd882c]">
+                            <AvatarFallback className="text-xs bg-gold/10 text-gold">
                               {member.name?.charAt(0) || "?"}
                             </AvatarFallback>
                           </Avatar>
@@ -284,6 +285,7 @@ export default function MembersSettingsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

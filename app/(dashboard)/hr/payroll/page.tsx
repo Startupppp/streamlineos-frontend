@@ -22,7 +22,7 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subMonths } from "date-fns";
 import { toast } from "sonner";
@@ -232,7 +232,7 @@ export default function PayrollPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 px-4 sm:px-6 py-5">
         <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
             <Skeleton className="h-8 w-44" />
@@ -289,86 +289,86 @@ export default function PayrollPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Payroll Management"
-        description="Generate and manage employee payrolls"
-        actions={
-          <div className="flex gap-2">
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <PageWrapper
+      title="Payroll Management"
+      subtitle="Generate and manage employee payrolls"
+      actions={
+        <div className="flex gap-2">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((month) => (
+                <SelectItem key={month.value} value={month.value}>
+                  {month.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <GeneratePayrollSheet
-              open={generateSheetOpen}
-              onOpenChange={(open) => {
-                if (!open) resetSheet();
-                else setGenerateSheetOpen(true);
-              }}
-              employees={employees}
-              selectedEmployee={selectedEmployee}
-              onSelectedEmployeeChange={setSelectedEmployee}
-              showPreview={showPreview}
-              onShowPreview={handleShowPreview}
-              onBackToEdit={() => setShowPreview(false)}
-              lopDays={lopDays}
-              onLopDaysChange={setLopDays}
-              halfDays={halfDays}
-              onHalfDaysChange={setHalfDays}
-              bonus={bonus}
-              onBonusChange={setBonus}
-              otherDeductions={otherDeductions}
-              onOtherDeductionsChange={setOtherDeductions}
-              overtimeType={overtimeType}
-              onOvertimeTypeChange={setOvertimeType}
-              overtimeDays={overtimeDays}
-              onOvertimeDaysChange={setOvertimeDays}
-              overtimeHours={overtimeHours}
-              onOvertimeHoursChange={setOvertimeHours}
-              overtimeAmount={overtimeAmount}
-              onOvertimeAmountChange={setOvertimeAmount}
-              payslipPreview={payslipPreview}
-              selectedEmployeeData={selectedEmployeeData}
-              selectedMonth={selectedMonth}
-              onConfirmGenerate={handleGenerateForEmployee}
-              isGenerating={generateEmployeePayslipMutation.isPending}
-            />
+          <GeneratePayrollSheet
+            open={generateSheetOpen}
+            onOpenChange={(open) => {
+              if (!open) resetSheet();
+              else setGenerateSheetOpen(true);
+            }}
+            employees={employees}
+            selectedEmployee={selectedEmployee}
+            onSelectedEmployeeChange={setSelectedEmployee}
+            showPreview={showPreview}
+            onShowPreview={handleShowPreview}
+            onBackToEdit={() => setShowPreview(false)}
+            lopDays={lopDays}
+            onLopDaysChange={setLopDays}
+            halfDays={halfDays}
+            onHalfDaysChange={setHalfDays}
+            bonus={bonus}
+            onBonusChange={setBonus}
+            otherDeductions={otherDeductions}
+            onOtherDeductionsChange={setOtherDeductions}
+            overtimeType={overtimeType}
+            onOvertimeTypeChange={setOvertimeType}
+            overtimeDays={overtimeDays}
+            onOvertimeDaysChange={setOvertimeDays}
+            overtimeHours={overtimeHours}
+            onOvertimeHoursChange={setOvertimeHours}
+            overtimeAmount={overtimeAmount}
+            onOvertimeAmountChange={setOvertimeAmount}
+            payslipPreview={payslipPreview}
+            selectedEmployeeData={selectedEmployeeData}
+            selectedMonth={selectedMonth}
+            onConfirmGenerate={handleGenerateForEmployee}
+            isGenerating={generateEmployeePayslipMutation.isPending}
+          />
 
-            <Button onClick={handleGenerateAll} disabled={generatePayrollMutation.isPending}>
-              {generatePayrollMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Users className="mr-2 h-4 w-4" />
-              )}
-              Generate All
-            </Button>
-          </div>
-        }
-      />
+          <Button onClick={handleGenerateAll} disabled={generatePayrollMutation.isPending}>
+            {generatePayrollMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Users className="mr-2 h-4 w-4" />
+            )}
+            Generate All
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        <PayrollSummaryCards
+          totalEmployees={allPayrolls?.length || 0}
+          totalGross={totalGross}
+          totalNet={totalNet}
+        />
 
-      <PayrollSummaryCards
-        totalEmployees={allPayrolls?.length || 0}
-        totalGross={totalGross}
-        totalNet={totalNet}
-      />
-
-      <PayrollTable
-        payrolls={allPayrolls ?? []}
-        selectedMonth={selectedMonth}
-        onApprove={handleApprovePayroll}
-        onMarkPaid={handleMarkPaid}
-        isApprovePending={approvePayrollMutation.isPending}
-        isMarkPaidPending={markPaidMutation.isPending}
-      />
-    </div>
+        <PayrollTable
+          payrolls={allPayrolls ?? []}
+          selectedMonth={selectedMonth}
+          onApprove={handleApprovePayroll}
+          onMarkPaid={handleMarkPaid}
+          isApprovePending={approvePayrollMutation.isPending}
+          isMarkPaidPending={markPaidMutation.isPending}
+        />
+      </div>
+    </PageWrapper>
   );
 }

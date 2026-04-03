@@ -9,6 +9,7 @@ import { useHrPendingWfhRequests } from "@/lib/api/hooks/hr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { Users } from "lucide-react";
@@ -62,119 +63,116 @@ export function LeavesWfhContent({
     incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
 
   return (
-    <motion.div
-      className="space-y-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
+    <PageWrapper
+      title="Leaves & Time Off"
+      subtitle="Manage your leave requests, work from home, and approvals."
     >
-      {/* ─── Page Header ─── */}
-      <motion.div variants={fadeUp}>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Leaves & Time Off</h1>
-          <p className="text-sm text-muted-foreground">Manage your leave requests, work from home, and approvals.</p>
-        </div>
-      </motion.div>
-
-      {/* ─── Who's Out Banner ─── */}
-      {approvedLeavesThisWeek.length > 0 && (
-        <motion.div variants={fadeUp}>
-          <Card className="border-border bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/30">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                <Users className="h-4 w-4" aria-hidden="true" />
-                Who&apos;s Out This Week
-                <Badge variant="secondary" className="ml-1 text-xs">
-                  {approvedLeavesThisWeek.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex flex-wrap gap-3" role="list" aria-label="Team members on leave this week">
-                {approvedLeavesThisWeek.map((leave) => (
-                  <div
-                    key={leave.id}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-card border border-amber-200/50 dark:border-amber-800/20"
-                    role="listitem"
-                  >
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={resolveImageUrl(leave.user?.image)} />
-                      <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700">
-                        {leave.user?.firstName?.[0]}
-                        {leave.user?.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">
-                        {leave.user?.firstName} {leave.user?.lastName}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {format(new Date(leave.startDate), "MMM dd")} –{" "}
-                        {format(new Date(leave.endDate), "MMM dd")}
-                        {leave.leaveType && (
-                          <span className="ml-1 text-amber-600 dark:text-amber-400">
-                            · {leave.leaveType.name}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* ─── Tabs ─── */}
-      <motion.div variants={fadeUp}>
-        <Tabs defaultValue="my-leaves" className="space-y-5">
-          <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
-            <TabsTrigger value="my-leaves" className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
-              My Leaves
-            </TabsTrigger>
-            <TabsTrigger value="wfh" className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
-              Work From Home
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="approvals" className="relative data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
-                Approvals
-                {totalPendingApprovals > 0 && (
-                  <Badge className="ml-2 h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-bold border-0">
-                    {totalPendingApprovals}
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* ─── Who's Out Banner ─── */}
+        {approvedLeavesThisWeek.length > 0 && (
+          <motion.div variants={fadeUp}>
+            <Card className="border-border bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/30">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  Who&apos;s Out This Week
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {approvedLeavesThisWeek.length}
                   </Badge>
-                )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-wrap gap-3" role="list" aria-label="Team members on leave this week">
+                  {approvedLeavesThisWeek.map((leave) => (
+                    <div
+                      key={leave.id}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-card border border-amber-200/50 dark:border-amber-800/20"
+                      role="listitem"
+                    >
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={resolveImageUrl(leave.user?.image)} />
+                        <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700">
+                          {leave.user?.firstName?.[0]}
+                          {leave.user?.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">
+                          {leave.user?.firstName} {leave.user?.lastName}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {format(new Date(leave.startDate), "MMM dd")} –{" "}
+                          {format(new Date(leave.endDate), "MMM dd")}
+                          {leave.leaveType && (
+                            <span className="ml-1 text-amber-600 dark:text-amber-400">
+                              · {leave.leaveType.name}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* ─── Tabs ─── */}
+        <motion.div variants={fadeUp}>
+          <Tabs defaultValue="my-leaves" className="space-y-5">
+            <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
+              <TabsTrigger value="my-leaves" className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
+                My Leaves
               </TabsTrigger>
-            )}
-          </TabsList>
+              <TabsTrigger value="wfh" className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
+                Work From Home
+              </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="approvals" className="relative data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-4 py-2 text-sm font-medium transition-all">
+                  Approvals
+                  {totalPendingApprovals > 0 && (
+                    <Badge className="ml-2 h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-bold border-0">
+                      {totalPendingApprovals}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              )}
+            </TabsList>
 
-          {/* ─── My Leaves Tab ─── */}
-          <TabsContent value="my-leaves" className="space-y-4">
-            <LeavesTabContent
-              balances={balances}
-              leaveTypes={leaveTypes}
-              approvers={approvers}
-              myLeaveRequests={myLeaveRequests}
-              joiningDate={joiningDate}
-            />
-          </TabsContent>
-
-          {/* ─── WFH Tab ─── */}
-          <TabsContent value="wfh" className="space-y-4">
-            <WfhTabContent approvers={approvers} />
-          </TabsContent>
-
-          {/* ─── Approvals Tab ─── */}
-          {isAdmin && (
-            <TabsContent value="approvals">
-              <LeaveApprovalsContent
-                incomingLeaveRequests={incomingLeaveRequests}
-                allIncomingLeaveRequests={allIncomingLeaveRequests}
+            {/* ─── My Leaves Tab ─── */}
+            <TabsContent value="my-leaves" className="space-y-4">
+              <LeavesTabContent
+                balances={balances}
+                leaveTypes={leaveTypes}
+                approvers={approvers}
+                myLeaveRequests={myLeaveRequests}
+                joiningDate={joiningDate}
               />
             </TabsContent>
-          )}
-        </Tabs>
+
+            {/* ─── WFH Tab ─── */}
+            <TabsContent value="wfh" className="space-y-4">
+              <WfhTabContent approvers={approvers} />
+            </TabsContent>
+
+            {/* ─── Approvals Tab ─── */}
+            {isAdmin && (
+              <TabsContent value="approvals">
+                <LeaveApprovalsContent
+                  incomingLeaveRequests={incomingLeaveRequests}
+                  allIncomingLeaveRequests={allIncomingLeaveRequests}
+                />
+              </TabsContent>
+            )}
+          </Tabs>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </PageWrapper>
   );
 }

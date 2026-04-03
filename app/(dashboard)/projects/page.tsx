@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useProjects } from "@/lib/api/hooks/projects";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { NewProjectDialog } from "./new-project-dialog";
 import { ProjectCard } from "./project-card";
 import { ProjectListRow } from "./project-list-row";
@@ -55,31 +55,22 @@ export default function ProjectsPage() {
       }
     : undefined;
 
-  const description = useMemo(() => {
-    if (!pagination) return "";
-    const total = pagination.total;
-    return `${total} project${total !== 1 ? "s" : ""} found`;
-  }, [pagination]);
-
   return (
-    <div className="space-y-6">
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-6 px-6 pt-0 space-y-6 border-b border-border/40">
-        <PageHeader
-          title="Projects"
-          description={description}
-          actions={<NewProjectDialog />}
-        />
-
+    <PageWrapper
+      title="Projects"
+      badge={pagination?.total ? String(pagination.total) : undefined}
+      actions={<NewProjectDialog />}
+      filters={
         <ProjectFilterBar
-        search={search}
-        onSearchChange={handleSearchChange}
-        status={status}
-        onStatusChange={handleStatusChange}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
-      </div>
-
+          search={search}
+          onSearchChange={handleSearchChange}
+          status={status}
+          onStatusChange={handleStatusChange}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+      }
+    >
       {/* SR live region for result count */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {isLoading ? "Loading projects..." : `${pagination?.total ?? 0} projects found`}
@@ -149,7 +140,7 @@ export default function ProjectsPage() {
         open={launchDialogOpen}
         onOpenChange={setLaunchDialogOpen}
       />
-    </div>
+    </PageWrapper>
   );
 }
 

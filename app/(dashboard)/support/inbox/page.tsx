@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyInboxIllustration, EmptyTicketIllustration } from "@/components/illustrations";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { SupportTicketStatus, SupportTicketPriority } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -99,49 +100,53 @@ function InboxContent() {
 
   const tickets = ticketsData?.items ?? [];
 
+  const subtitleParts: string[] = [];
+  if (!statsLoading) {
+    subtitleParts.push(`${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets`);
+  }
+
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <div className="px-4 md:px-6 py-4 border-b border-border/40 shrink-0 sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-xl font-bold">Support Inbox</h2>
-            <p className="text-xs text-muted-foreground">
-              {statsLoading ? "Loading..." : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets`}
-              {(stats?.sla_breached ?? 0) > 0 && (
-                <span className="text-red-500 font-medium ml-2">{stats?.sla_breached} SLA breached</span>
-              )}
-            </p>
-          </div>
-          <Button onClick={() => setCreateOpen(true)} size="sm" className="gap-1.5 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+    <>
+      <PageWrapper
+        title="Support Inbox"
+        subtitle={
+          statsLoading
+            ? "Loading..."
+            : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` : ""}`
+        }
+        actions={
+          <Button onClick={() => setCreateOpen(true)} size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
             <Plus className="h-3.5 w-3.5" /> New Ticket
           </Button>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="OPEN">Open</SelectItem>
-              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-              <SelectItem value="WAITING">Waiting</SelectItem>
-              <SelectItem value="RESOLVED">Resolved</SelectItem>
-              <SelectItem value="CLOSED">Closed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="LOW">Low</SelectItem>
-              <SelectItem value="MEDIUM">Medium</SelectItem>
-              <SelectItem value="HIGH">High</SelectItem>
-              <SelectItem value="URGENT">Urgent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
+        }
+        filters={
+          <>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="OPEN">Open</SelectItem>
+                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                <SelectItem value="WAITING">Waiting</SelectItem>
+                <SelectItem value="RESOLVED">Resolved</SelectItem>
+                <SelectItem value="CLOSED">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+                <SelectItem value="URGENT">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        }
+        noInternalScroll
+        contentClassName="flex overflow-hidden !py-0 !px-0"
+      >
         <div className={cn("w-full md:w-[360px] border-r border-border/40 flex flex-col overflow-hidden", selectedTicketId && "hidden md:flex")}>
           <ScrollArea className="flex-1">
             {isLoading ? (
@@ -165,7 +170,7 @@ function InboxContent() {
                       onClick={() => setSelectedTicketId(ticket.id)}
                       className={cn(
                         "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
-                        selectedTicketId === ticket.id && "bg-muted/50 border-l-2 border-[#bd882c]"
+                        selectedTicketId === ticket.id && "bg-muted/50 border-l-2 border-gold"
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -212,10 +217,10 @@ function InboxContent() {
             </div>
           )}
         </div>
-      </div>
+      </PageWrapper>
 
       <CreateTicketDialog open={createOpen} onOpenChange={setCreateOpen} />
-    </div>
+    </>
   );
 }
 
@@ -341,7 +346,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             onClick={handleReply}
             disabled={!replyText.trim() || addMessage.isPending}
             size="icon"
-            className="h-[60px] w-10 shrink-0 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white"
+            className="h-[60px] w-10 shrink-0 bg-gold hover:bg-gold/80 text-white"
             aria-label="Send reply"
           >
             {addMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -400,7 +405,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-gold hover:bg-gold/80 text-white">
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket
             </Button>

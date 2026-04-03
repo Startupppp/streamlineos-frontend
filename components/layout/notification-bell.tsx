@@ -118,7 +118,7 @@ export function NotificationBell() {
                     </div>
                     <div className="flex flex-col items-center gap-1 shrink-0 ml-1">
                       {!n.isRead && (
-                        <div className="h-2 w-2 rounded-full bg-[#bd882c]" />
+                        <div className="h-2 w-2 rounded-full bg-gold" />
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); deleteOne.mutate(n.id); }}

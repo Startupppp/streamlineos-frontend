@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useOrgSettings, useUpdateOrgSettings } from "@/lib/api/hooks/organization";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 
 export default function OrganizationSettingsPage() {
@@ -50,7 +51,7 @@ export default function OrganizationSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-48 mb-2" />
@@ -61,13 +62,13 @@ export default function OrganizationSettingsPage() {
             <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
-      </div>
+      </PageWrapper>
     );
   }
 
   if (!org) {
     return (
-      <div className="p-6">
+      <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -84,12 +85,12 @@ export default function OrganizationSettingsPage() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="p-6">
+    <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
       <Card>
         <CardHeader>
           <CardTitle>Organization Settings</CardTitle>
@@ -151,6 +152,6 @@ export default function OrganizationSettingsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageWrapper>
   );
 }

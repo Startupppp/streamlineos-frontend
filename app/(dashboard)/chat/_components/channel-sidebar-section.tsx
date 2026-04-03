@@ -30,7 +30,7 @@ export function ChannelSidebarSection({
         )}
         <span className="flex-1 text-left">{title}</span>
         {count > 0 && (
-          <span className="text-[10px] font-bold bg-[#bd882c] text-white rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
+          <span className="text-[10px] font-bold bg-gold text-white rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
             {count > 99 ? "99+" : count}
           </span>
         )}

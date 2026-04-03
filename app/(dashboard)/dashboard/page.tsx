@@ -37,13 +37,13 @@ import { Button } from "@/components/ui/button";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { QuickActions } from "./_components/quick-actions";
 import { SprintCard } from "./_components/sprint-card";
@@ -245,26 +245,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-5"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
+    <PageWrapper
+      title={`${greeting}, ${firstName}`}
+      subtitle={`${todayFormatted} · ${stats.orgName}`}
+      actions={<ClockInWidget />}
     >
-      <motion.div variants={fadeUp} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <PageHeader
-            title={`${greeting}, ${firstName}`}
-            description={`Overview for ${stats.orgName}`}
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            {todayFormatted}
-          </p>
-        </div>
-        <ClockInWidget />
-      </motion.div>
+      <div className="space-y-5">
 
-      <motion.div variants={fadeUp} className={`grid gap-4 grid-cols-1 ${statCards.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"}`}>
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${statCards.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"}`}>
         {statCards.map((stat, i) => (
           <StatCard
             key={stat.id}
@@ -277,17 +265,17 @@ export default function DashboardPage() {
         ))}
       </motion.div>
 
-      <motion.div variants={fadeUp}>
+      <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <QuickActions />
       </motion.div>
 
       {/* Public Documents — visible to all roles */}
-      <motion.div variants={fadeUp}>
+      <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <PublicDocumentsCard />
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}
-      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-1 lg:grid-cols-7 auto-rows-[24rem]">
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 auto-rows-[24rem]">
         <div className="lg:col-span-4 min-h-0">
           <MyIssuesCard
             tickets={sortedMyTickets}
@@ -300,7 +288,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <motion.div variants={fadeUp} className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} auto-rows-[24rem]`}>
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} auto-rows-[24rem]`}>
         <div className="sm:col-span-1 min-h-0">
           <RecentProjectsCard
             projects={recentProjects?.map((p) => ({ ...p, key: p.key ?? "" }))}
@@ -322,6 +310,8 @@ export default function DashboardPage() {
           </div>
         )}
       </motion.div>
-    </motion.div>
+
+      </div>
+    </PageWrapper>
   );
 }

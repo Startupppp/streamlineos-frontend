@@ -13,7 +13,7 @@ import {
 import { useAllTeamTimesheets, useProjects } from "@/lib/api/hooks/projects";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import type { TimeEntryWithUser } from "@/types/projects";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { TimeEntryDetailSheet } from "@/components/timesheets/time-entry-detail-sheet";
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
@@ -153,22 +153,20 @@ export default function TeamTimesheetsPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Daily Work Logs"
-        description="Monitor team efficiency and task allocation for HR performance reviews."
-        actions={
-          <LogTimeDialog
-            trigger={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Log
-              </Button>
-            }
-          />
-        }
-      />
-
+    <PageWrapper
+      title="Daily Work Logs"
+      subtitle="Monitor team efficiency and task allocation for HR performance reviews."
+      actions={
+        <LogTimeDialog
+          trigger={
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Log
+            </Button>
+          }
+        />
+      }
+    >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
         <motion.div variants={fadeUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <WeeklyProductivityChart
@@ -222,6 +220,6 @@ export default function TeamTimesheetsPage() {
         open={detailSheetOpen}
         onOpenChange={setDetailSheetOpen}
       />
-    </div>
+    </PageWrapper>
   );
 }

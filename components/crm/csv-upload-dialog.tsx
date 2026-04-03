@@ -311,7 +311,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
-              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-[#bd882c]/50 transition-colors"
+              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-gold/50 transition-colors"
             >
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <p className="text-sm font-medium mb-1">Drop your file here</p>
@@ -345,14 +345,14 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         ) : isParsing ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="h-8 w-8 border-2 border-[#bd882c] border-t-transparent rounded-full animate-spin mb-3" />
+            <div className="h-8 w-8 border-2 border-gold border-t-transparent rounded-full animate-spin mb-3" />
             <p className="text-sm text-muted-foreground">Parsing {fileName}...</p>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-[#bd882c]" />
+                <FileText className="h-4 w-4 text-gold" />
                 <span className="text-sm font-medium">{fileName}</span>
                 <Badge variant="secondary">{parsed!.length} leads</Badge>
               </div>
@@ -447,7 +447,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                     type="checkbox"
                     checked={autoDistribute}
                     onChange={(e) => setAutoDistribute(e.target.checked)}
-                    className="h-4 w-4 rounded border-input accent-[#bd882c]"
+                    className="h-4 w-4 rounded border-input accent-gold"
                   />
                   <div>
                     <p className="text-sm font-medium leading-none">Auto-distribute to sales team</p>
@@ -456,7 +456,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 </label>
 
                 <Button
-                  className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  className="w-full bg-gold hover:bg-gold/80 text-white"
                   onClick={handleImport}
                   disabled={bulkImport.isPending || !parsed?.length}
                 >

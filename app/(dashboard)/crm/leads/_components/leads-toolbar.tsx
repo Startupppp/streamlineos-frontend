@@ -53,7 +53,7 @@ export function LeadsToolbar({
         <Button
           variant={view === "table" ? "default" : "ghost"}
           size="sm"
-          className={cn("rounded-r-none", view === "table" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+          className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/80 text-white")}
           onClick={() => onViewChange("table")}
         >
           <TableIcon className="h-4 w-4" />
@@ -61,7 +61,7 @@ export function LeadsToolbar({
         <Button
           variant={view === "kanban" ? "default" : "ghost"}
           size="sm"
-          className={cn("rounded-l-none", view === "kanban" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+          className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/80 text-white")}
           onClick={() => onViewChange("kanban")}
         >
           <LayoutGrid className="h-4 w-4" />

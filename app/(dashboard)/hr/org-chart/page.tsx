@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
@@ -53,7 +53,7 @@ function buildTree(employees: Employee[]): TreeNode[] {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  CEO: "bg-[#bd882c]/10 text-[#bd882c] border-[#bd882c]/30",
+  CEO: "bg-gold/10 text-gold border-gold/30",
   ADMIN: "bg-blue-500/10 text-blue-500 border-blue-500/30",
   HR: "bg-purple-500/10 text-purple-500 border-purple-500/30",
   MEMBER: "bg-gray-500/10 text-gray-500 border-gray-500/30",
@@ -72,7 +72,7 @@ function OrgNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
       >
         <Card className={cn(
           "w-52 shadow-sm hover:shadow-md transition-shadow border-l-4",
-          depth === 0 ? "ring-2 ring-[#bd882c]/30 border-l-[#bd882c]" :
+          depth === 0 ? "ring-2 ring-gold/30 border-l-gold" :
           depth === 1 ? "border-l-blue-500" :
           depth === 2 ? "border-l-purple-500" :
           "border-l-gray-400"
@@ -157,89 +157,89 @@ export default function OrgChartPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-48" />
-        <div className="flex justify-center">
-          <Skeleton className="h-96 w-full max-w-4xl" />
+      <PageWrapper title="Organization Chart" subtitle="Loading...">
+        <div className="space-y-6">
+          <Skeleton className="h-10 w-48" />
+          <div className="flex justify-center">
+            <Skeleton className="h-96 w-full max-w-4xl" />
+          </div>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <motion.div
-      className="space-y-8"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
+    <PageWrapper
+      title="Organization Chart"
+      subtitle={`${employees.length} team members across ${deptGroups.length} departments`}
     >
-      <motion.div variants={fadeUp}>
-        <PageHeader
-          title="Organization Chart"
-          description={`${employees.length} team members across ${deptGroups.length} departments`}
-        />
-      </motion.div>
-
-      {tree.length > 0 && (
-        <motion.div variants={fadeUp}>
-          <Card className="shadow-sm">
-            <CardContent className="p-6 overflow-x-auto">
-              <div className="flex justify-center min-w-max py-4">
-                <div className="flex flex-col items-center gap-0">
-                  {tree.map((root) => (
-                    <OrgNode key={root.employee.id} node={root} />
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      <motion.div variants={fadeUp}>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-[#bd882c]" />
-          By Department
-        </h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {deptGroups.map(([deptName, members]) => (
-            <Card key={deptName} className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold">{deptName}</h4>
-                  <Badge variant="secondary" className="text-xs">
-                    <Users className="h-3 w-3 mr-1" />
-                    {members.length}
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  {members.slice(0, 8).map(emp => (
-                    <div key={emp.id} className="flex items-center gap-2">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={resolveImageUrl(emp.image)} />
-                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                          {emp.name?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium line-clamp-1">{emp.name}</p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-1">
-                          {emp.designation || emp.role}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {members.length > 8 && (
-                    <p className="text-[10px] text-muted-foreground text-center pt-1">
-                      +{members.length - 8} more
-                    </p>
-                  )}
+      <motion.div
+        className="space-y-8"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {tree.length > 0 && (
+          <motion.div variants={fadeUp}>
+            <Card className="shadow-sm">
+              <CardContent className="p-6 overflow-x-auto">
+                <div className="flex justify-center min-w-max py-4">
+                  <div className="flex flex-col items-center gap-0">
+                    {tree.map((root) => (
+                      <OrgNode key={root.employee.id} node={root} />
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </motion.div>
+        )}
+
+        <motion.div variants={fadeUp}>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-gold" />
+            By Department
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {deptGroups.map(([deptName, members]) => (
+              <Card key={deptName} className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold">{deptName}</h4>
+                    <Badge variant="secondary" className="text-xs">
+                      <Users className="h-3 w-3 mr-1" />
+                      {members.length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {members.slice(0, 8).map(emp => (
+                      <div key={emp.id} className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={resolveImageUrl(emp.image)} />
+                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                            {emp.name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium line-clamp-1">{emp.name}</p>
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">
+                            {emp.designation || emp.role}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {members.length > 8 && (
+                      <p className="text-[10px] text-muted-foreground text-center pt-1">
+                        +{members.length - 8} more
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </PageWrapper>
   );
 }

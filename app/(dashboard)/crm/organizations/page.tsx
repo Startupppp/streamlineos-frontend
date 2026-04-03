@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -102,17 +102,13 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-between">
-        <PageHeader title="Organizations" description={`${data?.totalCount ?? 0} organizations`} />
+    <PageWrapper
+      title="Organizations"
+      subtitle={`${data?.totalCount ?? 0} organizations`}
+      actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+            <Button className="bg-gold hover:bg-gold/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Organization
             </Button>
@@ -182,16 +178,15 @@ export default function OrganizationsPage() {
                     )} />
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createOrgMutation.isPending}>
+                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createOrgMutation.isPending}>
                   {createOrgMutation.isPending ? "Creating..." : "Create Organization"}
                 </Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
+      }
+      filters={
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -201,17 +196,23 @@ export default function OrganizationsPage() {
             className="pl-9"
           />
         </div>
-      </motion.div>
-
+      }
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
       <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {data?.organizations.map(org => {
           const health = getHealthBadge(org.healthScore);
           return (
-            <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-[#bd882c]/40">
+            <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-[#bd882c]/10 flex items-center justify-center text-sm font-semibold text-[#bd882c] shrink-0">
+                    <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
                       {org.name[0]?.toUpperCase() ?? "?"}
                     </div>
                     <div className="min-w-0">
@@ -241,7 +242,7 @@ export default function OrganizationsPage() {
                   {org.website && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Building2 className="h-3 w-3 shrink-0" />
-                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-[#bd882c]">
+                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-gold">
                         {org.website}
                       </a>
                     </div>
@@ -276,6 +277,7 @@ export default function OrganizationsPage() {
           </Button>
         </motion.div>
       )}
-    </motion.div>
+      </motion.div>
+    </PageWrapper>
   );
 }

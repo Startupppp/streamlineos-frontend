@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { format, parseISO } from "date-fns";
 import { Download, FileText, Loader2, ArrowLeft } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
@@ -157,44 +157,41 @@ export default function MyPayslipsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.back()}
-          className="h-9 w-9"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        </Button>
-        <div className="flex-1">
-          <PageHeader
-            title="My Payslips"
-            description="View and download your salary slips"
-            actions={
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[200px]" aria-label="Select payslip month">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent className="z-50">
-                  {availableMonths.length > 0 ? (
-                    availableMonths.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                      No payslips available
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            }
-          />
+    <PageWrapper
+      title="My Payslips"
+      subtitle="View and download your salary slips"
+      actions={
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.back()}
+            className="h-9 w-9"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[200px]" aria-label="Select payslip month">
+              <SelectValue placeholder="Select month" />
+            </SelectTrigger>
+            <SelectContent className="z-50">
+              {availableMonths.length > 0 ? (
+                availableMonths.map((month) => (
+                  <SelectItem key={month.value} value={month.value}>
+                    {month.label}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  No payslips available
+                </div>
+              )}
+            </SelectContent>
+          </Select>
         </div>
-      </div>
+      }
+    >
 
       {!selectedMonth ? (
         <Card>
@@ -472,6 +469,6 @@ export default function MyPayslipsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageWrapper>
   );
 }

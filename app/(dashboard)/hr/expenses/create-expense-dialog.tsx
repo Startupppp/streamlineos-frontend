@@ -255,7 +255,7 @@ export function CreateExpenseDialog({
       <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-semibold flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-[#bd882c]" />
+            <Receipt className="h-5 w-5 text-gold" />
             {isEditMode ? "Edit Expense Claim" : "New Expense Claim"}
           </SheetTitle>
         </SheetHeader>
@@ -408,7 +408,7 @@ export function CreateExpenseDialog({
             <div className="space-y-2">
               <label className="text-sm font-medium">Receipt</label>
               {!receiptFile ? (
-                <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 cursor-pointer hover:border-[#bd882c]/50 hover:bg-[#bd882c]/5 transition-colors">
+                <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 cursor-pointer hover:border-gold/50 hover:bg-gold/5 transition-colors">
                   <Upload className="h-8 w-8 text-muted-foreground/50 mb-2" />
                   <span className="text-sm font-medium text-foreground/70">
                     Upload receipt
@@ -436,8 +436,8 @@ export function CreateExpenseDialog({
                       className="h-16 w-16 object-cover rounded"
                     />
                   ) : (
-                    <div className="h-16 w-16 flex items-center justify-center bg-[#bd882c]/10 rounded">
-                      <Receipt className="h-6 w-6 text-[#bd882c]" />
+                    <div className="h-16 w-16 flex items-center justify-center bg-gold/10 rounded">
+                      <Receipt className="h-6 w-6 text-gold" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -474,7 +474,7 @@ export function CreateExpenseDialog({
               <Button
                 type="submit"
                 disabled={isLoading || uploading}
-                className="bg-[#bd882c] hover:bg-[#a67724] text-white"
+                className="bg-gold hover:bg-gold/80 text-white"
               >
                 {isLoading || uploading ? (
                   <>

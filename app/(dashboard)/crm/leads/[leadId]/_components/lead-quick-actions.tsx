@@ -151,7 +151,7 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  className="bg-gold hover:bg-gold/80 text-white"
                   disabled={isNotePending}
                 >
                   {isNotePending ? "Saving..." : "Save Note"}
@@ -206,7 +206,7 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  className="bg-gold hover:bg-gold/80 text-white"
                   disabled={isTaskPending}
                 >
                   {isTaskPending ? "Creating..." : "Create Task"}
@@ -278,7 +278,7 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  className="bg-gold hover:bg-gold/80 text-white"
                   disabled={isEmailPending}
                 >
                   {isEmailPending ? "Sending..." : "Send Email"}
@@ -361,7 +361,7 @@ export function LeadQuickActions({
                 <Button
                   type="submit"
                   size="sm"
-                  className="bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  className="bg-gold hover:bg-gold/80 text-white"
                   disabled={isCallPending}
                 >
                   {isCallPending ? "Logging..." : "Log Call"}

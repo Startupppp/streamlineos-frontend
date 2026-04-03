@@ -59,7 +59,7 @@ export function AdminExpenseItem({
         <div
           className={cn(
             "relative w-[100px] h-[80px] rounded-lg bg-gradient-to-br from-rose-100 to-rose-200 dark:from-rose-900/20 dark:to-rose-800/20 flex items-center justify-center overflow-hidden border border-rose-200/50 dark:border-rose-800/30",
-            expense.receiptUrl && "cursor-pointer hover:ring-2 hover:ring-[#bd882c]/40 transition-all"
+            expense.receiptUrl && "cursor-pointer hover:ring-2 hover:ring-gold/40 transition-all"
           )}
           onClick={() => expense.receiptUrl && viewFile(expense.receiptUrl)}
         >
@@ -272,7 +272,7 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs text-[#bd882c] border-[#bd882c]/20 hover:bg-[#bd882c]/5"
+            className="h-7 text-xs text-gold border-gold/20 hover:bg-gold/5"
             onClick={() => onResubmit(expense)}
           >
             Resubmit
@@ -281,7 +281,7 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-[#bd882c] hover:text-[#a67724]"
+            className="h-8 w-8 text-gold hover:text-gold/80"
             onClick={() => onEdit(toEditPayload())}
             aria-label="Edit"
           >

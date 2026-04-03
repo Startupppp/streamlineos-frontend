@@ -1,57 +1,55 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/ui/page-header";
-import { User, Palette, Bell, Shield } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SettingsProfile } from "./_components/settings-profile";
-import { SettingsAppearance } from "./_components/settings-appearance";
-import { SettingsNotifications } from "./_components/settings-notifications";
 import { SettingsSecurity } from "./_components/settings-security";
+import { SettingsPreferences } from "./_components/settings-preferences";
+import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Settings"
-        description="Manage your account preferences and settings."
-      />
-
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="profile" className="gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Profile</span>
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-2">
-            <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Appearance</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notifications</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Security</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile">
+    <PageWrapper
+      title="Account Settings"
+      subtitle="Manage your profile, preferences, and security."
+    >
+      <div className="max-w-2xl space-y-8">
+        {/* ── Profile & Avatar ── */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-[0.9375rem] font-semibold text-foreground">Profile</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Update your display name and profile photo.
+            </p>
+          </div>
           <SettingsProfile />
-        </TabsContent>
+        </section>
 
-        <TabsContent value="appearance">
-          <SettingsAppearance />
-        </TabsContent>
+        <Separator />
 
-        <TabsContent value="notifications">
-          <SettingsNotifications />
-        </TabsContent>
+        {/* ── Preferences (compact view, etc.) ── */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-[0.9375rem] font-semibold text-foreground">Preferences</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Customise how the application looks and behaves.
+            </p>
+          </div>
+          <SettingsPreferences />
+        </section>
 
-        <TabsContent value="security">
+        <Separator />
+
+        {/* ── Password & Security ── */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-[0.9375rem] font-semibold text-foreground">Security</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Change your password and manage account security.
+            </p>
+          </div>
           <SettingsSecurity />
-        </TabsContent>
-      </Tabs>
-    </div>
+        </section>
+      </div>
+    </PageWrapper>
   );
 }

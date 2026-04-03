@@ -26,8 +26,8 @@ interface SortIconProps {
 export function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
   if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
   return sortDirection === "asc"
-    ? <ArrowUp className="h-3 w-3 ml-1 text-[#bd882c]" />
-    : <ArrowDown className="h-3 w-3 ml-1 text-[#bd882c]" />;
+    ? <ArrowUp className="h-3 w-3 ml-1 text-gold" />
+    : <ArrowDown className="h-3 w-3 ml-1 text-gold" />;
 }
 
 /* ─── Cell renderer ─── */
@@ -64,7 +64,7 @@ export function useLeadCellRenderer({
       case "name":
         return (
           <button
-            className="font-medium text-sm hover:text-[#bd882c] hover:underline text-left truncate max-w-[180px]"
+            className="font-medium text-sm hover:text-gold hover:underline text-left truncate max-w-[180px]"
             onClick={() => router.push(`/crm/leads/${lead.id}`)}
           >
             {lead.name}

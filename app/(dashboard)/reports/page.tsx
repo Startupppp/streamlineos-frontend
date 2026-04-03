@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { FileSpreadsheet, FileText, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -95,19 +95,17 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <PageHeader
-        title="Report Center"
-        description="Generate and download Excel and PDF reports"
-      />
-
+    <PageWrapper
+      title="Report Center"
+      subtitle="Generate and download Excel and PDF reports"
+    >
       <div className="grid gap-4 md:grid-cols-2">
         {REPORTS.map(report => (
           <Card key={report.id}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                  <report.icon className="h-5 w-5 text-[#bd882c]" />
+                  <report.icon className="h-5 w-5 text-gold" />
                 </div>
                 <div>
                   <CardTitle className="text-sm">{report.title}</CardTitle>
@@ -138,6 +136,6 @@ export default function ReportsPage() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

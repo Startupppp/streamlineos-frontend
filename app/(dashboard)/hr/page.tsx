@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import { EmptySearchIllustration, EmptyTeamIllustration } from "@/components/illustrations";
 import { getEmployees, deleteEmployee, toggleDashboardAccess } from "@/server/actions/hr-actions";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/use-debounce";
@@ -209,49 +209,49 @@ export default function HRDashboardPage() {
     roleFilter !== "All";
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Employees"
-        description="Manage your company directory and employee access"
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={handleExport}
-            >
-              <Download className="h-4 w-4" aria-hidden="true" />
-              Export
+    <PageWrapper
+      title="Employees"
+      subtitle="Manage your company directory and employee access"
+      badge={String(filteredEmployees.length)}
+      actions={
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handleExport}
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Export
+          </Button>
+          <Link href="/hr/onboarding">
+            <Button size="sm" className="gap-2">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add Employee
             </Button>
-            <Link href="/hr/onboarding">
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                Add Employee
-              </Button>
-            </Link>
-          </div>
-        }
-      />
-
-      <HrFilterBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        deptFilter={deptFilter}
-        onDeptChange={setDeptFilter}
-        departments={departments}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        roleFilter={roleFilter}
-        onRoleChange={setRoleFilter}
-        onClearFilters={() => {
-          setSearchTerm("");
-          setDeptFilter("All");
-          setStatusFilter("Active");
-          setRoleFilter("All");
-        }}
-      />
-
+          </Link>
+        </div>
+      }
+      filters={
+        <HrFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          deptFilter={deptFilter}
+          onDeptChange={setDeptFilter}
+          departments={departments}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          roleFilter={roleFilter}
+          onRoleChange={setRoleFilter}
+          onClearFilters={() => {
+            setSearchTerm("");
+            setDeptFilter("All");
+            setStatusFilter("Active");
+            setRoleFilter("All");
+          }}
+        />
+      }
+    >
       {paginatedEmployees.length > 0 ? (
         <HrEmployeeTable
           employees={paginatedEmployees}
@@ -296,6 +296,6 @@ export default function HRDashboardPage() {
         employee={employeeToDelete}
         onConfirm={handleDelete}
       />
-    </div>
+    </PageWrapper>
   );
 }

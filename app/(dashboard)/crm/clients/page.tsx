@@ -18,7 +18,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
@@ -58,14 +58,33 @@ export default function ClientAccountsPage() {
   const accounts = data?.accounts ?? [];
 
   return (
-    <motion.div className="space-y-6 p-4 md:p-6" variants={staggerContainer} initial="hidden" animate="visible">
-      <motion.div variants={fadeUp}>
-        <PageHeader
-          title="Client Accounts"
-          description="Post-conversion client management — track account opening through investment"
-        />
-      </motion.div>
-
+    <PageWrapper
+      title="Client Accounts"
+      subtitle="Post-conversion client management — track account opening through investment"
+      filters={
+        <>
+          <div className="relative flex-1 max-w-sm min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search clients..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+            <SelectTrigger className="w-[160px] h-9 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All Stages</SelectItem>
+              {STATUSES.map(s => (
+                <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      }
+    >
+      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
       {/* Stats */}
       <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-5">
         {[
@@ -87,28 +106,6 @@ export default function ClientAccountsPage() {
             </CardContent>
           </Card>
         ))}
-      </motion.div>
-
-      {/* Filters */}
-      <motion.div variants={fadeUp} className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 max-w-sm min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search clients..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-          <SelectTrigger className="w-[160px] h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="text-xs">All Stages</SelectItem>
-            {STATUSES.map(s => (
-              <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </motion.div>
 
       {/* Table */}
@@ -221,6 +218,7 @@ export default function ClientAccountsPage() {
           )}
         </Card>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </PageWrapper>
   );
 }

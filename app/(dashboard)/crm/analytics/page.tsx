@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -201,15 +201,11 @@ export default function CrmAnalyticsPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-between flex-wrap gap-4">
-        <PageHeader title="CRM Analytics" description="Pipeline insights and performance metrics" />
-        <div className="flex items-center gap-3">
+    <PageWrapper
+      title="CRM Analytics"
+      subtitle="Pipeline insights and performance metrics"
+      filters={
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground">From</Label>
             <Input type="date" value={draftDateFrom} onChange={e => setDraftDateFrom(e.target.value)} readOnly={false} onKeyDown={e => e.preventDefault()} className="w-36 h-8 text-xs cursor-pointer" />
@@ -218,12 +214,19 @@ export default function CrmAnalyticsPage() {
             <Label className="text-xs text-muted-foreground">To</Label>
             <Input type="date" value={draftDateTo} onChange={e => setDraftDateTo(e.target.value)} readOnly={false} onKeyDown={e => e.preventDefault()} className="w-36 h-8 text-xs cursor-pointer" />
           </div>
-          <Button size="sm" className="h-8 bg-[#bd882c] hover:bg-[#a67724] text-white" onClick={applyFilters}>
+          <Button size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white" onClick={applyFilters}>
             <Filter className="mr-1.5 h-3.5 w-3.5" />
             Apply
           </Button>
         </div>
-      </motion.div>
+      }
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
 
       {analyticsSummary && (
         <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -572,6 +575,7 @@ export default function CrmAnalyticsPage() {
           </motion.div>
         )}
       </div>
-    </motion.div>
+      </motion.div>
+    </PageWrapper>
   );
 }

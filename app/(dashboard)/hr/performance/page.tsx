@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function PerformancePage() {
   return (
@@ -48,12 +49,10 @@ function PerformanceContent() {
   const [tab, setTab] = useState("reviews");
 
   return (
-    <div className="flex-1 space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Performance Management</h2>
-        <p className="text-sm text-muted-foreground">Reviews, goals, and team development</p>
-      </div>
-
+    <PageWrapper
+      title="Performance Management"
+      subtitle="Reviews, goals, and team development"
+    >
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="reviews" className="gap-1.5"><Star className="h-3.5 w-3.5" /> Reviews</TabsTrigger>
@@ -65,7 +64,7 @@ function PerformanceContent() {
         <TabsContent value="goals" className="space-y-4 mt-4"><GoalsTab /></TabsContent>
         <TabsContent value="oneOnOnes" className="space-y-4 mt-4"><OneOnOnesTab /></TabsContent>
       </Tabs>
-    </div>
+    </PageWrapper>
   );
 }
 
@@ -77,7 +76,7 @@ function ReviewsTab() {
     <>
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Performance Reviews</h3>
-        <Button onClick={() => setCreateOpen(true)} size="sm" className="gap-1.5 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+        <Button onClick={() => setCreateOpen(true)} size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
           <Plus className="h-3.5 w-3.5" /> New Review
         </Button>
       </div>
@@ -100,7 +99,7 @@ function ReviewsTab() {
                     {review.status ?? "DRAFT"}
                   </Badge>
                   {(review.overallScore ?? 0) > 0 && (
-                    <div className="flex items-center gap-1 text-[#bd882c]">
+                    <div className="flex items-center gap-1 text-gold">
                       <Star className="h-3.5 w-3.5 fill-current" />
                       <span className="text-sm font-bold">{review.overallScore}/5</span>
                     </div>
@@ -132,7 +131,7 @@ function GoalsTab() {
     <>
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Team Goals</h3>
-        <Button size="sm" className="gap-1.5 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+        <Button size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
           <Plus className="h-3.5 w-3.5" /> New Goal
         </Button>
       </div>
@@ -183,7 +182,7 @@ function OneOnOnesTab() {
     <>
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">1-on-1 Meetings</h3>
-        <Button size="sm" className="gap-1.5 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+        <Button size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
           <Plus className="h-3.5 w-3.5" /> Schedule 1-on-1
         </Button>
       </div>

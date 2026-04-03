@@ -22,19 +22,11 @@ export default async function LeavesPage() {
         getApprovedLeavesThisWeek(),
       ]);
   } catch {
-    return (
-      <div className="space-y-6">
-        <LeaveErrorState />
-      </div>
-    );
+    return <LeaveErrorState />;
   }
 
   if (!context.success || !context.balances) {
-    return (
-      <div className="space-y-6">
-        <LeaveErrorState />
-      </div>
-    );
+    return <LeaveErrorState />;
   }
 
   return (

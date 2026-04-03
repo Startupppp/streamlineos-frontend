@@ -18,7 +18,7 @@ import {
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
 } from "@/lib/api/hooks/notifications";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -110,60 +110,59 @@ export default function NotificationsPage() {
     markAllRead.mutate(undefined);
   }
 
+  const tabsFilter = (
+    <Tabs
+      value={activeTab}
+      onValueChange={(v) => setActiveTab(v as TabFilter)}
+    >
+      <TabsList className="bg-card border border-border">
+        <TabsTrigger value="ALL">All</TabsTrigger>
+        <TabsTrigger value="UNREAD">
+          Unread
+          {unreadCount > 0 && (
+            <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-[10px] font-semibold text-white">
+              {unreadCount}
+            </span>
+          )}
+        </TabsTrigger>
+        <TabsTrigger value="INFO">Info</TabsTrigger>
+        <TabsTrigger value="SUCCESS">Success</TabsTrigger>
+        <TabsTrigger value="WARNING">Warning</TabsTrigger>
+        <TabsTrigger value="ERROR">Error</TabsTrigger>
+      </TabsList>
+    </Tabs>
+  );
+
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 space-y-4 border-b border-border/40">
-        <PageHeader
-          title="Notifications"
-          description="Stay up to date with everything happening in your workspace"
-          actions={
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={unreadCount === 0 || markAllRead.isPending}
-              onClick={handleMarkAllRead}
-              className="border-[#bd882c]/30 text-[#bd882c] hover:bg-[#bd882c]/10 hover:text-[#bd882c]"
-            >
-              {markAllRead.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCheck className="mr-2 h-4 w-4" />
-              )}
-              Mark all as read
-              {unreadCount > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="ml-2 bg-[#bd882c]/20 text-[#bd882c] text-xs"
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          }
-        />
-
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as TabFilter)}
+    <PageWrapper
+      title="Notifications"
+      subtitle="Stay up to date with everything happening in your workspace"
+      actions={
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={unreadCount === 0 || markAllRead.isPending}
+          onClick={handleMarkAllRead}
+          className="border-gold/30 text-gold hover:bg-gold/10 hover:text-gold"
         >
-          <TabsList className="bg-card border border-border">
-            <TabsTrigger value="ALL">All</TabsTrigger>
-            <TabsTrigger value="UNREAD">
-              Unread
-              {unreadCount > 0 && (
-                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#bd882c] px-1.5 text-[10px] font-semibold text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="INFO">Info</TabsTrigger>
-            <TabsTrigger value="SUCCESS">Success</TabsTrigger>
-            <TabsTrigger value="WARNING">Warning</TabsTrigger>
-            <TabsTrigger value="ERROR">Error</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
+          {markAllRead.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <CheckCheck className="mr-2 h-4 w-4" />
+          )}
+          Mark all as read
+          {unreadCount > 0 && (
+            <Badge
+              variant="secondary"
+              className="ml-2 bg-gold/20 text-gold text-xs"
+            >
+              {unreadCount}
+            </Badge>
+          )}
+        </Button>
+      }
+      filters={tabsFilter}
+    >
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -181,8 +180,8 @@ export default function NotificationsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#bd882c]/10 mb-6">
-            <BellOff className="h-10 w-10 text-[#bd882c]/60" />
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gold/10 mb-6">
+            <BellOff className="h-10 w-10 text-gold/60" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-1">
             {activeTab === "UNREAD"
@@ -209,7 +208,7 @@ export default function NotificationsPage() {
                 className={cn(
                   "group relative cursor-pointer transition-all duration-200 hover:shadow-md",
                   isUnread
-                    ? "border-l-2 border-l-[#bd882c] bg-[#bd882c]/[0.03]"
+                    ? "border-l-2 border-l-gold bg-gold/[0.03]"
                     : "opacity-75 hover:opacity-100"
                 )}
                 onClick={() => handleNotificationClick(notification)}
@@ -258,8 +257,8 @@ export default function NotificationsPage() {
                   <div className="flex shrink-0 items-center gap-2">
                     {isUnread && (
                       <span className="flex h-2.5 w-2.5">
-                        <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-[#bd882c] opacity-40" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#bd882c]" />
+                        <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-gold opacity-40" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold" />
                       </span>
                     )}
                   </div>
@@ -269,6 +268,6 @@ export default function NotificationsPage() {
           })}
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

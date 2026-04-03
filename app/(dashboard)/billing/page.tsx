@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Sheet,
   SheetContent,
@@ -39,22 +40,11 @@ export default function BillingPage() {
   const totalRevenue = summary?.reduce((acc, curr) => acc + (curr.totalHours || 0) * hourlyRate, 0) || 0;
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Billing &amp; Invoices</h2>
-          <p className="text-muted-foreground mt-1">
-            {summary ? (
-              <>
-                {summary.length} {summary.length === 1 ? "project" : "projects"} billable — ${totalRevenue.toFixed(2)} estimated revenue
-              </>
-            ) : (
-              "Calculate billing from tracked time entries"
-            )}
-          </p>
-        </div>
-      </div>
-
+    <PageWrapper
+      title="Billing & Invoices"
+      subtitle={summary ? `${summary.length} ${summary.length === 1 ? "project" : "projects"} billable — $${totalRevenue.toFixed(2)} estimated revenue` : "Calculate billing from tracked time entries"}
+    >
+      <div className="space-y-4">
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="grid gap-2">
           <Label>Start Date</Label>
@@ -256,6 +246,7 @@ export default function BillingPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

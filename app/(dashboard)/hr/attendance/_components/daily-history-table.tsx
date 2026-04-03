@@ -35,7 +35,7 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Daily History</CardTitle>
           <button
-            className="text-sm text-[#bd882c] hover:text-[#a67724] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            className="text-sm text-gold hover:text-gold/80 font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             disabled={logs.length === 0}
             onClick={async () => {
               try {

@@ -60,8 +60,8 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
     <Card className="overflow-hidden border-border shadow-sm">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#bd882c]/10">
-            <PartyPopper className="h-4 w-4 text-[#bd882c]" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/10">
+            <PartyPopper className="h-4 w-4 text-gold" />
           </div>
           Company Holidays
         </CardTitle>

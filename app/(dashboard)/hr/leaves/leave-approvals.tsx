@@ -303,7 +303,7 @@ export function LeaveApprovalsContent({
               <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
                 <TabsTrigger
                   value="all"
-                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
                 >
                   All
                   <Badge variant="secondary" className="ml-1.5 h-5 min-w-5 px-1.5 text-[10px]">
@@ -312,7 +312,7 @@ export function LeaveApprovalsContent({
                 </TabsTrigger>
                 <TabsTrigger
                   value="pending"
-                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
                 >
                   Pending
                   {incomingLeaveRequests.length > 0 && (
@@ -323,7 +323,7 @@ export function LeaveApprovalsContent({
                 </TabsTrigger>
                 <TabsTrigger
                   value="approved"
-                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
                 >
                   Approved
                   {approvedRequests.length > 0 && (
@@ -334,7 +334,7 @@ export function LeaveApprovalsContent({
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
-                  className="data-[state=active]:bg-[#bd882c] data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-white data-[state=active]:shadow-sm rounded-md px-3 py-1.5 text-xs font-medium transition-all"
                 >
                   Rejected
                   {rejectedRequests.length > 0 && (

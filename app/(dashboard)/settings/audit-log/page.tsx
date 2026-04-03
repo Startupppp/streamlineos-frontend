@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   useAuditLogs,
   useAuditLogActions,
@@ -165,80 +165,77 @@ export default function AuditLogPage() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
+  const filtersBar = (
+    <div className="flex flex-wrap gap-3 items-end">
+      <div className="space-y-1">
+        <p className="text-[11px] font-medium text-muted-foreground">Action</p>
+        <Select value={actionFilter} onValueChange={handleFilterChange(setActionFilter)}>
+          <SelectTrigger className="h-8 w-[200px] text-sm">
+            <SelectValue placeholder="All actions" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Actions</SelectItem>
+            {actions?.map((a) => (
+              <SelectItem key={a} value={a}>{a}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <p className="text-[11px] font-medium text-muted-foreground">Entity Type</p>
+        <Select value={targetTypeFilter} onValueChange={handleFilterChange(setTargetTypeFilter)}>
+          <SelectTrigger className="h-8 w-[160px] text-sm">
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {targetTypes?.map((t) => (
+              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <p className="text-[11px] font-medium text-muted-foreground">From</p>
+        <Input
+          type="date"
+          className="h-8 text-sm w-[140px]"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+        />
+      </div>
+      <div className="space-y-1">
+        <p className="text-[11px] font-medium text-muted-foreground">To</p>
+        <Input
+          type="date"
+          className="h-8 text-sm w-[140px]"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+        />
+      </div>
+      {(actionFilter !== "all" || targetTypeFilter !== "all" || dateFrom || dateTo) && (
+        <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">
+          Clear
+        </Button>
+      )}
+    </div>
+  );
+
   return (
-    <div className="flex-1 space-y-6">
-      <PageHeader
-        title="Audit Log"
-        description="Track all system actions, logins, and changes across your organization."
-        actions={
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground font-medium">
-              {total.toLocaleString()} events
-            </span>
-          </div>
-        }
-      />
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="flex flex-wrap gap-3 items-end">
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground">Action</p>
-              <Select value={actionFilter} onValueChange={handleFilterChange(setActionFilter)}>
-                <SelectTrigger className="h-8 w-[200px] text-sm">
-                  <SelectValue placeholder="All actions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Actions</SelectItem>
-                  {actions?.map((a) => (
-                    <SelectItem key={a} value={a}>{a}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground">Entity Type</p>
-              <Select value={targetTypeFilter} onValueChange={handleFilterChange(setTargetTypeFilter)}>
-                <SelectTrigger className="h-8 w-[160px] text-sm">
-                  <SelectValue placeholder="All types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {targetTypes?.map((t) => (
-                    <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground">From</p>
-              <Input
-                type="date"
-                className="h-8 text-sm w-[140px]"
-                value={dateFrom}
-                onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground">To</p>
-              <Input
-                type="date"
-                className="h-8 text-sm w-[140px]"
-                value={dateTo}
-                onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-              />
-            </div>
-            {(actionFilter !== "all" || targetTypeFilter !== "all" || dateFrom || dateTo) && (
-              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">
-                Clear
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
+    <PageWrapper
+      title="Audit Log"
+      subtitle="Track all system actions, logins, and changes across your organization."
+      actions={
+        <div className="flex items-center gap-2">
+          <Shield className="h-5 w-5 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground font-medium">
+            {total.toLocaleString()} events
+          </span>
+        </div>
+      }
+      filters={filtersBar}
+    >
+      <div className="space-y-6">
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -346,6 +343,7 @@ export default function AuditLogPage() {
       )}
 
       {selectedLog && <LogDetailSheet log={selectedLog} onClose={() => setSelectedLog(null)} />}
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

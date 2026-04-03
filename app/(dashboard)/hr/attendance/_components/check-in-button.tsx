@@ -113,7 +113,7 @@ export const TimerCard = memo(function TimerCard() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          <Clock className="h-5 w-5 text-[#bd882c]" />
+          <Clock className="h-5 w-5 text-gold" />
           Time Tracker
         </CardTitle>
       </CardHeader>
@@ -136,7 +136,7 @@ export const TimerCard = memo(function TimerCard() {
           </div>
 
           {/* Colon */}
-          <span className="text-2xl font-bold text-[#bd882c] animate-pulse mb-5">:</span>
+          <span className="text-2xl font-bold text-gold animate-pulse mb-5">:</span>
 
           {/* Minutes */}
           <div className="flex flex-col items-center">
@@ -151,7 +151,7 @@ export const TimerCard = memo(function TimerCard() {
           </div>
 
           {/* Colon */}
-          <span className="text-2xl font-bold text-[#bd882c] animate-pulse mb-5">:</span>
+          <span className="text-2xl font-bold text-gold animate-pulse mb-5">:</span>
 
           {/* Seconds */}
           <div className="flex flex-col items-center">

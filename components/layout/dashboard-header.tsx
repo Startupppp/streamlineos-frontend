@@ -1,21 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useMemo } from "react"
-import { usePathname } from "next/navigation"
-import { UserNav } from "./user-nav"
-import { NotificationBell } from "./notification-bell"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Search } from "lucide-react"
-import { AppSidebar } from "./app-sidebar"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import { UserNav } from "./user-nav";
+import { NotificationBell } from "./notification-bell";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Menu, Search } from "lucide-react";
+import { AppSidebar } from "./app-sidebar";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const ROUTE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/hr": "Employees",
+  "/hr": "HR",
   "/hr/leaves": "Leaves",
   "/hr/expenses": "Expenses",
   "/hr/attendance": "Attendance",
   "/hr/payroll": "Payroll",
+  "/hr/incentives": "Incentives",
   "/hr/devices": "Devices",
   "/hr/documents": "Documents",
   "/hr/onboarding": "Onboarding",
@@ -23,81 +25,123 @@ const ROUTE_TITLES: Record<string, string> = {
   "/hr/org-chart": "Org Chart",
   "/hr/performance": "Performance",
   "/hr/my-payslips": "My Payslips",
+  "/crm": "CRM",
   "/crm/leads": "Lead Pipeline",
   "/crm/deals": "Deals",
   "/crm/targets": "Targets",
-  "/crm/analytics": "CRM Analytics",
+  "/crm/analytics": "Analytics",
   "/crm/clients": "Clients",
   "/crm/contacts": "Contacts",
   "/crm/organizations": "Organizations",
+  "/crm/reports": "CRM Reports",
   "/projects": "Projects",
   "/timesheets": "Timesheets",
+  "/timesheets/team": "Team Timesheets",
   "/settings": "Settings",
+  "/settings/organization": "Organization",
+  "/settings/members": "Members",
+  "/settings/branches": "Branches",
+  "/settings/roles": "Roles & Permissions",
+  "/settings/audit-log": "Audit Log",
   "/billing": "Billing",
-  "/sales": "Sales Dashboard",
+  "/billing/invoices": "Invoices",
+  "/sales": "Sales",
   "/customer-executive": "Customer Executive",
   "/chat": "Chat",
   "/support": "Support",
-}
+  "/support/inbox": "Inbox",
+  "/notifications": "Notifications",
+  "/reports": "Reports",
+  "/marketing": "Marketing",
+  "/digital-marketing": "Digital Marketing",
+  "/ceo/qr-code": "QR Codes",
+};
 
 export function DashboardHeader() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isMac, setIsMac] = useState(true)
-  const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMac, setIsMac] = useState(true);
+  const pathname = usePathname();
 
   const pageTitle = useMemo(() => {
-    if (!pathname) return "Dashboard"
-    const sorted = Object.keys(ROUTE_TITLES).sort((a, b) => b.length - a.length)
+    if (!pathname) return "Dashboard";
+    const sorted = Object.keys(ROUTE_TITLES).sort((a, b) => b.length - a.length);
     for (const route of sorted) {
-      if (pathname === route || pathname.startsWith(route + "/")) return ROUTE_TITLES[route]
+      if (pathname === route || pathname.startsWith(route + "/")) {
+        return ROUTE_TITLES[route];
+      }
     }
-    return "Dashboard"
-  }, [pathname])
+    return "Dashboard";
+  }, [pathname]);
 
   useEffect(() => {
-    setIsMac(navigator.platform?.toUpperCase().includes("MAC") || navigator.userAgent?.includes("Mac"))
-  }, [])
+    setIsMac(
+      navigator.platform?.toUpperCase().includes("MAC") ||
+        navigator.userAgent?.includes("Mac")
+    );
+  }, []);
+
+  const triggerSearch = () =>
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "k",
+        metaKey: isMac,
+        ctrlKey: !isMac,
+        bubbles: true,
+      })
+    );
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-4 glass transition-colors duration-300">
-      <div className="flex items-center gap-2 px-4">
-        <div className="md:hidden">
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
-            <SheetTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Open navigation menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="z-[100] p-0 w-72">
-              <AppSidebar onNavigate={() => setMobileMenuOpen(false)} />
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        <div className="font-semibold text-foreground">{pageTitle}</div>
-      </div>
+    <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3 transition-colors">
+      {/* Left: mobile menu + page title */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden sm:flex items-center gap-2 text-muted-foreground h-8 w-48 justify-start"
-          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: isMac, ctrlKey: !isMac }))}
+        {/* Mobile hamburger */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open navigation"
+            className={cn(
+              "md:hidden h-8 w-8 rounded-md flex items-center justify-center",
+              "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            )}
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <AppSidebar onNavigate={() => setMobileMenuOpen(false)} />
+          </SheetContent>
+        </Sheet>
+
+        {/* Page title */}
+        <span className="text-sm font-semibold text-foreground hidden md:block">
+          {pageTitle}
+        </span>
+      </div>
+
+      {/* Right: search + actions */}
+      <div className="flex items-center gap-1">
+        {/* Search trigger */}
+        <button
+          type="button"
+          onClick={triggerSearch}
+          aria-label="Search"
+          className={cn(
+            "hidden sm:flex items-center gap-2 h-8 rounded-md border border-border bg-muted/50 px-2.5",
+            "text-muted-foreground text-xs hover:border-border/80 hover:bg-muted transition-colors",
+            "w-44"
+          )}
         >
-          <Search className="h-3.5 w-3.5" />
-          <span className="text-xs">Search...</span>
-          <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-            <span className="text-xs">{isMac ? "⌘" : "Ctrl"}</span>K
+          <Search className="h-3 w-3 shrink-0" />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="hidden sm:inline-flex h-4 items-center gap-0.5 rounded border border-border bg-background px-1 font-mono text-[9px] text-muted-foreground">
+            {isMac ? "⌘" : "Ctrl"}K
           </kbd>
-        </Button>
+        </button>
+
         <NotificationBell />
         <UserNav />
       </div>
     </header>
-  )
+  );
 }

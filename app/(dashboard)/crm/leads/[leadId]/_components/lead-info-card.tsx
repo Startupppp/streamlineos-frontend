@@ -217,7 +217,7 @@ export function LeadInfoCard({
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-[#bd882c] hover:bg-[#a67724] text-white"
+                  className="bg-gold hover:bg-gold/80 text-white"
                   disabled={isUpdatePending}
                 >
                   {isUpdatePending ? "Saving..." : "Save Changes"}
@@ -270,7 +270,7 @@ export function LeadInfoCard({
                 {item.href ? (
                   <a
                     href={item.href}
-                    className="text-sm text-[#bd882c] hover:underline"
+                    className="text-sm text-gold hover:underline"
                   >
                     {item.value || "\u2014"}
                   </a>
@@ -283,7 +283,7 @@ export function LeadInfoCard({
         </div>
 
         {(lead.potentialValue || lead.investmentInterest) && (
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-[#bd882c]/5 border border-border/50">
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-gold/5 border border-border/50">
             {lead.potentialValue && (
               <div>
                 <p className="text-xs text-muted-foreground">Potential Value</p>
@@ -298,7 +298,7 @@ export function LeadInfoCard({
                 <p className="text-xs text-muted-foreground">
                   Investment Interest
                 </p>
-                <p className="text-xl font-bold text-[#bd882c]">
+                <p className="text-xl font-bold text-gold">
                   {"\u20B9"}
                   {Number(lead.investmentInterest).toLocaleString("en-IN")}
                 </p>

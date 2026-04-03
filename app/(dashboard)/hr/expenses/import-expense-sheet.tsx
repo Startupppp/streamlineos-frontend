@@ -300,7 +300,7 @@ export function ImportExpenseSheet({
       <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-semibold flex items-center gap-2">
-            <Upload className="h-5 w-5 text-[#bd882c]" />
+            <Upload className="h-5 w-5 text-gold" />
             Import Expenses
           </SheetTitle>
           <SheetDescription>

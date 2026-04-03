@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
@@ -193,58 +194,68 @@ export default function LeadDetailPage({
 
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
+    <PageWrapper
+      title={lead.name}
+      actions={
+        <Button variant="outline" size="sm" onClick={() => router.push("/crm/leads")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Pipeline
+        </Button>
+      }
     >
-      <LeadDetailHeader
-        lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
-        isEditing={isEditing}
-        onToggleEdit={() => setIsEditing((prev) => !prev)}
-        onStatusChange={handleStatusChange}
-      />
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <LeadDetailHeader
+          lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
+          isEditing={isEditing}
+          onToggleEdit={() => setIsEditing((prev) => !prev)}
+          onStatusChange={handleStatusChange}
+        />
 
-      <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-5">
-        {/* ── Main column ──────────────────────────────────────────────── */}
-        <div className="lg:col-span-3 space-y-6">
-          <LeadInfoCard
-            lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
-            isEditing={isEditing}
-            editForm={editForm}
-            isUpdatePending={updateLeadMutation.isPending}
-            onEditSubmit={onEditSubmit}
-            onCancelEdit={() => setIsEditing(false)}
-          />
+        <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-5">
+          {/* ── Main column ──────────────────────────────────────────────── */}
+          <div className="lg:col-span-3 space-y-6">
+            <LeadInfoCard
+              lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
+              isEditing={isEditing}
+              editForm={editForm}
+              isUpdatePending={updateLeadMutation.isPending}
+              onEditSubmit={onEditSubmit}
+              onCancelEdit={() => setIsEditing(false)}
+            />
 
-          <LeadQuickActions
-            activeAction={activeAction}
-            onSetActiveAction={setActiveAction}
-            noteForm={noteForm}
-            taskForm={taskForm}
-            emailForm={emailForm}
-            callForm={callForm}
-            onNoteSubmit={onNoteSubmit}
-            onTaskSubmit={onTaskSubmit}
-            onEmailSubmit={onEmailSubmit}
-            onCallSubmit={onCallSubmit}
-            isNotePending={logActivityMutation.isPending}
-            isTaskPending={logActivityMutation.isPending}
-            isEmailPending={logActivityMutation.isPending}
-            isCallPending={logActivityMutation.isPending}
-          />
-        </div>
+            <LeadQuickActions
+              activeAction={activeAction}
+              onSetActiveAction={setActiveAction}
+              noteForm={noteForm}
+              taskForm={taskForm}
+              emailForm={emailForm}
+              callForm={callForm}
+              onNoteSubmit={onNoteSubmit}
+              onTaskSubmit={onTaskSubmit}
+              onEmailSubmit={onEmailSubmit}
+              onCallSubmit={onCallSubmit}
+              isNotePending={logActivityMutation.isPending}
+              isTaskPending={logActivityMutation.isPending}
+              isEmailPending={logActivityMutation.isPending}
+              isCallPending={logActivityMutation.isPending}
+            />
+          </div>
 
-        {/* ── Sidebar column ───────────────────────────────────────────── */}
-        <div className="lg:col-span-2">
-          <LeadSidebar
-            lead={lead as unknown as Parameters<typeof LeadSidebar>[0]["lead"]}
-            timeline={timeline}
-            timelineLoading={timelineLoading}
-          />
-        </div>
+          {/* ── Sidebar column ───────────────────────────────────────────── */}
+          <div className="lg:col-span-2">
+            <LeadSidebar
+              lead={lead as unknown as Parameters<typeof LeadSidebar>[0]["lead"]}
+              timeline={timeline}
+              timelineLoading={timelineLoading}
+            />
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </PageWrapper>
   );
 }

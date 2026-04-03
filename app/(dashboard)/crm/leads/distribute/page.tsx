@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/lib/api/hooks/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
+
 export default function LeadDistributionPage() {
   const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,14 +65,52 @@ export default function LeadDistributionPage() {
   [filteredLeads]);
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <PageHeader
-        title="Lead Distribution"
-        description="Upload leads and distribute to your sales team via round-robin"
-      />
-
+    <PageWrapper
+      title="Lead Distribution"
+      subtitle="Upload leads and distribute to your sales team via round-robin"
+      filters={
+        <>
+          <div className="relative flex-1 max-w-sm min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search leads..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="NEW" className="text-xs">New</SelectItem>
+              <SelectItem value="CONTACTED" className="text-xs">Contacted</SelectItem>
+              <SelectItem value="INTERESTED" className="text-xs">Interested</SelectItem>
+              <SelectItem value="QUALIFIED" className="text-xs">Qualified</SelectItem>
+            </SelectContent>
+          </Select>
+          {selectedIds.size > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Clear selection
+            </Button>
+          )}
+        </>
+      }
+      actions={
+        <>
+          <CsvUploadDialog onSuccess={() => refetch()} />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={selectedIds.size === 0}
+            onClick={() => setShowDistribute(true)}
+          >
+            <Users className="h-4 w-4 mr-1" /> Distribute ({selectedIds.size})
+          </Button>
+        </>
+      }
+    >
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -99,47 +138,6 @@ export default function LeadDistributionPage() {
             <p className="text-xs text-muted-foreground mt-1">Selected</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4 flex flex-col gap-2">
-            <CsvUploadDialog onSuccess={() => refetch()} />
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full"
-              disabled={selectedIds.size === 0}
-              onClick={() => setShowDistribute(true)}
-            >
-              <Users className="h-4 w-4 mr-1" /> Distribute ({selectedIds.size})
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 max-w-sm min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search leads..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="NEW" className="text-xs">New</SelectItem>
-            <SelectItem value="CONTACTED" className="text-xs">Contacted</SelectItem>
-            <SelectItem value="INTERESTED" className="text-xs">Interested</SelectItem>
-            <SelectItem value="QUALIFIED" className="text-xs">Qualified</SelectItem>
-          </SelectContent>
-        </Select>
-        {selectedIds.size > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
-            Clear selection
-          </Button>
-        )}
       </div>
 
       {/* Leads Table */}
@@ -176,7 +174,7 @@ export default function LeadDistributionPage() {
                 </TableRow>
               ) : (
                 filteredLeads.map((lead) => (
-                  <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-[#bd882c]/5" : ""}>
+                  <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-gold/5" : ""}>
                     <TableCell className="px-3">
                       <Checkbox checked={selectedIds.has(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} />
                     </TableCell>
@@ -207,6 +205,6 @@ export default function LeadDistributionPage() {
         leadIds={[...selectedIds]}
         onSuccess={() => { setSelectedIds(new Set()); refetch(); }}
       />
-    </div>
+    </PageWrapper>
   );
 }

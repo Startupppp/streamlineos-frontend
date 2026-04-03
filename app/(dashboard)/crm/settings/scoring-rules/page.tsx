@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -151,17 +151,13 @@ export default function ScoringRulesPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-between">
-        <PageHeader title="Lead Scoring Rules" description="Define rules to automatically score leads" />
+    <PageWrapper
+      title="Lead Scoring Rules"
+      subtitle="Define rules to automatically score leads"
+      actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+            <Button className="bg-gold hover:bg-gold/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Rule
             </Button>
@@ -214,133 +210,140 @@ export default function ScoringRulesPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createRule.isPending}>
+                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createRule.isPending}>
                   {createRule.isPending ? "Creating..." : "Create Rule"}
                 </Button>
               </form>
             </Form>
           </DialogContent>
         </Dialog>
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Rules</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {rules && rules.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Field</TableHead>
-                    <TableHead className="text-xs">Operator</TableHead>
-                    <TableHead className="text-xs">Value</TableHead>
-                    <TableHead className="text-xs text-right">Points</TableHead>
-                    <TableHead className="text-xs text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rules.map(rule => (
-                    <TableRow key={rule.id}>
-                      {editingId === rule.id ? (
-                        <>
-                          <TableCell colSpan={4}>
-                            <Form {...editForm}>
-                              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
-                                <FormField control={editForm.control} name="field" render={({ field }) => (
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
-                                    <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                                  </Select>
-                                )} />
-                                <FormField control={editForm.control} name="operator" render={({ field }) => (
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
-                                    <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                                  </Select>
-                                )} />
-                                <FormField control={editForm.control} name="value" render={({ field }) => (
-                                  <Input {...field} className="h-8 w-24 text-xs" />
-                                )} />
-                                <FormField control={editForm.control} name="points" render={({ field }) => (
-                                  <Input type="number" {...field} className="h-8 w-16 text-xs" />
-                                )} />
-                                <Button type="submit" size="sm" className="h-8 bg-[#bd882c] hover:bg-[#a67724] text-white text-xs" disabled={updateRule.isPending}>Save</Button>
-                                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditingId(null)}>Cancel</Button>
-                              </form>
-                            </Form>
-                          </TableCell>
-                          <TableCell />
-                        </>
-                      ) : (
-                        <>
-                          <TableCell className="text-xs capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
-                          <TableCell className="text-xs">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
-                          <TableCell className="text-xs">{rule.value}</TableCell>
-                          <TableCell className="text-xs text-right">
-                            <Badge variant={rule.points >= 0 ? "default" : "destructive"} className="text-[10px]">
-                              {rule.points > 0 ? "+" : ""}{rule.points}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(rule)} aria-label="Edit">
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </>
-                      )}
+      }
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">Rules</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {rules && rules.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Field</TableHead>
+                      <TableHead className="text-xs">Operator</TableHead>
+                      <TableHead className="text-xs">Value</TableHead>
+                      <TableHead className="text-xs text-right">Points</TableHead>
+                      <TableHead className="text-xs text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <EmptyTargetIllustration className="mx-auto mb-4 w-40 h-40" />
-                <p className="text-sm font-medium text-foreground">No scoring rules defined</p>
-                <p className="text-xs mt-1">Create your first rule to start scoring leads automatically.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <motion.div variants={fadeUp}>
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Zap className="h-4 w-4 text-[#bd882c]" />
-              Live Preview - Sample Lead
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              {Object.entries(SAMPLE_LEAD).map(([key, value]) => (
-                <div key={key}>
-                  <span className="text-muted-foreground capitalize">{key}: </span>
-                  <span className="font-medium">{value}</span>
+                  </TableHeader>
+                  <TableBody>
+                    {rules.map(rule => (
+                      <TableRow key={rule.id}>
+                        {editingId === rule.id ? (
+                          <>
+                            <TableCell colSpan={4}>
+                              <Form {...editForm}>
+                                <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
+                                  <FormField control={editForm.control} name="field" render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                                      <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                  )} />
+                                  <FormField control={editForm.control} name="operator" render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                                      <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                  )} />
+                                  <FormField control={editForm.control} name="value" render={({ field }) => (
+                                    <Input {...field} className="h-8 w-24 text-xs" />
+                                  )} />
+                                  <FormField control={editForm.control} name="points" render={({ field }) => (
+                                    <Input type="number" {...field} className="h-8 w-16 text-xs" />
+                                  )} />
+                                  <Button type="submit" size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white text-xs" disabled={updateRule.isPending}>Save</Button>
+                                  <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditingId(null)}>Cancel</Button>
+                                </form>
+                              </Form>
+                            </TableCell>
+                            <TableCell />
+                          </>
+                        ) : (
+                          <>
+                            <TableCell className="text-xs capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
+                            <TableCell className="text-xs">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
+                            <TableCell className="text-xs">{rule.value}</TableCell>
+                            <TableCell className="text-xs text-right">
+                              <Badge variant={rule.points >= 0 ? "default" : "destructive"} className="text-[10px]">
+                                {rule.points > 0 ? "+" : ""}{rule.points}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(rule)} aria-label="Edit">
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <EmptyTargetIllustration className="mx-auto mb-4 w-40 h-40" />
+                  <p className="text-sm font-medium text-foreground">No scoring rules defined</p>
+                  <p className="text-xs mt-1">Create your first rule to start scoring leads automatically.</p>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-[#bd882c]/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
-              <span className="text-sm font-medium">Calculated Score</span>
-              <Badge className={cn(
-                "text-lg px-4 py-1 font-bold",
-                sampleScore <= 30 ? "bg-red-500/15 text-red-700 dark:text-red-400" :
-                sampleScore <= 60 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" :
-                "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-              )}>
-                {sampleScore} pts
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeUp}>
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Zap className="h-4 w-4 text-gold" />
+                Live Preview - Sample Lead
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                {Object.entries(SAMPLE_LEAD).map(([key, value]) => (
+                  <div key={key}>
+                    <span className="text-muted-foreground capitalize">{key}: </span>
+                    <span className="font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-gold/5 to-emerald-500/5 border border-border/50 flex items-center justify-between">
+                <span className="text-sm font-medium">Calculated Score</span>
+                <Badge className={cn(
+                  "text-lg px-4 py-1 font-bold",
+                  sampleScore <= 30 ? "bg-red-500/15 text-red-700 dark:text-red-400" :
+                  sampleScore <= 60 ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" :
+                  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                )}>
+                  {sampleScore} pts
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </PageWrapper>
   );
 }

@@ -16,7 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   IndianRupee, CheckCircle2, XCircle, Clock, Settings,
@@ -133,53 +133,15 @@ export default function IncentivesPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <PageHeader
-          title="Incentive Management"
-          description="Manage sales incentives, approvals, and rate configuration"
-        />
+    <PageWrapper
+      title="Incentive Management"
+      subtitle="Manage sales incentives, approvals, and rate configuration"
+      actions={
         <Button variant="outline" size="sm" onClick={() => setShowConfigDialog(true)}>
           <Settings className="h-4 w-4 mr-1" /> Configure Rate
         </Button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
-        {[
-          { label: "This Month", value: formatINR(stats?.thisMonth), icon: IndianRupee, color: "text-emerald-400" },
-          { label: "Total Revenue", value: formatINR(stats?.totalRevenue), icon: TrendingUp, color: "text-blue-400" },
-          { label: "Avg / Conversion", value: formatINR(stats?.avgPerConversion), icon: Users, color: "text-purple-400" },
-          { label: "Pending", value: stats?.pending ?? 0, icon: Clock, color: "text-amber-400" },
-          { label: "Approved", value: stats?.approved ?? 0, icon: CheckCircle2, color: "text-emerald-400" },
-        ].map(s => (
-          <Card key={s.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <s.icon className={cn("h-5 w-5", s.color)} />
-                <span className={cn("text-xl font-bold tabular-nums", s.color)}>{s.value}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Current Rate */}
-      {currentConfig && (
-        <Card className="bg-[#bd882c]/5 border-[#bd882c]/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Percent className="h-5 w-5 text-[#bd882c]" />
-            <div>
-              <p className="text-sm font-medium">Current Incentive Rate: <span className="text-[#bd882c] font-bold">{currentConfig.incentiveRate}%</span></p>
-              <p className="text-xs text-muted-foreground">Effective from {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters */}
-      <div className="flex items-center gap-3">
+      }
+      filters={
         <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -190,95 +152,131 @@ export default function IncentivesPage() {
             <SelectItem value="ADDED_TO_PAYROLL" className="text-xs">Added to Payroll</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      }
+    >
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
+          {[
+            { label: "This Month", value: formatINR(stats?.thisMonth), icon: IndianRupee, color: "text-emerald-400" },
+            { label: "Total Revenue", value: formatINR(stats?.totalRevenue), icon: TrendingUp, color: "text-blue-400" },
+            { label: "Avg / Conversion", value: formatINR(stats?.avgPerConversion), icon: Users, color: "text-purple-400" },
+            { label: "Pending", value: stats?.pending ?? 0, icon: Clock, color: "text-amber-400" },
+            { label: "Approved", value: stats?.approved ?? 0, icon: CheckCircle2, color: "text-emerald-400" },
+          ].map(s => (
+            <Card key={s.label}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <s.icon className={cn("h-5 w-5", s.color)} />
+                  <span className={cn("text-xl font-bold tabular-nums", s.color)}>{s.value}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-      {/* Incentives Table */}
-      <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Sales Rep</TableHead>
-                <TableHead className="text-xs">Client</TableHead>
-                <TableHead className="text-xs">Investment</TableHead>
-                <TableHead className="text-xs">Rate</TableHead>
-                <TableHead className="text-xs">Calculated</TableHead>
-                <TableHead className="text-xs">Approved</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={8} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
-                ))
-              ) : incentivesList.length === 0 ? (
+        {/* Current Rate */}
+        {currentConfig && (
+          <Card className="bg-gold/5 border-gold/20">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Percent className="h-5 w-5 text-gold" />
+              <div>
+                <p className="text-sm font-medium">Current Incentive Rate: <span className="text-gold font-bold">{currentConfig.incentiveRate}%</span></p>
+                <p className="text-xs text-muted-foreground">Effective from {new Date(currentConfig.effectiveFrom).toLocaleDateString("en-IN")}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Incentives Table */}
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                    No incentives found
-                  </TableCell>
+                  <TableHead className="text-xs">Sales Rep</TableHead>
+                  <TableHead className="text-xs">Client</TableHead>
+                  <TableHead className="text-xs">Investment</TableHead>
+                  <TableHead className="text-xs">Rate</TableHead>
+                  <TableHead className="text-xs">Calculated</TableHead>
+                  <TableHead className="text-xs">Approved</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Actions</TableHead>
                 </TableRow>
-              ) : (
-                incentivesList.map((inc) => (
-                  <TableRow key={inc.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={inc.salesRep?.image || ""} />
-                          <AvatarFallback className="text-[9px]">{inc.salesRep?.name?.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{inc.salesRep?.name || "—"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{inc.clientAccount?.clientName || "—"}</TableCell>
-                    <TableCell className="text-xs font-mono">{formatINR(inc.investmentAmount)}</TableCell>
-                    <TableCell className="text-xs">{inc.incentiveRate}%</TableCell>
-                    <TableCell className="text-xs font-mono font-medium">{formatINR(inc.calculatedAmount)}</TableCell>
-                    <TableCell className="text-xs font-mono text-emerald-400">{inc.approvedAmount ? formatINR(inc.approvedAmount) : "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[10px] border-0", STATUS_COLORS[inc.status])}>
-                        {inc.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {inc.status === "PENDING" && (
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs text-emerald-400 hover:text-emerald-300"
-                            onClick={() => handleApproveOpen(inc.id, inc.calculatedAmount)}
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs text-red-400 hover:text-red-300"
-                            onClick={() => handleReject(inc.id)}
-                          >
-                            <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
-                          </Button>
-                        </div>
-                      )}
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}><TableCell colSpan={8} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
+                  ))
+                ) : incentivesList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      No incentives found
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        {(data?.totalPages ?? 0) > 1 && (
-          <div className="flex items-center justify-between p-4 border-t">
-            <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
-            <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
-              <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => setPage(p => p + 1)}>Next</Button>
-            </div>
+                ) : (
+                  incentivesList.map((inc) => (
+                    <TableRow key={inc.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={inc.salesRep?.image || ""} />
+                            <AvatarFallback className="text-[9px]">{inc.salesRep?.name?.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{inc.salesRep?.name || "—"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{inc.clientAccount?.clientName || "—"}</TableCell>
+                      <TableCell className="text-xs font-mono">{formatINR(inc.investmentAmount)}</TableCell>
+                      <TableCell className="text-xs">{inc.incentiveRate}%</TableCell>
+                      <TableCell className="text-xs font-mono font-medium">{formatINR(inc.calculatedAmount)}</TableCell>
+                      <TableCell className="text-xs font-mono text-emerald-400">{inc.approvedAmount ? formatINR(inc.approvedAmount) : "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn("text-[10px] border-0", STATUS_COLORS[inc.status])}>
+                          {inc.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {inc.status === "PENDING" && (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs text-emerald-400 hover:text-emerald-300"
+                              onClick={() => handleApproveOpen(inc.id, inc.calculatedAmount)}
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs text-red-400 hover:text-red-300"
+                              onClick={() => handleReject(inc.id)}
+                            >
+                              <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
-      </Card>
+          {(data?.totalPages ?? 0) > 1 && (
+            <div className="flex items-center justify-between p-4 border-t">
+              <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
+                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => setPage(p => p + 1)}>Next</Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
 
       {/* Approve Modal */}
       <Dialog open={!!approveModal} onOpenChange={(open) => !open && handleApproveClose()}>
@@ -350,6 +348,6 @@ export default function IncentivesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageWrapper>
   );
 }

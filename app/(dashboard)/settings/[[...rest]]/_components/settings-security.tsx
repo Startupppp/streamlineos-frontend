@@ -1,97 +1,64 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { useChangePassword } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-function PasswordStrengthMeter({ password }: { password: string }) {
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (password.length >= 12) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[@$!%*?&]/.test(password)) score++;
-
-  const level = score <= 2 ? 1 : score <= 4 ? 2 : score <= 5 ? 3 : 4;
-  const label =
-    level <= 1 ? "Weak" : level <= 2 ? "Medium" : level <= 3 ? "Strong" : "Very Strong";
-  const barColor =
-    level <= 1
-      ? "bg-red-500"
-      : level <= 2
-        ? "bg-yellow-500"
-        : level <= 3
-          ? "bg-green-500"
-          : "bg-emerald-500";
-  const textColor =
-    level <= 1 ? "text-red-500" : level <= 2 ? "text-yellow-500" : "text-green-500";
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex gap-1">
-        {[1, 2, 3, 4].map((l) => (
-          <div
-            key={l}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${l <= level ? barColor : "bg-muted"}`}
-          />
-        ))}
-      </div>
-      <p className={`text-xs ${textColor}`}>{label}</p>
-    </div>
-  );
+/* ── Helpers ── */
+function getStrength(pw: string) {
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (pw.length >= 12) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[a-z]/.test(pw)) s++;
+  if (/\d/.test(pw)) s++;
+  if (/[@$!%*?&]/.test(pw)) s++;
+  const level = s <= 2 ? 1 : s <= 4 ? 2 : s <= 5 ? 3 : 4;
+  const colors = ["bg-red-500", "bg-amber-400", "bg-emerald-400", "bg-emerald-500"];
+  const labels = ["Weak", "Fair", "Good", "Strong"];
+  return { level, color: colors[level - 1], label: labels[level - 1] };
 }
 
-function PasswordRules({ password }: { password: string }) {
-  const rules: { label: string; met: boolean }[] = [
-    { label: "At least 8 characters", met: password.length >= 8 },
-    { label: "At most 15 characters", met: password.length <= 15 },
-    { label: "One uppercase letter", met: /[A-Z]/.test(password) },
-    { label: "One lowercase letter", met: /[a-z]/.test(password) },
-    { label: "One number", met: /\d/.test(password) },
-    { label: "One special character (@$!%*?&)", met: /[@$!%*?&]/.test(password) },
-  ];
+const RULES: { label: string; test: (pw: string) => boolean }[] = [
+  { label: "8–15 characters", test: (pw) => pw.length >= 8 && pw.length <= 15 },
+  { label: "One uppercase letter", test: (pw) => /[A-Z]/.test(pw) },
+  { label: "One lowercase letter", test: (pw) => /[a-z]/.test(pw) },
+  { label: "One number", test: (pw) => /\d/.test(pw) },
+  { label: "One special character (@$!%*?&)", test: (pw) => /[@$!%*?&]/.test(pw) },
+];
 
-  return (
-    <div className="space-y-1 text-xs">
-      {rules.map(({ label, met }) => (
-        <p key={label} className={met ? "text-emerald-500" : "text-muted-foreground"}>
-          {met ? "✓" : "○"} {label}
-        </p>
-      ))}
-    </div>
-  );
+function isPasswordValid(pw: string) {
+  return RULES.every((r) => r.test(pw));
 }
 
-interface PasswordFieldProps {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  maxLength?: number;
-  show: boolean;
-  onToggleShow: () => void;
-}
-
-function PasswordField({
+function PasswordInput({
   id,
   label,
   value,
   onChange,
   placeholder,
   maxLength,
-  show,
-  onToggleShow,
-}: PasswordFieldProps) {
+  autoComplete,
+  error,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  maxLength?: number;
+  autoComplete?: string;
+  error?: string;
+}) {
+  const [show, setShow] = useState(false);
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-[13px] font-medium">{label}</Label>
       <div className="relative">
         <Input
           id={id}
@@ -100,131 +67,158 @@ function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
-          className="pr-10"
+          autoComplete={autoComplete}
+          className={cn("h-9 text-sm pr-9", error && "border-destructive")}
         />
         <button
           type="button"
-          onClick={onToggleShow}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          aria-label={show ? "Hide password" : "Show password"}
+          onClick={() => setShow((v) => !v)}
+          tabIndex={-1}
+          aria-label={show ? "Hide" : "Show"}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 transition-colors"
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
+      {error && <p className="text-[11px] text-destructive">{error}</p>}
     </div>
   );
 }
 
 export function SettingsSecurity() {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   const changePassword = useChangePassword();
+  const strength = next ? getStrength(next) : null;
+  const mismatch = confirm.length > 0 && next !== confirm;
+  const canSubmit =
+    current.length > 0 &&
+    isPasswordValid(next) &&
+    next === confirm &&
+    !changePassword.isPending;
 
-  const passwordValid =
-    newPassword.length >= 8 &&
-    newPassword.length <= 15 &&
-    /[a-z]/.test(newPassword) &&
-    /[A-Z]/.test(newPassword) &&
-    /\d/.test(newPassword) &&
-    /[@$!%*?&]/.test(newPassword);
-
-  const handleChangePassword = useCallback(() => {
-    if (!newPassword || !currentPassword) return;
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
+  const handleSubmit = useCallback(() => {
+    if (!canSubmit) return;
     changePassword.mutate(
-      { currentPassword, newPassword },
+      { currentPassword: current, newPassword: next },
       {
         onSuccess: () => {
           toast.success("Password changed successfully");
-          setCurrentPassword("");
-          setNewPassword("");
-          setConfirmPassword("");
+          setCurrent(""); setNext(""); setConfirm("");
         },
         onError: (err) => {
           toast.error(err instanceof Error ? err.message : "Failed to change password");
         },
       }
     );
-  }, [currentPassword, newPassword, confirmPassword, changePassword]);
+  }, [canSubmit, current, next, changePassword]);
 
   return (
-    <Card className="border-border">
-      <CardHeader>
-        <CardTitle className="text-foreground">Change Password</CardTitle>
-        <CardDescription>
-          Update your account password. Use a strong, unique password.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <PasswordField
-          id="current-password"
-          label="Current Password"
-          value={currentPassword}
-          onChange={setCurrentPassword}
-          placeholder="Enter current password"
-          show={showCurrentPassword}
-          onToggleShow={() => setShowCurrentPassword((v) => !v)}
+    <div className="rounded-lg border border-border bg-card p-5 space-y-5">
+      {/* Header */}
+      <div className="flex items-center gap-2.5">
+        <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-foreground">Change password</p>
+          <p className="text-[11px] text-muted-foreground">Use a unique, strong password.</p>
+        </div>
+      </div>
+
+      <div className="h-px bg-border" />
+
+      {/* Fields */}
+      <div className="space-y-4">
+        <PasswordInput
+          id="current-pw"
+          label="Current password"
+          value={current}
+          onChange={setCurrent}
+          placeholder="Your current password"
+          autoComplete="current-password"
         />
 
-        <div className="space-y-2">
-          <PasswordField
-            id="new-password"
-            label="New Password"
-            value={newPassword}
-            onChange={setNewPassword}
-            placeholder="8–15 characters"
-            maxLength={15}
-            show={showNewPassword}
-            onToggleShow={() => setShowNewPassword((v) => !v)}
-          />
-          {newPassword && <PasswordStrengthMeter password={newPassword} />}
-          {newPassword && <PasswordRules password={newPassword} />}
-        </div>
+        <PasswordInput
+          id="new-pw"
+          label="New password"
+          value={next}
+          onChange={setNext}
+          placeholder="8–15 characters"
+          maxLength={15}
+          autoComplete="new-password"
+        />
 
-        <div className="space-y-2">
-          <PasswordField
-            id="confirm-password"
-            label="Confirm New Password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            placeholder="Confirm new password"
-            show={showConfirmPassword}
-            onToggleShow={() => setShowConfirmPassword((v) => !v)}
-          />
-          {confirmPassword && newPassword !== confirmPassword && (
-            <p className="text-xs text-destructive">Passwords do not match</p>
+        {/* Strength meter */}
+        {next.length > 0 && strength && (
+          <div className="space-y-2">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4].map((l) => (
+                <div
+                  key={l}
+                  className={cn(
+                    "h-1 flex-1 rounded-full transition-colors",
+                    l <= strength.level ? strength.color : "bg-muted"
+                  )}
+                />
+              ))}
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                {RULES.map((r) => (
+                  <p
+                    key={r.label}
+                    className={cn(
+                      "text-[11px] leading-snug",
+                      r.test(next) ? "text-emerald-500" : "text-muted-foreground"
+                    )}
+                  >
+                    {r.test(next) ? "✓" : "○"} {r.label}
+                  </p>
+                ))}
+              </div>
+              <span
+                className={cn(
+                  "text-[11px] font-semibold self-start",
+                  strength.level === 1 && "text-red-500",
+                  strength.level === 2 && "text-amber-500",
+                  strength.level >= 3 && "text-emerald-500"
+                )}
+              >
+                {strength.label}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <PasswordInput
+          id="confirm-pw"
+          label="Confirm new password"
+          value={confirm}
+          onChange={setConfirm}
+          placeholder="Re-enter new password"
+          autoComplete="new-password"
+          error={mismatch ? "Passwords do not match" : undefined}
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end pt-1">
+        <Button
+          size="sm"
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          className="h-8 px-4 text-xs"
+        >
+          {changePassword.isPending ? (
+            <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Changing…</>
+          ) : (
+            "Update password"
           )}
-        </div>
-
-        <div className="flex justify-end pt-2">
-          <Button
-            onClick={handleChangePassword}
-            disabled={
-              changePassword.isPending ||
-              !currentPassword ||
-              !passwordValid ||
-              newPassword !== confirmPassword
-            }
-          >
-            {changePassword.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Changing...
-              </>
-            ) : (
-              "Change Password"
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </Button>
+      </div>
+    </div>
   );
 }

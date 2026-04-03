@@ -2,16 +2,16 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useRef, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
-import { Camera, Loader2, Trash2, Check } from "lucide-react";
+import { Camera, Loader2, Trash2, Check, X } from "lucide-react";
 import { useUpdateProfile } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export function SettingsProfile() {
   const { data: session, update: updateSession } = useSession();
@@ -29,18 +29,20 @@ export function SettingsProfile() {
 
   const isBusy = uploading || updateProfile.isPending;
   const displayImage = previewUrl || resolveImageUrl(session?.user?.image);
+  const name = session?.user?.name || "";
+  const email = session?.user?.email || "";
+  const initials = name.charAt(0).toUpperCase() || "U";
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
+    if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
       toast.error("Please select an image file (JPEG, PNG, GIF, or WebP)");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be smaller than 5MB");
+      toast.error("Image must be smaller than 5 MB");
       return;
     }
 
@@ -50,13 +52,11 @@ export function SettingsProfile() {
       setCropDialogOpen(true);
     };
     reader.readAsDataURL(file);
-
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
   const handleCropComplete = useCallback(async (croppedBlob: Blob) => {
     if (!session?.user?.id) return;
-
     setUploading(true);
     try {
       const file = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" });
@@ -66,16 +66,11 @@ export function SettingsProfile() {
       formData.append("file", file);
       formData.append("folder", "avatars");
 
-      const res = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetch("/api/storage/upload", { method: "POST", body: formData });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Upload failed");
+        const d = await res.json();
+        throw new Error(d.error || "Upload failed");
       }
-
       const { url, key } = await res.json();
       const imageValue = url || key;
 
@@ -85,13 +80,12 @@ export function SettingsProfile() {
           {
             onSuccess: async () => {
               await updateSession({});
-              toast.success("Profile updated successfully");
-              setIsEditingName(false);
+              toast.success("Profile photo updated");
               setTimeout(() => setPreviewUrl(null), 1000);
               resolve();
             },
             onError: (err) => {
-              toast.error(err instanceof Error ? err.message : "Failed to update profile");
+              toast.error(err instanceof Error ? err.message : "Failed to update photo");
               reject(err);
             },
           }
@@ -116,26 +110,18 @@ export function SettingsProfile() {
         updateProfile.mutate(
           { userId: session.user.id, image: "" },
           {
-            onSuccess: async () => {
-              await updateSession({});
-              setPreviewUrl(null);
-              resolve();
-            },
+            onSuccess: async () => { await updateSession({}); setPreviewUrl(null); resolve(); },
             onError: (err) => reject(err),
           }
         );
       });
+      toast.success("Profile photo removed");
     } catch {
       toast.error("Failed to remove photo");
     } finally {
       setUploading(false);
     }
   }, [session, updateProfile, updateSession]);
-
-  const handleStartEditName = useCallback(() => {
-    setEditName(session?.user?.name || "");
-    setIsEditingName(true);
-  }, [session]);
 
   const handleSaveName = useCallback(() => {
     if (!session?.user?.id || !editName.trim()) return;
@@ -144,11 +130,11 @@ export function SettingsProfile() {
       {
         onSuccess: async () => {
           await updateSession({});
-          toast.success("Profile updated successfully");
+          toast.success("Name updated");
           setIsEditingName(false);
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to update profile");
+          toast.error(err instanceof Error ? err.message : "Failed to update name");
         },
       }
     );
@@ -156,142 +142,141 @@ export function SettingsProfile() {
 
   return (
     <>
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-foreground">Profile Information</CardTitle>
-          <CardDescription>Update your profile details and photo.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center gap-6">
-            <div className="relative group">
-              <Avatar className="h-20 w-20 border-2 border-border">
-                <AvatarImage src={displayImage} />
-                <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
-                  {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                type="button"
-                disabled={isBusy}
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Change profile photo"
-                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
-              >
-                {isBusy ? (
-                  <Loader2 className="h-6 w-6 text-white animate-spin" />
-                ) : (
-                  <Camera className="h-6 w-6 text-white" />
-                )}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-            </div>
+      {/* Avatar row */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative group shrink-0">
+          <Avatar className="h-16 w-16 ring-2 ring-border">
+            <AvatarImage src={displayImage} />
+            <AvatarFallback className="text-xl font-bold bg-gold/10 text-gold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Change profile photo"
+            className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+          >
+            {isBusy ? (
+              <Loader2 className="h-5 w-5 text-white animate-spin" />
+            ) : (
+              <Camera className="h-5 w-5 text-white" />
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            aria-label="Upload profile photo"
+            onChange={handleFileSelect}
+          />
+        </div>
 
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">{session?.user?.name || "User"}</h3>
-              <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isBusy}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {isBusy ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="h-4 w-4 mr-1" />
-                      Change Photo
-                    </>
-                  )}
-                </Button>
-                {session?.user?.image && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={isBusy}
-                    onClick={handleRemovePhoto}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground">Full Name</Label>
-              {isEditingName ? (
-                <div className="flex gap-2">
-                  <Input
-                    id="name"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Enter your full name"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleSaveName}
-                    disabled={updateProfile.isPending || !editName.trim()}
-                    className="shrink-0"
-                  >
-                    {updateProfile.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Check className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setIsEditingName(false)}
-                    className="shrink-0"
-                  >
-                    Cancel
-                  </Button>
-                </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-semibold text-foreground truncate">{name || "—"}</p>
+          <p className="text-xs text-muted-foreground truncate">{email}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              disabled={isBusy}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isBusy ? (
+                <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Uploading…</>
               ) : (
-                <div
-                  className="flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 text-sm cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={handleStartEditName}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleStartEditName(); }}
-                  aria-label="Click to edit name"
-                >
-                  {session?.user?.name || "Click to set name"}
-                </div>
+                <><Camera className="h-3 w-3 mr-1" />Change photo</>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={session?.user?.email || ""}
-                disabled
-                className="bg-muted/50"
-              />
-              <p className="text-xs text-muted-foreground">
-                Email cannot be changed. Contact admin for assistance.
-              </p>
-            </div>
+            </Button>
+            {session?.user?.image && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                disabled={isBusy}
+                onClick={handleRemovePhoto}
+              >
+                <Trash2 className="h-3 w-3 mr-1" />Remove
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Fields */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Name */}
+        <div className="space-y-1.5">
+          <Label htmlFor="display-name" className="text-[13px] font-medium">Display name</Label>
+          {isEditingName ? (
+            <div className="flex gap-1.5">
+              <Input
+                id="display-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveName();
+                  if (e.key === "Escape") setIsEditingName(false);
+                }}
+                placeholder="Your full name"
+                autoFocus
+                className="h-9 text-sm flex-1"
+              />
+              <Button
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={handleSaveName}
+                disabled={updateProfile.isPending || !editName.trim()}
+              >
+                {updateProfile.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setIsEditingName(false)}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setEditName(name); setIsEditingName(true); }}
+              className={cn(
+                "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm",
+                "text-left cursor-pointer hover:border-border/80 hover:bg-muted/40 transition-colors",
+                !name && "text-muted-foreground"
+              )}
+              aria-label="Click to edit name"
+            >
+              {name || "Click to set name"}
+            </button>
+          )}
+        </div>
+
+        {/* Email (read-only) */}
+        <div className="space-y-1.5">
+          <Label htmlFor="email-display" className="text-[13px] font-medium">Email address</Label>
+          <Input
+            id="email-display"
+            type="email"
+            value={email}
+            disabled
+            className="h-9 text-sm bg-muted/40"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Contact your admin to change email.
+          </p>
+        </div>
+      </div>
 
       {cropImageSrc && (
         <AvatarCropDialog

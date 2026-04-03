@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Dialog,
   DialogContent,
@@ -238,18 +238,10 @@ export default function TargetsPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <PageHeader
-          title="Targets & Leaderboard"
-          description="Track daily targets and team performance rankings"
-        />
-        {canSetTargets && (
+    <PageWrapper
+      title="Targets & Leaderboard"
+      subtitle="Track daily targets and team performance rankings"
+      actions={canSetTargets ? (
           <Sheet open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) setSelectedUserIds([]); }}>
             <SheetTrigger asChild>
               <Button className="bg-gold hover:bg-gold/90 text-white shadow-lg">
@@ -368,9 +360,14 @@ export default function TargetsPage() {
               </form>
             </SheetContent>
           </Sheet>
-        )}
-      </motion.div>
-
+      ) : undefined}
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
       {myTargets && myTargets.length > 0 && (
         <motion.div variants={fadeUp}>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -572,6 +569,7 @@ export default function TargetsPage() {
           </Card>
         )}
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </PageWrapper>
   );
 }

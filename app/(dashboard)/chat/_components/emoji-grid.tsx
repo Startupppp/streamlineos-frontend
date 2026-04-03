@@ -39,7 +39,7 @@ export function EmojiGrid({ onSelect }: { onSelect: (emoji: string) => void }) {
             className={cn(
               "px-2 py-1.5 text-[10px] font-medium rounded-t-md transition-colors",
               idx === activeTab
-                ? "bg-[#bd882c]/10 text-[#bd882c]"
+                ? "bg-gold/10 text-gold"
                 : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
             )}
           >

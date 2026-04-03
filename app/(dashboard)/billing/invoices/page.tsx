@@ -55,6 +55,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { InvoiceStatus } from "@/types/invoice";
@@ -107,18 +108,34 @@ function InvoicesContent() {
     });
   };
 
+  const filtersBar = (
+    <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <SelectTrigger className="w-[160px]">
+        <SelectValue placeholder="Filter status" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All Statuses</SelectItem>
+        <SelectItem value="DRAFT">Draft</SelectItem>
+        <SelectItem value="SENT">Sent</SelectItem>
+        <SelectItem value="PAID">Paid</SelectItem>
+        <SelectItem value="OVERDUE">Overdue</SelectItem>
+        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Invoices</h2>
-          <p className="text-sm text-muted-foreground">Manage and track all invoices</p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+    <PageWrapper
+      title="Invoices"
+      subtitle="Manage and track all invoices"
+      actions={
+        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-gold hover:bg-gold/90 text-white">
           <Plus className="h-4 w-4" /> New Invoice
         </Button>
-      </div>
-
+      }
+      filters={filtersBar}
+    >
+      <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -160,22 +177,6 @@ function InvoicesContent() {
             <p className="text-xs text-muted-foreground">Ready to send</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Filter status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="DRAFT">Draft</SelectItem>
-            <SelectItem value="SENT">Sent</SelectItem>
-            <SelectItem value="PAID">Paid</SelectItem>
-            <SelectItem value="OVERDUE">Overdue</SelectItem>
-            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <Card>
@@ -262,7 +263,8 @@ function InvoicesContent() {
       </Card>
 
       <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />
-    </div>
+      </div>
+    </PageWrapper>
   );
 }
 
@@ -401,7 +403,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={createInvoice.isPending} className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+            <Button onClick={handleSubmit} disabled={createInvoice.isPending} className="bg-gold hover:bg-gold/90 text-white">
               {createInvoice.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
               Create Invoice
             </Button>

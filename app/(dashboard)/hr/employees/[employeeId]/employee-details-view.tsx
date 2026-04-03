@@ -7,7 +7,6 @@ import { useHrEmployeeStats, useHrEmployeeProjects, useHrEmployeeTickets } from 
 import { EmployeeLeaveStats, EmployeeAttendanceSummary } from "@/components/hr/employee-stats-cards";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
-import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";

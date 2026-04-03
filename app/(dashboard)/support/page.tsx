@@ -14,7 +14,7 @@ import { MetricCard } from "@/components/crm/metric-card";
 import { MiniAreaChart } from "@/components/crm/mini-area-chart";
 import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
 import { ActivityFeed } from "@/components/crm/activity-feed";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { useSupportDashboard } from "@/lib/hooks/trpc-hooks";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
@@ -61,18 +61,16 @@ export default function SupportDashboardPage() {
   const { supportDashboardStats } = data;
 
   return (
+    <PageWrapper
+      title="Support Analytics"
+      subtitle="Real-time insights into customer support performance across all channels"
+    >
     <motion.div
       className="space-y-6"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={fadeUp}>
-        <PageHeader
-          title="Support Analytics"
-          description="Real-time insights into customer support performance across all channels"
-        />
-      </motion.div>
 
       <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
@@ -284,5 +282,6 @@ export default function SupportDashboardPage() {
         </Card>
       </motion.div>
     </motion.div>
+    </PageWrapper>
   );
 }

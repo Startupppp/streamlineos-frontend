@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealTableView } from "@/components/crm/deal-table-view";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -125,23 +125,19 @@ export default function DealsPage() {
   }
 
   return (
-    <motion.div
-      className="space-y-6 p-6"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-between">
-        <PageHeader title="Deals Pipeline" description="Track and manage your deals across stages" />
-        <div className="flex items-center gap-2">
+    <PageWrapper
+      title="Deals Pipeline"
+      subtitle="Track and manage your deals across stages"
+      actions={
+        <>
         <div className="flex items-center border border-border rounded-md">
           <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-            className={cn("rounded-r-none", view === "table" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+            className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/90 text-white")}
             onClick={() => handleViewChange("table")}>
             <TableIcon className="h-4 w-4" />
           </Button>
           <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
-            className={cn("rounded-l-none", view === "kanban" && "bg-[#bd882c] hover:bg-[#a67724] text-white")}
+            className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/90 text-white")}
             onClick={() => handleViewChange("kanban")}>
             <LayoutGrid className="h-4 w-4" />
           </Button>
@@ -183,7 +179,7 @@ export default function DealsPage() {
         </Button>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
+            <Button className="bg-gold hover:bg-gold/90 text-white">
               <Plus className="h-4 w-4 mr-2" />
               New Deal
             </Button>
@@ -198,9 +194,15 @@ export default function DealsPage() {
             />
           </DialogContent>
         </Dialog>
-        </div>
-      </motion.div>
-
+        </>
+      }
+    >
+      <motion.div
+        className="space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
       <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
         {[
           { label: "Total Deals", value: stats.total, icon: TrendingUp, color: "text-blue-400" },
@@ -286,7 +288,7 @@ export default function DealsPage() {
                           </DropdownMenu>
                         </div>
 
-                        <p className="text-lg font-bold text-[#bd882c] mt-1">
+                        <p className="text-lg font-bold text-gold mt-1">
                           {formatINR(Number(deal.value || 0))}
                         </p>
 
@@ -322,7 +324,7 @@ export default function DealsPage() {
                           <div className="mt-2">
                             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-[#bd882c]"
+                                className="h-full rounded-full bg-gold"
                                 style={{ width: `${deal.probability}%` }}
                               />
                             </div>
@@ -364,7 +366,8 @@ export default function DealsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </motion.div>
+      </motion.div>
+    </PageWrapper>
   );
 }
 
@@ -462,7 +465,7 @@ function CreateDealForm({
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" placeholder="Additional notes..." className="min-h-[80px]" />
       </div>
-      <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createMutation.isPending}>
+      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createMutation.isPending}>
         {createMutation.isPending ? "Creating..." : "Create Deal"}
       </Button>
     </form>
