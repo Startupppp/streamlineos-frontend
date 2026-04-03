@@ -84,6 +84,8 @@ export const users = pgTable("users", {
     phone: string;
     email?: string;
   }>(),
+  totpSecret: text("totp_secret"),
+  totpEnabled: boolean("totp_enabled").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

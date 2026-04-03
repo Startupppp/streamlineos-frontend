@@ -4,6 +4,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SettingsProfile } from "./_components/settings-profile";
 import { SettingsSecurity } from "./_components/settings-security";
 import { SettingsPreferences } from "./_components/settings-preferences";
+import { MfaSettings } from "@/components/settings/mfa-settings";
 import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
@@ -47,7 +48,10 @@ export default function SettingsPage() {
               Change your password and manage account security.
             </p>
           </div>
-          <SettingsSecurity />
+          <div className="space-y-4">
+            <SettingsSecurity />
+            <MfaSettings />
+          </div>
         </section>
       </div>
     </PageWrapper>

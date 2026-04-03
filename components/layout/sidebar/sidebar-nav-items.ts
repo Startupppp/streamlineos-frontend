@@ -13,6 +13,7 @@ import {
   Settings,
   Clock,
   CalendarCheck,
+  CalendarDays,
   Receipt,
   FileText,
   Laptop,
@@ -58,6 +59,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
             { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
           ],
@@ -128,6 +130,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
             { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
           ],
@@ -187,6 +190,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Sales Hub", icon: BarChart3, href: "/sales" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
@@ -212,6 +216,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Support Hub", icon: BarChart3, href: "/customer-executive" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
@@ -234,6 +239,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Marketing Hub", icon: BarChart3, href: "/marketing" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
@@ -258,6 +264,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
@@ -279,6 +286,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Core",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+            { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },

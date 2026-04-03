@@ -16,7 +16,6 @@ export const intakeStatusEnum = pgEnum("intake_status", ["pending", "accepted", 
 export const intakeSourceEnum = pgEnum("intake_source", ["manual", "web_form", "email"]);
 export const workItemRelationTypeEnum = pgEnum("work_item_relation_type", ["blocks", "blocked_by", "duplicate_of", "relates_to"]);
 export const viewLayoutEnum = pgEnum("view_layout", ["board", "list", "table", "calendar", "gantt"]);
-export const workflowStatusEnum = pgEnum("workflow_status", ["ACTIVE", "INACTIVE"]);
 
 // ─── HR ───
 export const leaveStatusEnum = pgEnum("leave_status", ["PENDING", "APPROVED", "REJECTED"]);

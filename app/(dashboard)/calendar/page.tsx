@@ -1,0 +1,13 @@
+import type { Metadata } from "next";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { CalendarView } from "./_components/calendar-view";
+
+export const metadata: Metadata = { title: "Calendar | Vaivamm CRM" };
+
+export default function CalendarPage() {
+  return (
+    <PageWrapper title="Calendar" noInternalScroll>
+      <CalendarView />
+    </PageWrapper>
+  );
+}

@@ -1,11 +1,11 @@
 /**
  * Project management tables: projects, tickets, sprints, cycles, modules, pages, views,
- * statuses, comments, attachments, labels, intake, work item relations, timesheets, workflows.
+ * statuses, comments, attachments, labels, intake, work item relations, timesheets.
  */
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
-  ticketPriorityEnum, projectStatusEnum, workflowStatusEnum,
+  ticketPriorityEnum, projectStatusEnum,
   stateGroupEnum, cycleStatusEnum, moduleStatusEnum,
   intakeStatusEnum, intakeSourceEnum, workItemRelationTypeEnum, viewLayoutEnum,
 } from "./enums";
@@ -280,17 +280,6 @@ export const pages = pgTable("pages", {
   index("idx_pages_org").on(table.orgId),
   foreignKey({ columns: [table.parentPageId], foreignColumns: [table.id] }),
 ]);
-
-export const workflows = pgTable("workflows", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  status: workflowStatusEnum("status").default("ACTIVE"),
-  steps: jsonb("steps").$type<{ from: string; to: string; condition?: string }[]>(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
