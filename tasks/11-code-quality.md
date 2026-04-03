@@ -165,13 +165,95 @@ Check for duplicate components across directories:
 
 Scan for list renders missing unique `key` props — this is a common React anti-pattern in large codebases.
 
+### 11.13 Fix `as any[]` Type Assertions (9 instances)
+
+**Files with `as any[]` that need proper typing**:
+- `app/(dashboard)/crm/clients/page.tsx`
+- `app/(dashboard)/crm/leads/distribute/page.tsx`
+- `app/(dashboard)/digital-marketing/campaigns/page.tsx`
+- `app/(dashboard)/digital-marketing/leads/page.tsx`
+- `app/(dashboard)/hr/incentives/page.tsx` (2 instances)
+- `app/(dashboard)/settings/branches/page.tsx`
+- `components/crm/lead-export-dialog.tsx`
+
+**Fix**: Replace `as any[]` with proper typed arrays using Drizzle inferred types.
+
+### 11.14 Centralize Hardcoded Constants
+
+**Scattered constants** that should be centralized:
+- Lead pipeline stages: `["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]` repeated in multiple files
+- Deal stages: `["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]` hardcoded in crm.ts
+- Stage colors: hardcoded hex strings in `server/api/routers/crm.ts`
+
+**Fix**: Create `lib/constants/pipeline.ts` with all stage/status/color constants.
+
+### 11.15 Fix Date/Timezone Handling
+
+**264 instances of `new Date()`** throughout codebase without timezone consideration.
+- Create centralized date utility using `date-fns` (already installed)
+- Handle organization timezone settings
+- Ensure consistent date formatting across all modules
+
+### 11.16 Remove Unused `zustand` Dependency
+
+`zustand@5.0.9` is in `package.json` but zero Zustand stores exist in the codebase. Remove it:
+```bash
+pnpm remove zustand
+```
+
 ---
 
-**Acceptance Criteria**:
-- Zero dead code files
-- Zero `eslint-disable` comments
-- Zero TODO comments in production code
-- Zero anonymous inline handlers
-- All Zod schemas match DB schema
-- Build passes with zero warnings
-- `pnpm lint` passes with zero errors
+## Rules to Follow
+
+1. **Fix, Don't Suppress**: Fix the underlying issue, don't add eslint-disable
+2. **Type, Don't Cast**: Use proper types instead of `as any`
+3. **Centralize, Don't Repeat**: Extract repeated constants/patterns
+4. **Delete, Don't Comment**: Remove dead code, don't comment it out
+5. **Verify, Don't Assume**: Run build + lint after every change
+
+---
+
+## Checklist
+
+- [ ] Delete dead files: `task` (root), `test-drizzle.ts`, `audit/REPORT.md`, `lib/email-templates.ts`
+- [ ] Remove `env.example` (duplicate — already deleted)
+- [ ] Update `drizzle.config.ts` schema path if needed
+- [ ] Fix ALL 14 `eslint-disable` comments (fix underlying issues)
+- [ ] Fix ALL 9 `as any[]` type assertions with proper types
+- [ ] Split `components/illustrations/index.tsx` (50KB) into individual files
+- [ ] Remove ALL TODO/FIXME comments from production code (8 server files)
+- [ ] Replace anonymous inline handlers with named functions
+- [ ] Run `pnpm lint --fix` to clean unused imports
+- [ ] Create specific interfaces for `Record<string, unknown>` usages
+- [ ] Use `Role` union type everywhere instead of loose `string`
+- [ ] Verify Zod schemas match DB schema (hr, project, leave, attendance)
+- [ ] Centralize pipeline stage constants
+- [ ] Centralize stage color constants
+- [ ] Audit and fix timezone handling (264 `new Date()` instances)
+- [ ] Remove `zustand` from package.json
+- [ ] Audit duplicate components across directories
+- [ ] Scan for missing `key` props in list renders
+- [ ] Check `app/qr/[slug]/` and `app/(dashboard)/ceo/` for dead routes
+- [ ] `pnpm build` passes with zero errors
+- [ ] `pnpm lint` passes with zero warnings
+
+## Acceptance Criteria
+
+1. Zero `eslint-disable` or `@ts-ignore` comments
+2. Zero `as any` type assertions
+3. Zero TODO/FIXME comments in production code
+4. Zero anonymous inline handlers
+5. Zero unused dependencies
+6. All Zod schemas verified against DB schema
+7. Largest single file under 500 lines
+8. `pnpm build` and `pnpm lint` pass with zero warnings
+
+## Testing Plan
+
+1. Run `pnpm lint` — must pass with zero warnings
+2. Run `pnpm build` — must pass with zero errors
+3. Run `pnpm tsc --noEmit` — must pass with zero type errors
+4. Search codebase for `eslint-disable` — must find zero
+5. Search codebase for `as any` — must find zero
+6. Search codebase for `TODO|FIXME|HACK` — must find zero
+7. Verify all pages still render correctly after changes

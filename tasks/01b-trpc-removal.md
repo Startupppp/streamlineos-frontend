@@ -1,6 +1,51 @@
-# Task 01b: Complete tRPC Removal
+# Task 01b: tRPC Removal (EVALUATE FIRST)
 
-## Priority: 🔴 CRITICAL — Must Execute After Task 06 (Infrastructure)
+## Priority: CRITICAL (if approved) | Effort: 8-10 days | Dependencies: Task 06 (Infrastructure) | Status: NEEDS EVALUATION
+
+---
+
+## PRD
+
+### Problem Statement
+The app uses tRPC as its data layer (28 router files, 14 hooks). While tRPC works well, it:
+1. Forces all data-fetching pages to be client components (can't use Server Components for reads)
+2. Adds bundle size for tRPC client/React Query integration
+3. Creates an API layer between Server Components and the database that isn't needed in App Router
+4. Makes the architecture more complex than native Next.js patterns
+
+### Goals (if approved)
+- Migrate queries to server-side functions (called directly from Server Components)
+- Migrate mutations to Server Actions
+- Keep TanStack Query only for real-time data (chat, notifications)
+- Reduce bundle size and complexity
+
+### Non-Goals
+- Building a public REST API (separate concern)
+- Changing the database layer (Drizzle stays)
+- Rewriting business logic (just moving where it runs)
+
+### Success Criteria
+- Zero tRPC imports in codebase
+- All read-heavy pages render as Server Components
+- All mutations use Server Actions
+- No functional regression
+
+### DECISION REQUIRED
+**Before starting this task, evaluate**:
+1. Is the effort (120 files, 8-10 days) worth the benefit?
+2. Does tRPC provide value for type-safety between client/server?
+3. Can we get Server Component benefits without full tRPC removal?
+4. Risk of regression during migration?
+
+**Alternative**: Keep tRPC but use `prefetch` pattern to get Server Component rendering benefits without full removal.
+
+## Rules to Follow
+
+1. **One module at a time**: Migrate one feature module completely before moving to next
+2. **Test after each module**: Verify no regressions before proceeding
+3. **Keep tRPC running**: Don't delete tRPC until ALL modules are migrated
+4. **Type safety**: Every server query/action must be fully typed
+5. **Auth checks**: Every server query/action must verify session
 
 > This is the largest single task (~120 files). It migrates the entire data layer from tRPC to native Next.js App Router patterns.
 
@@ -310,12 +355,46 @@ Replace `RouterOutputs` with manually defined types from query return signatures
 
 ---
 
+## Checklist
+
+- [ ] **DECISION**: Evaluate tRPC removal vs. tRPC+prefetch hybrid (user approval needed)
+- [ ] Create `server/queries/` directory with domain query files
+- [ ] Create `server/actions/` directory with domain action files (enhance existing)
+- [ ] Migrate dashboard module (queries → server, mutations → actions)
+- [ ] Migrate CRM module (leads, deals, contacts, organizations)
+- [ ] Migrate HR module (employees, attendance, leaves, payroll, expenses)
+- [ ] Migrate Projects module (tickets, sprints, epics, etc.)
+- [ ] Migrate Chat module (keep TanStack Query for real-time)
+- [ ] Migrate Notifications module (keep TanStack Query for polling)
+- [ ] Migrate Settings module
+- [ ] Migrate Billing module
+- [ ] Migrate Support module
+- [ ] Delete all tRPC router files
+- [ ] Delete `trpc/` directory
+- [ ] Delete `lib/hooks/trpc-hooks.ts`
+- [ ] Uninstall `@trpc/client @trpc/react-query @trpc/server`
+- [ ] Replace `RouterOutputs` types with direct function return types
+- [ ] Update `QueryClientProvider` (remove tRPC wrapper)
+- [ ] Verify every page renders correctly
+- [ ] `pnpm build` passes with zero errors
+
 ## Acceptance Criteria
 
-- [ ] Zero tRPC imports remain anywhere in the codebase
-- [ ] `@trpc/*` packages removed from package.json
-- [ ] All pages render correctly (SSR for reads, client-side for mutations)
-- [ ] Server Actions handle all mutations with proper auth checks
-- [ ] TanStack Query handles real-time polling (chat, notifications)
-- [ ] Build passes with zero TypeScript errors
-- [ ] No regression in any feature functionality
+1. Zero tRPC imports remain anywhere in the codebase
+2. `@trpc/*` packages removed from package.json
+3. All pages render correctly (SSR for reads, client-side for mutations)
+4. Server Actions handle all mutations with proper auth checks
+5. TanStack Query handles real-time polling (chat, notifications)
+6. Build passes with zero TypeScript errors
+7. No regression in any feature functionality
+
+## Testing Plan
+
+1. After each module migration: test all CRUD operations for that module
+2. Verify Server Components render on server (React DevTools)
+3. Verify mutations work via Server Actions (form submissions, button actions)
+4. Test chat real-time messaging still works (TanStack Query polling)
+5. Test notification bell still updates (TanStack Query polling)
+6. Full regression test: navigate every page, perform key operations
+7. `pnpm build` and `pnpm lint` pass
+8. Verify bundle size decreased (compare before/after)

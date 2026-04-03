@@ -183,3 +183,13 @@ export const payments = pgTable("payments", {
 5. Overdue reminders sent automatically
 6. Financial dashboard shows real-time metrics
 7. Tax calculated correctly based on configuration
+
+## Testing Plan
+
+1. **Invoice Lifecycle**: Create draft → send → mark paid, verify status transitions
+2. **PDF Generation**: Download invoice PDF, verify content and formatting
+3. **Payment Recording**: Record partial payment, verify outstanding balance
+4. **Recurring**: Create recurring invoice, trigger cron, verify new invoice generated
+5. **Reminders**: Create overdue invoice, verify reminder notification sent
+6. **Tax**: Create invoice with GST, verify tax calculation accuracy
+7. **Dashboard**: Create 10 invoices with various statuses, verify dashboard metrics

@@ -140,9 +140,53 @@ As an investment platform, several domain-specific features are missing:
 - Export capability
 - Built on existing `auditLogs` table
 
-**Acceptance Criteria**:
-- Each feature module has complete CRUD
-- Navigation integrated into sidebar
-- RBAC applied (only authorized roles see each module)
-- Loading/error/empty states implemented
-- Mobile responsive
+---
+
+## Rules to Follow
+
+1. **Schema First**: Define database tables before building UI
+2. **RBAC from Day 1**: Every new module must have role-based access
+3. **Reuse Existing Components**: Use DataTable, MetricCard, FilterBar from shared
+4. **Feature-Based Structure**: Each module in `app/(dashboard)/{module}/`
+5. **Loading/Error/Empty**: Every new page must have all three states
+6. **Responsive**: Mobile-first design for all new pages
+
+---
+
+## Checklist
+
+- [ ] Design investor 360-degree view page
+- [ ] Enhance existing lead detail with full interaction timeline
+- [ ] Create compliance module schema (documents, filings, checklists)
+- [ ] Build compliance module pages (dashboard, documents, audits, filings)
+- [ ] Create fund administration schema (funds, investors, capital calls, distributions)
+- [ ] Build fund admin pages (fund list, detail, capital calls, distributions)
+- [ ] Create portfolio management schema (companies, valuations, cap tables)
+- [ ] Build portfolio pages (overview, company detail, valuations, exits)
+- [ ] Enhance reports module with investment-specific analytics
+- [ ] Add fund performance metrics (IRR, MOIC, TVPI)
+- [ ] Enhance global search (Cmd+K) to search all entity types
+- [ ] Build audit trail viewer page (`/settings/audit-log`)
+- [ ] Add sidebar navigation for new modules
+- [ ] Apply RBAC to all new modules
+- [ ] Add loading/error/empty states to all new pages
+- [ ] Test all new modules on mobile
+
+## Acceptance Criteria
+
+1. Each feature module has complete CRUD operations
+2. Navigation integrated into sidebar with proper role filtering
+3. RBAC applied (only authorized roles see each module)
+4. Loading/error/empty states implemented for every page
+5. Mobile responsive
+6. All new tables have proper audit columns and indexes
+
+## Testing Plan
+
+1. **Investor 360**: View lead profile, verify all interactions displayed
+2. **Compliance**: Create document, track filing, generate audit report
+3. **Fund Admin**: Create fund, execute capital call, record distribution
+4. **Portfolio**: Add company, create valuation, track performance metrics
+5. **Reports**: Generate investor report, verify PDF output
+6. **Search**: Use Cmd+K to search for lead, deal, employee, ticket
+7. **Audit Trail**: View audit log, filter by user/action/date

@@ -202,3 +202,13 @@ Marketing
 5. Lead attribution tracks source campaign
 6. Digital marketing module merged into marketing
 7. Marketing team sees only their authorized content
+
+## Testing Plan
+
+1. **Campaign CRUD**: Create, edit, and complete a campaign lifecycle
+2. **Metrics**: Create campaign, add leads attributed to it, verify dashboard metrics
+3. **Content Calendar**: Create, drag-drop reschedule, publish content items
+4. **Email Campaign**: Build and send test email campaign, verify delivery
+5. **Attribution**: Create a lead from a campaign, verify source tracked
+6. **RBAC**: Login as non-marketing role, verify marketing module restricted
+7. **Migration**: Verify digital-marketing pages redirect to new marketing routes

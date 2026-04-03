@@ -47,8 +47,9 @@
 - [ ] No Redis caching layer
 - [ ] No background job queue (cron jobs are HTTP-triggered, no retry/queue)
 - [ ] Offset-based pagination (degrades on large datasets)
-- [ ] Large monolithic components (Leads page ~67KB)
+- [ ] Large monolithic components (Leads page ~67KB / 1450 lines)
 - [ ] 14 eslint-disable/@ts-ignore suppression comments
+- [ ] 9 `as any[]` type assertions in pages
 - [ ] No soft-delete on business-critical tables (leads, deals, payrolls, tickets)
 - [ ] Missing audit columns (created_by, updated_by) on many tables
 - [ ] Duplicate/legacy CRM tables (~12 tables from demo/seed data)
@@ -60,10 +61,22 @@
 - [ ] No webhook system for integrations
 - [ ] Zustand installed but unused (dead dependency)
 - [ ] Permission checks at route level only, not at procedure/query level
-- [ ] No branch/entity isolation (Branch A can see Branch B data)
+- [ ] No branch/entity isolation (Branch A can see Branch B data) - CRITICAL SECURITY
 - [ ] No full-text search indexes
 - [ ] No notification user preferences
-- [ ] `env.example` duplicate of `.env.example`
+- [x] `env.example` duplicate of `.env.example` — DELETED
+- [ ] 20+ pages missing loading.tsx files
+- [ ] 25+ pages missing error.tsx files
+- [ ] `window.confirm()` / `prompt()` used instead of AlertDialog (2 files)
+- [ ] 7 files with hardcoded `http://localhost:3000` fallbacks
+- [ ] `workflows` table in schema but never used (dead schema)
+- [ ] `scheduled-reports` cron has 3 empty TODO stubs (no implementation)
+- [ ] Many tRPC procedures lack Zod input validation
+- [ ] `crm.ts` getSalesDashboard does in-memory filtering instead of DB aggregation
+- [ ] 264 `new Date()` calls without timezone consideration
+- [ ] Hardcoded pipeline stages/colors repeated across multiple files
+- [ ] No Sentry/error tracking integration
+- [ ] No structured logging (console.log in production)
 
 ---
 

@@ -124,8 +124,71 @@ export const calendarEvents = pgTable("calendar_events", {
 ]);
 ```
 
-**Acceptance Criteria**:
-- `pnpm db:generate` creates migration
-- `pnpm db:push` applies without errors
-- All existing queries still work
-- Build passes
+---
+
+## Rules to Follow
+
+1. **Never modify existing migration files** — always create new ones
+2. **Backward compatible** — add columns as nullable first, then backfill
+3. **Index naming**: `idx_{table}_{column}` for single, `idx_{table}_{col1}_{col2}` for composite
+4. **Test on staging FIRST** — never run untested migrations on production
+5. **One migration per logical change** — don't bundle unrelated changes
+6. **Document breaking changes** — if any query needs updating, note it
+
+---
+
+### 2.8 Remove Dead Schema: `workflows` Table
+
+`workflows` table is defined in `lib/db/schema/projects.ts` but is never imported or used anywhere in the codebase. Remove it.
+
+### 2.9 Fix Scheduled Reports TODO Stubs
+
+`app/api/cron/scheduled-reports/route.ts` has 3 TODO stubs with empty try blocks:
+- Daily lead activity summary — empty implementation
+- Weekly sales performance — empty implementation
+- Monthly full suite — empty implementation
+
+Either implement or remove the cron job.
+
+---
+
+## Checklist
+
+- [ ] Migration: Add `updated_by` to all mutable tables
+- [ ] Migration: Add `created_by` to tables missing it
+- [ ] Migration: Add soft delete columns (deletedAt, deletedBy) to business-critical tables
+- [ ] Create `notDeleted()` Drizzle helper utility
+- [ ] Update ALL queries for soft-deleted tables to filter `deleted_at IS NULL`
+- [ ] Verify no active references to legacy CRM tables
+- [ ] Migration: Drop confirmed legacy CRM tables (after user approval)
+- [ ] Migration: Add missing indexes (users, leads, deals, attendance, expenses, notifications, chat)
+- [ ] Migration: Enhance organizations table (logo, website, timezone, currency, etc.)
+- [ ] Migration: Create push_subscriptions table
+- [ ] Migration: Create calendar_events + attendees tables
+- [ ] Migration: Create notification_preferences table
+- [ ] Remove unused `workflows` table from schema
+- [ ] Fix or remove empty scheduled-reports TODO stubs
+- [ ] Run `pnpm drizzle-kit generate` to verify schema sync
+- [ ] Run migration on dev/staging
+- [ ] Verify all existing queries work
+- [ ] `pnpm build` passes
+
+## Acceptance Criteria
+
+1. `pnpm drizzle-kit push` applies cleanly
+2. All existing tRPC routers and server actions work without modification
+3. Soft-deleted records excluded from normal queries but retrievable for audit
+4. No legacy/duplicate CRM tables remain (after user confirmation)
+5. Query performance improves on indexed columns (EXPLAIN ANALYZE)
+6. New tables exist and are ready for Tasks 05, 08
+7. Zero dead schema tables remain
+
+## Testing Plan
+
+1. Run migration on a test database (not production)
+2. Verify all existing API endpoints return correct data
+3. Test soft delete: delete a lead, verify excluded from list but exists in DB
+4. Test audit columns: update a record, verify `updated_by` populated
+5. Test new indexes: run EXPLAIN ANALYZE on common queries
+6. Verify scheduled-reports endpoint works or is properly removed
+7. `pnpm build` passes

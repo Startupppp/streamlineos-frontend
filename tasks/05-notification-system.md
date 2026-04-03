@@ -1,6 +1,47 @@
 # Task 05: Notification System Overhaul
 
-## Priority: 🟠 HIGH
+## Priority: HIGH | Effort: 5-6 days | Dependencies: Task 02 (DB tables), Task 06 (Redis, Inngest) | Status: NOT STARTED
+
+---
+
+## PRD
+
+### Problem Statement
+1. In-app notifications only — no desktop push
+2. Email notifications inconsistent (some features send, some don't)
+3. No user preferences — can't choose notification channels
+4. Polling-based (30s interval), not real-time
+5. No notification templates — messages hardcoded
+6. No batching/digest for high-frequency events
+
+### Goals
+- Web Push API for desktop notifications
+- Notification preferences per user per category
+- Real-time delivery (SSE or reduced polling)
+- Support in-app, email, push channels
+- Notification batching for high-frequency events
+
+### Non-Goals
+- Novu integration (evaluate later)
+- Mobile push (no mobile app)
+- WhatsApp (Task 09)
+
+### Success Criteria
+- Desktop push works in Chrome, Firefox, Edge
+- Users configure preferences per category
+- Notifications delivered within 2 seconds
+- High-frequency events batched
+
+## Rules to Follow
+
+1. **Opt-in Push**: Always request permission before enabling
+2. **Respect Preferences**: Never send disabled notification types
+3. **Idempotent Delivery**: No duplicate notifications for same event
+4. **Graceful Degradation**: If push fails, fall back to in-app
+5. **Rate Limit**: Max 10 push notifications per user per hour
+6. **Template-Based**: All messages from templates, not hardcoded
+
+---
 
 ### 5.1 Desktop Push Notifications (Web Push API)
 
@@ -88,8 +129,40 @@ export const notificationPreferences = pgTable("notification_preferences", {
 
 **UI**: Settings page → Notification Preferences matrix
 
-**Acceptance Criteria**:
-- Desktop push notifications work in Chrome/Firefox/Edge
-- Notification bell shows real-time unread count
-- Users can configure notification preferences
-- Service worker registered and active
+---
+
+## Checklist
+
+- [ ] Generate VAPID keys, add to env
+- [ ] Create service worker (`public/sw.js`)
+- [ ] Create `usePushNotifications` hook
+- [ ] Create push subscription API endpoint
+- [ ] Create `lib/notifications/notification-service.ts` (unified sender)
+- [ ] Create notification preferences tRPC router (CRUD)
+- [ ] Build notification preferences page in Settings
+- [ ] Upgrade NotificationBell component (real-time, filters, push status)
+- [ ] Enhance notifications page with search/filter/bulk actions
+- [ ] Add push notification opt-in prompt (non-intrusive)
+- [ ] Implement notification batching via Inngest
+- [ ] Add push notifications to all critical events (SLA, approvals, assignments)
+- [ ] Add email notifications to all high-priority events
+- [ ] Install `web-push` package
+- [ ] `pnpm build` passes
+
+## Acceptance Criteria
+
+1. Desktop push notifications appear within 2 seconds
+2. Users can toggle channels per category in settings
+3. Push prompt appears once on first visit
+4. Service worker registered and handles push events
+5. High-frequency events batched (max 10 push/hour)
+6. Notification page shows full history with filters
+
+## Testing Plan
+
+1. Enable push, trigger lead assignment, verify desktop notification
+2. Disable email for "Deal Updates", close deal, verify no email
+3. Send 20 chat messages while away, verify batched notification
+4. Close browser tab, trigger push from API, verify notification shows
+5. Test push in Chrome, Firefox, Edge
+6. Verify preferences persist and apply correctly

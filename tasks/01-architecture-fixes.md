@@ -134,7 +134,101 @@
 - Report button
 - Fallback UI matching the page layout
 
-**Acceptance Criteria**:
-- Every dashboard sub-route has a useful error boundary
-- Errors in one module don't crash the entire dashboard
-- Users can retry after transient failures
+### 1.8 Fix Missing Loading/Error States (20+ pages)
+
+**Pages missing `loading.tsx`**:
+- `app/(auth)/forgot-password/`
+- `app/(auth)/signin/`
+- `app/(auth)/verify-email/`
+- `app/(auth)/invitation/[token]/`
+- `app/(dashboard)/crm/clients/[id]/`
+- `app/(dashboard)/crm/leads/distribute/`
+- `app/(dashboard)/digital-marketing/` (all sub-pages)
+- `app/(dashboard)/settings/branches/`
+- `app/(dashboard)/settings/roles/`
+
+**Pages missing `error.tsx`**:
+- `app/(dashboard)/ceo/qr-code/`
+- `app/(dashboard)/hr/attendance/`
+- `app/(dashboard)/hr/employees/new/`
+- `app/(dashboard)/hr/payroll/`
+- `app/(dashboard)/hr/work-logs/`
+
+### 1.9 Replace browser confirm()/prompt() with AlertDialog
+
+**Files using anti-pattern**:
+- `app/(dashboard)/crm/deals/page.tsx` — uses `window.confirm()` for deal deletion
+- `app/(dashboard)/crm/deals/[dealId]/page.tsx` — uses `prompt()` for user input
+
+Replace with shadcn `AlertDialog` component for proper UX.
+
+### 1.10 Centralize Hardcoded localhost Fallbacks
+
+**7 files** use `http://localhost:3000` as fallback instead of throwing:
+- `app/(dashboard)/ceo/qr-code/actions.ts`
+- `app/api/qr-code/download/route.ts`
+- `lib/email/sender.ts`
+- `lib/email-templates/base.ts`
+- `lib/email.ts`
+- `lib/notifications/send.ts`
+- `lib/trpc.ts`
+
+**Fix**: Use `env.NEXT_PUBLIC_APP_URL` from validated env (lib/env.ts) everywhere. Remove fallbacks.
+
+---
+
+## Rules to Follow
+
+1. **Server Components First**: Remove `"use client"` from layout files. Extract interactive parts into separate client components
+2. **Component Size Limit**: No single component file should exceed 500 lines
+3. **Named Exports**: Every component must be a named export
+4. **No Prop Drilling**: If props pass through 3+ levels, use context or composition
+5. **Error Isolation**: Each route group gets its own `error.tsx` that doesn't crash siblings
+6. **Code Splitting**: Use `dynamic()` for heavy components (charts, kanban, rich editors)
+7. **No browser APIs for confirmation**: Use AlertDialog, not `window.confirm()`/`prompt()`
+8. **No hardcoded URLs**: Always use env-validated URLs from `lib/env.ts`
+
+---
+
+## Checklist
+
+- [ ] Dashboard layout converted to server component
+- [ ] `DashboardShell` client component extracted
+- [ ] Leads page split into 6+ sub-components (each under 500 lines)
+- [ ] Deals page split into sub-components
+- [ ] Chat page split into sub-components
+- [ ] Leaves page split into sub-components
+- [ ] Rate limiting migrated to Redis (requires Task 06)
+- [ ] Cron idempotency migrated to Redis (requires Task 06)
+- [ ] JWT callback uses Redis cache (requires Task 06)
+- [ ] Error boundaries exist for CRM, HR, Projects, Chat, Settings
+- [ ] Missing loading.tsx files created (20+ pages)
+- [ ] Missing error.tsx files created (25+ pages)
+- [ ] Heavy components use dynamic imports
+- [ ] `zustand` removed from package.json
+- [ ] `window.confirm()` and `prompt()` replaced with AlertDialog
+- [ ] Hardcoded localhost URLs replaced with env vars
+- [ ] No single component file exceeds 500 lines
+- [ ] Build passes with no errors
+
+## Acceptance Criteria
+
+1. `pnpm build` succeeds with zero errors
+2. Dashboard layout renders on server (no client boundary at layout level)
+3. Rate limit state persists across restarts
+4. Each module can error independently without crashing others
+5. Largest component file is under 500 lines
+6. Every page has loading.tsx and error.tsx
+7. No `window.confirm()` or `prompt()` in codebase
+8. No hardcoded localhost URLs remain
+
+## Testing Plan
+
+1. Navigate all dashboard routes, verify sidebar/header render correctly
+2. Trigger rate limits, restart server, verify limits persist
+3. Force an error in CRM module, verify HR/Projects still work
+4. Switch between kanban/table views on leads, verify both work
+5. Test responsive layout at 320px, 768px, 1024px, 1440px
+6. Verify all pages show loading skeleton during navigation
+7. Verify all pages show error boundary on failure
+8. `pnpm build` and `pnpm lint` must pass
