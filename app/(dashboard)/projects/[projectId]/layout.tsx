@@ -14,10 +14,10 @@ export default async function ProjectLayout({
     params
 }: {
     children: React.ReactNode;
-    params: Promise<{ id: string }>
+    params: Promise<{ projectId: string }>
 }) {
-    const { id } = await params;
-    const numId = Number(id);
+    const { projectId } = await params;
+    const numId = Number(projectId);
     if (isNaN(numId)) return notFound();
 
     const session = await auth();
@@ -43,7 +43,7 @@ export default async function ProjectLayout({
         <div className="flex h-full w-full -m-4 md:-m-8">
             <div className="pl-4 md:pl-6">
                 <ProjectSidebar 
-                    projectId={id} 
+                    projectId={projectId}
                     projectName={project.name} 
                     projectKey={project.key} 
                 />

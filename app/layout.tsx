@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import "../globals.css";
 import { Toaster } from "../components/ui/sonner";
-import { TRPCReactProvider } from "../trpc/react";
 import { SessionProvider } from "../components/providers/session-provider";
 import { ThemeProvider } from "../components/theme-provider";
 import { MotionProvider } from "../components/providers/motion-provider";
@@ -63,7 +62,7 @@ export default function RootLayout({
           >
           <SessionProvider>
             <MotionProvider>
-              <TRPCReactProvider>{children}</TRPCReactProvider>
+     {children}
             </MotionProvider>
             <Toaster position="top-right" />
           </SessionProvider>

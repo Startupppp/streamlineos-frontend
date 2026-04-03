@@ -23,12 +23,12 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 export default function ProjectBoardPage({ params }: PageProps) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
   const { data, isLoading } = useProject(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();

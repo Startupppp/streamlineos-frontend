@@ -43,12 +43,12 @@ import {
 import { toast } from "sonner";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 export default function EpicsPage({ params }: PageProps) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
 
   const { data: project, isLoading } = api.project.getProjectDetails.useQuery({ id: projectId });
   const utils = api.useUtils();

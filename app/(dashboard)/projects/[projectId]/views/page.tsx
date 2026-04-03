@@ -63,10 +63,10 @@ const layoutIcons: Record<string, React.ReactNode> = {
 export default function ViewsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
   const router = useRouter();
 

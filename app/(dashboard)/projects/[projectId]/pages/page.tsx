@@ -144,10 +144,10 @@ function PageTreeItem({
 export default function PagesPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
   const [activePage, setActivePage] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");

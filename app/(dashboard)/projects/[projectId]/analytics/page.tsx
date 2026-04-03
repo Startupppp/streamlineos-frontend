@@ -58,10 +58,10 @@ const CHART_COLORS = [
 export default function AnalyticsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
 
   const { data: analytics, isLoading } = trpc.project.analyticsGetProjectAnalytics.useQuery({
     projectId,

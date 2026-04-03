@@ -28,9 +28,9 @@ const createCycleSchema = z.object({
 });
 type CreateCycleForm = z.infer<typeof createCycleSchema>;
 
-export default function CyclesPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+export default function CyclesPage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
 
   const utils = trpc.useUtils();

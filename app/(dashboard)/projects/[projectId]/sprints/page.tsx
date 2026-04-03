@@ -50,12 +50,12 @@ import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 export default function SprintsPage({ params }: PageProps) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
 
   const { data: sprints, isLoading } = api.project.getSprints.useQuery({ projectId });
   const { data: project } = api.project.getProjectDetails.useQuery({ id: projectId });

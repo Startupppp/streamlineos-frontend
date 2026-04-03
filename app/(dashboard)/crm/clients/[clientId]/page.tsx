@@ -52,10 +52,10 @@ function formatINR(val: string | number | null | undefined): string {
 
 export default function ClientAccountDetailPage() {
   const params = useParams();
-  const id = Number(params.id);
+  const clientId = Number(params.clientId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: account, isLoading, refetch } = api.clientAccounts.getById.useQuery({ id }, { enabled: !!id }) as { data: any; isLoading: boolean; refetch: () => void };
+  const { data: account, isLoading, refetch } = api.clientAccounts.getById.useQuery({ id: clientId }, { enabled: !!clientId }) as { data: any; isLoading: boolean; refetch: () => void };
 
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityType, setActivityType] = useState("note");
@@ -88,7 +88,7 @@ export default function ClientAccountDetailPage() {
       setShowInvestmentModal(true);
       return;
     }
-    updateStatusMutation.mutate({ id, status: newStatus as typeof STATUSES[number] });
+    updateStatusMutation.mutate({ id: clientId, status: newStatus as typeof STATUSES[number] });
   };
 
   const handleInvestmentSubmit = () => {
@@ -97,7 +97,7 @@ export default function ClientAccountDetailPage() {
       return;
     }
     updateStatusMutation.mutate({
-      id,
+      id: clientId,
       status: "INVESTED",
       investmentAmount,
       planName: planName || undefined,
@@ -350,7 +350,7 @@ export default function ClientAccountDetailPage() {
             <Button
               disabled={!activityTitle.trim() || logActivityMutation.isPending}
               onClick={() => logActivityMutation.mutate({
-                clientAccountId: id,
+                clientAccountId: clientId,
                 activityType,
                 title: activityTitle,
                 description: activityDescription || undefined,

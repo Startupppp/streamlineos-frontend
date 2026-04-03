@@ -58,15 +58,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 const formSchema = updateProjectSettingsInputSchema.omit({ projectId: true });
 type FormValues = z.infer<typeof formSchema>;
 
 export default function ProjectSettingsPage({ params }: PageProps) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: session } = useSession();

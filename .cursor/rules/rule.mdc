@@ -26,6 +26,7 @@ Key Guidelines:
 - **Repo**: Scan existing files; install libraries (e.g., pnpm) only if absent. Handle edge cases (network failures, invalid data, concurrency).
 - **Testing**: Implicitly ensure code is testable; add minimal tests if repo has setup
 don't hardcode/ force the types, don't ignore the types and don't add any
-don't use the anonymous functions and make the proper handlers 
-don't add the comments and remove the unwanted comments and dead code 
+don't use the anonymous functions and make the proper handlers
+don't add the comments and remove the unwanted comments and dead code
 make sure well typed
+- **Dynamic Route Naming**: Always use descriptive param names in dynamic route folders, never generic `[id]`. Use the entity name: `[projectId]`, `[clientId]`, `[employeeId]`, `[cycleId]`, `[moduleId]`, `[sprintId]`, `[ticketId]`, etc. The param must match the folder name exactly (e.g., folder `[projectId]` → `params.projectId`).

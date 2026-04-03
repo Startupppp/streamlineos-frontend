@@ -30,12 +30,12 @@ import { format, isAfter, isBefore, parseISO } from "date-fns";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 export default function BacklogPage({ params }: PageProps) {
-  const { id } = use(params);
-  const projectId = parseInt(id);
+  const { projectId: projectIdStr } = use(params);
+  const projectId = parseInt(projectIdStr);
   const { data, isLoading } = useProject(projectId);
 
   const [searchQuery, setSearchQuery] = useState("");
