@@ -103,6 +103,38 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ─── Webhooks ───
+export const webhookEndpoints = pgTable("webhook_endpoints", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  url: text("url").notNull(),
+  secret: text("secret").notNull(),
+  description: text("description"),
+  events: jsonb("events").$type<string[]>().default([]),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_webhook_endpoints_org").on(table.orgId),
+]);
+
+export const webhookLogs = pgTable("webhook_logs", {
+  id: serial("id").primaryKey(),
+  endpointId: integer("endpoint_id").references(() => webhookEndpoints.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  event: text("event").notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>(),
+  statusCode: integer("status_code"),
+  responseBody: text("response_body"),
+  attempt: integer("attempt").default(1).notNull(),
+  success: boolean("success").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_webhook_logs_endpoint").on(table.endpointId),
+  index("idx_webhook_logs_org_event").on(table.orgId, table.event),
+]);
+
 // ─── Shared Relations ───
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),

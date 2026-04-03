@@ -1,5 +1,5 @@
 "server-only";
-import webpush from "web-push";
+import * as webpush from "web-push";
 import { db } from "@/lib/db";
 import { pushSubscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -29,9 +29,9 @@ export async function sendPushToUser(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify(payload)
         )
-        .catch(async (err) => {
+        .catch(async (pushErr: unknown) => {
           // Remove expired/invalid subscriptions (410 Gone)
-          if ((err as { statusCode?: number }).statusCode === 410) {
+          if (pushErr instanceof webpush.WebPushError && pushErr.statusCode === 410) {
             await db
               .delete(pushSubscriptions)
               .where(eq(pushSubscriptions.endpoint, sub.endpoint));
