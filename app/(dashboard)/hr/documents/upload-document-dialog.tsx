@@ -348,7 +348,7 @@ export function UploadDocumentDialog({
                           {f.size < 1024 * 1024 ? `${(f.size / 1024).toFixed(0)} KB` : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}
                         </p>
                       </div>
-                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeFile(i)}>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeFile(i)} aria-label="Remove file">
                         <X className="h-3 w-3" />
                       </Button>
                     </div>

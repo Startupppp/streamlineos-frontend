@@ -53,7 +53,7 @@ export function NewDMDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Direct Message">
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Direct Message" aria-label="New Direct Message">
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </DialogTrigger>

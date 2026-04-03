@@ -97,6 +97,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                     size="icon"
                     className="h-7 w-7"
                     onClick={(e) => { e.stopPropagation(); viewFile(doc.fileUrl); }}
+                    aria-label="View"
                   >
                     <Eye className="h-3.5 w-3.5" />
                   </Button>
@@ -105,6 +106,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
                     size="icon"
                     className="h-7 w-7"
                     onClick={(e) => { e.stopPropagation(); downloadFile(doc.fileUrl, doc.fileName || doc.name); }}
+                    aria-label="Download"
                   >
                     <Download className="h-3.5 w-3.5" />
                   </Button>

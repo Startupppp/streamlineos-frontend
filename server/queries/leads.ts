@@ -36,14 +36,20 @@ import type {
   LeadSource,
   LeadFilters,
 } from "@/types/leads";
+import { pushBranchAssigneeFilter, type BranchContext } from "@/lib/db/branch-filter";
 
 // ─── getLeads ────────────────────────────────────────────────────────────────
 
 export async function getLeads(
   orgId: string,
-  filters?: LeadFilters & { role?: string; userId?: string }
+  filters?: LeadFilters & { role?: string; userId?: string; branch?: BranchContext }
 ) {
   const where = [eq(leads.orgId, orgId)];
+
+  // Branch isolation: BRANCH_MANAGER/BRANCH_HR see only leads assigned to users in their branch
+  if (filters?.branch) {
+    await pushBranchAssigneeFilter(where, leads.assignedToId, filters.branch);
+  }
 
   if (filters?.role === "SALES" && filters.userId) {
     where.push(eq(leads.assignedToId, filters.userId));
@@ -132,11 +138,16 @@ export async function getLead(orgId: string, id: number) {
 
 export async function getLeadBoard(
   orgId: string,
-  opts?: { role?: string; userId?: string }
+  opts?: { role?: string; userId?: string; branch?: BranchContext }
 ) {
   const filters = [eq(leads.orgId, orgId)];
   const role = opts?.role;
   const userId = opts?.userId;
+
+  // Branch isolation for BRANCH_MANAGER/BRANCH_HR
+  if (opts?.branch) {
+    await pushBranchAssigneeFilter(filters, leads.assignedToId, opts.branch);
+  }
 
   if (role === "SALES" && userId) {
     filters.push(eq(leads.assignedToId, userId));
@@ -194,9 +205,12 @@ export async function getLeadBoard(
 
 export async function getLeadStats(
   orgId: string,
-  filters?: { dateFrom?: string; dateTo?: string; role?: string; userId?: string }
+  filters?: { dateFrom?: string; dateTo?: string; role?: string; userId?: string; branch?: BranchContext }
 ) {
   const statsFilters = [eq(leads.orgId, orgId)];
+  if (filters?.branch) {
+    await pushBranchAssigneeFilter(statsFilters, leads.assignedToId, filters.branch);
+  }
   if (filters?.role === "SALES" && filters.userId) {
     statsFilters.push(eq(leads.assignedToId, filters.userId));
   }

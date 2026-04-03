@@ -342,6 +342,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             disabled={!replyText.trim() || addMessage.isPending}
             size="icon"
             className="h-[60px] w-10 shrink-0 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white"
+            aria-label="Send reply"
           >
             {addMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>

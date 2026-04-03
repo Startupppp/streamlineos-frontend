@@ -22,9 +22,9 @@ export function NotActivatedPage() {
           className="mb-8"
         >
           <div className="relative">
-            <div className="h-28 w-28 rounded-full bg-[#bd882c]/10 flex items-center justify-center">
-              <div className="h-20 w-20 rounded-full bg-[#bd882c]/15 flex items-center justify-center">
-                <ShieldOff className="h-10 w-10 text-[#bd882c]" />
+            <div className="h-28 w-28 rounded-full bg-gold/10 flex items-center justify-center">
+              <div className="h-20 w-20 rounded-full bg-gold/15 flex items-center justify-center">
+                <ShieldOff className="h-10 w-10 text-gold" />
               </div>
             </div>
             <motion.div

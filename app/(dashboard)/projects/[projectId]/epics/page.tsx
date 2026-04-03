@@ -290,7 +290,7 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
-            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 mt-0.5">
+            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 mt-0.5" aria-label={isExpanded ? "Collapse epic" : "Expand epic"}>
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </Button>
             <div className="space-y-1">

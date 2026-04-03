@@ -30,16 +30,14 @@ export async function PATCH(
       notes?: string;
     };
 
-    const updatePayload: Parameters<typeof db.update>[0] extends never
-      ? never
-      : Record<string, unknown> = {};
+    const updatePayload: Partial<typeof assets.$inferInsert> = {};
 
     if (body.name) updatePayload.name = body.name;
     if (body.type) updatePayload.type = body.type;
     if (body.serialNumber !== undefined) updatePayload.serialNumber = body.serialNumber;
     if (body.assignedTo !== undefined) {
       updatePayload.assignedTo = body.assignedTo;
-      updatePayload.status = (body.assignedTo ? "ASSIGNED" : "AVAILABLE") as AssetStatusEnum;
+      updatePayload.status = body.assignedTo ? "ASSIGNED" : "AVAILABLE";
     }
     if (body.status) updatePayload.status = body.status;
     if (body.location !== undefined) updatePayload.location = body.location;
@@ -48,8 +46,7 @@ export async function PATCH(
 
     await db
       .update(assets)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .set(updatePayload as any)
+      .set(updatePayload)
       .where(
         and(eq(assets.id, assetId), eq(assets.orgId, session.orgId))
       );

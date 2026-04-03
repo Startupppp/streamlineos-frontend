@@ -161,7 +161,7 @@ export default function DealDetailPage({
       animate="visible"
     >
       <motion.div variants={fadeUp} className="flex items-center gap-4 flex-wrap">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")} aria-label="Back to deals">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">

@@ -6,6 +6,11 @@ export async function GET() {
     const board = await getLeadBoard(session.orgId!, {
       role: session.user.role ?? undefined,
       userId: session.user.id,
+      branch: {
+        role: session.user.role ?? "",
+        branchId: session.branchId,
+        userId: session.user.id,
+      },
     });
     return ok(board);
   });

@@ -184,6 +184,7 @@ export function ProjectSidebar(props: ProjectSidebarProps) {
                                 size="icon"
                                 onClick={() => setIsMobileOpen(false)}
                                 className="absolute top-4 right-4"
+                                aria-label="Close project menu"
                             >
                                 <X className="h-4 w-4" />
                             </Button>

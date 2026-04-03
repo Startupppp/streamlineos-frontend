@@ -153,6 +153,7 @@ function RolesContent() {
                         <button
                           onClick={(e) => { e.stopPropagation(); setDeleteTarget(role); }}
                           className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
+                          aria-label="Delete"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

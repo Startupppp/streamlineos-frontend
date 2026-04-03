@@ -69,6 +69,7 @@ export function LeadDetailHeader({
           variant="ghost"
           size="icon"
           onClick={() => router.push("/crm/leads")}
+          aria-label="Back to leads"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

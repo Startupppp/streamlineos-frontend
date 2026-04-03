@@ -267,7 +267,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Pipeline Funnel</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(funnelData, "pipeline-funnel")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(funnelData, "pipeline-funnel")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -293,7 +293,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Lead Volume Trend (12 weeks)</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(leadVolumeTrend, "lead-volume-trend")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(leadVolumeTrend, "lead-volume-trend")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -315,7 +315,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Lead Source Breakdown</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(sourceBreakdown, "lead-sources")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(sourceBreakdown, "lead-sources")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -338,7 +338,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Rep Performance</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX((leaderboard ?? []).map(l => ({ name: l.name, score: l.score, converted: l.leadsConverted, calls: l.totalCalls })), "rep-performance")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX((leaderboard ?? []).map(l => ({ name: l.name, score: l.score, converted: l.leadsConverted, calls: l.totalCalls })), "rep-performance")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -383,7 +383,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Won vs Lost</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(wonLostReasons, "won-vs-lost")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(wonLostReasons, "won-vs-lost")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -407,7 +407,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Deal Value by Stage</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(dealsByStageValue, "deal-value-by-stage")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(dealsByStageValue, "deal-value-by-stage")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -429,7 +429,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">SLA Compliance Rate</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(slaComplianceTrend, "sla-compliance")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(slaComplianceTrend, "sla-compliance")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -467,7 +467,7 @@ export default function CrmAnalyticsPage() {
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Score Distribution</CardTitle>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(scoreDistribution, "score-distribution")}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(scoreDistribution, "score-distribution")} aria-label="Download">
                 <Download className="h-3.5 w-3.5" />
               </Button>
             </CardHeader>
@@ -494,7 +494,7 @@ export default function CrmAnalyticsPage() {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Lead Assignment Distribution</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.assignmentDistribution as unknown as Record<string, unknown>[], "assignment-distribution")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.assignmentDistribution as unknown as Record<string, unknown>[], "assignment-distribution")} aria-label="Download">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </CardHeader>
@@ -518,7 +518,7 @@ export default function CrmAnalyticsPage() {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Conversion Rate by Source</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.conversionBySource as unknown as Record<string, unknown>[], "conversion-by-source")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.conversionBySource as unknown as Record<string, unknown>[], "conversion-by-source")} aria-label="Download">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </CardHeader>
@@ -544,7 +544,7 @@ export default function CrmAnalyticsPage() {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Revenue Trend</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.monthlyRevenue as unknown as Record<string, unknown>[], "monthly-revenue")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.monthlyRevenue as unknown as Record<string, unknown>[], "monthly-revenue")} aria-label="Download">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </CardHeader>

@@ -83,7 +83,7 @@ export default function LeadDetailPage({
   const handleStatusChange = useCallback(
     (status: PipelineStatus) => {
       updateStatusMutation.mutate(
-        { leadId, status, expectedStatus: (lead as any)?.status as PipelineStatus },
+        { leadId, status, expectedStatus: lead?.status as PipelineStatus },
         {
           onSuccess: () => toast.success("Status updated"),
           onError: (err) => toast.error(err.message),

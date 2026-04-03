@@ -115,7 +115,7 @@ export function NewGroupDialog({
     <Dialog open={open} onOpenChange={resetAndClose}>
       {!hideTrigger && (
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Channel">
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Channel" aria-label="New Channel">
             <Users className="h-3.5 w-3.5" />
           </Button>
         </DialogTrigger>

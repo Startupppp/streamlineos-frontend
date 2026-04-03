@@ -390,6 +390,7 @@ export function ImportExpenseSheet({
                     onClick={() => {
                       resetState();
                     }}
+                    aria-label="Remove file"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -403,6 +404,7 @@ export function ImportExpenseSheet({
               className="hidden"
               accept=".csv,.xlsx,.xls"
               onChange={handleFileChange}
+              aria-label="Upload expense file"
             />
           </div>
 

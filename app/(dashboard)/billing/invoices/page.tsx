@@ -225,7 +225,7 @@ function InvoicesContent() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -355,6 +355,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                     className="col-span-1 h-8 w-8"
                     onClick={() => setLineItems((prev) => prev.filter((_, i) => i !== idx))}
                     disabled={lineItems.length === 1}
+                    aria-label="Remove line item"
                   >
                     <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>

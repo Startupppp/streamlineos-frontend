@@ -61,10 +61,10 @@ export function DataTablePagination({
       </div>
 
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => onPageChange(1)}>
+        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => onPageChange(1)} aria-label="First page">
           <ChevronsLeft className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => onPageChange(page - 1)} aria-label="Previous page">
           <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
 
@@ -87,10 +87,10 @@ export function DataTablePagination({
         </div>
         <span className="sm:hidden text-xs text-muted-foreground px-2">{page}/{totalPages}</span>
 
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} aria-label="Next page">
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => onPageChange(totalPages)}>
+        <Button variant="outline" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => onPageChange(totalPages)} aria-label="Last page">
           <ChevronsRight className="h-3.5 w-3.5" />
         </Button>
       </div>

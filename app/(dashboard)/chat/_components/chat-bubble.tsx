@@ -70,7 +70,7 @@ export function ChatBubble({
           {showSender ? (
             <Avatar className="h-7 w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
-              <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-[#0f2b7f]">
+              <AvatarFallback className="text-[8px] font-bold bg-gradient-to-br from-blue-100 to-indigo-50 text-blue">
                 {getInitials(message.sender?.name)}
               </AvatarFallback>
             </Avatar>
@@ -80,7 +80,7 @@ export function ChatBubble({
 
       <div className={cn("max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
         {showSender && !isOwn && (
-          <p className="text-[11px] font-bold text-[#0f2b7f] mb-1 px-1 ml-1">
+          <p className="text-[11px] font-bold text-blue mb-1 px-1 ml-1">
             {message.sender?.name}
           </p>
         )}
@@ -90,11 +90,11 @@ export function ChatBubble({
             className={cn(
               "mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border text-[11px]",
               isOwn
-                ? "bg-[#bd882c]/5 border-[#bd882c]/15"
-                : "bg-[#0f2b7f]/5 border-[#0f2b7f]/10"
+                ? "bg-gold/5 border-gold/15"
+                : "bg-blue/5 border-blue/10"
             )}
           >
-            <p className={cn("font-bold", isOwn ? "text-[#bd882c]" : "text-[#0f2b7f]")}>
+            <p className={cn("font-bold", isOwn ? "text-gold" : "text-blue")}>
               {message.replyTo.sender?.name}
             </p>
             <p className="text-muted-foreground truncate">{message.replyTo.content}</p>
@@ -103,7 +103,7 @@ export function ChatBubble({
 
         {isEditing ? (
           <div className="mx-1">
-            <div className="rounded-xl border border-[#bd882c]/40 bg-background overflow-hidden shadow-sm">
+            <div className="rounded-xl border border-gold/40 bg-background overflow-hidden shadow-sm">
               <textarea
                 value={editInput}
                 onChange={(e) => onEditInputChange(e.target.value)}
@@ -118,7 +118,7 @@ export function ChatBubble({
             <div className="flex items-center gap-2 mt-1 px-1">
               <button onClick={onCancelEdit} className="text-[11px] text-muted-foreground hover:text-foreground">Cancel</button>
               <span className="text-muted-foreground/30">|</span>
-              <button onClick={onSaveEdit} className="text-[11px] text-[#bd882c] font-bold hover:underline">Save</button>
+              <button onClick={onSaveEdit} className="text-[11px] text-gold font-bold hover:underline">Save</button>
               <span className="text-[10px] text-muted-foreground/30 ml-auto hidden sm:inline">Esc / Enter</span>
             </div>
           </div>
@@ -127,7 +127,7 @@ export function ChatBubble({
             className={cn(
               "relative px-3.5 py-2 shadow-sm",
               isOwn
-                ? "bg-gradient-to-br from-[#bd882c] to-[#c9963a] text-white rounded-2xl rounded-br-md"
+                ? "bg-gradient-to-br from-gold to-[#c9963a] text-white rounded-2xl rounded-br-md"
                 : "bg-card border border-border/40 text-foreground rounded-2xl rounded-bl-md"
             )}
           >
@@ -227,7 +227,7 @@ export function ChatBubble({
             )}
           >
             <div className="flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-hidden">
-              <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply">
+              <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
               </button>
               {message.content && (
@@ -238,17 +238,18 @@ export function ChatBubble({
                   }}
                   className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   title="Copy"
+                  aria-label="Copy"
                 >
                   <Copy className="h-3.5 w-3.5" />
                 </button>
               )}
               {isOwn && (
-                <button onClick={onStartEdit} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Edit">
+                <button onClick={onStartEdit} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Edit" aria-label="Edit">
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
               )}
               {isOwn && (
-                <button onClick={onDelete} className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400" title="Delete">
+                <button onClick={onDelete} className="p-1.5 hover:bg-red-500/10 text-muted-foreground hover:text-red-400" title="Delete" aria-label="Delete">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               )}

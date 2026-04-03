@@ -217,13 +217,13 @@ export default function EmailTemplatesPage() {
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-sm truncate">{template.name}</CardTitle>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewId(previewId === template.id ? null : template.id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewId(previewId === template.id ? null : template.id)} aria-label="View">
                       <Eye className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(template)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(template)} aria-label="Edit">
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteTemplate.mutate(template.id, { onSuccess: () => toast.success("Template deleted"), onError: (err) => toast.error(err.message) })}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteTemplate.mutate(template.id, { onSuccess: () => toast.success("Template deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>

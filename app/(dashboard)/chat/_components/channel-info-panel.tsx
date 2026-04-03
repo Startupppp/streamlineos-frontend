@@ -94,11 +94,11 @@ export function ChannelInfoPanel({
         <h3 className="text-[14px] font-bold">Details</h3>
         <div className="flex items-center gap-1">
           {isGroup && isAdmin && !editing && (
-            <button onClick={startEditing} className="p-1.5 hover:bg-muted rounded-lg" title="Edit channel">
+            <button onClick={startEditing} className="p-1.5 hover:bg-muted rounded-lg" title="Edit channel" aria-label="Edit channel">
               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
-          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
+          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg" aria-label="Close">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
@@ -109,15 +109,15 @@ export function ChannelInfoPanel({
           {editing ? (
             <div className="space-y-4 mb-6">
               <div className="flex justify-center">
-                <input ref={editAvatarRef} type="file" accept="image/*" onChange={handleEditAvatarUpload} className="hidden" />
+                <input ref={editAvatarRef} type="file" accept="image/*" onChange={handleEditAvatarUpload} className="hidden" aria-label="Upload channel avatar" />
                 <button type="button" onClick={() => editAvatarRef.current?.click()} disabled={uploadingAvatar} className="relative group">
                   {editAvatar ? (
                     <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-border/40">
                       <Image src={resolveImageUrl(editAvatar) ?? ""} alt="Avatar" fill unoptimized className="object-cover" />
                     </div>
                   ) : (
-                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#0f2b7f]/10 to-[#0f2b7f]/5 flex items-center justify-center border border-[#0f2b7f]/10">
-                      {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <ImageIcon className="h-6 w-6 text-[#0f2b7f]/40" />}
+                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border border-blue/10">
+                      {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <ImageIcon className="h-6 w-6 text-blue/40" />}
                     </div>
                   )}
                   <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -135,7 +135,7 @@ export function ChannelInfoPanel({
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="flex-1 h-8 text-[12px]">Cancel</Button>
-                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+                <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-gold hover:bg-gold/90 text-white">
                   {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                 </Button>
               </div>
@@ -145,7 +145,7 @@ export function ChannelInfoPanel({
               {channel?.type === "DIRECT" ? (
                 <Avatar className="h-20 w-20 mb-3 border-2 border-border/30 shadow-md">
                   <AvatarImage src={resolveImageUrl(otherMember?.image)} />
-                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-[#bd882c]/20 to-[#bd882c]/5 text-[#bd882c]">
+                  <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-gold/20 to-gold/5 text-gold">
                     {getInitials(otherMember?.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -154,8 +154,8 @@ export function ChannelInfoPanel({
                   <Image src={resolveImageUrl(channel.avatarUrl) ?? ""} alt={channel.name} fill unoptimized className="object-cover" />
                 </div>
               ) : (
-                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#0f2b7f]/10 to-[#0f2b7f]/5 flex items-center justify-center mb-3 border border-[#0f2b7f]/10">
-                  <Hash className="h-8 w-8 text-[#0f2b7f]" />
+                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center mb-3 border border-blue/10">
+                  <Hash className="h-8 w-8 text-blue" />
                 </div>
               )}
               <h4 className="text-[17px] font-bold">{displayName}</h4>
@@ -209,7 +209,7 @@ export function ChannelInfoPanel({
                       <p className="text-[11px] text-muted-foreground truncate">{m.user?.email}</p>
                     </div>
                     {m.role === "ADMIN" && (
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-[#bd882c]/30 text-[#bd882c]">
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-gold/30 text-gold">
                         Admin
                       </Badge>
                     )}

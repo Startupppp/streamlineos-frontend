@@ -321,6 +321,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 className="hidden"
                 id="lead-file-upload"
+                aria-label="Upload leads file"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleFile(file);

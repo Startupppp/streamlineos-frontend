@@ -341,3 +341,8 @@
 .compact .gap-6 {
   gap: 0.75rem;
 }
+
+.gradient-gold { background: linear-gradient(135deg, var(--gold), #d4a04a); }
+.gradient-brand { background: linear-gradient(135deg, var(--blue) 0%, #1a3a8f 40%, var(--gold) 100%); }
+.gradient-green { background: linear-gradient(135deg, #16a34a, #22c55e); }
+.gradient-wizard { background: linear-gradient(90deg, var(--gold), var(--blue)); }

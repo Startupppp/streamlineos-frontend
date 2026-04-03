@@ -62,13 +62,29 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
 }
 
 export const CACHE_KEYS = {
+  // Auth & sessions
   dashboardStats: (orgId: string) => `dashboard:stats:${orgId}`,
   userProfile: (userId: string) => `user:profile:${userId}`,
   userSession: (userId: string) => `user:session:${userId}`,
   userPermissions: (userId: string) => `user:permissions:${userId}`,
-  leadsCount: (orgId: string) => `leads:count:${orgId}`,
-  orgSettings: (orgId: string) => `org:settings:${orgId}`,
   unreadNotifications: (userId: string) => `notifications:unread:${userId}`,
+
+  // Org settings
+  orgSettings: (orgId: string) => `org:settings:${orgId}`,
+  rolePermissions: (orgId: string, role: string) => `org:roles:${orgId}:${role}`,
+
+  // Leads
+  leadsCount: (orgId: string) => `leads:count:${orgId}`,
+  leadsList: (orgId: string, hash: string) => `leads:list:${orgId}:${hash}`,
+  leadDetail: (orgId: string, id: number) => `leads:detail:${orgId}:${id}`,
+
+  // Projects
+  projectsList: (orgId: string) => `projects:list:${orgId}`,
+  ticketsList: (orgId: string, projectId: number, hash: string) =>
+    `tickets:list:${orgId}:${projectId}:${hash}`,
+
+  // CRM
+  salesDashboard: (orgId: string) => `sales:dashboard:${orgId}`,
 } as const;
 
 export const CACHE_TTL = {

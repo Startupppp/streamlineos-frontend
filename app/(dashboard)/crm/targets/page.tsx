@@ -57,7 +57,7 @@ function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metri
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6">
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="View history">
           <History className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </DialogTrigger>

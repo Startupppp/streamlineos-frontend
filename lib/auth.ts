@@ -19,6 +19,7 @@ interface UserSessionCache {
   name: string | null;
   role: string | null;
   orgId: string | null;
+  branchId: number | null;
 }
 
 const USER_SESSION_TTL = 300;
@@ -188,6 +189,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   lastName: true,
                   name: true,
                   role: true,
+                  branchId: true,
                 },
               }),
               db.query.organizationMembers.findFirst({
@@ -196,7 +198,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               }),
             ]);
             const cacheValue: UserSessionCache | null = fresh
-              ? { ...fresh, orgId: membership?.orgId ?? null }
+              ? { ...fresh, orgId: membership?.orgId ?? null, branchId: fresh.branchId ?? null }
               : null;
             if (cacheValue && redis) {
               await redis.set(userSessionKey(userId), cacheValue, { ex: USER_SESSION_TTL });
@@ -211,6 +213,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.role = dbUser.role || token.role;
             token.image = dbUser.image || null;
             token.orgId = dbUser.orgId ?? null;
+            token.branchId = dbUser.branchId ?? null;
             if (dbUser.firstName && dbUser.lastName) {
               token.name = `${dbUser.firstName} ${dbUser.lastName}`;
             } else if (dbUser.name) {

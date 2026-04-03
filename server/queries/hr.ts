@@ -21,6 +21,7 @@ import {
 import { timesheets } from "@/lib/db/schema/projects";
 import { eq, and, desc, gte, lte, asc, isNull, sql, ilike, or, count } from "drizzle-orm";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
+import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
 import type {
   Department,
   Employee,
@@ -52,7 +53,10 @@ export async function getDepartments(orgId: string): Promise<Department[]> {
 
 // ─── Employees ────────────────────────────────────────────────────────────────
 
-export async function getEmployees(orgId: string): Promise<Employee[]> {
+export async function getEmployees(
+  orgId: string,
+  branch?: BranchContext
+): Promise<Employee[]> {
   const members = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, orgId),
     with: {
@@ -62,7 +66,15 @@ export async function getEmployees(orgId: string): Promise<Employee[]> {
 
   return members
     .map((m) => m.user)
-    .filter((u) => u.isActive !== false)
+    .filter((u) => {
+      if (u.isActive === false) return false;
+      // Branch isolation: BRANCH_MANAGER/BRANCH_HR see only their branch's users
+      if (branch?.branchId !== null && branch?.branchId !== undefined &&
+          ["BRANCH_MANAGER", "BRANCH_HR"].includes(branch.role)) {
+        return u.branchId === branch.branchId;
+      }
+      return true;
+    })
     .map((u) => ({
       id: u.id,
       name: u.name,
@@ -86,7 +98,8 @@ export async function getEmployeesPaginated(
   orgId: string,
   page: number = 1,
   limit: number = 20,
-  search?: string
+  search?: string,
+  branch?: BranchContext
 ): Promise<PaginatedEmployees> {
   const offset = (page - 1) * limit;
 
@@ -94,6 +107,10 @@ export async function getEmployeesPaginated(
     eq(organizationMembers.orgId, orgId),
     eq(users.isActive, true),
   ];
+
+  // Branch isolation: filter to only users in the same branch
+  const branchCond = branchIdFilter(users.branchId, branch ?? { role: "", branchId: null, userId: "" });
+  if (branchCond) baseConditions.push(branchCond);
 
   const searchConditions = search
     ? [

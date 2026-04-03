@@ -193,7 +193,7 @@ export default function AssignmentRulesPage() {
                           <Input {...field} className="h-8 text-xs flex-1" placeholder="Value" />
                         )} />
                         {conditionFields.length > 1 && (
-                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeCondition(i)}>
+                          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeCondition(i)} aria-label="Remove condition">
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
@@ -274,6 +274,7 @@ export default function AssignmentRulesPage() {
                         className="h-5 w-5"
                         disabled={index === 0}
                         onClick={() => moveRule(index, "up")}
+                        aria-label="Move rule up"
                       >
                         <ChevronUp className="h-3 w-3" />
                       </Button>
@@ -283,6 +284,7 @@ export default function AssignmentRulesPage() {
                         className="h-5 w-5"
                         disabled={index === (rules?.length ?? 0) - 1}
                         onClick={() => moveRule(index, "down")}
+                        aria-label="Move rule down"
                       >
                         <ChevronDown className="h-3 w-3" />
                       </Button>
@@ -320,6 +322,7 @@ export default function AssignmentRulesPage() {
                         size="icon"
                         className="h-7 w-7 text-destructive"
                         onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })}
+                        aria-label="Delete rule"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

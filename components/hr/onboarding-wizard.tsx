@@ -189,10 +189,9 @@ export function OnboardingWizard() {
           {/* Connecting line behind circles */}
           <div className="absolute top-5 left-0 right-0 h-[2px] bg-border z-0" />
           <div
-            className="absolute top-5 left-0 h-[2px] z-0 transition-all duration-500"
+            className="absolute top-5 left-0 h-[2px] z-0 transition-all duration-500 gradient-wizard"
             style={{
               width: `${((Math.min(currentStep, STEPS.length) - 1) / (STEPS.length - 1)) * 100}%`,
-              background: "linear-gradient(90deg, #bd882c, #0f2b7f)",
             }}
           />
 
@@ -206,9 +205,9 @@ export function OnboardingWizard() {
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300",
                     isCompleted
-                      ? "bg-[#bd882c] border-[#bd882c] text-white"
+                      ? "bg-gold border-gold text-white"
                       : isActive
-                        ? "bg-[#0f2b7f] border-[#0f2b7f] text-white shadow-lg shadow-[#0f2b7f]/30"
+                        ? "bg-blue border-blue text-white shadow-lg shadow-blue/30"
                         : "bg-card border-border text-muted-foreground"
                   )}
                   animate={isActive ? { scale: [1, 1.08, 1] } : {}}
@@ -223,9 +222,9 @@ export function OnboardingWizard() {
                 <span className={cn(
                   "text-[10px] font-semibold uppercase tracking-wider hidden md:block",
                   isCompleted
-                    ? "text-[#bd882c]"
+                    ? "text-gold"
                     : isActive
-                      ? "text-[#0f2b7f] dark:text-blue-400"
+                      ? "text-blue dark:text-blue-400"
                       : "text-muted-foreground/60"
                 )}>
                   {step.label}
@@ -246,7 +245,7 @@ export function OnboardingWizard() {
                 <h2 className="text-xl font-semibold text-foreground">{STEP_DETAILS[currentStep]?.title}</h2>
                 <p className="text-sm text-muted-foreground mt-1">{STEP_DETAILS[currentStep]?.description}</p>
               </div>
-              <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#0f2b7f]/10 text-[#0f2b7f] dark:bg-[#0f2b7f]/20 dark:text-blue-300 border border-[#0f2b7f]/20">
+              <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue/10 text-blue dark:bg-blue/20 dark:text-blue-300 border border-blue/20">
                 Step {currentStep} of {STEPS.length}
               </span>
             </div>
@@ -313,8 +312,7 @@ export function OnboardingWizard() {
                       <Button
                         type="button"
                         onClick={nextStep}
-                        className="gap-1.5 text-white"
-                        style={{ background: "linear-gradient(135deg, #bd882c, #d4a04a)" }}
+                        className="gap-1.5 text-white gradient-gold"
                       >
                         Continue to {nextStepLabel}
                         <ChevronRight className="w-4 h-4" />
@@ -323,8 +321,7 @@ export function OnboardingWizard() {
                       <Button
                         type="submit"
                         disabled={onboardEmployee.isPending}
-                        className="gap-1.5 text-white min-w-[140px]"
-                        style={{ background: "linear-gradient(135deg, #16a34a, #22c55e)" }}
+                        className="gap-1.5 text-white min-w-[140px] gradient-green"
                       >
                         {onboardEmployee.isPending ? (
                           <>
@@ -349,7 +346,7 @@ export function OnboardingWizard() {
 
       {/* Onboarding Tip */}
       <div className="mt-6 flex items-start gap-3 p-4 rounded-lg bg-muted/40 border border-border text-sm text-muted-foreground">
-        <Lightbulb className="w-5 h-5 text-[#bd882c] shrink-0 mt-0.5" />
+        <Lightbulb className="w-5 h-5 text-gold shrink-0 mt-0.5" />
         <div>
           <span className="font-medium text-foreground">Onboarding Tip:</span>{" "}
           Your progress is auto-saved. You can close this page and resume later from where you left off.

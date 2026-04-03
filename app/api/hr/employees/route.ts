@@ -10,17 +10,24 @@ export async function GET(req: NextRequest) {
     const limit = searchParams.get("limit");
     const search = searchParams.get("search") ?? undefined;
 
+    const branchCtx = {
+      role: session.user.role ?? "",
+      branchId: session.branchId,
+      userId: session.user.id,
+    };
+
     if (page || limit || search) {
       const data = await getEmployeesPaginated(
         session.orgId,
         page ? Number(page) : 1,
         limit ? Number(limit) : 20,
-        search
+        search,
+        branchCtx
       );
       return ok(data);
     }
 
-    const data = await getEmployees(session.orgId);
+    const data = await getEmployees(session.orgId, branchCtx);
     return ok(data);
   });
 }

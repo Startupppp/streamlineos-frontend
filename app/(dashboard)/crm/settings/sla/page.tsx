@@ -260,10 +260,10 @@ export default function SlaPage() {
                         <TableCell className="text-xs text-right">{policy.resolutionHours}h</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(policy)}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(policy)} aria-label="Edit">
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deletePolicy.mutate(policy.id, { onSuccess: () => toast.success("Policy deleted"), onError: (err) => toast.error(err.message) })}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deletePolicy.mutate(policy.id, { onSuccess: () => toast.success("Policy deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>

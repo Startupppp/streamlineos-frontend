@@ -301,7 +301,7 @@ export default function AuditLogPage() {
                       {log.ipAddress ?? "—"}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
                         <Info className="h-3.5 w-3.5 text-muted-foreground" />
                       </Button>
                     </TableCell>
@@ -326,6 +326,7 @@ export default function AuditLogPage() {
               className="h-8 w-8"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
+              aria-label="Previous page"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -336,6 +337,7 @@ export default function AuditLogPage() {
               className="h-8 w-8"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
+              aria-label="Next page"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

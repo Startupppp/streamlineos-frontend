@@ -47,6 +47,11 @@ export async function GET(req: NextRequest) {
       ...filters,
       role: session.user.role ?? undefined,
       userId: session.user.id,
+      branch: {
+        role: session.user.role ?? "",
+        branchId: session.branchId,
+        userId: session.user.id,
+      },
     });
     return ok(data);
   });

@@ -283,6 +283,7 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
             size="icon"
             className="h-8 w-8 text-[#bd882c] hover:text-[#a67724]"
             onClick={() => onEdit(toEditPayload())}
+            aria-label="Edit"
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -298,6 +299,7 @@ export function MemberExpenseItem({ expense, onEdit, onResubmit }: MemberExpense
                 onEdit(toEditPayload());
               }
             }}
+            aria-label="View"
           >
             <Eye className="h-4 w-4" />
           </Button>

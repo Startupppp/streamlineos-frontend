@@ -93,7 +93,7 @@ export default function InvitationPage() {
   if (!invitation) {
     return (
       <div className="flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-[#bd882c]" />
+        <Loader2 className="h-10 w-10 animate-spin text-gold" />
         <p className="text-sm text-muted-foreground">Verifying your invitation...</p>
       </div>
     );
@@ -110,8 +110,7 @@ export default function InvitationPage() {
         <Card className="shadow-2xl border-border overflow-hidden">
           {/* Illustration Header */}
           <div
-            className="relative h-40 flex items-center justify-center overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #0f2b7f 0%, #1a3a8f 40%, #bd882c 100%)" }}
+            className="relative h-40 flex items-center justify-center overflow-hidden gradient-brand"
           >
             {/* Abstract team illustration with circles */}
             <div className="relative flex items-end gap-3">
@@ -134,8 +133,8 @@ export default function InvitationPage() {
           <CardContent className="px-6 md:px-8 pt-6 pb-8">
             {/* Heading */}
             <div className="text-center mb-6">
-              <div className="mx-auto w-12 h-12 rounded-full bg-[#bd882c]/10 flex items-center justify-center mb-3">
-                <Mail className="w-6 h-6 text-[#bd882c]" />
+              <div className="mx-auto w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center mb-3">
+                <Mail className="w-6 h-6 text-gold" />
               </div>
               <h1 className="text-2xl font-bold text-foreground">Join Organization</h1>
               <p className="text-sm text-muted-foreground mt-1.5">
@@ -235,8 +234,7 @@ export default function InvitationPage() {
               <div className="pt-2 space-y-3">
                 <Button
                   type="submit"
-                  className="w-full gap-2 text-white font-medium h-11"
-                  style={{ background: "linear-gradient(135deg, #bd882c, #d4a04a)" }}
+                  className="w-full gap-2 text-white font-medium h-11 gradient-gold"
                   disabled={acceptInvitation.isPending}
                 >
                   {acceptInvitation.isPending ? (

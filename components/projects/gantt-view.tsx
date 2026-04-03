@@ -78,13 +78,13 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Gantt Chart</h3>
         <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((w) => w - 1)}>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((w) => w - 1)} aria-label="Previous week">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setWeekOffset(0)}>
             Today
           </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((w) => w + 1)}>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((w) => w + 1)} aria-label="Next week">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

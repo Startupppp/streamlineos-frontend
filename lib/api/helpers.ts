@@ -26,6 +26,8 @@ export type AuthSession = Omit<Session, "orgId"> & {
   user: NonNullable<Session["user"]>;
   /** Guaranteed non-null by withAuth — middleware ensures orgId exists before API calls. */
   orgId: string;
+  /** Branch the user belongs to. Null for CEO/HR (org-wide access). */
+  branchId: number | null;
 };
 
 /** Shape of the per-user Redis session cache set by lib/auth.ts JWT callback. */
@@ -39,6 +41,7 @@ interface UserSessionRedisCache {
   name: string | null;
   role: string | null;
   orgId: string | null;
+  branchId: number | null;
 }
 
 /** Returns a typed 200 JSON response. */
@@ -60,8 +63,9 @@ export async function withAuth<T>(
     return NextResponse.json({ error: "Unauthorized" } as T, { status: 401 });
   }
 
-  // Resolve orgId from session (may be updated by Redis cache below)
+  // Resolve orgId and branchId from session (may be updated by Redis cache below)
   let orgId: string | null | undefined = session.orgId;
+  let branchId: number | null = (session as { branchId?: number | null }).branchId ?? null;
 
   // Single Redis check per request: verify session is still valid and hydrate
   // with the freshest user/org data (avoids stale JWT data)
@@ -79,8 +83,9 @@ export async function withAuth<T>(
       if (cached.isPasswordChangeRequired !== undefined) {
         session.user.forceChangePassword = cached.isPasswordChangeRequired ?? session.user.forceChangePassword;
       }
-      // orgId lives at the session level — take the freshest value from Redis
+      // orgId/branchId live at the session level — take the freshest value from Redis
       if (cached.orgId !== undefined) orgId = cached.orgId ?? orgId;
+      if (cached.branchId !== undefined) branchId = cached.branchId ?? null;
     }
     // If cached === null: Redis miss (key expired or cleared). Gracefully allow —
     // the JWT callback will repopulate Redis on the next auth() call.
@@ -93,7 +98,7 @@ export async function withAuth<T>(
   }
 
   // Build the narrowed AuthSession with orgId guaranteed as string
-  const authSession: AuthSession = Object.assign(session, { orgId }) as AuthSession;
+  const authSession: AuthSession = Object.assign(session, { orgId, branchId }) as AuthSession;
   return handler(authSession);
 }
 

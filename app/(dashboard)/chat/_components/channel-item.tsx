@@ -40,7 +40,7 @@ export function ChannelItem({
       className={cn(
         "w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-left transition-all duration-100 group",
         isActive
-          ? "bg-[#bd882c]/10 shadow-sm"
+          ? "bg-gold/10 shadow-sm"
           : "hover:bg-muted/40",
         hasUnread && !isActive && "text-foreground"
       )}
@@ -49,13 +49,13 @@ export function ChannelItem({
         {channel.type === "DIRECT" ? (
           <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
             <AvatarImage src={resolveImageUrl(otherMember?.image)} />
-            <AvatarFallback className="text-[11px] font-semibold bg-gradient-to-br from-[#bd882c]/20 to-[#bd882c]/5 text-[#bd882c]">
+            <AvatarFallback className="text-[11px] font-semibold bg-gradient-to-br from-gold/20 to-gold/5 text-gold">
               {getInitials(otherMember?.name)}
             </AvatarFallback>
           </Avatar>
         ) : (
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#0f2b7f]/10 to-[#0f2b7f]/5 flex items-center justify-center border-2 border-background shadow-sm">
-            <Hash className="h-4 w-4 text-[#0f2b7f]" />
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border-2 border-background shadow-sm">
+            <Hash className="h-4 w-4 text-blue" />
           </div>
         )}
         {isOnline && (
@@ -86,7 +86,7 @@ export function ChannelItem({
               : "No messages yet"}
           </p>
           {hasUnread && (
-            <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-[#bd882c] text-white text-[10px] font-bold rounded-full px-1 shrink-0">
+            <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-gold text-white text-[10px] font-bold rounded-full px-1 shrink-0">
               {channel.unreadCount > 99 ? "99+" : channel.unreadCount}
             </span>
           )}

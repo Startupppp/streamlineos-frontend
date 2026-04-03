@@ -140,6 +140,7 @@ export function AvatarCropDialog({
               size="icon"
               onClick={handleReset}
               className="shrink-0"
+              aria-label="Reset zoom"
             >
               <RotateCcw className="h-4 w-4" />
             </Button>

@@ -421,6 +421,7 @@ export function CreateExpenseDialog({
                     className="hidden"
                     accept="image/*,.pdf"
                     onChange={handleFileChange}
+                    aria-label="Upload receipt"
                   />
                 </label>
               ) : (
@@ -453,6 +454,7 @@ export function CreateExpenseDialog({
                     size="icon"
                     onClick={removeFile}
                     className="shrink-0"
+                    aria-label="Remove receipt"
                   >
                     <X className="h-4 w-4" />
                   </Button>

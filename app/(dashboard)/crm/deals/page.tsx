@@ -261,7 +261,7 @@ export default function DealsPage() {
                           <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5">
+                              <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options">
                                 <MoreHorizontal className="h-3.5 w-3.5" />
                               </Button>
                             </DropdownMenuTrigger>

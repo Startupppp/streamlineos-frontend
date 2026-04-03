@@ -53,6 +53,7 @@ function ExpensePagination({
             className="h-8 w-8"
             disabled={pagination.page <= 1}
             onClick={() => onPageChange(pagination.page - 1)}
+            aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -79,6 +80,7 @@ function ExpensePagination({
             className="h-8 w-8"
             disabled={pagination.page >= totalPages}
             onClick={() => onPageChange(pagination.page + 1)}
+            aria-label="Next page"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

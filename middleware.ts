@@ -5,6 +5,7 @@ import {
   resolveTier,
   isSuspiciousBot,
 } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -150,12 +151,7 @@ export default async function middleware(req: NextRequest) {
     const result = await checkRateLimit(tier, ip);
 
     if (!result.allowed) {
-      console.info(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "warn",
-        message: "Rate limit exceeded",
-        meta: { ip, path: pathname, tier, retryAfterSecs: result.retryAfterSecs },
-      }));
+      logger.warn("Rate limit exceeded", { ip, path: pathname, tier, retryAfterSecs: result.retryAfterSecs });
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         {
@@ -172,17 +168,11 @@ export default async function middleware(req: NextRequest) {
   if (BOT_BLOCKED_PREFIXES.some((p) => pathname.startsWith(p))) {
     const ua = req.headers.get("user-agent");
     if (isSuspiciousBot(ua)) {
-      // Log blocked bot attempt for monitoring
-      console.info(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "warn",
-        message: "Blocked suspicious bot",
-        meta: {
-          ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown",
-          path: pathname,
-          userAgent: ua?.slice(0, 200),
-        },
-      }));
+      logger.warn("Blocked suspicious bot", {
+        ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown",
+        path: pathname,
+        userAgent: ua?.slice(0, 200),
+      });
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 },
