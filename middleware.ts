@@ -22,6 +22,8 @@ const PROTECTED_ROUTES = [
   "/chat",
   "/digital-marketing",
   "/reports",
+  "/notifications",
+  "/marketing",
 ];
 
 const AUTH_ROUTES = [
