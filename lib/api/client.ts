@@ -1,5 +1,5 @@
 /**
- * Typed Axios client for all /api/v1/* route handlers.
+ * Typed Axios client for all /api/* route handlers.
  * Uses httpOnly session cookies — no explicit auth headers needed.
  *
  * Usage:
@@ -10,7 +10,7 @@
 
 import axios, { type AxiosRequestConfig } from "axios";
 
-const BASE_URL = "/api/v1";
+const BASE_URL = "/api";
 
 const _axios = axios.create({
   baseURL: BASE_URL,

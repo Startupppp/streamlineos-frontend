@@ -1,5 +1,5 @@
 /**
- * Shared helpers for /api/v1/* route handlers.
+ * Shared helpers for /api/* route handlers.
  * Every route handler follows this pattern:
  *
  *   export async function GET(req: NextRequest) {
@@ -11,19 +11,35 @@
  */
 
 import { auth } from "@/lib/auth";
+import { redis } from "@/lib/redis";
 import type { Session } from "next-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { z, type ZodSchema } from "zod";
 
 /**
- * The authenticated session type used throughout all /api/v1/* route handlers.
- * We use the NextAuth `Session` type directly (augmented via next-auth.d.ts)
- * rather than `ReturnType<typeof auth>` which resolves to `NextMiddleware`
- * due to TypeScript's overload resolution picking the last overload.
+ * The authenticated session type used throughout all /api/* route handlers.
+ * `orgId` is narrowed to `string` (non-nullable) because:
+ *   - middleware redirects users without an orgId to /onboarding before hitting API routes
+ *   - withAuth returns 401 if orgId is missing
  */
-export type AuthSession = Session & {
+export type AuthSession = Omit<Session, "orgId"> & {
   user: NonNullable<Session["user"]>;
+  /** Guaranteed non-null by withAuth — middleware ensures orgId exists before API calls. */
+  orgId: string;
 };
+
+/** Shape of the per-user Redis session cache set by lib/auth.ts JWT callback. */
+interface UserSessionRedisCache {
+  isActive: boolean | null;
+  hasDashboardAccess: boolean | null;
+  isPasswordChangeRequired: boolean | null;
+  image: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  name: string | null;
+  role: string | null;
+  orgId: string | null;
+}
 
 /** Returns a typed 200 JSON response. */
 export function ok<T>(data: T, status = 200) {
@@ -43,7 +59,42 @@ export async function withAuth<T>(
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" } as T, { status: 401 });
   }
-  return handler(session as AuthSession);
+
+  // Resolve orgId from session (may be updated by Redis cache below)
+  let orgId: string | null | undefined = session.orgId;
+
+  // Single Redis check per request: verify session is still valid and hydrate
+  // with the freshest user/org data (avoids stale JWT data)
+  if (redis) {
+    const cached = await redis.get<UserSessionRedisCache>(`user:session:${session.user.id}`);
+    if (cached !== null) {
+      // Account was explicitly deactivated — reject immediately
+      if (cached.isActive === false) {
+        return NextResponse.json({ error: "Account deactivated" } as T, { status: 403 });
+      }
+      // Hydrate session with fresh Redis data (role/org changes take effect immediately)
+      if (cached.role !== undefined) session.user.role = (cached.role ?? session.user.role) as typeof session.user.role;
+      if (cached.name !== undefined) session.user.name = cached.name ?? session.user.name;
+      if (cached.image !== undefined) session.user.image = cached.image ?? session.user.image;
+      if (cached.isPasswordChangeRequired !== undefined) {
+        session.user.forceChangePassword = cached.isPasswordChangeRequired ?? session.user.forceChangePassword;
+      }
+      // orgId lives at the session level — take the freshest value from Redis
+      if (cached.orgId !== undefined) orgId = cached.orgId ?? orgId;
+    }
+    // If cached === null: Redis miss (key expired or cleared). Gracefully allow —
+    // the JWT callback will repopulate Redis on the next auth() call.
+  }
+
+  // Ensure orgId is present (middleware redirects missing-orgId users to /onboarding,
+  // but API routes called directly must still guard here)
+  if (!orgId) {
+    return NextResponse.json({ error: "Organization not found" } as T, { status: 403 });
+  }
+
+  // Build the narrowed AuthSession with orgId guaranteed as string
+  const authSession: AuthSession = Object.assign(session, { orgId }) as AuthSession;
+  return handler(authSession);
 }
 
 /** Same as withAuth but also enforces CEO/HR/ADMIN roles. */

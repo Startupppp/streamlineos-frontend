@@ -2,7 +2,7 @@
 
 /**
  * Chat domain — pure DB query functions.
- * Imported only by /api/v1/chat/* route handlers (server-side).
+ * Imported only by /api/chat/* route handlers (server-side).
  */
 
 import { db } from "@/lib/db";
