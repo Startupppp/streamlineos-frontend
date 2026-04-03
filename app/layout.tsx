@@ -5,6 +5,7 @@ import { Toaster } from "../components/ui/sonner";
 import { SessionProvider } from "../components/providers/session-provider";
 import { ThemeProvider } from "../components/theme-provider";
 import { MotionProvider } from "../components/providers/motion-provider";
+import { QueryProvider } from "../components/providers/query-provider";
 
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 
@@ -61,10 +62,12 @@ export default function RootLayout({
             disableTransitionOnChange
           >
           <SessionProvider>
-            <MotionProvider>
-     {children}
-            </MotionProvider>
-            <Toaster position="top-right" />
+            <QueryProvider>
+              <MotionProvider>
+                {children}
+              </MotionProvider>
+              <Toaster position="top-right" />
+            </QueryProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>

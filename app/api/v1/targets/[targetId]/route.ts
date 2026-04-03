@@ -1,0 +1,135 @@
+import { type NextRequest } from "next/server";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
+import { db } from "@/lib/db";
+import { targets, targetHistory, users } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { createAuditLog } from "@/lib/audit-log";
+import { ADMIN_ROLES } from "@/lib/constants/roles";
+import { z } from "zod";
+
+const updateSchema = z.object({
+  targetValue: z.string().optional(),
+  currentValue: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+async function assertCanManage(
+  callerRole: string,
+  callerId: string,
+  userIds: string[]
+) {
+  if (ADMIN_ROLES.includes(callerRole)) return true;
+  const targetUsers = await db
+    .select({ id: users.id, reportingTo: users.reportingTo })
+    .from(users)
+    .where(inArray(users.id, userIds));
+  return targetUsers.every((u) => u.reportingTo === callerId);
+}
+
+type Ctx = { params: Promise<{ targetId: string }> };
+
+export async function PATCH(req: NextRequest, ctx: Ctx) {
+  const { targetId: id } = await ctx.params;
+  const targetId = Number(id);
+  if (!Number.isFinite(targetId)) return err("Invalid target id", 400);
+
+  return withAuth(async (session) => {
+    const input = await parseBody(req, updateSchema);
+    const orgId = session.orgId!;
+
+    const existing = await db.query.targets.findFirst({
+      where: and(eq(targets.id, targetId), eq(targets.orgId, orgId)),
+    });
+    if (!existing) return err("Target not found", 404);
+
+    const canManage = await assertCanManage(
+      session.user.role ?? "",
+      session.user.id,
+      [existing.userId]
+    );
+    if (!canManage) return err("You can only set targets for your direct reports", 403);
+
+    const changes: { field: string; oldValue: string | null; newValue: string | null }[] = [];
+    if (input.targetValue !== undefined && input.targetValue !== existing.targetValue) {
+      changes.push({ field: "targetValue", oldValue: existing.targetValue, newValue: input.targetValue });
+    }
+    if (input.currentValue !== undefined && input.currentValue !== (existing.currentValue ?? "0")) {
+      changes.push({ field: "currentValue", oldValue: existing.currentValue ?? "0", newValue: input.currentValue });
+    }
+    if (input.notes !== undefined && input.notes !== existing.notes) {
+      changes.push({ field: "notes", oldValue: existing.notes, newValue: input.notes });
+    }
+
+    if (changes.length > 0) {
+      await db.insert(targetHistory).values(
+        changes.map((c) => ({
+          targetId,
+          orgId,
+          changedById: session.user.id,
+          field: c.field,
+          oldValue: c.oldValue,
+          newValue: c.newValue,
+        }))
+      );
+    }
+
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (input.targetValue !== undefined) updateData.targetValue = input.targetValue;
+    if (input.currentValue !== undefined) updateData.currentValue = input.currentValue;
+    if (input.notes !== undefined) updateData.notes = input.notes;
+
+    const [updated] = await db.update(targets)
+      .set(updateData)
+      .where(and(eq(targets.id, targetId), eq(targets.orgId, orgId)))
+      .returning();
+
+    if (!updated) return err("Target not found", 404);
+
+    createAuditLog({
+      action: "target.updated",
+      userId: session.user.id,
+      orgId,
+      targetId: String(targetId),
+      targetType: "target",
+      metadata: { changes },
+    }).catch(() => {});
+
+    return ok(updated);
+  });
+}
+
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
+  const { targetId: id } = await ctx.params;
+  const targetId = Number(id);
+  if (!Number.isFinite(targetId)) return err("Invalid target id", 400);
+
+  return withAuth(async (session) => {
+    const orgId = session.orgId!;
+
+    const existing = await db.query.targets.findFirst({
+      where: and(eq(targets.id, targetId), eq(targets.orgId, orgId)),
+    });
+    if (!existing) return err("Target not found", 404);
+
+    const canManage = await assertCanManage(
+      session.user.role ?? "",
+      session.user.id,
+      [existing.userId]
+    );
+    if (!canManage) return err("You can only manage targets for your direct reports", 403);
+
+    await db.delete(targets)
+      .where(and(eq(targets.id, targetId), eq(targets.orgId, orgId)));
+
+    createAuditLog({
+      action: "target.deleted",
+      userId: session.user.id,
+      orgId,
+      targetId: String(targetId),
+      targetType: "target",
+      metadata: { assignedTo: existing.userId, metricType: existing.metricType },
+    }).catch(() => {});
+
+    return ok({ success: true });
+  });
+}

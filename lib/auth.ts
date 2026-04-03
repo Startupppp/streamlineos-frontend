@@ -238,6 +238,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.isActive = token.isActive as boolean;
         session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
       }
+      session.orgId = token.orgId ?? null;
       return session;
     },
   },
