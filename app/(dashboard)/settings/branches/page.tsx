@@ -42,8 +42,7 @@ export default function BranchManagementPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const branches = (branchList || []) as any[];
+  const branches = branchList ?? [];
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData(f => ({ ...f, [key]: e.target.value }));

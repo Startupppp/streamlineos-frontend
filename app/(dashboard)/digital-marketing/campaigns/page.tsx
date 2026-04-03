@@ -43,8 +43,7 @@ export default function CampaignsPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const campaigns = (data?.campaigns || []) as any[];
+  const campaigns = data?.campaigns ?? [];
 
   return (
     <div className="space-y-6 p-4 md:p-6">

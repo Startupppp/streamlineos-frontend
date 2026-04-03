@@ -86,8 +86,7 @@ export default function DmLeadsPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const leads = (data?.leads || []) as any[];
+  const leads = data?.leads ?? [];
   const allSelected = leads.length > 0 && leads.every((l: { id: number }) => selectedIds.has(l.id));
 
   return (

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { formatDateOnly } from "@/lib/date-utils";
+import Image from "next/image";
 import { CalendarIcon, Upload, Receipt, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -425,9 +426,12 @@ export function CreateExpenseDialog({
               ) : (
                 <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
                   {receiptPreview ? (
-                    <img
+                    <Image
                       src={receiptPreview}
                       alt="Receipt preview"
+                      width={64}
+                      height={64}
+                      unoptimized
                       className="h-16 w-16 object-cover rounded"
                     />
                   ) : (

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -364,9 +365,12 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                       {attachmentFiles.map((file, index) => (
                         <div key={`${file.name}-${index}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
                           {attachmentPreviews[index] ? (
-                            <img
+                            <Image
                               src={attachmentPreviews[index]!}
                               alt="Preview"
+                              width={48}
+                              height={48}
+                              unoptimized
                               className="h-12 w-12 object-cover rounded"
                             />
                           ) : file.type === "application/pdf" ? (

@@ -2,16 +2,15 @@
 
 import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
 
-export default function AuthError(props: {
+export default function LeavesError(props: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
     <RouteErrorBoundary
       {...props}
-      layout="fullscreen"
-      title="Authentication Error"
-      fallbackMessage="Something went wrong. Please try again."
+      title="Leaves Error"
+      fallbackMessage="Failed to load leaves data. Please try again."
     />
   );
 }

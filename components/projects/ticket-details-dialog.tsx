@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   useTicket,
@@ -92,11 +93,12 @@ function AttachmentImage({ fileUrl, fileName }: { fileUrl: string; fileName: str
   }
 
   return (
-    <img
+    <Image
       src={imageSrc || fileUrl}
       alt={fileName}
-      className="object-cover w-full h-full"
-      onError={(e) => { if (e.target instanceof HTMLImageElement) e.target.style.display = 'none'; }}
+      fill
+      unoptimized
+      className="object-cover"
     />
   );
 }

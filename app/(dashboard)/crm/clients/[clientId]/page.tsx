@@ -54,8 +54,7 @@ export default function ClientAccountDetailPage() {
   const params = useParams();
   const clientId = Number(params.clientId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: account, isLoading, refetch } = api.clientAccounts.getById.useQuery({ id: clientId }, { enabled: !!clientId }) as { data: any; isLoading: boolean; refetch: () => void };
+  const { data: account, isLoading, refetch } = api.clientAccounts.getById.useQuery({ id: clientId }, { enabled: !!clientId });
 
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityType, setActivityType] = useState("note");
@@ -292,8 +291,7 @@ export default function ClientAccountDetailPage() {
             <p className="text-sm text-muted-foreground text-center py-8">No activities logged yet.</p>
           ) : (
             <div className="space-y-4">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {(account.activities || []).map((activity: any) => (
+              {(account.activities ?? []).map((activity) => (
                 <div key={activity.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">

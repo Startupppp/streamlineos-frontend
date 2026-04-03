@@ -72,10 +72,8 @@ export default function IncentivesPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const incentivesList = (data?.incentives || []) as any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currentConfig = (configs as any[])?.[0];
+  const incentivesList = data?.incentives ?? [];
+  const currentConfig = configs?.[0];
 
   return (
     <div className="space-y-6 p-4 md:p-6">

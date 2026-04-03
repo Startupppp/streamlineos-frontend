@@ -47,8 +47,7 @@ export default function SocialMediaPage() {
     onError: (err) => toast.error(err.message),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const platforms = latestData as Record<string, { latest: any; previous: any }> | undefined;
+  const platforms = latestData;
 
   return (
     <div className="space-y-6 p-4 md:p-6">

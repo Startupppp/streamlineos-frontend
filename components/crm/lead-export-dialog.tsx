@@ -44,8 +44,7 @@ export function LeadExportDialog() {
     setIsExporting(true);
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const leads = (data?.leads || []) as any[];
+      const leads = data?.leads ?? [];
 
       if (leads.length === 0) {
         toast.error("No leads found with current filters");

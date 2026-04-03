@@ -34,8 +34,7 @@ export default function LeadDistributionPage() {
     limit: 100,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredLeads = (data?.leads || []) as any[];
+  const filteredLeads = data?.leads ?? [];
 
   const allSelected = filteredLeads.length > 0 && filteredLeads.every((l) => selectedIds.has(l.id));
 

@@ -55,8 +55,7 @@ export default function ClientAccountsPage() {
     limit: 25,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const accounts = (data?.accounts || []) as any[];
+  const accounts = data?.accounts ?? [];
 
   return (
     <motion.div className="space-y-6 p-4 md:p-6" variants={staggerContainer} initial="hidden" animate="visible">

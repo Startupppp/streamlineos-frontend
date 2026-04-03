@@ -1,0 +1,129 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Users } from "lucide-react";
+import { toast } from "sonner";
+import { useChatOrgUsers, useChatOnlineUsers, useCreateDM } from "@/lib/hooks/trpc-hooks";
+import { resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "./chat-helpers";
+
+export function NewDMDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  hideTrigger,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (channelId: number) => void;
+  hideTrigger?: boolean;
+}) {
+  const { data: orgUsers, isLoading } = useChatOrgUsers();
+  const { data: onlineUsers } = useChatOnlineUsers();
+  const createDM = useCreateDM();
+  const [search, setSearch] = useState("");
+
+  const onlineUserIds = useMemo(
+    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
+    [onlineUsers]
+  );
+
+  const filteredUsers = useMemo(() => {
+    if (!orgUsers) return [];
+    if (!search) return orgUsers;
+    const q = search.toLowerCase();
+    return orgUsers.filter(
+      (u) => u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q)
+    );
+  }, [orgUsers, search]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" title="New Direct Message">
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-4 pt-4 pb-3">
+          <DialogTitle className="text-[16px]">New Direct Message</DialogTitle>
+        </DialogHeader>
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+            <Input
+              placeholder="Search by name or email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 bg-muted/30 border-border/30"
+              autoFocus
+            />
+          </div>
+        </div>
+        <ScrollArea className="h-[340px] border-t border-border/30">
+          <div className="p-1">
+            {filteredUsers.map((user) => {
+              const isOnline = onlineUserIds.has(user.id);
+              return (
+                <button
+                  key={user.id}
+                  onClick={async () => {
+                    try {
+                      const channel = await createDM.mutateAsync({ targetUserId: user.id });
+                      onCreated(channel.id);
+                      onOpenChange(false);
+                      setSearch("");
+                    } catch {
+                      toast.error("Failed to create conversation");
+                    }
+                  }}
+                  disabled={createDM.isPending}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/40 transition-colors"
+                >
+                  <div className="relative shrink-0">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={resolveImageUrl(user.image)} />
+                      <AvatarFallback className="text-[10px] font-medium">
+                        {getInitials(user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isOnline && (
+                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-[13px] font-medium truncate">{user.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] shrink-0 border-border/40">
+                    {user.role}
+                  </Badge>
+                </button>
+              );
+            })}
+            {filteredUsers.length === 0 && !isLoading && (
+              <div className="text-center py-10">
+                <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-[13px] text-muted-foreground">No users found</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
