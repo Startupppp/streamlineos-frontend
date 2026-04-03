@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import "@/lib/env";
-import { ensureOrgMembership, isAdminOrOwner } from "@/lib/auth-helpers";
+import { ensureOrgMembership, } from "@/lib/auth-helpers";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth();
