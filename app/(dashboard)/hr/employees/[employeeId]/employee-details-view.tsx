@@ -20,7 +20,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     const employeeName = `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employee';
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="flex items-center gap-4">
                 <Link href="/hr" aria-label="Back to employees">
                     <Button variant="outline" size="icon" className="h-9 w-9" tabIndex={-1}>
@@ -38,7 +38,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </div>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
+            <Tabs defaultValue="overview" className="space-y-4">
                 <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
                     <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
                     <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
@@ -47,10 +47,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     <TabsTrigger value="profile" className="text-xs sm:text-sm whitespace-nowrap">Profile Details</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="overview" className="space-y-6">
+                <TabsContent value="overview" className="space-y-4">
                     <EmployeeAttendanceSummary attendance={stats?.attendance} />
 
-                    <div className="grid gap-6 lg:grid-cols-2">
+                    <div className="grid gap-4 lg:grid-cols-2">
                         <EmployeeLeaveStats stats={stats} />
                         <EmployeeProjectsList projects={(projects ?? []) as unknown as Parameters<typeof EmployeeProjectsList>[0]["projects"]} />
                     </div>
@@ -64,7 +64,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                      <EmployeeTicketsList tickets={(ticketsResult?.data ?? []) as Parameters<typeof EmployeeTicketsList>[0]["tickets"]} />
                 </TabsContent>
 
-                <TabsContent value="attendance" className="space-y-6">
+                <TabsContent value="attendance" className="space-y-4">
                      <EmployeeLeaveStats stats={stats} />
                      <div>
                         <h3 className="text-lg font-semibold text-foreground mb-4">Attendance History</h3>

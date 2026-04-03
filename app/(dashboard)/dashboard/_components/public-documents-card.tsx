@@ -49,7 +49,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
           </Button>
         </Link>
       </CardHeader>
-      <CardContent aria-live="polite">
+      <CardContent className="px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (

@@ -115,7 +115,7 @@ export function AppSidebar({
     <TooltipProvider>
       <div
         className={cn(
-          "flex flex-col h-full bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-in-out",
+          "relative flex flex-col h-full bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-in-out",
           isCollapsed ? "w-[3.5rem]" : "w-[17rem]"
         )}
       >
@@ -176,11 +176,23 @@ export function AppSidebar({
           )}
         </div>
 
+        {/* ── Expand button (collapsed only) — floats on the right edge ── */}
+        {onToggleCollapse && isCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label="Expand sidebar"
+            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-gold hover:border-gold/40 hover:bg-sidebar transition-colors"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+
         {/* ── Navigation ── */}
         <ScrollArea className="flex-1 min-h-0">
           <nav
             className={cn(
-              "py-3",
+              "py-2",
               isCollapsed ? "px-1.5" : "px-3"
             )}
           >
@@ -197,23 +209,6 @@ export function AppSidebar({
             ))}
           </nav>
         </ScrollArea>
-
-        {/* ── Collapse / expand toggle ── */}
-        {onToggleCollapse && isCollapsed && (
-          <div className="border-t border-sidebar-border px-2 py-2">
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              aria-label="Expand sidebar"
-              className={cn(
-                "w-full h-8 rounded-lg flex items-center justify-center",
-                "text-sidebar-foreground/40 hover:text-sidebar-foreground/80 hover:bg-white/5 transition-colors"
-              )}
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
 
         {/* ── User menu ── */}
         <SidebarUserMenu isCollapsed={isCollapsed} isAdmin={isAdmin} />

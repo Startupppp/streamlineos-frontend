@@ -170,9 +170,9 @@ export default function LeadDetailPage({
   // ─── Loading / not-found guards ──────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 p-4">
         <Skeleton className="h-8 w-48" />
-        <div className="grid gap-6 lg:grid-cols-5">
+        <div className="grid gap-4 lg:grid-cols-5">
           <Skeleton className="h-[600px] lg:col-span-3" />
           <Skeleton className="h-[600px] lg:col-span-2" />
         </div>
@@ -204,7 +204,7 @@ export default function LeadDetailPage({
       }
     >
       <motion.div
-        className="space-y-6"
+        className="space-y-4"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
@@ -216,9 +216,9 @@ export default function LeadDetailPage({
           onStatusChange={handleStatusChange}
         />
 
-        <motion.div variants={fadeUp} className="grid gap-6 lg:grid-cols-5">
+        <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
           {/* ── Main column ──────────────────────────────────────────────── */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
               lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
               isEditing={isEditing}

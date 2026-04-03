@@ -69,7 +69,7 @@ export function DashboardShell({
         <aside
           aria-label="Sidebar"
           style={{ width: sidebarW }}
-          className="hidden md:flex flex-col h-screen border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-hidden relative z-30"
+          className="hidden md:flex flex-col h-screen border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-30"
         >
           <AppSidebar
             isCollapsed={isSidebarCollapsed}

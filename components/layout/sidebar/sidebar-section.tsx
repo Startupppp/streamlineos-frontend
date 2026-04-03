@@ -26,7 +26,7 @@ export function SidebarSection({
   const pathname = usePathname();
 
   return (
-    <div className={cn(groupIndex > 0 && "mt-5")}>
+    <div className={cn(groupIndex > 0 && "mt-3")}>
       {/* Section label — expanded only */}
       {!isCollapsed && (
         <div className="px-2 mb-1">
@@ -38,7 +38,7 @@ export function SidebarSection({
 
       {/* Visual divider between groups in collapsed mode */}
       {isCollapsed && groupIndex > 0 && (
-        <div className="mx-auto mb-3 h-px w-6 bg-sidebar-border" />
+        <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" />
       )}
 
       <div className="space-y-0.5">

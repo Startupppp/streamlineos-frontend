@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { NotificationBell } from "./notification-bell";
+
+const NotificationBell = dynamic(
+  () => import("./notification-bell").then((m) => ({ default: m.NotificationBell })),
+  { ssr: false }
+);
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Menu, Search } from "lucide-react";
 import { AppSidebar } from "./app-sidebar";
