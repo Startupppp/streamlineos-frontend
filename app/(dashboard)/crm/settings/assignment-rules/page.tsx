@@ -26,7 +26,11 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import {
+  useAssignmentRules, useCreateAssignmentRule, useUpdateAssignmentRule,
+  useDeleteAssignmentRule, useReorderAssignmentRules,
+} from "@/lib/api/hooks/crm-settings";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 
 const FIELDS = [
@@ -61,42 +65,15 @@ const createRuleSchema = z.object({
 type CreateRuleForm = z.infer<typeof createRuleSchema>;
 
 export default function AssignmentRulesPage() {
-  const utils = api.useUtils();
-  const { data: rules, isLoading } = api.leadAssignment.getRules.useQuery();
-  const { data: employees } = api.hr.getEmployees.useQuery();
+  const { data: rules, isLoading } = useAssignmentRules();
+  const { data: rawEmployees } = useHrEmployees();
+  const employees = Array.isArray(rawEmployees) ? rawEmployees : rawEmployees?.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
 
-  const createRule = api.leadAssignment.createRule.useMutation({
-    onSuccess: () => {
-      utils.leadAssignment.getRules.invalidate();
-      toast.success("Rule created");
-      setCreateOpen(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateRule = api.leadAssignment.updateRule.useMutation({
-    onSuccess: () => {
-      utils.leadAssignment.getRules.invalidate();
-      toast.success("Rule updated");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const deleteRule = api.leadAssignment.deleteRule.useMutation({
-    onSuccess: () => {
-      utils.leadAssignment.getRules.invalidate();
-      toast.success("Rule deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const reorderRules = api.leadAssignment.reorder.useMutation({
-    onSuccess: () => {
-      utils.leadAssignment.getRules.invalidate();
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createRule = useCreateAssignmentRule();
+  const updateRule = useUpdateAssignmentRule();
+  const deleteRule = useDeleteAssignmentRule();
+  const reorderRules = useReorderAssignmentRules();
 
   const form = useForm<CreateRuleForm>({
     resolver: zodResolver(createRuleSchema),
@@ -117,21 +94,29 @@ export default function AssignmentRulesPage() {
   const assignmentType = form.watch("assignmentType");
 
   const onCreateSubmit = useCallback((data: CreateRuleForm) => {
-    createRule.mutate({
-      name: data.name,
-      assignmentType: data.assignmentType,
-      assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId || undefined : undefined,
-      roundRobinUserIds: data.assignmentType === "round_robin"
-        ? data.roundRobinUserIds?.split(",").map(s => s.trim()).filter(Boolean) ?? []
-        : undefined,
-      conditions: data.conditions,
-      priority: (rules?.length ?? 0),
-    });
-    form.reset();
+    createRule.mutate(
+      {
+        name: data.name,
+        assignmentType: data.assignmentType,
+        assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId || undefined : undefined,
+        roundRobinUserIds: data.assignmentType === "round_robin"
+          ? data.roundRobinUserIds?.split(",").map(s => s.trim()).filter(Boolean) ?? []
+          : undefined,
+        conditions: data.conditions,
+        priority: (rules?.length ?? 0),
+      },
+      {
+        onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [createRule, form, rules]);
 
   const toggleActive = useCallback((id: number, currentActive: boolean) => {
-    updateRule.mutate({ id, isActive: !currentActive });
+    updateRule.mutate(
+      { id, isActive: !currentActive },
+      { onSuccess: () => toast.success("Rule updated"), onError: (err) => toast.error(err.message) }
+    );
   }, [updateRule]);
 
   const moveRule = useCallback((index: number, direction: "up" | "down") => {
@@ -140,9 +125,10 @@ export default function AssignmentRulesPage() {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newRules.length) return;
     [newRules[index], newRules[targetIndex]] = [newRules[targetIndex], newRules[index]];
-    reorderRules.mutate({
-      rules: newRules.map((r, i) => ({ id: r.id, priority: i })),
-    });
+    reorderRules.mutate(
+      { rules: newRules.map((r, i) => ({ id: r.id, priority: i })) },
+      { onError: (err) => toast.error(err.message) }
+    );
   }, [rules, reorderRules]);
 
   if (isLoading) {
@@ -333,7 +319,7 @@ export default function AssignmentRulesPage() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-destructive"
-                        onClick={() => deleteRule.mutate({ id: rule.id })}
+                        onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

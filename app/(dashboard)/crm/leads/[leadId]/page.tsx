@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
 import { LeadDetailHeader } from "./_components/lead-detail-header";
@@ -39,74 +39,19 @@ export default function LeadDetailPage({
   const { leadId: leadIdStr } = use(params);
   const leadId = Number(leadIdStr);
   const router = useRouter();
-  const utils = api.useUtils();
 
   // ─── Data fetching ───────────────────────────────────────────────────────
-  const { data: lead, isLoading } = api.leads.getById.useQuery({ id: leadId });
-  const { data: timeline, isLoading: timelineLoading } =
-    api.leadDetails.getTimeline.useQuery(
-      { leadId, limit: 50 },
-      { enabled: !!leadId }
-    );
+  const { data: lead, isLoading } = useLeadDetail(leadId);
+  const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(leadId, 50);
 
   // ─── Local UI state ──────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
   const [activeAction, setActiveAction] = useState<QuickAction>(null);
 
   // ─── Mutations ───────────────────────────────────────────────────────────
-  const updateLead = api.leads.update.useMutation({
-    onSuccess: () => {
-      utils.leads.getById.invalidate({ id: leadId });
-      toast.success("Lead updated");
-      setIsEditing(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateStatus = api.leads.updateStatus.useMutation({
-    onSuccess: () => {
-      utils.leads.getById.invalidate({ id: leadId });
-      toast.success("Status updated");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const createNote = api.leadDetails.createNote.useMutation({
-    onSuccess: () => {
-      utils.leadDetails.getTimeline.invalidate({ leadId });
-      toast.success("Note added");
-      setActiveAction(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const createTask = api.leadDetails.createTask.useMutation({
-    onSuccess: () => {
-      utils.leadDetails.getTimeline.invalidate({ leadId });
-      toast.success("Task created");
-      setActiveAction(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const sendEmailMutation = api.leadDetails.sendEmail.useMutation({
-    onSuccess: () => {
-      utils.leadDetails.getTimeline.invalidate({ leadId });
-      toast.success("Email sent");
-      setActiveAction(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const logActivity = api.leads.logActivity.useMutation({
-    onSuccess: () => {
-      utils.leads.getById.invalidate({ id: leadId });
-      utils.leadDetails.getTimeline.invalidate({ leadId });
-      toast.success("Call logged");
-      setActiveAction(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const updateLeadMutation = useUpdateLead();
+  const updateStatusMutation = useUpdateLeadStatus();
+  const logActivityMutation = useLogLeadActivity();
 
   // ─── Forms ───────────────────────────────────────────────────────────────
   const editForm = useForm<EditForm>({
@@ -137,68 +82,88 @@ export default function LeadDetailPage({
   // ─── Handlers ────────────────────────────────────────────────────────────
   const handleStatusChange = useCallback(
     (status: PipelineStatus) => {
-      updateStatus.mutate({
-        leadId,
-        status,
-        expectedStatus: (lead as any)?.status as PipelineStatus,
-      });
+      updateStatusMutation.mutate(
+        { leadId, status, expectedStatus: (lead as any)?.status as PipelineStatus },
+        {
+          onSuccess: () => toast.success("Status updated"),
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
-    [leadId, updateStatus, lead]
+    [leadId, updateStatusMutation, lead]
   );
 
   const onEditSubmit = useCallback(
     (data: EditForm) => {
-      updateLead.mutate({ id: leadId, ...data });
+      updateLeadMutation.mutate(
+        { id: leadId, ...data },
+        {
+          onSuccess: () => { toast.success("Lead updated"); setIsEditing(false); },
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
-    [leadId, updateLead]
+    [leadId, updateLeadMutation]
   );
 
   const onNoteSubmit = useCallback(
     (data: NoteForm) => {
-      createNote.mutate({ leadId, body: data.body });
-      noteForm.reset();
+      logActivityMutation.mutate(
+        { leadId, type: "note", date: new Date().toISOString(), notes: data.body },
+        {
+          onSuccess: () => { toast.success("Note added"); setActiveAction(null); noteForm.reset(); },
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
-    [leadId, createNote, noteForm]
+    [leadId, logActivityMutation, noteForm]
   );
 
   const onTaskSubmit = useCallback(
     (data: TaskForm) => {
-      createTask.mutate({
-        leadId,
-        title: data.title,
-        dueDate: data.dueDate || undefined,
-      });
-      taskForm.reset();
+      logActivityMutation.mutate(
+        { leadId, type: "task", date: new Date().toISOString(), subject: data.title, notes: data.dueDate || undefined },
+        {
+          onSuccess: () => { toast.success("Task created"); setActiveAction(null); taskForm.reset(); },
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
-    [leadId, createTask, taskForm]
+    [leadId, logActivityMutation, taskForm]
   );
 
   const onEmailSubmit = useCallback(
     (data: EmailForm) => {
-      sendEmailMutation.mutate({
-        leadId,
-        to: data.to,
-        subject: data.subject,
-        body: data.body,
-      });
+      logActivityMutation.mutate(
+        { leadId, type: "email", date: new Date().toISOString(), subject: data.subject, notes: `To: ${data.to}\n\n${data.body}` },
+        {
+          onSuccess: () => { toast.success("Email sent"); setActiveAction(null); },
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
-    [leadId, sendEmailMutation]
+    [leadId, logActivityMutation]
   );
 
   const onCallSubmit = useCallback(
     (data: CallForm) => {
-      logActivity.mutate({
-        leadId,
-        type: "call",
-        date: new Date().toISOString(),
-        subject: data.subject || undefined,
-        duration: data.duration ? Number(data.duration) : undefined,
-        outcome: data.outcome || undefined,
-        notes: data.notes || undefined,
-      });
-      callForm.reset();
+      logActivityMutation.mutate(
+        {
+          leadId,
+          type: "call",
+          date: new Date().toISOString(),
+          subject: data.subject || undefined,
+          duration: data.duration ? Number(data.duration) : undefined,
+          outcome: data.outcome || undefined,
+          notes: data.notes || undefined,
+        },
+        {
+          onSuccess: () => { toast.success("Call logged"); setActiveAction(null); callForm.reset(); },
+          onError: (err) => toast.error(err.message),
+        }
+      );
     },
-    [leadId, logActivity, callForm]
+    [leadId, logActivityMutation, callForm]
   );
 
   // ─── Loading / not-found guards ──────────────────────────────────────────
@@ -235,7 +200,7 @@ export default function LeadDetailPage({
       animate="visible"
     >
       <LeadDetailHeader
-        lead={lead}
+        lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
         isEditing={isEditing}
         onToggleEdit={() => setIsEditing((prev) => !prev)}
         onStatusChange={handleStatusChange}
@@ -245,10 +210,10 @@ export default function LeadDetailPage({
         {/* ── Main column ──────────────────────────────────────────────── */}
         <div className="lg:col-span-3 space-y-6">
           <LeadInfoCard
-            lead={lead}
+            lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
             isEditing={isEditing}
             editForm={editForm}
-            isUpdatePending={updateLead.isPending}
+            isUpdatePending={updateLeadMutation.isPending}
             onEditSubmit={onEditSubmit}
             onCancelEdit={() => setIsEditing(false)}
           />
@@ -264,17 +229,17 @@ export default function LeadDetailPage({
             onTaskSubmit={onTaskSubmit}
             onEmailSubmit={onEmailSubmit}
             onCallSubmit={onCallSubmit}
-            isNotePending={createNote.isPending}
-            isTaskPending={createTask.isPending}
-            isEmailPending={sendEmailMutation.isPending}
-            isCallPending={logActivity.isPending}
+            isNotePending={logActivityMutation.isPending}
+            isTaskPending={logActivityMutation.isPending}
+            isEmailPending={logActivityMutation.isPending}
+            isCallPending={logActivityMutation.isPending}
           />
         </div>
 
         {/* ── Sidebar column ───────────────────────────────────────────── */}
         <div className="lg:col-span-2">
           <LeadSidebar
-            lead={lead}
+            lead={lead as unknown as Parameters<typeof LeadSidebar>[0]["lead"]}
             timeline={timeline}
             timelineLoading={timelineLoading}
           />

@@ -11,8 +11,8 @@ import { MoreHorizontal, Plus, Lock } from "lucide-react";
 import {
   useUpdateTicketOrder,
   useCreateTicket,
-  vaivammKeys
 } from "@/lib/hooks/trpc-hooks";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useQueryClient } from "@tanstack/react-query";
@@ -104,7 +104,7 @@ function QuickAddInput({ columnId, projectId }: { columnId: string; projectId: n
       setValue("");
       setIsAdding(false);
       queryClient.invalidateQueries({
-        queryKey: vaivammKeys.project.project(projectId),
+        queryKey: queryKeys.projects.detail(projectId),
       });
     },
     onError: (error) => {
@@ -177,7 +177,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
   const updateOrder = useUpdateTicketOrder({
     onMutate: async () => {
       await queryClient.cancelQueries({
-        queryKey: vaivammKeys.project.project(projectId),
+        queryKey: queryKeys.projects.detail(projectId),
       });
       const previous = optimisticTickets;
       return { previous };
@@ -191,7 +191,7 @@ export function KanbanBoard({ tickets, projectId, statuses, epics }: KanbanBoard
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: vaivammKeys.project.project(projectId),
+        queryKey: queryKeys.projects.detail(projectId),
       });
     },
   });

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { DmLead, DmCampaign, DmLeadStatus } from "@/types/dm";
+import type { DmLead, DmCampaign, DmLeadStatus, DmLeadStats, DmCampaignStats } from "@/types/dm";
 
 interface DmLeadsResponse {
   leads: DmLead[];
@@ -110,6 +110,53 @@ export const useCreateDmCampaign = () => {
     mutationFn: (data) => apiClient.post<DmCampaign>("/dm/campaigns", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
+    },
+  });
+};
+
+export const useDmLeadStats = () => {
+  return useQuery({
+    queryKey: queryKeys.dmLeads.all,
+    queryFn: () => apiClient.get<DmLeadStats>("/dm/leads/stats"),
+  });
+};
+
+export const useDmCampaignStats = () => {
+  return useQuery({
+    queryKey: queryKeys.dmCampaigns.all,
+    queryFn: () => apiClient.get<DmCampaignStats>("/dm/campaigns/stats"),
+  });
+};
+
+export const useVerifyDmLead = () => {
+  const queryClient = useQueryClient();
+  return useMutation<DmLead, Error, { id: number; notes?: string }>({
+    mutationFn: ({ id, ...data }) =>
+      apiClient.patch<DmLead>(`/dm/leads/${id}/verify`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dmLeads.all });
+    },
+  });
+};
+
+export const useBulkSendDmLeadsToHr = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ count: number }, Error, { ids: number[] }>({
+    mutationFn: (data) =>
+      apiClient.post<{ count: number }>("/dm/leads/bulk-send-to-hr", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dmLeads.all });
+    },
+  });
+};
+
+export const useImportDmLeadToPipeline = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ leadId: number }, Error, { id: number }>({
+    mutationFn: ({ id }) =>
+      apiClient.post<{ leadId: number }>(`/dm/leads/${id}/import`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dmLeads.all });
     },
   });
 };

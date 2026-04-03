@@ -29,8 +29,18 @@ export const queryKeys = {
     goals: (userId?: string) => [...base, "hr", "goals", userId] as const,
     workLogs: (params?: Record<string, unknown>) => [...base, "hr", "workLogs", params] as const,
     incentives: (params?: Record<string, unknown>) => [...base, "hr", "incentives", params] as const,
+    incentiveStats: () => [...base, "hr", "incentiveStats"] as const,
+    incentiveConfigs: () => [...base, "hr", "incentiveConfigs"] as const,
     orgChart: () => [...base, "hr", "orgChart"] as const,
     helpdeskTickets: (params?: Record<string, unknown>) => [...base, "hr", "helpdeskTickets", params] as const,
+    wfhRequests: () => [...base, "hr", "wfhRequests"] as const,
+    pendingWfhRequests: () => [...base, "hr", "pendingWfhRequests"] as const,
+    holidaysYear: (year: number) => [...base, "hr", "holidaysYear", year] as const,
+    holidaysCalendar: (params: { year: number; month: number }) => [...base, "hr", "holidaysCalendar", params] as const,
+    devices: (params?: Record<string, unknown>) => [...base, "hr", "devices", params] as const,
+    monthlyAttendance: (params: { userId: string; year: number; month: number }) => [...base, "hr", "monthlyAttendance", params] as const,
+    employeeStats: (userId: string) => [...base, "hr", "employeeStats", userId] as const,
+    employeePayslips: (userId?: string) => [...base, "hr", "employeePayslips", userId] as const,
   },
 
   // ─── Leads / CRM ───────────────────────────────────────────────────────────
@@ -184,7 +194,45 @@ export const queryKeys = {
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,
     marketingDashboard: () => [...base, "crm", "marketingDashboard"] as const,
     supportDashboard: () => [...base, "crm", "supportDashboard"] as const,
+    customerExecutiveDashboard: () => [...base, "crm", "customerExecutiveDashboard"] as const,
     person: (slug: string) => [...base, "crm", "person", slug] as const,
+    peopleSlugs: () => [...base, "crm", "peopleSlugs"] as const,
+  },
+
+  crmSettings: {
+    all: [...base, "crmSettings"] as const,
+    assignmentRules: () => [...base, "crmSettings", "assignmentRules"] as const,
+    emailTemplates: (params?: Record<string, unknown>) => [...base, "crmSettings", "emailTemplates", params] as const,
+    scoringRules: () => [...base, "crmSettings", "scoringRules"] as const,
+    slaPolicies: () => [...base, "crmSettings", "slaPolicies"] as const,
+    slaReport: () => [...base, "crmSettings", "slaReport"] as const,
+    slaBreachedLeads: (params?: Record<string, unknown>) => [...base, "crmSettings", "slaBreachedLeads", params] as const,
+  },
+
+  crmOrganizations: {
+    all: [...base, "crmOrganizations"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmOrganizations", "list", params] as const,
+    detail: (id: number) => [...base, "crmOrganizations", "detail", id] as const,
+  },
+
+  clientStats: {
+    all: [...base, "clientStats"] as const,
+    stats: () => [...base, "clientStats", "stats"] as const,
+  },
+
+  dealActivities: {
+    all: [...base, "dealActivities"] as const,
+    list: (dealId: number, params?: Record<string, unknown>) => [...base, "dealActivities", "list", dealId, params] as const,
+  },
+
+  salesTeamCapacity: {
+    all: [...base, "salesTeamCapacity"] as const,
+    list: () => [...base, "salesTeamCapacity", "list"] as const,
+  },
+
+  salesLeaderboard: {
+    all: [...base, "salesLeaderboard"] as const,
+    list: () => [...base, "salesLeaderboard", "list"] as const,
   },
 
   dmLeads: {

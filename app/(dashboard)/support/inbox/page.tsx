@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/trpc/react";
-import { format, formatDistanceToNow } from "date-fns";
+import {
+  useSupportTickets,
+  useSupportTicket,
+  useCreateSupportTicket,
+  useUpdateSupportTicket,
+  useAddSupportMessage,
+  useSupportStats,
+} from "@/lib/api/hooks/support";
+import { formatDistanceToNow } from "date-fns";
 import {
   Plus,
   Loader2,
@@ -10,9 +17,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Pause,
-  MessageSquare,
   Send,
-  User,
   Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +46,7 @@ import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyInboxIllustration, EmptyTicketIllustration } from "@/components/illustrations";
+import type { SupportTicketStatus, SupportTicketPriority } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-slate-100 text-slate-700",
@@ -85,13 +91,11 @@ function InboxContent() {
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: ticketsData, isLoading } = api.support.list.useQuery(
-    {
-      ...(statusFilter !== "all" ? { status: statusFilter as "OPEN" } : {}),
-      ...(priorityFilter !== "all" ? { priority: priorityFilter as "LOW" } : {}),
-    }
-  );
-  const { data: stats, isLoading: statsLoading } = api.support.getStats.useQuery();
+  const { data: ticketsData, isLoading } = useSupportTickets({
+    ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
+    ...(priorityFilter !== "all" ? { priority: priorityFilter as SupportTicketPriority } : {}),
+  });
+  const { data: stats, isLoading: statsLoading } = useSupportStats();
 
   const tickets = ticketsData?.items ?? [];
 
@@ -216,28 +220,33 @@ function InboxContent() {
 }
 
 function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => void }) {
-  const { data: ticket, isLoading } = api.support.getById.useQuery({ id: ticketId });
+  const { data: ticket, isLoading } = useSupportTicket(ticketId);
   const [replyText, setReplyText] = useState("");
   const [isInternal, setIsInternal] = useState(false);
-  const utils = api.useUtils();
 
-  const reply = api.support.reply.useMutation({
-    onSuccess: () => {
-      utils.support.getById.invalidate({ id: ticketId });
-      utils.support.list.invalidate();
-      setReplyText("");
-      toast.success("Reply sent");
-    },
-  });
+  const addMessage = useAddSupportMessage();
+  const updateTicket = useUpdateSupportTicket();
 
-  const updateStatus = api.support.updateStatus.useMutation({
-    onSuccess: () => {
-      utils.support.getById.invalidate({ id: ticketId });
-      utils.support.list.invalidate();
-      utils.support.getStats.invalidate();
-      toast.success("Status updated");
-    },
-  });
+  const handleReply = () => {
+    if (!replyText.trim()) return;
+    addMessage.mutate(
+      { ticketId, body: replyText, isInternal },
+      {
+        onSuccess: () => {
+          setReplyText("");
+          toast.success("Reply sent");
+        },
+      }
+    );
+  };
+
+  const handleStatusChange = (status: SupportTicketStatus) => {
+    if (!ticket) return;
+    updateTicket.mutate(
+      { id: ticket.id, status },
+      { onSuccess: () => toast.success("Status updated") }
+    );
+  };
 
   if (isLoading || !ticket) {
     return (
@@ -264,7 +273,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={cn("text-xs", PRIORITY_COLORS[ticket.priority])}>{ticket.priority}</Badge>
             {isBreached && <Badge variant="destructive" className="text-xs">SLA Breached</Badge>}
-            <Select value={ticket.status} onValueChange={(v) => updateStatus.mutate({ id: ticket.id, status: v as "OPEN" })}>
+            <Select value={ticket.status} onValueChange={(v) => handleStatusChange(v as SupportTicketStatus)}>
               <SelectTrigger className="h-7 text-xs w-[120px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="OPEN">Open</SelectItem>
@@ -324,17 +333,17 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (replyText.trim()) reply.mutate({ ticketId: ticket.id, body: replyText, isInternal });
+                handleReply();
               }
             }}
           />
           <Button
-            onClick={() => { if (replyText.trim()) reply.mutate({ ticketId: ticket.id, body: replyText, isInternal }); }}
-            disabled={!replyText.trim() || reply.isPending}
+            onClick={handleReply}
+            disabled={!replyText.trim() || addMessage.isPending}
             size="icon"
             className="h-[60px] w-10 shrink-0 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white"
           >
-            {reply.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {addMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -343,22 +352,25 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
 }
 
 function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const utils = api.useUtils();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">("MEDIUM");
+  const [priority, setPriority] = useState<SupportTicketPriority>("MEDIUM");
+  const create = useCreateSupportTicket();
 
-  const create = api.support.create.useMutation({
-    onSuccess: () => {
-      utils.support.list.invalidate();
-      utils.support.getStats.invalidate();
-      onOpenChange(false);
-      setTitle("");
-      setDescription("");
-      setPriority("MEDIUM");
-      toast.success("Ticket created");
-    },
-  });
+  const handleCreate = () => {
+    create.mutate(
+      { title, description, priority },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          setTitle("");
+          setDescription("");
+          setPriority("MEDIUM");
+          toast.success("Ticket created");
+        },
+      }
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -375,7 +387,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div>
             <Label className="text-xs">Priority</Label>
-            <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
+            <Select value={priority} onValueChange={(v) => setPriority(v as SupportTicketPriority)}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="LOW">Low (48h SLA)</SelectItem>
@@ -387,7 +399,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={() => create.mutate({ title, description, priority })} disabled={!title.trim() || create.isPending} className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
+            <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket
             </Button>

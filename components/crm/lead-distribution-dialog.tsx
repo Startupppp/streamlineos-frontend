@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Loader2, Users, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useDistributeLeads } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
 interface LeadDistributionDialogProps {
@@ -30,19 +30,20 @@ export function LeadDistributionDialog({ open, onOpenChange, leadIds, onSuccess 
     summary: { userId: string; name: string; count: number }[];
   } | null>(null);
 
-  const distributeMutation = api.leads.distributeToSales.useMutation({
-    onSuccess: (data) => {
-      setResult(data);
-      toast.success(`${data.distributed} leads distributed to ${data.salesPeople} sales reps`);
-      onSuccess?.();
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
+  const distributeMutation = useDistributeLeads();
 
   const handleDistribute = () => {
-    distributeMutation.mutate({ leadIds, skipAbsent });
+    distributeMutation.mutate(
+      { leadIds, skipAbsent },
+      {
+        onSuccess: (data) => {
+          setResult(data);
+          toast.success(`${data.distributed} leads distributed to ${data.salesPeople} sales reps`);
+          onSuccess?.();
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   const handleClose = () => {

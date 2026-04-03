@@ -1,6 +1,7 @@
 export * from "./hr";
 export * from "./leads";
 export * from "./crm";
+export * from "./crm-settings";
 export * from "./projects";
 export * from "./chat";
 export * from "./dashboard";
@@ -14,3 +15,4 @@ export * from "./invoice";
 export * from "./support";
 export * from "./social-media";
 export * from "./dm";
+export * from "./audit-log";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/trpc/react";
+import { useHrMonthlyAttendance } from "@/lib/api/hooks/hr";
 import { format } from "date-fns";
 import {
   Table,
@@ -25,7 +25,7 @@ import { Loader2 } from "lucide-react";
 export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
   const [date, setDate] = useState(new Date());
 
-  const { data: attendance, isLoading } = api.hr.getMonthlyAttendance.useQuery({
+  const { data: attendance, isLoading } = useHrMonthlyAttendance({
     userId,
     year: date.getFullYear(),
     month: date.getMonth(),
@@ -40,109 +40,113 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
 
   const totalHours = attendance?.reduce((acc, curr) => acc + parseFloat(curr.workHours || "0"), 0) || 0;
 
+  function handleMonthChange(val: string) {
+    const newDate = new Date(date);
+    newDate.setMonth(parseInt(val));
+    setDate(newDate);
+  }
+
+  function handleYearChange(val: string) {
+    const newDate = new Date(date);
+    newDate.setFullYear(parseInt(val));
+    setDate(newDate);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Select
           value={date.getMonth().toString()}
-          onValueChange={(val) => {
-            const newDate = new Date(date);
-            newDate.setMonth(parseInt(val));
-            setDate(newDate);
-          }}
+          onValueChange={handleMonthChange}
         >
           <SelectTrigger className="w-[180px]">
-             <SelectValue placeholder="Month" />
+            <SelectValue placeholder="Month" />
           </SelectTrigger>
           <SelectContent>
             {months.map((m, i) => (
-                <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
+              <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         <Select
-           value={date.getFullYear().toString()}
-           onValueChange={(val) => {
-             const newDate = new Date(date);
-             newDate.setFullYear(parseInt(val));
-             setDate(newDate);
-           }}
+          value={date.getFullYear().toString()}
+          onValueChange={handleYearChange}
         >
           <SelectTrigger className="w-[120px]">
-             <SelectValue placeholder="Year" />
+            <SelectValue placeholder="Year" />
           </SelectTrigger>
           <SelectContent>
             {years.map((y) => (
-                <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+              <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-              <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{totalHours.toFixed(1)}h</div>
-              </CardContent>
-          </Card>
-           <Card>
-              <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Days Present</CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{attendance?.length || 0}</div>
-              </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalHours.toFixed(1)}h</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Days Present</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{attendance?.length || 0}</div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
-            <CardTitle>Daily Attendance</CardTitle>
+          <CardTitle>Daily Attendance</CardTitle>
         </CardHeader>
         <CardContent>
-            {isLoading ? (
-                 <div className="flex justify-center p-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                 </div>
-            ) : (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Check In</TableHead>
-                            <TableHead>Check Out</TableHead>
-                            <TableHead>Work Hours</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {attendance?.map((record) => (
-                            <TableRow key={record.id}>
-                                <TableCell>{format(new Date(record.date), "MMM d, yyyy")}</TableCell>
-                                <TableCell>
-                                    <Badge variant={(record.status === "PRESENT" || record.status === "WORK_FROM_HOME") ? "default" : "secondary"}>
-                                        {record.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{record.checkIn ? format(new Date(record.checkIn), "hh:mm a") : "-"}</TableCell>
-                                <TableCell>{record.checkOut ? format(new Date(record.checkOut), "hh:mm a") : "-"}</TableCell>
-                                <TableCell className="font-bold">{record.workHours}h</TableCell>
-                            </TableRow>
-                        ))}
-                        {!attendance?.length && (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                                    No attendance records found for this month.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            )}
+          {isLoading ? (
+            <div className="flex justify-center p-4">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Check In</TableHead>
+                  <TableHead>Check Out</TableHead>
+                  <TableHead>Work Hours</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {attendance?.map((record) => (
+                  <TableRow key={record.id}>
+                    <TableCell>{format(new Date(record.date), "MMM d, yyyy")}</TableCell>
+                    <TableCell>
+                      <Badge variant={(record.status === "PRESENT" || record.status === "WORK_FROM_HOME") ? "default" : "secondary"}>
+                        {record.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{record.checkIn ? format(new Date(record.checkIn), "hh:mm a") : "-"}</TableCell>
+                    <TableCell>{record.checkOut ? format(new Date(record.checkOut), "hh:mm a") : "-"}</TableCell>
+                    <TableCell className="font-bold">{record.workHours}h</TableCell>
+                  </TableRow>
+                ))}
+                {!attendance?.length && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                      No attendance records found for this month.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

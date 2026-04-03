@@ -11,7 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/page-header";
 import { Switch } from "@/components/ui/switch";
 import { User, Palette, Bell, Shield, Camera, Loader2, Trash2, Eye, EyeOff, Check } from "lucide-react";
-import { api } from "@/trpc/react";
+import {
+  useUpdateProfile,
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  useChangePassword,
+} from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
 import { AvatarCropDialog } from "@/components/ui/avatar-crop-dialog";
@@ -42,43 +47,24 @@ export default function SettingsPage() {
     toast.success(checked ? "Compact view enabled" : "Compact view disabled");
   };
 
-  const { data: notifPrefs } = api.hr.getNotificationPreferences.useQuery();
-  const updateNotifPrefs = api.hr.updateNotificationPreferences.useMutation({
-    onSuccess: () => toast.success("Notification preferences saved"),
-    onError: () => toast.error("Failed to save preferences"),
-  });
+  const { data: notifPrefs } = useNotificationPreferences();
+  const updateNotifPrefs = useUpdateNotificationPreferences();
+  const updateProfile = useUpdateProfile();
+  const changePassword = useChangePassword();
 
   const notifEmail = notifPrefs?.emailNotifications ?? true;
   const notifLeave = notifPrefs?.leaveReminders ?? true;
   const notifProject = notifPrefs?.projectUpdates ?? true;
 
   const toggleNotif = (key: "emailNotifications" | "leaveReminders" | "projectUpdates", value: boolean) => {
-    updateNotifPrefs.mutate({ [key]: value });
+    updateNotifPrefs.mutate(
+      { [key]: value },
+      {
+        onSuccess: () => toast.success("Notification preferences saved"),
+        onError: () => toast.error("Failed to save preferences"),
+      }
+    );
   };
-
-  const updateProfile = api.hr.updateProfile.useMutation({
-    onSuccess: async () => {
-      await updateSession({});
-      toast.success("Profile updated successfully");
-      setIsEditingName(false);
-      setTimeout(() => setPreviewUrl(null), 1000);
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update profile");
-    },
-  });
-
-  const changePassword = api.hr.changePassword.useMutation({
-    onSuccess: () => {
-      toast.success("Password changed successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to change password");
-    },
-  });
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -130,9 +116,23 @@ export default function SettingsPage() {
       const { url, key } = await res.json();
       const imageValue = url || key;
 
-      await updateProfile.mutateAsync({
-        userId: session.user.id,
-        image: imageValue,
+      await new Promise<void>((resolve, reject) => {
+        updateProfile.mutate(
+          { userId: session.user.id, image: imageValue },
+          {
+            onSuccess: async () => {
+              await updateSession({});
+              toast.success("Profile updated successfully");
+              setIsEditingName(false);
+              setTimeout(() => setPreviewUrl(null), 1000);
+              resolve();
+            },
+            onError: (err) => {
+              toast.error(err instanceof Error ? err.message : "Failed to update profile");
+              reject(err);
+            },
+          }
+        );
       });
 
       setCropDialogOpen(false);
@@ -143,31 +143,48 @@ export default function SettingsPage() {
     } finally {
       setUploading(false);
     }
-  }, [session, updateProfile]);
+  }, [session, updateProfile, updateSession]);
 
   const handleRemovePhoto = useCallback(async () => {
     if (!session?.user?.id) return;
     setUploading(true);
     try {
-      await updateProfile.mutateAsync({
-        userId: session.user.id,
-        image: "",
+      await new Promise<void>((resolve, reject) => {
+        updateProfile.mutate(
+          { userId: session.user.id, image: "" },
+          {
+            onSuccess: async () => {
+              await updateSession({});
+              setPreviewUrl(null);
+              resolve();
+            },
+            onError: (err) => reject(err),
+          }
+        );
       });
-      setPreviewUrl(null);
     } catch {
       toast.error("Failed to remove photo");
     } finally {
       setUploading(false);
     }
-  }, [session, updateProfile]);
+  }, [session, updateProfile, updateSession]);
 
   const handleSaveName = useCallback(() => {
     if (!session?.user?.id || !editName.trim()) return;
-    updateProfile.mutate({
-      userId: session.user.id,
-      name: editName.trim(),
-    });
-  }, [session, editName, updateProfile]);
+    updateProfile.mutate(
+      { userId: session.user.id, name: editName.trim() },
+      {
+        onSuccess: async () => {
+          await updateSession({});
+          toast.success("Profile updated successfully");
+          setIsEditingName(false);
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to update profile");
+        },
+      }
+    );
+  }, [session, editName, updateProfile, updateSession]);
 
   const handleStartEditName = useCallback(() => {
     setEditName(session?.user?.name || "");
@@ -180,10 +197,20 @@ export default function SettingsPage() {
       toast.error("New passwords do not match");
       return;
     }
-    changePassword.mutate({
-      currentPassword,
-      newPassword,
-    });
+    changePassword.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          toast.success("Password changed successfully");
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to change password");
+        },
+      }
+    );
   }, [currentPassword, newPassword, confirmPassword, changePassword]);
 
   const passwordValid = newPassword.length >= 8 &&

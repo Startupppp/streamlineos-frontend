@@ -29,7 +29,9 @@ export type ActivityType =
   | "email"
   | "whatsapp"
   | "meeting"
-  | "site_visit";
+  | "site_visit"
+  | "note"
+  | "task";
 
 // ─── Core Types ──────────────────────────────────────────────────────────────
 
@@ -37,6 +39,7 @@ export interface LeadUser {
   id: string;
   name: string | null;
   image: string | null;
+  email?: string | null;
 }
 
 export interface LeadUserWithEmail extends LeadUser {

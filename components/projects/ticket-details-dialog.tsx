@@ -11,8 +11,8 @@ import {
   useSprints,
   useSubtasks,
   useCreateTicket,
-  vaivammKeys,
 } from "@/lib/hooks/trpc-hooks";
+import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -141,19 +141,19 @@ export function TicketDetailsDialog({
   const [localDescription, setLocalDescription] = useState("");
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: ticket, isLoading, error: ticketError } = useTicket(ticketId || 0);
+  const { data: ticket, isLoading, error: ticketError } = useTicket(projectId, ticketId || 0);
   const { data: projectData } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
 
   const members = (() => {
     if (!projectData?.members) return [];
-    const list = projectData.members.map((m) => ({
-      id: m.user.id,
-      name: m.user.name || `${m.user.firstName || ""} ${m.user.lastName || ""}`.trim(),
-      firstName: m.user.firstName || undefined,
-      lastName: m.user.lastName || undefined,
-      image: m.user.image || null,
-      email: m.user.email,
+    const list = projectData.members.filter((m) => !!m.user).map((m) => ({
+      id: m.user!.id,
+      name: m.user!.name || `${m.user!.firstName || ""} ${m.user!.lastName || ""}`.trim(),
+      firstName: m.user!.firstName || undefined,
+      lastName: m.user!.lastName || undefined,
+      image: m.user!.image || null,
+      email: m.user!.email,
     }));
     const mgr = "manager" in projectData
       ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
@@ -173,45 +173,45 @@ export function TicketDetailsDialog({
   const { data: subtasks } = useSubtasks(ticketId || 0);
 
   const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: vaivammKeys.project.project(projectId) });
-    queryClient.invalidateQueries({ queryKey: vaivammKeys.project.ticket(ticketId!) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId!) });
   }, [queryClient, projectId, ticketId]);
 
-  const updateTicketMutation = useUpdateTicket({
+  const updateTicketMutation = useUpdateTicket(projectId, {
     onSuccess: () => {
       setSaving(false);
       invalidateAll();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       setSaving(false);
       toast.error(error.message || "Failed to update ticket");
     },
   });
 
-  const deleteTicketMutation = useDeleteTicket({
+  const deleteTicketMutation = useDeleteTicket(projectId, {
     onSuccess: () => {
       toast.success("Ticket deleted");
       invalidateAll();
       onOpenChange(false);
     },
-    onError: (error) => toast.error(error.message || "Failed to delete ticket"),
+    onError: (error: Error) => toast.error(error.message || "Failed to delete ticket"),
   });
 
   const addCommentMutation = useAddComment({
     onSuccess: () => {
       setCommentText("");
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.ticket(ticketId!) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId!) });
     },
-    onError: (error) => toast.error(error.message || "Failed to add comment"),
+    onError: (error: Error) => toast.error(error.message || "Failed to add comment"),
   });
 
   const createSubtask = useCreateTicket({
     onSuccess: () => {
       setSubtaskTitle("");
-      queryClient.invalidateQueries({ queryKey: [...vaivammKeys.project.all, "subtasks", { parentTicketId: ticketId }] });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "subtasks", { parentTicketId: ticketId }] });
       invalidateAll();
     },
-    onError: (error) => toast.error(error.message || "Failed to create subtask"),
+    onError: (error: Error) => toast.error(error.message || "Failed to create subtask"),
   });
   const autoSave = useCallback((field: Record<string, unknown>) => {
     if (!ticketId) return;
@@ -257,7 +257,7 @@ export function TicketDetailsDialog({
     const newStatus = currentStatus === "DONE" ? "TODO" : "DONE";
     updateTicketMutation.mutate({ ticketId: subtaskId, status: newStatus });
     setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: [...vaivammKeys.project.all, "subtasks", { parentTicketId: ticketId }] });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "subtasks", { parentTicketId: ticketId }] });
     }, 300);
   };
 
@@ -604,11 +604,11 @@ export function TicketDetailsDialog({
                   {/* Current assignees displayed as chips */}
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {(ticket.assignees && ticket.assignees.length > 0
-                      ? ticket.assignees.map((a: { userId: string; user: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null } }) => ({
+                      ? ticket.assignees.filter((a) => !!a.user).map((a) => ({
                           id: a.userId,
-                          firstName: a.user.firstName,
-                          lastName: a.user.lastName,
-                          image: a.user.image,
+                          firstName: a.user!.firstName,
+                          lastName: a.user!.lastName,
+                          image: a.user!.image,
                         }))
                       : ticket.assignee ? [ticket.assignee] : []
                     ).map((person: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null }) => (
@@ -759,7 +759,7 @@ export function TicketDetailsDialog({
                 
                 <LabelPicker
                   ticketId={ticketId!}
-                  currentLabels={ticket.labels || []}
+                  currentLabels={(ticket.labels || []).filter((l) => !!l.label) as Array<{ label: { id: number; name: string; color: string | null } }>}
                 />
 
                 

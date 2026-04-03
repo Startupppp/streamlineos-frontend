@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { vaivammTrpcClient } from "@/lib/trpc";
+import { apiClient } from "@/lib/api-client";
 import { useAcceptInvitation } from "@/lib/hooks/auth-hooks";
 import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
@@ -51,7 +51,7 @@ export default function InvitationPage() {
 
   const { data: invitation, error: invitationError } = useQuery({
     queryKey: ["invitation", token],
-    queryFn: () => vaivammTrpcClient.organization.getInvitationByToken.query({ token }),
+    queryFn: () => apiClient.get<{ email: string; organizationName: string; role: string }>("/auth/invitation", { token }),
     enabled: !!token,
     retry: false,
   });
@@ -64,27 +64,30 @@ export default function InvitationPage() {
     }
   }, [invitationError, router]);
 
-  const acceptInvitation = useAcceptInvitation({
-    onSuccess: () => {
-      toast.success("Account created! Redirecting to dashboard...");
-      router.push("/dashboard");
-    },
-    onError: (error) => {
-      toast.error(error.message || "An error occurred");
-    },
-  });
+  const acceptInvitation = useAcceptInvitation();
 
   const onSubmit = (values: InvitationFormValues) => {
     if (!token || !invitation) {
       toast.error("Invalid invitation");
       return;
     }
-    acceptInvitation.mutate({
-      token,
-      firstName: values.firstName || undefined,
-      lastName: values.lastName || undefined,
-      password: values.password,
-    });
+    acceptInvitation.mutate(
+      {
+        token,
+        firstName: values.firstName || undefined,
+        lastName: values.lastName || undefined,
+        password: values.password,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Account created! Redirecting to dashboard...");
+          router.push("/dashboard");
+        },
+        onError: (error) => {
+          toast.error(error.message || "An error occurred");
+        },
+      }
+    );
   };
 
   if (!invitation) {

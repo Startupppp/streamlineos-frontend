@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/trpc/react";
+import { useHrWfhRequests, useHrPendingWfhRequests, useProcessWfhRequest } from "@/lib/api/hooks/hr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ const statusIcons: Record<string, React.ReactNode> = {
 };
 
 export function MyWfhRequests() {
-  const { data: requests, isLoading } = api.hr.getWfhRequests.useQuery();
+  const { data: requests, isLoading } = useHrWfhRequests();
 
   if (isLoading) {
     return (
@@ -95,38 +95,51 @@ export function MyWfhRequests() {
 }
 
 export function PendingWfhApprovals() {
-  const { data: requests, isLoading } = api.hr.getPendingWfhRequests.useQuery();
-  const utils = api.useUtils();
+  const { data: requests, isLoading } = useHrPendingWfhRequests();
+  const processRequest = useProcessWfhRequest();
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const processRequest = api.hr.processWfhRequest.useMutation({
-    onSuccess: (_, variables) => {
-      const action = variables.status === "APPROVED" ? "approved" : "rejected";
-      toast.success(`WFH request ${action}`);
-      utils.hr.getPendingWfhRequests.invalidate();
-      utils.hr.getWfhRequests.invalidate();
-      setRejectDialogOpen(false);
-      setRejectionReason("");
-      setRejectingId(null);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to process request");
-    },
-  });
-
   function handleApprove(requestId: number) {
-    processRequest.mutate({ requestId, status: "APPROVED" });
+    processRequest.mutate(
+      { requestId, status: "APPROVED" },
+      {
+        onSuccess: () => {
+          toast.success("WFH request approved");
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to process request");
+        },
+      }
+    );
   }
 
-  function handleReject() {
+  function handleRejectOpen(requestId: number) {
+    setRejectingId(requestId);
+    setRejectDialogOpen(true);
+  }
+
+  function handleRejectConfirm() {
     if (rejectingId === null) return;
-    processRequest.mutate({
-      requestId: rejectingId,
-      status: "REJECTED",
-      rejectionReason: rejectionReason || undefined,
-    });
+    processRequest.mutate(
+      {
+        requestId: rejectingId,
+        status: "REJECTED",
+        rejectionReason: rejectionReason || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("WFH request rejected");
+          setRejectDialogOpen(false);
+          setRejectionReason("");
+          setRejectingId(null);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to process request");
+        },
+      }
+    );
   }
 
   if (isLoading) {
@@ -195,10 +208,7 @@ export function PendingWfhApprovals() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
-                      setRejectingId(req.id);
-                      setRejectDialogOpen(true);
-                    }}
+                    onClick={() => handleRejectOpen(req.id)}
                     disabled={processRequest.isPending}
                   >
                     Reject
@@ -231,7 +241,7 @@ export function PendingWfhApprovals() {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleReject}
+              onClick={handleRejectConfirm}
               disabled={processRequest.isPending}
             >
               {processRequest.isPending && (
@@ -242,6 +252,9 @@ export function PendingWfhApprovals() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Empty state for when all are processed (shown only when page reloads) */}
+      <EmptyCalendarIllustration className="hidden" />
     </>
   );
 }

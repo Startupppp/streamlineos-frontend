@@ -18,38 +18,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Loader2, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { resolveImageUrl } from "@/lib/utils";
-import { api } from "@/trpc/react";
-
-interface TimeEntry {
-  id: number;
-  userId: string | null;
-  ticketId: number | null;
-  date: string;
-  hours: string | null;
-  description: string | null;
-  imageUrl: string | null;
-  workLink: string | null;
-  status: string | null;
-  rejectionReason: string | null;
-  user?: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-    image: string | null;
-  } | null;
-  ticket?: {
-    id: number;
-    projectId: number;
-    project?: {
-      name: string;
-    };
-  } | null;
-  approverName?: string | null;
-}
+import {
+  useApproveTimesheet,
+  useRejectTimesheet,
+} from "@/lib/api/hooks/projects";
+import type { TimeEntryWithUser } from "@/types/projects";
 
 interface TimeEntryDetailSheetProps {
-  entry: TimeEntry | null;
+  entry: TimeEntryWithUser | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -59,35 +35,23 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
   const [rejectionReason, setRejectionReason] = useState("");
   const [imageError, setImageError] = useState(false);
 
-  const utils = api.useUtils();
-
-  const approveMutation = api.project.approveTimesheet.useMutation({
-    onSuccess: () => {
-      toast.success("Timesheet approved successfully");
-      utils.project.getAllTeamTimesheets.invalidate();
-      onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to approve timesheet");
-    },
-  });
-
-  const rejectMutation = api.project.rejectTimesheet.useMutation({
-    onSuccess: () => {
-      toast.success("Timesheet rejected");
-      utils.project.getAllTeamTimesheets.invalidate();
-      setRejectDialogOpen(false);
-      setRejectionReason("");
-      onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to reject timesheet");
-    },
-  });
+  const approveMutation = useApproveTimesheet();
+  const rejectMutation = useRejectTimesheet();
 
   const handleApprove = () => {
     if (!entry) return;
-    approveMutation.mutate({ timesheetId: entry.id });
+    approveMutation.mutate(
+      { timesheetId: entry.id },
+      {
+        onSuccess: () => {
+          toast.success("Timesheet approved successfully");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to approve timesheet");
+        },
+      }
+    );
   };
 
   const handleRejectClick = () => {
@@ -96,10 +60,23 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
 
   const handleRejectConfirm = () => {
     if (!entry) return;
-    rejectMutation.mutate({
-      timesheetId: entry.id,
-      reason: rejectionReason,
-    });
+    rejectMutation.mutate(
+      {
+        timesheetId: entry.id,
+        reason: rejectionReason,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Timesheet rejected");
+          setRejectDialogOpen(false);
+          setRejectionReason("");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to reject timesheet");
+        },
+      }
+    );
   };
 
   if (!entry) return null;
@@ -245,10 +222,10 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                 </div>
               )}
 
-              {entry.status === "APPROVED" && entry.approverName && (
+              {entry.status === "APPROVED" && entry.approvedBy && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Approved By</label>
-                  <p className="mt-1 text-sm">{entry.approverName}</p>
+                  <p className="mt-1 text-sm">{entry.approvedBy}</p>
                 </div>
               )}
 

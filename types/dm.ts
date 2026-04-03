@@ -42,6 +42,7 @@ export interface DmCampaign {
   spend?: string | null;
   leadsGenerated: number;
   costPerLead: number | null;
+  roi?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -14,10 +14,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyTeamIllustration } from "@/components/illustrations";
-import {
-  Plus, MapPin, Phone, Mail,
-} from "lucide-react";
-import { api } from "@/trpc/react";
+import { Plus, MapPin, Phone, Mail } from "lucide-react";
+import { useBranches, useCreateBranch } from "@/lib/api/hooks/branches";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -30,22 +28,24 @@ export default function BranchManagementPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
-  const { data: branchList, isLoading, refetch } = api.branches.getAll.useQuery();
-
-  const createMutation = api.branches.create.useMutation({
-    onSuccess: () => {
-      refetch();
-      toast.success("Branch created");
-      setShowCreate(false);
-      setFormData({ ...EMPTY_FORM });
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const { data: branchList, isLoading } = useBranches();
+  const createMutation = useCreateBranch();
 
   const branches = branchList ?? [];
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData(f => ({ ...f, [key]: e.target.value }));
+
+  const handleCreate = () => {
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        toast.success("Branch created");
+        setShowCreate(false);
+        setFormData({ ...EMPTY_FORM });
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -111,7 +111,6 @@ export default function BranchManagementPage() {
                     {branch.branchManager ? (
                       <div className="flex items-center gap-1.5">
                         <Avatar className="h-5 w-5">
-                          <AvatarImage src={branch.branchManager.image || ""} />
                           <AvatarFallback className="text-[8px]">{branch.branchManager.name?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span className="text-xs">{branch.branchManager.name}</span>
@@ -123,7 +122,6 @@ export default function BranchManagementPage() {
                     {branch.branchHr ? (
                       <div className="flex items-center gap-1.5">
                         <Avatar className="h-5 w-5">
-                          <AvatarImage src={branch.branchHr.image || ""} />
                           <AvatarFallback className="text-[8px]">{branch.branchHr.name?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span className="text-xs">{branch.branchHr.name}</span>
@@ -199,7 +197,7 @@ export default function BranchManagementPage() {
                 <Button
                   className="flex-1"
                   disabled={!formData.name || !formData.code || createMutation.isPending}
-                  onClick={() => createMutation.mutate(formData)}
+                  onClick={handleCreate}
                 >
                   Create Branch
                 </Button>

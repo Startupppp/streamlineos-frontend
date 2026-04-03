@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,13 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { api } from "@/trpc/react";
+import { useOrgSettings, useUpdateOrgSettings } from "@/lib/api/hooks/organization";
 import { toast } from "sonner";
 
 export default function OrganizationSettingsPage() {
   const { data: session } = useSession();
-  const { data: organizations, isLoading, refetch } = useGetOrganizations();
-  const org = organizations?.[0];
+  const { data: org, isLoading } = useOrgSettings();
 
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
@@ -25,16 +23,7 @@ export default function OrganizationSettingsPage() {
   const role = session?.user?.role;
   const canEdit = role === "CEO" || role === "ADMIN";
 
-  const updateOrg = api.organization.updateOrganization.useMutation({
-    onSuccess: async () => {
-      toast.success("Organization updated successfully");
-      setIsEditing(false);
-      await refetch();
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update organization");
-    },
-  });
+  const updateOrg = useUpdateOrgSettings();
 
   const handleStartEdit = useCallback(() => {
     if (!org) return;
@@ -45,10 +34,18 @@ export default function OrganizationSettingsPage() {
 
   const handleSave = useCallback(() => {
     if (!editName.trim()) return;
-    updateOrg.mutate({
-      name: editName.trim(),
-      slug: editSlug.trim() || undefined,
-    });
+    updateOrg.mutate(
+      { name: editName.trim(), slug: editSlug.trim() || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Organization updated successfully");
+          setIsEditing(false);
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to update organization");
+        },
+      }
+    );
   }, [editName, editSlug, updateOrg]);
 
   if (isLoading) {
@@ -124,10 +121,6 @@ export default function OrganizationSettingsPage() {
             ) : (
               <Input id="slug" value={org.slug} disabled className="bg-muted" aria-label="Organization slug" />
             )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Your Role</Label>
-            <Input id="role" value={org.role} disabled className="bg-muted" aria-label="Your role" />
           </div>
           <div className="pt-4 flex gap-2">
             {canEdit && !isEditing && (

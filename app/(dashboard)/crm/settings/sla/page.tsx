@@ -29,7 +29,10 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import {
+  useSlaPolicies, useSlaReport, useSlaBreachedLeads,
+  useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
+} from "@/lib/api/hooks/crm-settings";
 import { toast } from "sonner";
 
 const PRIORITY_COLORS: Record<string, { color: string; bg: string }> = {
@@ -49,38 +52,15 @@ const policySchema = z.object({
 type PolicyForm = z.infer<typeof policySchema>;
 
 export default function SlaPage() {
-  const utils = api.useUtils();
-  const { data: policies, isLoading } = api.crmSla.getPolicies.useQuery();
-  const { data: slaReport, isLoading: reportLoading } = api.crmSla.getSlaReport.useQuery();
-  const { data: breachedLeads } = api.crmSla.getBreachedLeads.useQuery({ limit: 10 });
+  const { data: policies, isLoading } = useSlaPolicies();
+  const { data: slaReport, isLoading: reportLoading } = useSlaReport();
+  const { data: breachedLeads } = useSlaBreachedLeads({ limit: 10 });
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const createPolicy = api.crmSla.createPolicy.useMutation({
-    onSuccess: () => {
-      utils.crmSla.getPolicies.invalidate();
-      toast.success("SLA policy created");
-      setCreateOpen(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updatePolicy = api.crmSla.updatePolicy.useMutation({
-    onSuccess: () => {
-      utils.crmSla.getPolicies.invalidate();
-      toast.success("Policy updated");
-      setEditingId(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const deletePolicy = api.crmSla.deletePolicy.useMutation({
-    onSuccess: () => {
-      utils.crmSla.getPolicies.invalidate();
-      toast.success("Policy deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createPolicy = useCreateSlaPolicy();
+  const updatePolicy = useUpdateSlaPolicy();
+  const deletePolicy = useDeleteSlaPolicy();
 
   const policyResolver = zodResolver(policySchema) as unknown as Resolver<PolicyForm>;
 
@@ -94,13 +74,24 @@ export default function SlaPage() {
   });
 
   const onCreateSubmit = useCallback((data: PolicyForm) => {
-    createPolicy.mutate(data);
-    createForm.reset();
+    createPolicy.mutate(
+      data,
+      {
+        onSuccess: () => { toast.success("SLA policy created"); setCreateOpen(false); createForm.reset(); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [createPolicy, createForm]);
 
   const onEditSubmit = useCallback((data: PolicyForm) => {
     if (editingId === null) return;
-    updatePolicy.mutate({ id: editingId, ...data });
+    updatePolicy.mutate(
+      { id: editingId, ...data },
+      {
+        onSuccess: () => { toast.success("Policy updated"); setEditingId(null); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [editingId, updatePolicy]);
 
   const startEdit = useCallback((policy: { id: number; name: string; appliesTo: string; priority: string; firstResponseHours: number; resolutionHours: number }) => {
@@ -272,7 +263,7 @@ export default function SlaPage() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(policy)}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deletePolicy.mutate({ id: policy.id })}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deletePolicy.mutate(policy.id, { onSuccess: () => toast.success("Policy deleted"), onError: (err) => toast.error(err.message) })}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>

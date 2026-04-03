@@ -1,7 +1,12 @@
 "use client";
 
 import { use, useState } from "react";
-import { api } from "@/trpc/react";
+import {
+  useSprints,
+  useProject,
+  useUpdateSprint,
+  useUpdateTicket,
+} from "@/lib/api/hooks/projects";
 import { CreateSprintDialog } from "@/components/projects/create-sprint-dialog";
 import { EditSprintDialog } from "@/components/projects/edit-sprint-dialog";
 import { BurndownChart } from "@/components/projects/burndown-chart";
@@ -57,32 +62,24 @@ export default function SprintsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
 
-  const { data: sprints, isLoading } = api.project.getSprints.useQuery({ projectId });
-  const { data: project } = api.project.getProjectDetails.useQuery({ id: projectId });
-  const utils = api.useUtils();
+  const { data: sprints, isLoading } = useSprints(projectId);
+  const { data: project } = useProject(projectId);
 
   const [planningSprintId, setPlanningSprintId] = useState<number | null>(null);
   const [completionSprintId, setCompletionSprintId] = useState<number | null>(null);
   const [moveToOption, setMoveToOption] = useState<string>("backlog");
 
-  const updateSprint = api.project.updateSprint.useMutation({
-    onSuccess: () => {
-      utils.project.getSprints.invalidate();
-      toast.success("Sprint updated");
-    },
-    onError: (error) => toast.error(error.message || "Failed to update sprint"),
-  });
-
-  const updateTicket = api.project.updateTicket.useMutation({
-    onSuccess: () => {
-      utils.project.getSprints.invalidate();
-      utils.project.getProjectDetails.invalidate();
-    },
-    onError: (error) => toast.error(error.message || "Failed to update ticket"),
-  });
+  const updateSprint = useUpdateSprint(projectId);
+  const updateTicket = useUpdateTicket(projectId);
 
   function handleStartSprint(sprintId: number) {
-    updateSprint.mutate({ sprintId, status: "ACTIVE" });
+    updateSprint.mutate(
+      { sprintId, status: "ACTIVE" },
+      {
+        onSuccess: () => toast.success("Sprint started"),
+        onError: (error) => toast.error((error as Error).message || "Failed to start sprint"),
+      }
+    );
   }
 
   function handleCompleteSprint(sprintId: number) {
@@ -108,7 +105,13 @@ export default function SprintsPage({ params }: PageProps) {
 
     Promise.all(promises)
       .then(() => {
-        updateSprint.mutate({ sprintId: completionSprintId, status: "COMPLETED" });
+        updateSprint.mutate(
+          { sprintId: completionSprintId, status: "COMPLETED" },
+          {
+            onSuccess: () => toast.success("Sprint completed"),
+            onError: (error) => toast.error((error as Error).message || "Failed to complete sprint"),
+          }
+        );
         setCompletionSprintId(null);
       })
       .catch(() => {
@@ -123,10 +126,15 @@ export default function SprintsPage({ params }: PageProps) {
     const ticketId = parseInt(draggableId);
     const newSprintId = destination.droppableId === "backlog" ? undefined : parseInt(destination.droppableId);
 
-    updateTicket.mutate({
-      ticketId,
-      ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}),
-    });
+    updateTicket.mutate(
+      {
+        ticketId,
+        ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}),
+      },
+      {
+        onError: (error) => toast.error((error as Error).message || "Failed to move ticket"),
+      }
+    );
   }
 
   if (isLoading) {
@@ -285,7 +293,7 @@ export default function SprintsPage({ params }: PageProps) {
                   onPlan={() => setPlanningSprintId(sprint.id)}
                   isUpdating={updateSprint.isPending}
                 />
-                <BurndownChart sprintId={sprint.id} />
+                <BurndownChart sprintId={sprint.id} projectId={projectId} />
               </div>
             ))}
           </div>
@@ -396,8 +404,8 @@ interface SprintCardProps {
     id: number;
     name: string;
     status: string | null;
-    startDate: Date;
-    endDate: Date;
+    startDate: Date | string;
+    endDate: Date | string;
     goal?: string | null;
     tickets?: Array<{
       id: number;
@@ -421,8 +429,10 @@ function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating
     .reduce((sum, t) => sum + (t.points || 0), 0);
   const progress = totalPoints > 0 ? (completedPoints / totalPoints) * 100 : 0;
 
-  const daysRemaining = differenceInDays(sprint.endDate, new Date());
-  const totalDays = differenceInDays(sprint.endDate, sprint.startDate);
+  const endDate = new Date(sprint.endDate);
+  const startDate = new Date(sprint.startDate);
+  const daysRemaining = differenceInDays(endDate, new Date());
+  const totalDays = differenceInDays(endDate, startDate);
 
   const statusInfo = {
     ACTIVE: { label: "Active", variant: "default" as const },
@@ -461,6 +471,7 @@ function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating
               <DropdownMenuItem asChild>
                 <EditSprintDialog
                   sprint={sprint}
+                  projectId={projectId}
                   trigger={
                     <button className="flex items-center w-full px-2 py-1.5 text-sm">
                       <Pencil className="h-4 w-4 mr-2" />
@@ -500,11 +511,11 @@ function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-muted-foreground">Start Date</p>
-            <p className="font-medium">{format(sprint.startDate, "MMM dd, yyyy")}</p>
+            <p className="font-medium">{format(startDate, "MMM dd, yyyy")}</p>
           </div>
           <div>
             <p className="text-muted-foreground">End Date</p>
-            <p className="font-medium">{format(sprint.endDate, "MMM dd, yyyy")}</p>
+            <p className="font-medium">{format(endDate, "MMM dd, yyyy")}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Duration</p>

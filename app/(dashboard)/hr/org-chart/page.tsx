@@ -10,18 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
-
-interface Employee {
-  id: string;
-  name: string | null;
-  email: string | null;
-  image: string | null;
-  role: string;
-  designation: string | null;
-  departmentId: number | null;
-  reportingTo: string | null;
-}
+import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
+import type { Employee } from "@/types/hr";
 
 interface TreeNode {
   employee: Employee;
@@ -38,8 +28,9 @@ function buildTree(employees: Employee[]): TreeNode[] {
 
   for (const emp of employees) {
     const node = map.get(emp.id)!;
-    if (emp.reportingTo && map.has(emp.reportingTo)) {
-      map.get(emp.reportingTo)!.children.push(node);
+    const reportingTo = (emp as Employee & { reportingTo?: string | null }).reportingTo;
+    if (reportingTo && map.has(reportingTo)) {
+      map.get(reportingTo)!.children.push(node);
     } else {
       roots.push(node);
     }
@@ -49,8 +40,8 @@ function buildTree(employees: Employee[]): TreeNode[] {
   const rolePriority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
   const sortNodes = (nodes: TreeNode[]) => {
     nodes.sort((a, b) => {
-      const pa = rolePriority[a.employee.role] ?? 99;
-      const pb = rolePriority[b.employee.role] ?? 99;
+      const pa = rolePriority[a.employee.role ?? ""] ?? 99;
+      const pb = rolePriority[b.employee.role ?? ""] ?? 99;
       if (pa !== pb) return pa - pb;
       return (a.employee.name || "").localeCompare(b.employee.name || "");
     });
@@ -70,7 +61,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 function OrgNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
   const emp = node.employee;
-  const roleColor = ROLE_COLORS[emp.role] || ROLE_COLORS.MEMBER;
+  const roleColor = ROLE_COLORS[emp.role ?? ""] || ROLE_COLORS.MEMBER;
 
   return (
     <div className="flex flex-col items-center">
@@ -134,12 +125,17 @@ function OrgNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
 }
 
 export default function OrgChartPage() {
-  const { data: employees, isLoading } = api.hr.getEmployees.useQuery();
-  const { data: departments } = api.hr.getDepartments.useQuery();
+  const { data: employeesRaw, isLoading } = useHrEmployees();
+  const { data: departments } = useHrDepartments();
+
+  const employees = useMemo(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    [employeesRaw]
+  );
 
   const tree = useMemo(() => {
-    if (!employees) return [];
-    return buildTree(employees as Employee[]);
+    if (!employees.length) return [];
+    return buildTree(employees);
   }, [employees]);
 
   const deptMap = useMemo(() => {
@@ -149,9 +145,9 @@ export default function OrgChartPage() {
   }, [departments]);
 
   const deptGroups = useMemo(() => {
-    if (!employees) return [];
+    if (!employees.length) return [];
     const groups = new Map<string, Employee[]>();
-    for (const emp of employees as Employee[]) {
+    for (const emp of employees) {
       const deptName = emp.departmentId ? (deptMap.get(emp.departmentId) || "Other") : "Unassigned";
       if (!groups.has(deptName)) groups.set(deptName, []);
       groups.get(deptName)!.push(emp);
@@ -180,7 +176,7 @@ export default function OrgChartPage() {
       <motion.div variants={fadeUp}>
         <PageHeader
           title="Organization Chart"
-          description={`${employees?.length || 0} team members across ${deptGroups.length} departments`}
+          description={`${employees.length} team members across ${deptGroups.length} departments`}
         />
       </motion.div>
 

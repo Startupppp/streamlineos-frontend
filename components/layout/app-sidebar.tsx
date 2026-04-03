@@ -53,7 +53,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChatUnreadTotal } from "@/lib/hooks/chat-hooks";
+import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
 
 interface NavRoute {
   label: string;

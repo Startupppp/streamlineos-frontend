@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import {
   Plus, TrendingUp, TrendingDown, Users, Eye, MousePointerClick,
 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useSocialMediaLatest, useUpsertSocialMediaStats } from "@/lib/api/hooks/social-media";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -37,15 +37,8 @@ export default function SocialMediaPage() {
     engagementRate: "", impressions: 0, reach: 0, linkClicks: 0, profileVisits: 0,
   });
 
-  const { data: latestData, refetch } = api.socialMedia.getLatest.useQuery();
-
-  const upsertMutation = api.socialMedia.upsert.useMutation({
-    onSuccess: () => {
-      refetch(); toast.success("Stats saved");
-      setShowEntry(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const { data: latestData } = useSocialMediaLatest();
+  const upsertMutation = useUpsertSocialMediaStats();
 
   const platforms = latestData;
 
@@ -167,7 +160,10 @@ export default function SocialMediaPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEntry(false)}>Cancel</Button>
-            <Button onClick={() => upsertMutation.mutate(formData)}>Save Stats</Button>
+            <Button onClick={() => upsertMutation.mutate(
+              formData,
+              { onSuccess: () => { toast.success("Stats saved"); setShowEntry(false); }, onError: (err) => toast.error(err.message) }
+            )}>Save Stats</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

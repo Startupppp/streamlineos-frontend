@@ -23,7 +23,7 @@ export async function PATCH(
   { params }: { params: Promise<{ employeeId: string }> }
 ) {
   return withAuth(async (session) => {
-    const { id: targetUserId } = await params;
+    const { employeeId: targetUserId } = await params;
 
     const targetMember = await db.query.organizationMembers.findFirst({
       where: and(

@@ -29,7 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "sonner";
 import { createProject } from "@/server/actions/project-actions";
 import { Plus, Check, User, Search } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
@@ -56,7 +56,10 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
   const [memberSearch, setMemberSearch] = useState("");
-  const { data: employees } = api.hr.getEmployees.useQuery();
+  const { data: employeesData } = useHrEmployees();
+  const employees = Array.isArray(employeesData)
+    ? employeesData
+    : employeesData?.data ?? [];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

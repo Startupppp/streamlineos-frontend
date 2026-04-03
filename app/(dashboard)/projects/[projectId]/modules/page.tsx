@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { trpc } from "@/trpc/client";
+import { useModules, useCreateModule, useProjectMembers } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,21 +95,10 @@ export default function ModulesPage({
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const utils = trpc.useUtils();
-  const { data: modules, isLoading } = trpc.project.modulesGetByProject.useQuery({
-    projectId,
-  });
-  const { data: members } = trpc.project.getProjectMembers.useQuery();
+  const { data: modules, isLoading } = useModules(projectId);
+  const { data: members } = useProjectMembers(projectId);
 
-  const createMutation = trpc.project.modulesCreate.useMutation({
-    onSuccess: () => {
-      utils.project.modulesGetByProject.invalidate({ projectId });
-      setCreateOpen(false);
-      form.reset();
-      toast.success("Module created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
     resolver: zodResolver(createModuleSchema) as unknown as Resolver<CreateModuleForm>,
@@ -117,7 +106,17 @@ export default function ModulesPage({
   });
 
   const onSubmit = (data: CreateModuleForm) => {
-    createMutation.mutate({ ...data, projectId });
+    createMutation.mutate(
+      { ...data, projectId },
+      {
+        onSuccess: () => {
+          setCreateOpen(false);
+          form.reset();
+          toast.success("Module created");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   if (isLoading) {
@@ -220,7 +219,7 @@ export default function ModulesPage({
                       <Select
                         value={field.value?.toString() ?? ""}
                         onValueChange={(v) =>
-                          field.onChange(v ? parseInt(v) : undefined)
+                          field.onChange(v || undefined)
                         }
                       >
                         <SelectTrigger>
@@ -229,10 +228,10 @@ export default function ModulesPage({
                         <SelectContent>
                           {members?.map((m) => (
                             <SelectItem
-                              key={m.id}
-                              value={m.id.toString()}
+                              key={m.userId}
+                              value={m.userId}
                             >
-                              {m.name ?? m.email}
+                              {m.user?.name ?? m.user?.email ?? m.userId}
                             </SelectItem>
                           ))}
                         </SelectContent>

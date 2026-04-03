@@ -62,3 +62,6 @@ export const useUpdateRolePermissions = () => {
     },
   });
 };
+
+// Backward-compatibility alias
+export const useRbacUserPermissions = useUserPermissions;

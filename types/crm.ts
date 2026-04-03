@@ -48,7 +48,7 @@ export interface Deal {
   createdAt: string | null;
   updatedAt: string | null;
   assignedTo?: DealUserRef | null;
-  lead?: { id: number; name: string } | null;
+  lead?: { id: number; name: string; email?: string | null; phone?: string | null } | null;
   client?: { id: number; name: string } | null;
 }
 
@@ -177,6 +177,16 @@ export interface UpdateContactInput {
   tags?: string[];
 }
 
+// ─── Deal Activities ──────────────────────────────────────────────────────────
+
+export interface LogDealActivityInput {
+  dealId: number;
+  type: DealActivityType;
+  subject?: string;
+  notes?: string;
+  duration?: number;
+}
+
 // ─── CRM Organizations ────────────────────────────────────────────────────────
 
 export type OrgSize = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
@@ -195,6 +205,30 @@ export interface CrmOrganization {
   createdAt: string | null;
   updatedAt: string | null;
   contacts?: Contact[];
+}
+
+export interface PaginatedCrmOrganizations {
+  organizations: CrmOrganization[];
+  totalCount: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface CrmOrganizationFilters {
+  search?: string;
+  industry?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateCrmOrganizationInput {
+  name: string;
+  domain?: string;
+  industry?: string;
+  size?: OrgSize;
+  website?: string;
+  linkedinUrl?: string;
+  description?: string;
 }
 
 // ─── Client Accounts ─────────────────────────────────────────────────────────
@@ -574,4 +608,54 @@ export interface SupportDashboard {
   supportActivityFeed: SupportActivityItem[];
   supportTeamMembers: SupportTeamMember[];
   ticketsByPriority: TicketBreakdownItem[];
+}
+
+// ─── CRM Person Profile (slug-based) ─────────────────────────────────────────
+
+export interface PersonStat {
+  label: string;
+  value: string | number;
+  trend?: { value: number; isPositive: boolean };
+}
+
+export interface PersonDeal {
+  company: string;
+  value: number;
+  stage: string;
+  probability: number;
+  closeDate: string;
+}
+
+export interface PersonAccount {
+  name: string;
+  revenue: number;
+  health: "healthy" | "at_risk" | "critical";
+  since: string;
+  renewalDate: string;
+}
+
+export interface PersonActivity {
+  type: "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation";
+  message: string;
+  time: string;
+}
+
+export interface CrmPersonProfile {
+  slug: string;
+  name: string;
+  initials: string;
+  role: string;
+  title: string;
+  department: string;
+  email: string;
+  phone: string;
+  location: string;
+  joinDate: string;
+  bio: string;
+  stats: PersonStat[];
+  monthlyPerformance: { month: string; value: number }[];
+  deals: PersonDeal[];
+  accounts: PersonAccount[];
+  activities: PersonActivity[];
+  skills: string[];
 }

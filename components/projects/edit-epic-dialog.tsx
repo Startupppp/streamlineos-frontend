@@ -30,7 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useUpdateTicket, vaivammKeys } from "@/lib/hooks/trpc-hooks";
+import { useUpdateTicket } from "@/lib/api/hooks/projects";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -80,13 +81,13 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
     }
   }, [open, epic, form]);
 
-  const updateTicket = useUpdateTicket({
+  const updateTicket = useUpdateTicket(projectId, {
     onSuccess: () => {
       toast.success("Epic updated");
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.project(projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
       setOpen(false);
     },
-    onError: (error) => toast.error(error.message || "Failed to update epic"),
+    onError: (error: Error) => toast.error(error.message || "Failed to update epic"),
   });
 
   function onSubmit(data: EditEpicInput) {

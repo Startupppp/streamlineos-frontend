@@ -27,9 +27,8 @@ import { useState, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { api } from "@/trpc/react";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
-import { useRolesList } from "@/lib/hooks/roles-hooks";
+import { useRolesList } from "@/lib/api/hooks/roles";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
@@ -148,6 +147,13 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     }
   }
 
+  const handlePhoneChange = (onChange: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (/^[\d+\s-]*$/.test(v)) {
+      onChange(v);
+    }
+  };
+
   return (
     <div className="grid gap-4">
     <Card>
@@ -157,8 +163,8 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
         <CardContent>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                
-                
+
+
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Personal Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -200,12 +206,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                                     inputMode="numeric"
                                     placeholder="+91 9876543210"
                                     {...field}
-                                    onChange={(e) => {
-                                      const v = e.target.value;
-                                      if (/^[\d+\s-]*$/.test(v)) {
-                                        field.onChange(v);
-                                      }
-                                    }}
+                                    onChange={handlePhoneChange(field.onChange)}
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -237,13 +238,13 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                     </div>
                 </div>
 
-                
+
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Professional Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         
-                         
-                         
+
+
+
                           <FormField
                             control={form.control}
                             name="bankAccount"
@@ -296,7 +297,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                             </FormItem>
                             )}
                         />
-                        
+
                          <FormField
                             control={form.control}
                             name="designation"
@@ -387,7 +388,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
                             <FormItem className="flex flex-col">
                                 <FormLabel>Joining Date</FormLabel>
                                 <FormControl>
-                                     <Input type="date" 
+                                     <Input type="date"
                                         value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
                                         onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
                                      />

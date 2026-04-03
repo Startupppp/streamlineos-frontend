@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { UseQueryOptions } from "@tanstack/react-query";
+import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -107,10 +107,12 @@ export function useUpdateProject(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-export function useDeleteProject(options?: Parameters<typeof useMutation>[0]) {
+export function useDeleteProject(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { projectId: number }>, "mutationFn">
+) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ projectId }: { projectId: number }) =>
+  return useMutation<{ success: boolean }, Error, { projectId: number }>({
+    mutationFn: ({ projectId }) =>
       apiClient.delete<{ success: boolean }>(`/projects/${projectId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
@@ -226,12 +228,14 @@ export function useTicket(
   });
 }
 
-export function useCreateTicket(options?: Parameters<typeof useMutation>[0]) {
+export function useCreateTicket(
+  options?: Omit<UseMutationOptions<Ticket, Error, CreateTicketInput>, "mutationFn">
+) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ projectId, ...data }: CreateTicketInput) =>
+  return useMutation<Ticket, Error, CreateTicketInput>({
+    mutationFn: ({ projectId, ...data }) =>
       apiClient.post<Ticket>(`/projects/${projectId}/tickets`, data),
-    onSuccess: (_data: unknown, variables: CreateTicketInput) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
       });
@@ -245,16 +249,16 @@ export function useCreateTicket(options?: Parameters<typeof useMutation>[0]) {
 
 export function useUpdateTicket(
   projectId: number,
-  options?: Parameters<typeof useMutation>[0]
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateTicketInput>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ ticketId, ...data }: UpdateTicketInput) =>
+  return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
+    mutationFn: ({ ticketId, ...data }) =>
       apiClient.patch<{ success: boolean }>(
         `/projects/${projectId}/tickets/${ticketId}`,
         data
       ),
-    onSuccess: (_data: unknown, variables: UpdateTicketInput) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
@@ -268,11 +272,11 @@ export function useUpdateTicket(
 
 export function useDeleteTicket(
   projectId: number,
-  options?: Parameters<typeof useMutation>[0]
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ ticketId }: { ticketId: number }) =>
+  return useMutation<{ success: boolean }, Error, { ticketId: number }>({
+    mutationFn: ({ ticketId }) =>
       apiClient.delete<{ success: boolean }>(
         `/projects/${projectId}/tickets/${ticketId}`
       ),
@@ -725,6 +729,20 @@ export function useUpdateView(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
+export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, projectId }: { id: number; projectId: number }) =>
+      apiClient.delete<{ success: boolean }>(`/projects/${projectId}/views/${id}`),
+    onSuccess: (_data: unknown, variables: { id: number; projectId: number }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.views(variables.projectId),
+      });
+    },
+    ...options,
+  });
+}
+
 // ─── Intake ───────────────────────────────────────────────────────────────────
 
 export function useIntakeRequests(
@@ -804,6 +822,239 @@ export function useCustomStates(
     queryFn: () =>
       apiClient.get<CustomState[]>(`/projects/${projectId}/custom-states`),
     enabled: !!projectId,
+    ...options,
+  });
+}
+
+
+// ─── Team Timesheets (CEO/Admin) ──────────────────────────────────────────────
+
+export interface TeamTimesheetFilters {
+  userId?: string;
+  projectId?: number;
+  startDate?: string;
+  endDate?: string;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+}
+
+export function useAllTeamTimesheets(
+  filters?: TeamTimesheetFilters,
+  options?: Omit<UseQueryOptions<TimeEntryWithUser[]>, "queryKey" | "queryFn">
+) {
+  return useQuery<TimeEntryWithUser[]>({
+    queryKey: [...queryKeys.projects.timeEntries(filters as Record<string, unknown>), "team"] as const,
+    queryFn: () =>
+      apiClient.get<TimeEntryWithUser[]>("/projects/time-entries/team", filters as Record<string, unknown>),
+    ...options,
+  });
+}
+
+export function useApproveTimesheet(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ timesheetId }: { timesheetId: number }) =>
+      apiClient.patch<{ success: boolean }>(`/projects/time-entries/${timesheetId}/approve`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.timeEntries() });
+    },
+    ...options,
+  });
+}
+
+export function useRejectTimesheet(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ timesheetId, reason }: { timesheetId: number; reason?: string }) =>
+      apiClient.patch<{ success: boolean }>(`/projects/time-entries/${timesheetId}/reject`, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.timeEntries() });
+    },
+    ...options,
+  });
+}
+
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+export interface BillingSummaryItem {
+  projectId: number;
+  projectName: string;
+  totalHours: number | null;
+}
+
+export function useBillingSummary(params: { startDate: Date; endDate: Date }) {
+  return useQuery<BillingSummaryItem[]>({
+    queryKey: [...queryKeys.projects.all, "billingSummary", params.startDate, params.endDate] as const,
+    queryFn: () =>
+      apiClient.get<BillingSummaryItem[]>("/projects/billing-summary", {
+        startDate: params.startDate.toISOString(),
+        endDate: params.endDate.toISOString(),
+      }),
+  });
+}
+
+// ─── Backward-compatibility aliases ──────────────────────────────────────────
+// These hooks existed in the old lib/hooks/project-hooks.ts and are still
+// referenced by legacy components. They forward to the canonical implementations.
+
+/** Alias for useProjectLabels() — fetches all labels across the org. */
+export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryKey" | "queryFn">) {
+  return useProjectLabels(undefined, options);
+}
+
+/**
+ * Backward-compat useUpdateTicket that doesn't require projectId as first arg.
+ * The ticket ID is in the input data; the URL uses the ticket-level PATCH endpoint.
+ */
+export function useUpdateTicketCompat(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateTicketInput>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
+    mutationFn: ({ ticketId, ...data }) =>
+      apiClient.patch<{ success: boolean }>(`/projects/tickets/${ticketId}`, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(variables.ticketId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+    ...options,
+  });
+}
+
+/** Backward-compat useDeleteTicket that doesn't require projectId as first arg. */
+export function useDeleteTicketCompat(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number }>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { ticketId: number }>({
+    mutationFn: ({ ticketId }) =>
+      apiClient.delete<{ success: boolean }>(`/projects/tickets/${ticketId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+    },
+    ...options,
+  });
+}
+
+/** Add a comment to a ticket. */
+export function useAddComment(
+  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; content: string }>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; content: string }>({
+    mutationFn: ({ ticketId, content }) =>
+      apiClient.post<{ id: number; content: string; createdAt: string }>(
+        `/projects/tickets/${ticketId}/comments`,
+        { content }
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
+    ...options,
+  });
+}
+
+/** Add a label to a ticket. */
+export function useAddLabelToTicket(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; labelId: number }>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { ticketId: number; labelId: number }>({
+    mutationFn: ({ ticketId, labelId }) =>
+      apiClient.post<{ success: boolean }>(`/projects/tickets/${ticketId}/labels`, { labelId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
+    ...options,
+  });
+}
+
+/** Remove a label from a ticket. */
+export function useRemoveLabelFromTicket(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; labelId: number }>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, { ticketId: number; labelId: number }>({
+    mutationFn: ({ ticketId, labelId }) =>
+      apiClient.delete<{ success: boolean }>(
+        `/projects/tickets/${ticketId}/labels/${labelId}`
+      ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
+    ...options,
+  });
+}
+
+/** Fetch subtasks of a ticket. */
+export function useSubtasks(
+  ticketId: number,
+  options?: Omit<UseQueryOptions<Ticket[]>, "queryKey" | "queryFn" | "enabled">
+) {
+  return useQuery<Ticket[]>({
+    queryKey: [...queryKeys.projects.all, "subtasks", { ticketId }],
+    queryFn: () => apiClient.get<Ticket[]>(`/projects/tickets/${ticketId}/subtasks`),
+    enabled: ticketId > 0,
+    ...options,
+  });
+}
+
+/** Reorder tickets within a project (drag-and-drop). Alias for useMoveTicket. */
+export function useUpdateTicketOrder(options?: Parameters<typeof useMutation>[0]) {
+  return useMoveTicket(options);
+}
+
+/**
+ * Backward-compat useCreateLabel that creates an org-level label (no projectId).
+ * The label can then be attached to any ticket in the org.
+ */
+export function useCreateOrgLabel(
+  options?: Omit<UseMutationOptions<TicketLabel, Error, CreateLabelInput>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<TicketLabel, Error, CreateLabelInput>({
+    mutationFn: (data) =>
+      apiClient.post<TicketLabel>("/projects/labels", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
+    },
+    ...options,
+  });
+}
+
+type AddAttachmentInput = {
+  ticketId: number;
+  fileName: string;
+  fileUrl: string;
+  fileKey?: string;
+  fileSize: number;
+  mimeType: string;
+};
+
+/** Add a file attachment to a ticket. */
+export function useAddAttachment(
+  options?: Omit<UseMutationOptions<{ id: number }, Error, AddAttachmentInput>, "mutationFn">
+) {
+  const queryClient = useQueryClient();
+  return useMutation<{ id: number }, Error, AddAttachmentInput>({
+    mutationFn: ({ ticketId, fileName, fileUrl, fileKey, fileSize, mimeType }) =>
+      apiClient.post<{ id: number }>(`/projects/tickets/${ticketId}/attachments`, {
+        fileName,
+        fileUrl,
+        fileKey,
+        fileSize,
+        mimeType,
+      }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+    },
     ...options,
   });
 }

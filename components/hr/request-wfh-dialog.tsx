@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { api } from "@/trpc/react";
+import { useHrEmployees, useCreateWfhRequest } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Home, Loader2 } from "lucide-react";
 import { format, addDays } from "date-fns";
+import type { Employee } from "@/types/hr";
 
 const wfhFormSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -46,11 +47,15 @@ type WfhFormValues = z.infer<typeof wfhFormSchema>;
 
 export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}) {
   const [open, setOpen] = useState(false);
-  const utils = api.useUtils();
 
-  const { data: members } = api.project.getProjectMembers.useQuery();
-  const approvers = (members || []).filter(
-    (m) => m.role === "ADMIN" || m.role === "CEO"
+  const { data: employeesRaw } = useHrEmployees();
+  const employees = useMemo(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    [employeesRaw]
+  );
+  const approvers = useMemo(
+    () => employees.filter((e) => e.role === "ADMIN" || e.role === "CEO"),
+    [employees]
   );
 
   const form = useForm<WfhFormValues>({
@@ -62,25 +67,26 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
     },
   });
 
-  const createWfhRequest = api.hr.createWfhRequest.useMutation({
-    onSuccess: () => {
-      toast.success("Work from home request submitted");
-      utils.hr.getWfhRequests.invalidate();
-      utils.hr.getPendingWfhRequests.invalidate();
-      setOpen(false);
-      form.reset();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to submit WFH request");
-    },
-  });
+  const createWfhRequest = useCreateWfhRequest();
 
   function onSubmit(data: WfhFormValues) {
-    createWfhRequest.mutate({
-      date: new Date(data.date),
-      reason: data.reason || undefined,
-      approverId: data.approverId,
-    });
+    createWfhRequest.mutate(
+      {
+        date: new Date(data.date),
+        reason: data.reason || undefined,
+        approverId: data.approverId,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Work from home request submitted");
+          setOpen(false);
+          form.reset();
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to submit WFH request");
+        },
+      }
+    );
   }
 
   return (

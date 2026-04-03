@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,9 +22,18 @@ import {
   IndianRupee, CheckCircle2, XCircle, Clock, Settings,
   TrendingUp, Users, Percent,
 } from "lucide-react";
-import { api } from "@/trpc/react";
+import {
+  useHrIncentiveStats,
+  useHrIncentives,
+  useHrIncentiveConfigs,
+  useApproveIncentive,
+  useRejectIncentive,
+  useSetIncentiveConfig,
+} from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-amber-500/10 text-amber-400",
@@ -49,31 +58,79 @@ export default function IncentivesPage() {
   const [approveAmount, setApproveAmount] = useState("");
   const [approveNotes, setApproveNotes] = useState("");
 
-  const { data: stats } = api.incentives.getStats.useQuery();
-  const { data, isLoading, refetch } = api.incentives.getAll.useQuery({
+  const qc = useQueryClient();
+
+  const { data: stats } = useHrIncentiveStats();
+  const { data, isLoading } = useHrIncentives({
     status: statusFilter !== "all" ? statusFilter as "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL" : undefined,
     page,
     limit: 25,
   });
-  const { data: configs } = api.incentives.getConfig.useQuery();
+  const { data: configs } = useHrIncentiveConfigs();
 
-  const approveMutation = api.incentives.approve.useMutation({
-    onSuccess: () => { refetch(); toast.success("Incentive approved"); setApproveModal(null); },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const rejectMutation = api.incentives.reject.useMutation({
-    onSuccess: () => { refetch(); toast.success("Incentive rejected"); },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const setConfigMutation = api.incentives.setConfig.useMutation({
-    onSuccess: () => { toast.success("Incentive rate updated"); setShowConfigDialog(false); setNewRate(""); },
-    onError: (err) => toast.error(err.message),
-  });
+  const approveMutation = useApproveIncentive();
+  const rejectMutation = useRejectIncentive();
+  const setConfigMutation = useSetIncentiveConfig();
 
   const incentivesList = data?.incentives ?? [];
   const currentConfig = configs?.[0];
+
+  function handleStatusFilterChange(v: string) {
+    setStatusFilter(v);
+    setPage(1);
+  }
+
+  function handleApproveOpen(id: number, calculated: string) {
+    setApproveModal({ id, calculated });
+    setApproveAmount(calculated);
+    setApproveNotes("");
+  }
+
+  function handleApproveClose() {
+    setApproveModal(null);
+  }
+
+  function handleApproveConfirm() {
+    if (!approveModal) return;
+    approveMutation.mutate(
+      { id: approveModal.id, approvedAmount: approveAmount, notes: approveNotes || undefined },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() });
+          toast.success("Incentive approved");
+          setApproveModal(null);
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  }
+
+  function handleReject(id: number) {
+    rejectMutation.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() });
+          toast.success("Incentive rejected");
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  }
+
+  function handleSetRate() {
+    setConfigMutation.mutate(
+      { incentiveRate: newRate },
+      {
+        onSuccess: () => {
+          toast.success("Incentive rate updated");
+          setShowConfigDialog(false);
+          setNewRate("");
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -123,7 +180,7 @@ export default function IncentivesPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-3">
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+        <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
           <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all" className="text-xs">All Status</SelectItem>
@@ -191,11 +248,7 @@ export default function IncentivesPage() {
                             size="sm"
                             variant="ghost"
                             className="h-7 text-xs text-emerald-400 hover:text-emerald-300"
-                            onClick={() => {
-                              setApproveModal({ id: inc.id, calculated: inc.calculatedAmount });
-                              setApproveAmount(inc.calculatedAmount);
-                              setApproveNotes("");
-                            }}
+                            onClick={() => handleApproveOpen(inc.id, inc.calculatedAmount)}
                           >
                             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
                           </Button>
@@ -203,7 +256,7 @@ export default function IncentivesPage() {
                             size="sm"
                             variant="ghost"
                             className="h-7 text-xs text-red-400 hover:text-red-300"
-                            onClick={() => rejectMutation.mutate({ id: inc.id })}
+                            onClick={() => handleReject(inc.id)}
                           >
                             <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
                           </Button>
@@ -228,7 +281,7 @@ export default function IncentivesPage() {
       </Card>
 
       {/* Approve Modal */}
-      <Dialog open={!!approveModal} onOpenChange={(open) => !open && setApproveModal(null)}>
+      <Dialog open={!!approveModal} onOpenChange={(open) => !open && handleApproveClose()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Approve Incentive</DialogTitle>
@@ -248,13 +301,9 @@ export default function IncentivesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setApproveModal(null)}>Cancel</Button>
+            <Button variant="outline" onClick={handleApproveClose}>Cancel</Button>
             <Button
-              onClick={() => approveModal && approveMutation.mutate({
-                id: approveModal.id,
-                approvedAmount: approveAmount,
-                notes: approveNotes || undefined,
-              })}
+              onClick={handleApproveConfirm}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               Approve
@@ -294,7 +343,7 @@ export default function IncentivesPage() {
             <Button variant="outline" onClick={() => setShowConfigDialog(false)}>Cancel</Button>
             <Button
               disabled={!newRate || setConfigMutation.isPending}
-              onClick={() => setConfigMutation.mutate({ incentiveRate: newRate })}
+              onClick={handleSetRate}
             >
               Set Rate
             </Button>

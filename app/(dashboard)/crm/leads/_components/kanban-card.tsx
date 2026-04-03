@@ -62,7 +62,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          selfAssign.mutate({ leadId: lead.id }, {
+                          selfAssign.mutate(lead.id, {
                             onSuccess: () => toast.success("Lead assigned to you"),
                           });
                         }}

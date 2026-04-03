@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { api } from "@/trpc/react";
+import { useUpdateTimeEntry } from "@/lib/api/hooks/projects";
 import { Loader2 } from "lucide-react";
 
 interface EditTimeEntryDialogProps {
@@ -44,18 +44,7 @@ const formSchema = z.object({
 });
 
 export function EditTimeEntryDialog({ entry, open, onOpenChange }: EditTimeEntryDialogProps) {
-  const utils = api.useUtils();
-  
-  const mutation = api.project.updateTimeEntry.useMutation({
-    onSuccess: () => {
-      toast.success("Time entry updated successfully");
-      onOpenChange(false);
-      utils.project.getTimeEntries.invalidate();
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update time entry");
-    },
-  });
+  const mutation = useUpdateTimeEntry();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,11 +64,22 @@ export function EditTimeEntryDialog({ entry, open, onOpenChange }: EditTimeEntry
   }, [open, entry, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    mutation.mutate({
-      entryId: entry.id,
-      description: values.description,
-      hours: values.hours,
-    });
+    mutation.mutate(
+      {
+        entryId: entry.id,
+        description: values.description,
+        hours: values.hours,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Time entry updated successfully");
+          onOpenChange(false);
+        },
+        onError: (err) => {
+          toast.error((err as Error).message || "Failed to update time entry");
+        },
+      }
+    );
   }
 
   return (

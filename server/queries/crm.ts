@@ -19,6 +19,7 @@ import {
   targetHistory,
   users,
   organizationMembers,
+  crmPeople,
   crmDeals,
   crmCompanies,
   crmCampaigns,
@@ -739,4 +740,270 @@ export async function getSupportDashboard(orgId: string) {
     supportTeamMembers,
     ticketsByPriority,
   };
+}
+
+// ─── CRM People (slug-based profiles) ────────────────────────────────────────
+
+export async function getAllPeopleSlugs(orgId: string): Promise<Record<string, string>> {
+  const people = await db.query.crmPeople.findMany({
+    where: eq(crmPeople.orgId, orgId),
+    columns: { slug: true, name: true },
+  });
+
+  const slugMap: Record<string, string> = {};
+  for (const p of people) {
+    slugMap[p.name] = p.slug;
+    const parts = p.name.split(" ");
+    const abbreviated = `${parts[0]} ${parts[1]?.[0]}.`;
+    slugMap[abbreviated] = p.slug;
+  }
+  return slugMap;
+}
+
+export async function getPersonBySlug(orgId: string, slug: string) {
+  const person = await db.query.crmPeople.findFirst({
+    where: and(eq(crmPeople.orgId, orgId), eq(crmPeople.slug, slug)),
+  });
+
+  if (!person) return null;
+
+  const performance = await db.query.crmTeamPerformance.findMany({
+    where: and(
+      eq(crmTeamPerformance.orgId, orgId),
+      eq(crmTeamPerformance.personId, person.id)
+    ),
+  });
+  const monthlyPerformance = performance.map((p) => ({
+    month: p.month,
+    value: Number(p.value),
+  }));
+
+  const personDealsRaw = await db.query.crmDeals.findMany({
+    where: and(eq(crmDeals.orgId, orgId), eq(crmDeals.salesRepId, person.id)),
+  });
+  const personDeals = personDealsRaw.map((d) => ({
+    company: d.companyName,
+    value: Number(d.value),
+    stage: d.stage,
+    probability: d.probability ?? 0,
+    closeDate: d.closeDate ?? "",
+  }));
+
+  const accounts = await db.query.crmCompanies.findMany({
+    where: and(eq(crmCompanies.orgId, orgId), eq(crmCompanies.csmId, person.id)),
+  });
+  const personAccounts = accounts.map((a) => ({
+    name: a.name,
+    revenue: Number(a.revenue),
+    health: a.health as "healthy" | "at_risk" | "critical",
+    since: a.customerSince ?? "—",
+    renewalDate: a.renewalDate ?? "",
+  }));
+
+  const activities = await db.query.crmActivities.findMany({
+    where: and(eq(crmActivities.orgId, orgId), eq(crmActivities.personId, person.id)),
+    orderBy: [desc(crmActivities.createdAt)],
+    limit: 10,
+  });
+  const personActivities = activities.map((a) => ({
+    type: a.type as "deal_won" | "meeting" | "proposal" | "call" | "email" | "ticket" | "escalation",
+    message: a.message,
+    time: a.time,
+  }));
+
+  const stats = computePersonStats(person.role, personDeals, personAccounts, monthlyPerformance);
+
+  return {
+    slug: person.slug,
+    name: person.name,
+    initials: person.initials,
+    role: person.role,
+    title: person.title,
+    department: person.department,
+    email: person.email,
+    phone: person.phone ?? "",
+    location: person.location ?? "",
+    joinDate: person.joinDate ?? "",
+    bio: person.bio ?? "",
+    stats,
+    monthlyPerformance,
+    deals: personDeals,
+    accounts: personAccounts,
+    activities: personActivities,
+    skills: person.skills ?? [],
+  };
+}
+
+export async function getCustomerExecutiveDashboard(orgId: string) {
+  const companies = await db.query.crmCompanies.findMany({
+    where: eq(crmCompanies.orgId, orgId),
+    with: { csm: true },
+  });
+
+  const totalClients = companies.length;
+  const healthCounts = {
+    healthy: companies.filter((c) => c.health === "healthy").length,
+    at_risk: companies.filter((c) => c.health === "at_risk").length,
+    critical: companies.filter((c) => c.health === "critical").length,
+  };
+  const newClients = companies.filter(
+    (c) => c.customerSince === "2025" || c.customerSince === "2026"
+  ).length;
+
+  const ceMetrics = await db.query.crmMonthlyMetrics.findMany({
+    where: eq(crmMonthlyMetrics.orgId, orgId),
+    orderBy: [desc(crmMonthlyMetrics.id)],
+  });
+  const ceCurr = ceMetrics[0];
+  const cePrev = ceMetrics[1];
+  const latestCsat = Number(ceCurr?.csat ?? 0);
+  const latestRetention = Number(ceCurr?.retention ?? 0);
+  const latestNps = Math.round(latestCsat * 16);
+
+  const customerStats = {
+    totalClients: { value: totalClients, trend: computeTrend(totalClients, totalClients - newClients) },
+    nps: { value: latestNps, trend: computeTrend(Number(ceCurr?.csat ?? 0) * 16, Number(cePrev?.csat ?? 0) * 16) },
+    csat: { value: latestCsat, trend: computeTrend(Number(ceCurr?.csat ?? 0), Number(cePrev?.csat ?? 0)) },
+    retention: { value: latestRetention, trend: computeTrend(Number(ceCurr?.retention ?? 0), Number(cePrev?.retention ?? 0)) },
+  };
+
+  const clientHealth = [
+    { label: "Healthy", value: healthCounts.healthy, color: "#10B981" },
+    { label: "At Risk", value: healthCounts.at_risk, color: "#F59E0B" },
+    { label: "Critical", value: healthCounts.critical, color: "#EF4444" },
+    { label: "New", value: newClients, color: "#3B82F6" },
+  ];
+
+  const upcomingRenewals = companies
+    .filter((c) => c.renewalDate)
+    .sort((a, b) => (a.renewalDate! > b.renewalDate! ? 1 : -1))
+    .slice(0, 6)
+    .map((c) => ({
+      client: c.name,
+      value: Number(c.renewalValue),
+      date: c.renewalDate!,
+      health: c.health as "healthy" | "at_risk" | "critical",
+    }));
+
+  const keyAccounts = companies
+    .sort((a, b) => Number(b.revenue) - Number(a.revenue))
+    .slice(0, 5)
+    .map((c) => ({
+      name: c.name,
+      revenue: Number(c.revenue),
+      health: c.health as "healthy" | "at_risk" | "critical",
+      csm: c.csm ? `${c.csm.name.split(" ")[0]} ${c.csm.name.split(" ")[1]?.[0]}.` : "Unassigned",
+      since: c.customerSince ?? "—",
+    }));
+
+  const ceActivities = await db.query.crmActivities.findMany({
+    where: and(eq(crmActivities.orgId, orgId), eq(crmActivities.category, "customer_success")),
+    orderBy: [desc(crmActivities.createdAt)],
+    limit: 6,
+  });
+  const customerInteractions = ceActivities.map((a) => ({
+    type: a.type as "call" | "email" | "meeting" | "ticket" | "escalation",
+    message: a.message,
+    time: a.time,
+    person: a.person ?? "",
+  }));
+
+  const supportTickets = await db.query.crmSupportTickets.findMany({
+    where: eq(crmSupportTickets.orgId, orgId),
+  });
+  const openTickets = supportTickets.filter(
+    (t) => t.status === "new" || t.status === "in_progress"
+  ).length;
+  const resolvedTickets = supportTickets.filter((t) => t.resolvedAt && t.createdAt);
+  const avgResMs =
+    resolvedTickets.length > 0
+      ? resolvedTickets.reduce(
+          (sum, t) => sum + (t.resolvedAt!.getTime() - t.createdAt!.getTime()),
+          0
+        ) / resolvedTickets.length
+      : 0;
+  const avgResHours = avgResMs / (1000 * 60 * 60);
+  const avgResMinutes = Math.round((avgResMs / (1000 * 60)) % 60);
+  const ceAvgResolution = avgResMs > 0 ? `${Math.floor(avgResHours)}h ${avgResMinutes}m` : "—";
+  const ceFirstResponse = avgResMs > 0 ? `${Math.max(1, Math.round(avgResHours * 60 * 0.07))}min` : "—";
+  const ceSatisfaction = latestCsat > 0 ? Math.round(latestCsat * 20 * 10) / 10 : 0;
+
+  const supportStats = {
+    openTickets,
+    avgResolution: ceAvgResolution,
+    firstResponse: ceFirstResponse,
+    satisfaction: ceSatisfaction,
+  };
+  const retentionTimeline = ceMetrics
+    .map((m) => ({ month: m.month, value: Number(m.retention) }))
+    .reverse();
+  const csatTimeline = ceMetrics
+    .map((m) => ({ month: m.month, value: Number(m.csat) }))
+    .reverse();
+
+  return {
+    customerStats,
+    clientHealth,
+    upcomingRenewals,
+    keyAccounts,
+    customerInteractions,
+    supportStats,
+    retentionTimeline,
+    csatTimeline,
+  };
+}
+
+function computePersonStats(
+  role: string,
+  personDeals: { value: number; stage: string; probability: number }[],
+  accounts: { revenue: number; health: string }[],
+  monthlyPerformance: { value: number }[]
+) {
+  const perf = monthlyPerformance;
+  const perfCurr = perf.length > 0 ? perf[perf.length - 1].value : 0;
+  const perfPrev = perf.length > 1 ? perf[perf.length - 2].value : 0;
+  const perfTrend = computeTrend(perfCurr, perfPrev);
+
+  if (role === "sales_rep") {
+    const totalRevenue = personDeals.reduce((s, d) => s + d.value, 0);
+    const dealsWon = personDeals.filter((d) => d.stage === "Closed Won").length;
+    const totalDeals = personDeals.length;
+    const convRate = totalDeals > 0 ? (dealsWon / totalDeals) * 100 : 0;
+    const avgDeal = totalDeals > 0 ? totalRevenue / totalDeals : 0;
+    const pipeline = personDeals
+      .filter((d) => d.stage !== "Closed Won")
+      .reduce((s, d) => s + d.value, 0);
+    const quotaAttain = perfPrev > 0 ? `${Math.round((perfCurr / perfPrev) * 100)}%` : "—";
+
+    return [
+      { label: "Revenue", value: `$${(totalRevenue / 1000).toFixed(0)}K`, trend: perfTrend },
+      { label: "Deals Won", value: dealsWon, trend: computeTrend(dealsWon, Math.max(1, dealsWon - 1)) },
+      { label: "Conv. Rate", value: `${convRate.toFixed(1)}%`, trend: computeTrend(convRate, convRate > 5 ? convRate - 3 : 0) },
+      { label: "Avg Deal", value: `$${(avgDeal / 1000).toFixed(1)}K`, trend: perfTrend },
+      { label: "Quota Attain.", value: quotaAttain },
+      { label: "Pipeline", value: `$${(pipeline / 1000).toFixed(0)}K` },
+    ];
+  }
+
+  if (role === "csm") {
+    const totalAccounts = accounts.length;
+    const arrManaged = accounts.reduce((s, a) => s + a.revenue, 0);
+    const healthyPercent =
+      totalAccounts > 0
+        ? (accounts.filter((a) => a.health === "healthy").length / totalAccounts) * 100
+        : 0;
+    const npsFromPerf = perf.length > 0 ? Math.round((perfCurr / 1000000) * 20) : 0;
+    const csatFromPerf = perf.length > 0 ? Math.min(5, Math.round((perfCurr / 1000000) * 1.3 * 10) / 10) : 0;
+
+    return [
+      { label: "Accounts", value: totalAccounts, trend: perfTrend },
+      { label: "ARR Managed", value: `$${(arrManaged / 1000000).toFixed(1)}M`, trend: perfTrend },
+      { label: "NPS", value: npsFromPerf, trend: computeTrend(perfCurr, perfPrev) },
+      { label: "Retention", value: `${healthyPercent.toFixed(1)}%`, trend: computeTrend(healthyPercent, healthyPercent > 5 ? healthyPercent - 2 : 0) },
+      { label: "CSAT", value: `${csatFromPerf.toFixed(1)}/5`, trend: perfTrend },
+      { label: "Expansion Rev.", value: "—" },
+    ];
+  }
+
+  return [];
 }

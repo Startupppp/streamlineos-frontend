@@ -1,6 +1,12 @@
 "use client";
 
-import { useGetOrganizations, useGetInvitations, useInviteUser, useCancelInvitation } from "@/lib/hooks/auth-hooks";
+import {
+  useOrgMembers,
+  useInvitations,
+  useInviteUser,
+  useCancelInvitation,
+  useUpdateMemberRole,
+} from "@/lib/api/hooks/organization";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Search, UserPlus, Shield } from "lucide-react";
-import { api } from "@/trpc/react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 
@@ -44,13 +49,6 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function MembersSettingsPage() {
-  const { data: organizations } = useGetOrganizations();
-  const orgId = organizations?.[0]?.id;
-  const { data: invitations } = useGetInvitations(orgId || "");
-  const inviteUser = useInviteUser();
-  const cancelInvitation = useCancelInvitation();
-  const utils = api.useUtils();
-
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<string>("ENGINEERING");
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -58,41 +56,50 @@ export default function MembersSettingsPage() {
   const debouncedSearch = useDebouncedValue(memberSearch, 300);
   const [page, setPage] = useState(1);
 
-  const { data: membersData, isLoading: membersLoading } = api.organization.getMembersPaginated.useQuery(
-    { orgId: orgId || "", page, limit: 20, search: debouncedSearch || undefined },
-    { enabled: !!orgId },
+  const { data: membersData, isLoading: membersLoading } = useOrgMembers(
+    page,
+    20,
+    debouncedSearch || undefined
   );
+  const { data: invitations } = useInvitations();
+  const inviteUser = useInviteUser();
+  const cancelInvitation = useCancelInvitation();
+  const updateRole = useUpdateMemberRole();
 
-  const updateRole = api.organization.updateMemberRole.useMutation({
-    onSuccess: () => {
-      utils.organization.getMembersPaginated.invalidate();
-      toast.success("Role updated successfully");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgId) { toast.error("No organization selected"); return; }
-    try {
-      await inviteUser.mutateAsync({ email: inviteEmail, orgId, role: inviteRole });
-      toast.success("Invitation sent!");
-      setInviteEmail("");
-      setShowInviteForm(false);
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to send invitation");
-    }
+    inviteUser.mutate(
+      { email: inviteEmail, role: inviteRole },
+      {
+        onSuccess: () => {
+          toast.success("Invitation sent!");
+          setInviteEmail("");
+          setShowInviteForm(false);
+        },
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : "Failed to send invitation");
+        },
+      }
+    );
   };
 
-  if (!orgId) {
-    return (
-      <div className="p-6">
-        <Card><CardContent className="py-8 text-center">
-          <p className="text-muted-foreground">Please select an organization first.</p>
-        </CardContent></Card>
-      </div>
+  const handleCancelInvitation = (invitationId: string) => {
+    cancelInvitation.mutate(
+      { invitationId },
+      { onError: (err) => toast.error(err.message) }
     );
-  }
+  };
+
+  const handleUpdateRole = (userId: string, newRole: string, currentRole: string) => {
+    if (newRole === currentRole) return;
+    updateRole.mutate(
+      { userId, role: newRole },
+      {
+        onSuccess: () => toast.success("Role updated successfully"),
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -214,11 +221,7 @@ export default function MembersSettingsPage() {
                       <TableCell className="px-4 py-2.5 text-right">
                         <Select
                           value={member.role}
-                          onValueChange={(newRole) => {
-                            if (newRole !== member.role) {
-                              updateRole.mutate({ userId: member.userId, orgId, role: newRole });
-                            }
-                          }}
+                          onValueChange={(newRole) => handleUpdateRole(member.userId, newRole, member.role)}
                         >
                           <SelectTrigger className="h-7 w-[150px] text-xs ml-auto">
                             <SelectValue />
@@ -267,7 +270,7 @@ export default function MembersSettingsPage() {
                     <Badge variant="outline" className={`text-[10px] mt-1 ${ROLE_COLORS[inv.role] || ""}`}>{inv.role}</Badge>
                   </div>
                   <Button variant="ghost" size="sm" className="text-xs"
-                    onClick={() => { if (orgId) cancelInvitation.mutate({ invitationId: inv.id, orgId }); }}>
+                    onClick={() => handleCancelInvitation(inv.id)}>
                     Cancel
                   </Button>
                 </div>

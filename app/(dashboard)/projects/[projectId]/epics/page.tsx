@@ -1,7 +1,12 @@
 "use client";
 
 import { use, useState } from "react";
-import { api } from "@/trpc/react";
+import {
+  useProject,
+  useUpdateTicket,
+  useDeleteTicket,
+  useCreateTicket,
+} from "@/lib/api/hooks/projects";
 import { CreateEpicDialog } from "@/components/projects/create-epic-dialog";
 import { EditEpicDialog } from "@/components/projects/edit-epic-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,30 +55,11 @@ export default function EpicsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
 
-  const { data: project, isLoading } = api.project.getProjectDetails.useQuery({ id: projectId });
-  const utils = api.useUtils();
+  const { data: project, isLoading } = useProject(projectId);
 
-  const updateTicket = api.project.updateTicket.useMutation({
-    onSuccess: () => {
-      utils.project.getProjectDetails.invalidate();
-    },
-  });
-
-  const deleteTicket = api.project.deleteTicket.useMutation({
-    onSuccess: () => {
-      utils.project.getProjectDetails.invalidate();
-      toast.success("Epic deleted");
-    },
-    onError: (error) => toast.error(error.message || "Failed to delete epic"),
-  });
-
-  const createTicket = api.project.createTicket.useMutation({
-    onSuccess: () => {
-      utils.project.getProjectDetails.invalidate();
-      toast.success("Story created");
-    },
-    onError: (error) => toast.error(error.message || "Failed to create story"),
-  });
+  const updateTicket = useUpdateTicket(projectId);
+  const deleteTicket = useDeleteTicket(projectId);
+  const createTicket = useCreateTicket();
 
   if (isLoading) {
     return (
@@ -97,7 +83,13 @@ export default function EpicsPage({ params }: PageProps) {
     );
     Promise.all(unlinkPromises)
       .then(() => {
-        deleteTicket.mutate({ ticketId: epicId });
+        deleteTicket.mutate(
+          { ticketId: epicId },
+          {
+            onSuccess: () => toast.success("Epic deleted"),
+            onError: (error) => toast.error((error as Error).message || "Failed to delete epic"),
+          }
+        );
       })
       .catch(() => {
         toast.error("Failed to unlink stories from epic");
@@ -189,7 +181,15 @@ export default function EpicsPage({ params }: PageProps) {
               unlinkedStories={stories.filter(s => !s.epicId)}
               onDeleteEpic={() => handleDeleteEpic(epic.id)}
               onLinkStory={(storyId) => updateTicket.mutate({ ticketId: storyId, epicId: epic.id })}
-              onCreateStory={(title) => createTicket.mutate({ projectId, title, type: "STORY", epicId: epic.id })}
+              onCreateStory={(title) =>
+                createTicket.mutate(
+                  { projectId, title, type: "STORY", epicId: epic.id },
+                  {
+                    onSuccess: () => toast.success("Story created"),
+                    onError: (error) => toast.error((error as Error).message || "Failed to create story"),
+                  }
+                )
+              }
               isDeleting={deleteTicket.isPending}
             />
           ))

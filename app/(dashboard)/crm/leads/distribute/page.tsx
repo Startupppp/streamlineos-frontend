@@ -17,22 +17,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/components/crm/lead-distribution-dialog";
 import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
-import { api } from "@/trpc/react";
-import { toast } from "sonner";
-
+import { useLeads } from "@/lib/api/hooks/leads";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 export default function LeadDistributionPage() {
+  const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("NEW");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDistribute, setShowDistribute] = useState(false);
 
-  const { data, isLoading, refetch } = api.leads.getAll.useQuery({
+  const { data, isLoading } = useLeads({
     status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
     search: searchQuery || undefined,
     sortBy: "createdAt",
     sortOrder: "desc",
     limit: 100,
   });
+
+  function refetch() {
+    qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+  }
 
   const filteredLeads = data?.leads ?? [];
 

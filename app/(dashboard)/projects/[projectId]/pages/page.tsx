@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useMemo } from "react";
-import { trpc } from "@/trpc/client";
+import { usePages, useCreatePage, useUpdatePage } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -152,42 +152,28 @@ export default function PagesPage({
   const [activePage, setActivePage] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
 
-  const utils = trpc.useUtils();
-  const { data: pages, isLoading } = trpc.project.pagesGetByProject.useQuery({
-    projectId,
-  });
+  const { data: pages, isLoading } = usePages(projectId);
 
-  const createMutation = trpc.project.pagesCreate.useMutation({
-    onSuccess: () => {
-      utils.project.pagesGetByProject.invalidate({ projectId });
-      setCreateOpen(false);
-      form.reset();
-      toast.success("Page created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateMutation = trpc.project.pagesUpdate.useMutation({
-    onSuccess: () => {
-      utils.project.pagesGetByProject.invalidate({ projectId });
-      toast.success("Page saved");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const togglePinMutation = trpc.project.pagesUpdate.useMutation({
-    onSuccess: () => {
-      utils.project.pagesGetByProject.invalidate({ projectId });
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createMutation = useCreatePage();
+  const updateMutation = useUpdatePage();
+  const togglePinMutation = useUpdatePage();
 
   const form = useForm<CreatePageForm>({
     resolver: zodResolver(createPageSchema),
   });
 
   const onSubmit = (data: CreatePageForm) => {
-    createMutation.mutate({ ...data, projectId });
+    createMutation.mutate(
+      { ...data, projectId },
+      {
+        onSuccess: () => {
+          setCreateOpen(false);
+          form.reset();
+          toast.success("Page created");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   const mappedPages: ProjectPage[] = useMemo(() => (pages ?? []).map((p) => ({
@@ -212,7 +198,11 @@ export default function PagesPage({
     if (activePage !== null && editContent !== String(selectedPage?.content ?? "")) {
       updateMutation.mutate({
         id: activePage,
+        projectId,
         content: editContent,
+      }, {
+        onSuccess: () => toast.success("Page saved"),
+        onError: (err) => toast.error((err as Error).message),
       });
     }
     setActivePage(pageId);
@@ -221,15 +211,21 @@ export default function PagesPage({
   };
 
   const handleTogglePin = (pageId: number, pinned: boolean) => {
-    togglePinMutation.mutate({ id: pageId, isPinned: pinned });
+    togglePinMutation.mutate(
+      { id: pageId, projectId, isPinned: pinned },
+      { onError: (err) => toast.error((err as Error).message) }
+    );
   };
 
   const handleSave = () => {
     if (activePage === null) return;
-    updateMutation.mutate({
-      id: activePage,
-      content: editContent,
-    });
+    updateMutation.mutate(
+      { id: activePage, projectId, content: editContent },
+      {
+        onSuccess: () => toast.success("Page saved"),
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   if (isLoading) {

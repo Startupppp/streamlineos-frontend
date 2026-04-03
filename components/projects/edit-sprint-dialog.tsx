@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/trpc/react";
+import { useUpdateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -40,23 +40,23 @@ interface EditSprintDialogProps {
   sprint: {
     id: number;
     name: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: Date | string;
+    endDate: Date | string;
     goal?: string | null;
   };
+  projectId: number;
   trigger?: React.ReactNode;
 }
 
-export function EditSprintDialog({ sprint, trigger }: EditSprintDialogProps) {
+export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialogProps) {
   const [open, setOpen] = useState(false);
-  const utils = api.useUtils();
 
   const form = useForm<EditSprintInput>({
     resolver: zodResolver(editSprintSchema),
     defaultValues: {
       name: sprint.name,
-      startDate: format(sprint.startDate, "yyyy-MM-dd"),
-      endDate: format(sprint.endDate, "yyyy-MM-dd"),
+      startDate: format(new Date(sprint.startDate), "yyyy-MM-dd"),
+      endDate: format(new Date(sprint.endDate), "yyyy-MM-dd"),
       goal: sprint.goal || "",
     },
   });
@@ -65,32 +65,34 @@ export function EditSprintDialog({ sprint, trigger }: EditSprintDialogProps) {
     if (open) {
       form.reset({
         name: sprint.name,
-        startDate: format(sprint.startDate, "yyyy-MM-dd"),
-        endDate: format(sprint.endDate, "yyyy-MM-dd"),
+        startDate: format(new Date(sprint.startDate), "yyyy-MM-dd"),
+        endDate: format(new Date(sprint.endDate), "yyyy-MM-dd"),
         goal: sprint.goal || "",
       });
     }
   }, [open, sprint, form]);
 
-  const updateSprint = api.project.updateSprint.useMutation({
-    onSuccess: () => {
-      toast.success("Sprint updated");
-      utils.project.getSprints.invalidate();
-      setOpen(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update sprint");
-    },
-  });
+  const updateSprint = useUpdateSprint(projectId);
 
   function onSubmit(data: EditSprintInput) {
-    updateSprint.mutate({
-      sprintId: sprint.id,
-      name: data.name,
-      startDate: new Date(data.startDate),
-      endDate: new Date(data.endDate),
-      goal: data.goal || undefined,
-    });
+    updateSprint.mutate(
+      {
+        sprintId: sprint.id,
+        name: data.name,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        goal: data.goal || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Sprint updated");
+          setOpen(false);
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to update sprint");
+        },
+      }
+    );
   }
 
   return (

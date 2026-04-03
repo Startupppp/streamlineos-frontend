@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { api } from "@/trpc/react";
+import {
+  useHrAllPayrolls,
+  useHrEmployees,
+  useGeneratePayroll,
+  useGenerateEmployeePayslip,
+  useApprovePayroll,
+  useMarkPayrollPaid,
+} from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,7 +47,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { format, subMonths } from "date-fns";
 import { toast } from "sonner";
-import { PayrollListSkeleton } from "@/components/ui/payroll-skeleton";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -54,6 +60,10 @@ import {
   Eye,
   Calculator,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import type { Employee } from "@/types/hr";
+import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
   const date = subMonths(new Date(), i);
@@ -63,9 +73,8 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => {
   };
 });
 
-import { getColorSafe, payrollStatusColors } from "@/lib/theme-constants";
-
 export default function PayrollPage() {
+  const qc = useQueryClient();
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [generateSheetOpen, setGenerateSheetOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
@@ -79,18 +88,27 @@ export default function PayrollPage() {
   const [overtimeHours, setOvertimeHours] = useState<string>("");
   const [overtimeAmount, setOvertimeAmount] = useState<string>("");
 
-  const { data: allPayrolls, isLoading, refetch } = api.hr.getAllPayrolls.useQuery({
-    month: selectedMonth,
-  });
-  const { data: employees } = api.hr.getEmployees.useQuery();
+  const { data: allPayrolls, isLoading } = useHrAllPayrolls({ month: selectedMonth });
+  const { data: employeesRaw } = useHrEmployees();
+
+  const employees = useMemo(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    [employeesRaw]
+  );
+
+  const generatePayrollMutation = useGeneratePayroll();
+  const generateEmployeePayslipMutation = useGenerateEmployeePayslip();
+  const approvePayrollMutation = useApprovePayroll();
+  const markPaidMutation = useMarkPayrollPaid();
 
   const selectedEmployeeData = useMemo(() => {
-    if (!selectedEmployee || !employees) return null;
-    return employees.find(e => e.id === selectedEmployee);
+    if (!selectedEmployee || !employees.length) return null;
+    return employees.find(e => e.id === selectedEmployee) ?? null;
   }, [selectedEmployee, employees]);
+
   const payslipPreview = useMemo(() => {
     if (!selectedEmployeeData) return null;
-    
+
     const monthlySalary = parseFloat(selectedEmployeeData.monthlySalary || "0");
     const workingDays = 30;
     const perDaySalary = monthlySalary / workingDays;
@@ -99,7 +117,7 @@ export default function PayrollPage() {
     const basicPay = monthlySalary * 0.5;
     const hra = monthlySalary * 0.5;
     const professionalTax = 200;
-    
+
     const otAmt = parseFloat(overtimeAmount) || 0;
     const grossSalary = monthlySalary + (parseFloat(bonus) || 0) + otAmt;
     const totalDeductions = lopDeduction + halfDayDeduction + professionalTax + (parseFloat(otherDeductions) || 0);
@@ -127,47 +145,6 @@ export default function PayrollPage() {
     };
   }, [selectedEmployeeData, lopDays, halfDays, otherDeductions, bonus, overtimeType, overtimeDays, overtimeHours, overtimeAmount]);
 
-  const generatePayrollMutation = api.hr.generatePayroll.useMutation({
-    onSuccess: () => {
-      toast.success("Payroll generated for all employees");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const generateEmployeePayslipMutation = api.hr.generateEmployeePayslip.useMutation({
-    onSuccess: () => {
-      toast.success("Payslip generated successfully");
-      resetSheet();
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const approvePayrollMutation = api.hr.approvePayroll.useMutation({
-    onSuccess: () => {
-      toast.success("Payroll approved");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const markPaidMutation = api.hr.markPayrollPaid.useMutation({
-    onSuccess: () => {
-      toast.success("Payroll marked as paid");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
   const resetSheet = () => {
     setGenerateSheetOpen(false);
     setSelectedEmployee("");
@@ -183,7 +160,16 @@ export default function PayrollPage() {
   };
 
   const handleGenerateAll = () => {
-    generatePayrollMutation.mutate({ month: selectedMonth });
+    generatePayrollMutation.mutate(
+      { month: selectedMonth },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
+          toast.success("Payroll generated for all employees");
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
   };
 
   const handleShowPreview = () => {
@@ -196,18 +182,54 @@ export default function PayrollPage() {
 
   const handleGenerateForEmployee = () => {
     if (!selectedEmployee) return;
-    generateEmployeePayslipMutation.mutate({
-      userId: selectedEmployee,
-      month: selectedMonth,
-      lopDays: parseFloat(lopDays) || 0,
-      halfDays: parseFloat(halfDays) || 0,
-      otherDeductions: parseFloat(otherDeductions) || 0,
-      bonus: parseFloat(bonus) || 0,
-      overtimeType: overtimeType === "days" || overtimeType === "hours" ? overtimeType : undefined,
-      overtimeDays: parseFloat(overtimeDays) || 0,
-      overtimeHours: parseFloat(overtimeHours) || 0,
-      overtimeAmount: parseFloat(overtimeAmount) || 0,
-    });
+    generateEmployeePayslipMutation.mutate(
+      {
+        userId: selectedEmployee,
+        month: selectedMonth,
+        lopDays: parseFloat(lopDays) || 0,
+        halfDays: parseFloat(halfDays) || 0,
+        otherDeductions: parseFloat(otherDeductions) || 0,
+        bonus: parseFloat(bonus) || 0,
+        overtimeType: overtimeType === "days" || overtimeType === "hours" ? overtimeType : undefined,
+        overtimeDays: parseFloat(overtimeDays) || 0,
+        overtimeHours: parseFloat(overtimeHours) || 0,
+        overtimeAmount: parseFloat(overtimeAmount) || 0,
+      },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
+          toast.success("Payslip generated successfully");
+          resetSheet();
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
+  };
+
+  const handleApprovePayroll = (payrollId: number) => {
+    approvePayrollMutation.mutate(
+      { payrollId },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
+          toast.success("Payroll approved");
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
+  };
+
+  const handleMarkPaid = (payrollId: number) => {
+    markPaidMutation.mutate(
+      { payrollId },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
+          toast.success("Payroll marked as paid");
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
   };
 
   const totalGross = allPayrolls?.reduce(
@@ -302,7 +324,7 @@ export default function PayrollPage() {
                 <Button variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
                   Generate Individual
-        </Button>
+                </Button>
               </SheetTrigger>
               <SheetContent className="sm:max-w-2xl overflow-y-auto">
                 <SheetHeader>
@@ -310,7 +332,7 @@ export default function PayrollPage() {
                     {showPreview ? "Payslip Preview" : "Generate Payslip for Employee"}
                   </SheetTitle>
                 </SheetHeader>
-                
+
                 <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
                   {showPreview ? `Payslip preview for ${selectedEmployeeData?.firstName ?? "employee"}` : ""}
                 </div>
@@ -324,11 +346,11 @@ export default function PayrollPage() {
                           <SelectValue placeholder="Select employee" />
                         </SelectTrigger>
                         <SelectContent>
-                        {employees?.map((emp) => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.firstName} {emp.lastName} - ₹{parseFloat(emp.monthlySalary || "0").toLocaleString()}/month
-                          </SelectItem>
-                        ))}
+                          {employees.map((emp) => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.firstName} {emp.lastName} - ₹{parseFloat(emp.monthlySalary || "0").toLocaleString()}/month
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -525,9 +547,8 @@ export default function PayrollPage() {
                               <span>₹{payslipPreview?.grossSalary.toLocaleString()}</span>
                             </div>
                           </div>
-                </div>
+                        </div>
 
-                        
                         <div>
                           <h4 className="font-semibold text-sm mb-3 text-red-700">Deductions</h4>
                           <div className="space-y-2 text-sm">
@@ -567,7 +588,6 @@ export default function PayrollPage() {
 
                         <Separator />
 
-                        
                         <div className="flex justify-between items-center pt-2">
                           <span className="text-lg font-bold">Net Salary</span>
                           <span className="text-2xl font-bold text-green-600">
@@ -575,7 +595,6 @@ export default function PayrollPage() {
                           </span>
                         </div>
 
-                        
                         <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Working Days</span>
@@ -710,7 +729,7 @@ export default function PayrollPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => approvePayrollMutation.mutate({ payrollId: payroll.id })}
+                            onClick={() => handleApprovePayroll(payroll.id)}
                             disabled={approvePayrollMutation.isPending}
                           >
                             <Check className="h-3 w-3 mr-1" />
@@ -720,7 +739,7 @@ export default function PayrollPage() {
                         {payroll.status === "APPROVED" && (
                           <Button
                             size="sm"
-                            onClick={() => markPaidMutation.mutate({ payrollId: payroll.id })}
+                            onClick={() => handleMarkPaid(payroll.id)}
                             disabled={markPaidMutation.isPending}
                           >
                             <CreditCard className="h-3 w-3 mr-1" />

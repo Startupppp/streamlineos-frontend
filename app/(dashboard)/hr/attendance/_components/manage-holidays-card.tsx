@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/trpc/react";
+import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, PartyPopper } from "lucide-react";
 
@@ -17,27 +17,10 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [message, setMessage] = useState("");
 
-  const utils = api.useUtils();
-  const { data: holidaysList, isLoading } = api.hr.getHolidaysForYear.useQuery({ year: currentYear });
-  const addMutation = api.hr.addHoliday.useMutation({
-    onSuccess: () => {
-      toast.success("Holiday added");
-      setName("");
-      setDate(format(new Date(), "yyyy-MM-dd"));
-      setMessage("");
-      utils.hr.getHolidaysForYear.invalidate();
-      utils.hr.getHolidaysForCalendar.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
-  const deleteMutation = api.hr.deleteHoliday.useMutation({
-    onSuccess: () => {
-      toast.success("Holiday removed");
-      utils.hr.getHolidaysForYear.invalidate();
-      utils.hr.getHolidaysForCalendar.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  const { data: holidaysList, isLoading } = useHrHolidaysForYear(currentYear);
+
+  const addMutation = useAddHoliday();
+  const deleteMutation = useDeleteHoliday();
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +28,32 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
       toast.error("Enter holiday name");
       return;
     }
-    addMutation.mutate({
-      name: name.trim(),
-      date: new Date(date),
-      message: message.trim() || undefined,
-    });
+    addMutation.mutate(
+      {
+        name: name.trim(),
+        date: new Date(date),
+        message: message.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Holiday added");
+          setName("");
+          setDate(format(new Date(), "yyyy-MM-dd"));
+          setMessage("");
+        },
+        onError: (e) => toast.error(e.message),
+      }
+    );
+  };
+
+  const handleDelete = (holidayId: number) => {
+    deleteMutation.mutate(
+      { holidayId },
+      {
+        onSuccess: () => toast.success("Holiday removed"),
+        onError: (e) => toast.error(e.message),
+      }
+    );
   };
 
   return (
@@ -126,7 +130,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                    onClick={() => deleteMutation.mutate({ holidayId: h.id })}
+                    onClick={() => handleDelete(h.id)}
                     disabled={deleteMutation.isPending}
                     aria-label={`Remove ${h.name}`}
                   >

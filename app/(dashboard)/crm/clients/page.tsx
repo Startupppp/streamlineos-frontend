@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
+import { useClientAccountStats, useClientAccounts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
@@ -47,8 +47,8 @@ export default function ClientAccountsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
 
-  const { data: stats, isLoading: statsLoading } = api.clientAccounts.getStats.useQuery();
-  const { data, isLoading } = api.clientAccounts.getAll.useQuery({
+  const { data: stats, isLoading: statsLoading } = useClientAccountStats();
+  const { data, isLoading } = useClientAccounts({
     status: statusFilter !== "all" ? statusFilter as typeof STATUSES[number] : undefined,
     search: debouncedSearch || undefined,
     page,

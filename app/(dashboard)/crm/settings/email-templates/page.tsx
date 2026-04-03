@@ -23,7 +23,9 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import {
+  useEmailTemplates, useCreateEmailTemplate, useUpdateEmailTemplate, useDeleteEmailTemplate,
+} from "@/lib/api/hooks/crm-settings";
 import { toast } from "sonner";
 
 const VARIABLES = [
@@ -72,37 +74,14 @@ function interpolate(text: string, data: Record<string, string>) {
 }
 
 export default function EmailTemplatesPage() {
-  const utils = api.useUtils();
-  const { data: templates, isLoading } = api.crmEmailTemplates.getAll.useQuery({ limit: 50, offset: 0 });
+  const { data: templates, isLoading } = useEmailTemplates({ limit: 50, offset: 0 });
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [previewId, setPreviewId] = useState<number | null>(null);
 
-  const createTemplate = api.crmEmailTemplates.create.useMutation({
-    onSuccess: () => {
-      utils.crmEmailTemplates.getAll.invalidate();
-      toast.success("Template created");
-      setCreateOpen(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateTemplate = api.crmEmailTemplates.update.useMutation({
-    onSuccess: () => {
-      utils.crmEmailTemplates.getAll.invalidate();
-      toast.success("Template updated");
-      setEditingId(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const deleteTemplate = api.crmEmailTemplates.delete.useMutation({
-    onSuccess: () => {
-      utils.crmEmailTemplates.getAll.invalidate();
-      toast.success("Template deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createTemplate = useCreateEmailTemplate();
+  const updateTemplate = useUpdateEmailTemplate();
+  const deleteTemplate = useDeleteEmailTemplate();
 
   const createForm = useForm<TemplateForm>({
     resolver: zodResolver(templateSchema),
@@ -114,13 +93,24 @@ export default function EmailTemplatesPage() {
   });
 
   const onCreateSubmit = useCallback((data: TemplateForm) => {
-    createTemplate.mutate(data);
-    createForm.reset();
+    createTemplate.mutate(
+      data,
+      {
+        onSuccess: () => { toast.success("Template created"); setCreateOpen(false); createForm.reset(); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [createTemplate, createForm]);
 
   const onEditSubmit = useCallback((data: TemplateForm) => {
     if (editingId === null) return;
-    updateTemplate.mutate({ id: editingId, ...data });
+    updateTemplate.mutate(
+      { id: editingId, ...data },
+      {
+        onSuccess: () => { toast.success("Template updated"); setEditingId(null); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [editingId, updateTemplate]);
 
   const startEdit = useCallback((template: { id: number; name: string; subject: string; body: string }) => {
@@ -233,7 +223,7 @@ export default function EmailTemplatesPage() {
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(template)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteTemplate.mutate({ id: template.id })}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteTemplate.mutate(template.id, { onSuccess: () => toast.success("Template deleted"), onError: (err) => toast.error(err.message) })}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>

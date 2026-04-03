@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
-import { useMyTargets, useTargetLeaderboard, useCreateTarget, useTargetHistory } from "@/lib/hooks/trpc-hooks";
-import { api } from "@/trpc/react";
+import { useMyTargets, useTargetLeaderboard, useCreateTarget, useTargetHistory } from "@/lib/api/hooks/crm";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
@@ -109,7 +109,8 @@ export default function TargetsPage() {
   const { data: session } = useSession();
   const { data: myTargets, isLoading: targetsLoading } = useMyTargets();
   const { data: leaderboard, isLoading: leaderboardLoading } = useTargetLeaderboard();
-  const { data: employees } = api.hr.getEmployees.useQuery();
+  const { data: rawEmployees } = useHrEmployees();
+  const employees = Array.isArray(rawEmployees) ? rawEmployees : rawEmployees?.data ?? [];
   const createTarget = useCreateTarget();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -125,7 +126,7 @@ export default function TargetsPage() {
   const canSetTargets = isAdmin || directReports.length > 0;
 
   const assignableEmployees = useMemo(() => {
-    if (isAdmin) return employees ?? [];
+    if (isAdmin) return employees;
     return directReports;
   }, [isAdmin, employees, directReports]);
 

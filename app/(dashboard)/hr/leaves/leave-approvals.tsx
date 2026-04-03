@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { api } from "@/trpc/react";
+import { useHrPendingWfhRequests, useProcessWfhRequest } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -216,31 +216,28 @@ export function LeaveApprovalsContent({
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const utils = api.useUtils();
-
-  const { data: pendingWfhRequests } =
-    api.hr.getPendingWfhRequests.useQuery();
-
-  const processWfhRequest = api.hr.processWfhRequest.useMutation({
-    onSuccess: (_, variables) => {
-      const action = variables.status === "APPROVED" ? "approved" : "rejected";
-      toast.success(`WFH request ${action}`);
-      utils.hr.getPendingWfhRequests.invalidate();
-      utils.hr.getWfhRequests.invalidate();
-      setRejectDialogOpen(false);
-      setRejectionReason("");
-      setRejectingId(null);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to process request");
-    },
-  });
+  const { data: pendingWfhRequests } = useHrPendingWfhRequests();
+  const processWfhRequestMutation = useProcessWfhRequest();
 
   const handleWfhApprove = useCallback(
     (requestId: number) => {
-      processWfhRequest.mutate({ requestId, status: "APPROVED" });
+      processWfhRequestMutation.mutate(
+        { requestId, status: "APPROVED" },
+        {
+          onSuccess: (_, variables) => {
+            const action = variables.status === "APPROVED" ? "approved" : "rejected";
+            toast.success(`WFH request ${action}`);
+            setRejectDialogOpen(false);
+            setRejectionReason("");
+            setRejectingId(null);
+          },
+          onError: (error) => {
+            toast.error(error.message || "Failed to process request");
+          },
+        }
+      );
     },
-    [processWfhRequest]
+    [processWfhRequestMutation]
   );
 
   const handleWfhRejectOpen = useCallback((requestId: number) => {
@@ -250,14 +247,33 @@ export function LeaveApprovalsContent({
 
   const handleWfhRejectConfirm = useCallback(() => {
     if (rejectingId === null) return;
-    processWfhRequest.mutate({
-      requestId: rejectingId,
-      status: "REJECTED",
-      rejectionReason: rejectionReason || undefined,
-    });
-  }, [rejectingId, rejectionReason, processWfhRequest]);
+    processWfhRequestMutation.mutate(
+      {
+        requestId: rejectingId,
+        status: "REJECTED",
+        rejectionReason: rejectionReason || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("WFH request rejected");
+          setRejectDialogOpen(false);
+          setRejectionReason("");
+          setRejectingId(null);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to process request");
+        },
+      }
+    );
+  }, [rejectingId, rejectionReason, processWfhRequestMutation]);
 
-  /* ─── Issue #186: Filter requests by status ─── */
+  const handleRejectCancel = useCallback(() => {
+    setRejectDialogOpen(false);
+    setRejectionReason("");
+    setRejectingId(null);
+  }, []);
+
+  /* ─── Filter requests by status ─── */
   const approvedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "APPROVED"),
     [allIncomingLeaveRequests]
@@ -283,7 +299,6 @@ export function LeaveApprovalsContent({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Issue #186: Status filter tabs */}
             <Tabs defaultValue="all" className="space-y-4">
               <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
                 <TabsTrigger
@@ -420,10 +435,10 @@ export function LeaveApprovalsContent({
                             size="sm"
                             variant="default"
                             onClick={() => handleWfhApprove(req.id)}
-                            disabled={processWfhRequest.isPending}
+                            disabled={processWfhRequestMutation.isPending}
                             className="h-8"
                           >
-                            {processWfhRequest.isPending ? (
+                            {processWfhRequestMutation.isPending ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (
                               <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -434,7 +449,7 @@ export function LeaveApprovalsContent({
                             size="sm"
                             variant="outline"
                             onClick={() => handleWfhRejectOpen(req.id)}
-                            disabled={processWfhRequest.isPending}
+                            disabled={processWfhRequestMutation.isPending}
                             className="h-8"
                           >
                             <XCircle className="h-3 w-3 mr-1" />
@@ -476,11 +491,7 @@ export function LeaveApprovalsContent({
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => {
-                setRejectDialogOpen(false);
-                setRejectionReason("");
-                setRejectingId(null);
-              }}
+              onClick={handleRejectCancel}
             >
               Cancel
             </Button>
@@ -488,9 +499,9 @@ export function LeaveApprovalsContent({
               variant="destructive"
               className="flex-1"
               onClick={handleWfhRejectConfirm}
-              disabled={processWfhRequest.isPending}
+              disabled={processWfhRequestMutation.isPending}
             >
-              {processWfhRequest.isPending && (
+              {processWfhRequestMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
               )}
               Reject Request
@@ -501,7 +512,7 @@ export function LeaveApprovalsContent({
 
       {/* ─── SR Announcement ─── */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {processWfhRequest.isPending && "Processing WFH request..."}
+        {processWfhRequestMutation.isPending && "Processing WFH request..."}
       </div>
     </>
   );

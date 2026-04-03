@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { api } from "@/trpc/react";
+import { useProjects } from "@/lib/api/hooks/projects";
 import { PageHeader } from "@/components/ui/page-header";
 import { NewProjectDialog } from "./new-project-dialog";
 import { ProjectCard } from "./project-card";
@@ -39,7 +39,7 @@ export default function ProjectsPage() {
     setPage(1);
   }, []);
 
-  const { data, isLoading } = api.project.getProjectsListing.useQuery({
+  const { data, isLoading } = useProjects({
     page,
     limit: 9,
     search: debouncedSearch || undefined,
@@ -47,7 +47,13 @@ export default function ProjectsPage() {
   });
 
   const projects = data?.data ?? [];
-  const pagination = data?.pagination;
+  const pagination = data
+    ? {
+        page: data.page,
+        total: data.total,
+        totalPages: data.totalPages,
+      }
+    : undefined;
 
   const description = useMemo(() => {
     if (!pagination) return "";

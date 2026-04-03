@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { api } from "@/trpc/react";
+import {
+  useRoles,
+  useCreateRole,
+  useUpdateRole,
+  useDeleteRole,
+} from "@/lib/api/hooks/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
   Plus,
   Loader2,
   Trash2,
   Shield,
-  Check,
-  X,
   ChevronDown,
   ChevronRight,
-  Users,
-  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,14 +36,7 @@ import { cn } from "@/lib/utils";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import type { Permission } from "@/lib/rbac/permissions";
-
-type RoleData = {
-  id: number;
-  name: string;
-  slug: string;
-  isSystem: boolean;
-  permissions: string[];
-};
+import type { Role } from "@/types/organization";
 
 const RESOURCE_GROUPS: Record<string, string> = {
   "hr:employees": "HR - Employees",
@@ -90,21 +84,23 @@ export default function RolesPage() {
 }
 
 function RolesContent() {
-  const { data: roles, isLoading } = api.roles.list.useQuery();
-  const [selectedRole, setSelectedRole] = useState<RoleData | null>(null);
+  const { data: roles, isLoading } = useRoles();
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<RoleData | null>(null);
-  const utils = api.useUtils();
+  const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+  const deleteRole = useDeleteRole();
 
-  const deleteRole = api.roles.delete.useMutation({
-    onSuccess: () => {
-      utils.roles.list.invalidate();
-      setDeleteTarget(null);
-      if (selectedRole?.id === deleteTarget?.id) setSelectedRole(null);
-      toast.success("Role deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const handleDeleteRole = () => {
+    if (!deleteTarget) return;
+    deleteRole.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        setDeleteTarget(null);
+        if (selectedRole?.id === deleteTarget.id) setSelectedRole(null);
+        toast.success("Role deleted");
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
 
   const permissionGroups = useMemo(() => groupPermissions(PERMISSIONS), []);
 
@@ -112,7 +108,7 @@ function RolesContent() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Roles & Permissions</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Roles &amp; Permissions</h2>
           <p className="text-sm text-muted-foreground">Manage system roles and their access levels</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-[#bd882c] hover:bg-[#bd882c]/90 text-white">
@@ -137,7 +133,7 @@ function RolesContent() {
                 {(roles ?? []).map((role) => (
                   <button
                     key={role.id}
-                    onClick={() => setSelectedRole(role as RoleData)}
+                    onClick={() => setSelectedRole(role)}
                     className={cn(
                       "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between",
                       selectedRole?.id === role.id && "bg-muted/50 border-l-2 border-[#bd882c]"
@@ -146,7 +142,7 @@ function RolesContent() {
                     <div>
                       <p className="text-sm font-medium">{role.name}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        {(role.permissions as string[])?.length ?? 0} permissions
+                        {role.permissions?.length ?? 0} permissions
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -155,7 +151,7 @@ function RolesContent() {
                       )}
                       {!role.isSystem && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(role as RoleData); }}
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(role); }}
                           className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -173,9 +169,7 @@ function RolesContent() {
           <PermissionMatrix
             role={selectedRole}
             permissionGroups={permissionGroups}
-            onUpdate={() => {
-              utils.roles.list.invalidate();
-            }}
+            onUpdate={(updatedRole) => setSelectedRole(updatedRole)}
           />
         ) : (
           <Card className="flex items-center justify-center min-h-[400px]">
@@ -202,7 +196,7 @@ function RolesContent() {
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
             <Button
               variant="destructive"
-              onClick={() => deleteTarget && deleteRole.mutate({ id: deleteTarget.id })}
+              onClick={handleDeleteRole}
               disabled={deleteRole.isPending}
             >
               {deleteRole.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
@@ -220,17 +214,12 @@ function PermissionMatrix({
   permissionGroups,
   onUpdate,
 }: {
-  role: RoleData;
+  role: Role;
   permissionGroups: [string, Permission[]][];
-  onUpdate: () => void;
+  onUpdate: (updated: Role) => void;
 }) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const updateRole = api.roles.update.useMutation({
-    onSuccess: () => {
-      onUpdate();
-      toast.success("Permissions updated");
-    },
-  });
+  const updateRole = useUpdateRole();
 
   const rolePermissions = new Set(role.permissions ?? []);
 
@@ -241,7 +230,16 @@ function PermissionMatrix({
     } else {
       current.add(permName);
     }
-    updateRole.mutate({ id: role.id, permissions: Array.from(current) });
+    const newPermissions = Array.from(current);
+    updateRole.mutate(
+      { id: role.id, permissions: newPermissions },
+      {
+        onSuccess: () => {
+          onUpdate({ ...role, permissions: newPermissions });
+          toast.success("Permissions updated");
+        },
+      }
+    );
   };
 
   const toggleGroup = (groupName: string) => {
@@ -259,7 +257,16 @@ function PermissionMatrix({
       if (enable) current.add(p.name);
       else current.delete(p.name);
     }
-    updateRole.mutate({ id: role.id, permissions: Array.from(current) });
+    const newPermissions = Array.from(current);
+    updateRole.mutate(
+      { id: role.id, permissions: newPermissions },
+      {
+        onSuccess: () => {
+          onUpdate({ ...role, permissions: newPermissions });
+          toast.success("Permissions updated");
+        },
+      }
+    );
   };
 
   const isCEO = role.slug === "CEO";
@@ -345,24 +352,28 @@ function PermissionMatrix({
 }
 
 function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const utils = api.useUtils();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-
-  const create = api.roles.create.useMutation({
-    onSuccess: () => {
-      utils.roles.list.invalidate();
-      onOpenChange(false);
-      setName("");
-      setSlug("");
-      toast.success("Role created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const create = useCreateRole();
 
   const handleNameChange = (value: string) => {
     setName(value);
     setSlug(value.toUpperCase().replace(/\s+/g, "_").replace(/[^A-Z_]/g, ""));
+  };
+
+  const handleCreate = () => {
+    create.mutate(
+      { name, slug, permissions: [] },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          setName("");
+          setSlug("");
+          toast.success("Role created");
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   return (
@@ -393,7 +404,7 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button
-              onClick={() => create.mutate({ name, slug, permissions: [] })}
+              onClick={handleCreate}
               disabled={!name.trim() || !slug.trim() || create.isPending}
               className="bg-[#bd882c] hover:bg-[#bd882c]/90 text-white"
             >

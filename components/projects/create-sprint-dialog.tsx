@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "@/trpc/react";
+import { useCreateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 
@@ -43,7 +43,6 @@ interface CreateSprintDialogProps {
 
 export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogProps) {
   const [open, setOpen] = useState(false);
-  const utils = api.useUtils();
 
   const form = useForm<CreateSprintInput>({
     resolver: zodResolver(createSprintSchema),
@@ -55,26 +54,28 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
     },
   });
 
-  const createSprint = api.project.createSprint.useMutation({
-    onSuccess: () => {
-      toast.success("Sprint created successfully");
-      utils.project.getSprints.invalidate();
-      setOpen(false);
-      form.reset();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to create sprint");
-    },
-  });
+  const createSprint = useCreateSprint();
 
   function onSubmit(data: CreateSprintInput) {
-    createSprint.mutate({
-      projectId,
-      name: data.name,
-      startDate: new Date(data.startDate),
-      endDate: new Date(data.endDate),
-      goal: data.goal || undefined,
-    });
+    createSprint.mutate(
+      {
+        projectId,
+        name: data.name,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        goal: data.goal || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Sprint created successfully");
+          setOpen(false);
+          form.reset();
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to create sprint");
+        },
+      }
+    );
   }
 
   return (

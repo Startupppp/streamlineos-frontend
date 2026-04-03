@@ -12,7 +12,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useLeadStats } from "@/lib/api/hooks/leads";
+import { useDeals } from "@/lib/api/hooks/crm";
+import { useContacts, useCrmOrganizations } from "@/lib/api/hooks/crm";
 
 function formatINR(v: number) {
   if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
@@ -73,10 +75,10 @@ const NAV_CARDS = [
 ] as const;
 
 export default function CrmHubPage() {
-  const { data: leadStats, isLoading: statsLoading } = api.leads.getStats.useQuery({});
-  const { data: allDeals, isLoading: dealsLoading } = api.deals.getAll.useQuery({});
-  const { data: contactsData, isLoading: contactsLoading } = api.contacts.getContacts.useQuery({ limit: 1 });
-  const { data: orgsData, isLoading: orgsLoading } = api.contacts.getOrganizations.useQuery({ limit: 1 });
+  const { data: leadStats, isLoading: statsLoading } = useLeadStats();
+  const { data: allDeals, isLoading: dealsLoading } = useDeals();
+  const { data: contactsData, isLoading: contactsLoading } = useContacts({ limit: 1 });
+  const { data: orgsData, isLoading: orgsLoading } = useCrmOrganizations({ limit: 1 });
 
   const isLoading = statsLoading || dealsLoading || contactsLoading || orgsLoading;
 
@@ -86,7 +88,7 @@ export default function CrmHubPage() {
       { label: "Total Leads", value: leadStats?.total ?? 0, icon: Target, color: "text-blue-400" },
       { label: "Deals in Pipeline", value: dealsInPipeline, icon: TrendingUp, color: "text-emerald-400" },
       { label: "Contacts", value: contactsData?.total ?? 0, icon: Phone, color: "text-purple-400" },
-      { label: "Organizations", value: orgsData?.total ?? 0, icon: Building2, color: "text-amber-400" },
+      { label: "Organizations", value: orgsData?.totalCount ?? 0, icon: Building2, color: "text-amber-400" },
     ];
   }, [leadStats, allDeals, contactsData, orgsData]);
 

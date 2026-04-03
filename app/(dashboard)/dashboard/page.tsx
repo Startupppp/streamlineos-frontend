@@ -7,10 +7,16 @@ import {
   useDashboardStats,
   useRecentProjects,
   useTeamAvailability,
-  useEmployeeTickets,
   useActiveSprintSummary,
   useRecentActivity,
-} from "@/lib/hooks/trpc-hooks";
+  useRoleStats,
+  useTodayActivities,
+} from "@/lib/api/hooks/dashboard";
+import { useMyIssues } from "@/lib/api/hooks/dashboard";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+} from "@/lib/api/hooks/notifications";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Users,
@@ -36,7 +42,6 @@ import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { api } from "@/trpc/react";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
@@ -55,35 +60,30 @@ export default function DashboardPage() {
   const firstName = getFirstName(session);
   const role = session?.user?.role;
   const isAdmin = role === "CEO" || role === "HR";
-  // All roles now have access to projects and tickets
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
     retryDelay: 1000,
   });
 
-  // Only fetch admin-level data for CEO/HR
   const { data: recentProjects, isLoading: projectsLoading, error: projectsError } = useRecentProjects();
   const { data: teamAvailability, isLoading: teamLoading } = useTeamAvailability();
   const { data: recentActivity, isLoading: activityLoading, error: activityError } = useRecentActivity();
 
-  // Fetch tickets/sprint for project roles and admins
-  const { data: myTicketsData, isLoading: ticketsLoading, error: ticketsError } = useEmployeeTickets(currentUserId ?? "");
+  const { data: myIssuesData, isLoading: ticketsLoading, error: ticketsError } = useMyIssues(
+    currentUserId ?? "",
+  );
+
   const { data: sprintSummary, isLoading: sprintLoading } = useActiveSprintSummary();
 
-  const { data: roleStats } = api.dashboard.getRoleStats.useQuery(undefined, {
-    enabled: !!currentUserId,
-  });
-
-  const { data: todayActivities } = api.dashboard.getTodayScheduledActivities.useQuery(undefined, {
-    enabled: !!currentUserId,
-  });
+  const { data: roleStats } = useRoleStats();
+  const { data: todayActivities } = useTodayActivities();
 
   const prevUnreadRef = useRef<number | null>(null);
-  const { data: unreadData } = api.notifications.getUnreadCount.useQuery(undefined, {
+  const { data: unreadData } = useUnreadNotificationCount({
     refetchInterval: 15000,
   });
-  const { data: latestNotifications } = api.notifications.getAll.useQuery({ limit: 5, unreadOnly: true }, {
+  const { data: latestNotifications } = useNotifications(true, 5, {
     refetchInterval: 15000,
   });
 
@@ -93,11 +93,12 @@ export default function DashboardPage() {
     if (prevUnreadRef.current !== null && currentCount > prevUnreadRef.current && latestNotifications) {
       const newOnes = latestNotifications.slice(0, currentCount - prevUnreadRef.current);
       for (const n of newOnes) {
-        toast(n.title, { description: n.message, duration: 5000 });
+        toast(n.title, { description: n.message ?? undefined, duration: 5000 });
       }
     }
     prevUnreadRef.current = currentCount;
   }, [unreadData, latestNotifications]);
+
   const shownMeetingToastRef = useRef(false);
   useEffect(() => {
     if (todayActivities && todayActivities.length > 0 && !shownMeetingToastRef.current) {
@@ -117,7 +118,6 @@ export default function DashboardPage() {
   const handleGoToDashboard = useCallback(() => router.push("/dashboard"), [router]);
   const handleGoToProjects = useCallback(() => router.push("/projects"), [router]);
 
-  // Role-specific stat cards
   const statCards = useMemo(() => {
     if (!stats) return [];
     const rs = roleStats as Record<string, number> | undefined;
@@ -169,7 +169,7 @@ export default function DashboardPage() {
   }, [stats, role, roleStats]);
 
   const sortedMyTickets = useMemo((): DashboardTicket[] => {
-    const raw = myTicketsData?.data ?? [];
+    const raw = myIssuesData ?? [];
     const toDashboardTicket = (t: (typeof raw)[number]): DashboardTicket => ({
       id: t.id,
       type: t.type,
@@ -177,12 +177,14 @@ export default function DashboardPage() {
       ticketNumber: t.ticketNumber,
       title: t.title,
       priority: t.priority,
-      project: t.project ?? null,
+      project: t.projectId != null
+        ? { id: t.projectId, name: t.projectName, key: t.projectKey }
+        : null,
     });
     const inProgress = raw.filter((t) => t.status === "IN_PROGRESS" || t.status === "IN_REVIEW");
     const todo = raw.filter((t) => t.status === "TODO" || t.status === "BACKLOG");
     return [...inProgress, ...todo].map(toDashboardTicket);
-  }, [myTicketsData]);
+  }, [myIssuesData]);
 
   if (isLoading) {
     return (
@@ -301,7 +303,7 @@ export default function DashboardPage() {
       <motion.div variants={fadeUp} className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} auto-rows-[24rem]`}>
         <div className="sm:col-span-1 min-h-0">
           <RecentProjectsCard
-            projects={recentProjects}
+            projects={recentProjects?.map((p) => ({ ...p, key: p.key ?? "" }))}
             isLoading={projectsLoading}
             error={projectsError}
             onCreateProject={handleGoToProjects}

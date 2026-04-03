@@ -4,7 +4,7 @@ import React from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { api } from "@/trpc/react";
+import { useHrPendingWfhRequests } from "@/lib/api/hooks/hr";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,8 +56,7 @@ export function LeavesWfhContent({
   const isAdmin =
     session?.user?.role === "CEO" || session?.user?.role === "ADMIN" || session?.user?.role === "HR";
 
-  const { data: pendingWfhRequests } =
-    api.hr.getPendingWfhRequests.useQuery();
+  const { data: pendingWfhRequests } = useHrPendingWfhRequests();
 
   const totalPendingApprovals =
     incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);

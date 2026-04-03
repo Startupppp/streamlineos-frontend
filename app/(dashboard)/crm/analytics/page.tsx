@@ -24,7 +24,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useLeadStats, useLeads, useLeadAnalyticsSummary } from "@/lib/api/hooks/leads";
+import { useDeals } from "@/lib/api/hooks/crm";
+import { useSalesLeaderboard } from "@/lib/api/hooks/leads";
+import { useSlaReport } from "@/lib/api/hooks/crm-settings";
 import ExcelJS from "exceljs";
 
 const COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444", "#0EA5E9", "#EC4899", "#6366F1"];
@@ -62,18 +65,18 @@ export default function CrmAnalyticsPage() {
     setDateTo(draftDateTo);
   }, [draftDateFrom, draftDateTo]);
 
-  const { data: leadStats, isLoading: statsLoading } = api.leads.getStats.useQuery({
+  const { data: leadStats, isLoading: statsLoading } = useLeadStats({
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
   });
 
-  const { data: allDeals, isLoading: dealsLoading } = api.deals.getAll.useQuery({});
-  const { data: leaderboard, isLoading: leaderLoading } = api.leads.getSalesLeaderboard.useQuery();
-  const { data: slaReport, isLoading: slaLoading } = api.crmSla.getSlaReport.useQuery();
-  const { data: allLeadsResult, isLoading: leadsLoading } = api.leads.getAll.useQuery({ limit: 100 });
+  const { data: allDeals, isLoading: dealsLoading } = useDeals();
+  const { data: leaderboard, isLoading: leaderLoading } = useSalesLeaderboard();
+  const { data: slaReport, isLoading: slaLoading } = useSlaReport();
+  const { data: allLeadsResult, isLoading: leadsLoading } = useLeads({ limit: 100 });
   const allLeads = allLeadsResult?.leads;
 
-  const { data: analyticsSummary, isLoading: summaryLoading } = api.leads.getAnalyticsSummary.useQuery({
+  const { data: analyticsSummary, isLoading: summaryLoading } = useLeadAnalyticsSummary({
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
   });
@@ -154,7 +157,7 @@ export default function CrmAnalyticsPage() {
     if (!allLeads) return [];
     const buckets = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
     allLeads.forEach(l => {
-      const score = (l as Record<string, unknown>).score as number | null ?? 0;
+      const score = (l as unknown as Record<string, unknown>).score as number | null ?? 0;
       if (score <= 20) buckets["0-20"]++;
       else if (score <= 40) buckets["21-40"]++;
       else if (score <= 60) buckets["41-60"]++;
@@ -491,7 +494,7 @@ export default function CrmAnalyticsPage() {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Lead Assignment Distribution</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.assignmentDistribution, "assignment-distribution")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.assignmentDistribution as unknown as Record<string, unknown>[], "assignment-distribution")}>
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </CardHeader>
@@ -515,7 +518,7 @@ export default function CrmAnalyticsPage() {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Conversion Rate by Source</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.conversionBySource, "conversion-by-source")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.conversionBySource as unknown as Record<string, unknown>[], "conversion-by-source")}>
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </CardHeader>
@@ -541,7 +544,7 @@ export default function CrmAnalyticsPage() {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Revenue Trend</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.monthlyRevenue, "monthly-revenue")}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadXLSX(analyticsSummary.monthlyRevenue as unknown as Record<string, unknown>[], "monthly-revenue")}>
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </CardHeader>

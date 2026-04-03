@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -70,41 +70,14 @@ export default function DealDetailPage({
   const { dealId: dealIdStr } = use(params);
   const dealId = Number(dealIdStr);
   const router = useRouter();
-  const utils = api.useUtils();
 
-  const { data: deal, isLoading } = api.deals.getById.useQuery({ id: dealId });
+  const { data: deal, isLoading } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
 
-  const updateDeal = api.deals.update.useMutation({
-    onSuccess: () => {
-      utils.deals.getById.invalidate({ id: dealId });
-      toast.success("Deal updated");
-      setIsEditing(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const { data: activities } = api.deals.getActivities.useQuery(
-    { dealId, limit: 30 },
-    { enabled: !!deal },
-  );
-
-  const logActivity = api.deals.logActivity.useMutation({
-    onSuccess: () => {
-      utils.deals.getActivities.invalidate({ dealId });
-      toast.success("Activity logged");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateStage = api.deals.updateStage.useMutation({
-    onSuccess: () => {
-      utils.deals.getById.invalidate({ id: dealId });
-      utils.deals.getActivities.invalidate({ dealId });
-      toast.success("Stage updated");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const updateDeal = useUpdateDeal();
+  const { data: activities } = useDealActivities(dealId, 30);
+  const logActivity = useLogDealActivity();
+  const updateStage = useUpdateDealStage();
 
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema) as unknown as Resolver<EditForm>,
@@ -123,23 +96,29 @@ export default function DealDetailPage({
   });
 
   const handleStageChange = useCallback((stage: DealStage) => {
-    updateStage.mutate({ id: dealId, stage });
+    updateStage.mutate(
+      { id: dealId, stage },
+      { onSuccess: () => toast.success("Stage updated"), onError: (err) => toast.error(err.message) }
+    );
   }, [dealId, updateStage]);
 
   const onEditSubmit = useCallback((data: EditForm) => {
-    updateDeal.mutate({
-      id: dealId,
-      name: data.name,
-      value: data.value || "0",
-      stage: data.stage,
-      probability: data.probability,
-      contactPerson: data.contactPerson || undefined,
-      contactEmail: data.contactEmail || undefined,
-      contactPhone: data.contactPhone || undefined,
-      expectedCloseDate: data.expectedCloseDate || undefined,
-      notes: data.notes || undefined,
-      lostReason: data.lostReason || undefined,
-    });
+    updateDeal.mutate(
+      {
+        id: dealId,
+        name: data.name,
+        value: data.value || "0",
+        stage: data.stage,
+        probability: data.probability,
+        contactPerson: data.contactPerson || undefined,
+        contactEmail: data.contactEmail || undefined,
+        contactPhone: data.contactPhone || undefined,
+        expectedCloseDate: data.expectedCloseDate || undefined,
+        notes: data.notes || undefined,
+        lostReason: data.lostReason || undefined,
+      },
+      { onSuccess: () => { toast.success("Deal updated"); setIsEditing(false); }, onError: (err) => toast.error(err.message) }
+    );
   }, [dealId, updateDeal]);
 
   const currentStageIndex = useMemo(() => {
@@ -515,12 +494,10 @@ export default function DealDetailPage({
                     onClick={() => {
                       const notes = prompt(`Enter ${action.label.toLowerCase()} details:`);
                       if (notes) {
-                        logActivity.mutate({
-                          dealId,
-                          type: action.type,
-                          subject: action.label,
-                          notes,
-                        });
+                        logActivity.mutate(
+                          { dealId, type: action.type, subject: action.label, notes },
+                          { onSuccess: () => toast.success("Activity logged"), onError: (err) => toast.error(err.message) }
+                        );
                       }
                     }}
                   >

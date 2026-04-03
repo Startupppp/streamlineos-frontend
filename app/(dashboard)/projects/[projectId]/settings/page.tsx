@@ -5,10 +5,9 @@ import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useProject,
-  useUpdateProjectSettings,
+  useUpdateProject,
   useDeleteProject,
-  vaivammKeys,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks/projects";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -37,12 +36,11 @@ import {
 import { toast } from "sonner";
 import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, User, AlertTriangle } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { useSession } from "next-auth/react";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import {
@@ -68,20 +66,11 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: session } = useSession();
 
   const { data: project, isLoading } = useProject(projectId);
 
-  const deleteMutation = useDeleteProject({
-    onSuccess: () => {
-      toast.success("Project deleted successfully");
-      router.push("/projects");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to delete project");
-    },
-  });
+  const deleteMutation = useDeleteProject();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -101,18 +90,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       : undefined,
   });
 
-  const updateMutation = useUpdateProjectSettings({
-    onSuccess: () => {
-      toast.success("Project settings updated");
-      queryClient.invalidateQueries({
-        queryKey: vaivammKeys.project.project(projectId),
-      });
-      router.push(`/projects/${projectId}`);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update project settings");
-    },
-  });
+  const updateMutation = useUpdateProject();
 
   if (isLoading) {
     return (
@@ -154,10 +132,18 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   }
 
   const onSubmit = (values: FormValues) => {
-    updateMutation.mutate({
-      projectId,
-      ...values,
-    });
+    updateMutation.mutate(
+      { projectId, ...values },
+      {
+        onSuccess: () => {
+          toast.success("Project settings updated");
+          router.push(`/projects/${projectId}`);
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to update project settings");
+        },
+      }
+    );
   };
 
   const isOwner = session?.user?.role === "CEO";
@@ -288,7 +274,20 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={() => deleteMutation.mutate({ projectId })}
+                    onClick={() =>
+                      deleteMutation.mutate(
+                        { projectId },
+                        {
+                          onSuccess: () => {
+                            toast.success("Project deleted successfully");
+                            router.push("/projects");
+                          },
+                          onError: (error) => {
+                            toast.error((error as Error).message || "Failed to delete project");
+                          },
+                        }
+                      )
+                    }
                   >
                     {deleteMutation.isPending ? "Deleting..." : "Delete Project"}
                   </AlertDialogAction>
@@ -304,7 +303,8 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
 
 function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
-    const { data: employees } = api.hr.getEmployees.useQuery();
+    const { data: employeesData } = useHrEmployees();
+    const employees = Array.isArray(employeesData) ? employeesData : employeesData?.data ?? [];
     const [searchQuery, setSearchQuery] = useState("");
 
     const filteredEmployees = useMemo(() => employees?.filter(emp =>

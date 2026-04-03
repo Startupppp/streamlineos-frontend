@@ -17,7 +17,7 @@ export async function PATCH(
 ) {
   return withAuth(async (session) => {
     try {
-      const { id: userId } = await params;
+      const { memberId: userId } = await params;
 
       if (!isCEO(session.user.role)) {
         return err("Only organization owners can update member roles", 403);
@@ -66,7 +66,7 @@ export async function DELETE(
 ) {
   return withAuth(async (session) => {
     try {
-      const { id: userId } = await params;
+      const { memberId: userId } = await params;
 
       if (userId === session.user.id) {
         return err("You cannot remove yourself from the organization", 400);

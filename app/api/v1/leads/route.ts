@@ -3,7 +3,7 @@ import { withAuth, withAdmin, ok, err, parseQuery, parseBody, toNumber } from "@
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
 import { leads, leadActivities, notifications } from "@/lib/db/schema";
-import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "@/server/api/routers/lead-auto-triggers";
+import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 

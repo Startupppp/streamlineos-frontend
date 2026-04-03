@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { api } from "@/trpc/react";
+import { useBulkImportLeads } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
 interface ParsedLead {
@@ -191,18 +191,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     salesPeopleCount?: number;
   } | null>(null);
 
-  const bulkImport = api.leads.bulkImport.useMutation({
-    onSuccess: (data) => {
-      setImportResult(data);
-      if (data.imported > 0) {
-        toast.success(`Imported ${data.imported} leads${data.skipped ? `, ${data.skipped} skipped` : ""}`);
-        onSuccess?.();
-      } else if (data.skipped > 0) {
-        toast.warning(`All ${data.skipped} leads were duplicates and skipped`);
-      }
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const bulkImport = useBulkImportLeads();
 
   const handleFile = useCallback(async (file: File) => {
     const ext = getFileExtension(file.name);
@@ -248,26 +237,40 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleImport = () => {
     if (!parsed?.length) return;
-    bulkImport.mutate({
-      leads: parsed.map(l => ({
-        name: l.name,
-        email: l.email || "",
-        phone: l.phone,
-        company: l.company,
-        source: l.source as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
-        notes: l.notes,
-        city: l.city,
-        designation: l.designation,
-        referredBy: l.referredBy,
-        potentialValue: l.potentialValue,
-        investmentInterest: l.investmentInterest,
-        whatsappNumber: l.whatsappNumber,
-        website: l.website,
-        priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
-        tags: l.tags ? l.tags.split(",").map(t => t.trim()) : undefined,
-      })),
-      autoDistribute,
-    });
+    bulkImport.mutate(
+      {
+        leads: parsed.map(l => ({
+          name: l.name,
+          email: l.email || "",
+          phone: l.phone,
+          company: l.company,
+          source: l.source as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
+          notes: l.notes,
+          city: l.city,
+          designation: l.designation,
+          referredBy: l.referredBy,
+          potentialValue: l.potentialValue,
+          investmentInterest: l.investmentInterest,
+          whatsappNumber: l.whatsappNumber,
+          website: l.website,
+          priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
+          tags: l.tags ? l.tags.split(",").map(t => t.trim()) : undefined,
+        })),
+        autoDistribute,
+      },
+      {
+        onSuccess: (data) => {
+          setImportResult(data);
+          if (data.imported > 0) {
+            toast.success(`Imported ${data.imported} leads${data.skipped ? `, ${data.skipped} skipped` : ""}`);
+            onSuccess?.();
+          } else if (data.skipped > 0) {
+            toast.warning(`All ${data.skipped} leads were duplicates and skipped`);
+          }
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   const downloadTemplate = () => {

@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
+import { useHrDepartments, useCreateDepartment } from "@/lib/api/hooks/hr";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
 interface DepartmentComboboxProps {
@@ -34,26 +36,10 @@ export function DepartmentCombobox({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const qc = useQueryClient();
 
-  const { data: departments = [], refetch: refetchDepartments } =
-    api.hr.getDepartments.useQuery();
-  const utils = api.useUtils();
-  const createDepartment = api.hr.createDepartment.useMutation({
-    onSuccess: async (_, variables) => {
-      await utils.hr.getDepartments.invalidate();
-      const list = await utils.hr.getDepartments.fetch();
-      const found = list.find((d) => d.name === variables.name);
-      if (found) {
-        onValueChange(found.id);
-      }
-      setOpen(false);
-      setSearch("");
-      toast.success(`Department "${variables.name}" added`);
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to add department");
-    },
-  });
+  const { data: departments = [] } = useHrDepartments();
+  const createDepartment = useCreateDepartment();
 
   const selectedDept = useMemo(
     () => departments.find((d) => d.id === value),
@@ -94,7 +80,31 @@ export function DepartmentCombobox({
   const handleAdd = () => {
     const name = search.trim();
     if (!name) return;
-    createDepartment.mutate({ name });
+    createDepartment.mutate(
+      { name },
+      {
+        onSuccess: async () => {
+          await qc.invalidateQueries({ queryKey: queryKeys.hr.departments() });
+          const list = await qc.fetchQuery({
+            queryKey: queryKeys.hr.departments(),
+            queryFn: async () => {
+              const result = await qc.getQueryData<{ id: number; name: string }[]>(queryKeys.hr.departments());
+              return result ?? [];
+            },
+          });
+          const found = list?.find((d: { id: number; name: string }) => d.name === name);
+          if (found) {
+            onValueChange(found.id);
+          }
+          setOpen(false);
+          setSearch("");
+          toast.success(`Department "${name}" added`);
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to add department");
+        },
+      }
+    );
   };
 
   return (

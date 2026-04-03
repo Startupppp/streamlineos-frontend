@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/trpc/react";
+import { useBillingSummary } from "@/lib/api/hooks/projects";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Loader2, DollarSign, FileText, FolderOpen, TrendingUp } from "lucide-react";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -20,24 +20,21 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-  } from "@/components/ui/sheet";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function BillingPage() {
   const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
   const [hourlyRate, setHourlyRate] = useState<number>(50);
 
-  const { data: summary, isLoading } = api.project.getBillingSummary.useQuery({
-      startDate,
-      endDate
-  });
+  const { data: summary, isLoading } = useBillingSummary({ startDate, endDate });
 
   const totalRevenue = summary?.reduce((acc, curr) => acc + (curr.totalHours || 0) * hourlyRate, 0) || 0;
 
@@ -45,7 +42,7 @@ export default function BillingPage() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Billing & Invoices</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Billing &amp; Invoices</h2>
           <p className="text-muted-foreground mt-1">
             {summary ? (
               <>
@@ -59,88 +56,88 @@ export default function BillingPage() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="grid gap-2">
-            <Label>Start Date</Label>
-            <Input
-                type="date"
-                aria-label="Billing start date"
-                max="9999-12-31"
-                value={format(startDate, "yyyy-MM-dd")}
-                onChange={(e) => setStartDate(new Date(e.target.value))}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>End Date</Label>
-            <Input
-                type="date"
-                aria-label="Billing end date"
-                max="9999-12-31"
-                value={format(endDate, "yyyy-MM-dd")}
-                onChange={(e) => setEndDate(new Date(e.target.value))}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Hourly Rate ($)</Label>
-            <Input
-                type="number"
-                aria-label="Hourly billing rate in dollars"
-                value={hourlyRate}
-                onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
-                onBlur={(e) => {
-                  const cleaned = e.target.value.replace(/^0+(?=\d)/, '');
-                  setHourlyRate(parseFloat(cleaned) || 0);
-                }}
-                className="w-[150px]"
-            />
-          </div>
+        <div className="grid gap-2">
+          <Label>Start Date</Label>
+          <Input
+            type="date"
+            aria-label="Billing start date"
+            max="9999-12-31"
+            value={format(startDate, "yyyy-MM-dd")}
+            onChange={(e) => setStartDate(new Date(e.target.value))}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>End Date</Label>
+          <Input
+            type="date"
+            aria-label="Billing end date"
+            max="9999-12-31"
+            value={format(endDate, "yyyy-MM-dd")}
+            onChange={(e) => setEndDate(new Date(e.target.value))}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>Hourly Rate ($)</Label>
+          <Input
+            type="number"
+            aria-label="Hourly billing rate in dollars"
+            value={hourlyRate}
+            onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
+            onBlur={(e) => {
+              const cleaned = e.target.value.replace(/^0+(?=\d)/, "");
+              setHourlyRate(parseFloat(cleaned) || 0);
+            }}
+            className="w-[150px]"
+          />
+        </div>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Billable Hours</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">
-                    {summary?.reduce((acc, curr) => acc + (curr.totalHours || 0), 0).toFixed(1)}h
-                </div>
-                <p className="text-xs text-muted-foreground">In selected period</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Billable Hours</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summary?.reduce((acc, curr) => acc + (curr.totalHours || 0), 0).toFixed(1)}h
+            </div>
+            <p className="text-xs text-muted-foreground">In selected period</p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Estimated Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">
-                    ${totalRevenue.toFixed(2)}
-                </div>
-                <p className="text-xs text-muted-foreground">At ${hourlyRate}/h rate</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Estimated Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${totalRevenue.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">At ${hourlyRate}/h rate</p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Projects Billed</CardTitle>
-                <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{summary?.length || 0}</div>
-                <p className="text-xs text-muted-foreground">With billable activity</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Projects Billed</CardTitle>
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">With billable activity</p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg per Project</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">
-                    ${summary && summary.length > 0 ? (totalRevenue / summary.length).toFixed(2) : "0.00"}
-                </div>
-                <p className="text-xs text-muted-foreground">Average billing amount</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg per Project</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${summary && summary.length > 0 ? (totalRevenue / summary.length).toFixed(2) : "0.00"}
+            </div>
+            <p className="text-xs text-muted-foreground">Average billing amount</p>
+          </CardContent>
         </Card>
       </div>
 
@@ -173,78 +170,78 @@ export default function BillingPage() {
                     <TableCell>${hourlyRate}/h</TableCell>
                     <TableCell>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</TableCell>
                     <TableCell>
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  Generate Invoice
-                                  <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">Preview</Badge>
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent className="overflow-y-auto">
-                                <SheetHeader>
-                                    <SheetTitle>Invoice Preview</SheetTitle>
-                                    <SheetDescription>
-                                        Draft invoice for {item.projectName}
-                                    </SheetDescription>
-                                </SheetHeader>
-                                <div className="space-y-4 py-4">
-                                     <div className="flex justify-between border-b pb-2">
-                                         <span className="font-bold">Period:</span>
-                                         <span>{format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}</span>
-                                     </div>
-                                     <div className="flex justify-between">
-                                         <span>Total Hours:</span>
-                                         <span>{item.totalHours?.toFixed(1) || 0}h</span>
-                                     </div>
-                                     <div className="flex justify-between">
-                                         <span>Rate:</span>
-                                         <span>${hourlyRate}/h</span>
-                                     </div>
-                                     <div className="flex justify-between border-t pt-2 font-bold text-lg">
-                                         <span>Total Due:</span>
-                                         <span>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</span>
-                                     </div>
-                                </div>
-                                <SheetFooter>
-                                    <Button onClick={async () => {
-                                      try {
-                                        const { default: jsPDF } = await import("jspdf");
-                                        const doc = new jsPDF();
-                                        doc.setFontSize(22);
-                                        doc.text("INVOICE", 20, 25);
-                                        doc.setFontSize(10);
-                                        doc.setTextColor(100);
-                                        doc.text("Vaivamm Capital — Capital Advisors LLP", 20, 33);
-                                        doc.text(`Date: ${format(new Date(), "MMM d, yyyy")}`, 20, 40);
-                                        doc.setDrawColor(189, 136, 44);
-                                        doc.line(20, 45, 190, 45);
-                                        doc.setTextColor(0);
-                                        doc.setFontSize(14);
-                                        doc.text(`Project: ${item.projectName}`, 20, 55);
-                                        doc.setFontSize(11);
-                                        doc.text(`Period: ${format(startDate, "MMM d")} — ${format(endDate, "MMM d, yyyy")}`, 20, 65);
-                                        doc.text(`Total Hours: ${item.totalHours?.toFixed(1) || 0}h`, 20, 75);
-                                        doc.text(`Rate: $${hourlyRate}/h`, 20, 83);
-                                        doc.line(20, 90, 190, 90);
-                                        doc.setFontSize(16);
-                                        doc.text(`Total Due: $${((item.totalHours || 0) * hourlyRate).toFixed(2)}`, 20, 102);
-                                        doc.setFontSize(9);
-                                        doc.setTextColor(150);
-                                        doc.text("Payment Terms: Net 30 days", 20, 115);
-                                        doc.text("Thank you for your business.", 20, 122);
-                                        doc.save(`invoice-${item.projectName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-                                        toast.success("Invoice PDF downloaded");
-                                      } catch {
-                                        toast.error("Failed to generate invoice");
-                                      }
-                                    }}>Download PDF</Button>
-                                </SheetFooter>
-                            </SheetContent>
-                        </Sheet>
+                      <Sheet>
+                        <SheetTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            Generate Invoice
+                            <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">Preview</Badge>
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent className="overflow-y-auto">
+                          <SheetHeader>
+                            <SheetTitle>Invoice Preview</SheetTitle>
+                            <SheetDescription>
+                              Draft invoice for {item.projectName}
+                            </SheetDescription>
+                          </SheetHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="flex justify-between border-b pb-2">
+                              <span className="font-bold">Period:</span>
+                              <span>{format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Total Hours:</span>
+                              <span>{item.totalHours?.toFixed(1) || 0}h</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Rate:</span>
+                              <span>${hourlyRate}/h</span>
+                            </div>
+                            <div className="flex justify-between border-t pt-2 font-bold text-lg">
+                              <span>Total Due:</span>
+                              <span>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</span>
+                            </div>
+                          </div>
+                          <SheetFooter>
+                            <Button onClick={async () => {
+                              try {
+                                const { default: jsPDF } = await import("jspdf");
+                                const doc = new jsPDF();
+                                doc.setFontSize(22);
+                                doc.text("INVOICE", 20, 25);
+                                doc.setFontSize(10);
+                                doc.setTextColor(100);
+                                doc.text("Vaivamm Capital — Capital Advisors LLP", 20, 33);
+                                doc.text(`Date: ${format(new Date(), "MMM d, yyyy")}`, 20, 40);
+                                doc.setDrawColor(189, 136, 44);
+                                doc.line(20, 45, 190, 45);
+                                doc.setTextColor(0);
+                                doc.setFontSize(14);
+                                doc.text(`Project: ${item.projectName}`, 20, 55);
+                                doc.setFontSize(11);
+                                doc.text(`Period: ${format(startDate, "MMM d")} — ${format(endDate, "MMM d, yyyy")}`, 20, 65);
+                                doc.text(`Total Hours: ${item.totalHours?.toFixed(1) || 0}h`, 20, 75);
+                                doc.text(`Rate: $${hourlyRate}/h`, 20, 83);
+                                doc.line(20, 90, 190, 90);
+                                doc.setFontSize(16);
+                                doc.text(`Total Due: $${((item.totalHours || 0) * hourlyRate).toFixed(2)}`, 20, 102);
+                                doc.setFontSize(9);
+                                doc.setTextColor(150);
+                                doc.text("Payment Terms: Net 30 days", 20, 115);
+                                doc.text("Thank you for your business.", 20, 122);
+                                doc.save(`invoice-${item.projectName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+                                toast.success("Invoice PDF downloaded");
+                              } catch {
+                                toast.error("Failed to generate invoice");
+                              }
+                            }}>Download PDF</Button>
+                          </SheetFooter>
+                        </SheetContent>
+                      </Sheet>
                     </TableCell>
                   </TableRow>
                 ))}
-                 {!summary?.length && (
+                {!summary?.length && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                       <div className="flex flex-col items-center gap-3">

@@ -61,3 +61,29 @@ export const useMarkAllNotificationsRead = () => {
     },
   });
 };
+
+export const useDeleteNotification = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationFn: (id) =>
+      apiClient.delete<{ success: boolean }>(`/notifications/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.notifications.all,
+      });
+    },
+  });
+};
+
+export const useClearAllNotifications = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, void>({
+    mutationFn: () =>
+      apiClient.delete<{ success: boolean }>("/notifications/clear-all"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.notifications.all,
+      });
+    },
+  });
+};

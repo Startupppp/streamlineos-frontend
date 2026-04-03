@@ -15,8 +15,12 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
-import { api } from "@/trpc/react";
-import { RouterOutputs } from "@/lib/trpc";
+import {
+  useAllTeamTimesheets,
+  useProjects,
+} from "@/lib/api/hooks/projects";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
+import type { TimeEntryWithUser } from "@/types/projects";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,7 +64,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 
-type TimesheetEntry = RouterOutputs["project"]["getAllTeamTimesheets"][number];
+type TimesheetEntry = TimeEntryWithUser;
 
 const ITEMS_PER_PAGE = 10;
 
@@ -394,7 +398,7 @@ export default function TeamTimesheetsPage() {
     return { start: format(prevStart, "yyyy-MM-dd"), end: format(prevEnd, "yyyy-MM-dd") };
   }, []);
 
-  const { data: timesheets, isLoading } = api.project.getAllTeamTimesheets.useQuery({
+  const { data: timesheets, isLoading } = useAllTeamTimesheets({
     userId: selectedEmployee === "all" ? undefined : selectedEmployee,
     projectId: selectedProject === "all" ? undefined : parseInt(selectedProject),
     startDate: dateRange.start,
@@ -402,13 +406,16 @@ export default function TeamTimesheetsPage() {
     status: selectedStatus === "all" ? undefined : (selectedStatus as "PENDING" | "APPROVED" | "REJECTED"),
   });
 
-  const { data: prevWeekTimesheets } = api.project.getAllTeamTimesheets.useQuery({
+  const { data: prevWeekTimesheets } = useAllTeamTimesheets({
     startDate: prevWeekRange.start,
     endDate: prevWeekRange.end,
   });
 
-  const { data: employees } = api.hr.getEmployees.useQuery();
-  const { data: projects } = api.project.getProjects.useQuery();
+  const { data: employeesData } = useHrEmployees();
+  const employees = Array.isArray(employeesData) ? employeesData : employeesData?.data ?? [];
+
+  const { data: projectsData } = useProjects();
+  const projects = projectsData?.data ?? [];
 
   const statistics = useMemo(() => {
     if (!timesheets) return { totalHours: 0, uniqueEmployees: 0, uniqueProjects: 0, avgHoursPerDay: 0 };

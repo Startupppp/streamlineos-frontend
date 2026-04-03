@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { api } from "@/trpc/react";
+import { useCreateTicket } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 
 const createEpicSchema = z.object({
@@ -49,7 +49,6 @@ interface CreateEpicDialogProps {
 
 export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) {
   const [open, setOpen] = useState(false);
-  const utils = api.useUtils();
 
   const form = useForm<CreateEpicInput>({
     resolver: zodResolver(createEpicSchema),
@@ -60,26 +59,28 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
     },
   });
 
-  const createTicket = api.project.createTicket.useMutation({
-    onSuccess: () => {
-      toast.success("Epic created successfully");
-      utils.project.getProjectDetails.invalidate();
-      setOpen(false);
-      form.reset();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to create epic");
-    },
-  });
+  const createTicket = useCreateTicket();
 
   function onSubmit(data: CreateEpicInput) {
-    createTicket.mutate({
-      projectId,
-      title: data.title,
-      description: data.description || undefined,
-      type: "EPIC",
-      priority: data.priority,
-    });
+    createTicket.mutate(
+      {
+        projectId,
+        title: data.title,
+        description: data.description || undefined,
+        type: "EPIC",
+        priority: data.priority,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Epic created successfully");
+          setOpen(false);
+          form.reset();
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to create epic");
+        },
+      }
+    );
   }
 
   return (

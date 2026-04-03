@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/trpc/react";
+import { useHrPerformanceReviews, useHrGoals } from "@/lib/api/hooks/hr";
+import type { PerformanceReview, Goal } from "@/types/hr";
+
+type ReviewWithUsers = PerformanceReview & {
+  reviewee?: { name?: string | null } | null;
+  reviewer?: { name?: string | null } | null;
+  overallScore?: number | null;
+};
 import { format } from "date-fns";
 import {
   Plus,
@@ -63,7 +70,7 @@ function PerformanceContent() {
 }
 
 function ReviewsTab() {
-  const { data: reviews, isLoading } = api.hr.getPerformanceReviews.useQuery(void 0 as never, { retry: false });
+  const { data: reviews, isLoading } = useHrPerformanceReviews();
   const [createOpen, setCreateOpen] = useState(false);
 
   return (
@@ -85,22 +92,22 @@ function ReviewsTab() {
         </Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(reviews) ? reviews : []).map((review: Record<string, unknown>) => (
-            <Card key={review.id as number} className="hover:shadow-md transition-shadow">
+          {(Array.isArray(reviews) ? reviews : []).map((review: ReviewWithUsers) => (
+            <Card key={review.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <Badge variant={(review.status as string) === "COMPLETED" ? "default" : "secondary"} className="text-xs">
-                    {(review.status as string) ?? "PENDING"}
+                  <Badge variant={review.status === "ACKNOWLEDGED" ? "default" : "secondary"} className="text-xs">
+                    {review.status ?? "DRAFT"}
                   </Badge>
-                  {(review.overallScore as number) > 0 && (
+                  {(review.overallScore ?? 0) > 0 && (
                     <div className="flex items-center gap-1 text-[#bd882c]">
                       <Star className="h-3.5 w-3.5 fill-current" />
-                      <span className="text-sm font-bold">{review.overallScore as number}/5</span>
+                      <span className="text-sm font-bold">{review.overallScore}/5</span>
                     </div>
                   )}
                 </div>
-                <p className="text-sm font-semibold">{(review.reviewee as Record<string, string>)?.name ?? "Employee"}</p>
-                <p className="text-xs text-muted-foreground">Reviewed by {(review.reviewer as Record<string, string>)?.name ?? "Manager"}</p>
+                <p className="text-sm font-semibold">{review.reviewee?.name ?? "Employee"}</p>
+                <p className="text-xs text-muted-foreground">Reviewed by {review.reviewer?.name ?? "Manager"}</p>
               </CardContent>
             </Card>
           ))}
@@ -119,7 +126,7 @@ function ReviewsTab() {
 }
 
 function GoalsTab() {
-  const { data: goals, isLoading } = api.hr.getGoals.useQuery(void 0 as never, { retry: false });
+  const { data: goals, isLoading } = useHrGoals();
 
   return (
     <>
@@ -140,27 +147,27 @@ function GoalsTab() {
         </Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(goals) ? goals : []).map((goal: Record<string, unknown>) => (
-            <Card key={goal.id as number} className="hover:shadow-md transition-shadow">
+          {(Array.isArray(goals) ? goals : []).map((goal: Goal) => (
+            <Card key={goal.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <Badge variant={(goal.status as string) === "COMPLETED" ? "default" : "secondary"} className="text-xs">
-                    {((goal.status as string) ?? "IN_PROGRESS").replace("_", " ")}
+                  <Badge variant={goal.status === "COMPLETED" ? "default" : "secondary"} className="text-xs">
+                    {(goal.status ?? "IN_PROGRESS").replace("_", " ")}
                   </Badge>
-                  {(goal.targetDate as string) && (
+                  {goal.endDate && (
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(goal.targetDate as string), "MMM d")}
+                      {format(new Date(goal.endDate), "MMM d")}
                     </span>
                   )}
                 </div>
-                <p className="text-sm font-semibold">{goal.title as string}</p>
+                <p className="text-sm font-semibold">{goal.title}</p>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium">{(goal.progress as number) ?? 0}%</span>
+                    <span className="font-medium">{goal.progress ?? 0}%</span>
                   </div>
-                  <Progress value={(goal.progress as number) ?? 0} className="h-2" />
+                  <Progress value={goal.progress ?? 0} className="h-2" />
                 </div>
               </CardContent>
             </Card>

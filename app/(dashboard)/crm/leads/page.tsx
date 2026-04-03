@@ -11,9 +11,10 @@ import { LeadExportDialog } from "@/components/crm/lead-export-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,
-} from "@/lib/hooks/trpc-hooks";
+  useLeads, useSalesTeamCapacity, useUpdateLead, useAssignLead,
+  useBulkUpdateLeads, useBulkDeleteLeads,
+} from "@/lib/api/hooks/leads";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { LeadsStatsBar } from "./_components/leads-stats-bar";
 import { LeadsToolbar } from "./_components/leads-toolbar";
@@ -46,7 +47,7 @@ export default function LeadsPipelinePage() {
   const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
   const [sourceFilter, setSourceFilter] = useState<string | undefined>();
 
-  const { data: tableData, isLoading: tableLoading } = api.leads.getAll.useQuery({
+  const { data: tableData, isLoading: tableLoading } = useLeads({
     search: debouncedSearchQuery || undefined,
     sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
     sortOrder: sortDirection,
@@ -55,30 +56,18 @@ export default function LeadsPipelinePage() {
     status: statusFilter as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" | undefined,
     priority: priorityFilter as "HOT" | "WARM" | "COLD" | undefined,
     source: sourceFilter as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other" | undefined,
-  }, { enabled: view === "table" });
+  });
 
-  const { data: teamCapacity } = api.leads.getSalesTeamCapacity.useQuery(undefined, { enabled: view === "table" });
+  const { data: teamCapacity } = useSalesTeamCapacity();
   const teamMembers = useMemo(
     () => (teamCapacity || []).map(m => ({ id: m.id, name: m.name, image: m.image })),
     [teamCapacity],
   );
 
-  const updateLeadMutation = api.leads.update.useMutation({
-    onSuccess: () => { refetchBoard(); },
-    onError: (err) => toast.error(err.message),
-  });
-  const assignLead = api.leads.assign.useMutation({
-    onSuccess: () => { refetchBoard(); toast.success("Lead assigned"); },
-    onError: (err) => toast.error(err.message),
-  });
-  const bulkUpdateMutation = api.leads.bulkUpdate.useMutation({
-    onSuccess: (data) => { refetchBoard(); toast.success(`${data.updated} leads updated`); },
-    onError: (err) => toast.error(err.message),
-  });
-  const bulkDeleteMutation = api.leads.bulkDelete.useMutation({
-    onSuccess: (data) => { refetchBoard(); toast.success(`${data.deleted} leads deleted`); },
-    onError: (err) => toast.error(err.message),
-  });
+  const updateLeadMutation = useUpdateLead();
+  const assignLeadMutation = useAssignLead();
+  const bulkUpdateMutation = useBulkUpdateLeads();
+  const bulkDeleteMutation = useBulkDeleteLeads();
 
   const createLead = useCreateLead();
   const updateStatus = useUpdateLeadStatus();
@@ -255,9 +244,9 @@ export default function LeadsPipelinePage() {
               }
             }}
             onPriorityChange={(id, priority) => updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" })}
-            onAssign={(id, userId) => assignLead.mutate({ leadId: id, assignedToId: userId })}
-            onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } })}
-            onBulkDelete={(ids) => bulkDeleteMutation.mutate({ leadIds: ids })}
+            onAssign={(id, userId) => assignLeadMutation.mutate({ leadId: id, assignedToId: userId }, { onSuccess: () => { refetchBoard(); toast.success("Lead assigned"); }, onError: (err) => toast.error(err.message) })}
+            onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.updated} leads updated`); }, onError: (err) => toast.error(err.message) })}
+            onBulkDelete={(ids) => bulkDeleteMutation.mutate({ leadIds: ids }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.deleted} leads deleted`); }, onError: (err) => toast.error(err.message) })}
             teamMembers={teamMembers}
             isLoading={tableLoading}
             isAdmin={isAdmin}

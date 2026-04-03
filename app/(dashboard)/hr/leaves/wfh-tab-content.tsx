@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, addDays, isBefore, isAfter, startOfDay } from "date-fns";
 import { motion } from "framer-motion";
-import { api } from "@/trpc/react";
+import { useHrWfhRequests, useCreateWfhRequest } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,22 +86,8 @@ interface WfhTabContentProps {
 export function WfhTabContent({ approvers }: WfhTabContentProps) {
   const [wfhStatusFilter, setWfhStatusFilter] = useState<string>("ALL");
 
-  const utils = api.useUtils();
-
-  const { data: myWfhRequests, isLoading: wfhLoading } =
-    api.hr.getWfhRequests.useQuery();
-
-  const createWfhRequest = api.hr.createWfhRequest.useMutation({
-    onSuccess: () => {
-      toast.success("WFH request submitted successfully");
-      utils.hr.getWfhRequests.invalidate();
-      utils.hr.getPendingWfhRequests.invalidate();
-      wfhForm.reset();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to submit WFH request");
-    },
-  });
+  const { data: myWfhRequests, isLoading: wfhLoading } = useHrWfhRequests();
+  const createWfhRequest = useCreateWfhRequest();
 
   const wfhForm = useForm<WfhFormValues>({
     resolver: zodResolver(wfhFormSchema),
@@ -115,11 +101,22 @@ export function WfhTabContent({ approvers }: WfhTabContentProps) {
   });
 
   function onWfhSubmit(data: WfhFormValues) {
-    createWfhRequest.mutate({
-      date: new Date(data.startDate),
-      reason: `${data.reason}${data.notes ? ` — ${data.notes}` : ""}`,
-      approverId: data.approverId,
-    });
+    createWfhRequest.mutate(
+      {
+        date: new Date(data.startDate),
+        reason: `${data.reason}${data.notes ? ` — ${data.notes}` : ""}`,
+        approverId: data.approverId,
+      },
+      {
+        onSuccess: () => {
+          toast.success("WFH request submitted successfully");
+          wfhForm.reset();
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to submit WFH request");
+        },
+      }
+    );
   }
 
   const filteredWfhRequests = useMemo(() => {

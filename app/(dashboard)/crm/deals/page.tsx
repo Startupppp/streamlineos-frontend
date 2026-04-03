@@ -32,7 +32,8 @@ import {
 } from "@/components/ui/select";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useDeals, useUpdateDealStage, useDeleteDeal, useCreateDeal } from "@/lib/api/hooks/crm";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 
 const STAGES = [
@@ -54,9 +55,9 @@ function formatINR(v: number) {
 }
 
 export default function DealsPage() {
-  const utils = api.useUtils();
-  const { data: allDeals, isLoading } = api.deals.getAll.useQuery();
-  const { data: employees } = api.hr.getEmployees.useQuery();
+  const { data: allDeals, isLoading } = useDeals();
+  const { data: rawEmployees } = useHrEmployees();
+  const employees = Array.isArray(rawEmployees) ? rawEmployees : rawEmployees?.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
   const [dealToDelete, setDealToDelete] = useState<number | null>(null);
 
@@ -84,19 +85,8 @@ export default function DealsPage() {
     localStorage.setItem("deals-view", v);
   }, []);
 
-  const updateStageMutation = api.deals.updateStage.useMutation({
-    onSuccess: () => {
-      utils.deals.getAll.invalidate();
-      toast.success("Deal stage updated");
-    },
-  });
-
-  const deleteMutation = api.deals.delete.useMutation({
-    onSuccess: () => {
-      utils.deals.getAll.invalidate();
-      toast.success("Deal deleted");
-    },
-  });
+  const updateStageMutation = useUpdateDealStage();
+  const deleteMutation = useDeleteDeal();
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, typeof allDeals> = {};
@@ -203,11 +193,8 @@ export default function DealsPage() {
               <DialogTitle>Create New Deal</DialogTitle>
             </DialogHeader>
             <CreateDealForm
-              employees={employees || []}
-              onSuccess={() => {
-                setCreateOpen(false);
-                utils.deals.getAll.invalidate();
-              }}
+              employees={employees}
+              onSuccess={() => setCreateOpen(false)}
             />
           </DialogContent>
         </Dialog>
@@ -241,7 +228,7 @@ export default function DealsPage() {
             sortColumn={dealSortCol}
             sortDirection={dealSortDir}
             onSort={handleDealSort}
-            onStageChange={(id, stage) => updateStageMutation.mutate({ id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" })}
+            onStageChange={(id, stage) => updateStageMutation.mutate({ id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" }, { onSuccess: () => toast.success("Deal stage updated") })}
             isLoading={isLoading}
           />
         </motion.div>
@@ -282,7 +269,7 @@ export default function DealsPage() {
                               {STAGES.filter(s => s.key !== deal.stage).map(s => (
                                 <DropdownMenuItem
                                   key={s.key}
-                                  onClick={() => updateStageMutation.mutate({ id: deal.id, stage: s.key })}
+                                  onClick={() => updateStageMutation.mutate({ id: deal.id, stage: s.key }, { onSuccess: () => toast.success("Deal stage updated") })}
                                 >
                                   <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: s.color }} />
                                   Move to {s.label}
@@ -370,7 +357,7 @@ export default function DealsPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { if (dealToDelete) deleteMutation.mutate({ id: dealToDelete }); setDealToDelete(null); }}
+              onClick={() => { if (dealToDelete) deleteMutation.mutate(dealToDelete, { onSuccess: () => toast.success("Deal deleted") }); setDealToDelete(null); }}
             >
               Delete
             </AlertDialogAction>
@@ -388,29 +375,29 @@ function CreateDealForm({
   employees: Array<{ id: string; name: string | null }>;
   onSuccess: () => void;
 }) {
-  const createMutation = api.deals.create.useMutation({
-    onSuccess: () => {
-      toast.success("Deal created");
-      onSuccess();
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createMutation = useCreateDeal();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    createMutation.mutate({
-      name: fd.get("name") as string,
-      value: (fd.get("value") as string) || "0",
-      stage: (fd.get("stage") as DealStage) || "LEAD",
-      probability: Number(fd.get("probability") || 0),
-      contactPerson: (fd.get("contactPerson") as string) || undefined,
-      contactEmail: (fd.get("contactEmail") as string) || undefined,
-      contactPhone: (fd.get("contactPhone") as string) || undefined,
-      assignedToId: (fd.get("assignedToId") as string) || undefined,
-      expectedCloseDate: (fd.get("expectedCloseDate") as string) || undefined,
-      notes: (fd.get("notes") as string) || undefined,
-    });
+    createMutation.mutate(
+      {
+        name: fd.get("name") as string,
+        value: (fd.get("value") as string) || "0",
+        stage: (fd.get("stage") as DealStage) || "LEAD",
+        probability: Number(fd.get("probability") || 0),
+        contactPerson: (fd.get("contactPerson") as string) || undefined,
+        contactEmail: (fd.get("contactEmail") as string) || undefined,
+        contactPhone: (fd.get("contactPhone") as string) || undefined,
+        assignedToId: (fd.get("assignedToId") as string) || undefined,
+        expectedCloseDate: (fd.get("expectedCloseDate") as string) || undefined,
+        notes: (fd.get("notes") as string) || undefined,
+      },
+      {
+        onSuccess: () => { toast.success("Deal created"); onSuccess(); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   return (

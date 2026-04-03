@@ -22,7 +22,9 @@ import {
   ClipboardList, FileCheck, Search, CheckCircle2,
   ArrowRight, Plus, User,
 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useClientAccount, useUpdateClientAccount, useLogClientActivity } from "@/lib/api/hooks/crm";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -51,10 +53,11 @@ function formatINR(val: string | number | null | undefined): string {
 }
 
 export default function ClientAccountDetailPage() {
+  const qc = useQueryClient();
   const params = useParams();
   const clientId = Number(params.clientId);
 
-  const { data: account, isLoading, refetch } = api.clientAccounts.getById.useQuery({ id: clientId }, { enabled: !!clientId });
+  const { data: account, isLoading } = useClientAccount(clientId);
 
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityType, setActivityType] = useState("note");
@@ -66,28 +69,22 @@ export default function ClientAccountDetailPage() {
   const [planName, setPlanName] = useState("");
   const [transactionRef, setTransactionRef] = useState("");
 
-  const updateStatusMutation = api.clientAccounts.updateStatus.useMutation({
-    onSuccess: () => { refetch(); toast.success("Status updated"); },
-    onError: (err) => toast.error(err.message),
-  });
+  const updateStatusMutation = useUpdateClientAccount();
+  const logActivityMutation = useLogClientActivity();
 
-  const logActivityMutation = api.clientAccounts.logActivity.useMutation({
-    onSuccess: () => {
-      refetch();
-      setShowActivityForm(false);
-      setActivityTitle("");
-      setActivityDescription("");
-      toast.success("Activity logged");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  function invalidateClient() {
+    qc.invalidateQueries({ queryKey: queryKeys.clients.detail(clientId) });
+  }
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus === "INVESTED") {
       setShowInvestmentModal(true);
       return;
     }
-    updateStatusMutation.mutate({ id: clientId, status: newStatus as typeof STATUSES[number] });
+    updateStatusMutation.mutate(
+      { id: clientId, status: newStatus as typeof STATUSES[number] },
+      { onSuccess: () => { invalidateClient(); toast.success("Status updated"); }, onError: (err) => toast.error(err.message) }
+    );
   };
 
   const handleInvestmentSubmit = () => {
@@ -95,13 +92,16 @@ export default function ClientAccountDetailPage() {
       toast.error("Investment amount is required");
       return;
     }
-    updateStatusMutation.mutate({
-      id: clientId,
-      status: "INVESTED",
-      investmentAmount,
-      planName: planName || undefined,
-      transactionRef: transactionRef || undefined,
-    });
+    updateStatusMutation.mutate(
+      {
+        id: clientId,
+        status: "INVESTED",
+        investmentAmount,
+        planName: planName || undefined,
+        transactionRef: transactionRef || undefined,
+      },
+      { onSuccess: () => { invalidateClient(); toast.success("Status updated"); }, onError: (err) => toast.error(err.message) }
+    );
     setShowInvestmentModal(false);
   };
 
@@ -347,12 +347,19 @@ export default function ClientAccountDetailPage() {
             <Button variant="outline" onClick={() => setShowActivityForm(false)}>Cancel</Button>
             <Button
               disabled={!activityTitle.trim() || logActivityMutation.isPending}
-              onClick={() => logActivityMutation.mutate({
-                clientAccountId: clientId,
-                activityType,
-                title: activityTitle,
-                description: activityDescription || undefined,
-              })}
+              onClick={() => logActivityMutation.mutate(
+                { clientAccountId: clientId, activityType, title: activityTitle, description: activityDescription || undefined },
+                {
+                  onSuccess: () => {
+                    invalidateClient();
+                    setShowActivityForm(false);
+                    setActivityTitle("");
+                    setActivityDescription("");
+                    toast.success("Activity logged");
+                  },
+                  onError: (err) => toast.error(err.message),
+                }
+              )}
             >
               Log Activity
             </Button>

@@ -4,7 +4,7 @@ import { getLead } from "@/server/queries/leads";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { recalculateLeadScore } from "@/server/api/routers/lead-auto-triggers";
+import { recalculateLeadScore } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 

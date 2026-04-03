@@ -38,37 +38,42 @@ function VerifyEmailForm() {
     }, 1000);
   };
 
-  const verifyEmail = useVerifyEmail({
-    onSuccess: () => {
-      setIsVerified(true);
-      toast.success("Email verified successfully!");
-      setTimeout(() => router.push("/signin"), 2000);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Verification failed");
-    },
-  });
-
-  const resendVerification = useResendVerificationEmail({
-    onSuccess: () => {
-      toast.success("Verification email resent!");
-      startCooldown();
-    },
-    onError: () => {
-      toast.error("Failed to resend email");
-    },
-  });
+  const verifyEmail = useVerifyEmail();
+  const resendVerification = useResendVerificationEmail();
 
   useEffect(() => {
     if (token && !hasVerified.current) {
       hasVerified.current = true;
-      verifyEmail.mutate({ token });
+      verifyEmail.mutate(
+        { token },
+        {
+          onSuccess: () => {
+            setIsVerified(true);
+            toast.success("Email verified successfully!");
+            setTimeout(() => router.push("/signin"), 2000);
+          },
+          onError: (error) => {
+            toast.error(error.message || "Verification failed");
+          },
+        }
+      );
     }
   }, [token]);
 
   const handleResend = () => {
     if (!email || cooldown > 0) return;
-    resendVerification.mutate({ email });
+    resendVerification.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          toast.success("Verification email resent!");
+          startCooldown();
+        },
+        onError: () => {
+          toast.error("Failed to resend email");
+        },
+      }
+    );
   };
 
   if (isVerified) {

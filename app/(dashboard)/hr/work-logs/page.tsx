@@ -3,13 +3,14 @@
 import { useState, useMemo, useCallback } from "react";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
 import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/hooks/trpc-hooks";
+import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
 import { Loader2, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { api } from "@/trpc/react";
+import type { Employee } from "@/types/hr";
 
 import {
   WorkLogFilterActions,
@@ -46,13 +47,13 @@ export default function WorkLogsPage() {
 
   const isAdminOrCeo = session?.user?.role === "CEO" || session?.user?.role === "HR" || session?.user?.role === "ADMIN";
 
-  const { data: employees } = api.hr.getEmployees.useQuery(undefined, {
-    enabled: isAdminOrCeo,
-  });
+  const { data: employeesRaw } = useHrEmployees(isAdminOrCeo ? undefined : undefined);
+  const { data: departments } = useHrDepartments();
 
-  const { data: departments } = api.hr.getDepartments.useQuery(undefined, {
-    enabled: isAdminOrCeo,
-  });
+  const employees = useMemo(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : (employeesRaw as { data?: Employee[] })?.data ?? []) as Employee[],
+    [employeesRaw]
+  );
 
   /* ─── Count active filters (beyond defaults) ─── */
   const activeFilterCount = useMemo(() => {
@@ -67,7 +68,7 @@ export default function WorkLogsPage() {
   }, [filters, currentYear, currentQuarter]);
 
   const joiningYear = useMemo(() => {
-    if (!employees) return currentYear;
+    if (!employees.length) return currentYear;
     const targetId = draftFilters.selectedUserId || session?.user?.id;
     const emp = employees.find(e => e.id === targetId);
     if (emp?.joiningDate) return new Date(emp.joiningDate).getFullYear();
@@ -194,7 +195,7 @@ export default function WorkLogsPage() {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Work Logs");
 
-      const employeeName = selectedUserId && employees
+      const employeeName = selectedUserId && employees.length
         ? `${employees.find((e) => e.id === selectedUserId)?.firstName ?? ""} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}`.trim()
         : "My";
 
@@ -260,7 +261,7 @@ export default function WorkLogsPage() {
         <PageHeader
           title="Work Logs"
           description={
-            selectedUserId && employees
+            selectedUserId && employees.length
               ? `Viewing logs for ${employees.find((e) => e.id === selectedUserId)?.firstName ?? "employee"} ${employees.find((e) => e.id === selectedUserId)?.lastName ?? ""}.`
               : "Track your daily tasks and activities."
           }

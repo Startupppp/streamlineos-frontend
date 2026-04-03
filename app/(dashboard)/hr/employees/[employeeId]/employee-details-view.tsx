@@ -3,7 +3,7 @@
 import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { api } from "@/trpc/react";
+import { useHrEmployeeStats, useHrEmployeeProjects, useHrEmployeeTickets } from "@/lib/api/hooks/hr";
 import { EmployeeLeaveStats, EmployeeAttendanceSummary } from "@/components/hr/employee-stats-cards";
 import { EmployeeProjectsList } from "@/components/hr/employee-projects-list";
 import { EmployeeTicketsList } from "@/components/hr/employee-tickets-list";
@@ -14,9 +14,9 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
-    const { data: stats } = api.hr.getEmployeeStats.useQuery({ userId: employee.id });
-    const { data: projects } = api.project.getEmployeeProjects.useQuery({ userId: employee.id });
-    const { data: tickets } = api.project.getEmployeeTickets.useQuery({ userId: employee.id });
+    const { data: stats } = useHrEmployeeStats(employee.id);
+    const { data: projects } = useHrEmployeeProjects(employee.id);
+    const { data: ticketsResult } = useHrEmployeeTickets(employee.id);
 
     const employeeName = `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'Employee';
 
@@ -38,7 +38,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                     </div>
                 </div>
             </div>
-            
+
             <Tabs defaultValue="overview" className="space-y-6">
                 <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
                     <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
@@ -49,22 +49,20 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
-                    
                     <EmployeeAttendanceSummary attendance={stats?.attendance} />
 
-                    
                     <div className="grid gap-6 lg:grid-cols-2">
                         <EmployeeLeaveStats stats={stats} />
-                        <EmployeeProjectsList projects={projects || []} />
+                        <EmployeeProjectsList projects={(projects ?? []) as unknown as Parameters<typeof EmployeeProjectsList>[0]["projects"]} />
                     </div>
                 </TabsContent>
 
                 <TabsContent value="projects" className="space-y-4">
-                     <EmployeeProjectsList projects={projects || []} />
+                     <EmployeeProjectsList projects={(projects ?? []) as unknown as Parameters<typeof EmployeeProjectsList>[0]["projects"]} />
                 </TabsContent>
 
                 <TabsContent value="tickets" className="space-y-4">
-                     <EmployeeTicketsList tickets={tickets?.data || []} />
+                     <EmployeeTicketsList tickets={(ticketsResult?.data ?? []) as Parameters<typeof EmployeeTicketsList>[0]["tickets"]} />
                 </TabsContent>
 
                 <TabsContent value="attendance" className="space-y-6">
@@ -82,4 +80,3 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         </div>
     );
 }
-

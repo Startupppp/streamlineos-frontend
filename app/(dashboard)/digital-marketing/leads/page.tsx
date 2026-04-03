@@ -20,9 +20,11 @@ import {
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Plus, Search, Send, CheckCircle2, Download, Loader2,
+  Plus, Search, Send, CheckCircle2, Loader2,
 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useDmLeads, useCreateDmLead, useVerifyDmLead, useBulkSendDmLeadsToHr, useImportDmLeadToPipeline } from "@/lib/api/hooks/dm";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
@@ -53,7 +55,10 @@ export default function DmLeadsPage() {
     sourcePlatform: "linkedin", leadQuality: "warm", notes: "",
   });
 
-  const { data, isLoading, refetch } = api.dmLeads.getAll.useQuery({
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.dmLeads.all });
+
+  const { data, isLoading } = useDmLeads({
     status: statusFilter !== "all" ? statusFilter as "pending_review" | "verified" | "sent_to_hr" | "imported_to_pipeline" : undefined,
     platform: platformFilter !== "all" ? platformFilter : undefined,
     search: debouncedSearch || undefined,
@@ -61,30 +66,10 @@ export default function DmLeadsPage() {
     limit: 25,
   });
 
-  const createMutation = api.dmLeads.create.useMutation({
-    onSuccess: () => {
-      refetch();
-      toast.success("Lead captured");
-      setShowCreateDialog(false);
-      setFormData({ name: "", phone: "", email: "", whatsappNumber: "", sourcePlatform: "linkedin", leadQuality: "warm", notes: "" });
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const verifyMutation = api.dmLeads.verify.useMutation({
-    onSuccess: () => { refetch(); toast.success("Lead verified"); },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const bulkSendMutation = api.dmLeads.bulkSendToHr.useMutation({
-    onSuccess: (data) => { refetch(); toast.success(`${data.count} leads sent to HR`); setSelectedIds(new Set()); },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const importMutation = api.dmLeads.importToPipeline.useMutation({
-    onSuccess: () => { refetch(); toast.success("Lead imported to pipeline"); },
-    onError: (err) => toast.error(err.message),
-  });
+  const createMutation = useCreateDmLead();
+  const verifyMutation = useVerifyDmLead();
+  const bulkSendMutation = useBulkSendDmLeadsToHr();
+  const importMutation = useImportDmLeadToPipeline();
 
   const leads = data?.leads ?? [];
   const allSelected = leads.length > 0 && leads.every((l: { id: number }) => selectedIds.has(l.id));
@@ -125,7 +110,10 @@ export default function DmLeadsPage() {
           </SelectContent>
         </Select>
         {selectedIds.size > 0 && (
-          <Button size="sm" variant="outline" onClick={() => bulkSendMutation.mutate({ ids: [...selectedIds] })}>
+          <Button size="sm" variant="outline" onClick={() => bulkSendMutation.mutate(
+            { ids: [...selectedIds] },
+            { onSuccess: (res) => { toast.success(`${res.count} leads sent to HR`); setSelectedIds(new Set()); }, onError: (err) => toast.error(err.message) }
+          )}>
             <Send className="h-3.5 w-3.5 mr-1" /> Send to HR ({selectedIds.size})
           </Button>
         )}
@@ -203,12 +191,18 @@ export default function DmLeadsPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         {lead.status === "pending_review" && (
-                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => verifyMutation.mutate({ id: lead.id })}>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => verifyMutation.mutate(
+                            { id: lead.id },
+                            { onSuccess: () => { invalidate(); toast.success("Lead verified"); }, onError: (err) => toast.error(err.message) }
+                          )}>
                             <CheckCircle2 className="h-3 w-3 mr-1" /> Verify
                           </Button>
                         )}
                         {lead.status === "sent_to_hr" && (
-                          <Button size="sm" variant="ghost" className="h-7 text-xs text-emerald-400" onClick={() => importMutation.mutate({ id: lead.id })}>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs text-emerald-400" onClick={() => importMutation.mutate(
+                            { id: lead.id },
+                            { onSuccess: () => { invalidate(); toast.success("Lead imported to pipeline"); }, onError: (err) => toast.error(err.message) }
+                          )}>
                             Import
                           </Button>
                         )}
@@ -283,7 +277,13 @@ export default function DmLeadsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button disabled={!formData.name || createMutation.isPending} onClick={() => createMutation.mutate(formData)}>
+            <Button disabled={!formData.name || createMutation.isPending} onClick={() => createMutation.mutate(
+            formData,
+            {
+              onSuccess: () => { toast.success("Lead captured"); setShowCreateDialog(false); setFormData({ name: "", phone: "", email: "", whatsappNumber: "", sourcePlatform: "linkedin", leadQuality: "warm", notes: "" }); },
+              onError: (err) => toast.error(err.message),
+            }
+          )}>
               {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Capture Lead
             </Button>

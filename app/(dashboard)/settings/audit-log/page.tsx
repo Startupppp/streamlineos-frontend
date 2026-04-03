@@ -3,8 +3,8 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import {
-  Shield, Search, ChevronLeft, ChevronRight,
-  User, Activity, Info, Download,
+  Shield, ChevronLeft, ChevronRight,
+  Activity, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/ui/page-header";
-import { api } from "@/trpc/react";
+import {
+  useAuditLogs,
+  useAuditLogActions,
+  useAuditLogTargetTypes,
+  type AuditLogRow,
+} from "@/lib/api/hooks/audit-log";
 import { resolveImageUrl } from "@/lib/utils";
 
 /* ─── Helpers ─── */
@@ -56,23 +61,9 @@ function actionBadgeClass(action: string) {
   return "bg-muted text-muted-foreground border-border";
 }
 
-type LogRow = {
-  id: number;
-  action: string;
-  userId: string;
-  userName: string | null;
-  userEmail: string | null;
-  userImage: string | null;
-  targetId: string | null;
-  targetType: string | null;
-  metadata: Record<string, unknown> | null;
-  ipAddress: string | null;
-  createdAt: Date;
-};
-
 /* ─── Detail Sheet ─── */
 
-function LogDetailSheet({ log, onClose }: { log: LogRow; onClose: () => void }) {
+function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
       <SheetContent className="w-[440px] sm:max-w-[440px]">
@@ -143,9 +134,9 @@ export default function AuditLogPage() {
   const [targetTypeFilter, setTargetTypeFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [selectedLog, setSelectedLog] = useState<LogRow | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
 
-  const { data, isLoading } = api.auditLog.list.useQuery({
+  const { data, isLoading } = useAuditLogs({
     page,
     pageSize: 25,
     action: actionFilter !== "all" ? actionFilter : undefined,
@@ -154,8 +145,8 @@ export default function AuditLogPage() {
     dateTo: dateTo || undefined,
   });
 
-  const { data: actions } = api.auditLog.getDistinctActions.useQuery();
-  const { data: targetTypes } = api.auditLog.getDistinctTargetTypes.useQuery();
+  const { data: actions } = useAuditLogActions();
+  const { data: targetTypes } = useAuditLogTargetTypes();
 
   const resetFilters = useCallback(() => {
     setActionFilter("all");
@@ -279,7 +270,7 @@ export default function AuditLogPage() {
                   <TableRow
                     key={log.id}
                     className="cursor-pointer"
-                    onClick={() => setSelectedLog(log as LogRow)}
+                    onClick={() => setSelectedLog(log)}
                   >
                     <TableCell className="text-[12px] text-muted-foreground font-mono">
                       {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}

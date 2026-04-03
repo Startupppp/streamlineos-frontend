@@ -7,8 +7,8 @@ import {
   useCreateTicket,
   useAddAttachment,
   useProject,
-  vaivammKeys,
 } from "@/lib/hooks/trpc-hooks";
+import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -61,13 +61,13 @@ export function CreateTicketDialog({
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
   const { data: projectData } = useProject(projectId);
-  const projectMembersList = projectData?.members?.map(m => ({
-    id: m.user.id,
-    name: m.user.name || `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim(),
-    firstName: m.user.firstName || undefined,
-    lastName: m.user.lastName || undefined,
-    image: m.user.image || null,
-    email: m.user.email,
+  const projectMembersList = projectData?.members?.filter(m => !!m.user).map(m => ({
+    id: m.user!.id,
+    name: m.user!.name || `${m.user!.firstName || ''} ${m.user!.lastName || ''}`.trim(),
+    firstName: m.user!.firstName || undefined,
+    lastName: m.user!.lastName || undefined,
+    image: m.user!.image || null,
+    email: m.user!.email,
   })) || [];
   const manager = projectData && "manager" in projectData
     ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
@@ -137,7 +137,7 @@ export function CreateTicketDialog({
     setFile(null);
     setSelectedAssignees([]);
     queryClient.invalidateQueries({
-      queryKey: vaivammKeys.project.project(projectId),
+      queryKey: queryKeys.projects.detail(projectId),
     });
   };
 

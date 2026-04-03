@@ -40,11 +40,12 @@ import type {
 
 // ─── Query Hooks ─────────────────────────────────────────────────────────────
 
-export function useLeads(filters?: LeadFilters) {
+export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.leads.list(filters as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>),
+    ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }
 
@@ -260,3 +261,24 @@ export function useAssignLead() {
     },
   });
 }
+
+export function useSalesLeaderboard() {
+  return useQuery({
+    queryKey: queryKeys.salesLeaderboard.list(),
+    queryFn: () =>
+      apiClient.get<SalesLeaderboardEntry[]>("/leads/sales-leaderboard"),
+  });
+}
+
+export function useSalesTeamCapacity() {
+  return useQuery({
+    queryKey: queryKeys.salesTeamCapacity.list(),
+    queryFn: () =>
+      apiClient.get<SalesTeamCapacityEntry[]>("/leads/sales-team-capacity"),
+  });
+}
+
+// ─── Backward-compatibility alias ─────────────────────────────────────────────
+
+/** Alias for useLeadSlaAlerts — kept for backward compatibility. */
+export const useSlaAlerts = useLeadSlaAlerts;

@@ -42,7 +42,7 @@ import {
   useChatTyping,
   useChatOrgUsers,
 } from "@/lib/hooks/trpc-hooks";
-import { vaivammKeys } from "@/lib/hooks/trpc-keys";
+import { queryKeys } from "@/lib/query-keys";
 import {
   getInitials,
   getDateLabel,
@@ -155,8 +155,8 @@ export function MessagePanel({
 
   useEffect(() => {
     if (polledMessages && polledMessages.length > 0) {
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.chat.messages(channelId) });
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.chat.myChannels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(channelId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
       setLastPollTime(new Date().toISOString());
     }
   }, [polledMessages, channelId, queryClient]);
@@ -263,7 +263,7 @@ export function MessagePanel({
     const content = editInput.trim();
     if (!content) return;
     try {
-      await editMessage.mutateAsync({ messageId, content });
+      await editMessage.mutateAsync({ channelId, messageId, content });
       setEditingMessage(null);
       setEditInput("");
     } catch { toast.error("Failed to edit message"); }
@@ -432,7 +432,7 @@ export function MessagePanel({
                       onCancelEdit={() => { setEditingMessage(null); setEditInput(""); }}
                       onSaveEdit={() => handleEdit(msg.id)}
                       onReply={() => { setReplyTo(msg); inputRef.current?.focus(); }}
-                      onDelete={() => deleteMessage.mutate({ messageId: msg.id })}
+                      onDelete={() => deleteMessage.mutate({ channelId, messageId: msg.id })}
                     />
                   );
                 })}

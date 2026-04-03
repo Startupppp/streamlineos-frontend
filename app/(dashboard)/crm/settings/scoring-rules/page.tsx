@@ -27,7 +27,9 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import {
+  useScoringRules, useCreateScoringRule, useUpdateScoringRule, useDeleteScoringRule,
+} from "@/lib/api/hooks/crm-settings";
 import { toast } from "sonner";
 
 const FIELDS = [
@@ -70,36 +72,13 @@ const SAMPLE_LEAD = {
 };
 
 export default function ScoringRulesPage() {
-  const utils = api.useUtils();
-  const { data: rules, isLoading } = api.leadScoring.getRules.useQuery();
+  const { data: rules, isLoading } = useScoringRules();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const createRule = api.leadScoring.createRule.useMutation({
-    onSuccess: () => {
-      utils.leadScoring.getRules.invalidate();
-      toast.success("Rule created");
-      setCreateOpen(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateRule = api.leadScoring.updateRule.useMutation({
-    onSuccess: () => {
-      utils.leadScoring.getRules.invalidate();
-      toast.success("Rule updated");
-      setEditingId(null);
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const deleteRule = api.leadScoring.deleteRule.useMutation({
-    onSuccess: () => {
-      utils.leadScoring.getRules.invalidate();
-      toast.success("Rule deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createRule = useCreateScoringRule();
+  const updateRule = useUpdateScoringRule();
+  const deleteRule = useDeleteScoringRule();
 
   const ruleResolver = zodResolver(ruleSchema) as unknown as Resolver<RuleForm>;
 
@@ -113,13 +92,24 @@ export default function ScoringRulesPage() {
   });
 
   const onCreateSubmit = useCallback((data: RuleForm) => {
-    createRule.mutate(data);
-    form.reset();
+    createRule.mutate(
+      data,
+      {
+        onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [createRule, form]);
 
   const onEditSubmit = useCallback((data: RuleForm) => {
     if (editingId === null) return;
-    updateRule.mutate({ id: editingId, ...data });
+    updateRule.mutate(
+      { id: editingId, ...data },
+      {
+        onSuccess: () => { toast.success("Rule updated"); setEditingId(null); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   }, [editingId, updateRule]);
 
   const startEdit = useCallback((rule: { id: number; field: string; operator: string; value: string; points: number }) => {
@@ -298,7 +288,7 @@ export default function ScoringRulesPage() {
                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(rule)}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteRule.mutate({ id: rule.id })}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })}>
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
                             </div>

@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/trpc/react";
+import { useHrWfhRequests } from "@/lib/api/hooks/hr";
 import { WFH_MONTHLY_QUOTA } from "@/lib/leave-policy";
 import { RequestWfhDialog } from "@/components/hr/request-wfh-dialog";
 import { Home } from "lucide-react";
 
 export const WfhBalancesCard = memo(function WfhBalancesCard() {
-  const { data: requests, isLoading } = api.hr.getWfhRequests.useQuery();
+  const { data: requests, isLoading } = useHrWfhRequests();
 
   const stats = useMemo(() => {
     if (!requests) return { approved: 0, pending: 0, remaining: WFH_MONTHLY_QUOTA };

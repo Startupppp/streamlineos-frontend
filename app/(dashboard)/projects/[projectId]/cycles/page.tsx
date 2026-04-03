@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { trpc } from "@/trpc/client";
+import { useCycles, useCreateCycle } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,28 +33,29 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const utils = trpc.useUtils();
-  const { data: cycles, isLoading } = trpc.project.cyclesGetByProject.useQuery({ projectId });
+  const { data: cycles, isLoading } = useCycles(projectId);
   const activeCycles = cycles?.filter((c) => c.status === "active") ?? [];
   const upcomingCycles = cycles?.filter((c) => c.status === "draft") ?? [];
   const completedCycles = cycles?.filter((c) => c.status === "completed") ?? [];
   const [showCompleted, setShowCompleted] = useState(false);
 
-  const createMutation = trpc.project.cyclesCreate.useMutation({
-    onSuccess: () => {
-      utils.project.cyclesGetByProject.invalidate({ projectId });
-      setCreateOpen(false);
-      toast.success("Cycle created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createMutation = useCreateCycle();
 
   const form = useForm<CreateCycleForm>({
     resolver: zodResolver(createCycleSchema),
   });
 
   const onSubmit = (data: CreateCycleForm) => {
-    createMutation.mutate({ ...data, projectId });
+    createMutation.mutate(
+      { ...data, projectId },
+      {
+        onSuccess: () => {
+          setCreateOpen(false);
+          toast.success("Cycle created");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   if (isLoading) {

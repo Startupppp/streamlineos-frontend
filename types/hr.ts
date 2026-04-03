@@ -531,3 +531,313 @@ export interface GetWorkLogsInput {
   quarter: number;
   userId?: string;
 }
+
+// ─── WFH Requests ─────────────────────────────────────────────────────────────
+
+export interface WfhRequest {
+  id: number;
+  orgId: string;
+  userId: string;
+  date: string | Date;
+  reason: string | null;
+  approverId: string | null;
+  status: WfhRequestStatus | null;
+  rejectionReason: string | null;
+  createdAt: Date | string | null;
+  user?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    image: string | null;
+  } | null;
+  approver?: {
+    id: string;
+    name: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+}
+
+export interface CreateWfhRequestInput {
+  date: Date | string;
+  reason?: string;
+  approverId: string;
+}
+
+export interface ProcessWfhRequestInput {
+  requestId: number;
+  status: "APPROVED" | "REJECTED";
+  rejectionReason?: string;
+}
+
+// ─── Holidays ─────────────────────────────────────────────────────────────────
+
+export interface Holiday {
+  id: number;
+  orgId: string;
+  name: string;
+  date: string;
+  message: string | null;
+  year: number;
+  createdAt: Date | string | null;
+}
+
+export interface AddHolidayInput {
+  name: string;
+  date: Date | string;
+  message?: string;
+}
+
+export interface DeleteHolidayInput {
+  holidayId: number;
+}
+
+// ─── Devices ──────────────────────────────────────────────────────────────────
+
+export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
+
+export interface Device {
+  id: number;
+  orgId: string;
+  userId: string;
+  deviceType: string;
+  deviceName: string;
+  serialNumber: string | null;
+  brand: string | null;
+  model: string | null;
+  notes: string | null;
+  assignedDate: Date | string | null;
+  returnDate: Date | string | null;
+  status: DeviceStatusExtended | null;
+  user?: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+}
+
+export interface CreateDeviceInput {
+  userId: string;
+  deviceType: string;
+  deviceName: string;
+  serialNumber?: string;
+  brand?: string;
+  model?: string;
+  notes?: string;
+  assignedDate?: Date | string;
+}
+
+export interface UpdateDeviceInput {
+  deviceId: number;
+  userId?: string;
+  deviceType?: string;
+  deviceName?: string;
+  serialNumber?: string;
+  brand?: string;
+  model?: string;
+  notes?: string;
+  status?: DeviceStatusExtended;
+  returnDate?: Date | string;
+}
+
+export interface DeleteDeviceInput {
+  deviceId: number;
+}
+
+// ─── Payslip (Employee View) ───────────────────────────────────────────────────
+
+export interface EmployeePayslip {
+  id: number;
+  userId: string;
+  month: string;
+  basicSalary: string;
+  hra: string | null;
+  allowances: string | null;
+  deductions: string | null;
+  grossSalary: string;
+  netSalary: string;
+  status: PayrollStatus | null;
+  overtimeType: string | null;
+  overtimeDays: string | null;
+  overtimeHours: string | null;
+  overtimeAmount: string | null;
+  user?: {
+    firstName: string | null;
+    lastName: string | null;
+    designation: string | null;
+    joiningDate: string | null;
+    employeeId: string | null;
+    taxId: string | null;
+    bankDetails: unknown;
+  } | null;
+}
+
+export interface GetEmployeePayslipsInput {
+  userId?: string;
+}
+
+// ─── Payroll Admin ────────────────────────────────────────────────────────────
+
+export interface PayrollWithUser extends Payroll {
+  user?: {
+    firstName: string | null;
+    lastName: string | null;
+    designation: string | null;
+    monthlySalary: string | null;
+  } | null;
+}
+
+export interface GetAllPayrollsInput {
+  month: string;
+}
+
+export interface GenerateEmployeePayslipInput {
+  userId: string;
+  month: string;
+  lopDays?: number;
+  halfDays?: number;
+  otherDeductions?: number;
+  bonus?: number;
+  overtimeType?: "days" | "hours";
+  overtimeDays?: number;
+  overtimeHours?: number;
+  overtimeAmount?: number;
+}
+
+export interface ApprovePayrollInput {
+  payrollId: number;
+}
+
+export interface MarkPayrollPaidInput {
+  payrollId: number;
+}
+
+// ─── Employee Stats ───────────────────────────────────────────────────────────
+
+export interface EmployeeAttendanceSummaryData {
+  daysPresent: number;
+  daysAbsent: number;
+  daysLate: number;
+  totalHours: string;
+  avgHoursPerDay: string;
+}
+
+export interface EmployeeStats {
+  leaves: {
+    total: number;
+    approved: number;
+    pending: number;
+    rejected: number;
+    byType: Record<string, number>;
+  };
+  attendance: EmployeeAttendanceSummaryData | null;
+}
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+
+export interface OnboardEmployeeInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  whatsappSameAsPhone?: boolean;
+  whatsappNumber?: string;
+  gender?: string;
+  password: string;
+  designation: string;
+  departmentId?: number;
+  role: string;
+  employeeId?: string;
+  joiningDate?: Date | string;
+  dateOfBirth?: Date | string;
+  skills?: string;
+  experienceYears?: number;
+  taxId?: string;
+  monthlySalary?: number;
+  bankDetails?: {
+    accountNumber?: string;
+    bankName?: string;
+    branch?: string;
+    ifsc?: string;
+    accountHolder?: string;
+    pfUanNumber?: string;
+  };
+}
+
+// ─── Incentives ───────────────────────────────────────────────────────────────
+
+export interface IncentiveConfig {
+  id: number;
+  orgId: string;
+  incentiveRate: string;
+  effectiveFrom: string | Date;
+  createdAt: Date | string | null;
+}
+
+export interface Incentive {
+  id: number;
+  orgId: string;
+  salesRepId: string;
+  clientAccountId: number | null;
+  investmentAmount: string;
+  incentiveRate: string;
+  calculatedAmount: string;
+  approvedAmount: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL";
+  notes: string | null;
+  createdAt: Date | string | null;
+  salesRep?: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  } | null;
+  clientAccount?: {
+    clientName: string | null;
+  } | null;
+}
+
+export interface IncentivesResult {
+  incentives: Incentive[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface IncentiveStats {
+  thisMonth: string;
+  totalRevenue: string;
+  avgPerConversion: string;
+  pending: number;
+  approved: number;
+}
+
+export interface GetIncentivesInput {
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL";
+  page?: number;
+  limit?: number;
+}
+
+export interface ApproveIncentiveInput {
+  id: number;
+  approvedAmount: string;
+  notes?: string;
+}
+
+export interface RejectIncentiveInput {
+  id: number;
+}
+
+export interface SetIncentiveConfigInput {
+  incentiveRate: string;
+}
+
+// ─── Monthly Attendance ───────────────────────────────────────────────────────
+
+export interface GetMonthlyAttendanceInput {
+  userId: string;
+  year: number;
+  month: number;
+}

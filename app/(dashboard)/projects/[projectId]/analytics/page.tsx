@@ -1,12 +1,11 @@
 "use client";
 
 import { use, useMemo } from "react";
-import { trpc } from "@/trpc/client";
+import { useProjectAnalytics } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { BarChart3 } from "lucide-react";
 import {
   BarChart,
   PieChart,
@@ -63,9 +62,7 @@ export default function AnalyticsPage({
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
 
-  const { data: analytics, isLoading } = trpc.project.analyticsGetProjectAnalytics.useQuery({
-    projectId,
-  });
+  const { data: analytics, isLoading } = useProjectAnalytics(projectId);
 
   const stateData = useMemo(() => {
     if (!analytics?.stateDistribution) return [];

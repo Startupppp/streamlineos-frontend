@@ -54,7 +54,7 @@ export function AttendanceTracker({
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          checkInMutation.mutate({ location: { latitude, longitude } });
+          checkInMutation.mutate({ location: { lat: latitude, lng: longitude } });
         },
         (error) => {
           toast.error("Location required for Check-In");

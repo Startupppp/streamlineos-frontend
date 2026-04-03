@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Download, Loader2 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useLeads } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
 const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
@@ -29,16 +29,19 @@ export function LeadExportDialog() {
     dateTo: "",
   });
 
-  const { data } = api.leads.getAll.useQuery({
-    status: filters.status !== "all" ? filters.status as typeof STATUSES[number] : undefined,
-    source: filters.source !== "all" ? filters.source as typeof SOURCES[number] : undefined,
-    priority: filters.priority !== "all" ? filters.priority as typeof PRIORITIES[number] : undefined,
-    dateFrom: filters.dateFrom || undefined,
-    dateTo: filters.dateTo || undefined,
-    limit: 100,
-    sortBy: "createdAt",
-    sortOrder: "desc",
-  }, { enabled: open });
+  const { data } = useLeads(
+    {
+      status: filters.status !== "all" ? filters.status as typeof STATUSES[number] : undefined,
+      source: filters.source !== "all" ? filters.source as typeof SOURCES[number] : undefined,
+      priority: filters.priority !== "all" ? filters.priority as typeof PRIORITIES[number] : undefined,
+      dateFrom: filters.dateFrom || undefined,
+      dateTo: filters.dateTo || undefined,
+      limit: 100,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    },
+    { enabled: open }
+  );
 
   const handleExport = async () => {
     setIsExporting(true);

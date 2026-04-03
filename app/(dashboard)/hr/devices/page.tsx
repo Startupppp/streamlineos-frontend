@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { api } from "@/trpc/react";
+import {
+  useHrDevices,
+  useHrEmployees,
+  useCreateDevice,
+  useUpdateDevice,
+  useDeleteDevice,
+} from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -55,6 +61,7 @@ import {
 import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2, Pencil, Eye, Download } from "lucide-react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
+import type { Employee } from "@/types/hr";
 
 const deviceSchema = z.object({
   userId: z.string().min(1, "Employee is required"),
@@ -86,30 +93,24 @@ export default function DevicesPage() {
   const [viewDevice, setViewDevice] = useState<number | null>(null);
   const [deleteDeviceId, setDeleteDeviceId] = useState<number | null>(null);
 
-  const { data: devices, isLoading, refetch } = api.hr.getDevices.useQuery({});
-  const { data: employees } = api.hr.getEmployees.useQuery();
+  const { data: devices, isLoading } = useHrDevices({});
+  const { data: employeesRaw } = useHrEmployees(undefined);
+  const employees = (employeesRaw ?? []) as Employee[];
 
-  const createDeviceMutation = api.hr.createDevice.useMutation({
-    onSuccess: () => {
-      toast.success("Device added successfully");
-      setOpen(false);
-      form.reset();
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
+  const createDeviceMutation = useCreateDevice();
+  const updateDeviceMutation = useUpdateDevice();
+  const deleteDeviceMutation = useDeleteDevice();
 
-  const updateDeviceMutation = api.hr.updateDevice.useMutation({
-    onSuccess: () => {
-      toast.success("Device updated");
-      setEditDevice(null);
-      editForm.reset();
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
+  const form = useForm<DeviceFormValues>({
+    resolver: zodResolver(deviceSchema),
+    defaultValues: {
+      userId: "",
+      deviceType: "",
+      deviceName: "",
+      serialNumber: "",
+      brand: "",
+      model: "",
+      notes: "",
     },
   });
 
@@ -131,48 +132,42 @@ export default function DevicesPage() {
     });
   };
 
-  const onEditSubmit = (values: DeviceFormValues) => {
-    if (!editDevice) return;
-    updateDeviceMutation.mutate({
-      deviceId: editDevice.id,
-      userId: values.userId,
-      deviceType: values.deviceType,
-      deviceName: values.deviceName,
-      serialNumber: values.serialNumber || undefined,
-      brand: values.brand || undefined,
-      model: values.model || undefined,
-      notes: values.notes || undefined,
-    });
+  const onSubmit = (values: DeviceFormValues) => {
+    createDeviceMutation.mutate(
+      { ...values, assignedDate: new Date() },
+      {
+        onSuccess: () => {
+          toast.success("Device added successfully");
+          setOpen(false);
+          form.reset();
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
   };
 
-  const deleteDeviceMutation = api.hr.deleteDevice.useMutation({
-    onSuccess: () => {
-      toast.success("Device removed");
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const form = useForm<DeviceFormValues>({
-    resolver: zodResolver(deviceSchema),
-    defaultValues: {
-      userId: "",
-      deviceType: "",
-      deviceName: "",
-      serialNumber: "",
-      brand: "",
-      model: "",
-      notes: "",
-    },
-  });
-
-  const onSubmit = (values: DeviceFormValues) => {
-    createDeviceMutation.mutate({
-      ...values,
-      assignedDate: new Date(),
-    });
+  const onEditSubmit = (values: DeviceFormValues) => {
+    if (!editDevice) return;
+    updateDeviceMutation.mutate(
+      {
+        deviceId: editDevice.id,
+        userId: values.userId,
+        deviceType: values.deviceType,
+        deviceName: values.deviceName,
+        serialNumber: values.serialNumber || undefined,
+        brand: values.brand || undefined,
+        model: values.model || undefined,
+        notes: values.notes || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Device updated");
+          setEditDevice(null);
+          editForm.reset();
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
   };
 
   const handleStatusChange = (deviceId: number, value: string) => {
@@ -182,6 +177,53 @@ export default function DevicesPage() {
       status: value,
       ...(value === "RETURNED" ? { returnDate: new Date() } : {}),
     });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteDeviceId === null) return;
+    deleteDeviceMutation.mutate(
+      { deviceId: deleteDeviceId },
+      {
+        onSuccess: () => {
+          toast.success("Device removed");
+          setDeleteDeviceId(null);
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
+    setDeleteDeviceId(null);
+  };
+
+  const handleExport = async () => {
+    try {
+      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+      await downloadXlsx("devices-export.xlsx", [{
+        name: "Devices",
+        columns: [
+          { header: "Device Name", key: "deviceName", width: 20 },
+          { header: "Type", key: "deviceType", width: 12 },
+          { header: "Brand", key: "brand", width: 12 },
+          { header: "Model", key: "model", width: 12 },
+          { header: "Serial Number", key: "serialNumber", width: 18 },
+          { header: "Assigned To", key: "assignedTo", width: 20 },
+          { header: "Assigned Date", key: "assignedDate", width: 14 },
+          { header: "Status", key: "status", width: 12 },
+        ],
+        rows: (devices || []).map(d => ({
+          deviceName: d.deviceName,
+          deviceType: d.deviceType,
+          brand: d.brand || "",
+          model: d.model || "",
+          serialNumber: d.serialNumber || "",
+          assignedTo: d.user ? `${d.user.firstName} ${d.user.lastName}` : "",
+          assignedDate: d.assignedDate ? format(new Date(d.assignedDate), "yyyy-MM-dd") : "",
+          status: d.status || "ACTIVE",
+        })),
+      }]);
+      toast.success("Devices exported");
+    } catch {
+      toast.error("Export failed");
+    }
   };
 
   if (isLoading) {
@@ -199,35 +241,7 @@ export default function DevicesPage() {
         description="Track devices assigned to employees"
         actions={
           <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={async () => {
-            try {
-              const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-              await downloadXlsx("devices-export.xlsx", [{
-                name: "Devices",
-                columns: [
-                  { header: "Device Name", key: "deviceName", width: 20 },
-                  { header: "Type", key: "deviceType", width: 12 },
-                  { header: "Brand", key: "brand", width: 12 },
-                  { header: "Model", key: "model", width: 12 },
-                  { header: "Serial Number", key: "serialNumber", width: 18 },
-                  { header: "Assigned To", key: "assignedTo", width: 20 },
-                  { header: "Assigned Date", key: "assignedDate", width: 14 },
-                  { header: "Status", key: "status", width: 12 },
-                ],
-                rows: (devices || []).map(d => ({
-                  deviceName: d.deviceName,
-                  deviceType: d.deviceType,
-                  brand: d.brand || "",
-                  model: d.model || "",
-                  serialNumber: d.serialNumber || "",
-                  assignedTo: d.user ? `${d.user.firstName} ${d.user.lastName}` : "",
-                  assignedDate: d.assignedDate ? format(new Date(d.assignedDate), "yyyy-MM-dd") : "",
-                  status: d.status || "ACTIVE",
-                })),
-              }]);
-              toast.success("Devices exported");
-            } catch { toast.error("Export failed"); }
-          }} disabled={!devices?.length}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={!devices?.length}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -257,7 +271,7 @@ export default function DevicesPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {employees?.map((emp) => (
+                            {employees.map((emp) => (
                               <SelectItem key={emp.id} value={emp.id}>
                                 {emp.firstName} {emp.lastName}
                               </SelectItem>
@@ -507,7 +521,7 @@ export default function DevicesPage() {
         </CardContent>
       </Card>
 
-      
+
       {/* View Device Sheet */}
       <Sheet open={viewDevice !== null} onOpenChange={(o) => { if (!o) setViewDevice(null); }}>
         <SheetContent className="sm:max-w-md p-6">
@@ -573,7 +587,7 @@ export default function DevicesPage() {
                         <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {employees?.map((emp) => (
+                        {employees.map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>
                             {emp.firstName} {emp.lastName}
                           </SelectItem>
@@ -690,12 +704,7 @@ export default function DevicesPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (deleteDeviceId !== null) {
-                  deleteDeviceMutation.mutate({ deviceId: deleteDeviceId });
-                  setDeleteDeviceId(null);
-                }
-              }}
+              onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Remove
@@ -706,4 +715,3 @@ export default function DevicesPage() {
     </div>
   );
 }
-

@@ -20,7 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus, Megaphone, IndianRupee, TrendingUp, Users, Target,
 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useDmCampaigns, useDmCampaignStats, useCreateDmCampaign } from "@/lib/api/hooks/dm";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +37,10 @@ export default function CampaignsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [formData, setFormData] = useState({ name: "", budgetAllocated: "", status: "active" as "active" | "paused" | "completed" });
 
-  const { data: stats } = api.dmCampaigns.getStats.useQuery();
-  const { data, isLoading, refetch } = api.dmCampaigns.getAll.useQuery();
-
-  const createMutation = api.dmCampaigns.create.useMutation({
-    onSuccess: () => { refetch(); toast.success("Campaign created"); setShowCreate(false); setFormData({ name: "", budgetAllocated: "", status: "active" }); },
-    onError: (err) => toast.error(err.message),
-  });
+  const qc = useQueryClient();
+  const { data: stats } = useDmCampaignStats();
+  const { data, isLoading } = useDmCampaigns();
+  const createMutation = useCreateDmCampaign();
 
   const campaigns = data?.campaigns ?? [];
 
@@ -136,7 +135,13 @@ export default function CampaignsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-            <Button disabled={!formData.name} onClick={() => createMutation.mutate(formData)}>Create</Button>
+            <Button disabled={!formData.name} onClick={() => createMutation.mutate(
+              formData,
+              {
+                onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all }); toast.success("Campaign created"); setShowCreate(false); setFormData({ name: "", budgetAllocated: "", status: "active" }); },
+                onError: (err) => toast.error(err.message),
+              }
+            )}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

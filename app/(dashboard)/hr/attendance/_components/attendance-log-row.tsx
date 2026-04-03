@@ -4,10 +4,8 @@ import { memo } from "react";
 import { format } from "date-fns";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { RouterOutputs } from "@/lib/trpc";
+import type { AttendanceLog } from "@/types/hr";
 import { tableStatusBadge, formatDuration } from "./attendance-utils";
-
-type AttendanceLog = RouterOutputs["hr"]["getAttendanceStatus"]["logs"][number];
 
 interface AttendanceLogRowProps {
   log: AttendanceLog;

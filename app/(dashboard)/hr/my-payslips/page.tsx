@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/trpc/react";
+import { useHrEmployeePayslips } from "@/lib/api/hooks/hr";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,7 +29,7 @@ export default function MyPayslipsPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const payslipRef = useRef<HTMLDivElement>(null);
 
-  const { data: payslips, isLoading } = api.hr.getEmployeePayslips.useQuery({});
+  const { data: payslips, isLoading } = useHrEmployeePayslips({});
 
   const selectedPayslip = payslips?.find((p) => p.month === selectedMonth);
 
@@ -46,7 +46,7 @@ export default function MyPayslipsPage() {
     try {
       const html2canvas = (await import("html2canvas")).default;
       const jsPDF = (await import("jspdf")).default;
-      
+
       const convertLabColors = (element: HTMLElement) => {
         const unsupportedColorPattern = /lab\(|oklch\(|oklab\(|lch\(/;
         const allElements = element.querySelectorAll('*');
@@ -76,7 +76,7 @@ export default function MyPayslipsPage() {
           element.style.backgroundColor = '#ffffff';
         }
       };
-      
+
       const canvas = await html2canvas(payslipRef.current, {
         scale: 2,
         backgroundColor: "#ffffff",
@@ -120,7 +120,7 @@ export default function MyPayslipsPage() {
       const employeeName = `${selectedPayslip.user?.firstName || ""}_${selectedPayslip.user?.lastName || ""}`.replace(/\s+/g, "_");
       const monthYear = format(parseISO(selectedMonth + "-01"), "MMM_yyyy");
       const fileName = `Payslip_${employeeName}_${monthYear}.pdf`;
-      
+
       pdf.save(fileName);
       toast.success("Payslip downloaded successfully!", { id: "pdf-download" });
     } catch (error: unknown) {
@@ -218,13 +218,13 @@ export default function MyPayslipsPage() {
             className="bg-white p-8 rounded-lg shadow-lg max-w-3xl mx-auto relative overflow-hidden"
             style={{ fontFamily: "Arial, sans-serif" }}
           >
-            
-            <div 
+
+            <div
               data-watermark
               className="absolute pointer-events-none"
-              style={{ 
-                top: "50%", 
-                left: "50%", 
+              style={{
+                top: "50%",
+                left: "50%",
                 transform: "translate(-50%, -50%)",
                 zIndex: 0,
                 opacity: 0.06,
@@ -238,12 +238,12 @@ export default function MyPayslipsPage() {
             </div>
 
             <div className="relative" style={{ zIndex: 1 }}>
-              
+
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "8px" }}>
-                <div style={{ 
-                  width: "64px", 
-                  height: "64px", 
-                  backgroundColor: "#0f2b7f", 
+                <div style={{
+                  width: "64px",
+                  height: "64px",
+                  backgroundColor: "#0f2b7f",
                   borderRadius: "8px",
                   display: "flex",
                   alignItems: "center",
@@ -274,7 +274,7 @@ export default function MyPayslipsPage() {
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Date of Joining:</span>
                   <span style={{ fontWeight: 500, color: "#111827" }}>
-                    {selectedPayslip.user?.joiningDate 
+                    {selectedPayslip.user?.joiningDate
                       ? format(new Date(selectedPayslip.user.joiningDate), "dd-MM-yyyy")
                       : "-"}
                   </span>

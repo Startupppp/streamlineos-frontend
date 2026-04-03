@@ -16,6 +16,7 @@ import type {
   CreateDealInput,
   UpdateDealInput,
   UpdateDealStageInput,
+  LogDealActivityInput,
   Contact,
   PaginatedContacts,
   ContactFilters,
@@ -28,6 +29,7 @@ import type {
   PaginatedClientAccounts,
   UpdateClientAccountStatusInput,
   LogClientActivityInput,
+  ClientAccountStats,
   Target,
   TargetHistory,
   TargetFilters,
@@ -38,6 +40,12 @@ import type {
   SalesDashboard,
   MarketingDashboard,
   SupportDashboard,
+  CustomerExecutiveDashboard,
+  CrmPersonProfile,
+  CrmOrganization,
+  CrmOrganizationFilters,
+  PaginatedCrmOrganizations,
+  CreateCrmOrganizationInput,
 } from "@/types/crm";
 
 // ─── Deals ───────────────────────────────────────────────────────────────────
@@ -302,3 +310,106 @@ export function useSupportDashboard() {
     queryFn: () => apiClient.get<SupportDashboard>("/crm/support-dashboard"),
   });
 }
+
+// ─── Deal Activities ──────────────────────────────────────────────────────────
+
+export function useDealActivities(dealId: number, limit?: number) {
+  return useQuery({
+    queryKey: queryKeys.dealActivities.list(dealId, limit ? { limit } : undefined),
+    queryFn: () =>
+      apiClient.get<DealActivity[]>(
+        `/deals/${dealId}/activities`,
+        limit ? { limit } : undefined
+      ),
+    enabled: dealId > 0,
+  });
+}
+
+export function useLogDealActivity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ dealId, ...data }: LogDealActivityInput) =>
+      apiClient.post<DealActivity>(`/deals/${dealId}/activities`, data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.dealActivities.list(vars.dealId) });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.dealId) });
+    },
+  });
+}
+
+export function useDeleteDeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/deals/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+    },
+  });
+}
+
+// ─── Client Account Stats ─────────────────────────────────────────────────────
+
+export function useClientAccountStats() {
+  return useQuery({
+    queryKey: queryKeys.clientStats.stats(),
+    queryFn: () => apiClient.get<ClientAccountStats>("/clients/stats"),
+  });
+}
+
+// ─── CRM Organizations ────────────────────────────────────────────────────────
+
+export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.list(filters as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<PaginatedCrmOrganizations>(
+        "/crm/organizations",
+        filters as Record<string, unknown>
+      ),
+  });
+}
+
+export function useCrmOrganizationDetail(id: number) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.detail(id),
+    queryFn: () => apiClient.get<CrmOrganization>(`/crm/organizations/${id}`),
+    enabled: id > 0,
+  });
+}
+
+export function useCreateCrmOrganization() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateCrmOrganizationInput) =>
+      apiClient.post<CrmOrganization>("/crm/organizations", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
+    },
+  });
+}
+
+// ─── CRM People (slug-based profiles) ────────────────────────────────────────
+
+export function useCrmPeopleSlugs() {
+  return useQuery({
+    queryKey: queryKeys.crm.peopleSlugs(),
+    queryFn: () => apiClient.get<Record<string, string>>("/crm/people-slugs"),
+  });
+}
+
+export function useCrmPerson(slug: string) {
+  return useQuery({
+    queryKey: queryKeys.crm.person(slug),
+    queryFn: () => apiClient.get<CrmPersonProfile | null>(`/crm/people/${slug}`),
+    enabled: !!slug,
+  });
+}
+
+export function useCustomerExecutiveDashboard() {
+  return useQuery({
+    queryKey: queryKeys.crm.customerExecutiveDashboard(),
+    queryFn: () => apiClient.get<CustomerExecutiveDashboard>("/crm/customer-executive"),
+  });
+}
+

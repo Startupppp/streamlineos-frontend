@@ -5,7 +5,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isWeekend,
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/trpc/react";
+import { useHrMonthlyAttendance, useHrWfhRequests, useHrHolidaysForCalendar } from "@/lib/api/hooks/hr";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { WEEKDAY_LABELS, CalendarDay, statusConfig } from "./attendance-utils";
 
@@ -14,13 +14,9 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({ userId }: {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
-  const { data: monthlyLogs, isLoading } = api.hr.getMonthlyAttendance.useQuery(
-    { userId, year, month },
-    { enabled: !!userId }
-  );
-
-  const { data: wfhRequests } = api.hr.getWfhRequests.useQuery();
-  const { data: holidaysList } = api.hr.getHolidaysForCalendar.useQuery({ year, month });
+  const { data: monthlyLogs, isLoading } = useHrMonthlyAttendance({ userId, year, month });
+  const { data: wfhRequests } = useHrWfhRequests();
+  const { data: holidaysList } = useHrHolidaysForCalendar({ year, month });
 
   const calendarDays = useMemo((): CalendarDay[] => {
     const start = startOfMonth(currentMonth);

@@ -6,9 +6,15 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDeleteNotification,
+  useClearAllNotifications,
+} from "@/lib/api/hooks/notifications";
 import { formatDistanceToNow } from "date-fns";
 
 const TYPE_CONFIG = {
@@ -19,39 +25,14 @@ const TYPE_CONFIG = {
 } as const;
 
 export function NotificationBell() {
-  const utils = api.useUtils();
-  const { data: countData } = api.notifications.getUnreadCount.useQuery(undefined, {
+  const { data: countData } = useUnreadNotificationCount({
     refetchInterval: 30000,
   });
-  const { data: notifications } = api.notifications.getAll.useQuery({ limit: 20 });
-
-  const markRead = api.notifications.markRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.getUnreadCount.invalidate();
-      utils.notifications.getAll.invalidate();
-    },
-  });
-
-  const markAllRead = api.notifications.markAllRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.getUnreadCount.invalidate();
-      utils.notifications.getAll.invalidate();
-    },
-  });
-
-  const deleteOne = api.notifications.deleteOne.useMutation({
-    onSuccess: () => {
-      utils.notifications.getUnreadCount.invalidate();
-      utils.notifications.getAll.invalidate();
-    },
-  });
-
-  const clearAll = api.notifications.clearAll.useMutation({
-    onSuccess: () => {
-      utils.notifications.getUnreadCount.invalidate();
-      utils.notifications.getAll.invalidate();
-    },
-  });
+  const { data: notifications } = useNotifications(false, 20);
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
+  const deleteOne = useDeleteNotification();
+  const clearAll = useClearAllNotifications();
 
   const unreadCount = countData?.count || 0;
 
@@ -76,7 +57,7 @@ export function NotificationBell() {
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => markAllRead.mutate()}
+                onClick={() => markAllRead.mutate(undefined)}
               >
                 <CheckCheck className="h-3.5 w-3.5 mr-1" />
                 Read all
@@ -87,7 +68,7 @@ export function NotificationBell() {
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={() => clearAll.mutate()}
+                onClick={() => clearAll.mutate(undefined)}
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                 Clear
@@ -115,7 +96,7 @@ export function NotificationBell() {
                       !n.isRead && "bg-primary/5"
                     )}
                     onClick={() => {
-                      if (!n.isRead) markRead.mutate({ id: n.id });
+                      if (!n.isRead) markRead.mutate(n.id);
                       if (n.link) window.location.href = n.link;
                     }}
                   >
@@ -140,7 +121,7 @@ export function NotificationBell() {
                         <div className="h-2 w-2 rounded-full bg-[#bd882c]" />
                       )}
                       <button
-                        onClick={(e) => { e.stopPropagation(); deleteOne.mutate({ id: n.id }); }}
+                        onClick={(e) => { e.stopPropagation(); deleteOne.mutate(n.id); }}
                         className="opacity-0 group-hover/notif:opacity-100 transition-opacity p-0.5 rounded hover:bg-red-100 text-muted-foreground hover:text-red-500"
                         aria-label="Delete notification"
                       >

@@ -117,3 +117,22 @@ export const useAddSupportMessage = () => {
     },
   });
 };
+
+interface SupportStats {
+  open: number;
+  in_progress: number;
+  waiting: number;
+  resolved: number;
+  closed: number;
+  sla_breached: number;
+}
+
+export const useSupportStats = (
+  options?: Omit<UseQueryOptions<SupportStats, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<SupportStats, Error>({
+    queryKey: [...queryKeys.support.all, "stats"] as const,
+    queryFn: () => apiClient.get<SupportStats>("/support/stats"),
+    ...options,
+  });
+};

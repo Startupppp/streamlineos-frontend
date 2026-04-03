@@ -64,9 +64,9 @@ export default function ProjectBoardPage({ params }: PageProps) {
       ticketNumber: t.ticketNumber,
       order: t.order ?? undefined,
       epicId: t.epicId ?? undefined,
-      sequenceId: (t as Record<string, unknown>).sequenceId as string | null ?? null,
-      startDate: (t as Record<string, unknown>).startDate as string | null ?? null,
-      dueDate: (t as Record<string, unknown>).dueDate as string | null ?? null,
+      sequenceId: t.sequenceId ?? null,
+      startDate: t.startDate ?? null,
+      dueDate: t.dueDate ?? null,
       assignee: t.assignee
         ? {
             id: t.assignee.id,
@@ -75,11 +75,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
             image: t.assignee.image ?? null,
           }
         : null,
-      labels: (t.labels || []).map((l) => ({
+      labels: (t.labels || []).filter((l) => !!l.label).map((l) => ({
         label: {
-          id: l.label.id,
-          name: l.label.name,
-          color: l.label.color,
+          id: l.label!.id,
+          name: l.label!.name,
+          color: l.label!.color,
         },
       })),
     }));

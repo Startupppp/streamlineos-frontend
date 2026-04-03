@@ -12,11 +12,11 @@ import {
 import { Plus, X, Tag } from "lucide-react";
 import {
   useLabels,
-  useCreateLabel,
+  useCreateOrgLabel,
   useAddLabelToTicket,
   useRemoveLabelFromTicket,
-  vaivammKeys,
 } from "@/lib/hooks/trpc-hooks";
+import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -35,27 +35,27 @@ export function LabelPicker({ ticketId, currentLabels }: LabelPickerProps) {
 
   const { data: allLabels } = useLabels();
 
-  const createLabel = useCreateLabel({
+  const createLabel = useCreateOrgLabel({
     onSuccess: (newLabel) => {
       setNewLabelName("");
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.labels() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
       addLabel.mutate({ ticketId, labelId: newLabel.id });
     },
-    onError: (error) => toast.error(error.message || "Failed to create label"),
+    onError: (error: Error) => toast.error(error.message || "Failed to create label"),
   });
 
   const addLabel = useAddLabelToTicket({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.ticket(ticketId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
     },
-    onError: (error) => toast.error(error.message || "Failed to add label"),
+    onError: (error: Error) => toast.error(error.message || "Failed to add label"),
   });
 
   const removeLabel = useRemoveLabelFromTicket({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: vaivammKeys.project.ticket(ticketId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
     },
-    onError: (error) => toast.error(error.message || "Failed to remove label"),
+    onError: (error: Error) => toast.error(error.message || "Failed to remove label"),
   });
 
   const currentLabelIds = new Set(currentLabels.map(l => l.label.id));

@@ -29,7 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useContacts, useCreateContact } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
@@ -51,7 +51,6 @@ function capitalize(s: string) {
 }
 
 export default function ContactsPage() {
-  const utils = api.useUtils();
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -70,20 +69,13 @@ export default function ContactsPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { data, isLoading } = api.contacts.getContacts.useQuery({
+  const { data, isLoading } = useContacts({
     search: search || undefined,
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
   });
 
-  const createContact = api.contacts.createContact.useMutation({
-    onSuccess: () => {
-      utils.contacts.getContacts.invalidate();
-      toast.success("Contact created");
-      setCreateOpen(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createContactMutation = useCreateContact();
 
   const form = useForm<CreateContactForm>({
     resolver: zodResolver(createContactSchema),
@@ -91,18 +83,24 @@ export default function ContactsPage() {
   });
 
   const onSubmit = useCallback((data: CreateContactForm) => {
-    createContact.mutate({
-      name: capitalize(data.name.trim()),
-      email: data.email || undefined,
-      phone: data.phone || undefined,
-      title: data.title || undefined,
-      department: data.department || undefined,
-      company: data.company || undefined,
-      linkedinUrl: data.linkedinUrl || undefined,
-      twitterUrl: data.twitterUrl || undefined,
-    });
+    createContactMutation.mutate(
+      {
+        name: capitalize(data.name.trim()),
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        title: data.title || undefined,
+        department: data.department || undefined,
+        company: data.company || undefined,
+        linkedinUrl: data.linkedinUrl || undefined,
+        twitterUrl: data.twitterUrl || undefined,
+      },
+      {
+        onSuccess: () => { toast.success("Contact created"); setCreateOpen(false); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
     form.reset();
-  }, [createContact, form]);
+  }, [createContactMutation, form]);
 
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
@@ -193,8 +191,8 @@ export default function ContactsPage() {
                     </FormItem>
                   )} />
                 </div>
-                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createContact.isPending}>
-                  {createContact.isPending ? "Creating..." : "Create Contact"}
+                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createContactMutation.isPending}>
+                  {createContactMutation.isPending ? "Creating..." : "Create Contact"}
                 </Button>
               </form>
             </Form>

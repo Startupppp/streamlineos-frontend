@@ -51,7 +51,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { uploadDocument } from "@/server/actions/document-actions";
-import { api } from "@/trpc/react";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 
 const formSchema = z.object({
   name: z.string(),
@@ -90,9 +90,7 @@ export function UploadDocumentDialog({
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  const { data: employees } = api.hr.getEmployees.useQuery(undefined, {
-    enabled: isAdmin,
-  });
+  const { data: employees } = useHrEmployees(undefined);
 
   const filteredCategories = useMemo(() => {
     return categories.filter((cat) => cat && cat.trim() !== "");
@@ -103,7 +101,10 @@ export function UploadDocumentDialog({
   }, [documentTypes]);
 
   const filteredEmployees = useMemo(() => {
-    return employees?.filter((emp) => emp.id && emp.id.trim() !== "") || [];
+    if (!employees || !Array.isArray(employees)) return [];
+    return (employees as { id: string; firstName: string | null; lastName: string | null }[]).filter(
+      (emp) => emp.id && emp.id.trim() !== ""
+    );
   }, [employees]);
 
   const form = useForm<FormData>({
@@ -264,7 +265,7 @@ export function UploadDocumentDialog({
       } else {
         toast.error("Failed to upload documents");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload documents");
     } finally {
       setIsLoading(false);
@@ -278,6 +279,18 @@ export function UploadDocumentDialog({
     if (f.type.includes("word")) return <FileText className="h-5 w-5 text-blue-500" />;
     if (f.type.includes("excel") || f.type.includes("spreadsheet")) return <FileText className="h-5 w-5 text-emerald-500" />;
     return <FileText className="h-5 w-5 text-slate-400" />;
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
+  const handleClearAllFiles = () => {
+    setFiles([]);
+    form.setValue("name", "");
   };
 
   return (
@@ -320,7 +333,7 @@ export function UploadDocumentDialog({
                     variant="ghost"
                     size="sm"
                     className="h-6 text-xs text-muted-foreground"
-                    onClick={() => { setFiles([]); form.setValue("name", ""); }}
+                    onClick={handleClearAllFiles}
                   >
                     Clear all
                   </Button>
@@ -419,8 +432,8 @@ export function UploadDocumentDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Associate with Employee</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "none" ? "" : value)}
                       value={field.value || "none"}
                     >
                       <FormControl>
@@ -514,12 +527,7 @@ export function UploadDocumentDialog({
                   placeholder="Add tag..."
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addTag();
-                    }
-                  }}
+                  onKeyDown={handleTagKeyDown}
                   className="flex-1"
                 />
                 <Button
@@ -610,4 +618,3 @@ export function UploadDocumentDialog({
     </Sheet>
   );
 }
-

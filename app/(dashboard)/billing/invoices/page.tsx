@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/trpc/react";
+import {
+  useInvoices,
+  useInvoiceStats,
+  useUpdateInvoice,
+  useDeleteInvoice,
+  useCreateInvoice,
+} from "@/lib/api/hooks/invoice";
 import { format } from "date-fns";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
@@ -14,7 +20,6 @@ import {
   Loader2,
   MoreHorizontal,
   Trash2,
-  Eye,
   IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,10 +57,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { formatCurrencyFull } from "@/lib/format-utils";
+import type { InvoiceStatus } from "@/types/invoice";
 
 const formatCurrency = (amount: number | string) => formatCurrencyFull(amount);
 
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof FileText }> = {
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof FileText }
+> = {
   DRAFT: { label: "Draft", variant: "secondary", icon: FileText },
   SENT: { label: "Sent", variant: "default", icon: Send },
   PAID: { label: "Paid", variant: "default", icon: Check },
@@ -75,30 +84,28 @@ function InvoicesContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: invoicesData, isLoading } = api.invoice.list.useQuery(
-    statusFilter !== "all" ? { status: statusFilter as "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED" } : undefined
+  const { data: invoicesData, isLoading } = useInvoices(
+    statusFilter !== "all" ? { status: statusFilter as InvoiceStatus } : undefined
   );
-  const { data: stats } = api.invoice.getStats.useQuery();
-  const utils = api.useUtils();
-
-  const updateStatus = api.invoice.updateStatus.useMutation({
-    onSuccess: () => {
-      utils.invoice.list.invalidate();
-      utils.invoice.getStats.invalidate();
-      toast.success("Invoice status updated");
-    },
-  });
-
-  const deleteInvoice = api.invoice.delete.useMutation({
-    onSuccess: () => {
-      utils.invoice.list.invalidate();
-      utils.invoice.getStats.invalidate();
-      toast.success("Invoice deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const { data: stats } = useInvoiceStats();
+  const updateInvoice = useUpdateInvoice();
+  const deleteInvoice = useDeleteInvoice();
 
   const invoices = invoicesData?.items ?? [];
+
+  const handleUpdateStatus = (id: number, status: InvoiceStatus) => {
+    updateInvoice.mutate(
+      { id, status },
+      { onSuccess: () => toast.success("Invoice status updated"), onError: (err) => toast.error(err.message) }
+    );
+  };
+
+  const handleDeleteInvoice = (id: number) => {
+    deleteInvoice.mutate(id, {
+      onSuccess: () => toast.success("Invoice deleted"),
+      onError: (err) => toast.error(err.message),
+    });
+  };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -224,22 +231,22 @@ function InvoicesContent() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {inv.status === "DRAFT" && (
-                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: inv.id, status: "SENT" })}>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "SENT")}>
                               <Send className="h-3.5 w-3.5 mr-2" /> Mark as Sent
                             </DropdownMenuItem>
                           )}
                           {(inv.status === "SENT" || inv.status === "OVERDUE") && (
-                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: inv.id, status: "PAID" })}>
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "PAID")}>
                               <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
                             </DropdownMenuItem>
                           )}
                           {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
-                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: inv.id, status: "CANCELLED" })} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "CANCELLED")} className="text-destructive">
                               <Ban className="h-3.5 w-3.5 mr-2" /> Cancel
                             </DropdownMenuItem>
                           )}
                           {inv.status !== "PAID" && (
-                            <DropdownMenuItem onClick={() => deleteInvoice.mutate({ id: inv.id })} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleDeleteInvoice(inv.id)} className="text-destructive">
                               <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
                             </DropdownMenuItem>
                           )}
@@ -260,18 +267,7 @@ function InvoicesContent() {
 }
 
 function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const utils = api.useUtils();
-  const createInvoice = api.invoice.create.useMutation({
-    onSuccess: () => {
-      utils.invoice.list.invalidate();
-      utils.invoice.getStats.invalidate();
-      onOpenChange(false);
-      setLineItems([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
-      toast.success("Invoice created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
+  const createInvoice = useCreateInvoice();
   const [lineItems, setLineItems] = useState([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
   const [taxRate, setTaxRate] = useState(18);
   const [discount, setDiscount] = useState(0);
@@ -298,13 +294,23 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const handleSubmit = () => {
     const validItems = lineItems.filter((i) => i.description.trim() && i.amount > 0);
     if (validItems.length === 0) { toast.error("Add at least one line item"); return; }
-    createInvoice.mutate({
-      lineItems: validItems,
-      taxRate,
-      discount,
-      dueDate: dueDate || undefined,
-      notes: notes || undefined,
-    });
+    createInvoice.mutate(
+      {
+        lineItems: validItems,
+        taxRate,
+        discount,
+        dueDate: dueDate || undefined,
+        notes: notes || undefined,
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          setLineItems([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
+          toast.success("Invoice created");
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
   };
 
   return (

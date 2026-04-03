@@ -1,7 +1,14 @@
 "use client";
 
 import { use, useState } from "react";
-import { trpc } from "@/trpc/client";
+import {
+  useIntakeRequests,
+  useCreateIntakeRequest,
+  useUpdateIntakeRequest,
+  useProjectMembers,
+  useCycles,
+  useModules,
+} from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,51 +88,13 @@ export default function IntakePage({
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("pending");
 
-  const utils = trpc.useUtils();
-  const { data: intakeItems, isLoading } = trpc.project.intakeGetByProject.useQuery(
-    { projectId }
-  );
-  const { data: members } = trpc.project.getProjectMembers.useQuery();
-  const { data: cycles } = trpc.project.cyclesGetByProject.useQuery({ projectId });
-  const { data: modules } = trpc.project.modulesGetByProject.useQuery({ projectId });
+  const { data: intakeData, isLoading } = useIntakeRequests(projectId);
+  const { data: members } = useProjectMembers(projectId);
+  const { data: cycles } = useCycles(projectId);
+  const { data: modules } = useModules(projectId);
 
-  const createMutation = trpc.project.intakeCreate.useMutation({
-    onSuccess: () => {
-      utils.project.intakeGetByProject.invalidate({ projectId });
-      setCreateOpen(false);
-      createForm.reset();
-      toast.success("Intake item created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const acceptMutation = trpc.project.intakeAccept.useMutation({
-    onSuccess: () => {
-      utils.project.intakeGetByProject.invalidate({ projectId });
-      setAcceptOpen(false);
-      acceptForm.reset();
-      toast.success("Item accepted and work item created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const declineMutation = trpc.project.intakeDecline.useMutation({
-    onSuccess: () => {
-      utils.project.intakeGetByProject.invalidate({ projectId });
-      setDeclineOpen(false);
-      declineForm.reset();
-      toast.success("Item declined");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const duplicateMutation = trpc.project.intakeMarkDuplicate.useMutation({
-    onSuccess: () => {
-      utils.project.intakeGetByProject.invalidate({ projectId });
-      toast.success("Item marked as duplicate");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createMutation = useCreateIntakeRequest();
+  const updateMutation = useUpdateIntakeRequest();
 
   const createForm = useForm<CreateIntakeForm>({
     resolver: zodResolver(createIntakeSchema),
@@ -140,17 +109,47 @@ export default function IntakePage({
   });
 
   const onCreateSubmit = (data: CreateIntakeForm) => {
-    createMutation.mutate({ ...data, projectId });
+    createMutation.mutate(
+      { ...data, projectId },
+      {
+        onSuccess: () => {
+          setCreateOpen(false);
+          createForm.reset();
+          toast.success("Intake item created");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
-  const onAcceptSubmit = (data: AcceptForm) => {
+  const onAcceptSubmit = (_data: AcceptForm) => {
     if (selectedItemId === null) return;
-    acceptMutation.mutate({ id: selectedItemId, stateId: parseInt(data.state), assigneeId: data.assigneeId?.toString(), cycleId: data.cycleId, moduleId: data.moduleId });
+    updateMutation.mutate(
+      { id: selectedItemId, projectId, status: "accepted" },
+      {
+        onSuccess: () => {
+          setAcceptOpen(false);
+          acceptForm.reset();
+          toast.success("Item accepted and work item created");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   const onDeclineSubmit = (data: DeclineForm) => {
     if (selectedItemId === null) return;
-    declineMutation.mutate({ id: selectedItemId, reason: data.reason });
+    updateMutation.mutate(
+      { id: selectedItemId, projectId, status: "declined", declineReason: data.reason },
+      {
+        onSuccess: () => {
+          setDeclineOpen(false);
+          declineForm.reset();
+          toast.success("Item declined");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   const handleAccept = (itemId: number) => {
@@ -166,10 +165,16 @@ export default function IntakePage({
   };
 
   const handleDuplicate = (itemId: number) => {
-    duplicateMutation.mutate({ id: itemId, linkedWorkItemId: 0 });
+    updateMutation.mutate(
+      { id: itemId, projectId, status: "duplicate" },
+      {
+        onSuccess: () => toast.success("Item marked as duplicate"),
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
-  const allItems = intakeItems && "items" in intakeItems ? intakeItems.items : [];
+  const allItems = intakeData?.items ?? [];
   const filteredItems = allItems.filter((item) => {
     if (activeTab === "all") return true;
     return item.status === activeTab;
@@ -435,8 +440,8 @@ export default function IntakePage({
                     </SelectTrigger>
                     <SelectContent>
                       {members?.map((m) => (
-                        <SelectItem key={m.id} value={m.id.toString()}>
-                          {m.name ?? m.email}
+                        <SelectItem key={m.userId} value={m.userId}>
+                          {m.user?.name ?? m.user?.email ?? m.userId}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -498,10 +503,10 @@ export default function IntakePage({
             </div>
             <Button
               type="submit"
-              disabled={acceptMutation.isPending}
+              disabled={updateMutation.isPending}
               className="w-full"
             >
-              {acceptMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}
+              {updateMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </form>
@@ -533,10 +538,10 @@ export default function IntakePage({
             <Button
               type="submit"
               variant="destructive"
-              disabled={declineMutation.isPending}
+              disabled={updateMutation.isPending}
               className="w-full"
             >
-              {declineMutation.isPending ? "Declining..." : "Decline Item"}
+              {updateMutation.isPending ? "Declining..." : "Decline Item"}
             </Button>
           </form>
         </SheetContent>

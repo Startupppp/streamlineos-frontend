@@ -1,10 +1,14 @@
 "use client";
 
 import { use, useState } from "react";
-import { trpc } from "@/trpc/client";
+import {
+  useViews,
+  useCreateView,
+  useUpdateView,
+  useDeleteView,
+} from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import {
@@ -32,9 +36,7 @@ import {
   Pin,
   PinOff,
   ArrowRight,
-  Eye,
   Trash2,
-  X,
 } from "lucide-react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { z } from "zod";
@@ -43,8 +45,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const LAYOUT_TYPES = ["board", "list", "table", "calendar", "gantt"] as const;
-const FILTER_FIELDS = ["status", "priority", "assignee", "label", "module", "cycle"] as const;
-const FILTER_OPERATORS = ["is", "is_not", "contains", "is_empty", "is_not_empty"] as const;
 
 const createViewSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -70,35 +70,10 @@ export default function ViewsPage({
   const [createOpen, setCreateOpen] = useState(false);
   const router = useRouter();
 
-  const utils = trpc.useUtils();
-  const { data: views, isLoading } = trpc.project.viewsGetByProject.useQuery({
-    projectId,
-  });
-
-  const createMutation = trpc.project.viewsCreate.useMutation({
-    onSuccess: () => {
-      utils.project.viewsGetByProject.invalidate({ projectId });
-      setCreateOpen(false);
-      form.reset();
-      toast.success("View created");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const togglePinMutation = trpc.project.viewsUpdate.useMutation({
-    onSuccess: () => {
-      utils.project.viewsGetByProject.invalidate({ projectId });
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const deleteMutation = trpc.project.viewsDelete.useMutation({
-    onSuccess: () => {
-      utils.project.viewsGetByProject.invalidate({ projectId });
-      toast.success("View deleted");
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const { data: views, isLoading } = useViews(projectId);
+  const createMutation = useCreateView();
+  const togglePinMutation = useUpdateView();
+  const deleteMutation = useDeleteView();
 
   const form = useForm<CreateViewForm>({
     resolver: zodResolver(createViewSchema) as unknown as Resolver<CreateViewForm>,
@@ -106,25 +81,46 @@ export default function ViewsPage({
   });
 
   const onSubmit = (data: CreateViewForm) => {
-    createMutation.mutate({ ...data, projectId });
+    createMutation.mutate(
+      { ...data, projectId },
+      {
+        onSuccess: () => {
+          setCreateOpen(false);
+          form.reset();
+          toast.success("View created");
+        },
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   const handleNavigateToView = (view: {
     id: number;
     layoutType: string;
   }) => {
-    const params = new URLSearchParams();
-    params.set("viewId", view.id.toString());
-    params.set("view", view.layoutType);
-    router.push(`/projects/${projectId}?${params.toString()}`);
+    const urlParams = new URLSearchParams();
+    urlParams.set("viewId", view.id.toString());
+    urlParams.set("view", view.layoutType);
+    router.push(`/projects/${projectId}?${urlParams.toString()}`);
   };
 
   const handleTogglePin = (viewId: number, isPinned: boolean) => {
-    togglePinMutation.mutate({ id: viewId, isPinned });
+    togglePinMutation.mutate(
+      { id: viewId, projectId, isPinned },
+      {
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   const handleDelete = (viewId: number) => {
-    deleteMutation.mutate({ id: viewId });
+    deleteMutation.mutate(
+      { id: viewId, projectId },
+      {
+        onSuccess: () => toast.success("View deleted"),
+        onError: (err) => toast.error((err as Error).message),
+      }
+    );
   };
 
   const pinnedViews = (views ?? []).filter((v) => v.isPinned);

@@ -12,7 +12,12 @@ import {
   CheckCheck,
   Loader2,
 } from "lucide-react";
-import { api } from "@/trpc/react";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from "@/lib/api/hooks/notifications";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,28 +79,12 @@ function formatRelativeTime(date: Date | string | null): string {
 export default function NotificationsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabFilter>("ALL");
-  const utils = api.useUtils();
 
   const isUnreadOnly = activeTab === "UNREAD";
-  const { data: notifications, isLoading } = api.notifications.getAll.useQuery({
-    limit: 50,
-    unreadOnly: isUnreadOnly,
-  });
-  const { data: unreadData } = api.notifications.getUnreadCount.useQuery();
-
-  const markRead = api.notifications.markRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.getAll.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
-    },
-  });
-
-  const markAllRead = api.notifications.markAllRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.getAll.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
-    },
-  });
+  const { data: notifications, isLoading } = useNotifications(isUnreadOnly, 50);
+  const { data: unreadData } = useUnreadNotificationCount();
+  const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
 
   const unreadCount = unreadData?.count ?? 0;
 
@@ -106,69 +95,73 @@ export default function NotificationsPage() {
 
   function handleNotificationClick(notification: {
     id: number;
-    isRead: boolean | null;
+    isRead: boolean;
     link: string | null;
   }) {
     if (!notification.isRead) {
-      markRead.mutate({ id: notification.id });
+      markRead.mutate(notification.id);
     }
     if (notification.link) {
       router.push(notification.link);
     }
   }
 
+  function handleMarkAllRead() {
+    markAllRead.mutate(undefined);
+  }
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-4 -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 space-y-4 border-b border-border/40">
-      <PageHeader
-        title="Notifications"
-        description="Stay up to date with everything happening in your workspace"
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={unreadCount === 0 || markAllRead.isPending}
-            onClick={() => markAllRead.mutate()}
-            className="border-[#bd882c]/30 text-[#bd882c] hover:bg-[#bd882c]/10 hover:text-[#bd882c]"
-          >
-            {markAllRead.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <CheckCheck className="mr-2 h-4 w-4" />
-            )}
-            Mark all as read
-            {unreadCount > 0 && (
-              <Badge
-                variant="secondary"
-                className="ml-2 bg-[#bd882c]/20 text-[#bd882c] text-xs"
-              >
-                {unreadCount}
-              </Badge>
-            )}
-          </Button>
-        }
-      />
+        <PageHeader
+          title="Notifications"
+          description="Stay up to date with everything happening in your workspace"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={unreadCount === 0 || markAllRead.isPending}
+              onClick={handleMarkAllRead}
+              className="border-[#bd882c]/30 text-[#bd882c] hover:bg-[#bd882c]/10 hover:text-[#bd882c]"
+            >
+              {markAllRead.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCheck className="mr-2 h-4 w-4" />
+              )}
+              Mark all as read
+              {unreadCount > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="ml-2 bg-[#bd882c]/20 text-[#bd882c] text-xs"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          }
+        />
 
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as TabFilter)}
-      >
-        <TabsList className="bg-card border border-border">
-          <TabsTrigger value="ALL">All</TabsTrigger>
-          <TabsTrigger value="UNREAD">
-            Unread
-            {unreadCount > 0 && (
-              <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#bd882c] px-1.5 text-[10px] font-semibold text-white">
-                {unreadCount}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="INFO">Info</TabsTrigger>
-          <TabsTrigger value="SUCCESS">Success</TabsTrigger>
-          <TabsTrigger value="WARNING">Warning</TabsTrigger>
-          <TabsTrigger value="ERROR">Error</TabsTrigger>
-        </TabsList>
-      </Tabs>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as TabFilter)}
+        >
+          <TabsList className="bg-card border border-border">
+            <TabsTrigger value="ALL">All</TabsTrigger>
+            <TabsTrigger value="UNREAD">
+              Unread
+              {unreadCount > 0 && (
+                <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#bd882c] px-1.5 text-[10px] font-semibold text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="INFO">Info</TabsTrigger>
+            <TabsTrigger value="SUCCESS">Success</TabsTrigger>
+            <TabsTrigger value="WARNING">Warning</TabsTrigger>
+            <TabsTrigger value="ERROR">Error</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {isLoading ? (

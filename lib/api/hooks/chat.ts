@@ -309,3 +309,14 @@ export function useVotePoll() {
     },
   });
 }
+
+// ─── Backward-compatibility aliases ───────────────────────────────────────────
+
+/** Alias for useMarkChannelRead — kept for backward compatibility. */
+export const useMarkRead = useMarkChannelRead;
+
+/** Alias for useCreateDMChannel — kept for backward compatibility. */
+export const useCreateDM = useCreateDMChannel;
+
+/** Alias for useChatSearchMessages — kept for backward compatibility. */
+export const useChatSearch = useChatSearchMessages;

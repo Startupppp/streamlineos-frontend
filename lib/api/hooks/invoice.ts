@@ -33,7 +33,7 @@ interface CreateInvoiceInput {
 
 interface UpdateInvoiceInput extends Partial<CreateInvoiceInput> {
   id: number;
-  status?: "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
+  status?: InvoiceStatus;
 }
 
 export const useInvoices = (
@@ -99,6 +99,17 @@ export const useUpdateInvoice = () => {
   return useMutation<{ success: boolean }, Error, UpdateInvoiceInput>({
     mutationFn: ({ id, ...data }) =>
       apiClient.patch<{ success: boolean }>(`/invoices/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+    },
+  });
+};
+
+export const useDeleteInvoice = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationFn: (id) =>
+      apiClient.delete<{ success: boolean }>(`/invoices/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
     },

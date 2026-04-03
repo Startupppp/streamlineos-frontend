@@ -16,7 +16,11 @@ import {
   subMonths,
   subQuarters,
 } from "date-fns";
-import { api } from "@/trpc/react";
+import {
+  useProjects,
+  useTimeEntries,
+  useDeleteTimeEntry,
+} from "@/lib/api/hooks/projects";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,8 +130,8 @@ export default function TimesheetsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
 
-  const { data: projects } = api.project.getProjects.useQuery();
-  const utils = api.useUtils();
+  const { data: projectsData } = useProjects();
+  const projects = projectsData?.data ?? [];
 
   const computedRange = useMemo(() => {
     const now = new Date();
@@ -169,7 +173,7 @@ export default function TimesheetsPage() {
     }
   }, [dateRange, startDate, endDate]);
 
-  const { data: entries, isLoading } = api.project.getTimeEntries.useQuery({
+  const { data: entries, isLoading } = useTimeEntries({
     projectId: selectedProject === "all" ? undefined : parseInt(selectedProject),
     startDate: computedRange.start,
     endDate: computedRange.end,
@@ -197,15 +201,7 @@ export default function TimesheetsPage() {
     setViewMode("current");
   }, []);
 
-  const deleteMutation = api.project.deleteTimeEntry.useMutation({
-    onSuccess: () => {
-      toast.success("Time entry deleted");
-      setDeleteDialogOpen(false);
-      setEntryToDelete(null);
-      utils.project.getTimeEntries.invalidate();
-    },
-    onError: (err) => toast.error(err.message || "Failed to delete"),
-  });
+  const deleteMutation = useDeleteTimeEntry();
 
   const handleViewMode = useCallback((mode: ViewMode) => {
     setViewMode(mode);
@@ -555,7 +551,20 @@ export default function TimesheetsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => entryToDelete && deleteMutation.mutate({ entryId: entryToDelete })}
+              onClick={() =>
+                entryToDelete &&
+                deleteMutation.mutate(
+                  { entryId: entryToDelete },
+                  {
+                    onSuccess: () => {
+                      toast.success("Time entry deleted");
+                      setDeleteDialogOpen(false);
+                      setEntryToDelete(null);
+                    },
+                    onError: (err) => toast.error((err as Error).message || "Failed to delete"),
+                  }
+                )
+              }
               disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

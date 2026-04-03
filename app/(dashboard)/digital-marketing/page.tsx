@@ -4,11 +4,11 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Users, Megaphone, BarChart3, Share2 } from "lucide-react";
-import { api } from "@/trpc/react";
+import { useDmLeadStats } from "@/lib/api/hooks/dm";
 import { cn } from "@/lib/utils";
 
 export default function DigitalMarketingPage() {
-  const { data: stats } = api.dmLeads.getStats.useQuery();
+  const { data: stats } = useDmLeadStats();
 
   const modules = [
     { title: "DM Leads", description: "Capture and manage leads from digital campaigns", href: "/digital-marketing/leads", icon: Users, count: stats?.total ?? 0, color: "text-blue-400" },

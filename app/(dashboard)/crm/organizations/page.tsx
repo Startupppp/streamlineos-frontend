@@ -27,7 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { api } from "@/trpc/react";
+import { useCrmOrganizations, useCreateCrmOrganization } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
@@ -51,45 +51,43 @@ function getHealthBadge(score: number | null) {
 }
 
 export default function OrganizationsPage() {
-  const utils = api.useUtils();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data, isLoading } = api.contacts.getOrganizations.useQuery({
+  const { data, isLoading } = useCrmOrganizations({
     search: search || undefined,
     limit: PAGE_SIZE,
-    offset: page * PAGE_SIZE,
+    page: page + 1,
   });
 
-  const createOrg = api.contacts.createOrganization.useMutation({
-    onSuccess: () => {
-      utils.contacts.getOrganizations.invalidate();
-      toast.success("Organization created");
-      setCreateOpen(false);
-    },
-    onError: (err) => toast.error(err.message),
-  });
+  const createOrgMutation = useCreateCrmOrganization();
 
   const form = useForm<CreateOrgForm>({
     resolver: zodResolver(createOrgSchema),
     defaultValues: { name: "", domain: "", industry: "", website: "", linkedinUrl: "", description: "" },
   });
 
-  const onSubmit = useCallback((data: CreateOrgForm) => {
-    createOrg.mutate({
-      name: data.name,
-      domain: data.domain || undefined,
-      industry: data.industry || undefined,
-      size: data.size || undefined,
-      website: data.website || undefined,
-      linkedinUrl: data.linkedinUrl || undefined,
-      description: data.description || undefined,
-    });
+  const onSubmit = useCallback((formData: CreateOrgForm) => {
+    createOrgMutation.mutate(
+      {
+        name: formData.name,
+        domain: formData.domain || undefined,
+        industry: formData.industry || undefined,
+        size: formData.size || undefined,
+        website: formData.website || undefined,
+        linkedinUrl: formData.linkedinUrl || undefined,
+        description: formData.description || undefined,
+      },
+      {
+        onSuccess: () => { toast.success("Organization created"); setCreateOpen(false); },
+        onError: (err) => toast.error(err.message),
+      }
+    );
     form.reset();
-  }, [createOrg, form]);
+  }, [createOrgMutation, form]);
 
-  const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
+  const totalPages = data?.totalPages ?? 0;
 
   if (isLoading) {
     return (
@@ -111,7 +109,7 @@ export default function OrganizationsPage() {
       animate="visible"
     >
       <motion.div variants={fadeUp} className="flex items-center justify-between">
-        <PageHeader title="Organizations" description={`${data?.total ?? 0} organizations`} />
+        <PageHeader title="Organizations" description={`${data?.totalCount ?? 0} organizations`} />
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#bd882c] hover:bg-[#a67724] text-white">
@@ -184,8 +182,8 @@ export default function OrganizationsPage() {
                     )} />
                   </div>
                 </div>
-                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createOrg.isPending}>
-                  {createOrg.isPending ? "Creating..." : "Create Organization"}
+                <Button type="submit" className="w-full bg-[#bd882c] hover:bg-[#a67724] text-white" disabled={createOrgMutation.isPending}>
+                  {createOrgMutation.isPending ? "Creating..." : "Create Organization"}
                 </Button>
               </form>
             </Form>
@@ -206,7 +204,7 @@ export default function OrganizationsPage() {
       </motion.div>
 
       <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {data?.items.map(org => {
+        {data?.organizations.map(org => {
           const health = getHealthBadge(org.healthScore);
           return (
             <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-[#bd882c]/40">
@@ -259,7 +257,7 @@ export default function OrganizationsPage() {
         })}
       </motion.div>
 
-      {data?.items.length === 0 && (
+      {(data?.organizations.length ?? 0) === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <EmptyProjectsIllustration className="mx-auto mb-3 w-36 h-36" />
           <p className="text-sm font-medium text-foreground">No organizations found</p>

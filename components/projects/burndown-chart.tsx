@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSprintBurndown } from "@/lib/hooks/trpc-hooks";
+import { useSprintBurndown } from "@/lib/api/hooks/projects";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { TrendingDown } from "lucide-react";
 
 interface BurndownChartProps {
   sprintId: number;
+  projectId: number;
 }
 
-export function BurndownChart({ sprintId }: BurndownChartProps) {
-  const { data, isLoading } = useSprintBurndown(sprintId);
+export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
+  const { data, isLoading } = useSprintBurndown(projectId, sprintId);
   const [hoveredPoint, setHoveredPoint] = useState<{ x: number; y: number; date: string; points: number } | null>(null);
 
   if (isLoading) {

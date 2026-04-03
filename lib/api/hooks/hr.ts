@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -11,6 +12,7 @@ import type {
   LeavesResult,
   LeaveBalance,
   Payroll,
+  PayrollWithUser,
   SalaryStructure,
   Expense,
   Asset,
@@ -23,6 +25,15 @@ import type {
   PaginatedEmployees,
   DocumentType,
   TicketStatus,
+  WfhRequest,
+  Holiday,
+  Device,
+  EmployeePayslip,
+  EmployeeStats,
+  Incentive,
+  IncentivesResult,
+  IncentiveStats,
+  IncentiveConfig,
   CreateDepartmentInput,
   UpdateProfileInput,
   CheckInInput,
@@ -42,6 +53,24 @@ import type {
   UpsertWorkLogInput,
   UpdateWorkLogStatusInput,
   GetWorkLogsInput,
+  CreateWfhRequestInput,
+  ProcessWfhRequestInput,
+  AddHolidayInput,
+  DeleteHolidayInput,
+  CreateDeviceInput,
+  UpdateDeviceInput,
+  DeleteDeviceInput,
+  GetEmployeePayslipsInput,
+  GetAllPayrollsInput,
+  GenerateEmployeePayslipInput,
+  ApprovePayrollInput,
+  MarkPayrollPaidInput,
+  GetMonthlyAttendanceInput,
+  OnboardEmployeeInput,
+  GetIncentivesInput,
+  ApproveIncentiveInput,
+  RejectIncentiveInput,
+  SetIncentiveConfigInput,
 } from "@/types/hr";
 
 // ─── Departments ──────────────────────────────────────────────────────────────
@@ -89,10 +118,13 @@ export function useUpdateProfile() {
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
 
-export function useHrAttendanceStatus() {
+export function useHrAttendanceStatus(
+  options?: Omit<UseQueryOptions<AttendanceStatusResult, Error>, "queryKey" | "queryFn">
+) {
   return useQuery({
     queryKey: queryKeys.hr.attendanceStatus(),
     queryFn: () => apiClient.get<AttendanceStatusResult>("/hr/attendance/status"),
+    ...options,
   });
 }
 
@@ -108,33 +140,51 @@ export function useHrAttendanceLogs(params?: {
   });
 }
 
-export function useHrCheckIn() {
+export function useHrCheckIn(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, CheckInInput>, "mutationFn">
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: CheckInInput) =>
       apiClient.post<{ success: boolean }>("/hr/attendance/check-in", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() }),
+    onSuccess: (...args) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      options?.onSuccess?.(...args);
+    },
+    onError: options?.onError,
+    ...options,
   });
 }
 
-export function useHrCheckOut() {
+export function useHrCheckOut(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, void>, "mutationFn">
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/hr/attendance/check-out"),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() }),
+    onSuccess: (...args) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      options?.onSuccess?.(...args);
+    },
+    onError: options?.onError,
+    ...options,
   });
 }
 
-export function useHrToggleBreak() {
+export function useHrToggleBreak(
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, void>, "mutationFn">
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/hr/attendance/break"),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() }),
+    onSuccess: (...args) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      options?.onSuccess?.(...args);
+    },
+    onError: options?.onError,
+    ...options,
   });
 }
 
@@ -420,23 +470,35 @@ export function useGetWorkLogs(input: GetWorkLogsInput) {
   });
 }
 
-export function useUpsertWorkLog() {
+export function useUpsertWorkLog(
+  options?: Omit<UseMutationOptions<WorkLog, Error, UpsertWorkLogInput>, "mutationFn">
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: UpsertWorkLogInput) =>
       apiClient.post<WorkLog>("/hr/work-logs", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: (...args) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all });
+      options?.onSuccess?.(...args);
+    },
+    onError: options?.onError,
+    ...options,
   });
 }
 
-export function useUpdateWorkLogStatus() {
+export function useUpdateWorkLogStatus(
+  options?: Omit<UseMutationOptions<WorkLog, Error, UpdateWorkLogStatusInput>, "mutationFn">
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: UpdateWorkLogStatusInput) =>
       apiClient.patch<WorkLog>("/hr/work-logs/status", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+    onSuccess: (...args) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all });
+      options?.onSuccess?.(...args);
+    },
+    onError: options?.onError,
+    ...options,
   });
 }
 
@@ -446,5 +508,324 @@ export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
     queryFn: () => apiClient.get<OrgChartNode[]>("/hr/org-chart"),
+  });
+}
+
+// ─── WFH Requests ─────────────────────────────────────────────────────────────
+
+export function useHrWfhRequests() {
+  return useQuery({
+    queryKey: queryKeys.hr.wfhRequests(),
+    queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh"),
+  });
+}
+
+export function useHrPendingWfhRequests() {
+  return useQuery({
+    queryKey: queryKeys.hr.pendingWfhRequests(),
+    queryFn: () => apiClient.get<WfhRequest[]>("/hr/wfh/pending"),
+  });
+}
+
+export function useCreateWfhRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateWfhRequestInput) =>
+      apiClient.post<{ success: boolean }>("/hr/wfh", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });
+    },
+  });
+}
+
+export function useProcessWfhRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ requestId, ...data }: ProcessWfhRequestInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/wfh/${requestId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });
+    },
+  });
+}
+
+// ─── Holidays ─────────────────────────────────────────────────────────────────
+
+export function useHrHolidaysForYear(year: number) {
+  return useQuery({
+    queryKey: queryKeys.hr.holidaysYear(year),
+    queryFn: () =>
+      apiClient.get<Holiday[]>("/hr/holidays", { year } as Record<string, unknown>),
+  });
+}
+
+export function useHrHolidaysForCalendar(params: { year: number; month: number }) {
+  return useQuery({
+    queryKey: queryKeys.hr.holidaysCalendar(params),
+    queryFn: () =>
+      apiClient.get<Holiday[]>("/hr/holidays/calendar", params as Record<string, unknown>),
+  });
+}
+
+export function useAddHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AddHolidayInput) =>
+      apiClient.post<{ success: boolean }>("/hr/holidays", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+  });
+}
+
+export function useDeleteHoliday() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ holidayId }: DeleteHolidayInput) =>
+      apiClient.delete<{ success: boolean }>(`/hr/holidays/${holidayId}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+  });
+}
+
+// ─── Devices ──────────────────────────────────────────────────────────────────
+
+export function useHrDevices(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.hr.devices(params),
+    queryFn: () => apiClient.get<Device[]>("/hr/devices", params),
+  });
+}
+
+export function useCreateDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateDeviceInput) =>
+      apiClient.post<Device>("/hr/devices", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+  });
+}
+
+export function useUpdateDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ deviceId, ...data }: UpdateDeviceInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/devices/${deviceId}`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+  });
+}
+
+export function useDeleteDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ deviceId }: DeleteDeviceInput) =>
+      apiClient.delete<{ success: boolean }>(`/hr/devices/${deviceId}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
+  });
+}
+
+// ─── Monthly Attendance ───────────────────────────────────────────────────────
+
+export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
+  return useQuery({
+    queryKey: queryKeys.hr.monthlyAttendance(params),
+    queryFn: () =>
+      apiClient.get<AttendanceLog[]>("/hr/attendance/monthly", params as unknown as Record<string, unknown>),
+    enabled: !!params.userId,
+  });
+}
+
+// ─── Employee Stats ───────────────────────────────────────────────────────────
+
+export function useHrEmployeeStats(userId: string) {
+  return useQuery({
+    queryKey: queryKeys.hr.employeeStats(userId),
+    queryFn: () =>
+      apiClient.get<EmployeeStats>("/hr/employees/stats", { userId }),
+    enabled: !!userId,
+  });
+}
+
+export function useHrEmployeeProjects(userId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "employeeProjects", userId] as const,
+    queryFn: () =>
+      apiClient.get<Record<string, unknown>[]>("/hr/employees/projects", { userId }),
+    enabled: !!userId,
+  });
+}
+
+export function useHrEmployeeTickets(userId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "employeeTickets", userId] as const,
+    queryFn: () =>
+      apiClient.get<{ data: Record<string, unknown>[] }>("/hr/employees/tickets", { userId }),
+    enabled: !!userId,
+  });
+}
+
+// ─── Payslips (Employee View) ─────────────────────────────────────────────────
+
+export function useHrEmployeePayslips(params?: GetEmployeePayslipsInput) {
+  return useQuery({
+    queryKey: queryKeys.hr.employeePayslips(params?.userId),
+    queryFn: () =>
+      apiClient.get<EmployeePayslip[]>(
+        "/hr/payslips",
+        params as Record<string, unknown> | undefined
+      ),
+  });
+}
+
+// ─── Payroll Admin ────────────────────────────────────────────────────────────
+
+export function useHrAllPayrolls(params: GetAllPayrollsInput) {
+  return useQuery({
+    queryKey: queryKeys.hr.payrolls({ month: params.month }),
+    queryFn: () =>
+      apiClient.get<PayrollWithUser[]>("/hr/payrolls/all", params as unknown as Record<string, unknown>),
+  });
+}
+
+export function useGenerateEmployeePayslip() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: GenerateEmployeePayslipInput) =>
+      apiClient.post<{ success: boolean }>("/hr/payrolls/generate", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
+  });
+}
+
+export function useApprovePayroll() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ payrollId }: ApprovePayrollInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/payrolls/${payrollId}/approve`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
+  });
+}
+
+export function useMarkPayrollPaid() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ payrollId }: MarkPayrollPaidInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/payrolls/${payrollId}/paid`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
+  });
+}
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+
+export function useOnboardEmployee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: OnboardEmployeeInput) =>
+      apiClient.post<{ success: boolean }>("/hr/employees/onboard", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
+  });
+}
+
+// ─── Incentives ───────────────────────────────────────────────────────────────
+
+export function useHrIncentives(params?: GetIncentivesInput) {
+  return useQuery({
+    queryKey: queryKeys.hr.incentives(params as Record<string, unknown> | undefined),
+    queryFn: () =>
+      apiClient.get<IncentivesResult>("/hr/incentives", params as Record<string, unknown> | undefined),
+  });
+}
+
+export function useHrIncentiveStats() {
+  return useQuery({
+    queryKey: queryKeys.hr.incentiveStats(),
+    queryFn: () => apiClient.get<IncentiveStats>("/hr/incentives/stats"),
+  });
+}
+
+export function useHrIncentiveConfigs() {
+  return useQuery({
+    queryKey: queryKeys.hr.incentiveConfigs(),
+    queryFn: () => apiClient.get<IncentiveConfig[]>("/hr/incentives/config"),
+  });
+}
+
+export function useApproveIncentive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: ApproveIncentiveInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/approve`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() }),
+  });
+}
+
+export function useRejectIncentive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: RejectIncentiveInput) =>
+      apiClient.patch<{ success: boolean }>(`/hr/incentives/${id}/reject`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() }),
+  });
+}
+
+export function useSetIncentiveConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: SetIncentiveConfigInput) =>
+      apiClient.post<IncentiveConfig>("/hr/incentives/config", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.incentiveConfigs() }),
+  });
+}
+
+// ─── Profile / Password / Notification Preferences ────────────────────────────
+
+interface NotificationPreferences {
+  emailNotifications: boolean;
+  leaveReminders: boolean;
+  projectUpdates: boolean;
+}
+
+export function useNotificationPreferences() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
+    queryFn: () =>
+      apiClient.get<NotificationPreferences>("/hr/notification-preferences"),
+  });
+}
+
+export function useUpdateNotificationPreferences() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<NotificationPreferences>) =>
+      apiClient.patch<{ success: boolean }>(
+        "/hr/notification-preferences",
+        data
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
+      }),
+  });
+}
+
+interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (data: ChangePasswordInput) =>
+      apiClient.patch<{ success: boolean }>("/hr/change-password", data),
   });
 }

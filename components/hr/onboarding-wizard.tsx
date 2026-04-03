@@ -19,8 +19,8 @@ import {
   Loader2,
   Lightbulb,
 } from "lucide-react";
-import { api } from "../../trpc/react";
-import { useRolesList } from "../../lib/hooks/roles-hooks";
+import { useHrDepartments, useOnboardEmployee } from "@/lib/api/hooks/hr";
+import { useRolesList } from "@/lib/api/hooks/roles";
 import { useRouter } from "next/navigation";
 
 import { StepPersonalInfo } from "./_onboarding/step-personal-info";
@@ -58,8 +58,10 @@ const COMMON_ROLE_DEPARTMENTS = [
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
-  const { data: departments } = api.hr.getDepartments.useQuery();
+  const { data: departments } = useHrDepartments();
   const { data: orgRoles } = useRolesList();
+  const onboardEmployee = useOnboardEmployee();
+
   const assignableRoles = useMemo(
     () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
     [orgRoles]
@@ -74,15 +76,6 @@ export function OnboardingWizard() {
       ...commonRoles
     ];
   }, [departments]);
-  const onboardEmployee = api.hr.onboardEmployee.useMutation({
-    onSuccess: () => {
-      toast.success("Employee onboarding initiated successfully!");
-      router.push("/hr/employees");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to onboard employee");
-    },
-  });
 
   type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
@@ -116,7 +109,7 @@ export function OnboardingWizard() {
       }
     };
     return base;
-  }, [assignableRoles]);
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
@@ -160,12 +153,24 @@ export function OnboardingWizard() {
   };
 
   const onSubmit = (data: z.infer<typeof onboardEmployeeInputSchema>) => {
-    onboardEmployee.mutate({
-      ...data,
-      firstName: toTitleCase(data.firstName),
-      lastName: toTitleCase(data.lastName),
-      designation: formatDesignation(data.designation),
-    });
+    onboardEmployee.mutate(
+      {
+        ...data,
+        firstName: toTitleCase(data.firstName),
+        lastName: toTitleCase(data.lastName),
+        designation: formatDesignation(data.designation),
+        password: data.password ?? "",
+      } as import("@/types/hr").OnboardEmployeeInput,
+      {
+        onSuccess: () => {
+          toast.success("Employee onboarding initiated successfully!");
+          router.push("/hr/employees");
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to onboard employee");
+        },
+      }
+    );
   };
 
   const nextStepLabel = currentStep < STEPS.length ? STEPS[currentStep]?.label : "";

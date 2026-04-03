@@ -34,10 +34,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { api } from "@/trpc/react";
+import {
+  useProjects,
+  useProject,
+  useLogTime,
+} from "@/lib/api/hooks/projects";
 import { Plus, Loader2, Link as LinkIcon, Upload, X, FileText } from "lucide-react";
 import { addTimeEntryInputSchema } from "@/lib/validations/project";
-import type { Project, Ticket } from "@/types/api";
+import type { ProjectListItem, Ticket } from "@/types/projects";
 
 interface LogTimeDialogProps {
   trigger?: React.ReactNode;
@@ -54,27 +58,13 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: projects } = api.project.getProjects.useQuery();
-  const { data: projectDetails, isLoading: isLoadingTickets } = api.project.getProjectDetails.useQuery(
-    { id: selectedProjectId! },
-    { enabled: !!selectedProjectId }
+  const { data: projectsData } = useProjects();
+  const projects = projectsData?.data ?? [];
+  const { data: projectDetails, isLoading: isLoadingTickets } = useProject(
+    selectedProjectId ?? 0
   );
-  
-  const utils = api.useUtils();
-  const mutation = api.project.addTimeEntry.useMutation({
-      onSuccess: () => {
-          toast.success("Time logged successfully");
-          setOpen(false);
-          form.reset();
-          setSelectedProjectId(null);
-          setAttachmentFiles([]);
-          setAttachmentPreviews([]);
-          utils.project.getTimeEntries.invalidate();
-      },
-      onError: (err) => {
-          toast.error(err.message || "Failed to log time");
-      }
-  });
+
+  const mutation = useLogTime();
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -177,7 +167,19 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
       workLink: (values.workLink || "").trim() || undefined,
       imageUrl: imageUrl ?? values.imageUrl ?? "",
     };
-    mutation.mutate(submitValues);
+    mutation.mutate(submitValues, {
+      onSuccess: () => {
+        toast.success("Time logged successfully");
+        setOpen(false);
+        form.reset();
+        setSelectedProjectId(null);
+        setAttachmentFiles([]);
+        setAttachmentPreviews([]);
+      },
+      onError: (err) => {
+        toast.error((err as Error).message || "Failed to log time");
+      },
+    });
   }
 
   const formContent = (
@@ -202,7 +204,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                    {projects?.map((p: Project) => (
+                    {projects?.map((p: ProjectListItem) => (
                         <SelectItem key={p.id} value={p.id.toString()} className="truncate capitalize">
                             {p.name} ({p.key})
                         </SelectItem>
