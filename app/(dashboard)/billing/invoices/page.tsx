@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   useInvoices,
@@ -231,6 +232,9 @@ function InvoicesContent() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
+                          </DropdownMenuItem>
                           {inv.status === "DRAFT" && (
                             <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "SENT")}>
                               <Send className="h-3.5 w-3.5 mr-2" /> Mark as Sent

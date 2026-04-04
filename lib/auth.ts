@@ -2,12 +2,13 @@ import NextAuth from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "./db";
-import { accounts, sessions, users, verificationTokens, organizationMembers, organizations } from "./db/schema";
+import { accounts, sessions, users, verificationTokens, organizationMembers, organizations, userSessions } from "./db/schema";
 import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { Adapter } from "next-auth/adapters";
 import { logger } from "./logger";
 import { redis } from "./redis";
+import { randomUUID } from "crypto";
 
 interface UserSessionCache {
   isActive: boolean | null;
@@ -164,6 +165,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isActive = user.isActive;
         token.hasDashboardAccess = user.hasDashboardAccess ?? true;
         token.orgId = null;
+        token.sessionId = randomUUID();
+        db.insert(userSessions).values({ id: token.sessionId, userId: user.id as string }).catch(() => {});
       }
 
       // Refresh critical fields from cache/DB (with error handling to prevent auth crashes)
@@ -242,6 +245,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
       }
       session.orgId = token.orgId ?? null;
+      session.sessionId = token.sessionId;
       return session;
     },
   },

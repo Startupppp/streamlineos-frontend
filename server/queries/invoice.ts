@@ -1,7 +1,7 @@
 "server-only";
 
 import { db } from "@/lib/db";
-import { invoices } from "@/lib/db/schema";
+import { invoices, payments } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
 export interface InvoiceFilters {
@@ -53,7 +53,63 @@ export async function getInvoice(orgId: string, id: number) {
       client: true,
       project: { columns: { id: true, name: true } },
       creator: { columns: { id: true, name: true } },
+      payments: {
+        orderBy: [desc(payments.paymentDate)],
+        with: { creator: { columns: { id: true, name: true } } },
+      },
     },
+  });
+}
+
+export async function getInvoicePayments(orgId: string, invoiceId: number) {
+  return db.query.payments.findMany({
+    where: and(eq(payments.invoiceId, invoiceId), eq(payments.orgId, orgId)),
+    orderBy: [desc(payments.paymentDate)],
+    with: { creator: { columns: { id: true, name: true } } },
+  });
+}
+
+export async function createPayment(
+  orgId: string,
+  invoiceId: number,
+  data: {
+    amount: number;
+    paymentDate: string;
+    paymentMethod: string;
+    referenceNumber?: string;
+    notes?: string;
+    createdBy: string;
+  }
+) {
+  return db.transaction(async (tx) => {
+    const [payment] = await tx.insert(payments).values({
+      orgId,
+      invoiceId,
+      amount: data.amount.toFixed(2),
+      paymentDate: data.paymentDate,
+      paymentMethod: data.paymentMethod,
+      referenceNumber: data.referenceNumber,
+      notes: data.notes,
+      createdBy: data.createdBy,
+    }).returning();
+
+    // Check total paid vs invoice total
+    const [{ totalPaid }] = await tx
+      .select({ totalPaid: sql<number>`COALESCE(sum(amount::numeric), 0)::float` })
+      .from(payments)
+      .where(eq(payments.invoiceId, invoiceId));
+
+    const invoice = await tx.query.invoices.findFirst({
+      where: eq(invoices.id, invoiceId),
+      columns: { total: true, status: true },
+    });
+
+    if (invoice && Number(invoice.total) <= totalPaid && invoice.status !== "PAID") {
+      await tx.update(invoices).set({ status: "PAID", paidAt: new Date(), updatedAt: new Date() })
+        .where(eq(invoices.id, invoiceId));
+    }
+
+    return payment;
   });
 }
 

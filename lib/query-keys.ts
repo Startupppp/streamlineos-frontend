@@ -259,6 +259,16 @@ export const queryKeys = {
     targetTypes: () => [...base, "auditLog", "targetTypes"] as const,
   },
 
+  sessions: {
+    all: [...base, "sessions"] as const,
+    list: () => [...base, "sessions", "list"] as const,
+  },
+
+  apiKeys: {
+    all: [...base, "apiKeys"] as const,
+    list: () => [...base, "apiKeys", "list"] as const,
+  },
+
   globalSearch: {
     all: [...base, "globalSearch"] as const,
     results: (query: string) => [...base, "globalSearch", query] as const,

@@ -4,6 +4,7 @@ import { DefaultSession } from "next-auth";
 declare module "next-auth" {
   interface Session {
     orgId?: string | null;
+    sessionId?: string;
     user: {
       id: string;
       role?: string;
@@ -31,5 +32,7 @@ declare module "next-auth/jwt" {
     isActive?: boolean;
     hasDashboardAccess?: boolean;
     image?: string | null;
+    branchId?: number | null;
+    sessionId?: string;
   }
 }

@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
+import { ROLES, ADMIN_ROLES } from "@/lib/constants/roles";
 
 export async function resetPassword(password: string) {
   const session = await auth();
@@ -49,7 +50,7 @@ export async function createEmployee(data: {
     initialPassword?: string;
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== "CEO" && session.user.role !== "HR")) {
+    if (!session?.user?.id || !ADMIN_ROLES.includes(session.user.role ?? "")) {
         return { error: "Unauthorized: Insufficient permissions" };
     }
 

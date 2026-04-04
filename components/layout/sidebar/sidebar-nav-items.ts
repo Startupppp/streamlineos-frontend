@@ -30,6 +30,8 @@ import {
   ClipboardList,
   MessageSquareText,
   Shield,
+  KeyRound,
+  ShieldCheck,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -116,10 +118,10 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         {
           label: "System",
           routes: [
-            // { label: "Billing", icon: Receipt, href: "/billing" },
-            // { label: "Invoices", icon: FileText, href: "/billing/invoices" },
             { label: "Settings", icon: Settings, href: "/settings" },
             { label: "Roles & Permissions", icon: Shield, href: "/settings/roles" },
+            { label: "API Keys", icon: KeyRound, href: "/settings/api-keys" },
+            { label: "Audit Log", icon: ShieldCheck, href: "/settings/audit-log" },
           ],
         },
       ];

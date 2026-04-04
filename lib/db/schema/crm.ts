@@ -655,6 +655,11 @@ export const invoices = pgTable("invoices", {
   notes: text("notes"),
   sentAt: timestamp("sent_at"),
   paidAt: timestamp("paid_at"),
+  viewedAt: timestamp("viewed_at"),
+  terms: text("terms"),
+  isRecurring: boolean("is_recurring").default(false).notNull(),
+  recurringInterval: text("recurring_interval"),
+  nextRecurringDate: date("next_recurring_date"),
   createdBy: text("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -663,6 +668,23 @@ export const invoices = pgTable("invoices", {
   index("idx_invoices_client").on(table.clientId),
   index("idx_invoices_project").on(table.projectId),
   index("idx_invoices_due_date").on(table.dueDate),
+]);
+
+// ─── Payments ───
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  invoiceId: integer("invoice_id").references(() => invoices.id, { onDelete: "cascade" }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  paymentDate: date("payment_date").notNull(),
+  paymentMethod: text("payment_method").notNull(),
+  referenceNumber: text("reference_number"),
+  notes: text("notes"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_payments_invoice").on(table.invoiceId),
+  index("idx_payments_org_date").on(table.orgId, table.paymentDate),
 ]);
 
 export const invoiceAiExtractions = pgTable("invoice_ai_extractions", {
@@ -900,11 +922,18 @@ export const dmLeadsRelations = relations(dmLeads, ({ one }) => ({
   creator: one(users, { fields: [dmLeads.createdBy], references: [users.id], relationName: "dmLeadCreator" }),
 }));
 
-export const invoicesRelations = relations(invoices, ({ one }) => ({
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   organization: one(organizations, { fields: [invoices.orgId], references: [organizations.id] }),
   client: one(clients, { fields: [invoices.clientId], references: [clients.id] }),
   project: one(projects, { fields: [invoices.projectId], references: [projects.id] }),
   creator: one(users, { fields: [invoices.createdBy], references: [users.id] }),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  organization: one(organizations, { fields: [payments.orgId], references: [organizations.id] }),
+  invoice: one(invoices, { fields: [payments.invoiceId], references: [invoices.id] }),
+  creator: one(users, { fields: [payments.createdBy], references: [users.id] }),
 }));
 
 export const invoiceAiExtractionsRelations = relations(invoiceAiExtractions, ({ one }) => ({

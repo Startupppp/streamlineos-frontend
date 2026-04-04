@@ -443,10 +443,14 @@ export function useSetIncentiveConfig() {
 
 // ─── Profile / Password / Notification Preferences ────────────────────────────
 
-interface NotificationPreferences {
-  emailNotifications: boolean;
-  leaveReminders: boolean;
-  projectUpdates: boolean;
+export interface NotificationPreferences {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  smsEnabled: boolean;
+  inAppEnabled: boolean;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
+  categories: Record<string, boolean>;
 }
 
 export function useNotificationPreferences() {

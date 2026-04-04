@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { Invoice, InvoiceItem, InvoiceStats, InvoiceStatus } from "@/types/invoice";
+import type { Invoice, InvoiceItem, InvoiceStats, InvoiceStatus, Payment, PaymentMethod } from "@/types/invoice";
 
 interface InvoicesResponse {
   items: Invoice[];
@@ -112,6 +112,37 @@ export const useDeleteInvoice = () => {
       apiClient.delete<{ success: boolean }>(`/invoices/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+    },
+  });
+};
+
+interface RecordPaymentInput {
+  invoiceId: number;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: PaymentMethod;
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export const useInvoicePayments = (invoiceId: number) => {
+  return useQuery<Payment[], Error>({
+    queryKey: [...queryKeys.invoice.detail(invoiceId), "payments"] as const,
+    queryFn: () => apiClient.get<Payment[]>(`/invoices/${invoiceId}/payments`),
+    enabled: invoiceId > 0,
+  });
+};
+
+export const useRecordPayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation<Payment, Error, RecordPaymentInput>({
+    mutationFn: ({ invoiceId, ...data }) =>
+      apiClient.post<Payment>(`/invoices/${invoiceId}/payments`, data),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoice.all });
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.invoice.detail(variables.invoiceId), "payments"],
+      });
     },
   });
 };

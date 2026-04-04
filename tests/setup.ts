@@ -4,6 +4,21 @@ import { vi } from "vitest";
 // outside of a Next.js server context (e.g., in Vitest's node environment).
 vi.mock("server-only", () => ({}));
 
+// Mock next-auth — prevents the auth library from trying to resolve
+// next/server via its own module resolution which fails in Vitest's node env.
+vi.mock("next-auth", () => ({
+  default: vi.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+vi.mock("@/lib/auth", () => ({
+  auth: vi.fn().mockResolvedValue(null),
+  invalidateUserSession: vi.fn(),
+  handlers: {},
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 // Mock Redis — prevents real network calls in tests.
 // Individual tests can override these mocks with vi.mocked(...).mockResolvedValue(...)
 vi.mock("@/lib/redis", () => ({

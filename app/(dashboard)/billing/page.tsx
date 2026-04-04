@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useBillingSummary } from "@/lib/api/hooks/projects";
-import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Loader2, DollarSign, FileText, FolderOpen, TrendingUp } from "lucide-react";
-import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { format, isPast } from "date-fns";
+import {
+  DollarSign,
+  FileText,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+  Plus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -17,236 +21,205 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { StatCard } from "@/components/ui/stat-card";
+import { useInvoiceStats, useInvoices } from "@/lib/api/hooks/invoice";
+import type { InvoiceStatus } from "@/types/invoice";
+
+const STATUS_BADGE: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  DRAFT: { label: "Draft", variant: "secondary" },
+  SENT: { label: "Sent", variant: "default" },
+  PAID: { label: "Paid", variant: "outline" },
+  OVERDUE: { label: "Overdue", variant: "destructive" },
+  CANCELLED: { label: "Cancelled", variant: "secondary" },
+};
+
+function fmt(amount: string | number) {
+  return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
 
 export default function BillingPage() {
-  const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
-  const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
-  const [hourlyRate, setHourlyRate] = useState<number>(50);
+  const { data: stats, isLoading: statsLoading } = useInvoiceStats();
+  const { data: recentData } = useInvoices({ limit: 5 });
+  const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
 
-  const { data: summary, isLoading } = useBillingSummary({ startDate, endDate });
-
-  const totalRevenue = summary?.reduce((acc, curr) => acc + (curr.totalHours || 0) * hourlyRate, 0) || 0;
+  const recentInvoices = recentData?.items ?? [];
+  const overdueInvoices = overdueData?.items ?? [];
 
   return (
     <PageWrapper
-      title="Billing & Invoices"
-      subtitle={summary ? `${summary.length} ${summary.length === 1 ? "project" : "projects"} billable — $${totalRevenue.toFixed(2)} estimated revenue` : "Calculate billing from tracked time entries"}
+      title="Billing & Finance"
+      subtitle="Track invoices, payments, and revenue"
+      actions={
+        <Link href="/billing/invoices/new">
+          <Button size="sm">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            New Invoice
+          </Button>
+        </Link>
+      }
     >
-      <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="grid gap-2">
-          <Label>Start Date</Label>
-          <Input
-            type="date"
-            aria-label="Billing start date"
-            max="9999-12-31"
-            value={format(startDate, "yyyy-MM-dd")}
-            onChange={(e) => setStartDate(new Date(e.target.value))}
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="Total Invoiced"
+            value={statsLoading ? "—" : fmt(stats ? (stats.totalOutstanding + stats.totalPaid) : 0)}
+            icon={FileText}
+            color="blue"
+          />
+          <StatCard
+            label="Received (Paid)"
+            value={statsLoading ? "—" : fmt(stats?.totalPaid ?? 0)}
+            icon={CheckCircle2}
+            color="green"
+          />
+          <StatCard
+            label="Outstanding"
+            value={statsLoading ? "—" : fmt(stats?.totalOutstanding ?? 0)}
+            icon={Clock}
+            color="gold"
+          />
+          <StatCard
+            label="Overdue"
+            value={statsLoading ? "—" : `${stats?.overdue ?? 0} invoices`}
+            icon={AlertCircle}
+            color="red"
           />
         </div>
-        <div className="grid gap-2">
-          <Label>End Date</Label>
-          <Input
-            type="date"
-            aria-label="Billing end date"
-            max="9999-12-31"
-            value={format(endDate, "yyyy-MM-dd")}
-            onChange={(e) => setEndDate(new Date(e.target.value))}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label>Hourly Rate ($)</Label>
-          <Input
-            type="number"
-            aria-label="Hourly billing rate in dollars"
-            value={hourlyRate}
-            onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
-            onBlur={(e) => {
-              const cleaned = e.target.value.replace(/^0+(?=\d)/, "");
-              setHourlyRate(parseFloat(cleaned) || 0);
-            }}
-            className="w-[150px]"
-          />
-        </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Billable Hours</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {summary?.reduce((acc, curr) => acc + (curr.totalHours || 0), 0).toFixed(1)}h
-            </div>
-            <p className="text-xs text-muted-foreground">In selected period</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estimated Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${totalRevenue.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">At ${hourlyRate}/h rate</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Projects Billed</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">With billable activity</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg per Project</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${summary && summary.length > 0 ? (totalRevenue / summary.length).toFixed(2) : "0.00"}
-            </div>
-            <p className="text-xs text-muted-foreground">Average billing amount</p>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Invoice status breakdown */}
+        <div className="grid gap-4 sm:grid-cols-5">
+          {(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
+            const badge = STATUS_BADGE[s];
+            const count = stats?.[s.toLowerCase() as keyof typeof stats] as number ?? 0;
+            return (
+              <Link key={s} href={`/billing/invoices?status=${s}`}>
+                <div className="rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                  <p className="text-xs text-muted-foreground mb-1">{badge.label}</p>
+                  <p className="text-2xl font-bold">{count}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Project Summary</CardTitle>
-        </CardHeader>
-        <CardContent aria-live="polite">
-          {isLoading ? (
-            <div className="flex justify-center p-8" role="status" aria-label="Loading billing data">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        {/* Recent invoices */}
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <div className="px-4 py-3 flex items-center justify-between border-b border-border">
+            <p className="text-sm font-semibold">Recent Invoices</p>
+            <Link href="/billing/invoices">
+              <Button variant="ghost" size="sm" className="text-xs gap-1">
+                View all <ChevronRight className="h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
+          <InvoiceTable invoices={recentInvoices} />
+        </div>
+
+        {/* Overdue invoices */}
+        {overdueInvoices.length > 0 && (
+          <div className="rounded-lg border border-destructive/30 bg-card overflow-hidden">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-destructive/30 bg-destructive/5">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+                <p className="text-sm font-semibold text-destructive">Overdue Invoices</p>
+              </div>
+              <Link href="/billing/invoices?status=OVERDUE">
+                <Button variant="ghost" size="sm" className="text-xs gap-1">
+                  View all <ChevronRight className="h-3 w-3" />
+                </Button>
+              </Link>
             </div>
-          ) : (
-            <Table>
-              <caption className="sr-only">Project billing summary</caption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {summary?.map((item) => (
-                  <TableRow key={item.projectId}>
-                    <TableCell className="font-medium">{item.projectName}</TableCell>
-                    <TableCell>{item.totalHours?.toFixed(1) || 0}h</TableCell>
-                    <TableCell>${hourlyRate}/h</TableCell>
-                    <TableCell>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Sheet>
-                        <SheetTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            Generate Invoice
-                            <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">Preview</Badge>
-                          </Button>
-                        </SheetTrigger>
-                        <SheetContent className="overflow-y-auto">
-                          <SheetHeader>
-                            <SheetTitle>Invoice Preview</SheetTitle>
-                            <SheetDescription>
-                              Draft invoice for {item.projectName}
-                            </SheetDescription>
-                          </SheetHeader>
-                          <div className="space-y-4 py-4">
-                            <div className="flex justify-between border-b pb-2">
-                              <span className="font-bold">Period:</span>
-                              <span>{format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Total Hours:</span>
-                              <span>{item.totalHours?.toFixed(1) || 0}h</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Rate:</span>
-                              <span>${hourlyRate}/h</span>
-                            </div>
-                            <div className="flex justify-between border-t pt-2 font-bold text-lg">
-                              <span>Total Due:</span>
-                              <span>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</span>
-                            </div>
-                          </div>
-                          <SheetFooter>
-                            <Button onClick={async () => {
-                              try {
-                                const { default: jsPDF } = await import("jspdf");
-                                const doc = new jsPDF();
-                                doc.setFontSize(22);
-                                doc.text("INVOICE", 20, 25);
-                                doc.setFontSize(10);
-                                doc.setTextColor(100);
-                                doc.text("Vaivamm Capital — Capital Advisors LLP", 20, 33);
-                                doc.text(`Date: ${format(new Date(), "MMM d, yyyy")}`, 20, 40);
-                                doc.setDrawColor(189, 136, 44);
-                                doc.line(20, 45, 190, 45);
-                                doc.setTextColor(0);
-                                doc.setFontSize(14);
-                                doc.text(`Project: ${item.projectName}`, 20, 55);
-                                doc.setFontSize(11);
-                                doc.text(`Period: ${format(startDate, "MMM d")} — ${format(endDate, "MMM d, yyyy")}`, 20, 65);
-                                doc.text(`Total Hours: ${item.totalHours?.toFixed(1) || 0}h`, 20, 75);
-                                doc.text(`Rate: $${hourlyRate}/h`, 20, 83);
-                                doc.line(20, 90, 190, 90);
-                                doc.setFontSize(16);
-                                doc.text(`Total Due: $${((item.totalHours || 0) * hourlyRate).toFixed(2)}`, 20, 102);
-                                doc.setFontSize(9);
-                                doc.setTextColor(150);
-                                doc.text("Payment Terms: Net 30 days", 20, 115);
-                                doc.text("Thank you for your business.", 20, 122);
-                                doc.save(`invoice-${item.projectName.replace(/\s+/g, "-").toLowerCase()}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-                                toast.success("Invoice PDF downloaded");
-                              } catch {
-                                toast.error("Failed to generate invoice");
-                              }
-                            }}>Download PDF</Button>
-                          </SheetFooter>
-                        </SheetContent>
-                      </Sheet>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!summary?.length && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                      <div className="flex flex-col items-center gap-3">
-                        <EmptyExpensesIllustration />
-                        <p>No billable activity in this period.</p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+            <InvoiceTable invoices={overdueInvoices} />
+          </div>
+        )}
+
+        {/* Quick links */}
+        <div className="flex gap-3 flex-wrap">
+          <Link href="/billing/invoices">
+            <Button variant="outline" size="sm">All Invoices</Button>
+          </Link>
+          <Link href="/billing/invoices/new">
+            <Button variant="outline" size="sm">Create Invoice</Button>
+          </Link>
+        </div>
       </div>
     </PageWrapper>
+  );
+}
+
+function InvoiceTable({
+  invoices,
+}: {
+  invoices: Array<{
+    id: number;
+    invoiceNumber: string;
+    status: InvoiceStatus;
+    total: string;
+    dueDate: string | null;
+    client: { id: number; name: string } | null;
+    createdAt: Date;
+  }>;
+}) {
+  if (!invoices.length) {
+    return (
+      <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+        No invoices found.
+      </div>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Invoice #</TableHead>
+          <TableHead>Client</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Due Date</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+          <TableHead />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {invoices.map((inv) => {
+          const badge = STATUS_BADGE[inv.status];
+          const overdue =
+            inv.status !== "PAID" &&
+            inv.status !== "CANCELLED" &&
+            inv.dueDate &&
+            isPast(new Date(inv.dueDate));
+          return (
+            <TableRow key={inv.id}>
+              <TableCell className="font-mono text-xs font-medium">
+                {inv.invoiceNumber}
+              </TableCell>
+              <TableCell className="text-sm">
+                {inv.client?.name ?? <span className="text-muted-foreground">—</span>}
+              </TableCell>
+              <TableCell>
+                <Badge variant={badge.variant} className="text-[11px]">
+                  {badge.label}
+                </Badge>
+              </TableCell>
+              <TableCell className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                {inv.dueDate ? format(new Date(inv.dueDate), "dd MMM yyyy") : "—"}
+              </TableCell>
+              <TableCell className="text-right font-medium text-sm">
+                {fmt(inv.total)}
+              </TableCell>
+              <TableCell>
+                <Link href={`/billing/invoices/${inv.id}`}>
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    View
+                  </Button>
+                </Link>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

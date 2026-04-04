@@ -67,6 +67,15 @@ export async function withAuth<T>(
   let orgId: string | null | undefined = session.orgId;
   let branchId: number | null = (session as { branchId?: number | null }).branchId ?? null;
 
+  // Check if this specific session has been revoked (e.g., user signed out another device)
+  const sessionId = (session as { sessionId?: string }).sessionId;
+  if (redis && sessionId) {
+    const revoked = await redis.get<boolean>(`revoked:session:${sessionId}`);
+    if (revoked) {
+      return NextResponse.json({ error: "Session revoked" } as T, { status: 401 });
+    }
+  }
+
   // Single Redis check per request: verify session is still valid and hydrate
   // with the freshest user/org data (avoids stale JWT data)
   if (redis) {

@@ -6,7 +6,7 @@ export function generateTotpSecret(): string {
 }
 
 export function generateTotpUri(secret: string, email: string): string {
-  return generateURI({ secret, label: email, issuer: "Vaivamm CRM", type: "totp" });
+  return generateURI({ secret, label: email, issuer: "Vaivamm CRM", strategy: "totp" });
 }
 
 export async function generateQrCodeDataUrl(uri: string): Promise<string> {
@@ -14,12 +14,12 @@ export async function generateQrCodeDataUrl(uri: string): Promise<string> {
 }
 
 export function generateTotpToken(secret: string): string {
-  return generateSync({ secret, type: "totp" });
+  return generateSync({ secret, strategy: "totp" });
 }
 
 export function verifyTotpToken(token: string, secret: string): boolean {
   try {
-    const result = verifySync({ secret, token, type: "totp" });
+    const result = verifySync({ secret, token, strategy: "totp" });
     return result.valid;
   } catch {
     return false;

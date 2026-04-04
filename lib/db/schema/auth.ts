@@ -148,6 +148,44 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const userSessions = pgTable("user_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  isRevoked: boolean("is_revoked").default(false).notNull(),
+  lastActive: timestamp("last_active").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_user_sessions_user_active").on(table.userId, table.isRevoked, table.createdAt),
+]);
+
+export const apiKeys = pgTable("api_keys", {
+  id: text("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  keyHash: text("key_hash").notNull(),
+  keyPrefix: text("key_prefix").notNull(),
+  description: text("description"),
+  isRevoked: boolean("is_revoked").default(false).notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  expiresAt: timestamp("expires_at"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_api_keys_org_active").on(table.orgId, table.isRevoked),
+  uniqueIndex("idx_api_keys_key_prefix").on(table.keyPrefix),
+]);
+
+export const passwordHistory = pgTable("password_history", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_password_history_user").on(table.userId, table.createdAt),
+]);
+
 // ─── Roles & Permissions ───
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
@@ -283,4 +321,13 @@ export const onboardingStepsRelations = relations(onboardingSteps, ({ one }) => 
     fields: [onboardingSteps.orgId],
     references: [organizations.id],
   }),
+}));
+
+export const userSessionsRelations = relations(userSessions, ({ one }) => ({
+  user: one(users, { fields: [userSessions.userId], references: [users.id] }),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  organization: one(organizations, { fields: [apiKeys.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [apiKeys.createdBy], references: [users.id] }),
 }));

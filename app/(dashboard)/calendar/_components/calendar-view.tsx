@@ -33,7 +33,7 @@ import {
   useDeleteCalendarEvent,
 } from "@/lib/api/hooks/calendar";
 import { toast } from "sonner";
-import type { View, SlotInfo } from "./big-calendar-wrapper";
+import type { View, SlotInfo, CalendarEvent } from "./big-calendar-wrapper";
 
 const BigCalendarWrapper = dynamic(
   () =>
@@ -151,7 +151,7 @@ export function CalendarView() {
     }
   };
 
-  const eventPropGetter = (event: (typeof calEvents)[number]) => ({
+  const eventPropGetter = (event: CalendarEvent) => ({
     style: {
       backgroundColor:
         EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
