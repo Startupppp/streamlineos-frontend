@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format } from "date-fns";
 import { Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -176,14 +177,35 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
 }
 
 export default function AuditLogPage() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [goToPage, setGoToPage] = useState("");
-  const [actionFilter, setActionFilter] = useState("all");
-  const [targetTypeFilter, setTargetTypeFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [selectedLog, setSelectedLog] = useState<AuditLogRow | null>(null);
+
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSize = (PAGE_SIZE_OPTIONS.includes(Number(searchParams.get("size")) as PageSize)
+    ? Number(searchParams.get("size"))
+    : 10) as PageSize;
+  const actionFilter = searchParams.get("action") || "all";
+  const targetTypeFilter = searchParams.get("target") || "all";
+  const dateFrom = searchParams.get("from") || "";
+  const dateTo = searchParams.get("to") || "";
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
 
   const { data, isLoading } = useAuditLogs({
     page,
@@ -202,27 +224,22 @@ export default function AuditLogPage() {
   const total = data?.total ?? 0;
 
   const resetFilters = useCallback(() => {
-    setActionFilter("all");
-    setTargetTypeFilter("all");
-    setDateFrom("");
-    setDateTo("");
-    setPage(1);
-  }, []);
+    updateParams({ action: null, target: null, from: null, to: null, page: null });
+  }, [updateParams]);
 
-  const handleActionFilter = useCallback((v: string) => { setActionFilter(v); setPage(1); }, []);
-  const handleTargetTypeFilter = useCallback((v: string) => { setTargetTypeFilter(v); setPage(1); }, []);
-  const handleDateFrom = useCallback((v: string) => { setDateFrom(v); setPage(1); }, []);
-  const handleDateTo = useCallback((v: string) => { setDateTo(v); setPage(1); }, []);
-  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
-  const handleNextPage = useCallback(() => setPage((p) => Math.min(totalPages, p + 1)), [totalPages]);
-  const handleFirstPage = useCallback(() => setPage(1), []);
-  const handleLastPage = useCallback(() => setPage(totalPages), [totalPages]);
+  const handleActionFilter = useCallback((v: string) => updateParams({ action: v === "all" ? null : v, page: null }), [updateParams]);
+  const handleTargetTypeFilter = useCallback((v: string) => updateParams({ target: v === "all" ? null : v, page: null }), [updateParams]);
+  const handleDateFrom = useCallback((v: string) => updateParams({ from: v || null, page: null }), [updateParams]);
+  const handleDateTo = useCallback((v: string) => updateParams({ to: v || null, page: null }), [updateParams]);
+  const handlePrevPage = useCallback(() => updateParams({ page: page <= 2 ? null : String(page - 1) }), [updateParams, page]);
+  const handleNextPage = useCallback(() => updateParams({ page: String(Math.min(totalPages, page + 1)) }), [updateParams, totalPages, page]);
+  const handleFirstPage = useCallback(() => updateParams({ page: null }), [updateParams]);
+  const handleLastPage = useCallback(() => updateParams({ page: String(totalPages) }), [updateParams, totalPages]);
   const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
 
   const handlePageSizeChange = useCallback((v: string) => {
-    setPageSize(Number(v) as PageSize);
-    setPage(1);
-  }, []);
+    updateParams({ size: v === "10" ? null : v, page: null });
+  }, [updateParams]);
 
   const handleGoToPageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setGoToPage(e.target.value);
@@ -232,11 +249,11 @@ export default function AuditLogPage() {
     if (e.key === "Enter") {
       const num = parseInt(goToPage);
       if (!isNaN(num) && num >= 1 && num <= totalPages) {
-        setPage(num);
+        updateParams({ page: num === 1 ? null : String(num) });
         setGoToPage("");
       }
     }
-  }, [goToPage, totalPages]);
+  }, [goToPage, totalPages, updateParams]);
 
   const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo;
 

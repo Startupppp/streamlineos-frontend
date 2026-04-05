@@ -443,6 +443,26 @@
 .calendar-container .rbc-agenda-view {
   border: none;
   height: 100%;
+  background: transparent;
+}
+
+.calendar-container .rbc-row-bg,
+.calendar-container .rbc-day-bg {
+  background: transparent;
+}
+
+.calendar-container .rbc-row-content {
+  background: transparent;
+}
+
+.calendar-container .rbc-time-header,
+.calendar-container .rbc-time-header-gutter {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-container .rbc-allday-cell {
+  background: transparent;
 }
 
 .calendar-container .rbc-header {
@@ -474,7 +494,7 @@
 .calendar-container .rbc-date-cell {
   padding: 4px 6px;
   font-size: 12px;
-  color: var(--muted-foreground);
+  color: var(--foreground);
 }
 
 .calendar-container .rbc-date-cell.rbc-now {
@@ -482,8 +502,14 @@
   color: var(--foreground);
 }
 
+.calendar-container .rbc-date-cell a,
 .calendar-container .rbc-date-cell button {
-  color: inherit;
+  color: var(--foreground);
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  cursor: pointer;
 }
 
 .calendar-container .rbc-event {

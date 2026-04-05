@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
 import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/hooks/trpc-hooks";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
@@ -25,14 +26,61 @@ export default function WorkLogsPage() {
   const currentMonth = new Date().getMonth();
   const currentQuarter = Math.floor(currentMonth / 3) + 1;
 
-  const [filters, setFilters] = useState<WorkLogFiltersType>({
-    year: currentYear,
-    quarter: currentQuarter,
-  });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const filters = useMemo<WorkLogFiltersType>(() => {
+    const monthParam = searchParams.get("month");
+    return {
+      year: parseInt(searchParams.get("year") ?? "") || currentYear,
+      quarter: parseInt(searchParams.get("quarter") ?? "") || currentQuarter,
+      selectedUserId: searchParams.get("user") ?? undefined,
+      departmentId: searchParams.get("dept") ? parseInt(searchParams.get("dept")!) : undefined,
+      month: monthParam !== null ? parseInt(monthParam) : undefined,
+      dateFrom: searchParams.get("from") ?? undefined,
+      dateTo: searchParams.get("to") ?? undefined,
+    };
+  }, [searchParams, currentYear, currentQuarter]);
+
+  const setFilters = useCallback(
+    (update: WorkLogFiltersType | ((prev: WorkLogFiltersType) => WorkLogFiltersType)) => {
+      const newFilters = typeof update === "function" ? update(filters) : update;
+      startTransition(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (newFilters.year !== currentYear) params.set("year", String(newFilters.year));
+        else params.delete("year");
+        if (newFilters.quarter !== currentQuarter) params.set("quarter", String(newFilters.quarter));
+        else params.delete("quarter");
+        if (newFilters.selectedUserId) params.set("user", newFilters.selectedUserId);
+        else params.delete("user");
+        if (newFilters.departmentId != null) params.set("dept", String(newFilters.departmentId));
+        else params.delete("dept");
+        if (newFilters.month != null) params.set("month", String(newFilters.month));
+        else params.delete("month");
+        if (newFilters.dateFrom) params.set("from", newFilters.dateFrom);
+        else params.delete("from");
+        if (newFilters.dateTo) params.set("to", newFilters.dateTo);
+        else params.delete("to");
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [filters, searchParams, pathname, router, currentYear, currentQuarter],
+  );
+
   // Draft state for the filter sheet (applied on "Apply")
-  const [draftFilters, setDraftFilters] = useState<WorkLogFiltersType>({
-    year: currentYear,
-    quarter: currentQuarter,
+  const [draftFilters, setDraftFilters] = useState<WorkLogFiltersType>(() => {
+    const monthParam = searchParams.get("month");
+    return {
+      year: parseInt(searchParams.get("year") ?? "") || currentYear,
+      quarter: parseInt(searchParams.get("quarter") ?? "") || currentQuarter,
+      selectedUserId: searchParams.get("user") ?? undefined,
+      departmentId: searchParams.get("dept") ? parseInt(searchParams.get("dept")!) : undefined,
+      month: monthParam !== null ? parseInt(monthParam) : undefined,
+      dateFrom: searchParams.get("from") ?? undefined,
+      dateTo: searchParams.get("to") ?? undefined,
+    };
   });
 
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());

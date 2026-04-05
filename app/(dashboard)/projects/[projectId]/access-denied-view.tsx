@@ -4,8 +4,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-const GOLD = "#bd882c";
-const BLUE = "#0f2b7f";
 const SKIN = "#ffb8b8";
 const HAIR = "#2f2e41";
 
@@ -19,12 +17,12 @@ function AccessDeniedIllustration({ className }: { className?: string }) {
       aria-hidden="true"
     >
       {/* Background circle */}
-      <circle cx="100" cy="100" r="80" fill={BLUE} opacity="0.04" />
+      <circle cx="100" cy="100" r="80" fill="var(--blue)" opacity="0.04" />
 
       {/* Lock body */}
-      <rect x="72" y="90" width="56" height="45" rx="8" fill={GOLD} opacity="0.9" />
+      <rect x="72" y="90" width="56" height="45" rx="8" fill="var(--gold)" opacity="0.9" />
       {/* Lock shackle */}
-      <path d="M82 90 V78 C82 65 92 58 100 58 C108 58 118 65 118 78 V90" stroke={GOLD} strokeWidth="6" fill="none" strokeLinecap="round" />
+      <path d="M82 90 V78 C82 65 92 58 100 58 C108 58 118 65 118 78 V90" stroke="var(--gold)" strokeWidth="6" fill="none" strokeLinecap="round" />
       {/* Keyhole */}
       <circle cx="100" cy="108" r="7" fill="white" />
       <rect x="97" y="112" width="6" height="10" rx="2" fill="white" />
@@ -32,20 +30,20 @@ function AccessDeniedIllustration({ className }: { className?: string }) {
       {/* Person peeking from left */}
       <circle cx="48" cy="105" r="10" fill={SKIN} />
       <ellipse cx="48" cy="97" rx="8" ry="7" fill={HAIR} />
-      <rect x="40" y="113" width="16" height="20" rx="4" fill={BLUE} />
+      <rect x="40" y="113" width="16" height="20" rx="4" fill="var(--blue)" />
       {/* Hand reaching */}
       <line x1="56" y1="120" x2="70" y2="110" stroke={SKIN} strokeWidth="3" strokeLinecap="round" />
 
       {/* Question marks */}
-      <text x="145" y="80" fontSize="18" fill={GOLD} opacity="0.5" fontWeight="bold">?</text>
-      <text x="155" y="100" fontSize="12" fill={GOLD} opacity="0.3" fontWeight="bold">?</text>
+      <text x="145" y="80" fontSize="18" fill="var(--gold)" opacity="0.5" fontWeight="bold">?</text>
+      <text x="155" y="100" fontSize="12" fill="var(--gold)" opacity="0.3" fontWeight="bold">?</text>
 
       {/* Floor line */}
-      <line x1="30" y1="145" x2="170" y2="145" stroke={BLUE} strokeWidth="1" opacity="0.1" />
+      <line x1="30" y1="145" x2="170" y2="145" stroke="var(--blue)" strokeWidth="1" opacity="0.1" />
 
       {/* Small decorations */}
-      <circle cx="160" cy="70" r="3" fill={GOLD} opacity="0.2" />
-      <circle cx="40" cy="150" r="4" fill={BLUE} opacity="0.1" />
+      <circle cx="160" cy="70" r="3" fill="var(--gold)" opacity="0.2" />
+      <circle cx="40" cy="150" r="4" fill="var(--blue)" opacity="0.1" />
     </svg>
   );
 }

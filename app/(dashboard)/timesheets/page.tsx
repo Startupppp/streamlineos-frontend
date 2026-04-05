@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useTransition } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   format,
@@ -60,17 +60,37 @@ type ViewMode = "current" | "history";
 export default function TimesheetsPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const isCEO = session?.user?.role === "CEO";
 
-  const [selectedProject, setSelectedProject] = useState("all");
-  const [dateRange, setDateRange] = useState("this-quarter");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState<ViewMode>("current");
+  // URL-derived filter state
+  const selectedProject = searchParams.get("project") ?? "all";
+  const dateRange = searchParams.get("range") ?? "this-quarter";
+  const startDate = searchParams.get("from") ?? "";
+  const endDate = searchParams.get("to") ?? "";
+  const page = parseInt(searchParams.get("page") ?? "1") || 1;
+  const viewMode = (searchParams.get("view") ?? "current") as ViewMode;
+
+  // Local UI state only
   const [editingEntry, setEditingEntry] = useState<EditEntry | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      startTransition(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        for (const [k, v] of Object.entries(updates)) {
+          if (v === null) params.delete(k);
+          else params.set(k, v);
+        }
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, pathname, router],
+  );
 
   const { data: projectsData } = useProjects();
   const projects = projectsData?.data ?? [];
@@ -143,34 +163,62 @@ export default function TimesheetsPage() {
 
   const deleteMutation = useDeleteTimeEntry();
 
-  const handleViewMode = useCallback((mode: ViewMode) => {
-    setViewMode(mode);
-    setPage(1);
-    setDateRange(mode === "current" ? "this-quarter" : "all");
-  }, []);
+  const handleViewMode = useCallback(
+    (mode: ViewMode) => {
+      updateParams({
+        view: mode === "current" ? null : mode,
+        range: mode === "current" ? null : "all",
+        page: null,
+      });
+    },
+    [updateParams],
+  );
 
   const handleViewModeCurrent = useCallback(() => handleViewMode("current"), [handleViewMode]);
   const handleViewModeHistory = useCallback(() => handleViewMode("history"), [handleViewMode]);
 
-  const handleProjectChange = useCallback((v: string) => { setSelectedProject(v); setPage(1); }, []);
-  const handlePeriodChange = useCallback((v: string) => {
-    setDateRange(v);
-    setPage(1);
-    setViewMode(v === "all" ? "history" : "current");
-  }, []);
-  const handleStartDateChange = useCallback((v: string) => { setStartDate(v); setPage(1); }, []);
-  const handleEndDateChange = useCallback((v: string) => { setEndDate(v); setPage(1); }, []);
+  const handleProjectChange = useCallback(
+    (v: string) => updateParams({ project: v === "all" ? null : v, page: null }),
+    [updateParams],
+  );
+  const handlePeriodChange = useCallback(
+    (v: string) => {
+      updateParams({
+        range: v === "this-quarter" ? null : v,
+        page: null,
+        view: v === "all" ? "history" : null,
+      });
+    },
+    [updateParams],
+  );
+  const handleStartDateChange = useCallback(
+    (v: string) => updateParams({ from: v || null, page: null }),
+    [updateParams],
+  );
+  const handleEndDateChange = useCallback(
+    (v: string) => updateParams({ to: v || null, page: null }),
+    [updateParams],
+  );
 
   const handleEditEntry = useCallback((entry: EditEntry) => setEditingEntry(entry), []);
   const handleDeleteEntry = useCallback((id: number) => { setEntryToDelete(id); setDeleteDialogOpen(true); }, []);
   const handleEditDialogClose = useCallback((open: boolean) => { if (!open) setEditingEntry(null); }, []);
 
-  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
-  const handleNextPage = useCallback(() => setPage((p) => p + 1), []);
-  const handlePageNumber = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const num = parseInt(e.currentTarget.dataset.page ?? "1");
-    if (!isNaN(num)) setPage(num);
-  }, []);
+  const handlePrevPage = useCallback(
+    () => updateParams({ page: page <= 2 ? null : String(page - 1) }),
+    [page, updateParams],
+  );
+  const handleNextPage = useCallback(
+    () => updateParams({ page: String(page + 1) }),
+    [page, updateParams],
+  );
+  const handlePageNumber = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const num = parseInt(e.currentTarget.dataset.page ?? "1");
+      if (!isNaN(num)) updateParams({ page: num === 1 ? null : String(num) });
+    },
+    [updateParams],
+  );
 
   const handleDeleteConfirm = useCallback(() => {
     if (!entryToDelete) return;
@@ -187,14 +235,6 @@ export default function TimesheetsPage() {
     );
   }, [entryToDelete, deleteMutation]);
 
-  const clearFilters = useCallback(() => {
-    setSelectedProject("all");
-    setDateRange("this-quarter");
-    setStartDate("");
-    setEndDate("");
-    setPage(1);
-    setViewMode("current");
-  }, []);
 
   const currentYear = new Date().getFullYear();
   const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;

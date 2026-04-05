@@ -59,7 +59,7 @@ export function PageWrapper({
   noInternalScroll = false,
 }: PageWrapperProps) {
   return (
-    <div className={cn("flex flex-col min-h-0", className)}>
+    <div className={cn("flex flex-col min-h-0", noInternalScroll && "h-full", className)}>
       {/* ── Header ── */}
       <div className="px-4 sm:px-6 pt-4 pb-3">
         <div className="flex items-start justify-between gap-3">

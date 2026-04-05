@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CalendarIcon, MapPin, Trash2, Tag } from "lucide-react";
+import { CalendarIcon, MapPin, Trash2, Tag, Pencil } from "lucide-react";
 import { useDeleteCalendarEvent } from "@/lib/api/hooks/calendar";
 import type { CalendarEvent } from "@/lib/api/hooks/calendar";
+import { EventCreateDialog } from "./event-create-dialog";
 import { toast } from "sonner";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -34,6 +35,7 @@ interface EventDetailSheetProps {
 
 export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const deleteEvent = useDeleteCalendarEvent();
 
   const handleDelete = useCallback(async () => {
@@ -123,7 +125,13 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               <Trash2 className="h-3.5 w-3.5 mr-1.5" />
               Delete
             </Button>
-            <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit
+              </Button>
+              <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -135,6 +143,11 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
         confirmLabel="Delete"
         destructive
         onConfirm={handleDelete}
+      />
+      <EventCreateDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        event={event}
       />
     </>
   );

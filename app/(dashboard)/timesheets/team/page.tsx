@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   format,
@@ -31,14 +32,36 @@ type ViewMode = "day" | "week" | "month";
 const ITEMS_PER_PAGE = 10;
 
 export default function TeamTimesheetsPage() {
-  const [viewMode, setViewMode] = useState<ViewMode>("week");
-  const [selectedEmployee, setSelectedEmployee] = useState("all");
-  const [selectedProject, setSelectedProject] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  // URL-derived filter state
+  const viewMode = (searchParams.get("view") ?? "week") as ViewMode;
+  const selectedEmployee = searchParams.get("emp") ?? "all";
+  const selectedProject = searchParams.get("project") ?? "all";
+  const selectedStatus = searchParams.get("status") ?? "all";
+  const page = parseInt(searchParams.get("page") ?? "1") || 1;
+
+  // Local UI state only
   const [calendarMonth, setCalendarMonth] = useState(new Date());
-  const [page, setPage] = useState(1);
   const [selectedEntry, setSelectedEntry] = useState<TimesheetEntry | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      startTransition(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        for (const [k, v] of Object.entries(updates)) {
+          if (v === null) params.delete(k);
+          else params.set(k, v);
+        }
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, pathname, router],
+  );
 
   const dateRange = useMemo(() => {
     const today = new Date();
@@ -149,8 +172,8 @@ export default function TeamTimesheetsPage() {
   }, []);
 
   const handleDateSelect = useCallback((_date: Date) => {
-    setViewMode("day");
-  }, []);
+    updateParams({ view: "day" });
+  }, [updateParams]);
 
   return (
     <PageWrapper
@@ -176,13 +199,13 @@ export default function TeamTimesheetsPage() {
           />
           <ViewSettingsCard
             viewMode={viewMode}
-            onViewModeChange={setViewMode}
+            onViewModeChange={(v) => updateParams({ view: v === "week" ? null : v, page: null })}
             selectedEmployee={selectedEmployee}
-            onEmployeeChange={setSelectedEmployee}
+            onEmployeeChange={(v) => updateParams({ emp: v === "all" ? null : v, page: null })}
             selectedProject={selectedProject}
-            onProjectChange={setSelectedProject}
+            onProjectChange={(v) => updateParams({ project: v === "all" ? null : v, page: null })}
             selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
+            onStatusChange={(v) => updateParams({ status: v === "all" ? null : v, page: null })}
             employees={employees}
             projects={projects}
             calendarMonth={calendarMonth}
@@ -208,7 +231,7 @@ export default function TeamTimesheetsPage() {
             paginatedEntries={paginatedEntries}
             page={page}
             totalPages={totalPages}
-            onPageChange={setPage}
+            onPageChange={(p) => updateParams({ page: p === 1 ? null : String(p) })}
             onEntryClick={handleEntryClick}
             onExportCSV={exportToCSV}
           />

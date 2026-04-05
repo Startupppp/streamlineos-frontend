@@ -28,10 +28,12 @@ import { Check, Video, Loader2 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import {
   useCreateCalendarEvent,
+  useUpdateCalendarEvent,
   useCalendarOrgMembers,
   useGoogleMeetStatus,
   useCreateMeetLink,
 } from "@/lib/api/hooks/calendar";
+import type { CalendarEvent } from "@/lib/api/hooks/calendar";
 import { toast } from "sonner";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -87,6 +89,24 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
   };
 }
 
+function toEditForm(event: CalendarEvent): FormState {
+  const start = new Date(event.startDate);
+  const end = new Date(event.endDate);
+  return {
+    title: event.title,
+    description: event.description ?? "",
+    location: event.location ?? "",
+    allDay: event.allDay ?? false,
+    color: event.color ?? "blue",
+    category: (event.category as EventCategory) ?? "general",
+    startDate: format(start, "yyyy-MM-dd"),
+    startTime: format(start, "HH:mm"),
+    endDate: format(end, "yyyy-MM-dd"),
+    endTime: format(end, "HH:mm"),
+    attendeeIds: event.attendeeIds ?? [],
+  };
+}
+
 function getMemberName(member: { firstName: string | null; lastName: string | null; name: string | null; }) {
   if (member.firstName) return `${member.firstName} ${member.lastName ?? ""}`.trim();
   return member.name ?? "Unknown";
@@ -100,20 +120,26 @@ interface EventCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultSlot?: { start: Date; end: Date } | null;
+  /** When provided, the dialog acts as an edit form for this event */
+  event?: CalendarEvent | null;
 }
 
-export function EventCreateDialog({ open, onOpenChange, defaultSlot }: EventCreateDialogProps) {
-  const [form, setForm] = useState<FormState>(() => toDefaultForm(defaultSlot));
+export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: EventCreateDialogProps) {
+  const isEdit = !!event;
+  const [form, setForm] = useState<FormState>(() =>
+    isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot)
+  );
   const createEvent = useCreateCalendarEvent();
+  const updateEvent = useUpdateCalendarEvent();
   const { data: members = [] } = useCalendarOrgMembers();
   const { data: meetStatus } = useGoogleMeetStatus();
   const createMeet = useCreateMeetLink();
 
   useEffect(() => {
     if (open) {
-      setForm(toDefaultForm(defaultSlot));
+      setForm(isEdit ? toEditForm(event!) : toDefaultForm(defaultSlot));
     }
-  }, [open, defaultSlot]);
+  }, [open, defaultSlot, event, isEdit]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -132,7 +158,7 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot }: EventCrea
     }));
   }, []);
 
-  const handleCreate = useCallback(async () => {
+  const handleSave = useCallback(async () => {
     if (!form.title.trim()) {
       toast.error("Event title is required");
       return;
@@ -147,30 +173,36 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot }: EventCrea
       toast.error("End time must be after start time");
       return;
     }
+    const payload = {
+      title: form.title,
+      description: form.description || undefined,
+      location: form.location || undefined,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      allDay: form.allDay,
+      color: form.color,
+      category: form.category,
+      attendeeIds: form.attendeeIds,
+    };
     try {
-      await createEvent.mutateAsync({
-        title: form.title,
-        description: form.description || undefined,
-        location: form.location || undefined,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        allDay: form.allDay,
-        color: form.color,
-        category: form.category,
-        attendeeIds: form.attendeeIds,
-      });
-      toast.success("Event created");
+      if (isEdit && event) {
+        await updateEvent.mutateAsync({ id: event.id, ...payload });
+        toast.success("Event updated");
+      } else {
+        await createEvent.mutateAsync(payload);
+        toast.success("Event created");
+      }
       handleClose();
     } catch {
-      toast.error("Failed to create event");
+      toast.error(isEdit ? "Failed to update event" : "Failed to create event");
     }
-  }, [form, createEvent, handleClose]);
+  }, [form, isEdit, event, createEvent, updateEvent, handleClose]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="sm:max-w-[520px] max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
-          <DialogTitle className="text-sm font-semibold">New Calendar Event</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">{isEdit ? "Edit Event" : "New Calendar Event"}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4 space-y-4">
@@ -362,10 +394,12 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot }: EventCrea
           <Button variant="outline" size="sm" onClick={handleClose}>Cancel</Button>
           <Button
             size="sm"
-            onClick={handleCreate}
-            disabled={createEvent.isPending || !form.title.trim()}
+            onClick={handleSave}
+            disabled={(isEdit ? updateEvent.isPending : createEvent.isPending) || !form.title.trim()}
           >
-            {createEvent.isPending ? "Creating..." : "Create Event"}
+            {isEdit
+              ? (updateEvent.isPending ? "Saving..." : "Save Changes")
+              : (createEvent.isPending ? "Creating..." : "Create Event")}
           </Button>
         </DialogFooter>
       </DialogContent>

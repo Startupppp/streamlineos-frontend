@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Plus, DollarSign, TrendingUp, Clock, Trophy, Download,
-  GripVertical, User, Calendar, MoreHorizontal, Pencil, Trash2,
+  User, Calendar, MoreHorizontal, Pencil, Trash2,
   LayoutGrid, TableIcon,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,35 +55,46 @@ function formatINR(v: number) {
 }
 
 export default function DealsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const view = (searchParams.get("view") || "table") as "table" | "kanban";
+  const dealSortCol = searchParams.get("sort") || "createdAt";
+  const dealSortDir = (searchParams.get("dir") || "desc") as "asc" | "desc";
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
   const { data: allDeals, isLoading } = useDeals();
   const { data: rawEmployees } = useHrEmployees();
   const employees = Array.isArray(rawEmployees) ? rawEmployees : rawEmployees?.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
   const [dealToDelete, setDealToDelete] = useState<number | null>(null);
 
-  // View toggle
-  const [view, setView] = useState<"table" | "kanban">(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("deals-view") as "table" | "kanban") || "table";
-    }
-    return "table";
-  });
-  const [dealSortCol, setDealSortCol] = useState("createdAt");
-  const [dealSortDir, setDealSortDir] = useState<"asc" | "desc">("desc");
-
   const handleDealSort = useCallback((col: string) => {
     if (dealSortCol === col) {
-      setDealSortDir(d => d === "asc" ? "desc" : "asc");
+      updateParams({ sort: col, dir: dealSortDir === "asc" ? "desc" : "asc" });
     } else {
-      setDealSortCol(col);
-      setDealSortDir("desc");
+      updateParams({ sort: col, dir: "desc" });
     }
-  }, [dealSortCol]);
+  }, [dealSortCol, dealSortDir, updateParams]);
 
   const handleViewChange = useCallback((v: "table" | "kanban") => {
-    setView(v);
-    localStorage.setItem("deals-view", v);
-  }, []);
+    updateParams({ view: v === "table" ? null : v });
+  }, [updateParams]);
 
   const updateStageMutation = useUpdateDealStage();
   const deleteMutation = useDeleteDeal();
