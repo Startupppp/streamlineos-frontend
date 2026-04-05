@@ -188,7 +188,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           </Form>
         </ScrollArea>
 
-        <SheetFooter>
+        <SheetFooter className="px-4 pb-4 pt-3 gap-2 shrink-0 border-t flex-row">
           <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
             Cancel
           </Button>

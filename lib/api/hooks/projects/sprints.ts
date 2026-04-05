@@ -15,14 +15,13 @@ import type {
 
 export function useSprints(
   projectId?: number,
-  options?: Omit<UseQueryOptions<Sprint[]>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<Sprint[]>, "queryKey" | "queryFn" | "enabled">
 ) {
   return useQuery<Sprint[]>({
     queryKey: queryKeys.projects.sprints(projectId),
     queryFn: () =>
-      projectId
-        ? apiClient.get<Sprint[]>(`/projects/${projectId}/sprints`)
-        : apiClient.get<Sprint[]>("/projects/sprints"),
+      apiClient.get<Sprint[]>(`/projects/${projectId}/sprints`),
+    enabled: !!projectId,
     ...options,
   });
 }

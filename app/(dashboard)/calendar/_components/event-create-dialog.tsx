@@ -310,7 +310,7 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                       Meet
                     </Button>
                   ) : (
-                    <a href={meetStatus.authUrl} className="shrink-0">
+                    <a href={meetStatus.authUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
                       <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5">
                         <Video className="h-3.5 w-3.5" />
                         Connect

@@ -120,7 +120,7 @@ export function CalendarView() {
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
   return (
-    <div className="h-full flex flex-col gap-3">
+    <div className="flex flex-col gap-3 h-[calc(100dvh-10rem)]">
       <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
         <div className="flex items-center gap-1.5">
           <Button

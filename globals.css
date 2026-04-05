@@ -476,6 +476,8 @@
 
 .calendar-container .rbc-month-row {
   border-top: 1px solid var(--border);
+  min-height: 100px;
+  flex: 1 0 0;
 }
 
 .calendar-container .rbc-day-bg + .rbc-day-bg {

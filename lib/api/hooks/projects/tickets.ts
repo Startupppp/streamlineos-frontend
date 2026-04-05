@@ -147,40 +147,6 @@ export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryK
   return useProjectLabels(undefined, options);
 }
 
-/**
- * Backward-compat useUpdateTicket that doesn't require projectId as first arg.
- * The ticket ID is in the input data; the URL uses the ticket-level PATCH endpoint.
- */
-export function useUpdateTicketCompat(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateTicketInput>, "mutationFn">
-) {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateTicketInput>({
-    mutationFn: ({ ticketId, ...data }) =>
-      apiClient.patch<{ success: boolean }>(`/projects/tickets/${ticketId}`, data),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(variables.ticketId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
-    },
-    ...options,
-  });
-}
-
-/** Backward-compat useDeleteTicket that doesn't require projectId as first arg. */
-export function useDeleteTicketCompat(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number }>, "mutationFn">
-) {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number }>({
-    mutationFn: ({ ticketId }) =>
-      apiClient.delete<{ success: boolean }>(`/projects/tickets/${ticketId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
-    },
-    ...options,
-  });
-}
-
 /** Add a comment to a ticket. */
 export function useAddComment(
   options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>, "mutationFn">
