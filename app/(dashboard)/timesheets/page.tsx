@@ -24,9 +24,9 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -43,70 +43,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { formatHoursMinutes } from "@/lib/format-utils";
 import { toast } from "sonner";
-import {
-  MoreVertical,
-  Edit,
-  Trash2,
-  Loader2,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Loader2, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { TimesheetTableRow, type EditEntry } from "./_components/timesheet-table-row";
 
 const ITEMS_PER_PAGE = 10;
-
-const statusBadgeStyles: Record<string, string> = {
-  APPROVED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  PENDING: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  REJECTED: "bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400",
-};
-
-const statusLabels: Record<string, string> = {
-  APPROVED: "Approved",
-  PENDING: "Pending",
-  REJECTED: "Rejected",
-};
-
-const PROJECT_DOT_COLORS = [
-  "bg-blue-500",
-  "bg-purple-500",
-  "bg-emerald-500",
-  "bg-rose-500",
-  "bg-amber-500",
-  "bg-cyan-500",
-  "bg-indigo-500",
-  "bg-pink-500",
-] as const;
-
-function getProjectDotColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return PROJECT_DOT_COLORS[Math.abs(hash) % PROJECT_DOT_COLORS.length];
-}
 
 type ViewMode = "current" | "history";
 
@@ -121,12 +67,7 @@ export default function TimesheetsPage() {
   const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>("current");
-  const [editingEntry, setEditingEntry] = useState<{
-    id: number;
-    description: string | null;
-    hours: string;
-    status: string;
-  } | null>(null);
+  const [editingEntry, setEditingEntry] = useState<EditEntry | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
 
@@ -179,10 +120,10 @@ export default function TimesheetsPage() {
     endDate: computedRange.end,
   });
 
-  const totalHours = useMemo(() => {
-    if (!entries) return 0;
-    return entries.reduce((sum, e) => sum + parseFloat(e.hours?.toString() || "0"), 0);
-  }, [entries]);
+  const totalHours = useMemo(
+    () => (entries ?? []).reduce((sum, e) => sum + parseFloat(e.hours?.toString() || "0"), 0),
+    [entries],
+  );
 
   const paginatedEntries = useMemo(() => {
     if (!entries) return [];
@@ -191,6 +132,59 @@ export default function TimesheetsPage() {
   }, [entries, page]);
 
   const totalPages = entries ? Math.ceil(entries.length / ITEMS_PER_PAGE) : 0;
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (page <= 3) return [1, 2, 3, 4, 5];
+    if (page >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [page - 2, page - 1, page, page + 1, page + 2];
+  }, [page, totalPages]);
+
+  const deleteMutation = useDeleteTimeEntry();
+
+  const handleViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    setPage(1);
+    setDateRange(mode === "current" ? "this-quarter" : "all");
+  }, []);
+
+  const handleViewModeCurrent = useCallback(() => handleViewMode("current"), [handleViewMode]);
+  const handleViewModeHistory = useCallback(() => handleViewMode("history"), [handleViewMode]);
+
+  const handleProjectChange = useCallback((v: string) => { setSelectedProject(v); setPage(1); }, []);
+  const handlePeriodChange = useCallback((v: string) => {
+    setDateRange(v);
+    setPage(1);
+    setViewMode(v === "all" ? "history" : "current");
+  }, []);
+  const handleStartDateChange = useCallback((v: string) => { setStartDate(v); setPage(1); }, []);
+  const handleEndDateChange = useCallback((v: string) => { setEndDate(v); setPage(1); }, []);
+
+  const handleEditEntry = useCallback((entry: EditEntry) => setEditingEntry(entry), []);
+  const handleDeleteEntry = useCallback((id: number) => { setEntryToDelete(id); setDeleteDialogOpen(true); }, []);
+  const handleEditDialogClose = useCallback((open: boolean) => { if (!open) setEditingEntry(null); }, []);
+
+  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
+  const handleNextPage = useCallback(() => setPage((p) => p + 1), []);
+  const handlePageNumber = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const num = parseInt(e.currentTarget.dataset.page ?? "1");
+    if (!isNaN(num)) setPage(num);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!entryToDelete) return;
+    deleteMutation.mutate(
+      { entryId: entryToDelete },
+      {
+        onSuccess: () => {
+          toast.success("Time entry deleted");
+          setDeleteDialogOpen(false);
+          setEntryToDelete(null);
+        },
+        onError: (err) => toast.error((err as Error).message || "Failed to delete"),
+      },
+    );
+  }, [entryToDelete, deleteMutation]);
 
   const clearFilters = useCallback(() => {
     setSelectedProject("all");
@@ -201,30 +195,9 @@ export default function TimesheetsPage() {
     setViewMode("current");
   }, []);
 
-  const deleteMutation = useDeleteTimeEntry();
-
-  const handleViewMode = useCallback((mode: ViewMode) => {
-    setViewMode(mode);
-    setPage(1);
-    if (mode === "current") {
-      setDateRange("this-quarter");
-    } else {
-      setDateRange("all");
-    }
-  }, []);
-
   const currentYear = new Date().getFullYear();
   const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;
 
-  // Compute visible page numbers for pagination
-  const pageNumbers = useMemo(() => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (page <= 3) return [1, 2, 3, 4, 5];
-    if (page >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    return [page - 2, page - 1, page, page + 1, page + 2];
-  }, [page, totalPages]);
-
-  // CEO should not access personal timesheets — redirect to team view
   if (isCEO) {
     router.replace("/timesheets/team");
     return null;
@@ -232,10 +205,9 @@ export default function TimesheetsPage() {
 
   const filtersBar = (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Project filter chip */}
       <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Project:</span>
-        <Select value={selectedProject} onValueChange={(v) => { setSelectedProject(v); setPage(1); }}>
+        <Select value={selectedProject} onValueChange={handleProjectChange}>
           <SelectTrigger aria-label="Filter by project" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
             <SelectValue placeholder="All" />
           </SelectTrigger>
@@ -248,10 +220,9 @@ export default function TimesheetsPage() {
         </Select>
       </div>
 
-      {/* Period filter chip */}
       <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
         <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Period:</span>
-        <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setPage(1); setViewMode(v === "all" ? "history" : "current"); }}>
+        <Select value={dateRange} onValueChange={handlePeriodChange}>
           <SelectTrigger aria-label="Filter by time period" className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium min-w-[100px] focus:ring-0">
             <SelectValue />
           </SelectTrigger>
@@ -268,52 +239,27 @@ export default function TimesheetsPage() {
         </Select>
       </div>
 
-      {/* Custom date inputs */}
       {dateRange === "custom" && (
         <>
-          <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">From:</Label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-              aria-label="From date"
-              className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
-            />
-          </div>
-          <div className="flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
-            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">To:</Label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-              aria-label="To date"
-              className="h-auto border-0 bg-transparent p-0 shadow-none text-sm font-medium w-[130px] focus-visible:ring-0"
-            />
-          </div>
+          <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="From date" />
+          <DatePicker value={endDate} onChange={handleEndDateChange} placeholder="To date" />
         </>
       )}
 
-      {/* Divider */}
       <div className="h-7 w-px bg-border mx-1 hidden sm:block" />
 
-      {/* View mode tabs */}
       <button
-        onClick={() => handleViewMode("current")}
+        onClick={handleViewModeCurrent}
         className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors ${
-          viewMode === "current"
-            ? "bg-gold/10 text-gold"
-            : "text-muted-foreground hover:text-foreground"
+          viewMode === "current" ? "bg-gold/10 text-gold" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         Current Quarter
       </button>
       <button
-        onClick={() => handleViewMode("history")}
+        onClick={handleViewModeHistory}
         className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-          viewMode === "history"
-            ? "bg-gold/10 text-gold"
-            : "text-muted-foreground hover:text-foreground"
+          viewMode === "history" ? "bg-gold/10 text-gold" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         History
@@ -338,7 +284,6 @@ export default function TimesheetsPage() {
       filters={filtersBar}
     >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
-        {/* Summary bar */}
         {entries && entries.length > 0 && (
           <motion.div variants={fadeUp}>
             <p className="text-sm text-muted-foreground">
@@ -349,7 +294,6 @@ export default function TimesheetsPage() {
           </motion.div>
         )}
 
-        {/* Table */}
         <motion.div variants={fadeUp}>
           <Card className="overflow-hidden">
             <CardContent className="p-0">
@@ -376,83 +320,14 @@ export default function TimesheetsPage() {
                       </TableHeader>
                       <TableBody>
                         {paginatedEntries.length > 0 ? (
-                          paginatedEntries.map((entry) => {
-                            const canEdit = entry.status === "PENDING";
-                            const ticket = entry.ticket;
-                            const projectName = ticket?.project?.name || "Unknown";
-                            const dotColor = getProjectDotColor(projectName);
-                            const statusKey = entry.status || "PENDING";
-                            return (
-                              <TableRow key={entry.id} className="hover:bg-muted/30 transition-colors">
-                                <TableCell className="px-6 py-5 whitespace-nowrap">
-                                  <span className="text-sm font-semibold">
-                                    {format(new Date(entry.date), "MMM dd, yyyy")}
-                                  </span>
-                                </TableCell>
-                                <TableCell className="px-6 py-5">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`size-2 rounded-full shrink-0 ${dotColor}`} />
-                                    <span className="text-sm font-medium">{projectName}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="px-6 py-5 max-w-xs">
-                                  <p className="text-sm text-muted-foreground truncate">
-                                    {entry.description || "No description"}
-                                  </p>
-                                </TableCell>
-                                <TableCell className="px-6 py-5 whitespace-nowrap">
-                                  <span className="text-sm font-medium">
-                                    {formatHoursMinutes(entry.hours)}
-                                  </span>
-                                </TableCell>
-                                <TableCell className="px-6 py-5 whitespace-nowrap">
-                                  <Badge className={`text-xs font-bold border-0 rounded-full px-2.5 py-0.5 ${statusBadgeStyles[statusKey]}`}>
-                                    {statusLabels[statusKey] || statusKey}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="px-6 py-5 text-right">
-                                  {canEdit ? (
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" aria-label="More options">
-                                          <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                          onClick={() =>
-                                            setEditingEntry({
-                                              id: entry.id,
-                                              description: entry.description,
-                                              hours: entry.hours?.toString() || "0",
-                                              status: entry.status || "PENDING",
-                                            })
-                                          }
-                                        >
-                                          <Edit className="mr-2 h-4 w-4" />
-                                          Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          onClick={() => {
-                                            setEntryToDelete(entry.id);
-                                            setDeleteDialogOpen(true);
-                                          }}
-                                          className="text-destructive"
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          Delete
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  ) : (
-                                    <span className="text-muted-foreground/30 inline-flex h-8 w-8 items-center justify-center">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })
+                          paginatedEntries.map((entry) => (
+                            <TimesheetTableRow
+                              key={entry.id}
+                              entry={entry}
+                              onEdit={handleEditEntry}
+                              onDelete={handleDeleteEntry}
+                            />
+                          ))
                         ) : (
                           <TableRow>
                             <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
@@ -471,11 +346,10 @@ export default function TimesheetsPage() {
                     </Table>
                   </div>
 
-                  {/* Pagination */}
                   {entries && entries.length > 0 && (
                     <div className="px-6 py-4 bg-muted/20 border-t flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
-                        Showing {Math.min((page - 1) * ITEMS_PER_PAGE + 1, entries.length)}-{Math.min(page * ITEMS_PER_PAGE, entries.length)} of {entries.length} entries
+                        Showing {Math.min((page - 1) * ITEMS_PER_PAGE + 1, entries.length)}–{Math.min(page * ITEMS_PER_PAGE, entries.length)} of {entries.length} entries
                       </span>
                       {totalPages > 1 && (
                         <div className="flex items-center gap-1.5">
@@ -484,7 +358,7 @@ export default function TimesheetsPage() {
                             size="icon"
                             className="h-8 w-8"
                             disabled={page <= 1}
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            onClick={handlePrevPage}
                             aria-label="Previous page"
                           >
                             <ChevronLeft className="h-4 w-4" />
@@ -492,14 +366,13 @@ export default function TimesheetsPage() {
                           {pageNumbers.map((num) => (
                             <Button
                               key={num}
+                              data-page={num}
                               variant={num === page ? "default" : "outline"}
                               size="icon"
                               className={`h-8 w-8 text-sm font-bold ${
-                                num === page
-                                  ? "bg-gold hover:bg-gold/90 text-white border-gold"
-                                  : ""
+                                num === page ? "bg-gold hover:bg-gold/90 text-white border-gold" : ""
                               }`}
-                              onClick={() => setPage(num)}
+                              onClick={handlePageNumber}
                               {...(num === page ? { "aria-current": "page" as const } : {})}
                             >
                               {num}
@@ -510,7 +383,7 @@ export default function TimesheetsPage() {
                             size="icon"
                             className="h-8 w-8"
                             disabled={page >= totalPages}
-                            onClick={() => setPage((p) => p + 1)}
+                            onClick={handleNextPage}
                             aria-label="Next page"
                           >
                             <ChevronRight className="h-4 w-4" />
@@ -530,44 +403,19 @@ export default function TimesheetsPage() {
         <EditTimeEntryDialog
           entry={editingEntry}
           open={!!editingEntry}
-          onOpenChange={(open) => !open && setEditingEntry(null)}
+          onOpenChange={handleEditDialogClose}
         />
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Time Entry</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this time entry? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() =>
-                entryToDelete &&
-                deleteMutation.mutate(
-                  { entryId: entryToDelete },
-                  {
-                    onSuccess: () => {
-                      toast.success("Time entry deleted");
-                      setDeleteDialogOpen(false);
-                      setEntryToDelete(null);
-                    },
-                    onError: (err) => toast.error((err as Error).message || "Failed to delete"),
-                  }
-                )
-              }
-              disabled={deleteMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Time Entry"
+        description="Are you sure you want to delete this time entry? This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+      />
     </PageWrapper>
   );
 }

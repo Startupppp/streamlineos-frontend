@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,9 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { Home, Loader2 } from "lucide-react";
 import { format, addDays } from "date-fns";
@@ -77,7 +77,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
     form.reset();
   }, [form]);
 
-  function onSubmit(data: WfhFormValues) {
+  const onSubmit = useCallback((data: WfhFormValues) => {
     createWfhRequest.mutate(
       {
         date: new Date(data.date),
@@ -94,7 +94,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
         },
       }
     );
-  }
+  }, [createWfhRequest, handleClose]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -106,13 +106,13 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="flex flex-col p-0 sm:max-w-lg">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-          <SheetTitle className="flex items-center gap-2">
-            <Home className="h-5 w-5 text-primary" />
+      <SheetContent className="flex flex-col p-0 sm:max-w-md">
+        <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
+          <SheetTitle className="flex items-center gap-2 text-sm">
+            <Home className="h-4 w-4 text-primary" />
             Work From Home Request
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-xs">
             Request to work from home for a specific date.
           </SheetDescription>
         </SheetHeader>
@@ -122,7 +122,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
             <form
               id="wfh-form"
               onSubmit={form.handleSubmit(onSubmit)}
-              className="px-6 py-5 space-y-5"
+              className="px-4 py-4 space-y-4"
             >
               <FormField
                 control={form.control}
@@ -131,7 +131,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
                   <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <Input type="date" className="w-full" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -187,7 +187,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           </Form>
         </ScrollArea>
 
-        <div className="px-6 py-4 border-t shrink-0 flex justify-end gap-3">
+        <div className="px-4 py-3 border-t shrink-0 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={handleClose}>
             Cancel
           </Button>

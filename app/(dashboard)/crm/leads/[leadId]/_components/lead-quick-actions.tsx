@@ -5,6 +5,7 @@ import { Phone, Mail, StickyNote, ListTodo } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
@@ -188,7 +189,7 @@ export function LeadQuickActions({
                   <FormItem>
                     <FormLabel>Due Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value || ""} onChange={field.onChange} placeholder="Select due date" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

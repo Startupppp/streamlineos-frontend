@@ -53,7 +53,8 @@ export function DashboardShell({
   const isCrmDetailPage =
     pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
   const isChatPage = pathname === "/chat";
-  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage;
+  const isOnboardingPage = pathname === "/onboarding";
+  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage;
 
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 

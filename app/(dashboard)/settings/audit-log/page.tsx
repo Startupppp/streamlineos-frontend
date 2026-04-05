@@ -2,12 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
-import {
-  Shield, ChevronLeft, ChevronRight,
-  Activity, Info,
-} from "lucide-react";
+import { Shield, ChevronLeft, ChevronRight, Activity, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -30,8 +27,6 @@ import {
   type AuditLogRow,
 } from "@/lib/api/hooks/audit-log";
 import { resolveImageUrl } from "@/lib/utils";
-
-/* ─── Helpers ─── */
 
 function getInitials(name?: string | null) {
   if (!name) return "?";
@@ -62,42 +57,86 @@ function actionBadgeClass(action: string) {
   return "bg-muted text-muted-foreground border-border";
 }
 
-/* ─── Detail Sheet ─── */
+interface LogTableRowProps {
+  log: AuditLogRow;
+  onSelect: (log: AuditLogRow) => void;
+}
+
+function LogTableRow({ log, onSelect }: LogTableRowProps) {
+  const handleClick = useCallback(() => onSelect(log), [log, onSelect]);
+  return (
+    <TableRow className="cursor-pointer" onClick={handleClick}>
+      <TableCell className="text-[12px] text-muted-foreground font-mono">
+        {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={resolveImageUrl(log.userImage)} />
+            <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
+          </Avatar>
+          <span className="text-[13px] font-medium truncate max-w-[120px]">
+            {log.userName ?? log.userEmail ?? log.userId}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
+          {log.action}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-[12px] text-muted-foreground capitalize">
+        {log.targetType ?? "—"}
+        {log.targetId && (
+          <span className="text-[11px] opacity-60"> #{log.targetId}</span>
+        )}
+      </TableCell>
+      <TableCell className="text-[12px] font-mono text-muted-foreground">
+        {log.ipAddress ?? "—"}
+      </TableCell>
+      <TableCell>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
+          <Info className="h-3.5 w-3.5 text-muted-foreground" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex flex-col p-0 w-[440px] sm:max-w-[440px]">
-        <SheetHeader className="px-5 pt-5 pb-4 border-b shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-[15px]">
+      <SheetContent className="flex flex-col p-0 w-[420px] sm:max-w-[420px]">
+        <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
+          <SheetTitle className="flex items-center gap-2 text-sm">
             <Activity className="h-4 w-4 text-muted-foreground" />
             Event Details
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-5 py-4 space-y-5">
+          <div className="px-4 py-3 space-y-4">
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Action</p>
-              <Badge variant="outline" className={`text-[12px] ${actionBadgeClass(log.action)}`}>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Action</p>
+              <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
                 {log.action}
               </Badge>
             </div>
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">User</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">User</p>
               <div className="flex items-center gap-2">
                 <Avatar className="h-7 w-7">
                   <AvatarImage src={resolveImageUrl(log.userImage)} />
                   <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{log.userName ?? "Unknown"}</p>
+                  <p className="text-sm font-medium leading-tight">{log.userName ?? "Unknown"}</p>
                   <p className="text-xs text-muted-foreground">{log.userEmail}</p>
                 </div>
               </div>
             </div>
             {log.targetType && (
               <div className="space-y-1">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Target</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Target</p>
                 <p className="text-sm">
                   <span className="font-medium capitalize">{log.targetType}</span>
                   {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
@@ -105,19 +144,19 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
               </div>
             )}
             <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Timestamp</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Timestamp</p>
               <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
             </div>
             {log.ipAddress && (
               <div className="space-y-1">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">IP Address</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">IP Address</p>
                 <p className="text-sm font-mono">{log.ipAddress}</p>
               </div>
             )}
             {log.metadata && Object.keys(log.metadata).length > 0 && (
               <div className="space-y-1">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Metadata</p>
-                <pre className="text-[11px] bg-muted/50 rounded-lg p-3 overflow-auto max-h-60 border">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Metadata</p>
+                <pre className="text-[11px] bg-muted/60 rounded p-2.5 overflow-auto max-h-52 border text-foreground">
                   {JSON.stringify(log.metadata, null, 2)}
                 </pre>
               </div>
@@ -129,7 +168,7 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
   );
 }
 
-/* ─── Page ─── */
+const PAGE_SIZE = 25;
 
 export default function AuditLogPage() {
   const [page, setPage] = useState(1);
@@ -141,7 +180,7 @@ export default function AuditLogPage() {
 
   const { data, isLoading } = useAuditLogs({
     page,
-    pageSize: 25,
+    pageSize: PAGE_SIZE,
     action: actionFilter !== "all" ? actionFilter : undefined,
     targetType: targetTypeFilter !== "all" ? targetTypeFilter : undefined,
     dateFrom: dateFrom || undefined,
@@ -159,21 +198,27 @@ export default function AuditLogPage() {
     setPage(1);
   }, []);
 
-  const handleFilterChange = useCallback(<T,>(setter: (v: T) => void) => (v: T) => {
-    setter(v);
-    setPage(1);
-  }, []);
+  const handleActionFilter = useCallback((v: string) => { setActionFilter(v); setPage(1); }, []);
+  const handleTargetTypeFilter = useCallback((v: string) => { setTargetTypeFilter(v); setPage(1); }, []);
+  const handleDateFrom = useCallback((v: string) => { setDateFrom(v); setPage(1); }, []);
+  const handleDateTo = useCallback((v: string) => { setDateTo(v); setPage(1); }, []);
+  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
+  const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
 
   const logs = data?.logs ?? [];
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
+  const handleNextPage = useCallback(() => setPage((p) => Math.min(totalPages, p + 1)), [totalPages]);
+
+  const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo;
+
   const filtersBar = (
-    <div className="flex flex-wrap gap-3 items-end">
-      <div className="space-y-1">
+    <div className="flex flex-wrap gap-2 items-end">
+      <div className="flex flex-col gap-1 min-w-[160px] flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">Action</p>
-        <Select value={actionFilter} onValueChange={handleFilterChange(setActionFilter)}>
-          <SelectTrigger className="h-8 w-[200px] text-sm">
+        <Select value={actionFilter} onValueChange={handleActionFilter}>
+          <SelectTrigger className="h-8 text-sm w-full">
             <SelectValue placeholder="All actions" />
           </SelectTrigger>
           <SelectContent>
@@ -184,10 +229,10 @@ export default function AuditLogPage() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1 min-w-[130px] flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">Entity Type</p>
-        <Select value={targetTypeFilter} onValueChange={handleFilterChange(setTargetTypeFilter)}>
-          <SelectTrigger className="h-8 w-[160px] text-sm">
+        <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
+          <SelectTrigger className="h-8 text-sm w-full">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -198,25 +243,15 @@ export default function AuditLogPage() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1">
         <p className="text-[11px] font-medium text-muted-foreground">From</p>
-        <Input
-          type="date"
-          className="h-8 text-sm w-[140px]"
-          value={dateFrom}
-          onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-        />
+        <DatePicker value={dateFrom} onChange={handleDateFrom} placeholder="From date" />
       </div>
-      <div className="space-y-1">
+      <div className="flex flex-col gap-1">
         <p className="text-[11px] font-medium text-muted-foreground">To</p>
-        <Input
-          type="date"
-          className="h-8 text-sm w-[140px]"
-          value={dateTo}
-          onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-        />
+        <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" />
       </div>
-      {(actionFilter !== "all" || targetTypeFilter !== "all" || dateFrom || dateTo) && (
+      {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">
           Clear
         </Button>
@@ -230,7 +265,7 @@ export default function AuditLogPage() {
       subtitle="Track all system actions, logins, and changes across your organization."
       actions={
         <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-muted-foreground" />
+          <Shield className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground font-medium">
             {total.toLocaleString()} events
           </span>
@@ -238,115 +273,75 @@ export default function AuditLogPage() {
       }
       filters={filtersBar}
     >
-      <div className="space-y-6">
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="py-16 flex flex-col items-center gap-2 text-muted-foreground">
-              <Shield className="h-10 w-10 opacity-20" />
-              <p className="text-sm">No audit events found.</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[180px]">Timestamp</TableHead>
-                  <TableHead className="w-[200px]">User</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead className="w-[120px]">Entity</TableHead>
-                  <TableHead className="w-[120px]">IP Address</TableHead>
-                  <TableHead className="w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <TableRow
-                    key={log.id}
-                    className="cursor-pointer"
-                    onClick={() => setSelectedLog(log)}
-                  >
-                    <TableCell className="text-[12px] text-muted-foreground font-mono">
-                      {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={resolveImageUrl(log.userImage)} />
-                          <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-[13px] font-medium truncate max-w-[130px]">
-                          {log.userName ?? log.userEmail ?? log.userId}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
-                        {log.action}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-[12px] text-muted-foreground capitalize">
-                      {log.targetType ?? "—"}
-                      {log.targetId && (
-                        <span className="text-[11px] opacity-60"> #{log.targetId}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-[12px] font-mono text-muted-foreground">
-                      {log.ipAddress ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
-                        <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-4 space-y-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Skeleton key={i} className="h-11 w-full" />
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="py-14 flex flex-col items-center gap-2 text-muted-foreground">
+                <Shield className="h-9 w-9 opacity-20" />
+                <p className="text-sm">No audit events found.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[170px]">Timestamp</TableHead>
+                    <TableHead className="w-[190px]">User</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead className="w-[110px]">Entity</TableHead>
+                    <TableHead className="w-[110px]">IP Address</TableHead>
+                    <TableHead className="w-[50px]" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.map((log) => (
+                    <LogTableRow key={log.id} log={log} onSelect={setSelectedLog} />
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <p>
-            Showing {((page - 1) * 25) + 1}–{Math.min(page * 25, total)} of {total.toLocaleString()}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium">{page} / {totalPages}</span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              aria-label="Next page"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+        {total > PAGE_SIZE && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <p>
+              Showing {((page - 1) * PAGE_SIZE) + 1}–{Math.min(page * PAGE_SIZE, total)} of {total.toLocaleString()}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handlePrevPage}
+                disabled={page <= 1}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium tabular-nums">{page} / {totalPages}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleNextPage}
+                disabled={page >= totalPages}
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {selectedLog && <LogDetailSheet log={selectedLog} onClose={() => setSelectedLog(null)} />}
+        )}
       </div>
+
+      {selectedLog && <LogDetailSheet log={selectedLog} onClose={handleCloseSheet} />}
     </PageWrapper>
   );
 }

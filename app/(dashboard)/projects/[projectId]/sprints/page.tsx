@@ -1,58 +1,21 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import {
-  useSprints,
-  useProject,
-  useUpdateSprint,
-  useUpdateTicket,
+  useSprints, useProject, useUpdateSprint, useUpdateTicket,
 } from "@/lib/api/hooks/projects";
 import { CreateSprintDialog } from "@/components/projects/create-sprint-dialog";
-import { EditSprintDialog } from "@/components/projects/edit-sprint-dialog";
 import { BurndownChart } from "@/components/projects/burndown-chart";
 import { VelocityChart } from "@/components/projects/velocity-chart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  Target,
-  CheckCircle2,
-  Play,
-  Square,
-  MoreHorizontal,
-  Loader2,
-  Pencil,
-  ArrowLeftRight,
-  AlertTriangle,
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Play, Calendar, CheckCircle2, Loader2 } from "lucide-react";
 import { EmptySprintIllustration } from "@/components/illustrations";
-import { format, differenceInDays } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
+import { SprintCard } from "./_components/sprint-card";
+import { CompleteSprintSheet } from "./_components/complete-sprint-sheet";
+import { SprintPlanningPanel } from "./_components/sprint-planning-panel";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -72,7 +35,7 @@ export default function SprintsPage({ params }: PageProps) {
   const updateSprint = useUpdateSprint(projectId);
   const updateTicket = useUpdateTicket(projectId);
 
-  function handleStartSprint(sprintId: number) {
+  const handleStartSprint = useCallback((sprintId: number) => {
     updateSprint.mutate(
       { sprintId, status: "ACTIVE" },
       {
@@ -80,27 +43,35 @@ export default function SprintsPage({ params }: PageProps) {
         onError: (error) => toast.error((error as Error).message || "Failed to start sprint"),
       }
     );
-  }
+  }, [updateSprint]);
 
-  function handleCompleteSprint(sprintId: number) {
+  const handleOpenCompletionSheet = useCallback((sprintId: number) => {
     setCompletionSprintId(sprintId);
-  }
+  }, []);
 
-  function confirmCompleteSprint() {
+  const handleOpenPlanningSheet = useCallback((sprintId: number) => {
+    setPlanningSprintId(sprintId);
+  }, []);
+
+  const handleClosePlanningSheet = useCallback(() => {
+    setPlanningSprintId(null);
+  }, []);
+
+  const handleCancelCompletion = useCallback(() => {
+    setCompletionSprintId(null);
+  }, []);
+
+  const handleConfirmCompletion = useCallback(() => {
     if (!completionSprintId) return;
-    const sprint = sprints?.find(s => s.id === completionSprintId);
+    const sprint = sprints?.find((s) => s.id === completionSprintId);
     if (!sprint) return;
 
-    const incompleteTickets = (sprint.tickets || []).filter(t => t.status !== "DONE");
-    const nextSprint = sprints?.find(s => s.status === "PLANNED");
+    const incompleteTickets = (sprint.tickets || []).filter((t) => t.status !== "DONE");
+    const nextSprint = sprints?.find((s) => s.status === "PLANNED");
+    const targetSprintId = moveToOption === "next" && nextSprint ? nextSprint.id : undefined;
 
-    const targetSprintId = moveToOption === "backlog" ? undefined :
-      moveToOption === "next" && nextSprint ? nextSprint.id : undefined;
-    const promises = incompleteTickets.map(ticket =>
-      updateTicket.mutateAsync({
-        ticketId: ticket.id,
-        sprintId: targetSprintId,
-      })
+    const promises = incompleteTickets.map((ticket) =>
+      updateTicket.mutateAsync({ ticketId: ticket.id, sprintId: targetSprintId })
     );
 
     Promise.all(promises)
@@ -117,9 +88,9 @@ export default function SprintsPage({ params }: PageProps) {
       .catch(() => {
         toast.error("Failed to move some tickets");
       });
-  }
+  }, [completionSprintId, sprints, moveToOption, updateTicket, updateSprint]);
 
-  function handlePlanningDragEnd(result: DropResult) {
+  const handlePlanningDragEnd = useCallback((result: DropResult) => {
     const { destination, source, draggableId } = result;
     if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) return;
 
@@ -127,15 +98,10 @@ export default function SprintsPage({ params }: PageProps) {
     const newSprintId = destination.droppableId === "backlog" ? undefined : parseInt(destination.droppableId);
 
     updateTicket.mutate(
-      {
-        ticketId,
-        ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}),
-      },
-      {
-        onError: (error) => toast.error((error as Error).message || "Failed to move ticket"),
-      }
+      { ticketId, ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}) },
+      { onError: (error) => toast.error((error as Error).message || "Failed to move ticket") }
     );
-  }
+  }, [updateTicket]);
 
   if (isLoading) {
     return (
@@ -147,19 +113,16 @@ export default function SprintsPage({ params }: PageProps) {
     );
   }
 
-  const activeSprints = sprints?.filter(s => s.status === "ACTIVE") || [];
-  const plannedSprints = sprints?.filter(s => s.status === "PLANNED") || [];
-  const completedSprints = sprints?.filter(s => s.status === "COMPLETED") || [];
+  const activeSprints = sprints?.filter((s) => s.status === "ACTIVE") || [];
+  const plannedSprints = sprints?.filter((s) => s.status === "PLANNED") || [];
+  const completedSprints = sprints?.filter((s) => s.status === "COMPLETED") || [];
 
   const allTickets = project?.tickets || [];
-  const backlogTickets = allTickets.filter(t => !t.sprintId && t.type !== "EPIC");
+  const backlogTickets = allTickets.filter((t) => !t.sprintId && t.type !== "EPIC");
 
-  const planningSprint = planningSprintId ? sprints?.find(s => s.id === planningSprintId) : null;
-  const completionSprint = completionSprintId ? sprints?.find(s => s.id === completionSprintId) : null;
-  const incompleteCount = completionSprint
-    ? (completionSprint.tickets || []).filter(t => t.status !== "DONE").length
-    : 0;
-  const nextPlannedSprint = sprints?.find(s => s.status === "PLANNED");
+  const planningSprint = planningSprintId ? sprints?.find((s) => s.id === planningSprintId) : null;
+  const completionSprint = completionSprintId ? sprints?.find((s) => s.id === completionSprintId) : null;
+  const nextPlannedSprint = sprints?.find((s) => s.status === "PLANNED");
 
   return (
     <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite" aria-atomic="true">
@@ -180,101 +143,12 @@ export default function SprintsPage({ params }: PageProps) {
       </div>
 
       {planningSprintId && planningSprint && (
-        <Card className="border-primary/50">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ArrowLeftRight className="h-5 w-5 text-primary" />
-                Planning: {planningSprint.name}
-              </CardTitle>
-              <Button variant="outline" size="sm" onClick={() => setPlanningSprintId(null)}>
-                Done Planning
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <DragDropContext onDragEnd={handlePlanningDragEnd}>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">Backlog ({backlogTickets.length})</h4>
-                  <Droppable droppableId="backlog">
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        aria-label="Backlog tickets"
-                        className={cn(
-                          "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
-                          snapshot.isDraggingOver && "bg-primary/5 border-primary/30"
-                        )}
-                      >
-                        {backlogTickets.map((ticket, index) => (
-                          <Draggable key={ticket.id} draggableId={ticket.id.toString()} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="p-2 bg-card rounded border text-sm flex items-center justify-between"
-                              >
-                                <span className="truncate">{ticket.title}</span>
-                                {ticket.points && (
-                                  <Badge variant="secondary" className="text-xs ml-2 shrink-0">{ticket.points}</Badge>
-                                )}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                        {backlogTickets.length === 0 && (
-                          <p className="text-xs text-muted-foreground text-center py-8">No backlog tickets</p>
-                        )}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">{planningSprint.name} ({(planningSprint.tickets || []).length})</h4>
-                  <Droppable droppableId={planningSprint.id.toString()}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        aria-label={`${planningSprint.name} tickets`}
-                        className={cn(
-                          "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
-                          snapshot.isDraggingOver && "bg-primary/5 border-primary/30"
-                        )}
-                      >
-                        {(planningSprint.tickets || []).map((ticket, index) => (
-                          <Draggable key={ticket.id} draggableId={ticket.id.toString()} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="p-2 bg-card rounded border text-sm flex items-center justify-between"
-                              >
-                                <span className="truncate">{ticket.title}</span>
-                                {ticket.points && (
-                                  <Badge variant="secondary" className="text-xs ml-2 shrink-0">{ticket.points}</Badge>
-                                )}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                        {(planningSprint.tickets || []).length === 0 && (
-                          <p className="text-xs text-muted-foreground text-center py-8">Drag tickets here</p>
-                        )}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              </div>
-            </DragDropContext>
-          </CardContent>
-        </Card>
+        <SprintPlanningPanel
+          sprint={planningSprint}
+          backlogTickets={backlogTickets}
+          onDragEnd={handlePlanningDragEnd}
+          onDone={handleClosePlanningSheet}
+        />
       )}
 
       {activeSprints.length > 0 && (
@@ -289,8 +163,8 @@ export default function SprintsPage({ params }: PageProps) {
                 <SprintCard
                   sprint={sprint}
                   projectId={projectId}
-                  onComplete={() => handleCompleteSprint(sprint.id)}
-                  onPlan={() => setPlanningSprintId(sprint.id)}
+                  onComplete={handleOpenCompletionSheet}
+                  onPlan={handleOpenPlanningSheet}
                   isUpdating={updateSprint.isPending}
                 />
                 <BurndownChart sprintId={sprint.id} projectId={projectId} />
@@ -312,8 +186,8 @@ export default function SprintsPage({ params }: PageProps) {
                 key={sprint.id}
                 sprint={sprint}
                 projectId={projectId}
-                onStart={() => handleStartSprint(sprint.id)}
-                onPlan={() => setPlanningSprintId(sprint.id)}
+                onStart={handleStartSprint}
+                onPlan={handleOpenPlanningSheet}
                 isUpdating={updateSprint.isPending}
               />
             ))}
@@ -321,9 +195,7 @@ export default function SprintsPage({ params }: PageProps) {
         </section>
       )}
 
-      {completedSprints.length > 0 && (
-        <VelocityChart sprints={completedSprints} />
-      )}
+      {completedSprints.length > 0 && <VelocityChart sprints={completedSprints} />}
 
       {completedSprints.length > 0 && (
         <section>
@@ -357,208 +229,15 @@ export default function SprintsPage({ params }: PageProps) {
         </Card>
       )}
 
-      <Sheet open={!!completionSprintId} onOpenChange={(open) => !open && setCompletionSprintId(null)}>
-        <SheetContent className="overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Complete Sprint: {completionSprint?.name}
-            </SheetTitle>
-          </SheetHeader>
-          <div className="space-y-4">
-            {incompleteCount > 0 ? (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  {incompleteCount} ticket{incompleteCount > 1 ? "s are" : " is"} not done. Where should they go?
-                </p>
-                <Select value={moveToOption} onValueChange={setMoveToOption}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="backlog">Move to Backlog</SelectItem>
-                    {nextPlannedSprint && (
-                      <SelectItem value="next">Move to {nextPlannedSprint.name}</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">All tickets are done! Ready to complete this sprint.</p>
-            )}
-          </div>
-          <SheetFooter>
-            <Button variant="outline" onClick={() => setCompletionSprintId(null)}>Cancel</Button>
-            <Button onClick={confirmCompleteSprint} disabled={updateSprint.isPending}>
-              {updateSprint.isPending ? "Completing..." : "Complete Sprint"}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <CompleteSprintSheet
+        sprint={completionSprint ?? null}
+        nextPlannedSprint={nextPlannedSprint}
+        moveToOption={moveToOption}
+        isUpdating={updateSprint.isPending}
+        onMoveToChange={setMoveToOption}
+        onCancel={handleCancelCompletion}
+        onConfirm={handleConfirmCompletion}
+      />
     </div>
-  );
-}
-
-interface SprintCardProps {
-  sprint: {
-    id: number;
-    name: string;
-    status: string | null;
-    startDate: Date | string;
-    endDate: Date | string;
-    goal?: string | null;
-    tickets?: Array<{
-      id: number;
-      title?: string;
-      status: string | null;
-      points: number | null;
-    }>;
-  };
-  projectId: number;
-  onStart?: () => void;
-  onComplete?: () => void;
-  onPlan?: () => void;
-  isUpdating?: boolean;
-}
-
-function SprintCard({ sprint, projectId, onStart, onComplete, onPlan, isUpdating }: SprintCardProps) {
-  const tickets = sprint.tickets || [];
-  const totalPoints = tickets.reduce((sum, t) => sum + (t.points || 0), 0);
-  const completedPoints = tickets
-    .filter(t => t.status === "DONE")
-    .reduce((sum, t) => sum + (t.points || 0), 0);
-  const progress = totalPoints > 0 ? (completedPoints / totalPoints) * 100 : 0;
-
-  const endDate = new Date(sprint.endDate);
-  const startDate = new Date(sprint.startDate);
-  const daysRemaining = differenceInDays(endDate, new Date());
-  const totalDays = differenceInDays(endDate, startDate);
-
-  const statusInfo = {
-    ACTIVE: { label: "Active", variant: "default" as const },
-    PLANNED: { label: "Planned", variant: "secondary" as const },
-    COMPLETED: { label: "Completed", variant: "outline" as const },
-  }[sprint.status || "PLANNED"] || { label: sprint.status || "PLANNED", variant: "secondary" as const };
-
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Link
-                href={`/projects/${projectId}?sprint=${sprint.id}`}
-                className="hover:text-primary transition-colors"
-              >
-                {sprint.name}
-              </Link>
-              <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-            </CardTitle>
-            {sprint.goal && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <Target className="h-3 w-3" />
-                {sprint.goal}
-              </p>
-            )}
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Sprint actions for ${sprint.name}`}>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <EditSprintDialog
-                  sprint={sprint}
-                  projectId={projectId}
-                  trigger={
-                    <button className="flex items-center w-full px-2 py-1.5 text-sm">
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit Sprint
-                    </button>
-                  }
-                />
-              </DropdownMenuItem>
-              {onPlan && (
-                <DropdownMenuItem onClick={onPlan}>
-                  <ArrowLeftRight className="h-4 w-4 mr-2" />
-                  Plan Sprint
-                </DropdownMenuItem>
-              )}
-              {sprint.status === "PLANNED" && onStart && (
-                <DropdownMenuItem onClick={onStart} disabled={isUpdating}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Sprint
-                </DropdownMenuItem>
-              )}
-              {sprint.status === "ACTIVE" && onComplete && (
-                <DropdownMenuItem onClick={onComplete} disabled={isUpdating}>
-                  <Square className="h-4 w-4 mr-2" />
-                  Complete Sprint
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem asChild>
-                <Link href={`/projects/${projectId}?sprint=${sprint.id}`}>
-                  View Board
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">Start Date</p>
-            <p className="font-medium">{format(startDate, "MMM dd, yyyy")}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">End Date</p>
-            <p className="font-medium">{format(endDate, "MMM dd, yyyy")}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Duration</p>
-            <p className="font-medium">{totalDays} days</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">
-              {sprint.status === "COMPLETED" ? "Completed" : "Remaining"}
-            </p>
-            <p className={cn(
-              "font-medium",
-              sprint.status !== "COMPLETED" && daysRemaining < 0 && "text-red-500"
-            )}>
-              {sprint.status === "COMPLETED"
-                ? "Done"
-                : daysRemaining < 0
-                  ? `${Math.abs(daysRemaining)} days overdue`
-                  : `${daysRemaining} days`
-              }
-            </p>
-          </div>
-        </div>
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Progress: {completedPoints} / {totalPoints} points</span>
-            <span>{tickets.filter(t => t.status === "DONE").length} / {tickets.length} tickets</span>
-          </div>
-          <div
-            className="w-full bg-secondary rounded-full h-2"
-            role="progressbar"
-            aria-valuenow={Math.round(progress)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Sprint progress: ${completedPoints} of ${totalPoints} points`}
-            aria-valuetext={`${Math.round(progress)}% complete, ${completedPoints} of ${totalPoints} points done`}
-          >
-            <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }

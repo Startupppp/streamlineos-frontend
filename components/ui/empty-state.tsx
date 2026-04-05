@@ -2,24 +2,55 @@
 
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "./button";
+import Link from "next/link";
+
+interface ActionProps {
+  label: string;
+  onClick?: () => void;
+  href?: string;
+}
 
 interface EmptyStateProps {
   icon?: LucideIcon;
   illustration?: React.ReactNode;
   title: string;
   description?: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
+  action?: ActionProps;
+  secondaryAction?: ActionProps;
   className?: string;
   compact?: boolean;
+}
+
+function ActionButton({
+  action,
+  size,
+  className,
+  variant = "default",
+}: {
+  action: ActionProps;
+  size: "sm" | "default";
+  className?: string;
+  variant?: "default" | "outline";
+}) {
+  if (action.href) {
+    return (
+      <Button asChild size={size} variant={variant} className={className}>
+        <Link href={action.href}>{action.label}</Link>
+      </Button>
+    );
+  }
+  return (
+    <Button
+      size={size}
+      variant={variant}
+      onClick={action.onClick}
+      className={className}
+    >
+      {action.label}
+    </Button>
+  );
 }
 
 export function EmptyState({
@@ -41,7 +72,6 @@ export function EmptyState({
         className
       )}
     >
-      {/* Icon / illustration */}
       {illustration ? (
         <div className={cn("mb-4", compact ? "mb-3" : "mb-5")}>{illustration}</div>
       ) : Icon ? (
@@ -51,7 +81,12 @@ export function EmptyState({
             compact ? "h-10 w-10 mb-3" : "h-12 w-12 mb-5"
           )}
         >
-          <Icon className={cn("text-muted-foreground/60", compact ? "h-5 w-5" : "h-6 w-6")} />
+          <Icon
+            className={cn(
+              "text-muted-foreground/60",
+              compact ? "h-5 w-5" : "h-6 w-6"
+            )}
+          />
         </div>
       ) : null}
 
@@ -78,23 +113,19 @@ export function EmptyState({
       {(action || secondaryAction) && (
         <div className={cn("flex items-center gap-2", compact ? "mt-3" : "mt-5")}>
           {action && (
-            <Button
+            <ActionButton
+              action={action}
               size={compact ? "sm" : "default"}
-              onClick={action.onClick}
               className={compact ? "h-7 text-xs" : undefined}
-            >
-              {action.label}
-            </Button>
+            />
           )}
           {secondaryAction && (
-            <Button
-              variant="outline"
+            <ActionButton
+              action={secondaryAction}
               size={compact ? "sm" : "default"}
-              onClick={secondaryAction.onClick}
+              variant="outline"
               className={compact ? "h-7 text-xs" : undefined}
-            >
-              {secondaryAction.label}
-            </Button>
+            />
           )}
         </div>
       )}

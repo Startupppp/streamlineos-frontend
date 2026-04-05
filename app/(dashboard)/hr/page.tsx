@@ -41,7 +41,6 @@ export default function HRDashboardPage() {
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
   const [page, setPage] = useState(1);
 
-  // Derive unique departments from loaded employees
   const departments = useMemo(() => {
     const deptSet = new Map<string, string>();
     employees.forEach((e) => {
@@ -50,7 +49,6 @@ export default function HRDashboardPage() {
     return Array.from(deptSet.values()).sort();
   }, [employees]);
 
-  // Filter employees
   const filteredEmployees = useMemo(() => {
     let result = employees;
 
@@ -95,19 +93,16 @@ export default function HRDashboardPage() {
     return result;
   }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredEmployees.length / PAGE_SIZE);
   const paginatedEmployees = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
     return filteredEmployees.slice(start, start + PAGE_SIZE);
   }, [filteredEmployees, page]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
 
-  // Load employees on mount
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -131,9 +126,9 @@ export default function HRDashboardPage() {
     try {
       await deleteEmployee(employeeToDelete.id);
       setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id));
-      toast.success("Employee deactivated");
+      toast.success("Employee terminated");
     } catch {
-      toast.error("Failed to deactivate employee");
+      toast.error("Failed to terminate employee");
     } finally {
       setDeleteDialogOpen(false);
       setEmployeeToDelete(null);
@@ -193,8 +188,20 @@ export default function HRDashboardPage() {
         },
       ],
     );
-    toast.success("Employees exported successfully");
+    toast.success("Employees exported");
   }, [filteredEmployees]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm("");
+    setDeptFilter("All");
+    setStatusFilter("Active");
+    setRoleFilter("All");
+  }, []);
+
+  const handleRequestDelete = useCallback((employee: Employee) => {
+    setEmployeeToDelete(employee);
+    setDeleteDialogOpen(true);
+  }, []);
 
   if (loading) {
     return <EmployeesLoadingSkeleton />;
@@ -215,21 +222,16 @@ export default function HRDashboardPage() {
       badge={String(filteredEmployees.length)}
       actions={
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={handleExport}
-          >
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
             <Download className="h-4 w-4" aria-hidden="true" />
             Export
           </Button>
-          <Link href="/hr/onboarding">
-            <Button size="sm" className="gap-2">
+          <Button size="sm" className="gap-2" asChild>
+            <Link href="/hr/onboarding">
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Employee
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       }
       filters={
@@ -243,12 +245,7 @@ export default function HRDashboardPage() {
           onStatusChange={setStatusFilter}
           roleFilter={roleFilter}
           onRoleChange={setRoleFilter}
-          onClearFilters={() => {
-            setSearchTerm("");
-            setDeptFilter("All");
-            setStatusFilter("Active");
-            setRoleFilter("All");
-          }}
+          onClearFilters={handleClearFilters}
         />
       }
     >
@@ -265,10 +262,7 @@ export default function HRDashboardPage() {
           togglingAccess={togglingAccess}
           onPageChange={setPage}
           onToggleDashboardAccess={handleToggleDashboardAccess}
-          onRequestDelete={(employee) => {
-            setEmployeeToDelete(employee);
-            setDeleteDialogOpen(true);
-          }}
+          onRequestDelete={handleRequestDelete}
         />
       ) : hasActiveFilters ? (
         <EmptyState
@@ -283,9 +277,7 @@ export default function HRDashboardPage() {
           description="Get started by adding your first team member."
           action={{
             label: "Add Employee",
-            onClick: () => {
-              window.location.href = "/hr/onboarding";
-            },
+            href: "/hr/onboarding",
           }}
         />
       )}

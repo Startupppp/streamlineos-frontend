@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -132,7 +133,7 @@ export default function SocialMediaPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Date</Label>
-                <Input type="date" className="h-8" value={formData.date} onChange={(e) => setFormData(f => ({ ...f, date: e.target.value }))} />
+                <DatePicker value={formData.date} onChange={(v) => setFormData(f => ({ ...f, date: v }))} placeholder="Select date" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">

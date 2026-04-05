@@ -11,15 +11,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Trash2, Download, X } from "lucide-react";
 import { toast } from "sonner";
 import { Lead, TeamMember, STATUSES, PRIORITIES, LOST_REASONS } from "./types";
 
-/* ─── Conversion Modal ─── */
 interface ConversionModalProps {
   leadName: string | undefined;
   open: boolean;
@@ -106,7 +102,6 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
   );
 }
 
-/* ─── Lost Reason Modal ─── */
 interface LostModalProps {
   leadName: string | undefined;
   open: boolean;
@@ -172,7 +167,6 @@ export function LostModal({ leadName, open, onClose, onSubmit }: LostModalProps)
   );
 }
 
-/* ─── Bulk Actions Bar ─── */
 interface BulkActionsBarProps {
   selectedIds: Set<number>;
   selectedArray: number[];
@@ -227,6 +221,8 @@ export function BulkActionsBar({
       toast.error("Export failed");
     }
   }, [leads, selectedIds]);
+
+  const handleOpenDeleteDialog = useCallback(() => setDeleteDialogOpen(true), []);
 
   const handleConfirmDelete = useCallback(() => {
     onBulkDelete(selectedArray);
@@ -301,7 +297,7 @@ export function BulkActionsBar({
             variant="destructive"
             size="sm"
             className="h-7 text-xs"
-            onClick={() => setDeleteDialogOpen(true)}
+            onClick={handleOpenDeleteDialog}
           >
             <Trash2 className="h-3 w-3 mr-1" /> Delete
           </Button>
@@ -312,25 +308,15 @@ export function BulkActionsBar({
         </Button>
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedIds.size} lead{selectedIds.size !== 1 ? "s" : ""}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The selected lead{selectedIds.size !== 1 ? "s" : ""} will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={`Delete ${selectedIds.size} lead${selectedIds.size !== 1 ? "s" : ""}?`}
+        description={`This action cannot be undone. The selected lead${selectedIds.size !== 1 ? "s" : ""} will be permanently deleted.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

@@ -6,12 +6,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Download, Loader2 } from "lucide-react";
 import { useLeads } from "@/lib/api/hooks/leads";
+import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 
 const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
@@ -148,11 +148,11 @@ export function LeadExportDialog() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">From Date</Label>
-              <Input type="date" className="h-8 text-xs" value={filters.dateFrom} onChange={(e) => setFilters(f => ({ ...f, dateFrom: e.target.value }))} />
+              <DatePicker value={filters.dateFrom} onChange={(v) => setFilters(f => ({ ...f, dateFrom: v }))} placeholder="From date" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">To Date</Label>
-              <Input type="date" className="h-8 text-xs" value={filters.dateTo} onChange={(e) => setFilters(f => ({ ...f, dateTo: e.target.value }))} />
+              <DatePicker value={filters.dateTo} onChange={(v) => setFilters(f => ({ ...f, dateTo: v }))} placeholder="To date" />
             </div>
           </div>
           <div className="text-xs text-muted-foreground">

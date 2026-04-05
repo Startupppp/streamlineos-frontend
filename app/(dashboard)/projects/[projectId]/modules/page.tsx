@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -195,19 +196,11 @@ export default function ModulesPage({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="mod-start">Start Date</Label>
-                    <Input
-                      id="mod-start"
-                      type="date"
-                      {...form.register("startDate")}
-                    />
+                    <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
                   </div>
                   <div>
                     <Label htmlFor="mod-end">End Date</Label>
-                    <Input
-                      id="mod-end"
-                      type="date"
-                      {...form.register("endDate")}
-                    />
+                    <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
                   </div>
                 </div>
                 <div>

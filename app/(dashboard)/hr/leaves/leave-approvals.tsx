@@ -13,35 +13,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  EmptyApprovalIllustration,
-  EmptyCalendarIllustration,
-} from "@/components/illustrations";
-
-import {
-  Home,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  CalendarDays,
-  Clock,
-  UserCheck,
-} from "lucide-react";
-
+import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
+import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
 import type { LeaveRequest, WfhRequest } from "./leaves-shared";
 import { WfhRequestItem, priorityConfig } from "./leaves-shared";
-
-/* ─── Status Badge ─── */
 
 function LeaveStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; icon: React.ElementType }> = {
@@ -61,10 +41,8 @@ function LeaveStatusBadge({ status }: { status: string }) {
       icon: XCircle,
     },
   };
-
   const c = config[status] ?? config.PENDING;
   const Icon = c.icon;
-
   return (
     <Badge variant="outline" className={`text-xs flex items-center gap-1 ${c.className}`}>
       <Icon className="h-3 w-3" aria-hidden="true" />
@@ -72,8 +50,6 @@ function LeaveStatusBadge({ status }: { status: string }) {
     </Badge>
   );
 }
-
-/* ─── LeaveApprovalItem (internal) ─── */
 
 function LeaveApprovalItem({
   req,
@@ -89,25 +65,22 @@ function LeaveApprovalItem({
   const priority = req.priority || "MEDIUM";
   const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
 
+  const handleApprove = useCallback(() => onProcess(req.id, "APPROVED"), [req.id, onProcess]);
+  const handleReject = useCallback(() => onProcess(req.id, "REJECTED"), [req.id, onProcess]);
+
   return (
-    <div
-      className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border"
-      role="listitem"
-    >
+    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border" role="listitem">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage src={resolveImageUrl(req.user?.image)} />
           <AvatarFallback className="text-xs bg-primary/10 text-primary">
-            {req.user?.firstName?.[0]}
-            {req.user?.lastName?.[0]}
+            {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-foreground">
-              {req.user?.firstName
-                ? `${req.user.firstName} ${req.user.lastName}`
-                : req.user?.email}
+              {req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user?.email}
             </p>
             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 gap-1 ${pConfig.textColor} border-current/20`}>
               <span className={`h-1.5 w-1.5 rounded-full ${pConfig.dotColor}`} />
@@ -132,13 +105,7 @@ function LeaveApprovalItem({
       <div className="flex items-center gap-2 shrink-0 ml-3">
         {isPending ? (
           <>
-            <Button
-              size="sm"
-              variant="default"
-              className="h-8"
-              disabled={processingId === req.id}
-              onClick={() => onProcess(req.id, "APPROVED")}
-            >
+            <Button size="sm" variant="default" className="h-8" disabled={processingId === req.id} onClick={handleApprove}>
               {processingId === req.id ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
@@ -146,13 +113,7 @@ function LeaveApprovalItem({
               )}
               Approve
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8"
-              disabled={processingId === req.id}
-              onClick={() => onProcess(req.id, "REJECTED")}
-            >
+            <Button size="sm" variant="outline" className="h-8" disabled={processingId === req.id} onClick={handleReject}>
               <XCircle className="h-3 w-3 mr-1" />
               Reject
             </Button>
@@ -165,48 +126,36 @@ function LeaveApprovalItem({
   );
 }
 
-/* ─── LeaveApprovalsList (internal) ─── */
-
 function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const router = useRouter();
 
-  async function handleProcess(requestId: number, status: "APPROVED" | "REJECTED") {
+  const handleProcess = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED") => {
     setProcessingId(requestId);
     const { processLeaveRequest } = await import("@/server/actions/leave-actions");
     const res = await processLeaveRequest({ requestId, status });
     setProcessingId(null);
-
     if (res.success) {
       toast.success(`Request ${status.toLowerCase()} successfully`);
       router.refresh();
     } else {
       toast.error(res.error || "Failed to process");
     }
-  }
+  }, [router]);
 
   return (
     <div className="space-y-4" role="list" aria-label="Leave approvals">
       {requests.map((req) => (
-        <LeaveApprovalItem
-          key={req.id}
-          req={req}
-          processingId={processingId}
-          onProcess={handleProcess}
-        />
+        <LeaveApprovalItem key={req.id} req={req} processingId={processingId} onProcess={handleProcess} />
       ))}
     </div>
   );
 }
 
-/* ─── Props ─── */
-
 interface LeaveApprovalsContentProps {
   incomingLeaveRequests: LeaveRequest[];
   allIncomingLeaveRequests: LeaveRequest[];
 }
-
-/* ─── Component ─── */
 
 export function LeaveApprovalsContent({
   incomingLeaveRequests,
@@ -219,26 +168,23 @@ export function LeaveApprovalsContent({
   const { data: pendingWfhRequests } = useHrPendingWfhRequests();
   const processWfhRequestMutation = useProcessWfhRequest();
 
-  const handleWfhApprove = useCallback(
-    (requestId: number) => {
-      processWfhRequestMutation.mutate(
-        { requestId, status: "APPROVED" },
-        {
-          onSuccess: (_, variables) => {
-            const action = variables.status === "APPROVED" ? "approved" : "rejected";
-            toast.success(`WFH request ${action}`);
-            setRejectDialogOpen(false);
-            setRejectionReason("");
-            setRejectingId(null);
-          },
-          onError: (error) => {
-            toast.error(error.message || "Failed to process request");
-          },
-        }
-      );
-    },
-    [processWfhRequestMutation]
-  );
+  const handleRejectionReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRejectionReason(e.target.value);
+  }, []);
+
+  const handleWfhApprove = useCallback((requestId: number) => {
+    processWfhRequestMutation.mutate(
+      { requestId, status: "APPROVED" },
+      {
+        onSuccess: () => {
+          toast.success("WFH request approved");
+        },
+        onError: (error) => {
+          toast.error(error.message || "Failed to process request");
+        },
+      }
+    );
+  }, [processWfhRequestMutation]);
 
   const handleWfhRejectOpen = useCallback((requestId: number) => {
     setRejectingId(requestId);
@@ -248,11 +194,7 @@ export function LeaveApprovalsContent({
   const handleWfhRejectConfirm = useCallback(() => {
     if (rejectingId === null) return;
     processWfhRequestMutation.mutate(
-      {
-        requestId: rejectingId,
-        status: "REJECTED",
-        rejectionReason: rejectionReason || undefined,
-      },
+      { requestId: rejectingId, status: "REJECTED", rejectionReason: rejectionReason || undefined },
       {
         onSuccess: () => {
           toast.success("WFH request rejected");
@@ -273,7 +215,6 @@ export function LeaveApprovalsContent({
     setRejectingId(null);
   }, []);
 
-  /* ─── Filter requests by status ─── */
   const approvedRequests = useMemo(
     () => allIncomingLeaveRequests.filter((r) => r.status === "APPROVED"),
     [allIncomingLeaveRequests]
@@ -292,9 +233,7 @@ export function LeaveApprovalsContent({
               <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
               Leave Requests
               {allIncomingLeaveRequests.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {allIncomingLeaveRequests.length}
-                </Badge>
+                <Badge variant="secondary" className="ml-1">{allIncomingLeaveRequests.length}</Badge>
               )}
             </CardTitle>
           </CardHeader>
@@ -347,47 +286,28 @@ export function LeaveApprovalsContent({
 
               <TabsContent value="all">
                 {allIncomingLeaveRequests.length === 0 ? (
-                  <EmptyState
-                    illustration={<EmptyApprovalIllustration />}
-                    title="No leave requests"
-                    description="There are no leave requests to display."
-                  />
+                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No leave requests" description="There are no leave requests to display." />
                 ) : (
                   <LeaveApprovalsList requests={allIncomingLeaveRequests} />
                 )}
               </TabsContent>
-
               <TabsContent value="pending">
                 {incomingLeaveRequests.length === 0 ? (
-                  <EmptyState
-                    illustration={<EmptyApprovalIllustration />}
-                    title="No pending leave requests"
-                    description="All leave requests have been processed."
-                  />
+                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No pending leave requests" description="All leave requests have been processed." />
                 ) : (
                   <LeaveApprovalsList requests={incomingLeaveRequests} />
                 )}
               </TabsContent>
-
               <TabsContent value="approved">
                 {approvedRequests.length === 0 ? (
-                  <EmptyState
-                    illustration={<EmptyApprovalIllustration />}
-                    title="No approved leave requests"
-                    description="No leave requests have been approved yet."
-                  />
+                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No approved leave requests" description="No leave requests have been approved yet." />
                 ) : (
                   <LeaveApprovalsList requests={approvedRequests} />
                 )}
               </TabsContent>
-
               <TabsContent value="rejected">
                 {rejectedRequests.length === 0 ? (
-                  <EmptyState
-                    illustration={<EmptyApprovalIllustration />}
-                    title="No rejected leave requests"
-                    description="No leave requests have been rejected."
-                  />
+                  <EmptyState illustration={<EmptyApprovalIllustration />} title="No rejected leave requests" description="No leave requests have been rejected." />
                 ) : (
                   <LeaveApprovalsList requests={rejectedRequests} />
                 )}
@@ -402,9 +322,7 @@ export function LeaveApprovalsContent({
               <Home className="h-4 w-4 text-primary" aria-hidden="true" />
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {pendingWfhRequests.length}
-                </Badge>
+                <Badge variant="secondary" className="ml-1">{pendingWfhRequests.length}</Badge>
               )}
             </CardTitle>
           </CardHeader>
@@ -430,32 +348,12 @@ export function LeaveApprovalsContent({
                       request={req as WfhRequest}
                       showUser
                       actions={
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleWfhApprove(req.id)}
-                            disabled={processWfhRequestMutation.isPending}
-                            className="h-8"
-                          >
-                            {processWfhRequestMutation.isPending ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                            )}
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleWfhRejectOpen(req.id)}
-                            disabled={processWfhRequestMutation.isPending}
-                            className="h-8"
-                          >
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
+                        <WfhApprovalActions
+                          requestId={req.id}
+                          isPending={processWfhRequestMutation.isPending}
+                          onApprove={handleWfhApprove}
+                          onRejectOpen={handleWfhRejectOpen}
+                        />
                       }
                     />
                   </motion.div>
@@ -466,7 +364,6 @@ export function LeaveApprovalsContent({
         </Card>
       </div>
 
-      {/* ─── Reject WFH Dialog ─── */}
       <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <SheetContent className="sm:max-w-sm p-0 flex flex-col">
           <SheetHeader className="p-5 pb-4 border-b">
@@ -481,18 +378,14 @@ export function LeaveApprovalsContent({
               <Textarea
                 placeholder="E.g. Not enough prior notice, project deadline..."
                 value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
+                onChange={handleRejectionReasonChange}
                 rows={4}
                 className="resize-none"
               />
             </div>
           </div>
           <div className="flex gap-2 p-5 pt-4 border-t">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleRejectCancel}
-            >
+            <Button variant="outline" className="flex-1" onClick={handleRejectCancel}>
               Cancel
             </Button>
             <Button
@@ -510,10 +403,37 @@ export function LeaveApprovalsContent({
         </SheetContent>
       </Sheet>
 
-      {/* ─── SR Announcement ─── */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {processWfhRequestMutation.isPending && "Processing WFH request..."}
       </div>
     </>
+  );
+}
+
+function WfhApprovalActions({
+  requestId,
+  isPending,
+  onApprove,
+  onRejectOpen,
+}: {
+  requestId: number;
+  isPending: boolean;
+  onApprove: (id: number) => void;
+  onRejectOpen: (id: number) => void;
+}) {
+  const handleApprove = useCallback(() => onApprove(requestId), [requestId, onApprove]);
+  const handleReject = useCallback(() => onRejectOpen(requestId), [requestId, onRejectOpen]);
+
+  return (
+    <div className="flex gap-2">
+      <Button size="sm" variant="default" onClick={handleApprove} disabled={isPending} className="h-8">
+        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
+        Approve
+      </Button>
+      <Button size="sm" variant="outline" onClick={handleReject} disabled={isPending} className="h-8">
+        <XCircle className="h-3 w-3 mr-1" />
+        Reject
+      </Button>
+    </div>
   );
 }

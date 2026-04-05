@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -265,26 +266,12 @@ export default function BacklogPage({ params }: PageProps) {
 
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground">Start Date</label>
-            <Input
-              type="date"
-              value={startDate}
-              max="9999-12-31"
-              onChange={(e) => setStartDate(e.target.value)}
-              placeholder="From date"
-              aria-label="Filter by start date"
-            />
+            <DatePicker value={startDate} onChange={setStartDate} placeholder="From date" />
           </div>
 
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground">End Date</label>
-            <Input
-              type="date"
-              value={endDate}
-              max="9999-12-31"
-              onChange={(e) => setEndDate(e.target.value)}
-              placeholder="To date"
-              aria-label="Filter by end date"
-            />
+            <DatePicker value={endDate} onChange={setEndDate} placeholder="To date" />
           </div>
         </div>
 

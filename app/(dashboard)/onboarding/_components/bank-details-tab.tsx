@@ -49,7 +49,7 @@ export function BankDetailsTab({ onComplete, onBack, defaultValues }: BankDetail
   const { errors } = form.formState;
 
   return (
-    <Card className="shadow-noir border-border">
+    <Card className="shadow-soft border-border">
       <CardContent className="pt-6">
         <motion.div variants={staggerContainer} initial="hidden" animate="visible">
           <motion.div variants={fadeUp} className="mb-6">

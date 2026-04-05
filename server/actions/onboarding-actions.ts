@@ -16,17 +16,25 @@ export async function updatePersonalDetails(formData: FormData) {
   const phone = formData.get("phone") as string;
   const skills = (formData.get("skills") as string)?.split(",").map(s => s.trim()).filter(Boolean);
   const experienceYears = formData.get("experienceYears") as string;
+  const genderRaw = formData.get("gender") as string | null;
+  const dateOfBirth = formData.get("dateOfBirth") as string | null;
+
+  const gender = genderRaw === "MALE" || genderRaw === "FEMALE" || genderRaw === "OTHER"
+    ? genderRaw
+    : undefined;
 
   try {
     await db.update(users).set({
       phone,
       skills,
       experienceYears: experienceYears ? experienceYears.toString() : undefined,
+      ...(gender ? { gender } : {}),
+      ...(dateOfBirth ? { dateOfBirth } : {}),
     }).where(eq(users.id, userId));
 
     await updateOnboardingStep(userId, "Personal Details", "COMPLETED");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update profile" };
   }
 }
@@ -53,7 +61,7 @@ export async function updateBankDetails(formData: FormData) {
 
     await updateOnboardingStep(userId, "Bank Details", "COMPLETED");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update bank details" };
   }
 }
@@ -95,7 +103,7 @@ export async function uploadOnboardingDocument(formData: FormData) {
 
     revalidatePath("/onboarding");
     return { success: true, url: fileUrl };
-  } catch (error) {
+  } catch {
     return { error: "Failed to upload document" };
   }
 }

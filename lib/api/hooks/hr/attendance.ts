@@ -46,12 +46,21 @@ export function useHrCheckIn(
   return useMutation({
     mutationFn: (data: CheckInInput) =>
       apiClient.post<{ success: boolean }>("/hr/attendance/check-in", data),
-    onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
-      options?.onSuccess?.(...args);
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      const previous = qc.getQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus());
+      if (previous) {
+        qc.setQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus(), {
+          ...previous,
+          status: "PRESENT",
+        });
+      }
     },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+    },
+    onSuccess: options?.onSuccess,
     onError: options?.onError,
-    ...options,
   });
 }
 
@@ -62,12 +71,21 @@ export function useHrCheckOut(
   return useMutation({
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/hr/attendance/check-out"),
-    onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
-      options?.onSuccess?.(...args);
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      const previous = qc.getQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus());
+      if (previous) {
+        qc.setQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus(), {
+          ...previous,
+          status: "CHECKED_OUT",
+        });
+      }
     },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+    },
+    onSuccess: options?.onSuccess,
     onError: options?.onError,
-    ...options,
   });
 }
 
@@ -78,12 +96,21 @@ export function useHrToggleBreak(
   return useMutation({
     mutationFn: () =>
       apiClient.post<{ success: boolean }>("/hr/attendance/break"),
-    onSuccess: (...args) => {
-      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
-      options?.onSuccess?.(...args);
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+      const previous = qc.getQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus());
+      if (previous) {
+        qc.setQueryData<AttendanceStatusResult>(queryKeys.hr.attendanceStatus(), {
+          ...previous,
+          status: previous.status === "ON_BREAK" ? "PRESENT" : "ON_BREAK",
+        });
+      }
     },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.attendanceStatus() });
+    },
+    onSuccess: options?.onSuccess,
     onError: options?.onError,
-    ...options,
   });
 }
 

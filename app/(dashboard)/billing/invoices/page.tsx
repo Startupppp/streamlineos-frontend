@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
@@ -390,7 +391,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 
           <div>
             <Label className="text-xs">Due Date</Label>
-            <Input type="date" max="9999-12-31" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="h-9 mt-1" />
+            <DatePicker value={dueDate} onChange={setDueDate} placeholder="Select due date" />
           </div>
 
           <div>

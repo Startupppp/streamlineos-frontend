@@ -6,6 +6,7 @@ import { onboardEmployeeInputSchema } from "../../../lib/validations/hr";
 import { format } from "date-fns";
 
 import { Input } from "../../ui/input";
+import { DatePicker } from "../../ui/date-picker";
 import {
   FormControl,
   FormDescription,
@@ -174,15 +175,11 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
             <FormControl>
-              <Input
-                type="date"
-                {...field}
+              <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                onChange={(e) => {
-                  const date = e.target.value ? new Date(e.target.value) : null;
-                  field.onChange(date);
-                }}
-                max={format(new Date(), "yyyy-MM-dd")}
+                onChange={(v) => field.onChange(v ? new Date(v) : null)}
+                toDate={new Date()}
+                placeholder="Select date of birth"
               />
             </FormControl>
             <FormMessage />

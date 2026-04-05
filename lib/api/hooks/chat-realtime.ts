@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useAbly } from "ably/react";
+import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
@@ -50,7 +51,7 @@ export function useChatRealtime(channelId: number | null) {
     const channelName = `chat:${orgId}:${channelId}`;
     const channel = ably.channels.get(channelName);
 
-    const handler = (msg: { data: unknown }) => {
+    const handler = (msg: InboundMessage) => {
       const payload = msg.data as AblyMessagePayload;
       if (!payload?.id) return;
 

@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -259,11 +260,9 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 <FormItem>
                 <FormLabel>Date</FormLabel>
                 <FormControl>
-                    <Input
-                        type="date"
-                        max="9999-12-31"
+                    <DatePicker
                         value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                        onChange={(e) => field.onChange(e.target.valueAsDate)}
+                        onChange={(v) => field.onChange(v ? new Date(v) : new Date())}
                     />
                 </FormControl>
                 <FormMessage />

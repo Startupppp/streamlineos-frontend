@@ -3,33 +3,25 @@
 import { use, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useForm, type Resolver } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   ArrowLeft, Calendar, User, Edit2, Trophy, XCircle,
-  ChevronRight, Clock, Building2, Phone, Mail, StickyNote,
-  MessageSquare, PhoneCall, Video, FileText, ArrowRightLeft,
+  ChevronRight, Clock, Phone, Mail, StickyNote, PhoneCall, Video,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity } from "@/lib/api/hooks/crm";
+import {
+  useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity,
+} from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 import Link from "next/link";
+import { DealEditForm, type EditFormValues } from "./_components/deal-edit-form";
+import { ActivityTimeline } from "./_components/activity-timeline";
+import { LogActivityDialog } from "./_components/log-activity-dialog";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
@@ -49,20 +41,6 @@ function formatINR(v: number) {
   return `₹${v.toLocaleString("en-IN")}`;
 }
 
-const editSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  value: z.string().optional(),
-  stage: z.enum(["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]),
-  probability: z.coerce.number().min(0).max(100),
-  contactPerson: z.string().optional(),
-  contactEmail: z.string().email().optional().or(z.literal("")),
-  contactPhone: z.string().optional(),
-  expectedCloseDate: z.string().optional(),
-  notes: z.string().optional(),
-  lostReason: z.string().optional(),
-});
-type EditForm = z.infer<typeof editSchema>;
-
 export default function DealDetailPage({
   params,
 }: {
@@ -74,36 +52,29 @@ export default function DealDetailPage({
 
   const { data: deal, isLoading } = useDealDetail(dealId);
   const [isEditing, setIsEditing] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "call" | "note" | "email" | "meeting";
+    label: string;
+  } | null>(null);
 
   const updateDeal = useUpdateDeal();
   const { data: activities } = useDealActivities(dealId, 30);
   const logActivity = useLogDealActivity();
   const updateStage = useUpdateDealStage();
 
-  const editForm = useForm<EditForm>({
-    resolver: zodResolver(editSchema) as unknown as Resolver<EditForm>,
-    values: deal ? {
-      name: deal.name,
-      value: deal.value ?? "0",
-      stage: deal.stage as DealStage,
-      probability: deal.probability ?? 0,
-      contactPerson: deal.contactPerson ?? "",
-      contactEmail: deal.contactEmail ?? "",
-      contactPhone: deal.contactPhone ?? "",
-      expectedCloseDate: deal.expectedCloseDate ?? "",
-      notes: deal.notes ?? "",
-      lostReason: deal.lostReason ?? "",
-    } : undefined,
-  });
+  const currentStageIndex = useMemo(() => {
+    if (!deal) return -1;
+    return STAGES.findIndex(s => s.key === deal.stage);
+  }, [deal]);
 
   const handleStageChange = useCallback((stage: DealStage) => {
     updateStage.mutate(
       { id: dealId, stage },
-      { onSuccess: () => toast.success("Stage updated"), onError: (err) => toast.error(err.message) }
+      { onSuccess: () => toast.success("Stage updated"), onError: (err) => toast.error(err.message) },
     );
   }, [dealId, updateStage]);
 
-  const onEditSubmit = useCallback((data: EditForm) => {
+  const onEditSubmit = useCallback((data: EditFormValues) => {
     updateDeal.mutate(
       {
         id: dealId,
@@ -118,14 +89,39 @@ export default function DealDetailPage({
         notes: data.notes || undefined,
         lostReason: data.lostReason || undefined,
       },
-      { onSuccess: () => { toast.success("Deal updated"); setIsEditing(false); }, onError: (err) => toast.error(err.message) }
+      { onSuccess: () => { toast.success("Deal updated"); setIsEditing(false); }, onError: (err) => toast.error(err.message) },
     );
   }, [dealId, updateDeal]);
 
-  const currentStageIndex = useMemo(() => {
-    if (!deal) return -1;
-    return STAGES.findIndex(s => s.key === deal.stage);
-  }, [deal]);
+  const handleBackToDeals = useCallback(() => router.push("/crm/deals"), [router]);
+  const handleToggleEdit = useCallback(() => setIsEditing((v) => !v), []);
+  const handleCancelEdit = useCallback(() => setIsEditing(false), []);
+  const handleMarkWon = useCallback(() => handleStageChange("WON"), [handleStageChange]);
+  const handleMarkLost = useCallback(() => handleStageChange("LOST"), [handleStageChange]);
+
+  const handleStagePipelineClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const stage = e.currentTarget.dataset.stage as DealStage;
+    if (stage) handleStageChange(stage);
+  }, [handleStageChange]);
+
+  const handleQuickActionClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const type = e.currentTarget.dataset.actionType as "call" | "note" | "email" | "meeting";
+    const label = e.currentTarget.dataset.actionLabel ?? "";
+    setPendingAction({ type, label });
+  }, []);
+
+  const handleLogActivity = useCallback((notes: string) => {
+    if (!pendingAction) return;
+    logActivity.mutate(
+      { dealId, type: pendingAction.type, subject: pendingAction.label, notes },
+      {
+        onSuccess: () => { toast.success("Activity logged"); setPendingAction(null); },
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  }, [pendingAction, logActivity, dealId]);
+
+  const handleCloseLogDialog = useCallback(() => setPendingAction(null), []);
 
   if (isLoading) {
     return (
@@ -143,7 +139,7 @@ export default function DealDetailPage({
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
         <p className="text-muted-foreground">Deal not found</p>
-        <Button variant="outline" onClick={() => router.push("/crm/deals")}>
+        <Button variant="outline" onClick={handleBackToDeals}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Deals
         </Button>
@@ -168,31 +164,23 @@ export default function DealDetailPage({
       }
       actions={
         <>
-          <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")} aria-label="Back to deals">
+          <Button variant="ghost" size="icon" onClick={handleBackToDeals} aria-label="Back to deals">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           {deal.probability !== null && (
             <Badge variant="secondary" className="text-xs">{deal.probability}% probability</Badge>
           )}
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
+          <Button variant="outline" size="sm" onClick={handleToggleEdit}>
             <Edit2 className="h-4 w-4 mr-1" />
             {isEditing ? "Cancel" : "Edit"}
           </Button>
           {deal.stage !== "WON" && deal.stage !== "LOST" && (
             <>
-              <Button
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={() => handleStageChange("WON")}
-              >
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleMarkWon}>
                 <Trophy className="h-4 w-4 mr-1" />
                 Mark Won
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => handleStageChange("LOST")}
-              >
+              <Button size="sm" variant="destructive" onClick={handleMarkLost}>
                 <XCircle className="h-4 w-4 mr-1" />
                 Mark Lost
               </Button>
@@ -201,13 +189,7 @@ export default function DealDetailPage({
         </>
       }
     >
-      <motion.div
-        className="space-y-6"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Stage pipeline strip */}
+      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
         <motion.div variants={fadeUp} className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto">
           {STAGES.map((stage, i) => {
             const isActive = stage.key === deal.stage;
@@ -215,12 +197,13 @@ export default function DealDetailPage({
             return (
               <button
                 key={stage.key}
-                onClick={() => handleStageChange(stage.key)}
+                data-stage={stage.key}
+                onClick={handleStagePipelineClick}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
                   isActive ? cn(stage.bg, "ring-1 ring-current/20") :
                   isPast ? "bg-muted/50 text-muted-foreground" :
-                  "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
+                  "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",
                 )}
                 style={isActive ? { color: stage.color } : undefined}
               >
@@ -234,110 +217,12 @@ export default function DealDetailPage({
         <div className="grid gap-6 lg:grid-cols-5">
           <motion.div variants={fadeUp} className="lg:col-span-3 space-y-6">
             {isEditing ? (
-              <Card className="shadow-noir">
-                <CardHeader>
-                  <CardTitle className="text-base">Edit Deal</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Form {...editForm}>
-                    <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                          <FormField control={editForm.control} name="name" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Deal Name</FormLabel>
-                              <FormControl><Input {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        </div>
-                        <FormField control={editForm.control} name="value" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Value (INR)</FormLabel>
-                            <FormControl><Input type="number" {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="stage" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Stage</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {STAGES.map(s => (
-                                  <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="probability" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Probability (%)</FormLabel>
-                            <FormControl><Input type="number" min={0} max={100} {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="expectedCloseDate" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Expected Close</FormLabel>
-                            <FormControl><Input type="date" {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="contactPerson" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Contact Person</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="contactEmail" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Contact Email</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="contactPhone" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Contact Phone</FormLabel>
-                            <FormControl><Input {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        {deal.stage === "LOST" && (
-                          <FormField control={editForm.control} name="lostReason" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Lost Reason</FormLabel>
-                              <FormControl><Input {...field} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        )}
-                        <div className="col-span-2">
-                          <FormField control={editForm.control} name="notes" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Notes</FormLabel>
-                              <FormControl><Textarea {...field} rows={3} /></FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                        <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updateDeal.isPending}>
-                          {updateDeal.isPending ? "Saving..." : "Save Changes"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
+              <DealEditForm
+                deal={deal}
+                isPending={updateDeal.isPending}
+                onSubmit={onEditSubmit}
+                onCancel={handleCancelEdit}
+              />
             ) : (
               <Card className="shadow-noir">
                 <CardHeader>
@@ -375,7 +260,9 @@ export default function DealDetailPage({
                         <div className="h-2 rounded-full bg-muted overflow-hidden">
                           <div className="h-full rounded-full bg-gold" style={{ width: `${deal.probability}%` }} />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Weighted: {formatINR(Math.round(dealValue * (deal.probability / 100)))}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Weighted: {formatINR(Math.round(dealValue * (deal.probability / 100)))}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -409,9 +296,7 @@ export default function DealDetailPage({
                     <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold">
                       {deal.assignedTo.name?.[0] ?? "?"}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{deal.assignedTo.name}</p>
-                    </div>
+                    <p className="text-sm font-medium">{deal.assignedTo.name}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -447,9 +332,7 @@ export default function DealDetailPage({
                     <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-semibold text-emerald-400">
                       {deal.client.name?.[0] ?? "?"}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{deal.client.name}</p>
-                    </div>
+                    <p className="text-sm font-medium">{deal.client.name}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -476,7 +359,6 @@ export default function DealDetailPage({
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
             <Card className="shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base">Quick Actions</CardTitle>
@@ -494,15 +376,9 @@ export default function DealDetailPage({
                       variant="outline"
                       size="sm"
                       className="justify-start gap-2 text-xs"
-                      onClick={() => {
-                        const notes = prompt(`Enter ${action.label.toLowerCase()} details:`);
-                        if (notes) {
-                          logActivity.mutate(
-                            { dealId, type: action.type, subject: action.label, notes },
-                            { onSuccess: () => toast.success("Activity logged"), onError: (err) => toast.error(err.message) }
-                          );
-                        }
-                      }}
+                      data-action-type={action.type}
+                      data-action-label={action.label}
+                      onClick={handleQuickActionClick}
                     >
                       <action.icon className="h-3.5 w-3.5" />
                       {action.label}
@@ -512,60 +388,25 @@ export default function DealDetailPage({
               </CardContent>
             </Card>
 
-            {/* Activity Timeline */}
             <Card className="shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base">Activity Timeline</CardTitle>
               </CardHeader>
               <CardContent>
-                {!activities || activities.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No activities yet</p>
-                ) : (
-                  <ScrollArea className="max-h-[400px]">
-                    <div className="space-y-3">
-                      {activities.map((activity) => {
-                        const actIcons: Record<string, typeof PhoneCall> = {
-                          stage_change: ArrowRightLeft,
-                          call: PhoneCall,
-                          note: StickyNote,
-                          email: Mail,
-                          meeting: Video,
-                          document: FileText,
-                        };
-                        const Icon = actIcons[activity.type] || MessageSquare;
-                        const isStageChange = activity.type === "stage_change";
-                        return (
-                          <div key={activity.id} className="flex gap-3">
-                            <div className={cn(
-                              "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                              isStageChange ? "bg-purple-500/10" : "bg-gold/10",
-                            )}>
-                              <Icon className={cn("h-3.5 w-3.5", isStageChange ? "text-purple-400" : "text-gold")} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium">
-                                {isStageChange
-                                  ? `${activity.previousValue} → ${activity.newValue}`
-                                  : activity.subject || activity.type}
-                              </p>
-                              {activity.notes && (
-                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{activity.notes}</p>
-                              )}
-                              <p className="text-[10px] text-muted-foreground mt-1">
-                                {activity.user?.name ?? "System"} • {activity.createdAt ? new Date(activity.createdAt).toLocaleString("en-IN") : ""}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                )}
+                <ActivityTimeline activities={activities ?? []} />
               </CardContent>
             </Card>
           </motion.div>
         </div>
       </motion.div>
+
+      <LogActivityDialog
+        open={pendingAction !== null}
+        actionLabel={pendingAction?.label ?? ""}
+        isPending={logActivity.isPending}
+        onClose={handleCloseLogDialog}
+        onSubmit={handleLogActivity}
+      />
     </PageWrapper>
   );
 }

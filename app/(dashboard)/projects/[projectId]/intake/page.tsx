@@ -1,51 +1,31 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import {
-  useIntakeRequests,
-  useCreateIntakeRequest,
-  useUpdateIntakeRequest,
-  useProjectMembers,
-  useCycles,
-  useModules,
+  useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest,
+  useProjectMembers, useCycles, useModules,
 } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Plus,
-  Inbox,
-  Check,
-  X,
-  Copy,
-  ExternalLink,
-  ArrowRight,
-} from "lucide-react";
+import { Plus, ExternalLink, Copy, ArrowRight } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { IntakeItemCard } from "./_components/intake-item-card";
 
 const createIntakeSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -68,20 +48,10 @@ type DeclineForm = z.infer<typeof declineSchema>;
 
 const WORK_STATES = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
 
-const statusBadgeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "secondary",
-  accepted: "default",
-  declined: "destructive",
-  duplicate: "outline",
-};
-
-export default function IntakePage({
-  params,
-}: {
-  params: Promise<{ projectId: string }>;
-}) {
+export default function IntakePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
+
   const [createOpen, setCreateOpen] = useState(false);
   const [acceptOpen, setAcceptOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
@@ -96,19 +66,11 @@ export default function IntakePage({
   const createMutation = useCreateIntakeRequest();
   const updateMutation = useUpdateIntakeRequest();
 
-  const createForm = useForm<CreateIntakeForm>({
-    resolver: zodResolver(createIntakeSchema),
-  });
+  const createForm = useForm<CreateIntakeForm>({ resolver: zodResolver(createIntakeSchema) });
+  const acceptForm = useForm<AcceptForm>({ resolver: zodResolver(acceptSchema) });
+  const declineForm = useForm<DeclineForm>({ resolver: zodResolver(declineSchema) });
 
-  const acceptForm = useForm<AcceptForm>({
-    resolver: zodResolver(acceptSchema),
-  });
-
-  const declineForm = useForm<DeclineForm>({
-    resolver: zodResolver(declineSchema),
-  });
-
-  const onCreateSubmit = (data: CreateIntakeForm) => {
+  const onCreateSubmit = useCallback((data: CreateIntakeForm) => {
     createMutation.mutate(
       { ...data, projectId },
       {
@@ -120,9 +82,9 @@ export default function IntakePage({
         onError: (err) => toast.error((err as Error).message),
       }
     );
-  };
+  }, [createMutation, projectId, createForm]);
 
-  const onAcceptSubmit = (_data: AcceptForm) => {
+  const onAcceptSubmit = useCallback((_data: AcceptForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
       { id: selectedItemId, projectId, status: "accepted" },
@@ -135,9 +97,9 @@ export default function IntakePage({
         onError: (err) => toast.error((err as Error).message),
       }
     );
-  };
+  }, [selectedItemId, updateMutation, projectId, acceptForm]);
 
-  const onDeclineSubmit = (data: DeclineForm) => {
+  const onDeclineSubmit = useCallback((data: DeclineForm) => {
     if (selectedItemId === null) return;
     updateMutation.mutate(
       { id: selectedItemId, projectId, status: "declined", declineReason: data.reason },
@@ -150,21 +112,21 @@ export default function IntakePage({
         onError: (err) => toast.error((err as Error).message),
       }
     );
-  };
+  }, [selectedItemId, updateMutation, projectId, declineForm]);
 
-  const handleAccept = (itemId: number) => {
+  const handleAccept = useCallback((itemId: number) => {
     setSelectedItemId(itemId);
     acceptForm.reset();
     setAcceptOpen(true);
-  };
+  }, [acceptForm]);
 
-  const handleDecline = (itemId: number) => {
+  const handleDecline = useCallback((itemId: number) => {
     setSelectedItemId(itemId);
     declineForm.reset();
     setDeclineOpen(true);
-  };
+  }, [declineForm]);
 
-  const handleDuplicate = (itemId: number) => {
+  const handleDuplicate = useCallback((itemId: number) => {
     updateMutation.mutate(
       { id: itemId, projectId, status: "duplicate" },
       {
@@ -172,13 +134,19 @@ export default function IntakePage({
         onError: (err) => toast.error((err as Error).message),
       }
     );
-  };
+  }, [updateMutation, projectId]);
+
+  const handleCopyFormUrl = useCallback(() => {
+    const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/intake/${projectId}`;
+    navigator.clipboard.writeText(formUrl);
+    toast.success("Form URL copied to clipboard");
+  }, [projectId]);
+
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const allItems = intakeData?.items ?? [];
-  const filteredItems = allItems.filter((item) => {
-    if (activeTab === "all") return true;
-    return item.status === activeTab;
-  });
+  const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);
+  const pendingCount = allItems.filter((i) => i.status === "pending").length;
 
   const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/intake/${projectId}`;
 
@@ -205,14 +173,7 @@ export default function IntakePage({
         <div className="flex items-center justify-between mt-4">
           <h1 className="text-2xl font-bold">Intake</h1>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                navigator.clipboard.writeText(formUrl);
-                toast.success("Form URL copied to clipboard");
-              }}
-            >
+            <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
               <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
             </Button>
             <Sheet open={createOpen} onOpenChange={setCreateOpen}>
@@ -225,34 +186,19 @@ export default function IntakePage({
                 <SheetHeader>
                   <SheetTitle>Create Intake Item</SheetTitle>
                 </SheetHeader>
-                <form
-                  onSubmit={createForm.handleSubmit(onCreateSubmit)}
-                  className="space-y-4 p-4"
-                >
+                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 p-4">
                   <div>
                     <Label htmlFor="intake-title">Title</Label>
-                    <Input
-                      id="intake-title"
-                      {...createForm.register("title")}
-                    />
+                    <Input id="intake-title" {...createForm.register("title")} />
                     {createForm.formState.errors.title && (
-                      <p className="text-xs text-destructive mt-1">
-                        {createForm.formState.errors.title.message}
-                      </p>
+                      <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
                     )}
                   </div>
                   <div>
                     <Label htmlFor="intake-desc">Description</Label>
-                    <Textarea
-                      id="intake-desc"
-                      {...createForm.register("description")}
-                    />
+                    <Textarea id="intake-desc" {...createForm.register("description")} />
                   </div>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                    className="w-full"
-                  >
+                  <Button type="submit" disabled={createMutation.isPending} className="w-full">
                     {createMutation.isPending ? "Creating..." : "Create Item"}
                   </Button>
                 </form>
@@ -266,15 +212,7 @@ export default function IntakePage({
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
           <ExternalLink className="h-4 w-4 shrink-0" />
           <span className="truncate">Public form: {formUrl}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 shrink-0"
-            onClick={() => {
-              navigator.clipboard.writeText(formUrl);
-              toast.success("Copied");
-            }}
-          >
+          <Button variant="ghost" size="sm" className="h-6 px-2 shrink-0" onClick={handleCopyFormUrl}>
             <Copy className="h-3 w-3" />
           </Button>
         </div>
@@ -283,14 +221,8 @@ export default function IntakePage({
           <TabsList>
             <TabsTrigger value="pending">
               Pending
-              {allItems.filter((i) => i.status === "pending")
-                .length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                  {
-                    allItems.filter((i) => i.status === "pending")
-                      .length
-                  }
-                </Badge>
+              {pendingCount > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{pendingCount}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="accepted">Accepted</TabsTrigger>
@@ -303,9 +235,7 @@ export default function IntakePage({
               <div className="text-center py-16">
                 <EmptyInboxIllustration className="mx-auto mb-4 w-36 h-36" />
                 <h3 className="text-lg font-semibold mb-1">
-                  {activeTab === "pending"
-                    ? "No pending items"
-                    : `No ${activeTab} items`}
+                  {activeTab === "pending" ? "No pending items" : `No ${activeTab} items`}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {activeTab === "pending"
@@ -313,7 +243,7 @@ export default function IntakePage({
                     : "Items will appear here once triaged."}
                 </p>
                 {activeTab === "pending" && (
-                  <Button onClick={() => setCreateOpen(true)}>
+                  <Button onClick={handleOpenCreate}>
                     <Plus className="h-4 w-4 mr-1" /> Create First Item
                   </Button>
                 )}
@@ -321,66 +251,13 @@ export default function IntakePage({
             ) : (
               <div className="space-y-3">
                 {filteredItems.map((item) => (
-                  <Card key={item.id}>
-                    <CardContent className="py-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium truncate">
-                              {item.title}
-                            </p>
-                            <Badge
-                              variant={
-                                statusBadgeVariant[item.status] ?? "outline"
-                              }
-                            >
-                              {item.status.charAt(0).toUpperCase() +
-                                item.status.slice(1)}
-                            </Badge>
-                          </div>
-                          {item.description != null ? (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
-                              {typeof item.description === "string" ? item.description : JSON.stringify(item.description)}
-                            </p>
-                          ) : null}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
-                            {item.submitterEmail && ` by ${item.submitterEmail}`}
-                          </p>
-                          {item.declineReason && (
-                            <p className="text-xs text-destructive mt-1">
-                              Reason: {item.declineReason}
-                            </p>
-                          )}
-                        </div>
-                        {item.status === "pending" && (
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAccept(item.id)}
-                            >
-                              <Check className="h-3.5 w-3.5 mr-1" /> Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDecline(item.id)}
-                            >
-                              <X className="h-3.5 w-3.5 mr-1" /> Decline
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDuplicate(item.id)}
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <IntakeItemCard
+                    key={item.id}
+                    item={item}
+                    onAccept={handleAccept}
+                    onDecline={handleDecline}
+                    onDuplicate={handleDuplicate}
+                  />
                 ))}
               </div>
             )}
@@ -393,10 +270,7 @@ export default function IntakePage({
           <SheetHeader>
             <SheetTitle>Accept Intake Item</SheetTitle>
           </SheetHeader>
-          <form
-            onSubmit={acceptForm.handleSubmit(onAcceptSubmit)}
-            className="space-y-4 p-4"
-          >
+          <form onSubmit={acceptForm.handleSubmit(onAcceptSubmit)} className="space-y-4 p-4">
             <div>
               <Label>State</Label>
               <Controller
@@ -404,9 +278,7 @@ export default function IntakePage({
                 name="state"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select state..." />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select state..." /></SelectTrigger>
                     <SelectContent>
                       {WORK_STATES.map((s) => (
                         <SelectItem key={s} value={s}>
@@ -418,9 +290,7 @@ export default function IntakePage({
                 )}
               />
               {acceptForm.formState.errors.state && (
-                <p className="text-xs text-destructive mt-1">
-                  {acceptForm.formState.errors.state.message}
-                </p>
+                <p className="text-xs text-destructive mt-1">{acceptForm.formState.errors.state.message}</p>
               )}
             </div>
             <div>
@@ -431,13 +301,9 @@ export default function IntakePage({
                 render={({ field }) => (
                   <Select
                     value={field.value?.toString() ?? ""}
-                    onValueChange={(v) =>
-                      field.onChange(v ? parseInt(v) : undefined)
-                    }
+                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select assignee..." />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
                     <SelectContent>
                       {members?.map((m) => (
                         <SelectItem key={m.userId} value={m.userId}>
@@ -457,18 +323,12 @@ export default function IntakePage({
                 render={({ field }) => (
                   <Select
                     value={field.value?.toString() ?? ""}
-                    onValueChange={(v) =>
-                      field.onChange(v ? parseInt(v) : undefined)
-                    }
+                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select cycle..." />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select cycle..." /></SelectTrigger>
                     <SelectContent>
                       {cycles?.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>
-                          {c.name}
-                        </SelectItem>
+                        <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -483,29 +343,19 @@ export default function IntakePage({
                 render={({ field }) => (
                   <Select
                     value={field.value?.toString() ?? ""}
-                    onValueChange={(v) =>
-                      field.onChange(v ? parseInt(v) : undefined)
-                    }
+                    onValueChange={(v) => field.onChange(v ? parseInt(v) : undefined)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select module..." />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select module..." /></SelectTrigger>
                     <SelectContent>
                       {modules?.map((m) => (
-                        <SelectItem key={m.id} value={m.id.toString()}>
-                          {m.name}
-                        </SelectItem>
+                        <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
             </div>
-            <Button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="w-full"
-            >
+            <Button type="submit" disabled={updateMutation.isPending} className="w-full">
               {updateMutation.isPending ? "Accepting..." : "Accept & Create Work Item"}
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
@@ -518,10 +368,7 @@ export default function IntakePage({
           <SheetHeader>
             <SheetTitle>Decline Intake Item</SheetTitle>
           </SheetHeader>
-          <form
-            onSubmit={declineForm.handleSubmit(onDeclineSubmit)}
-            className="space-y-4 p-4"
-          >
+          <form onSubmit={declineForm.handleSubmit(onDeclineSubmit)} className="space-y-4 p-4">
             <div>
               <Label htmlFor="decline-reason">Reason</Label>
               <Textarea
@@ -530,17 +377,10 @@ export default function IntakePage({
                 {...declineForm.register("reason")}
               />
               {declineForm.formState.errors.reason && (
-                <p className="text-xs text-destructive mt-1">
-                  {declineForm.formState.errors.reason.message}
-                </p>
+                <p className="text-xs text-destructive mt-1">{declineForm.formState.errors.reason.message}</p>
               )}
             </div>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={updateMutation.isPending}
-              className="w-full"
-            >
+            <Button type="submit" variant="destructive" disabled={updateMutation.isPending} className="w-full">
               {updateMutation.isPending ? "Declining..." : "Decline Item"}
             </Button>
           </form>

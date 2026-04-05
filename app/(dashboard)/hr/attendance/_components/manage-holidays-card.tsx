@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHrHolidaysForYear, useAddHoliday, useDeleteHoliday } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
@@ -81,13 +82,7 @@ export const ManageHolidaysCard = memo(function ManageHolidaysCard() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="holiday-date">Date</Label>
-              <Input
-                id="holiday-date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="bg-background"
-              />
+              <DatePicker id="holiday-date" value={date} onChange={setDate} placeholder="Select date" />
             </div>
           </div>
           <div className="space-y-2">

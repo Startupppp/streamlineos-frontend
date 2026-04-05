@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { invalidateUserSession } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 
 export async function GET(
@@ -48,7 +49,13 @@ export async function PATCH(
       departmentId?: number;
       phone?: string;
       image?: string;
+      isActive?: boolean;
     };
+
+    if (body.isActive === false) {
+      if (!isOwnerOrAdmin) return err("Only admins can terminate employees.", 403);
+      if (isSelf) return err("You cannot terminate your own account.", 400);
+    }
 
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
@@ -56,9 +63,14 @@ export async function PATCH(
     if (body.departmentId !== undefined) updateData.departmentId = body.departmentId;
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.image !== undefined) updateData.image = body.image;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
 
     if (Object.keys(updateData).length > 0) {
       await db.update(users).set(updateData).where(eq(users.id, targetUserId));
+    }
+
+    if (body.isActive === false) {
+      await invalidateUserSession(targetUserId);
     }
 
     return ok({ success: true });

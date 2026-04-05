@@ -53,8 +53,7 @@ export function AdminExpenseItem({
   const adminCatLabel = ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;
 
   return (
-    <div className="flex items-start gap-5 px-6 py-5 hover:bg-muted/20 transition-colors">
-      {/* Receipt Thumbnail */}
+    <div className="flex items-start gap-4 px-4 py-4 hover:bg-muted/20 transition-colors">
       <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
         <div
           className={cn(
@@ -194,7 +193,7 @@ export function AdminExpenseItem({
             </Button>
             <Button
               size="sm"
-              className="h-8 text-xs bg-[#1e293b] hover:bg-[#0f172a] text-white dark:bg-white dark:text-[#1e293b] dark:hover:bg-gray-200"
+              className="h-8 text-xs"
               onClick={() => onApprove(expense.id)}
               disabled={isPending}
             >

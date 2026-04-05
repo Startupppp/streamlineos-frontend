@@ -49,7 +49,6 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Progress bar with fraction */}
         <div>
           <div className="flex justify-between text-sm mb-2">
             <span className="text-muted-foreground">Monthly Quota</span>
@@ -62,14 +61,12 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
           />
         </div>
 
-        {/* Remaining line */}
         <p className="text-sm text-muted-foreground text-center">
           Remaining Balance:{" "}
           <span className="font-semibold text-foreground">{stats.remaining} Days</span>
           {" "}/ Year
         </p>
 
-        {/* Stats grid */}
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg bg-emerald-500/10 p-3 text-center">
             <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{stats.remaining}</p>
@@ -85,7 +82,6 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
           </div>
         </div>
 
-        {/* Apply for WFH button */}
         <RequestWfhDialog
           trigger={
             <Button className="w-full" variant="outline">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,28 @@ export const TimerCard = memo(function TimerCard() {
   const isInCooldown = localCooldown > 0;
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
 
+  const breakStartRef = useRef<number | null>(null);
+  const [localExtraBreakMs, setLocalExtraBreakMs] = useState(0);
+  const prevBreakHoursRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (isOnBreak) {
+      breakStartRef.current = Date.now();
+    } else if (breakStartRef.current !== null) {
+      const duration = Date.now() - breakStartRef.current;
+      setLocalExtraBreakMs((prev) => prev + duration);
+      breakStartRef.current = null;
+    }
+  }, [isOnBreak]);
+
+  useEffect(() => {
+    const serverBreakHours = Number(statusData?.todayLog?.breakHours) || 0;
+    if (serverBreakHours > prevBreakHoursRef.current) {
+      setLocalExtraBreakMs(0);
+      prevBreakHoursRef.current = serverBreakHours;
+    }
+  }, [statusData?.todayLog?.breakHours]);
+
   useEffect(() => {
     if (isOnBreak) return;
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -72,14 +94,19 @@ export const TimerCard = memo(function TimerCard() {
       return { hours: 0, minutes: 0, seconds: 0 };
     }
     const checkInTime = new Date(statusData.todayLog.checkIn);
-    const breakMs = (Number(statusData.todayLog.breakHours) || 0) * 3600000;
-    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime() - breakMs);
+    const serverBreakMs = (Number(statusData.todayLog.breakHours) || 0) * 3600000;
+    const totalBreakMs = serverBreakMs + localExtraBreakMs;
+    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime() - totalBreakMs);
     return {
       hours: Math.floor(diffMs / 3600000),
       minutes: Math.floor((diffMs % 3600000) / 60000),
       seconds: Math.floor((diffMs % 60000) / 1000),
     };
-  }, [now, statusData?.todayLog]);
+  }, [now, statusData?.todayLog, localExtraBreakMs]);
+
+  const handleCheckIn = useCallback(() => {
+    checkInMutation.mutate({ location: undefined });
+  }, [checkInMutation]);
 
   const handleClockAction = useCallback(() => {
     if (isActive) {
@@ -119,12 +146,10 @@ export const TimerCard = memo(function TimerCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Digit boxes */}
         <div
           className="flex items-center justify-center gap-2"
           aria-label={`Session time: ${sessionTimer.hours} hours, ${sessionTimer.minutes} minutes, ${sessionTimer.seconds} seconds`}
         >
-          {/* Hours */}
           <div className="flex flex-col items-center">
             <div className="bg-muted rounded-lg px-3 py-3 min-w-[56px] text-center">
               <span className="font-mono text-3xl font-bold tabular-nums text-foreground">
@@ -136,10 +161,8 @@ export const TimerCard = memo(function TimerCard() {
             </span>
           </div>
 
-          {/* Colon */}
           <span className="text-2xl font-bold text-gold animate-pulse mb-5">:</span>
 
-          {/* Minutes */}
           <div className="flex flex-col items-center">
             <div className="bg-muted rounded-lg px-3 py-3 min-w-[56px] text-center">
               <span className="font-mono text-3xl font-bold tabular-nums text-foreground">
@@ -151,10 +174,8 @@ export const TimerCard = memo(function TimerCard() {
             </span>
           </div>
 
-          {/* Colon */}
           <span className="text-2xl font-bold text-gold animate-pulse mb-5">:</span>
 
-          {/* Seconds */}
           <div className="flex flex-col items-center">
             <div className="bg-muted rounded-lg px-3 py-3 min-w-[56px] text-center">
               <span className="font-mono text-3xl font-bold tabular-nums text-foreground">
@@ -167,7 +188,6 @@ export const TimerCard = memo(function TimerCard() {
           </div>
         </div>
 
-        {/* Status caption */}
         <p className="text-sm text-muted-foreground text-center italic">
           {isOnBreak && "On break"}
           {isCheckedIn && checkInTime && `Checked in at ${format(new Date(checkInTime), "hh:mm a")}`}
@@ -183,12 +203,9 @@ export const TimerCard = memo(function TimerCard() {
           </div>
         )}
 
-        {/* 2-column button grid */}
         <div className="grid grid-cols-2 gap-3">
           <Button
-            onClick={() => {
-              if (!isActive && !isInCooldown) checkInMutation.mutate({ location: undefined });
-            }}
+            onClick={handleCheckIn}
             disabled={isActive || isPending || isInCooldown}
             variant={isActive ? "secondary" : "default"}
             className={`font-semibold ${
@@ -226,7 +243,6 @@ export const TimerCard = memo(function TimerCard() {
           </Button>
         </div>
 
-        {/* Break toggle */}
         {isActive && (
           <Button
             variant="outline"
@@ -245,7 +261,6 @@ export const TimerCard = memo(function TimerCard() {
           </Button>
         )}
 
-        {/* Daily stats */}
         {dailyStats && (
           <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
             <div className="text-center">

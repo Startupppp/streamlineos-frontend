@@ -2,7 +2,7 @@
 
 import { Button } from "../ui/button";
 import { format } from "date-fns";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useHrAttendanceStatus,
   useHrCheckIn,
@@ -61,13 +61,13 @@ export function ClockInWidget() {
   const isOnBreak = statusData?.status === "ON_BREAK";
   const isInCooldown = localCooldown > 0;
 
-  const handleClockAction = () => {
+  const handleClockAction = useCallback(() => {
     if (isCheckedIn || isOnBreak) {
       checkOutMutation.mutate();
     } else if (!isInCooldown) {
       checkInMutation.mutate({ location: undefined });
     }
-  };
+  }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
 
   const isPending =
     checkInMutation.isPending || checkOutMutation.isPending || isLoading;

@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Trash2, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { useCreateInvoice } from "@/lib/api/hooks/invoice";
@@ -201,14 +202,7 @@ export default function NewInvoicePage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="due-date" className="text-xs">Due Date</Label>
-              <Input
-                id="due-date"
-                type="date"
-                max="9999-12-31"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="h-8 text-sm"
-              />
+              <DatePicker id="due-date" value={dueDate} onChange={setDueDate} placeholder="Select due date" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="currency" className="text-xs">Currency</Label>

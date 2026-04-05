@@ -10,6 +10,7 @@ import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -155,11 +156,11 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="startDate">Start Date</Label>
-                    <Input id="startDate" type="date" {...form.register("startDate")} />
+                    <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
                   </div>
                   <div>
                     <Label htmlFor="endDate">End Date</Label>
-                    <Input id="endDate" type="date" {...form.register("endDate")} />
+                    <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
                   </div>
                 </div>
                 <Button type="submit" disabled={createMutation.isPending} className="w-full">

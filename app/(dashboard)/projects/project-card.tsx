@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { Calendar, MoreVertical, Settings, LayoutDashboard, Trash2 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -13,16 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   getColorSafe,
@@ -72,6 +63,16 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     },
   });
 
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    deleteProject.mutate({ projectId: project.id });
+  }, [project.id, deleteProject]);
+
   return (
     <>
     <Link href={`/projects/${project.id}`} aria-label={`${project.name} — ${displayLabel}`}>
@@ -111,11 +112,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDeleteDialogOpen(true);
-                }}
+                onClick={handleDeleteClick}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete Project
@@ -131,7 +128,6 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">{project.key}</p>
           </div>
-
         </CardContent>
 
         <CardFooter className="justify-between pt-3 border-t border-border/50">
@@ -146,28 +142,15 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
       </Card>
     </Link>
 
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Project</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete &quot;{project.name}&quot;? This will permanently
-            remove the project and all its tickets, sprints, and members. This action
-            cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={() => deleteProject.mutate({ projectId: project.id })}
-            disabled={deleteProject.isPending}
-          >
-            {deleteProject.isPending ? "Deleting..." : "Delete Project"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      title="Delete Project"
+      description={`Are you sure you want to delete "${project.name}"? This will permanently remove the project and all its tickets, sprints, and members. This action cannot be undone.`}
+      confirmLabel={deleteProject.isPending ? "Deleting..." : "Delete Project"}
+      destructive
+      onConfirm={handleDeleteConfirm}
+    />
     </>
   );
 });

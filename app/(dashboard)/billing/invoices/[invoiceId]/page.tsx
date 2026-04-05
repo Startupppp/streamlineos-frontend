@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -402,13 +403,11 @@ export default function InvoiceDetailPage({
             </div>
             <div className="space-y-1">
               <Label htmlFor="pay-date" className="text-xs">Payment Date</Label>
-              <Input
+              <DatePicker
                 id="pay-date"
-                type="date"
-                max="9999-12-31"
                 value={paymentForm.paymentDate}
-                onChange={(e) => setPaymentForm((p) => ({ ...p, paymentDate: e.target.value }))}
-                className="h-8 text-sm"
+                onChange={(v) => setPaymentForm((p) => ({ ...p, paymentDate: v }))}
+                placeholder="Select payment date"
               />
             </div>
             <div className="space-y-1">

@@ -43,9 +43,10 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
   const [validationError, setValidationError] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const onFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const type = e.currentTarget.dataset.docType;
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!type || !file) return;
     e.target.value = "";
 
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
@@ -76,8 +77,9 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
     }
   }, []);
 
-  const handleSelectFile = useCallback((type: string) => {
-    fileInputRefs.current[type]?.click();
+  const handleSelectClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const type = e.currentTarget.dataset.docType;
+    if (type) fileInputRefs.current[type]?.click();
   }, []);
 
   const handleFormSubmit = useCallback(
@@ -99,15 +101,15 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
   );
 
   return (
-    <Card className="shadow-noir border-border">
+    <Card className="shadow-soft border-border">
       <CardContent className="pt-6">
         <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-          <motion.div variants={fadeUp} className="mb-6">
-            <h2 className="text-xl font-bold text-foreground">Documents</h2>
+          <motion.div variants={fadeUp} className="mb-5">
+            <h2 className="text-xl font-semibold text-foreground">Documents</h2>
             <p className="text-sm text-muted-foreground mt-1">Please upload the necessary documents.</p>
           </motion.div>
           <form onSubmit={handleFormSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" aria-live="polite">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-live="polite">
               {DOCUMENT_TYPES.map((doc) => {
                 const isUploaded = !!uploadedFiles[doc.type];
                 const isThisLoading = loadingDoc === doc.type;
@@ -116,41 +118,43 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
                   <motion.div
                     key={doc.type}
                     variants={fadeUp}
-                    className={`border border-dashed rounded-lg p-6 flex flex-col items-center text-center space-y-2 transition ${
-                      isUploaded ? "border-green-500/50 bg-green-500/10" : "border-border hover:bg-muted/50"
+                    className={`border border-dashed rounded-lg p-5 flex flex-col items-center text-center space-y-2 transition ${
+                      isUploaded ? "border-emerald-500/50 bg-emerald-500/5" : "border-border hover:bg-muted/50"
                     }`}
                   >
                     {isUploaded ? (
-                      <CheckCircle className="h-8 w-8 text-green-500" aria-hidden="true" />
+                      <CheckCircle className="h-7 w-7 text-emerald-500" aria-hidden="true" />
                     ) : isThisLoading ? (
-                      <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" aria-hidden="true" />
+                      <Loader2 className="h-7 w-7 text-muted-foreground animate-spin" aria-hidden="true" />
                     ) : (
-                      <Upload className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+                      <Upload className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
                     )}
-                    <Label htmlFor={`${doc.type}-upload`} className="font-semibold cursor-pointer">
+                    <Label htmlFor={`${doc.type}-upload`} className="font-medium text-sm cursor-pointer">
                       {doc.label}
                       {isRequired && <span className="text-destructive ml-1">*</span>}
                     </Label>
                     <span className="text-xs text-muted-foreground">{doc.hint}</span>
-                    <span className="text-xs text-muted-foreground/70">Max {MAX_FILE_SIZE_MB}MB &middot; {FILE_HINT}</span>
+                    <span className="text-xs text-muted-foreground/60">Max {MAX_FILE_SIZE_MB}MB · {FILE_HINT}</span>
                     {uploadedFiles[doc.type] && (
-                      <span className="text-xs text-green-600 font-medium">{uploadedFiles[doc.type]}</span>
+                      <span className="text-xs text-emerald-600 font-medium truncate max-w-full">{uploadedFiles[doc.type]}</span>
                     )}
                     <input
                       ref={(el) => { fileInputRefs.current[doc.type] = el; }}
                       id={`${doc.type}-upload`}
                       type="file"
                       accept={ALLOWED_EXTENSIONS}
+                      data-doc-type={doc.type}
                       className="sr-only"
                       aria-label={`${doc.label}, ${doc.hint}`}
                       aria-required={isRequired}
-                      onChange={(e) => onFileUpload(e, doc.type)}
+                      onChange={handleFileChange}
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => handleSelectFile(doc.type)}
+                      data-doc-type={doc.type}
+                      onClick={handleSelectClick}
                       disabled={isThisLoading}
                     >
                       {isUploaded ? "Replace File" : "Select File"}
@@ -164,7 +168,7 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
                 {validationError}
               </motion.p>
             )}
-            <motion.div variants={fadeUp} className="mt-6">
+            <motion.div variants={fadeUp} className="mt-5">
               <FormNavButtons onBack={onBack} isLoading={loadingDoc !== null} submitLabel="Continue to Review" />
             </motion.div>
           </form>

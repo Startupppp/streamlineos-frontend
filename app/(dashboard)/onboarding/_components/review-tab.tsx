@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +44,8 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
   const roleLabel = ROLE_LABELS[userRole] || userRole;
   const dataSteps = steps.filter((s) => s.id !== reviewStepId);
   const allDataStepsComplete = dataSteps.every((s) => completedSteps.has(s.id));
+
+  const handleGoToDashboard = useCallback(() => router.push("/dashboard"), [router]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -111,7 +113,7 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
             </motion.div>
 
             <motion.div variants={fadeUp} className="pt-4">
-              <Button onClick={() => router.push("/dashboard")}>
+              <Button onClick={handleGoToDashboard}>
                 Go to Dashboard
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

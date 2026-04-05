@@ -1,55 +1,36 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, startOfDay, differenceInCalendarDays } from "date-fns";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import ExcelJS from "exceljs";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
-
-import {
-  Loader2,
-  Filter,
-  CalendarDays,
-  Download,
-  AlertCircle,
-} from "lucide-react";
-
+import { Loader2, Filter, CalendarDays, Download, AlertCircle } from "lucide-react";
 import { submitLeaveRequest, processLeaveRequest } from "@/server/actions/leave-actions";
 import { FileUpload } from "@/components/storage/file-upload";
 import { useSession } from "next-auth/react";
-import ExcelJS from "exceljs";
 
 import type { LeaveBalance, LeaveType, Approver, LeaveRequest } from "./leaves-shared";
 import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
 import { ALLOWED_LEAVE_TYPE_NAMES, LEAVE_MAX_DAYS } from "@/lib/leave-policy";
-
-/* ─── Leave request form schema ─── */
 
 const leaveFormSchema = z.object({
   leaveTypeId: z.string().min(1, "Leave type is required"),
@@ -63,8 +44,6 @@ const leaveFormSchema = z.object({
 
 type LeaveFormValues = z.infer<typeof leaveFormSchema>;
 
-/* ─── Props ─── */
-
 interface LeavesTabContentProps {
   balances: LeaveBalance[];
   leaveTypes: LeaveType[];
@@ -72,8 +51,6 @@ interface LeavesTabContentProps {
   myLeaveRequests: LeaveRequest[];
   joiningDate: string | null;
 }
-
-/* ─── Component ─── */
 
 export function LeavesTabContent({
   balances,
@@ -88,20 +65,9 @@ export function LeavesTabContent({
   const [leaveFormLoading, setLeaveFormLoading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
-  // Minimum selectable date: the employee's Date of Joining (DOJ)
   const minDate = joiningDate
     ? format(new Date(joiningDate), "yyyy-MM-dd")
     : format(startOfDay(new Date()), "yyyy-MM-dd");
-
-  const handleStatusChange = async (requestId: number, status: "APPROVED" | "REJECTED" | "PENDING", rejectionReason?: string) => {
-    const result = await processLeaveRequest({ requestId, status, rejectionReason });
-    if (result && "error" in result) {
-      toast.error(result.error);
-    } else {
-      toast.success(`Leave request ${status.toLowerCase()}`);
-      router.refresh();
-    }
-  };
 
   const currentYear = new Date().getFullYear();
 
@@ -118,7 +84,6 @@ export function LeavesTabContent({
     },
   });
 
-  /* ─── Issue #137: Leave day limit validation ─── */
   const watchedLeaveTypeId = leaveForm.watch("leaveTypeId");
   const watchedStartDate = leaveForm.watch("startDate");
   const watchedEndDate = leaveForm.watch("endDate");
@@ -129,7 +94,7 @@ export function LeavesTabContent({
     const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
     if (!selectedType) return null;
     const maxDays = LEAVE_MAX_DAYS[selectedType.name];
-    if (maxDays === undefined) return null; // no limit for this type (e.g. Unpaid)
+    if (maxDays === undefined) return null;
     const days = watchedHalfDay
       ? 0.5
       : differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
@@ -139,21 +104,33 @@ export function LeavesTabContent({
     return null;
   }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes]);
 
-  async function onLeaveSubmit(data: LeaveFormValues) {
-    if (!data.startDate || !data.endDate) return;
+  const handleStatusChange = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED" | "PENDING", rejectionReason?: string) => {
+    const result = await processLeaveRequest({ requestId, status, rejectionReason });
+    if (result && "error" in result) {
+      toast.error(result.error);
+    } else {
+      toast.success(`Leave request ${status.toLowerCase()}`);
+      router.refresh();
+    }
+  }, [router]);
 
-    // Issue #137: Block submission if day limit exceeded
+  const handleApproveRequest = useCallback((id: number) => handleStatusChange(id, "APPROVED"), [handleStatusChange]);
+  const handleRejectRequest = useCallback((id: number, reason?: string) => handleStatusChange(id, "REJECTED", reason), [handleStatusChange]);
+  const handleRevertRequest = useCallback((id: number) => handleStatusChange(id, "PENDING"), [handleStatusChange]);
+
+  const handleAttachmentUpload = useCallback((url: string) => setAttachmentUrl(url), []);
+
+  const onLeaveSubmit = useCallback(async (data: LeaveFormValues) => {
+    if (!data.startDate || !data.endDate) return;
     if (leaveDayLimitError) {
       toast.error(leaveDayLimitError);
       return;
     }
-
     const approverId = data.approverId || approvers[0]?.id;
     if (!approverId) {
       toast.error("No approver available");
       return;
     }
-
     setLeaveFormLoading(true);
     const result = await submitLeaveRequest({
       leaveTypeId: parseInt(data.leaveTypeId),
@@ -165,7 +142,6 @@ export function LeavesTabContent({
       attachmentUrl: attachmentUrl || undefined,
     });
     setLeaveFormLoading(false);
-
     if (result.success) {
       toast.success("Leave requested successfully!");
       leaveForm.reset();
@@ -174,9 +150,9 @@ export function LeavesTabContent({
     } else {
       toast.error(result.error || "Failed to submit request");
     }
-  }
+  }, [leaveDayLimitError, approvers, attachmentUrl, leaveForm, router]);
 
-  const handleExportExcel = async () => {
+  const handleExportExcel = useCallback(async () => {
     if (myLeaveRequests.length === 0) {
       toast.error("No leave requests to export");
       return;
@@ -194,7 +170,6 @@ export function LeavesTabContent({
         { header: "Reason", width: 30 },
         { header: "Requested On", width: 14 },
       ];
-      // Style header row
       ws.getRow(1).font = { bold: true };
       for (const req of myLeaveRequests) {
         ws.addRow([
@@ -222,11 +197,10 @@ export function LeavesTabContent({
     } catch {
       toast.error("Failed to export");
     }
-  };
+  }, [myLeaveRequests]);
 
   return (
     <>
-      {/* ─── Overview Section ─── */}
       <div className="space-y-1 mb-4">
         <h2 className="text-xl font-bold text-foreground">Overview</h2>
         <p className="text-sm text-muted-foreground">
@@ -238,18 +212,16 @@ export function LeavesTabContent({
         {balances
           .filter((bal) => bal.typeName && ALLOWED_LEAVE_TYPE_NAMES.has(bal.typeName))
           .map((bal, index) => (
-          <BalanceCard
-            key={`${bal.leaveTypeId}-${index}`}
-            typeName={bal.typeName}
-            balance={bal.balance}
-            daysPerYear={bal.daysPerYear}
-          />
-        ))}
+            <BalanceCard
+              key={`${bal.leaveTypeId}-${index}`}
+              typeName={bal.typeName}
+              balance={bal.balance}
+              daysPerYear={bal.daysPerYear}
+            />
+          ))}
       </div>
 
-      {/* ─── Request History + Form ─── */}
       <div className="grid gap-4 lg:grid-cols-12 auto-rows-[28rem]">
-        {/* Request History Table (left) */}
         <div className="lg:col-span-8 min-h-0">
           <Card className="border-border h-full flex flex-col">
             <CardHeader className="pb-3">
@@ -299,9 +271,9 @@ export function LeavesTabContent({
                             key={req.id}
                             request={req}
                             isAdmin={isAdmin}
-                            onApprove={(id) => handleStatusChange(id, "APPROVED")}
-                            onReject={(id, reason) => handleStatusChange(id, "REJECTED", reason)}
-                            onRevert={(id) => handleStatusChange(id, "PENDING")}
+                            onApprove={handleApproveRequest}
+                            onReject={handleRejectRequest}
+                            onRevert={handleRevertRequest}
                           />
                         ))}
                       </tbody>
@@ -320,7 +292,6 @@ export function LeavesTabContent({
           </Card>
         </div>
 
-        {/* New Request Form (right) */}
         <div className="lg:col-span-4 min-h-0">
           <Card className="border-border h-full flex flex-col">
             <CardHeader className="pb-4">
@@ -336,196 +307,178 @@ export function LeavesTabContent({
             </CardHeader>
             <CardContent className="pt-0 flex-1 overflow-hidden">
               <ScrollArea className="h-full pr-2">
-              <Form {...leaveForm}>
-                <form onSubmit={leaveForm.handleSubmit(onLeaveSubmit)} className="space-y-4">
-                  {/* Leave Type */}
-                  <FormField
-                    control={leaveForm.control}
-                    name="leaveTypeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-medium">Leave Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="text-sm">
-                              <SelectValue placeholder="Select leave type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {leaveTypes.map((t) => (
-                              <SelectItem key={t.id} value={t.id.toString()}>
-                                {t.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* From / To dates */}
-                  <div className="grid grid-cols-2 gap-3">
+                <Form {...leaveForm}>
+                  <form onSubmit={leaveForm.handleSubmit(onLeaveSubmit)} className="space-y-4">
                     <FormField
                       control={leaveForm.control}
-                      name="startDate"
+                      name="leaveTypeId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-medium">From</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              className="text-sm"
-                              min={minDate}
-                              max="9999-12-31"
-                              {...field}
-                            />
-                          </FormControl>
+                          <FormLabel className="text-xs font-medium">Leave Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="text-sm">
+                                <SelectValue placeholder="Select leave type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {leaveTypes.map((t) => (
+                                <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={leaveForm.control}
-                      name="endDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium">To</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              className="text-sm"
-                              min={
-                                leaveForm.watch("startDate") || minDate
-                              }
-                              max="9999-12-31"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
 
-                  {/* Half Day checkbox */}
-                  <FormField
-                    control={leaveForm.control}
-                    name="halfDay"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center gap-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormLabel className="text-xs font-normal text-muted-foreground !mt-0">
-                          Half Day Request
-                        </FormLabel>
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Priority */}
-                  <FormField
-                    control={leaveForm.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-medium">Priority</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="text-sm">
-                              <SelectValue placeholder="Select priority" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="LOW">
-                              <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                                Low
-                              </span>
-                            </SelectItem>
-                            <SelectItem value="MEDIUM">
-                              <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                                Medium
-                              </span>
-                            </SelectItem>
-                            <SelectItem value="HIGH">
-                              <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-red-500" />
-                                High
-                              </span>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Reason */}
-                  <FormField
-                    control={leaveForm.control}
-                    name="reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-medium">Reason</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="E.g. Family function, Doctor appointment..."
-                            className="resize-none text-sm"
-                            rows={3}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Attach documents */}
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      Attach Document (Optional)
-                    </label>
-                    <FileUpload
-                      folder="leave-attachments"
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      onUploadComplete={(url) => setAttachmentUrl(url)}
-                    />
-                  </div>
-
-                  {/* Issue #137: Day limit warning */}
-                  {leaveDayLimitError && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-                      <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
-                      <p className="text-xs text-red-600 dark:text-red-400">{leaveDayLimitError}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={leaveForm.control}
+                        name="startDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-medium">From</FormLabel>
+                            <FormControl>
+                              <DatePicker
+                                value={field.value}
+                                onChange={field.onChange}
+                                fromDate={minDate ? new Date(minDate) : undefined}
+                                placeholder="Start date"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={leaveForm.control}
+                        name="endDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-medium">To</FormLabel>
+                            <FormControl>
+                              <DatePicker
+                                value={field.value}
+                                onChange={field.onChange}
+                                fromDate={watchedStartDate ? new Date(watchedStartDate) : (minDate ? new Date(minDate) : undefined)}
+                                placeholder="End date"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  )}
 
-                  {/* Submit */}
-                  <Button
-                    type="submit"
-                    className="w-full bg-gold hover:bg-gold/90 text-white"
-                    disabled={leaveFormLoading || !!leaveDayLimitError}
-                  >
-                    {leaveFormLoading && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                    <FormField
+                      control={leaveForm.control}
+                      name="halfDay"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <FormLabel className="text-xs font-normal text-muted-foreground !mt-0">
+                            Half Day Request
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={leaveForm.control}
+                      name="priority"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium">Priority</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="text-sm">
+                                <SelectValue placeholder="Select priority" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="LOW">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                  Low
+                                </span>
+                              </SelectItem>
+                              <SelectItem value="MEDIUM">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                                  Medium
+                                </span>
+                              </SelectItem>
+                              <SelectItem value="HIGH">
+                                <span className="flex items-center gap-2">
+                                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                                  High
+                                </span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={leaveForm.control}
+                      name="reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium">Reason</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="E.g. Family function, Doctor appointment..."
+                              className="resize-none text-sm"
+                              rows={3}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                        Attach Document (Optional)
+                      </label>
+                      <FileUpload
+                        folder="leave-attachments"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        onUploadComplete={handleAttachmentUpload}
+                      />
+                    </div>
+
+                    {leaveDayLimitError && (
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+                        <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" aria-hidden="true" />
+                        <p className="text-xs text-red-600 dark:text-red-400">{leaveDayLimitError}</p>
+                      </div>
                     )}
-                    Submit Request
-                  </Button>
-                </form>
-              </Form>
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-gold hover:bg-gold/90 text-white"
+                      disabled={leaveFormLoading || !!leaveDayLimitError}
+                    >
+                      {leaveFormLoading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                      )}
+                      Submit Request
+                    </Button>
+                  </form>
+                </Form>
               </ScrollArea>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* ─── SR Announcement ─── */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {leaveFormLoading && "Submitting leave request..."}
       </div>

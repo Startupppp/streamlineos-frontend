@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Employee } from "./hr-types";
 
 interface HrDeleteDialogProps {
@@ -25,27 +16,17 @@ export function HrDeleteDialog({
   employee,
   onConfirm,
 }: HrDeleteDialogProps) {
+  const name = employee?.firstName ?? "this employee";
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Deactivate Employee</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to deactivate{" "}
-            {employee?.firstName ?? "this employee"}? They will lose access to
-            the system immediately. Their past records will be preserved.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Deactivate
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Terminate Employee"
+      description={`Are you sure you want to terminate ${name}? They will immediately lose access to the system. Their records will be preserved.`}
+      confirmLabel="Terminate"
+      destructive
+      onConfirm={onConfirm}
+    />
   );
 }

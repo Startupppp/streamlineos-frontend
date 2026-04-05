@@ -11,8 +11,8 @@ import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -161,12 +161,11 @@ export function WfhTabContent({ approvers }: WfhTabContentProps) {
                         <FormItem>
                           <FormLabel className="text-xs">Start Date</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              className="text-sm"
-                              min={format(startOfDay(new Date()), "yyyy-MM-dd")}
-                              max="9999-12-31"
-                              {...field}
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              fromDate={startOfDay(new Date())}
+                              placeholder="Start date"
                             />
                           </FormControl>
                           <FormMessage />
@@ -180,15 +179,11 @@ export function WfhTabContent({ approvers }: WfhTabContentProps) {
                         <FormItem>
                           <FormLabel className="text-xs">End Date</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              className="text-sm"
-                              min={
-                                wfhForm.watch("startDate") ||
-                                format(startOfDay(new Date()), "yyyy-MM-dd")
-                              }
-                              max="9999-12-31"
-                              {...field}
+                            <DatePicker
+                              value={field.value}
+                              onChange={field.onChange}
+                              fromDate={wfhForm.watch("startDate") ? new Date(wfhForm.watch("startDate")) : startOfDay(new Date())}
+                              placeholder="End date"
                             />
                           </FormControl>
                           <FormMessage />

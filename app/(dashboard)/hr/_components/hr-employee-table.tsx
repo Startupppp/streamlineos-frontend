@@ -7,13 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Pencil, UserX, ChevronLeft, ChevronRight } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   canDeleteEmployee,
@@ -51,8 +47,7 @@ export function HrEmployeeTable({
   onToggleDashboardAccess,
   onRequestDelete,
 }: HrEmployeeTableProps) {
-  const canManageAccess =
-    currentUserRole === "CEO" || currentUserRole === "HR";
+  const canManageAccess = currentUserRole === "CEO" || currentUserRole === "HR";
 
   return (
     <Card className="border-border">
@@ -63,74 +58,40 @@ export function HrEmployeeTable({
           aria-label="Employee directory table"
           tabIndex={0}
         >
-          <table className="w-full">
-            <caption className="sr-only">Employee directory table</caption>
-            <thead>
-              <tr className="border-b border-border">
-                <th
-                  scope="col"
-                  className="text-left text-xs font-medium text-muted-foreground py-3 px-4"
-                >
-                  Name
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-xs font-medium text-muted-foreground py-3 px-4"
-                >
-                  Email
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-xs font-medium text-muted-foreground py-3 px-4"
-                >
-                  Role
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-xs font-medium text-muted-foreground py-3 px-4"
-                >
-                  Department
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-xs font-medium text-muted-foreground py-3 px-4"
-                >
-                  Status
-                </th>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Status</TableHead>
                 {canManageAccess && (
-                  <th
-                    scope="col"
-                    className="text-center text-xs font-medium text-muted-foreground py-3 px-4"
-                  >
-                    Dashboard
-                  </th>
+                  <TableHead className="text-center">Dashboard</TableHead>
                 )}
-                <th
-                  scope="col"
-                  className="text-right text-xs font-medium text-muted-foreground py-3 px-4"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {employees.map((user) => {
                 const displayName = getDisplayName(user);
                 const initials = getInitials(user);
                 const isActive = user.isActive !== false;
+                const canTerminate = canDeleteEmployee(
+                  user.role,
+                  user.id,
+                  currentUserRole,
+                  currentUserId,
+                );
 
                 return (
-                  <tr
-                    key={user.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors group"
-                  >
-                    {/* Name */}
-                    <td className="py-3 px-4">
+                  <TableRow key={user.id} className="group">
+                    <TableCell>
                       <Link
                         href={`/hr/employees/${user.id}`}
                         className="flex items-center gap-3"
                       >
-                        <Avatar className="h-9 w-9 border border-border">
+                        <Avatar className="h-8 w-8 border border-border">
                           <AvatarImage
                             src={resolveImageUrl(user.image)}
                             alt=""
@@ -143,15 +104,13 @@ export function HrEmployeeTable({
                           {displayName}
                         </span>
                       </Link>
-                    </td>
+                    </TableCell>
 
-                    {/* Email */}
-                    <td className="py-3 px-4 text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground">
                       {user.email}
-                    </td>
+                    </TableCell>
 
-                    {/* Designation / Role */}
-                    <td className="py-3 px-4">
+                    <TableCell>
                       {user.designation ? (
                         <Badge variant="outline" className="text-xs font-normal">
                           {user.designation}
@@ -159,15 +118,13 @@ export function HrEmployeeTable({
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
-                    </td>
+                    </TableCell>
 
-                    {/* Department */}
-                    <td className="py-3 px-4 text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground">
                       {user.department?.name ?? "—"}
-                    </td>
+                    </TableCell>
 
-                    {/* Status */}
-                    <td className="py-3 px-4">
+                    <TableCell>
                       <Badge
                         variant="outline"
                         className={`text-xs gap-1.5 ${
@@ -183,11 +140,10 @@ export function HrEmployeeTable({
                         />
                         {isActive ? "Active" : "Inactive"}
                       </Badge>
-                    </td>
+                    </TableCell>
 
-                    {/* Dashboard Access Toggle */}
                     {canManageAccess && (
-                      <td className="py-3 px-4 text-center">
+                      <TableCell className="text-center">
                         {user.role === "CEO" || user.id === currentUserId ? (
                           <Switch
                             checked={true}
@@ -204,95 +160,69 @@ export function HrEmployeeTable({
                             aria-label={`Toggle dashboard access for ${displayName}`}
                           />
                         )}
-                      </td>
+                      </TableCell>
                     )}
 
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={`Edit ${displayName}`}
+                          asChild
+                        >
+                          <Link href={`/hr/employees/${user.id}?tab=profile`}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                        {canTerminate && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7"
-                            aria-label={`Actions for ${displayName}`}
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            aria-label={`Terminate ${displayName}`}
+                            onClick={() => onRequestDelete(user)}
                           >
-                            <MoreVertical className="h-4 w-4" />
+                            <UserX className="h-3.5 w-3.5" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href={`/hr/employees/${user.id}?tab=profile`}
-                            >
-                              <Pencil
-                                className="mr-2 h-4 w-4"
-                                aria-hidden="true"
-                              />
-                              Edit Profile
-                            </Link>
-                          </DropdownMenuItem>
-                          {canDeleteEmployee(
-                            user.role,
-                            user.id,
-                            currentUserRole,
-                            currentUserId,
-                          ) && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => onRequestDelete(user)}
-                              >
-                                <Trash2
-                                  className="mr-2 h-4 w-4"
-                                  aria-hidden="true"
-                                />
-                                Deactivate
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
-        {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-border">
-          <p className="text-xs sm:text-sm text-gold font-medium">
+          <p className="text-xs text-muted-foreground">
             Showing {showFrom}–{showTo} of {totalCount} employees
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-7 w-7"
               disabled={page <= 1}
               onClick={() => onPageChange(page - 1)}
-              className="h-8 text-xs"
               aria-label="Go to previous page"
             >
-              Previous
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span
-              className="text-xs text-muted-foreground whitespace-nowrap"
-              aria-current="page"
-            >
-              Page {page} of {totalPages}
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {page} / {totalPages}
             </span>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-7 w-7"
               disabled={page >= totalPages}
               onClick={() => onPageChange(page + 1)}
-              className="h-8 text-xs"
               aria-label="Go to next page"
             >
-              Next
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>

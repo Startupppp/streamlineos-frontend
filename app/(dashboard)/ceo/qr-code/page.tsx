@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,10 +27,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -48,7 +45,7 @@ function QRCodeImage({ imageUrl }: { imageUrl: string }) {
   const [src, setSrc] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
-  useCallback(() => {
+  useEffect(() => {
     if (!imageUrl?.trim()) { setSrc("/placeholder.png"); return; }
     const trimmed = imageUrl.trim();
     if (trimmed.startsWith("http") || trimmed.startsWith("/")) {
@@ -56,7 +53,7 @@ function QRCodeImage({ imageUrl }: { imageUrl: string }) {
     } else {
       getQRCodeImageUrl(trimmed).then(setSrc).catch(() => setError(true));
     }
-  }, [imageUrl])();
+  }, [imageUrl]);
 
   if (error) return <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Error</div>;
   if (!src) return <div className="flex items-center justify-center h-full"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
@@ -121,6 +118,14 @@ export default function CEOQRCodePage() {
     },
     onError: () => { toast.error("An error occurred"); setDeleteId(null); },
   });
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (deleteId !== null) deleteMutation.mutate(deleteId);
+  }, [deleteId, deleteMutation]);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteId(null);
+  }, []);
 
   const handleGenerate = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -305,25 +310,15 @@ export default function CEOQRCodePage() {
         </Card>
       </div>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete QR Code</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The QR code and its tracking data will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId !== null && deleteMutation.mutate(deleteId)}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete QR Code"
+        description="This action cannot be undone. The QR code and its tracking data will be permanently deleted."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+      />
     </PageWrapper>
   );
 }

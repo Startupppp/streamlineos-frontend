@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useState, useMemo, useCallback } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -43,17 +43,7 @@ import { Check, ChevronsUpDown, User, AlertTriangle } from "lucide-react";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { useSession } from "next-auth/react";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -91,6 +81,22 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   });
 
   const updateMutation = useUpdateProject();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleDeleteConfirm = useCallback(() => {
+    deleteMutation.mutate(
+      { projectId },
+      {
+        onSuccess: () => {
+          toast.success("Project deleted successfully");
+          router.push("/projects");
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to delete project");
+        },
+      }
+    );
+  }, [deleteMutation, projectId, router]);
 
   if (isLoading) {
     return (
@@ -256,44 +262,22 @@ export default function ProjectSettingsPage({ params }: PageProps) {
               Deleting a project is irreversible. It will remove all tickets,
               sprints, and associated data.
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full sm:w-auto">
-                  Delete Project
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    project <strong>{project.name}</strong> and remove all associated data.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={() =>
-                      deleteMutation.mutate(
-                        { projectId },
-                        {
-                          onSuccess: () => {
-                            toast.success("Project deleted successfully");
-                            router.push("/projects");
-                          },
-                          onError: (error) => {
-                            toast.error((error as Error).message || "Failed to delete project");
-                          },
-                        }
-                      )
-                    }
-                  >
-                    {deleteMutation.isPending ? "Deleting..." : "Delete Project"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button
+              variant="destructive"
+              className="w-full sm:w-auto"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              Delete Project
+            </Button>
+            <ConfirmDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              title="Are you absolutely sure?"
+              description={`This action cannot be undone. This will permanently delete the project "${project.name}" and remove all associated data.`}
+              confirmLabel={deleteMutation.isPending ? "Deleting..." : "Delete Project"}
+              destructive
+              onConfirm={handleDeleteConfirm}
+            />
           </CardContent>
         </Card>
       )}

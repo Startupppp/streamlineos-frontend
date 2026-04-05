@@ -9,8 +9,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
@@ -166,11 +166,11 @@ export default function CrmReportsPage() {
         <>
           <div>
             <Label htmlFor="dateFrom" className="text-xs text-muted-foreground">From</Label>
-            <Input id="dateFrom" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+            <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" />
           </div>
           <div>
             <Label htmlFor="dateTo" className="text-xs text-muted-foreground">To</Label>
-            <Input id="dateTo" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+            <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" />
           </div>
           <Button variant="outline" size="sm" onClick={handleApplyFilter}>
             <Filter className="h-4 w-4 mr-1" />

@@ -429,3 +429,103 @@
   border-color: rgba(189,136,44,0.3);
   color: var(--foreground);
 }
+
+/* ─── React Big Calendar overrides ──────────────────────────────────────────── */
+.calendar-container .rbc-calendar {
+  height: 100%;
+  font-family: var(--font-sans);
+  background: transparent;
+  color: var(--foreground);
+}
+
+.calendar-container .rbc-month-view,
+.calendar-container .rbc-time-view,
+.calendar-container .rbc-agenda-view {
+  border: none;
+  height: 100%;
+}
+
+.calendar-container .rbc-header {
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+
+.calendar-container .rbc-month-row {
+  border-top: 1px solid var(--border);
+}
+
+.calendar-container .rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid var(--border);
+}
+
+.calendar-container .rbc-off-range-bg {
+  background: var(--muted);
+  opacity: 0.5;
+}
+
+.calendar-container .rbc-today {
+  background: rgba(189, 136, 44, 0.06);
+}
+
+.calendar-container .rbc-date-cell {
+  padding: 4px 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.calendar-container .rbc-date-cell.rbc-now {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.calendar-container .rbc-date-cell button {
+  color: inherit;
+}
+
+.calendar-container .rbc-event {
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 1px 6px;
+  border: none;
+}
+
+.calendar-container .rbc-event:focus {
+  outline: 2px solid var(--ring);
+}
+
+.calendar-container .rbc-show-more {
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 500;
+  background: transparent;
+  padding: 0 4px;
+}
+
+.calendar-container .rbc-time-slot {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.calendar-container .rbc-time-content {
+  border-top: 1px solid var(--border);
+}
+
+.calendar-container .rbc-time-gutter .rbc-timeslot-group {
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-container .rbc-timeslot-group {
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-container .rbc-time-header-content {
+  border-left: 1px solid var(--border);
+}
+
+.calendar-container .rbc-current-time-indicator {
+  background: rgba(189, 136, 44, 0.8);
+}

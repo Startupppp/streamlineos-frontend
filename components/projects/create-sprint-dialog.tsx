@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useCreateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
@@ -119,7 +120,7 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -133,7 +134,7 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

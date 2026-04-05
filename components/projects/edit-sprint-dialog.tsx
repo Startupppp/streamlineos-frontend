@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useUpdateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -135,7 +136,7 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,7 +149,7 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

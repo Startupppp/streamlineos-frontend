@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -8,14 +8,17 @@ import {
   endOfMonth,
   addMonths,
   subMonths,
+  parseISO,
+  addHours,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,23 +63,39 @@ const EVENT_CATEGORIES = [
   "leave",
   "project",
   "other",
-];
+] as const;
+
+type EventCategory = (typeof EVENT_CATEGORIES)[number];
 
 interface FormData {
   title: string;
   description: string;
   allDay: boolean;
   color: string;
-  category: string;
+  category: EventCategory;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
 }
 
-const defaultForm: FormData = {
-  title: "",
-  description: "",
-  allDay: false,
-  color: "blue",
-  category: "general",
-};
+function toDefaultForm(slot?: { start: Date; end: Date } | null): FormData {
+  const start = slot?.start ?? new Date();
+  const end = slot?.end ?? addHours(start, 1);
+  return {
+    title: "",
+    description: "",
+    allDay: false,
+    color: "blue",
+    category: "general",
+    startDate: format(start, "yyyy-MM-dd"),
+    startTime: format(start, "HH:mm"),
+    endDate: format(end, "yyyy-MM-dd"),
+    endTime: format(end, "HH:mm"),
+  };
+}
+
+const VIEWS: View[] = ["month", "week", "day"];
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -86,180 +105,233 @@ export function CalendarView() {
     start: Date;
     end: Date;
   } | null>(null);
-  const [formData, setFormData] = useState<FormData>(defaultForm);
+  const [formData, setFormData] = useState<FormData>(() =>
+    toDefaultForm(null)
+  );
 
-  // Fetch events for a wider range to cover week/day views too
-  const rangeStart = startOfMonth(subMonths(currentDate, 0));
-  const rangeEnd = endOfMonth(addMonths(currentDate, 1));
+  const rangeStart = useMemo(
+    () => startOfMonth(subMonths(currentDate, 0)),
+    [currentDate]
+  );
+  const rangeEnd = useMemo(
+    () => endOfMonth(addMonths(currentDate, 1)),
+    [currentDate]
+  );
 
   const { data: events = [] } = useCalendarEvents(rangeStart, rangeEnd);
   const createEvent = useCreateCalendarEvent();
   const deleteEvent = useDeleteCalendarEvent();
 
-  // Convert API events to react-big-calendar format
-  const calEvents = events.map((e) => ({
-    id: e.id,
-    title: e.title,
-    start: new Date(e.startDate),
-    end: new Date(e.endDate),
-    allDay: e.allDay ?? false,
-    resource: {
-      color: e.color,
-      category: e.category,
-      description: e.description,
-    },
-  }));
+  const calEvents = useMemo(
+    () =>
+      events.map((e) => ({
+        id: e.id,
+        title: e.title,
+        start: new Date(e.startDate),
+        end: new Date(e.endDate),
+        allDay: e.allDay ?? false,
+        resource: {
+          color: e.color,
+          category: e.category,
+          description: e.description,
+        },
+      })),
+    [events]
+  );
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
-    setSelectedSlot({ start: slotInfo.start, end: slotInfo.end });
+    const slot = { start: slotInfo.start, end: slotInfo.end };
+    setSelectedSlot(slot);
+    setFormData(toDefaultForm(slot));
     setIsCreateOpen(true);
   }, []);
 
-  const handleCreate = async () => {
+  const handleOpenCreate = useCallback(() => {
+    setSelectedSlot(null);
+    setFormData(toDefaultForm(null));
+    setIsCreateOpen(true);
+  }, []);
+
+  const handleCloseCreate = useCallback(() => {
+    setIsCreateOpen(false);
+    setSelectedSlot(null);
+  }, []);
+
+  const handleFieldChange = useCallback(
+    <K extends keyof FormData>(key: K, value: FormData[K]) => {
+      setFormData((prev) => ({ ...prev, [key]: value }));
+    },
+    []
+  );
+
+  const handleCreate = useCallback(async () => {
     if (!formData.title.trim()) {
       toast.error("Event title is required");
       return;
     }
-    const start = selectedSlot?.start ?? currentDate;
-    const end = selectedSlot?.end ?? currentDate;
+
+    let startDate: Date;
+    let endDate: Date;
+
+    if (formData.allDay) {
+      startDate = parseISO(formData.startDate);
+      endDate = parseISO(formData.endDate);
+    } else {
+      startDate = parseISO(`${formData.startDate}T${formData.startTime}`);
+      endDate = parseISO(`${formData.endDate}T${formData.endTime}`);
+    }
+
+    if (endDate <= startDate) {
+      toast.error("End time must be after start time");
+      return;
+    }
 
     try {
       await createEvent.mutateAsync({
         title: formData.title,
         description: formData.description || undefined,
-        startDate: start.toISOString(),
-        endDate: end.toISOString(),
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         allDay: formData.allDay,
         color: formData.color,
         category: formData.category,
       });
       toast.success("Event created");
-      setIsCreateOpen(false);
-      setFormData(defaultForm);
-      setSelectedSlot(null);
+      handleCloseCreate();
     } catch {
       toast.error("Failed to create event");
     }
-  };
+  }, [formData, createEvent, handleCloseCreate]);
 
-  const handleDeleteEvent = async (id: number) => {
-    try {
-      await deleteEvent.mutateAsync(id);
-      toast.success("Event deleted");
-    } catch {
-      toast.error("Failed to delete event");
-    }
-  };
-
-  const eventPropGetter = (event: CalendarEvent) => ({
-    style: {
-      backgroundColor:
-        EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
-      border: "none",
-      borderRadius: "4px",
-      color: "#fff",
-      fontSize: "12px",
-      padding: "1px 4px",
+  const handleDeleteEvent = useCallback(
+    async (id: number) => {
+      try {
+        await deleteEvent.mutateAsync(id);
+        toast.success("Event deleted");
+      } catch {
+        toast.error("Failed to delete event");
+      }
     },
-  });
+    [deleteEvent]
+  );
 
-  void handleDeleteEvent; // exposed if needed later
+  void handleDeleteEvent;
+
+  const eventPropGetter = useCallback(
+    (event: CalendarEvent) => ({
+      style: {
+        backgroundColor:
+          EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
+        border: "none",
+        borderRadius: "4px",
+        color: "#fff",
+        fontSize: "12px",
+        padding: "1px 6px",
+      },
+    }),
+    []
+  );
+
+  const handlePrev = useCallback(
+    () => setCurrentDate((d) => subMonths(d, 1)),
+    []
+  );
+  const handleNext = useCallback(
+    () => setCurrentDate((d) => addMonths(d, 1)),
+    []
+  );
+  const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
   return (
-    <div className="h-full flex flex-col gap-4" style={{ minHeight: "600px" }}>
-      {/* Toolbar */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
+    <div className="h-full flex flex-col gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="icon"
-            aria-label="Previous month"
-            onClick={() => setCurrentDate((d) => subMonths(d, 1))}
+            className="h-8 w-8"
+            aria-label="Previous"
+            onClick={handlePrev}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold min-w-[140px] text-center">
+          <span className="text-sm font-semibold min-w-[130px] text-center">
             {format(currentDate, "MMMM yyyy")}
           </span>
           <Button
             variant="outline"
             size="icon"
-            aria-label="Next month"
-            onClick={() => setCurrentDate((d) => addMonths(d, 1))}
+            className="h-8 w-8"
+            aria-label="Next"
+            onClick={handleNext}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentDate(new Date())}
-          >
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleToday}>
             Today
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex rounded-md border border-border overflow-hidden">
-            {(["month", "week", "day"] as const).map((v) => (
+          <div className="flex rounded-md border border-border overflow-hidden h-8">
+            {VIEWS.map((v) => (
               <button
                 key={v}
                 type="button"
                 onClick={() => setView(v)}
-                className={`px-3 py-1.5 text-xs capitalize transition-colors ${
+                className={`px-3 text-xs capitalize transition-colors ${
                   view === v
                     ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted"
+                    : "hover:bg-muted text-muted-foreground"
                 }`}
               >
                 {v}
               </button>
             ))}
           </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              setSelectedSlot(null);
-              setIsCreateOpen(true);
-            }}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
+          <Button size="sm" className="h-8 text-xs" onClick={handleOpenCreate}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
             Add Event
           </Button>
         </div>
       </div>
 
-      {/* Calendar */}
-      <div
-        className="flex-1 min-h-0 bg-card rounded-lg border border-border overflow-hidden"
-        style={{ height: "calc(100vh - 220px)", minHeight: "500px" }}
-      >
-        <BigCalendarWrapper
-          events={calEvents}
-          date={currentDate}
-          view={view}
-          onView={setView}
-          onNavigate={setCurrentDate}
-          onSelectSlot={handleSelectSlot}
-          eventPropGetter={eventPropGetter}
-        />
+      <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden bg-card calendar-container">
+        {calEvents.length === 0 && view === "month" ? (
+          <div className="h-full flex flex-col items-center justify-center gap-4 text-muted-foreground">
+            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+              <Calendar className="h-8 w-8 opacity-30" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">No events this month</p>
+              <p className="text-xs">Click &quot;Add Event&quot; or select a date on the calendar to get started.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={handleOpenCreate}>
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Create First Event
+            </Button>
+          </div>
+        ) : (
+          <BigCalendarWrapper
+            events={calEvents}
+            date={currentDate}
+            view={view}
+            onView={setView}
+            onNavigate={setCurrentDate}
+            onSelectSlot={handleSelectSlot}
+            eventPropGetter={eventPropGetter}
+          />
+        )}
       </div>
 
-      {/* Create event dialog */}
-      <Dialog
-        open={isCreateOpen}
-        onOpenChange={(open) => {
-          setIsCreateOpen(open);
-          if (!open) {
-            setFormData(defaultForm);
-            setSelectedSlot(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isCreateOpen} onOpenChange={(open) => !open && handleCloseCreate()}>
+        <DialogContent className="sm:max-w-[460px]">
           <DialogHeader>
-            <DialogTitle className="text-sm">New Calendar Event</DialogTitle>
+            <DialogTitle className="text-sm font-semibold">
+              New Calendar Event
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-2">
+          <div className="space-y-3 py-1">
             <div className="space-y-1">
               <Label htmlFor="event-title" className="text-xs">
                 Title <span className="text-destructive">*</span>
@@ -267,9 +339,7 @@ export function CalendarView() {
               <Input
                 id="event-title"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, title: e.target.value }))
-                }
+                onChange={(e) => handleFieldChange("title", e.target.value)}
                 placeholder="Event title"
                 className="h-8 text-sm"
                 autoFocus
@@ -284,11 +354,73 @@ export function CalendarView() {
                 id="event-desc"
                 value={formData.description}
                 onChange={(e) =>
-                  setFormData((p) => ({ ...p, description: e.target.value }))
+                  handleFieldChange("description", e.target.value)
                 }
-                placeholder="Optional"
+                placeholder="Optional description"
                 className="h-8 text-sm"
               />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="all-day"
+                checked={formData.allDay}
+                onCheckedChange={(v) => handleFieldChange("allDay", v)}
+              />
+              <Label htmlFor="all-day" className="text-xs cursor-pointer">
+                All day event
+              </Label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Start Date</Label>
+                <Input
+                  type="date"
+                  className="h-8 text-xs"
+                  value={formData.startDate}
+                  onChange={(e) =>
+                    handleFieldChange("startDate", e.target.value)
+                  }
+                />
+              </div>
+              {!formData.allDay && (
+                <div className="space-y-1">
+                  <Label className="text-xs">Start Time</Label>
+                  <Input
+                    type="time"
+                    className="h-8 text-xs"
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      handleFieldChange("startTime", e.target.value)
+                    }
+                  />
+                </div>
+              )}
+              <div className="space-y-1">
+                <Label className="text-xs">End Date</Label>
+                <Input
+                  type="date"
+                  className="h-8 text-xs"
+                  value={formData.endDate}
+                  onChange={(e) =>
+                    handleFieldChange("endDate", e.target.value)
+                  }
+                />
+              </div>
+              {!formData.allDay && (
+                <div className="space-y-1">
+                  <Label className="text-xs">End Time</Label>
+                  <Input
+                    type="time"
+                    className="h-8 text-xs"
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      handleFieldChange("endTime", e.target.value)
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -297,10 +429,10 @@ export function CalendarView() {
                 <Select
                   value={formData.category}
                   onValueChange={(v) =>
-                    setFormData((p) => ({ ...p, category: v }))
+                    handleFieldChange("category", v as EventCategory)
                   }
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 text-xs w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -317,11 +449,9 @@ export function CalendarView() {
                 <Label className="text-xs">Color</Label>
                 <Select
                   value={formData.color}
-                  onValueChange={(v) =>
-                    setFormData((p) => ({ ...p, color: v }))
-                  }
+                  onValueChange={(v) => handleFieldChange("color", v)}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 text-xs w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -329,7 +459,7 @@ export function CalendarView() {
                       <SelectItem key={key} value={key}>
                         <span className="flex items-center gap-2">
                           <span
-                            className="h-2.5 w-2.5 rounded-full"
+                            className="h-2.5 w-2.5 rounded-full shrink-0"
                             style={{ backgroundColor: hex }}
                           />
                           <span className="capitalize text-xs">{key}</span>
@@ -340,45 +470,20 @@ export function CalendarView() {
                 </Select>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <Switch
-                id="all-day"
-                checked={formData.allDay}
-                onCheckedChange={(v) =>
-                  setFormData((p) => ({ ...p, allDay: v }))
-                }
-              />
-              <Label htmlFor="all-day" className="text-xs cursor-pointer">
-                All day event
-              </Label>
-            </div>
-
-            {selectedSlot && (
-              <p className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
-                {format(selectedSlot.start, "MMM d, yyyy")}
-                {!formData.allDay &&
-                  ` · ${format(selectedSlot.start, "h:mm a")} – ${format(selectedSlot.end, "h:mm a")}`}
-              </p>
-            )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsCreateOpen(false)}
-            >
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={handleCloseCreate}>
               Cancel
             </Button>
             <Button
               size="sm"
               onClick={handleCreate}
-              disabled={createEvent.isPending}
+              disabled={createEvent.isPending || !formData.title.trim()}
             >
-              {createEvent.isPending ? "Creating..." : "Create"}
+              {createEvent.isPending ? "Creating..." : "Create Event"}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

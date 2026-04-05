@@ -11,7 +11,7 @@ import {
   Mail,
   CalendarIcon,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -238,23 +238,11 @@ export function ExpenseExportDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    max={dateTo || undefined}
-                    className="h-9 text-sm"
-                  />
+                  <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="From date" />
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    min={dateFrom || undefined}
-                    className="h-9 text-sm"
-                  />
+                  <DatePicker value={dateTo} onChange={setDateTo} placeholder="To date" />
                 </div>
               </div>
               {(dateFrom || dateTo) && (

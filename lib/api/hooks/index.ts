@@ -18,4 +18,3 @@ export * from "./dm";
 export * from "./audit-log";
 export * from "./mfa";
 export * from "./calendar";
-export * from "./api-keys";

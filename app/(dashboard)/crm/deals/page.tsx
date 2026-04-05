@@ -14,10 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealTableView } from "@/components/crm/deal-table-view";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -26,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -87,6 +85,17 @@ export default function DealsPage() {
 
   const updateStageMutation = useUpdateDealStage();
   const deleteMutation = useDeleteDeal();
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (dealToDelete) {
+      deleteMutation.mutate(dealToDelete, { onSuccess: () => toast.success("Deal deleted") });
+    }
+    setDealToDelete(null);
+  }, [dealToDelete, deleteMutation]);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDealToDelete(null);
+  }, []);
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, typeof allDeals> = {};
@@ -347,25 +356,15 @@ export default function DealsPage() {
         </div>
       </motion.div>
       )}
-      <AlertDialog open={dealToDelete !== null} onOpenChange={(open) => { if (!open) setDealToDelete(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete deal?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { if (dealToDelete) deleteMutation.mutate(dealToDelete, { onSuccess: () => toast.success("Deal deleted") }); setDealToDelete(null); }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={dealToDelete !== null}
+        onOpenChange={handleDeleteDialogChange}
+        title="Delete deal?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+      />
       </motion.div>
     </PageWrapper>
   );
@@ -379,6 +378,7 @@ function CreateDealForm({
   onSuccess: () => void;
 }) {
   const createMutation = useCreateDeal();
+  const [expectedCloseDate, setExpectedCloseDate] = useState("");
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -393,7 +393,7 @@ function CreateDealForm({
         contactEmail: (fd.get("contactEmail") as string) || undefined,
         contactPhone: (fd.get("contactPhone") as string) || undefined,
         assignedToId: (fd.get("assignedToId") as string) || undefined,
-        expectedCloseDate: (fd.get("expectedCloseDate") as string) || undefined,
+        expectedCloseDate: expectedCloseDate || undefined,
         notes: (fd.get("notes") as string) || undefined,
       },
       {
@@ -433,7 +433,7 @@ function CreateDealForm({
         </div>
         <div>
           <Label htmlFor="expectedCloseDate">Expected Close</Label>
-          <Input id="expectedCloseDate" name="expectedCloseDate" type="date" />
+          <DatePicker id="expectedCloseDate" value={expectedCloseDate} onChange={setExpectedCloseDate} placeholder="Select date" />
         </div>
         <div>
           <Label htmlFor="contactPerson">Contact Person</Label>

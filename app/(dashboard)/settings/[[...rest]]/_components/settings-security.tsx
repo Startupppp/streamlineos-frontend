@@ -10,20 +10,9 @@ import { useChangePassword } from "@/lib/api/hooks/hr";
 import { useSessions, useRevokeSession, useRevokeAllSessions } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 
-/* ── Helpers ── */
 function getStrength(pw: string) {
   let s = 0;
   if (pw.length >= 8) s++;
@@ -119,7 +108,6 @@ function parseDeviceName(userAgent: string | null): string {
   return "Browser";
 }
 
-/* ── Sessions Section ── */
 function SessionsSection() {
   const { data: sessions, isLoading } = useSessions();
   const revokeOne = useRevokeSession();
@@ -142,6 +130,7 @@ function SessionsSection() {
     });
   }, [revokeAll]);
 
+  const [revokeAllOpen, setRevokeAllOpen] = useState(false);
   const otherSessions = sessions?.filter((s) => !s.isCurrent) ?? [];
 
   return (
@@ -157,25 +146,25 @@ function SessionsSection() {
           </div>
         </div>
         {otherSessions.length > 0 && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs" disabled={revokeAll.isPending}>
-                {revokeAll.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Sign out all others"}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Sign out other sessions?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will immediately revoke {otherSessions.length} other session{otherSessions.length !== 1 ? "s" : ""}. Those devices will need to sign in again.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleRevokeAll}>Sign out</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={revokeAll.isPending}
+              onClick={() => setRevokeAllOpen(true)}
+            >
+              {revokeAll.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Sign out all others"}
+            </Button>
+            <ConfirmDialog
+              open={revokeAllOpen}
+              onOpenChange={setRevokeAllOpen}
+              title="Sign out other sessions?"
+              description={`This will immediately revoke ${otherSessions.length} other session${otherSessions.length !== 1 ? "s" : ""}. Those devices will need to sign in again.`}
+              confirmLabel="Sign out"
+              onConfirm={handleRevokeAll}
+            />
+          </>
         )}
       </div>
 
@@ -228,7 +217,6 @@ function SessionsSection() {
   );
 }
 
-/* ── Password Change ── */
 export function SettingsSecurity() {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
