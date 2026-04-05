@@ -264,17 +264,18 @@ export default function LeadsPipelinePage() {
           onClearFilters={clearFilters}
         />
       }
+      noInternalScroll
     >
-      <div className="space-y-6">
+      <div className="h-full flex flex-col gap-6">
         {stats && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" className="shrink-0">
             <LeadsStatsBar stats={stats} />
           </motion.div>
         )}
 
         {/* Table View */}
         {view === "table" && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex-1 min-h-0">
             <LeadTableView
               leads={tableData?.leads || []}
               totalCount={tableData?.totalCount || 0}
@@ -300,7 +301,7 @@ export default function LeadsPipelinePage() {
 
         {/* Kanban View */}
         {view === "kanban" && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" className="flex-1 min-h-0 overflow-auto">
             <LeadsKanban
               filteredBoard={filteredBoard as Record<string, BoardLead[]> | null}
               onDragEnd={handleDragEnd}

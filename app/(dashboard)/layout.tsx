@@ -22,7 +22,11 @@ export default async function DashboardLayout({
   const defaultCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
 
   return (
-    <DashboardShell hasDashboardAccess={hasDashboardAccess} defaultCollapsed={defaultCollapsed}>
+    <DashboardShell
+      userId={session.user.id}
+      hasDashboardAccess={hasDashboardAccess}
+      defaultCollapsed={defaultCollapsed}
+    >
       {children}
     </DashboardShell>
   );

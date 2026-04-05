@@ -7,7 +7,7 @@ import {
   useUpdateView,
   useDeleteView,
 } from "@/lib/api/hooks/projects";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -129,7 +129,7 @@ export default function ViewsPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Views" filters={<ProjectSubNav projectId={projectId} />}>
+      <PageWrapper title="Views">
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
@@ -142,8 +142,7 @@ export default function ViewsPage({
   return (
     <PageWrapper
       title="Views"
-      filters={<ProjectSubNav projectId={projectId} />}
-      actions={
+           actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>
             <Button size="sm">

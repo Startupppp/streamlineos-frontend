@@ -227,12 +227,12 @@ export default function DealsPage() {
       }
     >
       <motion.div
-        className="space-y-6"
+        className="h-full flex flex-col gap-6"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
       >
-      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4 shrink-0">
         {[
           { label: "Total Deals", value: stats.total, icon: TrendingUp, color: "text-blue-400" },
           { label: "Pipeline Value", value: formatINR(stats.totalValue), icon: DollarSign, color: "text-gold" },
@@ -253,7 +253,7 @@ export default function DealsPage() {
 
       {/* Table View */}
       {view === "table" && (
-        <motion.div variants={fadeUp}>
+        <motion.div variants={fadeUp} className="flex-1 min-h-0">
           <DealTableView
             deals={allDeals || []}
             sortColumn={dealSortCol}
@@ -267,8 +267,8 @@ export default function DealsPage() {
 
       {/* Kanban View */}
       {view === "kanban" && (
-      <motion.div variants={fadeUp}>
-        <ScrollArea className="w-full" type="auto">
+      <motion.div variants={fadeUp} className="flex-1 min-h-0">
+        <ScrollArea className="h-full w-full" type="auto">
         <div className="inline-flex gap-3 sm:gap-4 pb-4">
           {STAGES.map(stage => {
             const stageDeals = dealsByStage[stage.key] || [];

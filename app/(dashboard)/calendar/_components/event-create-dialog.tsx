@@ -3,12 +3,12 @@
 import { useState, useCallback, useEffect } from "react";
 import { format, parseISO, addHours } from "date-fns";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -107,7 +107,7 @@ function toEditForm(event: CalendarEvent): FormState {
   };
 }
 
-function getMemberName(member: { firstName: string | null; lastName: string | null; name: string | null; }) {
+function getMemberName(member: { firstName: string | null; lastName: string | null; name: string | null }) {
   if (member.firstName) return `${member.firstName} ${member.lastName ?? ""}`.trim();
   return member.name ?? "Unknown";
 }
@@ -120,7 +120,6 @@ interface EventCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultSlot?: { start: Date; end: Date } | null;
-  /** When provided, the dialog acts as an edit form for this event */
   event?: CalendarEvent | null;
 }
 
@@ -157,6 +156,55 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
         : [...prev.attendeeIds, memberId],
     }));
   }, []);
+
+  const handleGenerateMeet = useCallback(async () => {
+    try {
+      const res = await createMeet.mutateAsync();
+      set("location", res.meetLink);
+    } catch {
+      toast.error("Failed to generate Meet link");
+    }
+  }, [createMeet, set]);
+
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    set("title", e.target.value);
+  }, [set]);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    set("description", e.target.value);
+  }, [set]);
+
+  const handleLocationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    set("location", e.target.value);
+  }, [set]);
+
+  const handleAllDayChange = useCallback((v: boolean) => {
+    set("allDay", v);
+  }, [set]);
+
+  const handleStartDateChange = useCallback((v: string) => {
+    set("startDate", v);
+  }, [set]);
+
+  const handleStartTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    set("startTime", e.target.value);
+  }, [set]);
+
+  const handleEndDateChange = useCallback((v: string) => {
+    set("endDate", v);
+  }, [set]);
+
+  const handleEndTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    set("endTime", e.target.value);
+  }, [set]);
+
+  const handleCategoryChange = useCallback((v: string) => {
+    set("category", v as EventCategory);
+  }, [set]);
+
+  const handleColorChange = useCallback((v: string) => {
+    set("color", v);
+  }, [set]);
 
   const handleSave = useCallback(async () => {
     if (!form.title.trim()) {
@@ -198,44 +246,53 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
     }
   }, [form, isEdit, event, createEvent, updateEvent, handleClose]);
 
+  const isPending = isEdit ? updateEvent.isPending : createEvent.isPending;
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="sm:max-w-[520px] max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
-          <DialogTitle className="text-sm font-semibold">{isEdit ? "Edit Event" : "New Calendar Event"}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={(v) => !v && handleClose()}>
+      <SheetContent side="right" className="flex flex-col p-0 w-full sm:max-w-[480px]">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
+          <SheetTitle className="text-base font-semibold">
+            {isEdit ? "Edit Event" : "New Calendar Event"}
+          </SheetTitle>
+        </SheetHeader>
+
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 py-4 space-y-4">
+          <div className="px-6 py-5 space-y-5">
             <div className="space-y-1.5">
-              <Label htmlFor="ev-title" className="text-xs">Title <span className="text-destructive">*</span></Label>
+              <Label htmlFor="ev-title" className="text-xs font-medium">
+                Title <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="ev-title"
                 value={form.title}
-                onChange={(e) => set("title", e.target.value)}
+                onChange={handleTitleChange}
                 placeholder="Event title"
-                className="h-8 text-sm"
+                className="h-9"
                 autoFocus
               />
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="ev-desc" className="text-xs">Description</Label>
+              <Label htmlFor="ev-desc" className="text-xs font-medium">Description</Label>
               <Input
                 id="ev-desc"
                 value={form.description}
-                onChange={(e) => set("description", e.target.value)}
+                onChange={handleDescriptionChange}
                 placeholder="Optional description"
-                className="h-8 text-sm"
+                className="h-9"
               />
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="ev-location" className="text-xs">Location / Meet Link</Label>
+              <Label htmlFor="ev-location" className="text-xs font-medium">Location / Meet Link</Label>
               <div className="flex gap-2">
                 <Input
                   id="ev-location"
                   value={form.location}
-                  onChange={(e) => set("location", e.target.value)}
+                  onChange={handleLocationChange}
                   placeholder="Room A, Zoom link, https://meet.google.com/..."
-                  className="h-8 text-sm flex-1"
+                  className="h-9 flex-1"
                 />
                 {meetStatus && (
                   meetStatus.connected ? (
@@ -243,26 +300,19 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-8 shrink-0 gap-1.5 text-xs"
+                      className="h-9 shrink-0 gap-1.5"
                       disabled={createMeet.isPending}
-                      onClick={async () => {
-                        try {
-                          const res = await createMeet.mutateAsync();
-                          set("location", res.meetLink);
-                        } catch {
-                          toast.error("Failed to generate Meet link");
-                        }
-                      }}
+                      onClick={handleGenerateMeet}
                     >
                       {createMeet.isPending
-                        ? <Loader2 className="h-3 w-3 animate-spin" />
-                        : <Video className="h-3 w-3" />}
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <Video className="h-3.5 w-3.5" />}
                       Meet
                     </Button>
                   ) : (
                     <a href={meetStatus.authUrl} className="shrink-0">
-                      <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-                        <Video className="h-3 w-3" />
+                      <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5">
+                        <Video className="h-3.5 w-3.5" />
                         Connect
                       </Button>
                     </a>
@@ -270,78 +320,85 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                 )}
               </div>
               {meetStatus?.connected && meetStatus.googleEmail && (
-                <p className="text-[10px] text-muted-foreground">Google: {meetStatus.googleEmail}</p>
+                <p className="text-[11px] text-muted-foreground">Google: {meetStatus.googleEmail}</p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Switch id="ev-allday" checked={form.allDay} onCheckedChange={(v) => set("allDay", v)} />
-              <Label htmlFor="ev-allday" className="text-xs cursor-pointer">All day event</Label>
+
+            <div className="flex items-center gap-2.5">
+              <Switch id="ev-allday" checked={form.allDay} onCheckedChange={handleAllDayChange} />
+              <Label htmlFor="ev-allday" className="text-sm cursor-pointer">All day event</Label>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Start Date</Label>
-                <DatePicker value={form.startDate} onChange={(v) => set("startDate", v)} placeholder="Start date" />
+                <Label className="text-xs font-medium">Start Date</Label>
+                <DatePicker
+                  value={form.startDate}
+                  onChange={handleStartDateChange}
+                  placeholder="Start date"
+                />
               </div>
               {!form.allDay && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Start Time</Label>
+                  <Label className="text-xs font-medium">Start Time</Label>
                   <Input
                     type="time"
-                    className="h-8 text-xs"
+                    className="h-9"
                     value={form.startTime}
-                    onChange={(e) => set("startTime", e.target.value)}
+                    onChange={handleStartTimeChange}
                   />
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label className="text-xs">End Date</Label>
+                <Label className="text-xs font-medium">End Date</Label>
                 <DatePicker
                   value={form.endDate}
-                  onChange={(v) => set("endDate", v)}
+                  onChange={handleEndDateChange}
                   fromDate={form.startDate ? new Date(form.startDate) : undefined}
                   placeholder="End date"
                 />
               </div>
               {!form.allDay && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs">End Time</Label>
+                  <Label className="text-xs font-medium">End Time</Label>
                   <Input
                     type="time"
-                    className="h-8 text-xs"
+                    className="h-9"
                     value={form.endTime}
-                    onChange={(e) => set("endTime", e.target.value)}
+                    onChange={handleEndTimeChange}
                   />
                 </div>
               )}
             </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Category</Label>
-                <Select value={form.category} onValueChange={(v) => set("category", v as EventCategory)}>
-                  <SelectTrigger className="h-8 text-xs w-full">
+                <Label className="text-xs font-medium">Category</Label>
+                <Select value={form.category} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="h-9 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {EVENT_CATEGORIES.map((cat) => (
                       <SelectItem key={cat} value={cat}>
-                        <span className="capitalize text-xs">{cat}</span>
+                        <span className="capitalize">{cat}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Color</Label>
-                <Select value={form.color} onValueChange={(v) => set("color", v)}>
-                  <SelectTrigger className="h-8 text-xs w-full">
+                <Label className="text-xs font-medium">Color</Label>
+                <Select value={form.color} onValueChange={handleColorChange}>
+                  <SelectTrigger className="h-9 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(EVENT_COLORS).map(([key, hex]) => (
                       <SelectItem key={key} value={key}>
                         <span className="flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: hex }} />
-                          <span className="capitalize text-xs">{key}</span>
+                          <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: hex }} />
+                          <span className="capitalize">{key}</span>
                         </span>
                       </SelectItem>
                     ))}
@@ -349,40 +406,30 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
                 </Select>
               </div>
             </div>
+
             {members.length > 0 && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Attendees</Label>
+                  <Label className="text-xs font-medium">Attendees</Label>
                   {form.attendeeIds.length > 0 && (
-                    <Badge variant="secondary" className="text-[10px]">{form.attendeeIds.length} selected</Badge>
+                    <Badge variant="secondary" className="text-[11px]">
+                      {form.attendeeIds.length} selected
+                    </Badge>
                   )}
                 </div>
-                <div className="max-h-36 overflow-y-auto rounded-lg border bg-muted/30 p-1 space-y-0.5">
+                <div className="rounded-lg border bg-muted/30 p-1 space-y-0.5 max-h-48 overflow-y-auto">
                   {members.map((member) => {
                     const name = getMemberName(member);
                     const selected = form.attendeeIds.includes(member.id);
                     return (
-                      <button
+                      <AttendeeRow
                         key={member.id}
-                        type="button"
-                        onClick={() => toggleAttendee(member.id)}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors text-left",
-                          selected ? "bg-gold/10 ring-1 ring-gold/30" : "hover:bg-muted"
-                        )}
-                      >
-                        <Avatar className="h-6 w-6 shrink-0">
-                          <AvatarImage src={resolveImageUrl(member.image)} />
-                          <AvatarFallback className="text-[9px]">{getInitials(name)}</AvatarFallback>
-                        </Avatar>
-                        <span className={cn("flex-1 truncate text-xs", selected && "font-medium")}>{name}</span>
-                        <div className={cn(
-                          "h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center shrink-0",
-                          selected ? "border-gold bg-gold" : "border-muted-foreground/30"
-                        )}>
-                          {selected && <Check className="h-2 w-2 text-white" />}
-                        </div>
-                      </button>
+                        memberId={member.id}
+                        name={name}
+                        image={member.image}
+                        selected={selected}
+                        onToggle={toggleAttendee}
+                      />
                     );
                   })}
                 </div>
@@ -390,19 +437,55 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
             )}
           </div>
         </ScrollArea>
-        <DialogFooter className="px-6 py-3 border-t shrink-0">
-          <Button variant="outline" size="sm" onClick={handleClose}>Cancel</Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={(isEdit ? updateEvent.isPending : createEvent.isPending) || !form.title.trim()}
-          >
-            {isEdit
-              ? (updateEvent.isPending ? "Saving..." : "Save Changes")
-              : (createEvent.isPending ? "Creating..." : "Create Event")}
+
+        <SheetFooter className="px-6 py-4 border-t shrink-0 flex-row gap-2 justify-end">
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+            Cancel
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <Button onClick={handleSave} disabled={isPending || !form.title.trim()}>
+            {isPending
+              ? (isEdit ? "Saving..." : "Creating...")
+              : (isEdit ? "Save Changes" : "Create Event")}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+interface AttendeeRowProps {
+  memberId: string;
+  name: string;
+  image: string | null | undefined;
+  selected: boolean;
+  onToggle: (id: string) => void;
+}
+
+function AttendeeRow({ memberId, name, image, selected, onToggle }: AttendeeRowProps) {
+  const handleClick = useCallback(() => {
+    onToggle(memberId);
+  }, [memberId, onToggle]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors text-left",
+        selected ? "bg-gold/10 ring-1 ring-gold/30" : "hover:bg-muted"
+      )}
+    >
+      <Avatar className="h-7 w-7 shrink-0">
+        <AvatarImage src={resolveImageUrl(image)} />
+        <AvatarFallback className="text-[10px]">{getInitials(name)}</AvatarFallback>
+      </Avatar>
+      <span className={cn("flex-1 truncate text-sm", selected && "font-medium")}>{name}</span>
+      <div className={cn(
+        "h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0",
+        selected ? "border-gold bg-gold" : "border-muted-foreground/30"
+      )}>
+        {selected && <Check className="h-2.5 w-2.5 text-white" />}
+      </div>
+    </button>
   );
 }

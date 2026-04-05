@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -97,9 +96,9 @@ export function LeadTableView({
   });
 
   return (
-    <div className="space-y-0">
+    <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-1 pb-2">
+      <div className="shrink-0 flex items-center justify-between px-1 pb-2">
         <span className="text-xs text-muted-foreground">{totalCount} leads</span>
         <div className="flex items-center gap-2">
           <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
@@ -133,8 +132,8 @@ export function LeadTableView({
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-lg overflow-hidden">
-        <ScrollArea className="w-full max-h-[60vh]" type="auto">
+      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-hidden">
+        <div className="overflow-auto h-full w-full">
           <div className="min-w-max">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted/60">
@@ -210,12 +209,12 @@ export function LeadTableView({
             </TableBody>
           </Table>
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-3 px-1">
+        <div className="shrink-0 flex items-center justify-between pt-3 px-1">
           <span className="text-xs text-muted-foreground">
             Page {page} of {totalPages}
           </span>

@@ -119,7 +119,7 @@ export function DashboardHeader() {
         </Sheet>
 
         {/* Page title — mobile only (desktop has PageWrapper h1) */}
-        <span className="text-sm font-semibold text-foreground md:hidden">
+        <span className="text-sm flex-1 bg-black font-semibold text-foreground md:hidden">
           {pageTitle}
         </span>
       </div>

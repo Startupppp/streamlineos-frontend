@@ -23,12 +23,14 @@ function setSidebarCookie(collapsed: boolean) {
 }
 
 interface DashboardShellProps {
+  userId: string;
   hasDashboardAccess: boolean;
   defaultCollapsed: boolean;
   children: React.ReactNode;
 }
 
 export function DashboardShell({
+  userId,
   hasDashboardAccess,
   defaultCollapsed,
   children,
@@ -37,8 +39,7 @@ export function DashboardShell({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  usePushSubscription();
-  // Renders null — subscribes to channel unread counts for cross-page notifications
+  usePushSubscription(userId);
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => {
@@ -58,7 +59,8 @@ export function DashboardShell({
   const isOnboardingPage = pathname === "/onboarding";
   const isCalendarPage = pathname === "/calendar";
   const isAttendancePage = pathname === "/hr/attendance";
-  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage || isCalendarPage || isAttendancePage;
+  const isTablePage = pathname === "/crm/leads" || pathname === "/crm/deals" || pathname === "/billing/invoices" || pathname === "/crm/clients";
+  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage || isCalendarPage || isAttendancePage || isTablePage;
 
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 

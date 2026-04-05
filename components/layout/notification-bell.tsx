@@ -88,16 +88,26 @@ export function NotificationBell() {
                 const config = TYPE_CONFIG[n.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.INFO;
                 const Icon = config.icon;
 
+                const openNotification = () => {
+                  if (!n.isRead) markRead.mutate(n.id);
+                  if (n.link) window.location.href = n.link;
+                };
+
                 return (
-                  <button
+                  <div
                     key={n.id}
+                    role="button"
+                    tabIndex={0}
                     className={cn(
-                      "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors group/notif",
+                      "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors group/notif cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       !n.isRead && "bg-primary/5"
                     )}
-                    onClick={() => {
-                      if (!n.isRead) markRead.mutate(n.id);
-                      if (n.link) window.location.href = n.link;
+                    onClick={openNotification}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openNotification();
+                      }
                     }}
                   >
                     <div className={cn("mt-0.5 h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0", config.bg)}>
@@ -128,7 +138,7 @@ export function NotificationBell() {
                         <X className="h-3 w-3" />
                       </button>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

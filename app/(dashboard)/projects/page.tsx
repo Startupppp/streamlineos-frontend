@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useProjects } from "@/lib/api/hooks/projects";
@@ -10,12 +10,10 @@ import { ProjectCard } from "./project-card";
 import { ProjectListRow } from "./project-list-row";
 import { ProjectFilterBar } from "./project-filter-bar";
 import { ProjectPagination } from "./project-pagination";
-import { LaunchProjectCard } from "./launch-project-card";
 import { ProjectsEmptyState } from "./projects-empty-state";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
@@ -25,7 +23,6 @@ export default function ProjectsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
-  const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
 
   const search = searchParams.get("q") || "";
   const status = (searchParams.get("status") as StatusFilter) || "ALL";
@@ -48,25 +45,34 @@ export default function ProjectsPage() {
     [searchParams, router, pathname],
   );
 
-  const handleSearchChange = useCallback((value: string) => updateParams({ q: value || null, page: null }), [updateParams]);
-  const handleStatusChange = useCallback((value: StatusFilter) => updateParams({ status: value === "ALL" ? null : value, page: null }), [updateParams]);
-  const handleViewModeChange = useCallback((value: ViewMode) => updateParams({ view: value === "grid" ? null : value }), [updateParams]);
-  const setPage = useCallback((p: number) => updateParams({ page: p === 1 ? null : String(p) }), [updateParams]);
+  const handleSearchChange = useCallback(
+    (value: string) => updateParams({ q: value || null, page: null }),
+    [updateParams],
+  );
+  const handleStatusChange = useCallback(
+    (value: StatusFilter) =>
+      updateParams({ status: value === "ALL" ? null : value, page: null }),
+    [updateParams],
+  );
+  const handleViewModeChange = useCallback(
+    (value: ViewMode) => updateParams({ view: value === "grid" ? null : value }),
+    [updateParams],
+  );
+  const setPage = useCallback(
+    (p: number) => updateParams({ page: p === 1 ? null : String(p) }),
+    [updateParams],
+  );
 
   const { data, isLoading } = useProjects({
     page,
-    limit: 9,
+    limit: 12,
     search: debouncedSearch || undefined,
     status,
   });
 
   const projects = data?.data ?? [];
   const pagination = data
-    ? {
-        page: data.page,
-        total: data.total,
-        totalPages: data.totalPages,
-      }
+    ? { page: data.page, total: data.total, totalPages: data.totalPages }
     : undefined;
 
   return (
@@ -85,19 +91,35 @@ export default function ProjectsPage() {
         />
       }
     >
-      {/* SR live region for result count */}
-      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {isLoading ? "Loading projects..." : `${pagination?.total ?? 0} projects found`}
-      </div>
-
-      {/* Content */}
       {isLoading ? (
-        <ProjectsGridSkeleton />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4 space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-5 w-14 rounded" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-1 w-full rounded-full" />
+              <div className="flex justify-between pt-2 border-t">
+                <div className="flex -space-x-1.5">
+                  {[1, 2, 3].map((j) => (
+                    <Skeleton key={j} className="h-6 w-6 rounded-full" />
+                  ))}
+                </div>
+                <Skeleton className="h-3 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
         <ProjectsEmptyState />
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-muted-foreground text-sm">No projects match your filters.</p>
+          <p className="text-muted-foreground text-sm">
+            No projects match your filters.
+          </p>
           <button
             onClick={() => updateParams({ q: null, status: null, page: null })}
             className="text-primary text-sm mt-2 hover:underline"
@@ -107,7 +129,7 @@ export default function ProjectsPage() {
         </div>
       ) : viewMode === "grid" ? (
         <motion.div
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
           role="list"
           aria-label="Projects grid"
           variants={staggerContainer}
@@ -119,9 +141,6 @@ export default function ProjectsPage() {
               <ProjectCard project={project} />
             </motion.div>
           ))}
-          <motion.div variants={fadeUp}>
-            <LaunchProjectCard onClick={() => setLaunchDialogOpen(true)} />
-          </motion.div>
         </motion.div>
       ) : (
         <motion.div
@@ -140,56 +159,13 @@ export default function ProjectsPage() {
         </motion.div>
       )}
 
-      {pagination && (
+      {pagination && pagination.totalPages > 1 && (
         <ProjectPagination
           page={pagination.page}
           totalPages={pagination.totalPages}
           onPageChange={setPage}
         />
       )}
-
-      {/* Hidden dialog triggered by LaunchProjectCard */}
-      <NewProjectDialog
-        trigger={<span className="hidden" />}
-        open={launchDialogOpen}
-        onOpenChange={setLaunchDialogOpen}
-      />
     </PageWrapper>
-  );
-}
-
-function ProjectsGridSkeleton() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Card key={i} className="h-full flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-7 w-7 rounded" />
-          </CardHeader>
-          <CardContent className="flex-1 space-y-3">
-            <div>
-              <Skeleton className="h-5 w-3/4 mb-1" />
-              <Skeleton className="h-3 w-12" />
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Skeleton className="h-3 w-14" />
-                <Skeleton className="h-3 w-8" />
-              </div>
-              <Skeleton className="h-1.5 w-full rounded-full" />
-            </div>
-          </CardContent>
-          <CardFooter className="justify-between pt-3 border-t border-border/50">
-            <div className="flex -space-x-2">
-              {Array.from({ length: 3 }).map((_, j) => (
-                <Skeleton key={j} className="h-7 w-7 rounded-full" />
-              ))}
-            </div>
-            <Skeleton className="h-3 w-20" />
-          </CardFooter>
-        </Card>
-      ))}
-    </div>
   );
 }

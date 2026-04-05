@@ -1,13 +1,11 @@
 "use client";
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 
-export function usePushSubscription() {
-  const { status } = useSession();
-
+/** Pass the signed-in user id from a server-verified session (e.g. dashboard layout); avoids next-auth SessionProvider context. */
+export function usePushSubscription(userId: string | undefined) {
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (!userId) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     navigator.serviceWorker
@@ -36,7 +34,7 @@ export function usePushSubscription() {
       .catch(() => {
         /* Service worker registration failed silently */
       });
-  }, [status]);
+  }, [userId]);
 }
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {

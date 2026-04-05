@@ -1,28 +1,17 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React from "react";
 import Link from "next/link";
-import { Calendar, MoreVertical, Settings, LayoutDashboard, Trash2 } from "lucide-react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AvatarStack } from "@/components/ui/avatar-stack";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   getColorSafe,
   projectStatusColors,
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { format } from "date-fns";
-import { useDeleteProject } from "@/lib/hooks/trpc-hooks";
-import { toast } from "sonner";
 
 interface ProjectCardProps {
   project: {
@@ -49,108 +38,75 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
   const statusColor = getColorSafe(projectStatusColors, status);
   const dateStr = project.startDate
-    ? format(new Date(project.startDate), "MMM d, yyyy")
+    ? format(new Date(project.startDate), "MMM d")
     : null;
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-  const deleteProject = useDeleteProject({
-    onSuccess: () => {
-      toast.success("Project deleted successfully");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to delete project");
-    },
-  });
-
-  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDeleteDialogOpen(true);
-  }, []);
-
-  const handleDeleteConfirm = useCallback(() => {
-    deleteProject.mutate({ projectId: project.id });
-  }, [project.id, deleteProject]);
-
   return (
-    <>
-    <Link href={`/projects/${project.id}`} aria-label={`${project.name} — ${displayLabel}`}>
-      <Card
-        className="hover:shadow-md transition-all cursor-pointer h-full flex flex-col group border-border"
+    <Link
+      href={`/projects/${project.id}`}
+      aria-label={`${project.name} — ${displayLabel}`}
+      className="block"
+    >
+      <div
+        className="rounded-lg border bg-card p-4 hover:shadow-md hover:border-border/80 transition-all cursor-pointer h-full flex flex-col group"
         role="listitem"
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <Badge variant="secondary" className={`text-[10px] font-semibold uppercase tracking-wider ${statusColor}`}>
+        {/* Top row: key badge + status */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            {project.key}
+          </span>
+          <Badge
+            variant="secondary"
+            className={`text-[10px] font-medium ${statusColor}`}
+          >
             {displayLabel}
           </Badge>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                aria-label={`Actions for ${project.name}`}
-                onClick={(e) => e.preventDefault()}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/projects/${project.id}`} onClick={(e) => e.stopPropagation()}>
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  View Board
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/projects/${project.id}/settings`} onClick={(e) => e.stopPropagation()}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={handleDeleteClick}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Project
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardHeader>
+        </div>
 
-        <CardContent className="flex-1 space-y-3">
-          <div>
-            <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-              {project.name}
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{project.key}</p>
+        {/* Project name */}
+        <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1">
+          {project.name}
+        </h3>
+
+        {/* Description */}
+        {project.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+            {project.description}
+          </p>
+        )}
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Progress */}
+        {project.progress.total > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+              <span>Progress</span>
+              <span className="tabular-nums">
+                {project.progress.done}/{project.progress.total}
+              </span>
+            </div>
+            <Progress value={project.progress.percentage} className="h-1" />
           </div>
-        </CardContent>
+        )}
 
-        <CardFooter className="justify-between pt-3 border-t border-border/50">
-          <AvatarStack users={project.members} limit={4} className="[&>div]:h-7 [&>div]:w-7" />
+        {/* Footer: avatars + date */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/40">
+          <AvatarStack
+            users={project.members}
+            limit={4}
+            className="[&>div]:h-6 [&>div]:w-6"
+          />
           {dateStr && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5" />
-              <span>{dateStr}</span>
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              {dateStr}
             </div>
           )}
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </Link>
-
-    <ConfirmDialog
-      open={deleteDialogOpen}
-      onOpenChange={setDeleteDialogOpen}
-      title="Delete Project"
-      description={`Are you sure you want to delete "${project.name}"? This will permanently remove the project and all its tickets, sprints, and members. This action cannot be undone.`}
-      confirmLabel={deleteProject.isPending ? "Deleting..." : "Delete Project"}
-      destructive
-      onConfirm={handleDeleteConfirm}
-    />
-    </>
   );
 });
