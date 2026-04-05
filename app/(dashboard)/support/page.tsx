@@ -10,10 +10,10 @@ import {
   Shield,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MetricCard } from "@/components/crm/metric-card";
-import { MiniAreaChart } from "@/components/crm/mini-area-chart";
-import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
-import { ActivityFeed } from "@/components/crm/activity-feed";
+import { MetricCard } from "@/components/charts/metric-card";
+import { MiniAreaChart } from "@/components/charts/mini-area-chart";
+import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
+import { ActivityFeed } from "@/components/charts/activity-feed";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn } from "@/lib/utils";
 import { useSupportDashboard } from "@/lib/hooks/trpc-hooks";

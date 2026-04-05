@@ -5,9 +5,9 @@ import type { DropResult } from "@hello-pangea/dnd";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
-import { LeadTableView } from "@/components/crm/lead-table-view";
-import { LeadExportDialog } from "@/components/crm/lead-export-dialog";
+import { CsvUploadDialog } from "./_components/csv-upload-dialog";
+import { LeadTableView } from "./_components/lead-table-view";
+import { LeadExportDialog } from "./_components/lead-export-dialog";
 import { fadeUp } from "@/lib/motion-variants";
 import {
   useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,

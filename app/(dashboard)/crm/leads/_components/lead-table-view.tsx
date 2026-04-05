@@ -1,2 +1,2 @@
-// Barrel re-export — implementation lives in ./lead-table/
+// Barrel re-export — implementation in ./lead-table/
 export { LeadTableView } from "./lead-table/lead-table-view";

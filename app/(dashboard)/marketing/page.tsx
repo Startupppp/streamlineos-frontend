@@ -13,10 +13,10 @@ import {
   Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MetricCard } from "@/components/crm/metric-card";
-import { MiniAreaChart } from "@/components/crm/mini-area-chart";
-import { FunnelChart } from "@/components/crm/funnel-chart";
-import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
+import { MetricCard } from "@/components/charts/metric-card";
+import { MiniAreaChart } from "@/components/charts/mini-area-chart";
+import { FunnelChart } from "@/components/charts/funnel-chart";
+import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useMarketingDashboard } from "@/lib/hooks/trpc-hooks";
 import { formatCurrency, formatNumber } from "@/lib/format-utils";

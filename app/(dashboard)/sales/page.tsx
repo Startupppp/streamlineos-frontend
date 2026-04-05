@@ -20,10 +20,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { MetricCard } from "@/components/crm/metric-card";
-import { MiniAreaChart } from "@/components/crm/mini-area-chart";
-import { FunnelChart } from "@/components/crm/funnel-chart";
-import { ActivityFeed } from "@/components/crm/activity-feed";
+import { MetricCard } from "@/components/charts/metric-card";
+import { MiniAreaChart } from "@/components/charts/mini-area-chart";
+import { FunnelChart } from "@/components/charts/funnel-chart";
+import { ActivityFeed } from "@/components/charts/activity-feed";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { useSalesDashboard, useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";

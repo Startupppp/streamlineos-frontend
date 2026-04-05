@@ -13,10 +13,10 @@ import {
   SmilePlus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MetricCard } from "@/components/crm/metric-card";
-import { MiniDonutChart } from "@/components/crm/mini-donut-chart";
-import { MiniAreaChart } from "@/components/crm/mini-area-chart";
-import { ActivityFeed } from "@/components/crm/activity-feed";
+import { MetricCard } from "@/components/charts/metric-card";
+import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
+import { MiniAreaChart } from "@/components/charts/mini-area-chart";
+import { ActivityFeed } from "@/components/charts/activity-feed";
 import { useCustomerExecutiveDashboard, useCrmPeopleSlugs } from "@/lib/hooks/trpc-hooks";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
