@@ -5,11 +5,11 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Plus, DollarSign, TrendingUp, Clock, Trophy, Download,
-  User, Calendar, MoreHorizontal, Pencil, Trash2,
+  User, Calendar, MoreHorizontal, Trash2,
   LayoutGrid, TableIcon,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +35,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDeals, useUpdateDealStage, useDeleteDeal, useCreateDeal } from "@/lib/api/hooks/crm";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
+import type { Deal } from "@/types/crm";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", dot: "bg-blue-500", bg: "bg-blue-500/10" },
@@ -95,6 +96,44 @@ export default function DealsPage() {
   const handleViewChange = useCallback((v: "table" | "kanban") => {
     updateParams({ view: v === "table" ? null : v });
   }, [updateParams]);
+
+  const handleViewTable = useCallback(() => handleViewChange("table"), [handleViewChange]);
+  const handleViewKanban = useCallback(() => handleViewChange("kanban"), [handleViewChange]);
+
+  const handleExport = useCallback(async () => {
+    try {
+      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+      const rows = (allDeals || []).map(d => ({
+        name: d.name,
+        value: d.value || "0",
+        stage: d.stage,
+        probability: `${d.probability ?? 0}%`,
+        contactPerson: d.contactPerson || "",
+        contactEmail: d.contactEmail || "",
+        assignedTo: d.assignedTo?.name || "Unassigned",
+        expectedClose: d.expectedCloseDate || "",
+        createdAt: d.createdAt ? new Date(d.createdAt).toLocaleDateString() : "",
+      }));
+      await downloadXlsx("deals-export.xlsx", [{
+        name: "Deals",
+        columns: [
+          { header: "Deal Name", key: "name", width: 25 },
+          { header: "Value (INR)", key: "value", width: 15 },
+          { header: "Stage", key: "stage", width: 14 },
+          { header: "Probability", key: "probability", width: 12 },
+          { header: "Contact Person", key: "contactPerson", width: 20 },
+          { header: "Contact Email", key: "contactEmail", width: 25 },
+          { header: "Assigned To", key: "assignedTo", width: 18 },
+          { header: "Expected Close", key: "expectedClose", width: 14 },
+          { header: "Created", key: "createdAt", width: 12 },
+        ],
+        rows,
+      }]);
+      toast.success("Deals exported");
+    } catch { toast.error("Export failed"); }
+  }, [allDeals]);
+
+  const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
 
   const updateStageMutation = useUpdateDealStage();
   const deleteMutation = useDeleteDeal();
@@ -162,47 +201,16 @@ export default function DealsPage() {
         <div className="flex items-center border border-border rounded-md">
           <Button variant={view === "table" ? "default" : "ghost"} size="sm"
             className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/90 text-white")}
-            onClick={() => handleViewChange("table")}>
+            onClick={handleViewTable}>
             <TableIcon className="h-4 w-4" />
           </Button>
           <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
             className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/90 text-white")}
-            onClick={() => handleViewChange("kanban")}>
+            onClick={handleViewKanban}>
             <LayoutGrid className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={async () => {
-          try {
-            const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-            const rows = (allDeals || []).map(d => ({
-              name: d.name,
-              value: d.value || "0",
-              stage: d.stage,
-              probability: `${d.probability ?? 0}%`,
-              contactPerson: d.contactPerson || "",
-              contactEmail: d.contactEmail || "",
-              assignedTo: d.assignedTo?.name || "Unassigned",
-              expectedClose: d.expectedCloseDate || "",
-              createdAt: d.createdAt ? new Date(d.createdAt).toLocaleDateString() : "",
-            }));
-            await downloadXlsx("deals-export.xlsx", [{
-              name: "Deals",
-              columns: [
-                { header: "Deal Name", key: "name", width: 25 },
-                { header: "Value (INR)", key: "value", width: 15 },
-                { header: "Stage", key: "stage", width: 14 },
-                { header: "Probability", key: "probability", width: 12 },
-                { header: "Contact Person", key: "contactPerson", width: 20 },
-                { header: "Contact Email", key: "contactEmail", width: 25 },
-                { header: "Assigned To", key: "assignedTo", width: 18 },
-                { header: "Expected Close", key: "expectedClose", width: 14 },
-                { header: "Created", key: "createdAt", width: 12 },
-              ],
-              rows,
-            }]);
-            toast.success("Deals exported");
-          } catch { toast.error("Export failed"); }
-        }}>
+        <Button variant="outline" size="sm" onClick={handleExport}>
           <Download className="h-4 w-4 mr-2" />
           Export
         </Button>
@@ -219,7 +227,7 @@ export default function DealsPage() {
             </DialogHeader>
             <CreateDealForm
               employees={employees}
-              onSuccess={() => setCreateOpen(false)}
+              onSuccess={handleCreateSuccess}
             />
           </DialogContent>
         </Dialog>
@@ -251,7 +259,6 @@ export default function DealsPage() {
         ))}
       </motion.div>
 
-      {/* Table View */}
       {view === "table" && (
         <motion.div variants={fadeUp}>
           <DealTableView
@@ -265,7 +272,6 @@ export default function DealsPage() {
         </motion.div>
       )}
 
-      {/* Kanban View */}
       {view === "kanban" && (
       <motion.div variants={fadeUp}>
         <ScrollArea className="w-full" type="auto">
@@ -273,7 +279,6 @@ export default function DealsPage() {
           {STAGES.map(stage => {
             const stageDeals = dealsByStage[stage.key] || [];
             const stageValue = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
-
             return (
               <div key={stage.key} className="w-56 sm:w-64 md:w-72 flex-shrink-0">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -284,91 +289,17 @@ export default function DealsPage() {
                   </div>
                   <span className="text-xs text-muted-foreground">{formatINR(stageValue)}</span>
                 </div>
-
                 <div className="space-y-2 min-h-[200px] p-2 rounded-lg bg-muted/30 border border-border/50">
                   {stageDeals.map(deal => (
-                    <Card key={deal.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between">
-                          <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options">
-                                <MoreHorizontal className="h-3.5 w-3.5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {STAGES.filter(s => s.key !== deal.stage).map(s => (
-                                <DropdownMenuItem
-                                  key={s.key}
-                                  onClick={() => handleStageChange(deal.id, s.key)}
-                                >
-                                  <div className={cn("w-2 h-2 rounded-full mr-2", s.dot)} />
-                                  Move to {s.label}
-                                </DropdownMenuItem>
-                              ))}
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => setDealToDelete(deal.id)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        <p className="text-lg font-bold text-gold mt-1">
-                          {formatINR(Number(deal.value || 0))}
-                        </p>
-
-                        {deal.contactPerson && (
-                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {deal.contactPerson}
-                          </p>
-                        )}
-
-                        <div className="flex items-center justify-between mt-2">
-                          {deal.assignedTo ? (
-                            <div className="flex items-center gap-1.5">
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={resolveImageUrl(deal.assignedTo.image)} />
-                                <AvatarFallback className="text-[8px]">
-                                  {deal.assignedTo.name?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-muted-foreground">{deal.assignedTo.name}</span>
-                            </div>
-                          ) : <span />}
-
-                          {deal.expectedCloseDate && (
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                              <Calendar className="h-2.5 w-2.5" />
-                              {new Date(deal.expectedCloseDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
-                            </span>
-                          )}
-                        </div>
-
-                        {deal.probability !== null && deal.probability > 0 && (
-                          <div className="mt-2">
-                            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                              <div
-                                className="h-full rounded-full bg-gold"
-                                style={{ width: `${deal.probability}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground">{deal.probability}% probability</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <DealKanbanCard
+                      key={deal.id}
+                      deal={deal}
+                      onStageChange={handleStageChange}
+                      onDelete={setDealToDelete}
+                    />
                   ))}
-
                   {stageDeals.length === 0 && (
-                    <div className="text-center py-8 text-xs text-muted-foreground">
-                      No deals
-                    </div>
+                    <div className="text-center py-8 text-xs text-muted-foreground">No deals</div>
                   )}
                 </div>
               </div>
@@ -392,6 +323,107 @@ export default function DealsPage() {
   );
 }
 
+interface StageMenuItemProps {
+  stageKey: string;
+  dot: string;
+  label: string;
+  dealId: number;
+  onStageChange: (id: number, stage: string) => void;
+}
+
+function StageMenuItem({ stageKey, dot, label, dealId, onStageChange }: StageMenuItemProps) {
+  const handleClick = useCallback(() => onStageChange(dealId, stageKey), [dealId, stageKey, onStageChange]);
+  return (
+    <DropdownMenuItem onClick={handleClick}>
+      <div className={cn("w-2 h-2 rounded-full mr-2", dot)} />
+      Move to {label}
+    </DropdownMenuItem>
+  );
+}
+
+interface DealKanbanCardProps {
+  deal: Deal;
+  onStageChange: (id: number, stage: string) => void;
+  onDelete: (id: number) => void;
+}
+
+function DealKanbanCard({ deal, onStageChange, onDelete }: DealKanbanCardProps) {
+  const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
+  return (
+    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between">
+          <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options">
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {STAGES.filter(s => s.key !== deal.stage).map(s => (
+                <StageMenuItem
+                  key={s.key}
+                  stageKey={s.key}
+                  dot={s.dot}
+                  label={s.label}
+                  dealId={deal.id}
+                  onStageChange={onStageChange}
+                />
+              ))}
+              <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+                <Trash2 className="h-3.5 w-3.5 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <p className="text-lg font-bold text-gold mt-1">
+          {formatINR(Number(deal.value || 0))}
+        </p>
+
+        {deal.contactPerson && (
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <User className="h-3 w-3" />
+            {deal.contactPerson}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between mt-2">
+          {deal.assignedTo ? (
+            <div className="flex items-center gap-1.5">
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={resolveImageUrl(deal.assignedTo.image)} />
+                <AvatarFallback className="text-[8px]">
+                  {deal.assignedTo.name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-muted-foreground">{deal.assignedTo.name}</span>
+            </div>
+          ) : <span />}
+
+          {deal.expectedCloseDate && (
+            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <Calendar className="h-2.5 w-2.5" />
+              {new Date(deal.expectedCloseDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+            </span>
+          )}
+        </div>
+
+        {deal.probability !== null && deal.probability > 0 && (
+          <div className="mt-2">
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full rounded-full bg-gold" style={{ width: `${deal.probability}%` }} />
+            </div>
+            <span className="text-[10px] text-muted-foreground">{deal.probability}% probability</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CreateDealForm({
   employees,
   onSuccess,
@@ -402,7 +434,7 @@ function CreateDealForm({
   const createMutation = useCreateDeal();
   const [expectedCloseDate, setExpectedCloseDate] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     createMutation.mutate(
@@ -423,7 +455,7 @@ function CreateDealForm({
         onError: (err) => toast.error(err.message),
       }
     );
-  };
+  }, [createMutation, expectedCloseDate, onSuccess]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

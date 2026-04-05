@@ -88,7 +88,7 @@ export default function MembersSettingsPage() {
   const cancelInvitation = useCancelInvitation();
   const updateRole = useUpdateMemberRole();
 
-  const handleInvite = (e: React.FormEvent) => {
+  const handleInvite = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     inviteUser.mutate(
       { email: inviteEmail, role: inviteRole },
@@ -103,16 +103,16 @@ export default function MembersSettingsPage() {
         },
       }
     );
-  };
+  }, [inviteUser, inviteEmail, inviteRole]);
 
-  const handleCancelInvitation = (invitationId: string) => {
+  const handleCancelInvitation = useCallback((invitationId: string) => {
     cancelInvitation.mutate(
       { invitationId },
       { onError: (err) => toast.error(err.message) }
     );
-  };
+  }, [cancelInvitation]);
 
-  const handleUpdateRole = (userId: string, newRole: string, currentRole: string) => {
+  const handleUpdateRole = useCallback((userId: string, newRole: string, currentRole: string) => {
     if (newRole === currentRole) return;
     updateRole.mutate(
       { userId, role: newRole },
@@ -121,7 +121,15 @@ export default function MembersSettingsPage() {
         onError: (err) => toast.error(err.message),
       }
     );
-  };
+  }, [updateRole]);
+
+  const handleToggleInviteForm = useCallback(() => setShowInviteForm((v) => !v), []);
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setInviteEmail(e.target.value), []);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    updateParams({ q: e.target.value || null, page: null });
+  }, [updateParams]);
+  const handlePrevPage = useCallback(() => updateParams({ page: page <= 2 ? null : String(page - 1) }), [page, updateParams]);
+  const handleNextPage = useCallback(() => updateParams({ page: String(page + 1) }), [page, updateParams]);
 
   return (
     <PageWrapper
@@ -129,7 +137,7 @@ export default function MembersSettingsPage() {
       subtitle="Manage organization members, roles, and invitations"
       badge={membersData ? String(membersData.pagination.total) : undefined}
       actions={
-        <Button onClick={() => setShowInviteForm(!showInviteForm)} className="bg-gold hover:bg-gold/80 text-white">
+        <Button onClick={handleToggleInviteForm} className="bg-gold hover:bg-gold/80 text-white">
           <UserPlus className="h-4 w-4 mr-2" />
           {showInviteForm ? "Cancel" : "Invite Member"}
         </Button>
@@ -147,7 +155,7 @@ export default function MembersSettingsPage() {
               <div className="flex-1 space-y-1.5">
                 <Label htmlFor="email" className="text-xs">Email</Label>
                 <Input id="email" type="email" placeholder="user@example.com"
-                  value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required />
+                  value={inviteEmail} onChange={handleEmailChange} required />
               </div>
               <div className="w-[180px] space-y-1.5">
                 <Label className="text-xs">Role</Label>
@@ -168,7 +176,6 @@ export default function MembersSettingsPage() {
         </Card>
       )}
 
-      {/* Current Members */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -184,7 +191,7 @@ export default function MembersSettingsPage() {
               <Input
                 placeholder="Search members..."
                 value={memberSearch}
-                onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
+                onChange={handleSearchChange}
                 className="pl-8 h-8 text-xs"
               />
             </div>
@@ -220,43 +227,11 @@ export default function MembersSettingsPage() {
                   </TableRow>
                 ) : (
                   membersData.data.map((member) => (
-                    <TableRow key={member.userId} className="hover:bg-muted/30">
-                      <TableCell className="px-4 py-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={resolveImageUrl(member.image)} />
-                            <AvatarFallback className="text-xs bg-gold/10 text-gold">
-                              {member.name?.charAt(0) || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm font-medium">{member.name || "Unknown"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">{member.email}</TableCell>
-                      <TableCell className="px-4 py-2.5">
-                        <Badge variant="outline" className={`text-[10px] border ${ROLE_COLORS[member.role] || ""}`}>
-                          {member.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
-                        {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}
-                      </TableCell>
-                      <TableCell className="px-4 py-2.5 text-right">
-                        <Select
-                          value={member.role}
-                          onValueChange={(newRole) => handleUpdateRole(member.userId, newRole, member.role)}
-                        >
-                          <SelectTrigger className="h-7 w-[150px] text-xs ml-auto">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ALL_ROLES.map(r => (
-                              <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
+                    <MemberTableRow
+                      key={member.userId}
+                      member={member}
+                      onUpdateRole={handleUpdateRole}
+                    />
                   ))
                 )}
               </TableBody>
@@ -270,16 +245,15 @@ export default function MembersSettingsPage() {
               </span>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" className="h-7 text-xs"
-                  disabled={page <= 1} onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>Prev</Button>
+                  disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
                 <Button variant="outline" size="sm" className="h-7 text-xs"
-                  disabled={page >= membersData.pagination.totalPages} onClick={() => updateParams({ page: String(page + 1) })}>Next</Button>
+                  disabled={page >= membersData.pagination.totalPages} onClick={handleNextPage}>Next</Button>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Pending Invitations */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Pending Invitations</CardTitle>
@@ -288,16 +262,7 @@ export default function MembersSettingsPage() {
           {invitations && invitations.length > 0 ? (
             <div className="space-y-2">
               {invitations.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{inv.email}</p>
-                    <Badge variant="outline" className={`text-[10px] mt-1 ${ROLE_COLORS[inv.role] || ""}`}>{inv.role}</Badge>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-xs"
-                    onClick={() => handleCancelInvitation(inv.id)}>
-                    Cancel
-                  </Button>
-                </div>
+                <InvitationRow key={inv.id} inv={inv} onCancel={handleCancelInvitation} />
               ))}
             </div>
           ) : (
@@ -310,5 +275,64 @@ export default function MembersSettingsPage() {
       </Card>
       </div>
     </PageWrapper>
+  );
+}
+
+interface MemberTableRowProps {
+  member: { userId: string; name: string | null; email: string; image?: string | null; role: string; joinedAt?: string | Date | null };
+  onUpdateRole: (userId: string, newRole: string, currentRole: string) => void;
+}
+
+function MemberTableRow({ member, onUpdateRole }: MemberTableRowProps) {
+  const handleRoleChange = useCallback((newRole: string) => onUpdateRole(member.userId, newRole, member.role), [member.userId, member.role, onUpdateRole]);
+
+  return (
+    <TableRow className="hover:bg-muted/30">
+      <TableCell className="px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={resolveImageUrl(member.image)} />
+            <AvatarFallback className="text-xs bg-gold/10 text-gold">{member.name?.charAt(0) || "?"}</AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-medium">{member.name || "Unknown"}</span>
+        </div>
+      </TableCell>
+      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">{member.email}</TableCell>
+      <TableCell className="px-4 py-2.5">
+        <Badge variant="outline" className={`text-[10px] border ${ROLE_COLORS[member.role] || ""}`}>{member.role}</Badge>
+      </TableCell>
+      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+        {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}
+      </TableCell>
+      <TableCell className="px-4 py-2.5 text-right">
+        <Select value={member.role} onValueChange={handleRoleChange}>
+          <SelectTrigger className="h-7 w-[150px] text-xs ml-auto"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {ALL_ROLES.map(r => (
+              <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+interface InvitationRowProps {
+  inv: { id: string; email: string; role: string };
+  onCancel: (id: string) => void;
+}
+
+function InvitationRow({ inv, onCancel }: InvitationRowProps) {
+  const handleCancel = useCallback(() => onCancel(inv.id), [inv.id, onCancel]);
+
+  return (
+    <div className="flex items-center justify-between p-3 border rounded-lg">
+      <div>
+        <p className="text-sm font-medium">{inv.email}</p>
+        <Badge variant="outline" className={`text-[10px] mt-1 ${ROLE_COLORS[inv.role] || ""}`}>{inv.role}</Badge>
+      </div>
+      <Button variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
+    </div>
   );
 }

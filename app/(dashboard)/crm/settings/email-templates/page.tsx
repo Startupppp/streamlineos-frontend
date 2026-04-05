@@ -124,6 +124,20 @@ export default function EmailTemplatesPage() {
     f.setValue("body", current + variable);
   }, [createForm, editForm]);
 
+  const handleDeleteTemplate = useCallback((id: number) => {
+    deleteTemplate.mutate(id, {
+      onSuccess: () => toast.success("Template deleted"),
+      onError: (err) => toast.error(err.message),
+    });
+  }, [deleteTemplate]);
+
+  const handlePreviewToggle = useCallback((id: number) => {
+    setPreviewId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const handleCloseEdit = useCallback(() => setEditingId(null), []);
+  const handleClosePreview = useCallback(() => setPreviewId(null), []);
+
   const previewTemplate = useMemo(() => {
     if (previewId === null || !templates) return null;
     return templates.find(t => t.id === previewId) ?? null;
@@ -183,16 +197,7 @@ export default function EmailTemplatesPage() {
                   <p className="text-xs text-muted-foreground mb-2">Insert variable:</p>
                   <div className="flex flex-wrap gap-1.5">
                     {VARIABLES.map(v => (
-                      <Button
-                        key={v}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-[10px] h-6 px-2"
-                        onClick={() => insertVariable(v, "create")}
-                      >
-                        {v}
-                      </Button>
+                      <VariableButton key={v} variable={v} formType="create" onInsert={insertVariable} />
                     ))}
                   </div>
                 </div>
@@ -214,36 +219,14 @@ export default function EmailTemplatesPage() {
         <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {templates && templates.length > 0 ? (
             templates.map(template => (
-              <Card key={template.id} className="shadow-sm hover:shadow-md transition-all">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-sm truncate">{template.name}</CardTitle>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setPreviewId(previewId === template.id ? null : template.id)} aria-label="View">
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(template)} aria-label="Edit">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteTemplate.mutate(template.id, { onSuccess: () => toast.success("Template deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Subject</p>
-                      <p className="text-xs truncate">{template.subject}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Body</p>
-                      <p className="text-xs line-clamp-3 whitespace-pre-wrap">{template.body}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <TemplateCard
+                key={template.id}
+                template={template}
+                isPreviewActive={previewId === template.id}
+                onPreviewToggle={handlePreviewToggle}
+                onEdit={startEdit}
+                onDelete={handleDeleteTemplate}
+              />
             ))
           ) : (
             <Card className="col-span-full shadow-sm">
@@ -290,14 +273,12 @@ export default function EmailTemplatesPage() {
                       <p className="text-xs text-muted-foreground mb-2">Insert variable:</p>
                       <div className="flex flex-wrap gap-1.5">
                         {VARIABLES.map(v => (
-                          <Button key={v} type="button" variant="outline" size="sm" className="text-[10px] h-6 px-2" onClick={() => insertVariable(v, "edit")}>
-                            {v}
-                          </Button>
+                          <VariableButton key={v} variable={v} formType="edit" onInsert={insertVariable} />
                         ))}
                       </div>
                     </div>
                     <div className="flex justify-end gap-3">
-                      <Button type="button" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                      <Button type="button" variant="outline" onClick={handleCloseEdit}>Cancel</Button>
                       <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updateTemplate.isPending}>
                         {updateTemplate.isPending ? "Saving..." : "Save Changes"}
                       </Button>
@@ -318,7 +299,7 @@ export default function EmailTemplatesPage() {
                     <Eye className="h-4 w-4 text-emerald-400" />
                     Preview: {previewTemplate.name}
                   </CardTitle>
-                  <Button variant="ghost" size="sm" onClick={() => setPreviewId(null)}>Close</Button>
+                  <Button variant="ghost" size="sm" onClick={handleClosePreview}>Close</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -339,5 +320,74 @@ export default function EmailTemplatesPage() {
         )}
       </motion.div>
     </PageWrapper>
+  );
+}
+
+interface TemplateData {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+}
+
+interface TemplateCardProps {
+  template: TemplateData;
+  isPreviewActive: boolean;
+  onPreviewToggle: (id: number) => void;
+  onEdit: (template: TemplateData) => void;
+  onDelete: (id: number) => void;
+}
+
+function TemplateCard({ template, onPreviewToggle, onEdit, onDelete }: TemplateCardProps) {
+  const handlePreviewToggle = useCallback(() => onPreviewToggle(template.id), [template.id, onPreviewToggle]);
+  const handleEdit = useCallback(() => onEdit(template), [template, onEdit]);
+  const handleDelete = useCallback(() => onDelete(template.id), [template.id, onDelete]);
+
+  return (
+    <Card className="shadow-sm hover:shadow-md transition-all">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-sm truncate">{template.name}</CardTitle>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePreviewToggle} aria-label="View">
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDelete} aria-label="Delete">
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          <div>
+            <p className="text-xs text-muted-foreground">Subject</p>
+            <p className="text-xs truncate">{template.subject}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Body</p>
+            <p className="text-xs line-clamp-3 whitespace-pre-wrap">{template.body}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface VariableButtonProps {
+  variable: string;
+  formType: "create" | "edit";
+  onInsert: (variable: string, formType: "create" | "edit") => void;
+}
+
+function VariableButton({ variable, formType, onInsert }: VariableButtonProps) {
+  const handleClick = useCallback(() => onInsert(variable, formType), [variable, formType, onInsert]);
+  return (
+    <Button type="button" variant="outline" size="sm" className="text-[10px] h-6 px-2" onClick={handleClick}>
+      {variable}
+    </Button>
   );
 }

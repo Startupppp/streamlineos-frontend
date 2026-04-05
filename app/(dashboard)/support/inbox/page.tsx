@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useSupportTickets,
@@ -48,7 +48,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyInboxIllustration, EmptyTicketIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import type { SupportTicketStatus, SupportTicketPriority } from "@/types/support";
+import type { SupportTicketStatus, SupportTicketPriority, SupportTicket } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
   LOW: "bg-slate-100 text-slate-700",
@@ -98,14 +98,14 @@ function InboxContent() {
   const statusFilter = searchParams.get("status") || "all";
   const priorityFilter = searchParams.get("priority") || "all";
 
-  const updateFilter = (key: string, value: string) => {
+  const updateFilter = useCallback((key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value === "all") params.delete(key);
     else params.set(key, value);
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     });
-  };
+  }, [searchParams, router, pathname]);
 
   const { data: ticketsData, isLoading } = useSupportTickets({
     ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
@@ -115,10 +115,10 @@ function InboxContent() {
 
   const tickets = ticketsData?.items ?? [];
 
-  const subtitleParts: string[] = [];
-  if (!statsLoading) {
-    subtitleParts.push(`${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets`);
-  }
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleStatusFilter = useCallback((v: string) => updateFilter("status", v), [updateFilter]);
+  const handlePriorityFilter = useCallback((v: string) => updateFilter("priority", v), [updateFilter]);
+  const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
 
   return (
     <>
@@ -130,13 +130,13 @@ function InboxContent() {
             : `${(stats?.open ?? 0) + (stats?.in_progress ?? 0)} active tickets${(stats?.sla_breached ?? 0) > 0 ? ` · ${stats?.sla_breached} SLA breached` : ""}`
         }
         actions={
-          <Button onClick={() => setCreateOpen(true)} size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
+          <Button onClick={handleOpenCreate} size="sm" className="gap-1.5 bg-gold hover:bg-gold/80 text-white">
             <Plus className="h-3.5 w-3.5" /> New Ticket
           </Button>
         }
         filters={
           <>
-            <Select value={statusFilter} onValueChange={(v) => updateFilter("status", v)}>
+            <Select value={statusFilter} onValueChange={handleStatusFilter}>
               <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -147,7 +147,7 @@ function InboxContent() {
                 <SelectItem value="CLOSED">Closed</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={priorityFilter} onValueChange={(v) => updateFilter("priority", v)}>
+            <Select value={priorityFilter} onValueChange={handlePriorityFilter}>
               <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Priority</SelectItem>
@@ -176,44 +176,14 @@ function InboxContent() {
               </div>
             ) : (
               <div className="divide-y divide-border/30">
-                {tickets.map((ticket) => {
-                  const StatusIcon = STATUS_ICONS[ticket.status] ?? Clock;
-                  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED", "CLOSED"].includes(ticket.status);
-                  return (
-                    <button
-                      key={ticket.id}
-                      onClick={() => setSelectedTicketId(ticket.id)}
-                      className={cn(
-                        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
-                        selectedTicketId === ticket.id && "bg-muted/50 border-l-2 border-gold"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold truncate">{toTitleCase(ticket.title)}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0", PRIORITY_COLORS[ticket.priority])}>
-                            {ticket.priority}
-                          </Badge>
-                          {isBreached && (
-                            <Badge variant="destructive" className="text-[9px] px-1 py-0">SLA</Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <StatusIcon className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-[10px] text-muted-foreground">{ticket.status.replace("_", " ")}</span>
-                        <span className="text-[10px] text-muted-foreground ml-auto">
-                          {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : ""}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
+                {tickets.map((ticket) => (
+                  <TicketListItem
+                    key={ticket.id}
+                    ticket={ticket}
+                    isSelected={selectedTicketId === ticket.id}
+                    onSelect={setSelectedTicketId}
+                  />
+                ))}
               </div>
             )}
           </ScrollArea>
@@ -221,7 +191,7 @@ function InboxContent() {
 
         <div className={cn("flex-1 flex flex-col", !selectedTicketId && "hidden md:flex")}>
           {selectedTicketId ? (
-            <TicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />
+            <TicketDetail ticketId={selectedTicketId} onBack={handleBackFromTicket} />
           ) : (
             <div className="flex-1 flex items-center justify-center text-center px-6">
               <div>
@@ -239,6 +209,52 @@ function InboxContent() {
   );
 }
 
+interface TicketListItemProps {
+  ticket: SupportTicket;
+  isSelected: boolean;
+  onSelect: (id: number) => void;
+}
+
+function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
+  const handleClick = useCallback(() => onSelect(ticket.id), [ticket.id, onSelect]);
+  const StatusIcon = STATUS_ICONS[ticket.status] ?? Clock;
+  const isBreached = ticket.slaDeadline && new Date(ticket.slaDeadline) < new Date() && !["RESOLVED", "CLOSED"].includes(ticket.status);
+
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
+        isSelected && "bg-muted/50 border-l-2 border-gold"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-semibold truncate">{toTitleCase(ticket.title)}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            #{ticket.id} {ticket.client?.name ? `- ${ticket.client.name}` : ""}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0", PRIORITY_COLORS[ticket.priority])}>
+            {ticket.priority}
+          </Badge>
+          {isBreached && (
+            <Badge variant="destructive" className="text-[9px] px-1 py-0">SLA</Badge>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 mt-1.5">
+        <StatusIcon className="h-3 w-3 text-muted-foreground" />
+        <span className="text-[10px] text-muted-foreground">{ticket.status.replace("_", " ")}</span>
+        <span className="text-[10px] text-muted-foreground ml-auto">
+          {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : ""}
+        </span>
+      </div>
+    </button>
+  );
+}
+
 function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => void }) {
   const { data: ticket, isLoading } = useSupportTicket(ticketId);
   const [replyText, setReplyText] = useState("");
@@ -247,7 +263,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
   const addMessage = useAddSupportMessage();
   const updateTicket = useUpdateSupportTicket();
 
-  const handleReply = () => {
+  const handleReply = useCallback(() => {
     if (!replyText.trim()) return;
     addMessage.mutate(
       { ticketId, body: replyText, isInternal },
@@ -258,15 +274,25 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
         },
       }
     );
-  };
+  }, [replyText, ticketId, isInternal, addMessage]);
 
-  const handleStatusChange = (status: SupportTicketStatus) => {
+  const handleStatusChange = useCallback((status: SupportTicketStatus) => {
     if (!ticket) return;
     updateTicket.mutate(
       { id: ticket.id, status },
       { onSuccess: () => toast.success("Status updated") }
     );
-  };
+  }, [ticket, updateTicket]);
+
+  const handleStatusValueChange = useCallback((v: string) => handleStatusChange(v as SupportTicketStatus), [handleStatusChange]);
+  const handleToggleInternal = useCallback(() => setIsInternal((v) => !v), []);
+  const handleReplyChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyText(e.target.value), []);
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleReply();
+    }
+  }, [handleReply]);
 
   if (isLoading || !ticket) {
     return (
@@ -293,7 +319,7 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={cn("text-xs", PRIORITY_COLORS[ticket.priority])}>{ticket.priority}</Badge>
             {isBreached && <Badge variant="destructive" className="text-xs">SLA Breached</Badge>}
-            <Select value={ticket.status} onValueChange={(v) => handleStatusChange(v as SupportTicketStatus)}>
+            <Select value={ticket.status} onValueChange={handleStatusValueChange}>
               <SelectTrigger className="h-7 text-xs w-[120px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="OPEN">Open</SelectItem>
@@ -340,22 +366,17 @@ function TicketDetail({ ticketId, onBack }: { ticketId: number; onBack: () => vo
       <div className="px-4 py-3 border-t border-border/40 shrink-0">
         <div className="flex items-center gap-2 mb-2">
           <Switch checked={isInternal} onCheckedChange={setIsInternal} className="h-4 w-7" />
-          <Label className="text-[11px] text-muted-foreground cursor-pointer" onClick={() => setIsInternal(!isInternal)}>
+          <Label className="text-[11px] text-muted-foreground cursor-pointer" onClick={handleToggleInternal}>
             {isInternal ? "Internal note (not visible to client)" : "Public reply"}
           </Label>
         </div>
         <div className="flex gap-2">
           <Textarea
             value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
+            onChange={handleReplyChange}
             placeholder={isInternal ? "Add internal note..." : "Type your reply..."}
             className="min-h-[60px] max-h-[120px] text-sm resize-none"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleReply();
-              }
-            }}
+            onKeyDown={handleKeyDown}
           />
           <Button
             onClick={handleReply}
@@ -378,7 +399,12 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
   const [priority, setPriority] = useState<SupportTicketPriority>("MEDIUM");
   const create = useCreateSupportTicket();
 
-  const handleCreate = () => {
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
+  const handleDescChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value), []);
+  const handlePriorityChange = useCallback((v: string) => setPriority(v as SupportTicketPriority), []);
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleCreate = useCallback(() => {
     create.mutate(
       { title, description, priority },
       {
@@ -391,7 +417,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         },
       }
     );
-  };
+  }, [create, title, description, priority, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -400,15 +426,15 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         <div className="space-y-3">
           <div>
             <Label className="text-xs">Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brief description of the issue" className="mt-1" />
+            <Input value={title} onChange={handleTitleChange} placeholder="Brief description of the issue" className="mt-1" />
           </div>
           <div>
             <Label className="text-xs">Description</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detailed description..." className="mt-1 min-h-[80px]" />
+            <Textarea value={description} onChange={handleDescChange} placeholder="Detailed description..." className="mt-1 min-h-[80px]" />
           </div>
           <div>
             <Label className="text-xs">Priority</Label>
-            <Select value={priority} onValueChange={(v) => setPriority(v as SupportTicketPriority)}>
+            <Select value={priority} onValueChange={handlePriorityChange}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="LOW">Low (48h SLA)</SelectItem>
@@ -419,7 +445,7 @@ function CreateTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChang
             </Select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
             <Button onClick={handleCreate} disabled={!title.trim() || create.isPending} className="bg-gold hover:bg-gold/80 text-white">
               {create.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               Create Ticket

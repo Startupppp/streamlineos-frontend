@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useInvoices,
@@ -61,6 +61,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import type { InvoiceStatus } from "@/types/invoice";
+import type { Invoice } from "@/types/invoice";
 
 const formatCurrency = (amount: number | string) => formatCurrencyFull(amount);
 
@@ -92,14 +93,14 @@ function InvoicesContent() {
 
   const statusFilter = searchParams.get("status") || "all";
 
-  const setStatusFilter = (value: string) => {
+  const setStatusFilter = useCallback((value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value === "all") params.delete("status");
     else params.set("status", value);
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     });
-  };
+  }, [searchParams, router, pathname]);
 
   const { data: invoicesData, isLoading } = useInvoices(
     statusFilter !== "all" ? { status: statusFilter as InvoiceStatus } : undefined
@@ -110,19 +111,21 @@ function InvoicesContent() {
 
   const invoices = invoicesData?.items ?? [];
 
-  const handleUpdateStatus = (id: number, status: InvoiceStatus) => {
+  const handleUpdateStatus = useCallback((id: number, status: InvoiceStatus) => {
     updateInvoice.mutate(
       { id, status },
       { onSuccess: () => toast.success("Invoice status updated"), onError: (err) => toast.error(err.message) }
     );
-  };
+  }, [updateInvoice]);
 
-  const handleDeleteInvoice = (id: number) => {
+  const handleDeleteInvoice = useCallback((id: number) => {
     deleteInvoice.mutate(id, {
       onSuccess: () => toast.success("Invoice deleted"),
       onError: (err) => toast.error(err.message),
     });
-  };
+  }, [deleteInvoice]);
+
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const filtersBar = (
     <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -145,7 +148,7 @@ function InvoicesContent() {
       title="Invoices"
       subtitle="Manage and track all invoices"
       actions={
-        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-gold hover:bg-gold/90 text-white">
+        <Button onClick={handleOpenCreate} className="gap-2 bg-gold hover:bg-gold/90 text-white">
           <Plus className="h-4 w-4" /> New Invoice
         </Button>
       }
@@ -196,91 +199,47 @@ function InvoicesContent() {
       </div>
 
       <div className="border border-border rounded-lg overflow-auto h-[calc(100dvh-20rem)] min-h-[320px]">
-          <div className="min-w-[700px]">
-        <table className="w-full caption-bottom text-sm">
-          <TableHeader className="sticky top-0 z-10 bg-card">
-            <TableRow>
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+        <div className="min-w-[700px]">
+          <table className="w-full caption-bottom text-sm">
+            <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                </TableCell>
+                <TableHead>Invoice #</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
-            ) : invoices.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-12">
-                  <EmptyDocumentsIllustration className="mx-auto mb-3 w-32 h-32" />
-                  <p className="text-sm font-medium text-foreground">No invoices yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Create your first invoice to get started</p>
-                </TableCell>
-              </TableRow>
-            ) : (
-              invoices.map((inv) => {
-                const config = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG.DRAFT;
-                return (
-                  <TableRow key={inv.id}>
-                    <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
-                    <TableCell>{inv.client?.name ?? "—"}</TableCell>
-                    <TableCell className="font-semibold">{formatCurrency(inv.total)}</TableCell>
-                    <TableCell>
-                      <Badge variant={config.variant} className="gap-1 text-xs">
-                        <config.icon className="h-3 w-3" />
-                        {config.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{inv.dueDate ? format(new Date(inv.dueDate), "MMM d, yyyy") : "—"}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{inv.createdAt ? format(new Date(inv.createdAt), "MMM d") : ""}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
-                          </DropdownMenuItem>
-                          {inv.status === "DRAFT" && (
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "SENT")}>
-                              <Send className="h-3.5 w-3.5 mr-2" /> Mark as Sent
-                            </DropdownMenuItem>
-                          )}
-                          {(inv.status === "SENT" || inv.status === "OVERDUE") && (
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "PAID")}>
-                              <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
-                            </DropdownMenuItem>
-                          )}
-                          {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(inv.id, "CANCELLED")} className="text-destructive">
-                              <Ban className="h-3.5 w-3.5 mr-2" /> Cancel
-                            </DropdownMenuItem>
-                          )}
-                          {inv.status !== "PAID" && (
-                            <DropdownMenuItem onClick={() => handleDeleteInvoice(inv.id)} className="text-destructive">
-                              <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </table>
-          </div>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                  </TableCell>
+                </TableRow>
+              ) : invoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12">
+                    <EmptyDocumentsIllustration className="mx-auto mb-3 w-32 h-32" />
+                    <p className="text-sm font-medium text-foreground">No invoices yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">Create your first invoice to get started</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                invoices.map((inv) => (
+                  <InvoiceTableRow
+                    key={inv.id}
+                    inv={inv}
+                    onUpdateStatus={handleUpdateStatus}
+                    onDelete={handleDeleteInvoice}
+                  />
+                ))
+              )}
+            </TableBody>
+          </table>
+        </div>
       </div>
 
       <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />
@@ -289,15 +248,113 @@ function InvoicesContent() {
   );
 }
 
+interface InvoiceTableRowProps {
+  inv: Invoice;
+  onUpdateStatus: (id: number, status: InvoiceStatus) => void;
+  onDelete: (id: number) => void;
+}
+
+function InvoiceTableRow({ inv, onUpdateStatus, onDelete }: InvoiceTableRowProps) {
+  const config = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG.DRAFT;
+  const handleMarkSent = useCallback(() => onUpdateStatus(inv.id, "SENT"), [inv.id, onUpdateStatus]);
+  const handleMarkPaid = useCallback(() => onUpdateStatus(inv.id, "PAID"), [inv.id, onUpdateStatus]);
+  const handleMarkCancelled = useCallback(() => onUpdateStatus(inv.id, "CANCELLED"), [inv.id, onUpdateStatus]);
+  const handleDelete = useCallback(() => onDelete(inv.id), [inv.id, onDelete]);
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{inv.invoiceNumber}</TableCell>
+      <TableCell>{inv.client?.name ?? "—"}</TableCell>
+      <TableCell className="font-semibold">{formatCurrency(inv.total)}</TableCell>
+      <TableCell>
+        <Badge variant={config.variant} className="gap-1 text-xs">
+          <config.icon className="h-3 w-3" />
+          {config.label}
+        </Badge>
+      </TableCell>
+      <TableCell>{inv.dueDate ? format(new Date(inv.dueDate), "MMM d, yyyy") : "—"}</TableCell>
+      <TableCell className="text-muted-foreground text-xs">{inv.createdAt ? format(new Date(inv.createdAt), "MMM d") : ""}</TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href={`/billing/invoices/${inv.id}`}>View Detail</Link>
+            </DropdownMenuItem>
+            {inv.status === "DRAFT" && (
+              <DropdownMenuItem onClick={handleMarkSent}>
+                <Send className="h-3.5 w-3.5 mr-2" /> Mark as Sent
+              </DropdownMenuItem>
+            )}
+            {(inv.status === "SENT" || inv.status === "OVERDUE") && (
+              <DropdownMenuItem onClick={handleMarkPaid}>
+                <Check className="h-3.5 w-3.5 mr-2" /> Mark as Paid
+              </DropdownMenuItem>
+            )}
+            {inv.status !== "PAID" && inv.status !== "CANCELLED" && (
+              <DropdownMenuItem onClick={handleMarkCancelled} className="text-destructive">
+                <Ban className="h-3.5 w-3.5 mr-2" /> Cancel
+              </DropdownMenuItem>
+            )}
+            {inv.status !== "PAID" && (
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+interface LineItem {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+interface LineItemRowProps {
+  item: LineItem;
+  idx: number;
+  onUpdate: (idx: number, field: string, value: string | number) => void;
+  onRemove: (idx: number) => void;
+  disabled: boolean;
+}
+
+function LineItemRow({ item, idx, onUpdate, onRemove, disabled }: LineItemRowProps) {
+  const handleDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "description", e.target.value), [idx, onUpdate]);
+  const handleQtyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "quantity", Number(e.target.value)), [idx, onUpdate]);
+  const handleRateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onUpdate(idx, "rate", Number(e.target.value)), [idx, onUpdate]);
+  const handleRemove = useCallback(() => onRemove(idx), [idx, onRemove]);
+
+  return (
+    <div className="grid grid-cols-12 gap-2 items-center">
+      <Input className="col-span-5 h-9 text-sm" placeholder="Description" value={item.description} onChange={handleDescChange} />
+      <Input className="col-span-2 h-9 text-sm text-right" type="number" placeholder="Qty" value={item.quantity || ""} onChange={handleQtyChange} />
+      <Input className="col-span-2 h-9 text-sm text-right" type="number" placeholder="Rate" value={item.rate || ""} onChange={handleRateChange} />
+      <div className="col-span-2 text-sm font-medium text-right pr-1">{formatCurrency(item.amount)}</div>
+      <Button variant="ghost" size="icon" className="col-span-1 h-8 w-8" onClick={handleRemove} disabled={disabled} aria-label="Remove line item">
+        <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+      </Button>
+    </div>
+  );
+}
+
 function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const createInvoice = useCreateInvoice();
-  const [lineItems, setLineItems] = useState([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([{ description: "", quantity: 1, rate: 0, amount: 0 }]);
   const [taxRate, setTaxRate] = useState(18);
   const [discount, setDiscount] = useState(0);
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
 
-  const updateLineItem = (idx: number, field: string, value: string | number) => {
+  const updateLineItem = useCallback((idx: number, field: string, value: string | number) => {
     setLineItems((prev) =>
       prev.map((item, i) => {
         if (i !== idx) return item;
@@ -308,23 +365,30 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         return updated;
       })
     );
-  };
+  }, []);
+
+  const removeLineItem = useCallback((idx: number) => {
+    setLineItems((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  const handleAddLineItem = useCallback(() => {
+    setLineItems((prev) => [...prev, { description: "", quantity: 1, rate: 0, amount: 0 }]);
+  }, []);
+
+  const handleTaxRateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTaxRate(Number(e.target.value)), []);
+  const handleDiscountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDiscount(Number(e.target.value)), []);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value), []);
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
   const taxAmount = subtotal * (taxRate / 100);
   const total = subtotal + taxAmount - discount;
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     const validItems = lineItems.filter((i) => i.description.trim() && i.amount > 0);
     if (validItems.length === 0) { toast.error("Add at least one line item"); return; }
     createInvoice.mutate(
-      {
-        lineItems: validItems,
-        taxRate,
-        discount,
-        dueDate: dueDate || undefined,
-        notes: notes || undefined,
-      },
+      { lineItems: validItems, taxRate, discount, dueDate: dueDate || undefined, notes: notes || undefined },
       {
         onSuccess: () => {
           onOpenChange(false);
@@ -334,7 +398,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         onError: (err) => toast.error(err.message),
       }
     );
-  };
+  }, [lineItems, taxRate, discount, dueDate, notes, createInvoice, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -348,47 +412,9 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
             <Label className="text-xs font-medium text-muted-foreground mb-2 block">Line Items</Label>
             <div className="space-y-2">
               {lineItems.map((item, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                  <Input
-                    className="col-span-5 h-9 text-sm"
-                    placeholder="Description"
-                    value={item.description}
-                    onChange={(e) => updateLineItem(idx, "description", e.target.value)}
-                  />
-                  <Input
-                    className="col-span-2 h-9 text-sm text-right"
-                    type="number"
-                    placeholder="Qty"
-                    value={item.quantity || ""}
-                    onChange={(e) => updateLineItem(idx, "quantity", Number(e.target.value))}
-                  />
-                  <Input
-                    className="col-span-2 h-9 text-sm text-right"
-                    type="number"
-                    placeholder="Rate"
-                    value={item.rate || ""}
-                    onChange={(e) => updateLineItem(idx, "rate", Number(e.target.value))}
-                  />
-                  <div className="col-span-2 text-sm font-medium text-right pr-1">
-                    {formatCurrency(item.amount)}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="col-span-1 h-8 w-8"
-                    onClick={() => setLineItems((prev) => prev.filter((_, i) => i !== idx))}
-                    disabled={lineItems.length === 1}
-                    aria-label="Remove line item"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                </div>
+                <LineItemRow key={idx} item={item} idx={idx} onUpdate={updateLineItem} onRemove={removeLineItem} disabled={lineItems.length === 1} />
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLineItems((prev) => [...prev, { description: "", quantity: 1, rate: 0, amount: 0 }])}
-              >
+              <Button variant="outline" size="sm" onClick={handleAddLineItem}>
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
               </Button>
             </div>
@@ -397,11 +423,11 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Tax Rate (%)</Label>
-              <Input type="number" value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="h-9 mt-1" />
+              <Input type="number" value={taxRate} onChange={handleTaxRateChange} className="h-9 mt-1" />
             </div>
             <div>
               <Label className="text-xs">Discount</Label>
-              <Input type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="h-9 mt-1" />
+              <Input type="number" value={discount} onChange={handleDiscountChange} className="h-9 mt-1" />
             </div>
           </div>
 
@@ -412,7 +438,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
 
           <div>
             <Label className="text-xs">Notes</Label>
-            <Input placeholder="Payment terms, bank details, etc." value={notes} onChange={(e) => setNotes(e.target.value)} className="h-9 mt-1" />
+            <Input placeholder="Payment terms, bank details, etc." value={notes} onChange={handleNotesChange} className="h-9 mt-1" />
           </div>
 
           <div className="border-t pt-3 space-y-1 text-sm">
@@ -423,7 +449,7 @@ function CreateInvoiceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={createInvoice.isPending} className="bg-gold hover:bg-gold/90 text-white">
               {createInvoice.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
               Create Invoice

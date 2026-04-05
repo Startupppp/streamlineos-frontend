@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   useRoles,
   useCreateRole,
@@ -105,12 +105,16 @@ function RolesContent() {
 
   const permissionGroups = useMemo(() => groupPermissions(PERMISSIONS), []);
 
+  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleUpdateRole = useCallback((updated: Role) => setSelectedRole(updated), []);
+  const handleDeleteDialogClose = useCallback(() => setDeleteTarget(null), []);
+
   return (
     <PageWrapper
       title="Roles & Permissions"
       subtitle="Configure access controls for each role"
       actions={
-        <Button onClick={() => setCreateOpen(true)} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+        <Button onClick={handleOpenCreate} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="h-4 w-4" /> New Role
         </Button>
       }
@@ -130,35 +134,13 @@ function RolesContent() {
             ) : (
               <div className="divide-y divide-border/30">
                 {(roles ?? []).map((role) => (
-                  <button
+                  <RoleListItem
                     key={role.id}
-                    onClick={() => setSelectedRole(role)}
-                    className={cn(
-                      "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between",
-                      selectedRole?.id === role.id && "bg-muted/50 border-l-2 border-primary"
-                    )}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{role.name}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {role.permissions?.length ?? 0} permissions
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {role.isSystem && (
-                        <Badge variant="outline" className="text-[9px] px-1.5">System</Badge>
-                      )}
-                      {!role.isSystem && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(role); }}
-                          className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
-                          aria-label="Delete"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </button>
+                    role={role}
+                    isSelected={selectedRole?.id === role.id}
+                    onSelect={setSelectedRole}
+                    onDelete={setDeleteTarget}
+                  />
                 ))}
               </div>
             )}
@@ -169,7 +151,7 @@ function RolesContent() {
           <PermissionMatrix
             role={selectedRole}
             permissionGroups={permissionGroups}
-            onUpdate={(updatedRole) => setSelectedRole(updatedRole)}
+            onUpdate={handleUpdateRole}
           />
         ) : (
           <Card className="flex items-center justify-center min-h-[400px]">
@@ -184,7 +166,7 @@ function RolesContent() {
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
 
-      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+      <Dialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Delete Role</DialogTitle>
@@ -193,7 +175,7 @@ function RolesContent() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="outline" onClick={handleDeleteDialogClose}>Cancel</Button>
             <Button
               variant="destructive"
               onClick={handleDeleteRole}
@@ -290,61 +272,20 @@ function PermissionMatrix({
       <Separator />
       <ScrollArea className="max-h-[600px]">
         <div className="divide-y divide-border/30">
-          {permissionGroups.map(([groupName, perms]) => {
-            const isExpanded = expandedGroups.has(groupName);
-            const enabledCount = perms.filter((p) => rolePermissions.has(p.name)).length;
-            const allEnabled = enabledCount === perms.length;
-
-            return (
-              <div key={groupName}>
-                <button
-                  onClick={() => toggleGroup(groupName)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-                    <span className="text-sm font-medium">{groupName}</span>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {enabledCount}/{perms.length}
-                    </Badge>
-                  </div>
-                  {!isCEO && (
-                    <Switch
-                      checked={allEnabled}
-                      onCheckedChange={(v) => toggleAllInGroup(perms, v)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-4 w-7"
-                    />
-                  )}
-                </button>
-
-                {isExpanded && (
-                  <div className="bg-muted/10 border-t border-border/20">
-                    {perms.map((perm) => {
-                      const enabled = isCEO || rolePermissions.has(perm.name);
-                      return (
-                        <div
-                          key={perm.name}
-                          className="flex items-center justify-between px-4 pl-10 py-2 hover:bg-muted/20 transition-colors"
-                        >
-                          <div>
-                            <p className="text-[13px]">{perm.description}</p>
-                            <p className="text-[10px] text-muted-foreground font-mono">{perm.name}</p>
-                          </div>
-                          <Switch
-                            checked={enabled}
-                            onCheckedChange={() => togglePermission(perm.name)}
-                            disabled={isCEO}
-                            className="h-4 w-7"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {permissionGroups.map(([groupName, perms]) => (
+            <PermissionGroupRow
+              key={groupName}
+              groupName={groupName}
+              perms={perms}
+              isExpanded={expandedGroups.has(groupName)}
+              enabledCount={perms.filter((p) => rolePermissions.has(p.name)).length}
+              isCEO={isCEO}
+              rolePermissions={rolePermissions}
+              onToggleGroup={toggleGroup}
+              onToggleAll={toggleAllInGroup}
+              onTogglePermission={togglePermission}
+            />
+          ))}
         </div>
       </ScrollArea>
     </Card>
@@ -356,12 +297,16 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
   const [slug, setSlug] = useState("");
   const create = useCreateRole();
 
-  const handleNameChange = (value: string) => {
+  const handleNameChange = useCallback((value: string) => {
     setName(value);
     setSlug(value.toUpperCase().replace(/\s+/g, "_").replace(/[^A-Z_]/g, ""));
-  };
+  }, []);
 
-  const handleCreate = () => {
+  const handleNameInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => handleNameChange(e.target.value), [handleNameChange]);
+  const handleSlugInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSlug(e.target.value.toUpperCase().replace(/[^A-Z_]/g, "")), []);
+  const handleCancelDialog = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleCreate = useCallback(() => {
     create.mutate(
       { name, slug, permissions: [] },
       {
@@ -374,7 +319,7 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
         onError: (err) => toast.error(err.message),
       }
     );
-  };
+  }, [create, name, slug, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -387,7 +332,7 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
             <Label className="text-xs">Role Name</Label>
             <Input
               value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
+              onChange={handleNameInputChange}
               placeholder="e.g. Finance Manager"
               className="mt-1"
             />
@@ -396,13 +341,13 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
             <Label className="text-xs">Slug (auto-generated)</Label>
             <Input
               value={slug}
-              onChange={(e) => setSlug(e.target.value.toUpperCase().replace(/[^A-Z_]/g, ""))}
+              onChange={handleSlugInputChange}
               placeholder="FINANCE_MANAGER"
               className="mt-1 font-mono text-xs"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button variant="outline" onClick={handleCancelDialog}>Cancel</Button>
             <Button
               onClick={handleCreate}
               disabled={!name.trim() || !slug.trim() || create.isPending}
@@ -415,5 +360,108 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface RoleListItemProps {
+  role: Role;
+  isSelected: boolean;
+  onSelect: (role: Role) => void;
+  onDelete: (role: Role) => void;
+}
+
+function RoleListItem({ role, isSelected, onSelect, onDelete }: RoleListItemProps) {
+  const handleSelect = useCallback(() => onSelect(role), [role, onSelect]);
+  const handleDelete = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onDelete(role); }, [role, onDelete]);
+
+  return (
+    <button
+      onClick={handleSelect}
+      className={cn(
+        "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between",
+        isSelected && "bg-muted/50 border-l-2 border-primary"
+      )}
+    >
+      <div>
+        <p className="text-sm font-medium">{role.name}</p>
+        <p className="text-[11px] text-muted-foreground">{role.permissions?.length ?? 0} permissions</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {role.isSystem && <Badge variant="outline" className="text-[9px] px-1.5">System</Badge>}
+        {!role.isSystem && (
+          <button onClick={handleDelete} className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors" aria-label="Delete">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    </button>
+  );
+}
+
+interface PermissionGroupRowProps {
+  groupName: string;
+  perms: Permission[];
+  isExpanded: boolean;
+  enabledCount: number;
+  isCEO: boolean;
+  rolePermissions: Set<string>;
+  onToggleGroup: (name: string) => void;
+  onToggleAll: (perms: Permission[], enable: boolean) => void;
+  onTogglePermission: (name: string) => void;
+}
+
+function PermissionGroupRow({ groupName, perms, isExpanded, enabledCount, isCEO, rolePermissions, onToggleGroup, onToggleAll, onTogglePermission }: PermissionGroupRowProps) {
+  const allEnabled = enabledCount === perms.length;
+  const handleToggleGroup = useCallback(() => onToggleGroup(groupName), [groupName, onToggleGroup]);
+  const handleToggleAll = useCallback((v: boolean) => onToggleAll(perms, v), [perms, onToggleAll]);
+  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
+  return (
+    <div>
+      <button onClick={handleToggleGroup} className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors">
+        <div className="flex items-center gap-2">
+          {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+          <span className="text-sm font-medium">{groupName}</span>
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{enabledCount}/{perms.length}</Badge>
+        </div>
+        {!isCEO && (
+          <Switch checked={allEnabled} onCheckedChange={handleToggleAll} onClick={handleStopPropagation} className="h-4 w-7" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className="bg-muted/10 border-t border-border/20">
+          {perms.map((perm) => (
+            <PermissionRow
+              key={perm.name}
+              perm={perm}
+              enabled={isCEO || rolePermissions.has(perm.name)}
+              isCEO={isCEO}
+              onToggle={onTogglePermission}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface PermissionRowProps {
+  perm: Permission;
+  enabled: boolean;
+  isCEO: boolean;
+  onToggle: (name: string) => void;
+}
+
+function PermissionRow({ perm, enabled, isCEO, onToggle }: PermissionRowProps) {
+  const handleToggle = useCallback(() => onToggle(perm.name), [perm.name, onToggle]);
+
+  return (
+    <div className="flex items-center justify-between px-4 pl-10 py-2 hover:bg-muted/20 transition-colors">
+      <div>
+        <p className="text-[13px]">{perm.description}</p>
+        <p className="text-[10px] text-muted-foreground font-mono">{perm.name}</p>
+      </div>
+      <Switch checked={enabled} onCheckedChange={handleToggle} disabled={isCEO} className="h-4 w-7" />
+    </div>
   );
 }

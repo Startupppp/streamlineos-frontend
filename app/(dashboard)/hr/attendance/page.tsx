@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AttendanceContent } from "./attendance-content";
@@ -14,7 +15,18 @@ type Tab = "attendance" | "wfh";
 
 export default function AttendancePage() {
   const { data: session, status } = useSession();
-  const [activeTab, setActiveTab] = useState<Tab>("attendance");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = (searchParams.get("tab") as Tab) || "attendance";
+  const setActiveTab = useCallback(
+    (tab: Tab) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "attendance") params.delete("tab");
+      else params.set("tab", tab);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
 
   if (status === "loading") {
     return (

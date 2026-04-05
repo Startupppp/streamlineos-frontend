@@ -74,6 +74,8 @@ function QRCodeImage({ imageUrl, size = 96 }: { imageUrl: string; size?: number 
       </div>
     );
   }
+  const handleError = useCallback(() => setError(true), []);
+
   return (
     <Image
       src={src}
@@ -82,7 +84,7 @@ function QRCodeImage({ imageUrl, size = 96 }: { imageUrl: string; size?: number 
       height={size}
       className="object-contain w-full h-full"
       unoptimized={src.startsWith("http")}
-      onError={() => setError(true)}
+      onError={handleError}
     />
   );
 }
@@ -99,6 +101,11 @@ function QRCard({
   const domain = (() => {
     try { return new URL(qr.targetUrl).hostname; } catch { return qr.targetUrl; }
   })();
+
+  const handleDeleteClick = useCallback(() => onDelete(qr.id), [qr.id, onDelete]);
+  const handleDownloadPng = useCallback(() => onDownload(qr.slug, "png"), [qr.slug, onDownload]);
+  const handleDownloadJpeg = useCallback(() => onDownload(qr.slug, "jpeg"), [qr.slug, onDownload]);
+  const handleDownloadSvg = useCallback(() => onDownload(qr.slug, "svg"), [qr.slug, onDownload]);
 
   return (
     <Card className="flex flex-col overflow-hidden">
@@ -156,13 +163,13 @@ function QRCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => onDownload(qr.slug, "png")}>
+            <DropdownMenuItem onClick={handleDownloadPng}>
               <FileImage className="mr-2 h-3.5 w-3.5" /> PNG
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDownload(qr.slug, "jpeg")}>
+            <DropdownMenuItem onClick={handleDownloadJpeg}>
               <FileImage className="mr-2 h-3.5 w-3.5" /> JPEG
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDownload(qr.slug, "svg")}>
+            <DropdownMenuItem onClick={handleDownloadSvg}>
               <FileType className="mr-2 h-3.5 w-3.5" /> SVG
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -171,7 +178,7 @@ function QRCard({
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-          onClick={() => onDelete(qr.id)}
+          onClick={handleDeleteClick}
           aria-label="Delete QR code"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -251,6 +258,9 @@ export default function CEOQRCodePage() {
     if (deleteId !== null) deleteMutation.mutate(deleteId);
   }, [deleteId, deleteMutation]);
 
+  const handleRefetch = useCallback(() => { refetch(); }, [refetch]);
+  const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
+
   const handleGenerate = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!targetUrl) return;
@@ -306,7 +316,7 @@ export default function CEOQRCodePage() {
       subtitle="Generate trackable QR codes for your marketing campaigns."
       badge={typedCodes.length > 0 ? String(typedCodes.length) : undefined}
       actions={
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => refetch()} disabled={isLoadingData} aria-label="Refresh">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRefetch} disabled={isLoadingData} aria-label="Refresh">
           <RefreshCw className={cn("h-3.5 w-3.5", isLoadingData && "animate-spin")} />
         </Button>
       }
@@ -378,7 +388,7 @@ export default function CEOQRCodePage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+        onOpenChange={handleDeleteDialogChange}
         title="Delete QR Code"
         description="This action cannot be undone. The QR code and its tracking data will be permanently deleted."
         confirmLabel="Delete"

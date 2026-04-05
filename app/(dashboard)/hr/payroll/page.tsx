@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   useHrAllPayrolls,
   useHrEmployees,
@@ -45,7 +46,17 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => {
 
 export default function PayrollPage() {
   const qc = useQueryClient();
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedMonth = searchParams.get("month") || format(new Date(), "yyyy-MM");
+  const setSelectedMonth = useCallback(
+    (month: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("month", month);
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router]
+  );
   const [generateSheetOpen, setGenerateSheetOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
@@ -149,7 +160,7 @@ export default function PayrollPage() {
     setOvertimeAmount("");
   };
 
-  const handleGenerateAll = () => {
+  const handleGenerateAll = useCallback(() => {
     generatePayrollMutation.mutate(
       { month: selectedMonth },
       {
@@ -160,17 +171,17 @@ export default function PayrollPage() {
         onError: (error) => toast.error(error.message),
       }
     );
-  };
+  }, [generatePayrollMutation, selectedMonth, qc]);
 
-  const handleShowPreview = () => {
+  const handleShowPreview = useCallback(() => {
     if (!selectedEmployee) {
       toast.error("Please select an employee");
       return;
     }
     setShowPreview(true);
-  };
+  }, [selectedEmployee]);
 
-  const handleGenerateForEmployee = () => {
+  const handleGenerateForEmployee = useCallback(() => {
     if (!selectedEmployee) return;
     generateEmployeePayslipMutation.mutate(
       {
@@ -197,9 +208,9 @@ export default function PayrollPage() {
         onError: (error) => toast.error(error.message),
       }
     );
-  };
+  }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, overtimeType, overtimeDays, overtimeHours, overtimeAmount, qc]);
 
-  const handleApprovePayroll = (payrollId: number) => {
+  const handleApprovePayroll = useCallback((payrollId: number) => {
     approvePayrollMutation.mutate(
       { payrollId },
       {
@@ -210,9 +221,9 @@ export default function PayrollPage() {
         onError: (error) => toast.error(error.message),
       }
     );
-  };
+  }, [approvePayrollMutation, selectedMonth, qc]);
 
-  const handleMarkPaid = (payrollId: number) => {
+  const handleMarkPaid = useCallback((payrollId: number) => {
     markPaidMutation.mutate(
       { payrollId },
       {
@@ -223,7 +234,7 @@ export default function PayrollPage() {
         onError: (error) => toast.error(error.message),
       }
     );
-  };
+  }, [markPaidMutation, selectedMonth, qc]);
 
   const totalGross =
     allPayrolls?.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;

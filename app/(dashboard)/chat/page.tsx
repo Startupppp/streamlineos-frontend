@@ -65,6 +65,16 @@ export default function ChatPage() {
     setShowMobileList(false);
   }, []);
 
+  const handleSearchFocused = useCallback(() => setShowSearchFocus(false), []);
+  const handleCollapseSidebar = useCallback(() => setSidebarCollapsed(true), []);
+  const handleBack = useCallback(() => setShowMobileList(true), []);
+  const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);
+  const handleExpandSidebar = useCallback(() => setSidebarCollapsed(false), []);
+  const handleNewDM = useCallback(() => setEmptyDMOpen(true), []);
+  const handleNewChannel = useCallback(() => setEmptyGroupOpen(true), []);
+  const handleSearch = useCallback(() => { setShowMobileList(true); setShowSearchFocus(true); }, []);
+  const handleCloseInfo = useCallback(() => setShowInfoPanel(false), []);
+
   return (
     <ChatAblyProvider>
       <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
@@ -82,8 +92,8 @@ export default function ChatPage() {
           onSelectChannel={handleSelectChannel}
           currentUserId={currentUserId ?? ""}
           autoFocusSearch={showSearchFocus}
-          onSearchFocused={() => setShowSearchFocus(false)}
-          onCollapse={() => setSidebarCollapsed(true)}
+          onSearchFocused={handleSearchFocused}
+          onCollapse={handleCollapseSidebar}
         />
       </div>
 
@@ -98,18 +108,18 @@ export default function ChatPage() {
           <MessagePanel
             channelId={activeChannelId}
             currentUserId={currentUserId}
-            onBack={() => setShowMobileList(true)}
-            onToggleInfo={() => setShowInfoPanel((p) => !p)}
+            onBack={handleBack}
+            onToggleInfo={handleToggleInfo}
             showInfoPanel={showInfoPanel}
             sidebarCollapsed={sidebarCollapsed}
-            onExpandSidebar={() => setSidebarCollapsed(false)}
+            onExpandSidebar={handleExpandSidebar}
           />
         ) : (
           <EmptyChatState
-            onNewDM={() => setEmptyDMOpen(true)}
-            onNewChannel={() => setEmptyGroupOpen(true)}
-            onSearch={() => { setShowMobileList(true); setShowSearchFocus(true); }}
-            onExpandSidebar={sidebarCollapsed ? () => setSidebarCollapsed(false) : undefined}
+            onNewDM={handleNewDM}
+            onNewChannel={handleNewChannel}
+            onSearch={handleSearch}
+            onExpandSidebar={sidebarCollapsed ? handleExpandSidebar : undefined}
           />
         )}
       </div>
@@ -127,7 +137,7 @@ export default function ChatPage() {
             <ChannelInfoPanel
               channelId={activeChannelId}
               currentUserId={currentUserId ?? ""}
-              onClose={() => setShowInfoPanel(false)}
+              onClose={handleCloseInfo}
             />
           </motion.div>
         )}

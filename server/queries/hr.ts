@@ -17,8 +17,12 @@ import {
   goals,
   helpdeskTickets,
   users,
+  holidays,
+  wfhRequests,
+  employeeDevices,
 } from "@/lib/db/schema";
-import { timesheets } from "@/lib/db/schema/projects";
+import { timesheets, projectMembers, projects, tickets } from "@/lib/db/schema/projects";
+import { incentives, incentiveConfig } from "@/lib/db/schema/crm";
 import { eq, and, desc, gte, lte, asc, isNull, sql, ilike, or, count } from "drizzle-orm";
 import { formatDateOnly, getTodayString } from "@/lib/date-utils";
 import { branchIdFilter, type BranchContext } from "@/lib/db/branch-filter";
@@ -30,6 +34,7 @@ import type {
   LeavesResult,
   LeaveBalance,
   Payroll,
+  PayrollWithUser,
   SalaryStructure,
   Expense,
   Asset,
@@ -37,6 +42,15 @@ import type {
   PerformanceReview,
   Goal,
   HelpdeskTicket,
+  EmployeeStats,
+  EmployeePayslip,
+  WfhRequest,
+  Holiday,
+  Device,
+  Incentive,
+  IncentivesResult,
+  IncentiveStats,
+  IncentiveConfig,
   WorkLog,
   OrgChartNode,
   PaginatedResult,
@@ -594,4 +608,462 @@ export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
       departmentId: u.departmentId,
       reportingTo: u.reportingTo,
     }));
+}
+
+// ─── Employee Stats ──────────────────────────────────────────────────────────
+
+export async function getEmployeeStats(orgId: string, userId: string): Promise<EmployeeStats> {
+  const year = new Date().getFullYear();
+  const startOfYear = `${year}-01-01`;
+  const endOfYear = `${year}-12-31`;
+
+  const [leaveData, attendanceData] = await Promise.all([
+    db.query.leaveRequests.findMany({
+      where: and(
+        eq(leaveRequests.userId, userId),
+        eq(leaveRequests.orgId, orgId),
+        gte(leaveRequests.startDate, startOfYear),
+        lte(leaveRequests.startDate, endOfYear)
+      ),
+    }),
+    db.query.attendance.findMany({
+      where: and(
+        eq(attendance.userId, userId),
+        eq(attendance.orgId, orgId),
+        gte(attendance.date, startOfYear),
+        lte(attendance.date, endOfYear)
+      ),
+    }),
+  ]);
+
+  const byType: Record<string, number> = {};
+  let approved = 0;
+  let pending = 0;
+  let rejected = 0;
+
+  for (const lr of leaveData) {
+    if (lr.status === "APPROVED") approved++;
+    else if (lr.status === "PENDING") pending++;
+    else if (lr.status === "REJECTED") rejected++;
+    const typeKey = lr.leaveTypeId?.toString() ?? "unknown";
+    byType[typeKey] = (byType[typeKey] ?? 0) + 1;
+  }
+
+  let totalHours = 0;
+  let daysPresent = 0;
+  for (const log of attendanceData) {
+    if (log.checkIn) {
+      daysPresent++;
+      totalHours += Number(log.workHours || 0);
+    }
+  }
+
+  return {
+    leaves: {
+      total: leaveData.length,
+      approved,
+      pending,
+      rejected,
+      byType,
+    },
+    attendance: daysPresent > 0
+      ? {
+          daysPresent,
+          daysAbsent: 0,
+          daysLate: 0,
+          totalHours: totalHours.toFixed(2),
+          avgHoursPerDay: (totalHours / daysPresent).toFixed(2),
+        }
+      : null,
+  };
+}
+
+// ─── Employee Projects ───────────────────────────────────────────────────────
+
+export async function getEmployeeProjects(orgId: string, userId: string) {
+  const memberships = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      key: projects.key,
+      status: projects.status,
+      role: projectMembers.role,
+    })
+    .from(projectMembers)
+    .innerJoin(projects, eq(projectMembers.projectId, projects.id))
+    .where(and(eq(projectMembers.userId, userId), eq(projects.orgId, orgId)));
+
+  return memberships;
+}
+
+// ─── Employee Tickets ────────────────────────────────────────────────────────
+
+export async function getEmployeeTickets(orgId: string, userId: string) {
+  const data = await db
+    .select({
+      id: tickets.id,
+      title: tickets.title,
+      status: tickets.status,
+      priority: tickets.priority,
+      projectId: tickets.projectId,
+      ticketNumber: tickets.ticketNumber,
+    })
+    .from(tickets)
+    .where(and(eq(tickets.assigneeId, userId), eq(tickets.orgId, orgId)))
+    .orderBy(desc(tickets.id))
+    .limit(50);
+
+  return { data };
+}
+
+// ─── WFH Requests ────────────────────────────────────────────────────────────
+
+export async function getWfhRequests(orgId: string, userId: string): Promise<WfhRequest[]> {
+  return db.query.wfhRequests.findMany({
+    where: and(eq(wfhRequests.orgId, orgId), eq(wfhRequests.userId, userId)),
+    orderBy: [desc(wfhRequests.createdAt)],
+  }) as unknown as Promise<WfhRequest[]>;
+}
+
+export async function getPendingWfhRequests(orgId: string): Promise<WfhRequest[]> {
+  const rows = await db
+    .select({
+      id: wfhRequests.id,
+      orgId: wfhRequests.orgId,
+      userId: wfhRequests.userId,
+      date: wfhRequests.date,
+      reason: wfhRequests.reason,
+      status: wfhRequests.status,
+      approverId: wfhRequests.approverId,
+      rejectionReason: wfhRequests.rejectionReason,
+      createdAt: wfhRequests.createdAt,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userEmail: users.email,
+      userImage: users.image,
+    })
+    .from(wfhRequests)
+    .innerJoin(users, eq(wfhRequests.userId, users.id))
+    .where(and(eq(wfhRequests.orgId, orgId), eq(wfhRequests.status, "PENDING")))
+    .orderBy(desc(wfhRequests.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    orgId: r.orgId,
+    userId: r.userId,
+    date: r.date,
+    reason: r.reason,
+    status: r.status,
+    approverId: r.approverId,
+    rejectionReason: r.rejectionReason,
+    createdAt: r.createdAt,
+    user: { id: r.userId, firstName: r.userFirstName, lastName: r.userLastName, email: r.userEmail, image: r.userImage },
+  })) as WfhRequest[];
+}
+
+// ─── Holidays ────────────────────────────────────────────────────────────────
+
+export async function getHolidays(orgId: string, year: number): Promise<Holiday[]> {
+  const startDate = `${year}-01-01`;
+  const endDate = `${year}-12-31`;
+  return db.query.holidays.findMany({
+    where: and(
+      eq(holidays.orgId, orgId),
+      gte(holidays.date, startDate),
+      lte(holidays.date, endDate)
+    ),
+    orderBy: [asc(holidays.date)],
+  }) as unknown as Promise<Holiday[]>;
+}
+
+export async function getHolidaysForCalendar(
+  orgId: string,
+  year: number,
+  month: number
+): Promise<Holiday[]> {
+  const mm = String(month).padStart(2, "0");
+  const startDate = `${year}-${mm}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${mm}-${String(lastDay).padStart(2, "0")}`;
+
+  return db.query.holidays.findMany({
+    where: and(
+      eq(holidays.orgId, orgId),
+      gte(holidays.date, startDate),
+      lte(holidays.date, endDate)
+    ),
+    orderBy: [asc(holidays.date)],
+  }) as unknown as Promise<Holiday[]>;
+}
+
+// ─── Devices ─────────────────────────────────────────────────────────────────
+
+export async function getDevices(orgId: string): Promise<Device[]> {
+  const rows = await db
+    .select({
+      id: employeeDevices.id,
+      orgId: employeeDevices.orgId,
+      userId: employeeDevices.userId,
+      deviceType: employeeDevices.deviceType,
+      deviceName: employeeDevices.deviceName,
+      serialNumber: employeeDevices.serialNumber,
+      brand: employeeDevices.brand,
+      model: employeeDevices.model,
+      assignedDate: employeeDevices.assignedDate,
+      returnDate: employeeDevices.returnDate,
+      status: employeeDevices.status,
+      notes: employeeDevices.notes,
+      createdAt: employeeDevices.createdAt,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userEmail: users.email,
+    })
+    .from(employeeDevices)
+    .innerJoin(users, eq(employeeDevices.userId, users.id))
+    .where(eq(employeeDevices.orgId, orgId))
+    .orderBy(desc(employeeDevices.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    orgId: r.orgId,
+    userId: r.userId,
+    deviceType: r.deviceType,
+    deviceName: r.deviceName,
+    serialNumber: r.serialNumber,
+    brand: r.brand,
+    model: r.model,
+    assignedDate: r.assignedDate,
+    returnDate: r.returnDate,
+    status: r.status,
+    notes: r.notes,
+    createdAt: r.createdAt,
+    user: { id: r.userId, firstName: r.userFirstName, lastName: r.userLastName, email: r.userEmail },
+  })) as Device[];
+}
+
+// ─── Incentives ──────────────────────────────────────────────────────────────
+
+export async function getIncentives(
+  orgId: string,
+  params?: { status?: string; page?: number; limit?: number }
+): Promise<IncentivesResult> {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 20;
+  const offset = (page - 1) * limit;
+
+  const conditions = [eq(incentives.orgId, orgId)];
+  if (params?.status) {
+    conditions.push(eq(incentives.status, params.status as "PENDING" | "APPROVED" | "REJECTED" | "ADDED_TO_PAYROLL"));
+  }
+
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(incentives)
+    .where(and(...conditions));
+
+  const total = Number(countResult?.count || 0);
+
+  const rows = await db
+    .select({
+      id: incentives.id,
+      orgId: incentives.orgId,
+      salesRepId: incentives.salesRepId,
+      clientAccountId: incentives.clientAccountId,
+      investmentAmount: incentives.investmentAmount,
+      incentiveRate: incentives.incentiveRate,
+      calculatedAmount: incentives.calculatedAmount,
+      approvedAmount: incentives.approvedAmount,
+      status: incentives.status,
+      notes: incentives.notes,
+      createdAt: incentives.createdAt,
+      salesRepName: users.name,
+      salesRepImage: users.image,
+    })
+    .from(incentives)
+    .innerJoin(users, eq(incentives.salesRepId, users.id))
+    .where(and(...conditions))
+    .orderBy(desc(incentives.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return {
+    incentives: rows.map((r) => ({
+      id: r.id,
+      orgId: r.orgId,
+      salesRepId: r.salesRepId,
+      clientAccountId: r.clientAccountId,
+      investmentAmount: r.investmentAmount,
+      incentiveRate: r.incentiveRate,
+      calculatedAmount: r.calculatedAmount,
+      approvedAmount: r.approvedAmount,
+      status: r.status,
+      notes: r.notes,
+      createdAt: r.createdAt,
+      salesRep: { id: r.salesRepId, name: r.salesRepName, image: r.salesRepImage },
+    })) as Incentive[],
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+export async function getIncentiveStats(orgId: string): Promise<IncentiveStats> {
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+
+  const [allRows, monthRows] = await Promise.all([
+    db.query.incentives.findMany({
+      where: eq(incentives.orgId, orgId),
+    }),
+    db.query.incentives.findMany({
+      where: and(
+        eq(incentives.orgId, orgId),
+        gte(incentives.createdAt, new Date(monthStart))
+      ),
+    }),
+  ]);
+
+  let totalRevenue = 0;
+  let approved = 0;
+  let pending = 0;
+  let thisMonth = 0;
+
+  for (const inc of allRows) {
+    const amount = Number(inc.calculatedAmount || 0);
+    totalRevenue += amount;
+    if (inc.status === "APPROVED" || inc.status === "ADDED_TO_PAYROLL") approved++;
+    if (inc.status === "PENDING") pending++;
+  }
+  for (const inc of monthRows) {
+    thisMonth += Number(inc.calculatedAmount || 0);
+  }
+
+  return {
+    thisMonth: thisMonth.toFixed(2),
+    totalRevenue: totalRevenue.toFixed(2),
+    avgPerConversion: approved > 0 ? (totalRevenue / approved).toFixed(2) : "0.00",
+    pending,
+    approved,
+  };
+}
+
+export async function getIncentiveConfigs(orgId: string): Promise<IncentiveConfig[]> {
+  return db.query.incentiveConfig.findMany({
+    where: and(eq(incentiveConfig.orgId, orgId), eq(incentiveConfig.isActive, true)),
+    orderBy: [desc(incentiveConfig.effectiveFrom)],
+  }) as unknown as Promise<IncentiveConfig[]>;
+}
+
+// ─── Payroll Admin ───────────────────────────────────────────────────────────
+
+export async function getAllPayrolls(orgId: string, month: string): Promise<PayrollWithUser[]> {
+  const rows = await db
+    .select({
+      id: payrolls.id,
+      orgId: payrolls.orgId,
+      userId: payrolls.userId,
+      month: payrolls.month,
+      basicSalary: payrolls.basicSalary,
+      hra: payrolls.hra,
+      allowances: payrolls.allowances,
+      deductions: payrolls.deductions,
+      grossSalary: payrolls.grossSalary,
+      netSalary: payrolls.netSalary,
+      status: payrolls.status,
+      generatedBy: payrolls.generatedBy,
+      approvedBy: payrolls.approvedBy,
+      overtimeType: payrolls.overtimeType,
+      overtimeDays: payrolls.overtimeDays,
+      overtimeHours: payrolls.overtimeHours,
+      overtimeAmount: payrolls.overtimeAmount,
+      payslipUrl: payrolls.payslipUrl,
+      createdAt: payrolls.createdAt,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+      userDesignation: users.designation,
+      userMonthlySalary: users.monthlySalary,
+    })
+    .from(payrolls)
+    .innerJoin(users, eq(payrolls.userId, users.id))
+    .where(and(eq(payrolls.orgId, orgId), eq(payrolls.month, month)))
+    .orderBy(desc(payrolls.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    orgId: r.orgId,
+    userId: r.userId,
+    month: r.month,
+    basicSalary: r.basicSalary,
+    hra: r.hra,
+    allowances: r.allowances,
+    deductions: r.deductions,
+    grossSalary: r.grossSalary,
+    netSalary: r.netSalary,
+    status: r.status,
+    generatedBy: r.generatedBy,
+    approvedBy: r.approvedBy,
+    overtimeType: r.overtimeType,
+    overtimeDays: r.overtimeDays,
+    overtimeHours: r.overtimeHours,
+    overtimeAmount: r.overtimeAmount,
+    payslipUrl: r.payslipUrl,
+    createdAt: r.createdAt,
+    user: {
+      firstName: r.userFirstName,
+      lastName: r.userLastName,
+      designation: r.userDesignation,
+      monthlySalary: r.userMonthlySalary,
+    },
+  })) as PayrollWithUser[];
+}
+
+// ─── Employee Payslips ───────────────────────────────────────────────────────
+
+export async function getEmployeePayslips(orgId: string, userId: string): Promise<EmployeePayslip[]> {
+  const rows = await db
+    .select({
+      id: payrolls.id,
+      userId: payrolls.userId,
+      month: payrolls.month,
+      basicSalary: payrolls.basicSalary,
+      hra: payrolls.hra,
+      allowances: payrolls.allowances,
+      deductions: payrolls.deductions,
+      grossSalary: payrolls.grossSalary,
+      netSalary: payrolls.netSalary,
+      status: payrolls.status,
+      overtimeType: payrolls.overtimeType,
+      overtimeDays: payrolls.overtimeDays,
+      overtimeHours: payrolls.overtimeHours,
+      overtimeAmount: payrolls.overtimeAmount,
+    })
+    .from(payrolls)
+    .where(and(eq(payrolls.orgId, orgId), eq(payrolls.userId, userId)))
+    .orderBy(desc(payrolls.month));
+
+  return rows as unknown as EmployeePayslip[];
+}
+
+// ─── Monthly Attendance ──────────────────────────────────────────────────────
+
+export async function getMonthlyAttendance(
+  orgId: string,
+  userId: string,
+  year: number,
+  month: number
+): Promise<AttendanceLog[]> {
+  const mm = String(month).padStart(2, "0");
+  const startDate = `${year}-${mm}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${mm}-${String(lastDay).padStart(2, "0")}`;
+
+  return db.query.attendance.findMany({
+    where: and(
+      eq(attendance.userId, userId),
+      eq(attendance.orgId, orgId),
+      gte(attendance.date, startDate),
+      lte(attendance.date, endDate)
+    ),
+    orderBy: [asc(attendance.date)],
+  }) as unknown as Promise<AttendanceLog[]>;
 }
