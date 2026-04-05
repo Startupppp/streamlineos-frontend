@@ -156,7 +156,7 @@ export default function CustomerExecutiveDashboardPage() {
               <CardTitle className="text-base">Upcoming Renewals</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="w-full" type="auto">
+              <ScrollArea className="w-full max-h-[60vh]" type="auto">
               <div className="min-w-[400px]">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Upcoming client renewals</caption>

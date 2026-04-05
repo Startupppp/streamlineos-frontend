@@ -136,7 +136,7 @@ export default function ClientAccountsPage() {
       {/* Table */}
       <motion.div variants={fadeUp}>
         <Card>
-          <ScrollArea className="w-full" type="auto">
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-max">
             <Table>
               <TableHeader>

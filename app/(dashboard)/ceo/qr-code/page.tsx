@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -100,9 +101,9 @@ function QRCard({
   })();
 
   return (
-    <div className="rounded-xl border bg-card flex flex-col overflow-hidden hover:shadow-soft transition-shadow">
+    <Card className="flex flex-col overflow-hidden">
       {/* QR preview */}
-      <div className="bg-white flex items-center justify-center p-4 h-36 border-b">
+      <div className="bg-white flex items-center justify-center p-4 h-36 border-b rounded-t-xl">
         <div className="relative h-full aspect-square">
           <QRCodeImage imageUrl={qr.imageUrl} size={120} />
         </div>
@@ -176,13 +177,13 @@ function QRCard({
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function QRCardSkeleton() {
   return (
-    <div className="rounded-xl border bg-card overflow-hidden">
+    <Card className="overflow-hidden">
       <Skeleton className="h-36 w-full rounded-none" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-4 w-3/4" />
@@ -192,7 +193,7 @@ function QRCardSkeleton() {
       <div className="px-4 pb-4">
         <Skeleton className="h-8 w-full" />
       </div>
-    </div>
+    </Card>
   );
 }
 

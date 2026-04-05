@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,8 +52,28 @@ function formatINR(val: string | number | null | undefined): string {
 }
 
 export default function IncentivesPage() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const statusFilter = searchParams.get("status") || "all";
+  const page = Number(searchParams.get("page")) || 1;
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [newRate, setNewRate] = useState("");
   const [approveModal, setApproveModal] = useState<{ id: number; calculated: string } | null>(null);
@@ -77,8 +98,7 @@ export default function IncentivesPage() {
   const currentConfig = configs?.[0];
 
   function handleStatusFilterChange(v: string) {
-    setStatusFilter(v);
-    setPage(1);
+    updateParams({ status: v === "all" ? null : v, page: null });
   }
 
   function handleApproveOpen(id: number, calculated: string) {
@@ -192,7 +212,7 @@ export default function IncentivesPage() {
 
         {/* Incentives Table */}
         <Card>
-          <ScrollArea className="w-full" type="auto">
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-max">
             <Table>
               <TableHeader>
@@ -273,8 +293,8 @@ export default function IncentivesPage() {
             <div className="flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
-                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => setPage(p => p + 1)}>Next</Button>
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>Prev</Button>
+                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => updateParams({ page: String(page + 1) })}>Next</Button>
               </div>
             </div>
           )}

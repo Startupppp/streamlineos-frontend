@@ -148,7 +148,7 @@ export const TimerCard = memo(function TimerCard() {
           Time Tracker
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 pb-5">
         <div
           className="flex items-center justify-center gap-2"
           aria-label={`Session time: ${sessionTimer.hours} hours, ${sessionTimer.minutes} minutes, ${sessionTimer.seconds} seconds`}

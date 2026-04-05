@@ -14,14 +14,14 @@ export function AttendanceContent({ userId, isAdmin = false }: { userId: string;
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+      className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0"
     >
-      <motion.div variants={fadeUp} className="lg:col-span-4 space-y-6">
+      <motion.div variants={fadeUp} className="lg:col-span-4 space-y-6 overflow-y-auto pb-6 scrollbar-thin">
         <TimerCard />
         <WfhBalancesCard />
       </motion.div>
 
-      <motion.div variants={fadeUp} className="lg:col-span-8 space-y-6">
+      <motion.div variants={fadeUp} className="lg:col-span-8 space-y-6 overflow-y-auto pb-6 scrollbar-thin">
         <AttendanceCalendar userId={userId} />
         {isAdmin && <ManageHolidaysCard />}
         <DailyHistoryTable />

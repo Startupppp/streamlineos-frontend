@@ -74,7 +74,7 @@ export default function CampaignsPage() {
         </div>
 
         <Card>
-          <ScrollArea className="w-full" type="auto">
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-[640px]">
             <Table>
               <TableHeader>

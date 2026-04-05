@@ -162,7 +162,7 @@ export default function MarketingDashboardPage() {
                 <CardTitle className="text-base">Campaigns</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="w-full" type="auto">
+                <ScrollArea className="w-full max-h-[60vh]" type="auto">
                 <div className="min-w-[500px]">
                   <table className="w-full text-sm">
                     <caption className="sr-only">Marketing campaigns with status, leads, spend, and ROI</caption>
@@ -252,7 +252,7 @@ export default function MarketingDashboardPage() {
                 <CardTitle className="text-base">Content Performance</CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="w-full" type="auto">
+                <ScrollArea className="w-full max-h-[60vh]" type="auto">
                 <div className="min-w-[500px]">
                   <table className="w-full text-sm">
                     <caption className="sr-only">Content performance with views, leads, and conversion rates</caption>

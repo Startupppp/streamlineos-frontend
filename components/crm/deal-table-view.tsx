@@ -102,7 +102,7 @@ export function DealTableView({
       </div>
 
       <div className="border border-border rounded-lg overflow-hidden">
-        <ScrollArea className="w-full" type="auto">
+        <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-max">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted/60">

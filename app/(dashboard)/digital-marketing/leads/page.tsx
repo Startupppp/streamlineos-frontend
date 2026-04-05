@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,11 +43,31 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function DmLeadsPage() {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const search = searchParams.get("q") || "";
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [platformFilter, setPlatformFilter] = useState<string>("all");
-  const [page, setPage] = useState(1);
+  const statusFilter = searchParams.get("status") || "all";
+  const platformFilter = searchParams.get("platform") || "all";
+  const page = Number(searchParams.get("page")) || 1;
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
@@ -88,9 +109,9 @@ export default function DmLeadsPage() {
         <>
           <div className="relative flex-1 max-w-sm min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} className="pl-9" />
+            <Input placeholder="Search..." value={search} onChange={(e) => updateParams({ q: e.target.value || null, page: null })} className="pl-9" />
           </div>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <Select value={statusFilter} onValueChange={(v) => updateParams({ status: v === "all" ? null : v, page: null })}>
             <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">All Status</SelectItem>
@@ -100,7 +121,7 @@ export default function DmLeadsPage() {
               <SelectItem value="imported_to_pipeline" className="text-xs">Imported</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={platformFilter} onValueChange={(v) => { setPlatformFilter(v); setPage(1); }}>
+          <Select value={platformFilter} onValueChange={(v) => updateParams({ platform: v === "all" ? null : v, page: null })}>
             <SelectTrigger className="w-[140px] h-9 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
@@ -121,7 +142,7 @@ export default function DmLeadsPage() {
       <div className="space-y-6">
         {/* Table */}
         <Card>
-          <ScrollArea className="w-full" type="auto">
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-[700px]">
             <Table>
               <TableHeader>
@@ -220,8 +241,8 @@ export default function DmLeadsPage() {
             <div className="flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
-                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => setPage(p => p + 1)}>Next</Button>
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>Prev</Button>
+                <Button variant="outline" size="sm" disabled={page >= (data?.totalPages ?? 1)} onClick={() => updateParams({ page: String(page + 1) })}>Next</Button>
               </div>
             </div>
           )}

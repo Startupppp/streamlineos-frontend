@@ -145,7 +145,7 @@ export function DocumentTable({
   return (
     <Card className="shadow-sm border overflow-hidden">
       <CardContent className="p-0" aria-live="polite">
-        <ScrollArea className="w-full" type="auto">
+        <ScrollArea className="w-full max-h-[60vh]" type="auto">
         <div className="min-w-[700px]">
         <Table>
           <caption className="sr-only">Document library</caption>

@@ -53,7 +53,7 @@ export function PayrollTable({
       </CardHeader>
       <CardContent aria-live="polite" className="p-0">
         {payrolls.length > 0 ? (
-          <ScrollArea className="w-full" type="auto">
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-[640px]">
               <Table>
                 <caption className="sr-only">Payroll records for selected month</caption>

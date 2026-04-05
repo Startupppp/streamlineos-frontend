@@ -306,7 +306,7 @@ export default function TimesheetsPage() {
                 </div>
               ) : (
                 <>
-                  <ScrollArea className="w-full" type="auto" role="region" aria-label="Timesheets table">
+                  <ScrollArea className="w-full max-h-[60vh]" type="auto" role="region" aria-label="Timesheets table">
                     <div className="min-w-max">
                     <Table>
                       <caption className="sr-only">Your daily work logs</caption>

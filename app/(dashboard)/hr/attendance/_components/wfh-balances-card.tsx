@@ -48,7 +48,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
           WFH Balance
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pb-5">
         <div>
           <div className="flex justify-between text-sm mb-2">
             <span className="text-muted-foreground">Monthly Quota</span>

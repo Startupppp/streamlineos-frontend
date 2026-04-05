@@ -44,6 +44,7 @@ export default function AttendancePage() {
     <PageWrapper
       title="Attendance"
       subtitle="Track your work hours, breaks, and work from home requests."
+      noInternalScroll
       actions={
         <div className="flex items-center gap-2 rounded-full bg-muted p-1" role="tablist" aria-label="Attendance view">
           <button
@@ -80,7 +81,7 @@ export default function AttendancePage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="space-y-6"
+          className="space-y-6 overflow-y-auto h-full pb-6"
         >
           <motion.div variants={fadeUp} className="flex justify-end">
             <RequestWfhDialog />

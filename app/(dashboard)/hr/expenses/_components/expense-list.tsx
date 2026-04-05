@@ -274,7 +274,7 @@ export function MemberExpenseList({
           </div>
         ) : (
           <>
-            <ScrollArea className="w-full" type="auto" role="region" aria-label="Expense claims table">
+            <ScrollArea className="w-full max-h-[60vh]" type="auto" role="region" aria-label="Expense claims table">
               <div className="min-w-[640px]">
               <Table>
                 <caption className="sr-only">Expense claims</caption>

@@ -198,7 +198,7 @@ function InvoicesContent() {
       </div>
 
       <Card>
-        <ScrollArea className="w-full" type="auto">
+        <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-[700px]">
         <Table>
           <TableHeader>

@@ -163,7 +163,7 @@ export default function SupportDashboardPage() {
               <CardTitle className="text-base">Team Access</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="w-full" type="auto">
+              <ScrollArea className="w-full max-h-[60vh]" type="auto">
               <div className="min-w-[400px]">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Support team members with roles, access levels, and online status</caption>

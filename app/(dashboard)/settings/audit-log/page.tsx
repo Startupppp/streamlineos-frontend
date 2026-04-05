@@ -315,7 +315,7 @@ export default function AuditLogPage() {
                 <p className="text-sm">No audit events found.</p>
               </div>
             ) : (
-              <ScrollArea className="w-full" type="auto">
+              <ScrollArea className="w-full max-h-[60vh]" type="auto">
                 <div className="min-w-[700px]">
                   <Table>
                     <TableHeader>

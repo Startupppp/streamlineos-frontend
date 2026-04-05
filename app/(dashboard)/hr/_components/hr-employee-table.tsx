@@ -90,7 +90,7 @@ export function HrEmployeeTable({
     <Card className="border-border">
       <CardContent className="p-0">
         <ScrollArea
-          className="w-full"
+          className="w-full max-h-[60vh]"
           type="auto"
           role="region"
           aria-label="Employee directory table"

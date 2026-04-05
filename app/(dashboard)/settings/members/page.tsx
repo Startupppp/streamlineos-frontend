@@ -17,7 +17,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useTransition, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -51,12 +52,31 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function MembersSettingsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<string>("ENGINEERING");
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const [memberSearch, setMemberSearch] = useState("");
+
+  const memberSearch = searchParams.get("q") || "";
+  const page = Number(searchParams.get("page")) || 1;
   const debouncedSearch = useDebouncedValue(memberSearch, 300);
-  const [page, setPage] = useState(1);
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
 
   const { data: membersData, isLoading: membersLoading } = useOrgMembers(
     page,
@@ -164,14 +184,14 @@ export default function MembersSettingsPage() {
               <Input
                 placeholder="Search members..."
                 value={memberSearch}
-                onChange={(e) => { setMemberSearch(e.target.value); setPage(1); }}
+                onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
                 className="pl-8 h-8 text-xs"
               />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="w-full" type="auto">
+          <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-max">
             <Table>
               <TableHeader className="bg-muted/40">
@@ -250,9 +270,9 @@ export default function MembersSettingsPage() {
               </span>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" className="h-7 text-xs"
-                  disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
+                  disabled={page <= 1} onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>Prev</Button>
                 <Button variant="outline" size="sm" className="h-7 text-xs"
-                  disabled={page >= membersData.pagination.totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
+                  disabled={page >= membersData.pagination.totalPages} onClick={() => updateParams({ page: String(page + 1) })}>Next</Button>
               </div>
             </div>
           )}

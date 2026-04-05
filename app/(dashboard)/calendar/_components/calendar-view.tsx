@@ -8,6 +8,12 @@ import {
   endOfMonth,
   addMonths,
   subMonths,
+  addWeeks,
+  subWeeks,
+  addDays,
+  subDays,
+  startOfWeek,
+  endOfWeek,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -95,8 +101,22 @@ export function CalendarView() {
     []
   );
 
-  const handlePrev = useCallback(() => setCurrentDate((d) => subMonths(d, 1)), []);
-  const handleNext = useCallback(() => setCurrentDate((d) => addMonths(d, 1)), []);
+  const handlePrev = useCallback(() => {
+    setCurrentDate((d) => {
+      if (view === "month") return subMonths(d, 1);
+      if (view === "week") return subWeeks(d, 1);
+      return subDays(d, 1);
+    });
+  }, [view]);
+
+  const handleNext = useCallback(() => {
+    setCurrentDate((d) => {
+      if (view === "month") return addMonths(d, 1);
+      if (view === "week") return addWeeks(d, 1);
+      return addDays(d, 1);
+    });
+  }, [view]);
+
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
   return (
@@ -112,8 +132,10 @@ export function CalendarView() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-semibold min-w-[130px] text-center">
-            {format(currentDate, "MMMM yyyy")}
+          <span className="text-sm font-semibold min-w-[140px] text-center">
+            {view === "month" && format(currentDate, "MMMM yyyy")}
+            {view === "week" && `${format(startOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(currentDate, { weekStartsOn: 1 }), "MMM d, yyyy")}`}
+            {view === "day" && format(currentDate, "EEE, MMM d, yyyy")}
           </span>
           <Button
             variant="outline"
