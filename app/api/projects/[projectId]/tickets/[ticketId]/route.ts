@@ -7,8 +7,8 @@
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets, workItemRelations } from "@/lib/db/schema";
+import { eq, and, or, desc } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";
@@ -189,12 +189,22 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
 
     // Cascade delete related rows in a transaction
     await db.transaction(async (tx) => {
+      // Clear self-referencing FKs: subtasks (parentTicketId) and epic children (epicId)
+      await tx.update(tickets).set({ parentTicketId: null }).where(eq(tickets.parentTicketId, id));
+      await tx.update(tickets).set({ epicId: null }).where(eq(tickets.epicId, id));
+
+      // Delete junction / child rows
       await tx.delete(ticketAssignees).where(eq(ticketAssignees.ticketId, id));
       await tx.delete(ticketComments).where(eq(ticketComments.ticketId, id));
       await tx.delete(ticketAttachments).where(eq(ticketAttachments.ticketId, id));
       await tx.delete(ticketLabelMappings).where(eq(ticketLabelMappings.ticketId, id));
       await tx.delete(ticketWatchers).where(eq(ticketWatchers.ticketId, id));
       await tx.delete(timesheets).where(eq(timesheets.ticketId, id));
+      await tx.delete(workItemRelations).where(
+        or(eq(workItemRelations.workItemId, id), eq(workItemRelations.relatedWorkItemId, id))
+      );
+
+      // Finally delete the ticket itself
       await tx.delete(tickets).where(eq(tickets.id, id));
     });
 

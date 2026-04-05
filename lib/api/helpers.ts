@@ -116,7 +116,15 @@ export async function withAuth<T>(
 
   // Build the narrowed AuthSession with orgId guaranteed as string
   const authSession: AuthSession = Object.assign(session, { orgId, branchId }) as AuthSession;
-  return handler(authSession);
+  try {
+    return await handler(authSession);
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      const detail = e.errors.map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`).join("; ");
+      return NextResponse.json({ error: `Validation failed: ${detail}` }, { status: 400 }) as NextResponse<T>;
+    }
+    throw e;
+  }
 }
 
 /** Same as withAuth but also enforces CEO/HR/ADMIN roles. */
