@@ -155,6 +155,13 @@
       "when": 1774210000000,
       "tag": "0021_sessions_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1774220000000,
+      "tag": "0022_calendar_location",
+      "breakpoints": true
     }
   ]
 }

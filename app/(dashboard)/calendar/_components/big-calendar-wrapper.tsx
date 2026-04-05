@@ -1,8 +1,4 @@
 "use client";
-/**
- * Wrapper around react-big-calendar that provides the date-fns localizer.
- * Dynamically imported in calendar-view.tsx to avoid SSR issues.
- */
 import {
   Calendar,
   dateFnsLocalizer,
@@ -22,7 +18,7 @@ const localizer = dateFnsLocalizer({
   locales: { "en-IN": enIN },
 });
 
-export interface CalendarEvent {
+export interface BigCalEvent {
   id: number;
   title: string;
   start: Date;
@@ -32,17 +28,19 @@ export interface CalendarEvent {
     color?: string | null;
     category?: string;
     description?: string | null;
+    location?: string | null;
   };
 }
 
 interface BigCalendarWrapperProps {
-  events: CalendarEvent[];
+  events: BigCalEvent[];
   date: Date;
   view: View;
   onView: (view: View) => void;
   onNavigate: (date: Date) => void;
   onSelectSlot?: (slotInfo: SlotInfo) => void;
-  eventPropGetter?: EventPropGetter<CalendarEvent>;
+  onSelectEvent?: (event: BigCalEvent) => void;
+  eventPropGetter?: EventPropGetter<BigCalEvent>;
 }
 
 export function BigCalendarWrapper({
@@ -52,6 +50,7 @@ export function BigCalendarWrapper({
   onView,
   onNavigate,
   onSelectSlot,
+  onSelectEvent,
   eventPropGetter,
 }: BigCalendarWrapperProps) {
   return (
@@ -64,6 +63,7 @@ export function BigCalendarWrapper({
       onNavigate={onNavigate}
       selectable={!!onSelectSlot}
       onSelectSlot={onSelectSlot}
+      onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
       eventPropGetter={eventPropGetter as EventPropGetter<object>}
       toolbar={false}
       style={{ height: "100%" }}

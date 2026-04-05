@@ -69,6 +69,7 @@ export const calendarEvents = pgTable("calendar_events", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  location: text("location"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   allDay: boolean("all_day").default(false),

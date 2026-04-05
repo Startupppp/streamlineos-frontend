@@ -17,6 +17,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -103,28 +104,36 @@ function LogTableRow({ log, onSelect }: LogTableRowProps) {
   );
 }
 
+function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
+      {children}
+    </div>
+  );
+}
+
 function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="flex flex-col p-0 w-[420px] sm:max-w-[420px]">
-        <SheetHeader className="px-4 pt-4 pb-3 border-b shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-sm">
+      <SheetContent className="flex flex-col p-0 w-[400px] sm:max-w-[400px]">
+        <SheetHeader className="px-5 py-4 border-b shrink-0">
+          <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
             <Activity className="h-4 w-4 text-muted-foreground" />
             Event Details
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-4 py-3 space-y-4">
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Action</p>
+          <div className="px-5 py-4 space-y-3">
+            <DetailField label="Action">
               <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
                 {log.action}
               </Badge>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">User</p>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-7 w-7">
+            </DetailField>
+            <Separator />
+            <DetailField label="User">
+              <div className="flex items-center gap-2.5">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={resolveImageUrl(log.userImage)} />
                   <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
                 </Avatar>
@@ -133,33 +142,39 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
                   <p className="text-xs text-muted-foreground">{log.userEmail}</p>
                 </div>
               </div>
-            </div>
+            </DetailField>
             {log.targetType && (
-              <div className="space-y-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Target</p>
-                <p className="text-sm">
-                  <span className="font-medium capitalize">{log.targetType}</span>
-                  {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
-                </p>
-              </div>
+              <>
+                <Separator />
+                <DetailField label="Target">
+                  <p className="text-sm">
+                    <span className="font-medium capitalize">{log.targetType}</span>
+                    {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
+                  </p>
+                </DetailField>
+              </>
             )}
-            <div className="space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Timestamp</p>
+            <Separator />
+            <DetailField label="Timestamp">
               <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
-            </div>
+            </DetailField>
             {log.ipAddress && (
-              <div className="space-y-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">IP Address</p>
-                <p className="text-sm font-mono">{log.ipAddress}</p>
-              </div>
+              <>
+                <Separator />
+                <DetailField label="IP Address">
+                  <p className="text-sm font-mono">{log.ipAddress}</p>
+                </DetailField>
+              </>
             )}
             {log.metadata && Object.keys(log.metadata).length > 0 && (
-              <div className="space-y-1">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Metadata</p>
-                <pre className="text-[11px] bg-muted/60 rounded p-2.5 overflow-auto max-h-52 border text-foreground">
-                  {JSON.stringify(log.metadata, null, 2)}
-                </pre>
-              </div>
+              <>
+                <Separator />
+                <DetailField label="Metadata">
+                  <pre className="text-[11px] bg-muted/60 rounded-md p-3 overflow-auto max-h-52 border text-foreground">
+                    {JSON.stringify(log.metadata, null, 2)}
+                  </pre>
+                </DetailField>
+              </>
             )}
           </div>
         </ScrollArea>
@@ -243,11 +258,11 @@ export default function AuditLogPage() {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 min-w-[140px] flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">From</p>
         <DatePicker value={dateFrom} onChange={handleDateFrom} placeholder="From date" />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 min-w-[140px] flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">To</p>
         <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" />
       </div>

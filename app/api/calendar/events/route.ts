@@ -14,6 +14,7 @@ const getSchema = z.object({
 const postSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
+  location: z.string().optional(),
   startDate: z.string(),
   endDate: z.string(),
   allDay: z.boolean().optional(),
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
       createdBy: session.user.id,
       title: input.title,
       description: input.description ?? null,
+      location: input.location ?? null,
       startDate: new Date(input.startDate),
       endDate: new Date(input.endDate),
       allDay: input.allDay ?? false,

@@ -8,6 +8,7 @@ export interface CalendarEvent {
   orgId: string;
   title: string;
   description?: string | null;
+  location?: string | null;
   startDate: string;
   endDate: string;
   allDay: boolean | null;
@@ -27,6 +28,7 @@ export interface CalendarEvent {
 export interface CreateCalendarEventPayload {
   title: string;
   description?: string;
+  location?: string;
   startDate: string;
   endDate: string;
   allDay?: boolean;

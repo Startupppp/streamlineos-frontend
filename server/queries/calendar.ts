@@ -35,6 +35,7 @@ export async function createCalendarEvent(data: {
   orgId: string;
   title: string;
   description?: string | null;
+  location?: string | null;
   startDate: Date;
   endDate: Date;
   allDay?: boolean;
@@ -53,6 +54,7 @@ export async function createCalendarEvent(data: {
       orgId: data.orgId,
       title: data.title,
       description: data.description ?? null,
+      location: data.location ?? null,
       startDate: data.startDate,
       endDate: data.endDate,
       allDay: data.allDay ?? false,
@@ -76,6 +78,7 @@ export async function updateCalendarEvent(
   data: Partial<{
     title: string;
     description: string | null;
+    location: string | null;
     startDate: Date;
     endDate: Date;
     allDay: boolean;
