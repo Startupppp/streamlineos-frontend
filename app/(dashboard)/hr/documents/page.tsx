@@ -169,6 +169,10 @@ export default function DocumentsPage() {
   const usedGB = totalStorageBytes / (1024 * 1024 * 1024);
   const storagePercent = Math.min(100, Math.round((usedGB / maxStorageGB) * 100));
 
+  /* Stable callbacks — declared before any early return to satisfy Rules of Hooks */
+  const handleNewFolderOpen = useCallback(() => setIsNewFolderOpen(true), []);
+  const handleUploadOpen = useCallback(() => setIsUploadOpen(true), []);
+
   /* Handlers */
   const handleDelete = async (documentId: number) => {
     const result = await deleteDocument(documentId);
@@ -312,9 +316,6 @@ export default function DocumentsPage() {
   /* ---------------------------------------------------------------- */
   /* Render                                                             */
   /* ---------------------------------------------------------------- */
-  const handleNewFolderOpen = useCallback(() => setIsNewFolderOpen(true), []);
-  const handleUploadOpen = useCallback(() => setIsUploadOpen(true), []);
-
   const pageActions = (
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" className="gap-2" onClick={handleNewFolderOpen}>

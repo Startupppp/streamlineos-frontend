@@ -120,7 +120,7 @@ export async function withAuth<T>(
     return await handler(authSession);
   } catch (e) {
     if (e instanceof z.ZodError) {
-      const detail = e.errors.map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`).join("; ");
+      const detail = e.issues.map((issue: { path: PropertyKey[]; message: string }) => `${String(issue.path.join?.(".") ?? "body")}: ${issue.message}`).join("; ");
       return NextResponse.json({ error: `Validation failed: ${detail}` }, { status: 400 }) as NextResponse<T>;
     }
     throw e;
