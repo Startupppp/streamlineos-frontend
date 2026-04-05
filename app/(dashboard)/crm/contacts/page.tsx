@@ -6,27 +6,29 @@ import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Link from "next/link";
 import {
-  Plus, Search, Users, Mail, Phone, Building2,
-  ChevronLeft, ChevronRight, Linkedin, Twitter, Tag,
-  MoreHorizontal, Eye, Pencil, Trash2,
+  Plus, Search, Mail, Phone, Building2,
+  ChevronLeft, ChevronRight, Linkedin, MoreHorizontal, Pencil, Trash2,
+  TableIcon, LayoutGrid,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
+  TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -37,13 +39,13 @@ import { toast } from "sonner";
 const PAGE_SIZE = 20;
 
 const createContactSchema = z.object({
-  name: z.string().min(1, "Name is required").max(200).regex(/^[a-zA-Z\s.'-]+$/, "Name must contain only letters"),
+  name: z.string().min(1, "Name is required").max(200),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().regex(/^[\d+\-\s()]*$/, "Phone must contain only numbers").optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
   title: z.string().optional(),
   department: z.string().optional(),
   company: z.string().optional(),
-  linkedinUrl: z.string().url("Invalid LinkedIn URL").optional().or(z.literal("")),
+  linkedinUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   twitterUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 type CreateContactForm = z.infer<typeof createContactSchema>;
@@ -59,11 +61,11 @@ export default function ContactsPage() {
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
 
+  const view = (searchParams.get("view") || "table") as "table" | "card";
   const searchInput = searchParams.get("q") || "";
   const page = Number(searchParams.get("page")) || 1;
 
   const debouncedSearch = useDebouncedValue(searchInput, 300);
-  // Only trigger API for 3+ chars or empty string
   const apiSearch = debouncedSearch.length >= 3 || debouncedSearch.length === 0 ? debouncedSearch : "";
 
   const updateParams = useCallback(
@@ -106,24 +108,25 @@ export default function ContactsPage() {
         twitterUrl: data.twitterUrl || undefined,
       },
       {
-        onSuccess: () => { toast.success("Contact created"); setCreateOpen(false); },
+        onSuccess: () => { toast.success("Contact created"); setCreateOpen(false); form.reset(); },
         onError: (err) => toast.error(err.message),
-      }
+      },
     );
-    form.reset();
   }, [createContactMutation, form]);
 
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
 
+  const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
+  const handleViewCard = useCallback(() => updateParams({ view: "card" }), [updateParams]);
+
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-10 w-full max-w-sm" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-40" />)}
+      <PageWrapper title="Contacts" subtitle="People directory">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full max-w-sm" />
+          <Skeleton className="h-96" />
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -132,79 +135,92 @@ export default function ContactsPage() {
       title="Contacts"
       subtitle={`${data?.total ?? 0} contacts`}
       actions={
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              New Contact
+        <>
+          <div className="flex items-center border border-border rounded-md">
+            <Button variant={view === "table" ? "default" : "ghost"} size="sm"
+              className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/90 text-white")}
+              onClick={handleViewTable}>
+              <TableIcon className="h-4 w-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Create Contact</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <FormField control={form.control} name="name" render={({ field }) => (
+            <Button variant={view === "card" ? "default" : "ghost"} size="sm"
+              className={cn("rounded-l-none", view === "card" && "bg-gold hover:bg-gold/90 text-white")}
+              onClick={handleViewCard}>
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gold hover:bg-gold/90 text-white">
+                <Plus className="h-4 w-4 mr-2" />New Contact
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create Contact</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <FormField control={form.control} name="name" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name *</FormLabel>
+                          <FormControl><Input {...field} placeholder="Full name" /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                    <FormField control={form.control} name="email" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name *</FormLabel>
-                        <FormControl><Input {...field} placeholder="Full name" /></FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl><Input {...field} type="email" placeholder="email@example.com" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="phone" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl><Input {...field} placeholder="+91..." /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="company" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="title" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl><Input {...field} placeholder="e.g. VP of Sales" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="department" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="linkedinUrl" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>LinkedIn</FormLabel>
+                        <FormControl><Input {...field} placeholder="https://linkedin.com/in/..." /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                   </div>
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl><Input {...field} type="email" placeholder="email@example.com" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="phone" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone</FormLabel>
-                      <FormControl><Input {...field} placeholder="+91..." /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="company" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="title" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl><Input {...field} placeholder="e.g. VP of Sales" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="department" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl><Input {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="linkedinUrl" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>LinkedIn</FormLabel>
-                      <FormControl><Input {...field} placeholder="https://linkedin.com/in/..." /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-                <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createContactMutation.isPending}>
-                  {createContactMutation.isPending ? "Creating..." : "Create Contact"}
-                </Button>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createContactMutation.isPending}>
+                    {createContactMutation.isPending ? "Creating..." : "Create Contact"}
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </>
       }
       filters={
         <div className="relative max-w-sm">
@@ -218,116 +234,167 @@ export default function ContactsPage() {
         </div>
       }
     >
-      <motion.div
-        className="space-y-6"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {data?.items.map(contact => (
-          <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
-                  {contact.name[0]?.toUpperCase() ?? "?"}
+      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+        {/* Table View (default) */}
+        {view === "table" && (
+          <motion.div variants={fadeUp}>
+            <div className="border border-border rounded-lg flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
+              <div className="flex-1 min-h-0 overflow-auto">
+                <div className="min-w-max">
+                  <table className="w-full caption-bottom text-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-card">
+                      <TableRow>
+                        <TableHead className="text-xs">Name</TableHead>
+                        <TableHead className="text-xs">Email</TableHead>
+                        <TableHead className="text-xs">Phone</TableHead>
+                        <TableHead className="text-xs">Company</TableHead>
+                        <TableHead className="text-xs">Title</TableHead>
+                        <TableHead className="text-xs">Tags</TableHead>
+                        <TableHead className="text-xs w-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(data?.items ?? []).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                            <EmptyTeamIllustration className="mx-auto mb-3 w-24 h-24" />
+                            <p className="text-sm font-medium text-foreground">No contacts found</p>
+                            <p className="text-xs mt-1">Create your first contact to get started</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : data?.items.map(contact => (
+                        <TableRow key={contact.id} className="hover:bg-muted/40">
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-8 w-8 rounded-full bg-gold/10 flex items-center justify-center text-xs font-semibold text-gold shrink-0">
+                                {contact.name[0]?.toUpperCase() ?? "?"}
+                              </div>
+                              <span className="text-sm font-medium">{contact.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{contact.email || "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground font-mono">{contact.phone || "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{contact.company || "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{contact.title || "—"}</TableCell>
+                          <TableCell>
+                            {contact.tags && (contact.tags as string[]).length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {(contact.tags as string[]).slice(0, 2).map(tag => (
+                                  <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
+                                ))}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem><Pencil className="h-3.5 w-3.5 mr-2" />Edit</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-red-600"><Trash2 className="h-3.5 w-3.5 mr-2" />Delete</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </table>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate group-hover:text-gold transition-colors">{contact.name}</p>
-                  {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" aria-label="More options">
-                      <MoreHorizontal className="h-4 w-4" />
+              </div>
+              {totalPages > 1 && (
+                <div className="shrink-0 flex items-center justify-between p-4 border-t">
+                  <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="sm" disabled={page <= 1}
+                      onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
+                      <ChevronLeft className="h-4 w-4" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem><Eye className="h-3.5 w-3.5 mr-2" />View</DropdownMenuItem>
-                    <DropdownMenuItem><Pencil className="h-3.5 w-3.5 mr-2" />Edit</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600"><Trash2 className="h-3.5 w-3.5 mr-2" />Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="mt-3 space-y-1.5">
-                {contact.email && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{contact.email}</span>
+                    <Button variant="outline" size="sm" disabled={page >= totalPages}
+                      onClick={() => updateParams({ page: String(page + 1) })}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
-                {contact.phone && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Phone className="h-3 w-3 shrink-0" />
-                    <span>{contact.phone}</span>
-                  </div>
-                )}
-                {contact.company && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Building2 className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{contact.company}</span>
-                  </div>
-                )}
-              </div>
-
-              {contact.tags && (contact.tags as string[]).length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {(contact.tags as string[]).slice(0, 3).map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
-                  ))}
                 </div>
               )}
+            </div>
+          </motion.div>
+        )}
 
-              <div className="mt-3 flex items-center gap-2">
-                {contact.linkedinUrl && (
-                  <a href={contact.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-blue-400">
-                    <Linkedin className="h-3.5 w-3.5" />
-                  </a>
-                )}
-                {contact.twitterUrl && (
-                  <a href={contact.twitterUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-sky-400">
-                    <Twitter className="h-3.5 w-3.5" />
-                  </a>
-                )}
+        {/* Card View */}
+        {view === "card" && (
+          <>
+            <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {data?.items.map(contact => (
+                <Card key={contact.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 group">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold shrink-0">
+                        {contact.name[0]?.toUpperCase() ?? "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate group-hover:text-gold transition-colors">{contact.name}</p>
+                        {contact.title && <p className="text-xs text-muted-foreground truncate">{contact.title}</p>}
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-1.5">
+                      {contact.email && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{contact.email}</span>
+                        </div>
+                      )}
+                      {contact.phone && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Phone className="h-3 w-3 shrink-0" />
+                          <span>{contact.phone}</span>
+                        </div>
+                      )}
+                      {contact.company && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{contact.company}</span>
+                        </div>
+                      )}
+                    </div>
+                    {contact.linkedinUrl && (
+                      <div className="mt-3">
+                        <a href={contact.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-blue-400">
+                          <Linkedin className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </motion.div>
+
+            {(data?.items.length ?? 0) === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <EmptyTeamIllustration className="mx-auto mb-3 w-36 h-36" />
+                <p className="text-sm font-medium text-foreground">No contacts found</p>
+                <p className="text-xs mt-1">Create your first contact to get started</p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
+            )}
 
-      {data?.items.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <EmptyTeamIllustration className="mx-auto mb-3 w-36 h-36" />
-          <p className="text-sm font-medium text-foreground">No contacts found</p>
-          <p className="text-xs mt-1">Create your first contact to get started</p>
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <motion.div variants={fadeUp} className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => updateParams({ page: String(page + 1) })}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </motion.div>
-      )}
+            {totalPages > 1 && (
+              <motion.div variants={fadeUp} className="flex items-center justify-center gap-2">
+                <Button variant="outline" size="sm" disabled={page <= 1}
+                  onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={page >= totalPages}
+                  onClick={() => updateParams({ page: String(page + 1) })}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            )}
+          </>
+        )}
       </motion.div>
     </PageWrapper>
   );

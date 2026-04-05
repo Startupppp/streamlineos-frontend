@@ -841,3 +841,179 @@ export interface GetMonthlyAttendanceInput {
   year: number;
   month: number;
 }
+
+// ─── Recruitment ─────────────────────────────────────────────────────────────
+
+export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
+export type CandidateStatus = "NEW" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED" | "REJECTED";
+export type InterviewType = "PHONE" | "VIDEO" | "ONSITE" | "TECHNICAL" | "HR" | "FINAL";
+export type InterviewResult = "PENDING" | "PASSED" | "FAILED" | "NO_SHOW";
+export type ApplicationStatus = "APPLIED" | "SHORTLISTED" | "INTERVIEWING" | "OFFERED" | "ACCEPTED" | "REJECTED" | "WITHDRAWN";
+
+export interface JobPosting {
+  id: number;
+  orgId: string;
+  title: string;
+  departmentId: number | null;
+  location: string | null;
+  type: string | null;
+  experience: string | null;
+  salaryMin: string | null;
+  salaryMax: string | null;
+  description: string | null;
+  requirements: string | null;
+  benefits: string | null;
+  status: JobPostingStatus | null;
+  openings: number | null;
+  applicationDeadline: string | null;
+  postedBy: string | null;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
+  _count?: { applications?: number };
+}
+
+export interface Candidate {
+  id: number;
+  orgId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  resumeUrl: string | null;
+  linkedinUrl: string | null;
+  portfolioUrl: string | null;
+  currentCompany: string | null;
+  currentRole: string | null;
+  experienceYears: string | null;
+  skills: string[] | null;
+  source: string | null;
+  status: CandidateStatus | null;
+  notes: string | null;
+  rating: number | null;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
+}
+
+export interface CandidateApplication {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  jobPostingId: number;
+  status: ApplicationStatus | null;
+  appliedAt: Date | string | null;
+  coverLetter: string | null;
+  notes: string | null;
+  candidate?: Candidate;
+  jobPosting?: JobPosting;
+}
+
+export interface Interview {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  jobPostingId: number | null;
+  interviewerId: string | null;
+  type: InterviewType | null;
+  scheduledAt: Date | string;
+  duration: number | null;
+  location: string | null;
+  meetingLink: string | null;
+  result: InterviewResult | null;
+  feedback: string | null;
+  rating: number | null;
+  notes: string | null;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
+  candidate?: Candidate;
+  interviewer?: { id: string; name: string | null; image: string | null };
+}
+
+export interface RecruitmentStats {
+  totalJobs: number;
+  openJobs: number;
+  totalCandidates: number;
+  newCandidates: number;
+  upcomingInterviews: number;
+  hiredThisMonth: number;
+}
+
+export interface CreateJobPostingInput {
+  title: string;
+  departmentId?: number;
+  location?: string;
+  type?: string;
+  experience?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  description?: string;
+  requirements?: string;
+  benefits?: string;
+  openings?: number;
+  applicationDeadline?: string;
+}
+
+export interface UpdateJobPostingInput {
+  title?: string;
+  departmentId?: number;
+  location?: string;
+  type?: string;
+  experience?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  description?: string;
+  requirements?: string;
+  benefits?: string;
+  status?: JobPostingStatus;
+  openings?: number;
+  applicationDeadline?: string;
+}
+
+export interface CreateCandidateInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  resumeUrl?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  currentCompany?: string;
+  currentRole?: string;
+  experienceYears?: number;
+  skills?: string[];
+  source?: string;
+  notes?: string;
+}
+
+export interface UpdateCandidateInput {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  status?: CandidateStatus;
+  notes?: string;
+  rating?: number;
+}
+
+export interface CreateInterviewInput {
+  candidateId: number;
+  jobPostingId?: number;
+  interviewerId?: string;
+  type?: InterviewType;
+  scheduledAt: string;
+  duration?: number;
+  location?: string;
+  meetingLink?: string;
+  notes?: string;
+}
+
+export interface UpdateInterviewInput {
+  type?: InterviewType;
+  scheduledAt?: string;
+  duration?: number;
+  location?: string;
+  meetingLink?: string;
+  result?: InterviewResult;
+  feedback?: string;
+  rating?: number;
+  notes?: string;
+}

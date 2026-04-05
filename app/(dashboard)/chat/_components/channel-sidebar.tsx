@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,27 @@ import { ChannelSidebarSection } from "./channel-sidebar-section";
 import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
+
+interface ChannelListEntryProps {
+  channel: Channel;
+  activeChannelId: number | null;
+  currentUserId: string;
+  onlineUserIds: Set<string>;
+  onSelectChannel: (id: number) => void;
+}
+
+function ChannelListEntry({ channel: ch, activeChannelId, currentUserId, onlineUserIds, onSelectChannel }: ChannelListEntryProps) {
+  const handleClick = useCallback(() => onSelectChannel(ch.id), [ch.id, onSelectChannel]);
+  return (
+    <ChannelItem
+      channel={ch}
+      isActive={activeChannelId === ch.id}
+      onClick={handleClick}
+      currentUserId={currentUserId}
+      onlineUserIds={onlineUserIds}
+    />
+  );
+}
 
 export function ChannelSidebar({
   activeChannelId,
@@ -37,6 +58,11 @@ export function ChannelSidebar({
   const [dmsCollapsed, setDmsCollapsed] = useState(false);
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleClearSearch = useCallback(() => setSearch(""), []);
+  const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
+  const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
 
   useEffect(() => {
     if (autoFocusSearch && searchInputRef.current) {
@@ -106,12 +132,12 @@ export function ChannelSidebar({
             ref={searchInputRef}
             placeholder="Search conversations..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             className="pl-8 h-8 text-[13px] bg-muted/30 border-border/30 rounded-lg placeholder:text-muted-foreground/40"
           />
           {search && (
             <button
-              onClick={() => setSearch("")}
+              onClick={handleClearSearch}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
               aria-label="Clear search"
             >
@@ -141,16 +167,16 @@ export function ChannelSidebar({
                 title="Channels"
                 count={groups.reduce((a, c) => a + c.unreadCount, 0)}
                 collapsed={groupsCollapsed}
-                onToggle={() => setGroupsCollapsed((p) => !p)}
+                onToggle={handleToggleGroups}
               >
                 {groups.map((ch) => (
-                  <ChannelItem
+                  <ChannelListEntry
                     key={ch.id}
                     channel={ch}
-                    isActive={activeChannelId === ch.id}
-                    onClick={() => onSelectChannel(ch.id)}
+                    activeChannelId={activeChannelId}
                     currentUserId={currentUserId}
                     onlineUserIds={onlineUserIds}
+                    onSelectChannel={onSelectChannel}
                   />
                 ))}
               </ChannelSidebarSection>
@@ -161,16 +187,16 @@ export function ChannelSidebar({
                 title="Direct Messages"
                 count={dms.reduce((a, c) => a + c.unreadCount, 0)}
                 collapsed={dmsCollapsed}
-                onToggle={() => setDmsCollapsed((p) => !p)}
+                onToggle={handleToggleDMs}
               >
                 {dms.map((ch) => (
-                  <ChannelItem
+                  <ChannelListEntry
                     key={ch.id}
                     channel={ch}
-                    isActive={activeChannelId === ch.id}
-                    onClick={() => onSelectChannel(ch.id)}
+                    activeChannelId={activeChannelId}
                     currentUserId={currentUserId}
                     onlineUserIds={onlineUserIds}
+                    onSelectChannel={onSelectChannel}
                   />
                 ))}
               </ChannelSidebarSection>

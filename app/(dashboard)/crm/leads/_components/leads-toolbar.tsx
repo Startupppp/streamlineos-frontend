@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Search, LayoutGrid, TableIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,13 @@ export function LeadsToolbar({
   onSourceFilterChange,
   onClearFilters,
 }: LeadsToolbarProps) {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
+  const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);
+  const handleViewKanban = useCallback(() => onViewChange("kanban"), [onViewChange]);
+  const handleStatusFilter = useCallback((v: string) => onStatusFilterChange(v === "all" ? undefined : v), [onStatusFilterChange]);
+  const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v === "all" ? undefined : v), [onPriorityFilterChange]);
+  const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v === "all" ? undefined : v), [onSourceFilterChange]);
+
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {/* Search */}
@@ -43,7 +51,7 @@ export function LeadsToolbar({
         <Input
           placeholder="Search leads..."
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={handleSearchChange}
           className="pl-9"
         />
       </div>
@@ -54,7 +62,7 @@ export function LeadsToolbar({
           variant={view === "table" ? "default" : "ghost"}
           size="sm"
           className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/80 text-white")}
-          onClick={() => onViewChange("table")}
+          onClick={handleViewTable}
         >
           <TableIcon className="h-4 w-4" />
         </Button>
@@ -62,7 +70,7 @@ export function LeadsToolbar({
           variant={view === "kanban" ? "default" : "ghost"}
           size="sm"
           className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/80 text-white")}
-          onClick={() => onViewChange("kanban")}
+          onClick={handleViewKanban}
         >
           <LayoutGrid className="h-4 w-4" />
         </Button>
@@ -73,7 +81,7 @@ export function LeadsToolbar({
         <>
           <Select
             value={statusFilter || "all"}
-            onValueChange={(v) => onStatusFilterChange(v === "all" ? undefined : v)}
+            onValueChange={handleStatusFilter}
           >
             <SelectTrigger className="w-[130px] h-9 text-xs">
               <SelectValue placeholder="Status" />
@@ -88,7 +96,7 @@ export function LeadsToolbar({
 
           <Select
             value={priorityFilter || "all"}
-            onValueChange={(v) => onPriorityFilterChange(v === "all" ? undefined : v)}
+            onValueChange={handlePriorityFilter}
           >
             <SelectTrigger className="w-[110px] h-9 text-xs">
               <SelectValue placeholder="Priority" />
@@ -103,7 +111,7 @@ export function LeadsToolbar({
 
           <Select
             value={sourceFilter || "all"}
-            onValueChange={(v) => onSourceFilterChange(v === "all" ? undefined : v)}
+            onValueChange={handleSourceFilter}
           >
             <SelectTrigger className="w-[130px] h-9 text-xs">
               <SelectValue placeholder="Source" />

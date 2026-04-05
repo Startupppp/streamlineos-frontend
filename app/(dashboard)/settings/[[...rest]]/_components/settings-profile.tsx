@@ -140,6 +140,31 @@ export function SettingsProfile() {
     );
   }, [session, editName, updateProfile, updateSession]);
 
+  const handleOpenFileInput = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditName(e.target.value);
+  }, []);
+
+  const handleNameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleSaveName();
+    if (e.key === "Escape") setIsEditingName(false);
+  }, [handleSaveName]);
+
+  const handleCancelEditName = useCallback(() => setIsEditingName(false), []);
+
+  const handleStartEditName = useCallback(() => {
+    setEditName(name);
+    setIsEditingName(true);
+  }, [name]);
+
+  const handleCropDialogChange = useCallback((open: boolean) => {
+    setCropDialogOpen(open);
+    if (!open) setCropImageSrc(null);
+  }, []);
+
   return (
     <>
       {/* Avatar row */}
@@ -154,7 +179,7 @@ export function SettingsProfile() {
           <button
             type="button"
             disabled={isBusy}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleOpenFileInput}
             aria-label="Change profile photo"
             className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
           >
@@ -183,7 +208,7 @@ export function SettingsProfile() {
               size="sm"
               className="h-7 text-xs"
               disabled={isBusy}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleOpenFileInput}
             >
               {isBusy ? (
                 <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Uploading…</>
@@ -216,11 +241,8 @@ export function SettingsProfile() {
               <Input
                 id="display-name"
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveName();
-                  if (e.key === "Escape") setIsEditingName(false);
-                }}
+                onChange={handleEditNameChange}
+                onKeyDown={handleNameKeyDown}
                 placeholder="Your full name"
                 autoFocus
                 className="h-9 text-sm flex-1"
@@ -241,7 +263,7 @@ export function SettingsProfile() {
                 size="icon"
                 variant="ghost"
                 className="h-9 w-9 shrink-0"
-                onClick={() => setIsEditingName(false)}
+                onClick={handleCancelEditName}
               >
                 <X className="h-3.5 w-3.5" />
               </Button>
@@ -249,7 +271,7 @@ export function SettingsProfile() {
           ) : (
             <button
               type="button"
-              onClick={() => { setEditName(name); setIsEditingName(true); }}
+              onClick={handleStartEditName}
               className={cn(
                 "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm",
                 "text-left cursor-pointer hover:border-border/80 hover:bg-muted/40 transition-colors",
@@ -281,10 +303,7 @@ export function SettingsProfile() {
       {cropImageSrc && (
         <AvatarCropDialog
           open={cropDialogOpen}
-          onOpenChange={(open) => {
-            setCropDialogOpen(open);
-            if (!open) setCropImageSrc(null);
-          }}
+          onOpenChange={handleCropDialogChange}
           imageSrc={cropImageSrc}
           onCropComplete={handleCropComplete}
           loading={uploading}

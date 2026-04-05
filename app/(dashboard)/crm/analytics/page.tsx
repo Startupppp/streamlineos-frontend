@@ -2,97 +2,36 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Download, Filter, TrendingUp, Users, DollarSign, Target } from "lucide-react";
+import { Filter, Users, DollarSign, Target, Percent } from "lucide-react";
 import {
-  BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+  BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import { StatCard } from "@/components/ui/stat-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useLeadStats, useLeads, useLeadAnalyticsSummary } from "@/lib/api/hooks/leads";
+import { useLeadStats, useLeads, useLeadAnalyticsSummary, useSalesLeaderboard } from "@/lib/api/hooks/leads";
 import { useDeals } from "@/lib/api/hooks/crm";
-import { useSalesLeaderboard } from "@/lib/api/hooks/leads";
 import { useSlaReport } from "@/lib/api/hooks/crm-settings";
-import { Percent } from "lucide-react";
-import ExcelJS from "exceljs";
-
-const COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444", "#0EA5E9", "#EC4899", "#6366F1"];
-
-async function downloadXLSX(data: Record<string, unknown>[], filename: string) {
-  if (data.length === 0) return;
-  const workbook = new ExcelJS.Workbook();
-  const ws = workbook.addWorksheet("Data");
-  const headers = Object.keys(data[0]);
-  ws.columns = headers.map((h) => ({ header: h, key: h, width: Math.max(h.length + 4, 12) }));
-  ws.getRow(1).font = { bold: true };
-  for (const row of data) {
-    ws.addRow(headers.map((h) => row[h] ?? ""));
-  }
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${filename}.xlsx`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-const CHART_TOOLTIP_STYLE = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: 8,
-} as const;
-
-const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
-
-function AnalyticsChartCard({
-  title,
-  data,
-  filename,
-  children,
-}: {
-  title: string;
-  data: Record<string, unknown>[];
-  filename: string;
-  children: React.ReactNode;
-}) {
-  const handleDownload = useCallback(() => downloadXLSX(data, filename), [data, filename]);
-  return (
-    <motion.div variants={fadeUp}>
-      <Card className="shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownload} aria-label="Download">
-            <Download className="h-3.5 w-3.5" />
-          </Button>
-        </CardHeader>
-        <CardContent>{children}</CardContent>
-      </Card>
-    </motion.div>
-  );
-}
+import { CHART_TOOLTIP_STYLE, AXIS_TICK, CHART_COLORS } from "../_constants";
+import { PipelineFunnelChart } from "./_components/pipeline-funnel-chart";
+import { SourceBreakdownChart } from "./_components/source-breakdown-chart";
+import { RepPerformanceTable } from "./_components/rep-performance-table";
+import { LeadVolumeChart } from "./_components/lead-volume-chart";
+import { ConversionChart } from "./_components/conversion-chart";
+import { DealValueChart } from "./_components/deal-value-chart";
+import { AnalyticsChartCard } from "./_components/analytics-chart-card";
 
 export default function CrmAnalyticsPage() {
   const [draftDateFrom, setDraftDateFrom] = useState("");
   const [draftDateTo, setDraftDateTo] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-
-  const handleDraftDateFromChange = useCallback((v: string) => setDraftDateFrom(v), []);
-  const handleDraftDateToChange = useCallback((v: string) => setDraftDateTo(v), []);
 
   const applyFilters = useCallback(() => {
     setDateFrom(draftDateFrom);
@@ -103,13 +42,11 @@ export default function CrmAnalyticsPage() {
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
   });
-
   const { data: allDeals, isLoading: dealsLoading } = useDeals();
   const { data: leaderboard, isLoading: leaderLoading } = useSalesLeaderboard();
   const { data: slaReport, isLoading: slaLoading } = useSlaReport();
   const { data: allLeadsResult, isLoading: leadsLoading } = useLeads({ limit: 100 });
   const allLeads = allLeadsResult?.leads;
-
   const { data: analyticsSummary, isLoading: summaryLoading } = useLeadAnalyticsSummary({
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
@@ -133,8 +70,6 @@ export default function CrmAnalyticsPage() {
     const weeks: Record<string, number> = {};
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i * 7);
       weeks[`W${12 - i}`] = 0;
     }
     allLeads.forEach((lead) => {
@@ -189,39 +124,20 @@ export default function CrmAnalyticsPage() {
     return Object.entries(buckets).map(([range, count]) => ({ range, count }));
   }, [allLeads]);
 
-  const repPerformanceData = useMemo(
-    () => (leaderboard ?? []).map((l) => ({ name: l.name, score: l.score, converted: l.leadsConverted, calls: l.totalCalls })),
-    [leaderboard],
-  );
-
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-1">
-            <Skeleton className="h-8 w-40" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-8 w-36" />
-            <Skeleton className="h-8 w-36" />
-            <Skeleton className="h-8 w-20" />
+      <PageWrapper title="CRM Analytics" subtitle="Pipeline insights and performance metrics">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className="shadow-sm">
+                <CardHeader className="pb-2"><Skeleton className="h-4 w-36" /></CardHeader>
+                <CardContent><Skeleton className="h-[280px] w-full" /></CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <Skeleton className="h-4 w-36" />
-                <Skeleton className="h-7 w-7 rounded" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-[280px] w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -233,15 +149,14 @@ export default function CrmAnalyticsPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground">From</Label>
-            <DatePicker value={draftDateFrom} onChange={handleDraftDateFromChange} placeholder="From" />
+            <DatePicker value={draftDateFrom} onChange={setDraftDateFrom} placeholder="From" />
           </div>
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground">To</Label>
-            <DatePicker value={draftDateTo} onChange={handleDraftDateToChange} placeholder="To" />
+            <DatePicker value={draftDateTo} onChange={setDraftDateTo} placeholder="To" />
           </div>
           <Button size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white" onClick={applyFilters}>
-            <Filter className="mr-1.5 h-3.5 w-3.5" />
-            Apply
+            <Filter className="mr-1.5 h-3.5 w-3.5" />Apply
           </Button>
         </div>
       }
@@ -250,139 +165,33 @@ export default function CrmAnalyticsPage() {
         {analyticsSummary && (
           <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             <StatCard
-              label="Total Leads"
-              value={analyticsSummary.totalLeads}
-              icon={Users}
-              index={0}
+              label="Total Leads" value={analyticsSummary.totalLeads} icon={Users} index={0}
               trend={analyticsSummary.totalLeadsPrevPeriod > 0 ? {
                 value: Math.round(((analyticsSummary.totalLeads - analyticsSummary.totalLeadsPrevPeriod) / analyticsSummary.totalLeadsPrevPeriod) * 100),
                 isPositive: analyticsSummary.totalLeads >= analyticsSummary.totalLeadsPrevPeriod,
               } : undefined}
             />
             <StatCard
-              label="Conversion Rate"
-              value={`${analyticsSummary.conversionRate}%`}
-              icon={Percent}
-              index={1}
+              label="Conversion Rate" value={`${analyticsSummary.conversionRate}%`} icon={Percent} index={1}
               trend={analyticsSummary.conversionRatePrevPeriod > 0 ? {
                 value: Math.abs(analyticsSummary.conversionRate - analyticsSummary.conversionRatePrevPeriod),
                 isPositive: analyticsSummary.conversionRate >= analyticsSummary.conversionRatePrevPeriod,
               } : undefined}
             />
-            <StatCard
-              label="Total Revenue"
-              value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`}
-              icon={DollarSign}
-              index={2}
-            />
-            <StatCard
-              label="Active Reps"
-              value={analyticsSummary.assignmentDistribution.length}
-              icon={Target}
-              index={3}
-            />
+            <StatCard label="Total Revenue" value={`₹${(analyticsSummary.totalRevenue / 100000).toFixed(1)}L`} icon={DollarSign} index={2} />
+            <StatCard label="Active Reps" value={analyticsSummary.assignmentDistribution.length} icon={Target} index={3} />
           </motion.div>
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <AnalyticsChartCard title="Pipeline Funnel" data={funnelData} filename="pipeline-funnel">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={funnelData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" tick={AXIS_TICK} />
-                <YAxis dataKey="name" type="category" tick={AXIS_TICK} width={80} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                  {funnelData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </AnalyticsChartCard>
+          <PipelineFunnelChart data={funnelData} />
+          <LeadVolumeChart data={leadVolumeTrend} />
+          <SourceBreakdownChart data={sourceBreakdown} />
+          <RepPerformanceTable leaderboard={leaderboard} />
+          <ConversionChart data={wonLostReasons} />
+          <DealValueChart data={dealsByStageValue} />
 
-          <AnalyticsChartCard title="Lead Volume Trend (12 weeks)" data={leadVolumeTrend} filename="lead-volume-trend">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={leadVolumeTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="week" tick={AXIS_TICK} />
-                <YAxis tick={AXIS_TICK} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Line type="monotone" dataKey="leads" stroke="#bd882c" strokeWidth={2} dot={{ fill: "#bd882c", r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </AnalyticsChartCard>
-
-          <AnalyticsChartCard title="Lead Source Breakdown" data={sourceBreakdown} filename="lead-sources">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={sourceBreakdown} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ""} ${((percent ?? 0) * 100).toFixed(0)}%`}>
-                  {sourceBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Pie>
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-              </PieChart>
-            </ResponsiveContainer>
-          </AnalyticsChartCard>
-
-          <AnalyticsChartCard title="Rep Performance" data={repPerformanceData} filename="rep-performance">
-            <div className="max-h-[280px] overflow-y-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Rep</TableHead>
-                    <TableHead className="text-xs text-right">Leads</TableHead>
-                    <TableHead className="text-xs text-right">Converted</TableHead>
-                    <TableHead className="text-xs text-right">Calls</TableHead>
-                    <TableHead className="text-xs text-right">Score</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {leaderboard?.map((rep, i) => (
-                    <TableRow key={rep.userId}>
-                      <TableCell className="text-xs font-medium">
-                        <span className="mr-1.5 text-muted-foreground">{i + 1}.</span>
-                        {rep.name}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">{rep.leadsAssigned}</TableCell>
-                      <TableCell className="text-xs text-right text-emerald-400">{rep.leadsConverted}</TableCell>
-                      <TableCell className="text-xs text-right">{rep.totalCalls}</TableCell>
-                      <TableCell className="text-xs text-right font-semibold">{rep.score}</TableCell>
-                    </TableRow>
-                  ))}
-                  {(!leaderboard || leaderboard.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">No data</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </AnalyticsChartCard>
-
-          <AnalyticsChartCard title="Won vs Lost" data={wonLostReasons} filename="won-vs-lost">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={wonLostReasons} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }: { name?: string; value?: number }) => `${name ?? ""}: ${value ?? 0}`}>
-                  {wonLostReasons.map((entry, i) => (
-                    <Cell key={i} fill={entry.name === "Won" ? "#10B981" : "#EF4444"} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </AnalyticsChartCard>
-
-          <AnalyticsChartCard title="Deal Value by Stage" data={dealsByStageValue} filename="deal-value-by-stage">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={dealsByStageValue}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="stage" tick={AXIS_TICK} />
-                <YAxis tick={AXIS_TICK} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${value}L`, "Value"]} />
-                <Bar dataKey="value" fill="#bd882c" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </AnalyticsChartCard>
-
+          {/* SLA Compliance */}
           <AnalyticsChartCard title="SLA Compliance Rate" data={[]} filename="sla-compliance">
             {slaReport && (
               <div className="flex flex-col items-center justify-center h-[280px]">
@@ -411,6 +220,7 @@ export default function CrmAnalyticsPage() {
             )}
           </AnalyticsChartCard>
 
+          {/* Score Distribution */}
           <AnalyticsChartCard title="Score Distribution" data={scoreDistribution} filename="score-distribution">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={scoreDistribution}>
@@ -419,12 +229,13 @@ export default function CrmAnalyticsPage() {
                 <YAxis tick={AXIS_TICK} />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {scoreDistribution.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {scoreDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </AnalyticsChartCard>
 
+          {/* Assignment Distribution */}
           {analyticsSummary && analyticsSummary.assignmentDistribution.length > 0 && (
             <AnalyticsChartCard title="Lead Assignment Distribution" data={analyticsSummary.assignmentDistribution as unknown as Record<string, unknown>[]} filename="assignment-distribution">
               <ResponsiveContainer width="100%" height={280}>
@@ -439,6 +250,7 @@ export default function CrmAnalyticsPage() {
             </AnalyticsChartCard>
           )}
 
+          {/* Conversion by Source */}
           {analyticsSummary && analyticsSummary.conversionBySource.length > 0 && (
             <AnalyticsChartCard title="Conversion Rate by Source" data={analyticsSummary.conversionBySource as unknown as Record<string, unknown>[]} filename="conversion-by-source">
               <ResponsiveContainer width="100%" height={280}>
@@ -455,6 +267,7 @@ export default function CrmAnalyticsPage() {
             </AnalyticsChartCard>
           )}
 
+          {/* Monthly Revenue */}
           {analyticsSummary && analyticsSummary.monthlyRevenue.length > 0 && (
             <AnalyticsChartCard title="Monthly Revenue Trend" data={analyticsSummary.monthlyRevenue as unknown as Record<string, unknown>[]} filename="monthly-revenue">
               <ResponsiveContainer width="100%" height={280}>
@@ -468,10 +281,7 @@ export default function CrmAnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tick={AXIS_TICK} />
                   <YAxis tick={AXIS_TICK} />
-                  <Tooltip
-                    contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value) => [`₹${(Number(value) / 100000).toFixed(1)}L`, "Revenue"]}
-                  />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} formatter={(value) => [`₹${(Number(value) / 100000).toFixed(1)}L`, "Revenue"]} />
                   <Area type="monotone" dataKey="revenue" stroke="#bd882c" strokeWidth={2} fill="url(#revenueGrad)" />
                 </AreaChart>
               </ResponsiveContainer>

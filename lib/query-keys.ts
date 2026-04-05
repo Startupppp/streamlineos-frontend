@@ -41,6 +41,14 @@ export const queryKeys = {
     monthlyAttendance: (params: { userId: string; year: number; month: number }) => [...base, "hr", "monthlyAttendance", params] as const,
     employeeStats: (userId: string) => [...base, "hr", "employeeStats", userId] as const,
     employeePayslips: (userId?: string) => [...base, "hr", "employeePayslips", userId] as const,
+    // Recruitment
+    recruitmentStats: () => [...base, "hr", "recruitmentStats"] as const,
+    jobPostings: (params?: Record<string, unknown>) => [...base, "hr", "jobPostings", params] as const,
+    jobPosting: (id: number) => [...base, "hr", "jobPosting", id] as const,
+    candidates: (params?: Record<string, unknown>) => [...base, "hr", "candidates", params] as const,
+    candidate: (id: number) => [...base, "hr", "candidate", id] as const,
+    interviews: (params?: Record<string, unknown>) => [...base, "hr", "interviews", params] as const,
+    recruitmentPipeline: () => [...base, "hr", "recruitmentPipeline"] as const,
   },
 
   // ─── Leads / CRM ───────────────────────────────────────────────────────────

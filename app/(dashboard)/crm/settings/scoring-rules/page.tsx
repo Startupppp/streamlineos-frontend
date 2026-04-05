@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useForm, type Resolver } from "react-hook-form";
+import { useForm, type Resolver, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2, Pencil, Zap } from "lucide-react";
@@ -121,6 +121,15 @@ export default function ScoringRulesPage() {
       points: rule.points,
     });
   }, [editForm]);
+
+  const handleCancelEdit = useCallback(() => setEditingId(null), []);
+
+  const handleDeleteScoringRule = useCallback((id: number) => {
+    deleteRule.mutate(id, {
+      onSuccess: () => toast.success("Rule deleted"),
+      onError: (err) => toast.error(err.message),
+    });
+  }, [deleteRule]);
 
   const sampleScore = useMemo(() => {
     if (!rules) return 0;
@@ -244,60 +253,17 @@ export default function ScoringRulesPage() {
                   </TableHeader>
                   <TableBody>
                     {rules.map(rule => (
-                      <TableRow key={rule.id}>
-                        {editingId === rule.id ? (
-                          <>
-                            <TableCell colSpan={4}>
-                              <Form {...editForm}>
-                                <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
-                                  <FormField control={editForm.control} name="field" render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
-                                      <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                  )} />
-                                  <FormField control={editForm.control} name="operator" render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                      <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
-                                      <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                  )} />
-                                  <FormField control={editForm.control} name="value" render={({ field }) => (
-                                    <Input {...field} className="h-8 w-24 text-xs" />
-                                  )} />
-                                  <FormField control={editForm.control} name="points" render={({ field }) => (
-                                    <Input type="number" {...field} className="h-8 w-16 text-xs" />
-                                  )} />
-                                  <Button type="submit" size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white text-xs" disabled={updateRule.isPending}>Save</Button>
-                                  <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditingId(null)}>Cancel</Button>
-                                </form>
-                              </Form>
-                            </TableCell>
-                            <TableCell />
-                          </>
-                        ) : (
-                          <>
-                            <TableCell className="text-xs capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
-                            <TableCell className="text-xs">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
-                            <TableCell className="text-xs">{rule.value}</TableCell>
-                            <TableCell className="text-xs text-right">
-                              <Badge variant={rule.points >= 0 ? "default" : "destructive"} className="text-[10px]">
-                                {rule.points > 0 ? "+" : ""}{rule.points}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(rule)} aria-label="Edit">
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteRule.mutate(rule.id, { onSuccess: () => toast.success("Rule deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </>
-                        )}
-                      </TableRow>
+                      <ScoringRuleRow
+                        key={rule.id}
+                        rule={rule}
+                        isEditing={editingId === rule.id}
+                        editForm={editForm}
+                        onEditSubmit={onEditSubmit}
+                        onEdit={startEdit}
+                        onDelete={handleDeleteScoringRule}
+                        onCancelEdit={handleCancelEdit}
+                        updatePending={updateRule.isPending}
+                      />
                     ))}
                   </TableBody>
                 </Table>
@@ -345,5 +311,80 @@ export default function ScoringRulesPage() {
         </motion.div>
       </motion.div>
     </PageWrapper>
+  );
+}
+
+type ScoringRuleData = { id: number; field: string; operator: string; value: string; points: number };
+
+interface ScoringRuleRowProps {
+  rule: ScoringRuleData;
+  isEditing: boolean;
+  editForm: UseFormReturn<RuleForm>;
+  onEditSubmit: (data: RuleForm) => void;
+  onEdit: (rule: ScoringRuleData) => void;
+  onDelete: (id: number) => void;
+  onCancelEdit: () => void;
+  updatePending: boolean;
+}
+
+function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDelete, onCancelEdit, updatePending }: ScoringRuleRowProps) {
+  const handleEdit = useCallback(() => onEdit(rule), [rule, onEdit]);
+  const handleDelete = useCallback(() => onDelete(rule.id), [rule.id, onDelete]);
+
+  return (
+    <TableRow>
+      {isEditing ? (
+        <>
+          <TableCell colSpan={4}>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="flex items-end gap-2">
+                <FormField control={editForm.control} name="field" render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
+                <FormField control={editForm.control} name="operator" render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                )} />
+                <FormField control={editForm.control} name="value" render={({ field }) => (
+                  <Input {...field} className="h-8 w-24 text-xs" />
+                )} />
+                <FormField control={editForm.control} name="points" render={({ field }) => (
+                  <Input type="number" {...field} className="h-8 w-16 text-xs" />
+                )} />
+                <Button type="submit" size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white text-xs" disabled={updatePending}>Save</Button>
+                <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={onCancelEdit}>Cancel</Button>
+              </form>
+            </Form>
+          </TableCell>
+          <TableCell />
+        </>
+      ) : (
+        <>
+          <TableCell className="text-xs capitalize">{FIELDS.find(f => f.value === rule.field)?.label ?? rule.field}</TableCell>
+          <TableCell className="text-xs">{OPERATORS.find(o => o.value === rule.operator)?.label ?? rule.operator}</TableCell>
+          <TableCell className="text-xs">{rule.value}</TableCell>
+          <TableCell className="text-xs text-right">
+            <Badge variant={rule.points >= 0 ? "default" : "destructive"} className="text-[10px]">
+              {rule.points > 0 ? "+" : ""}{rule.points}
+            </Badge>
+          </TableCell>
+          <TableCell className="text-right">
+            <div className="flex items-center justify-end gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDelete} aria-label="Delete">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </TableCell>
+        </>
+      )}
+    </TableRow>
   );
 }

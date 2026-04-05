@@ -16,6 +16,8 @@ import {
 } from "@/lib/api/hooks/leads";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { useLeadsFilters } from "@/hooks/use-leads-filters";
+import { useSession } from "next-auth/react";
+import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { toast } from "sonner";
 import { LeadsStatsBar } from "./_components/leads-stats-bar";
 import { LeadsToolbar } from "./_components/leads-toolbar";
@@ -76,10 +78,13 @@ export default function LeadsPipelinePage() {
   const bulkUpdateMutation = useBulkUpdateLeads();
   const bulkDeleteMutation = useBulkDeleteLeads();
 
+  const { data: session } = useSession();
   const createLead = useCreateLead();
   const updateStatus = useUpdateLeadStatus();
 
-  const isAdmin = true; // HR/CEO check already handled by middleware
+  const isAdmin = ADMIN_ROLES.includes(session?.user?.role ?? "");
+
+  const handleCloseDetail = useCallback(() => setSelectedLeadId(null), []);
 
   const handleSort = useCallback((col: string) => {
     const newDir = sortColumn === col
@@ -313,7 +318,7 @@ export default function LeadsPipelinePage() {
         <LeadDetailSheet
           leadId={selectedLeadId}
           open={!!selectedLeadId}
-          onClose={() => setSelectedLeadId(null)}
+          onClose={handleCloseDetail}
           onMoveStatus={handleMoveStatus}
         />
       </div>

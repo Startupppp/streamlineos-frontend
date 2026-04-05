@@ -59,6 +59,13 @@ export const crmSupportTicketPriorityEnum = pgEnum("crm_support_ticket_priority"
 export const crmActivityTypeEnum = pgEnum("crm_activity_type", ["deal_won", "meeting", "proposal", "call", "email", "ticket", "escalation"]);
 export const crmEventStatusEnum = pgEnum("crm_event_status", ["planning", "confirmed", "completed"]);
 
+// ─── Recruitment ───
+export const jobPostingStatusEnum = pgEnum("job_posting_status", ["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]);
+export const candidateStatusEnum = pgEnum("candidate_status", ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"]);
+export const interviewTypeEnum = pgEnum("interview_type", ["PHONE", "VIDEO", "ONSITE", "TECHNICAL", "HR", "FINAL"]);
+export const interviewResultEnum = pgEnum("interview_result", ["PENDING", "PASSED", "FAILED", "NO_SHOW"]);
+export const applicationStatusEnum = pgEnum("application_status", ["APPLIED", "SHORTLISTED", "INTERVIEWING", "OFFERED", "ACCEPTED", "REJECTED", "WITHDRAWN"]);
+
 // ─── Chat ───
 export const chatMessageTypeEnum = pgEnum("chat_message_type", ["text", "lead_submission", "system"]);
 

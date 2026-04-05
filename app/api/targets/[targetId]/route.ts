@@ -5,6 +5,7 @@ import { targets, targetHistory, users } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { createAuditLog } from "@/lib/audit-log";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
+import { isBranchScoped, getBranchUserIds } from "@/lib/db/branch-filter";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -36,11 +37,20 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   return withAuth(async (session) => {
     const input = await parseBody(req, updateSchema);
     const orgId = session.orgId!;
+    const branchCtx = { role: session.user.role ?? "", branchId: session.branchId, userId: session.user.id };
 
     const existing = await db.query.targets.findFirst({
       where: and(eq(targets.id, targetId), eq(targets.orgId, orgId)),
     });
     if (!existing) return err("Target not found", 404);
+
+    // Branch isolation check
+    if (isBranchScoped(branchCtx)) {
+      const branchUserIds = await getBranchUserIds(branchCtx);
+      if (branchUserIds !== null && !branchUserIds.includes(existing.userId)) {
+        return err("Target not in your branch", 403);
+      }
+    }
 
     const canManage = await assertCanManage(
       session.user.role ?? "",
@@ -105,11 +115,20 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
 
   return withAuth(async (session) => {
     const orgId = session.orgId!;
+    const branchCtx = { role: session.user.role ?? "", branchId: session.branchId, userId: session.user.id };
 
     const existing = await db.query.targets.findFirst({
       where: and(eq(targets.id, targetId), eq(targets.orgId, orgId)),
     });
     if (!existing) return err("Target not found", 404);
+
+    // Branch isolation check
+    if (isBranchScoped(branchCtx)) {
+      const branchUserIds = await getBranchUserIds(branchCtx);
+      if (branchUserIds !== null && !branchUserIds.includes(existing.userId)) {
+        return err("Target not in your branch", 403);
+      }
+    }
 
     const canManage = await assertCanManage(
       session.user.role ?? "",

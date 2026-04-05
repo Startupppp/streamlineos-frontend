@@ -14,7 +14,7 @@ const listSchema = z.object({
 
 const createSchema = z.object({
   name: z.string().min(1),
-  value: z.string().optional(),
+  value: z.coerce.number().min(0).optional(),
   stage: z.enum(["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]).default("LEAD"),
   probability: z.number().min(0).max(100).optional(),
   contactPerson: z.string().optional(),
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     const [deal] = await db.insert(deals).values({
       orgId: session.orgId!,
       name: input.name,
-      value: input.value || "0",
+      value: String(input.value ?? 0),
       stage: input.stage,
       probability: input.probability ?? 0,
       contactPerson: input.contactPerson || null,

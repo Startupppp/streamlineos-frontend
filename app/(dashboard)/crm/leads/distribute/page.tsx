@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,35 @@ import { useLeads } from "@/lib/api/hooks/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
+interface DistributeLeadRowProps {
+  lead: { id: number; name: string; email?: string | null; phone?: string | null; source?: string | null; status: string; assignedTo?: { id: string | number; name?: string | null } | null };
+  isSelected: boolean;
+  onToggle: (id: number) => void;
+}
+
+function DistributeLeadRow({ lead, isSelected, onToggle }: DistributeLeadRowProps) {
+  const handleToggle = useCallback(() => onToggle(lead.id), [lead.id, onToggle]);
+  return (
+    <TableRow className={isSelected ? "bg-gold/5" : ""}>
+      <TableCell className="px-3">
+        <Checkbox checked={isSelected} onCheckedChange={handleToggle} />
+      </TableCell>
+      <TableCell className="text-sm font-medium">{lead.name}</TableCell>
+      <TableCell className="text-xs text-muted-foreground">{lead.email || "—"}</TableCell>
+      <TableCell className="text-xs text-muted-foreground font-mono">{lead.phone || "—"}</TableCell>
+      <TableCell>
+        <Badge variant="outline" className="text-[10px]">{lead.source || "—"}</Badge>
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline" className="text-[10px]">{lead.status}</Badge>
+      </TableCell>
+      <TableCell className="text-xs">
+        {lead.assignedTo?.name || <span className="text-muted-foreground">Unassigned</span>}
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function LeadDistributionPage() {
   const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,9 +66,9 @@ export default function LeadDistributionPage() {
     limit: 100,
   });
 
-  function refetch() {
+  const refetch = useCallback(() => {
     qc.invalidateQueries({ queryKey: queryKeys.leads.all });
-  }
+  }, [qc]);
 
   const filteredLeads = data?.leads ?? [];
 
@@ -65,6 +94,11 @@ export default function LeadDistributionPage() {
     filteredLeads.filter((l) => !l.assignedTo?.id).length,
   [filteredLeads]);
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const handleShowDistribute = useCallback(() => setShowDistribute(true), []);
+  const handleRefetch = useCallback(() => refetch(), [refetch]);
+
   return (
     <PageWrapper
       title="Lead Distribution"
@@ -76,7 +110,7 @@ export default function LeadDistributionPage() {
             <Input
               placeholder="Search leads..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-9"
             />
           </div>
@@ -90,7 +124,7 @@ export default function LeadDistributionPage() {
             </SelectContent>
           </Select>
           {selectedIds.size > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+            <Button variant="ghost" size="sm" onClick={handleClearSelection}>
               Clear selection
             </Button>
           )}
@@ -98,12 +132,12 @@ export default function LeadDistributionPage() {
       }
       actions={
         <>
-          <CsvUploadDialog onSuccess={() => refetch()} />
+          <CsvUploadDialog onSuccess={handleRefetch} />
           <Button
             size="sm"
             variant="outline"
             disabled={selectedIds.size === 0}
-            onClick={() => setShowDistribute(true)}
+            onClick={handleShowDistribute}
           >
             <Users className="h-4 w-4 mr-1" /> Distribute ({selectedIds.size})
           </Button>
@@ -176,23 +210,12 @@ export default function LeadDistributionPage() {
                 </TableRow>
               ) : (
                 filteredLeads.map((lead) => (
-                  <TableRow key={lead.id} className={selectedIds.has(lead.id) ? "bg-gold/5" : ""}>
-                    <TableCell className="px-3">
-                      <Checkbox checked={selectedIds.has(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} />
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">{lead.name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{lead.email || "—"}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground font-mono">{lead.phone || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px]">{lead.source || "—"}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px]">{lead.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {lead.assignedTo?.name || <span className="text-muted-foreground">Unassigned</span>}
-                    </TableCell>
-                  </TableRow>
+                  <DistributeLeadRow
+                    key={lead.id}
+                    lead={lead}
+                    isSelected={selectedIds.has(lead.id)}
+                    onToggle={toggleSelect}
+                  />
                 ))
               )}
             </TableBody>

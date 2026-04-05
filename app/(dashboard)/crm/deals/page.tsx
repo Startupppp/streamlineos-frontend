@@ -3,57 +3,27 @@
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Plus, DollarSign, TrendingUp, Clock, Trophy, Download,
-  User, Calendar, MoreHorizontal, Trash2,
-  LayoutGrid, TableIcon,
-} from "lucide-react";
+import { Plus, Download, LayoutGrid, TableIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealTableView } from "@/components/crm/deal-table-view";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { cn, resolveImageUrl } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useDeals, useUpdateDealStage, useDeleteDeal, useCreateDeal } from "@/lib/api/hooks/crm";
+import { formatINRCompact } from "@/lib/format-utils";
+import { useDeals, useUpdateDealStage, useDeleteDeal } from "@/lib/api/hooks/crm";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
-import type { Deal } from "@/types/crm";
-
-const STAGES = [
-  { key: "LEAD", label: "Lead", dot: "bg-blue-500", bg: "bg-blue-500/10" },
-  { key: "CONTACTED", label: "Contacted", dot: "bg-sky-500", bg: "bg-sky-500/10" },
-  { key: "PROPOSAL", label: "Proposal", dot: "bg-amber-500", bg: "bg-amber-500/10" },
-  { key: "NEGOTIATION", label: "Negotiation", dot: "bg-purple-500", bg: "bg-purple-500/10" },
-  { key: "WON", label: "Won", dot: "bg-emerald-500", bg: "bg-emerald-500/10" },
-  { key: "LOST", label: "Lost", dot: "bg-red-500", bg: "bg-red-500/10" },
-] as const;
-
-type DealStage = typeof STAGES[number]["key"];
-
-function formatINR(v: number) {
-  if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
-  if (v >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
-  if (v >= 1000) return `₹${(v / 1000).toFixed(0)}K`;
-  return `₹${v.toLocaleString("en-IN")}`;
-}
+import { DEAL_STAGES } from "../_constants";
+import { CreateDealForm } from "./_components/create-deal-form";
+import { DealKanbanCard } from "./_components/deal-kanban-card";
+import { DealsStatsBar } from "./_components/deals-stats-bar";
 
 export default function DealsPage() {
   const searchParams = useSearchParams();
@@ -93,12 +63,9 @@ export default function DealsPage() {
     }
   }, [dealSortCol, dealSortDir, updateParams]);
 
-  const handleViewChange = useCallback((v: "table" | "kanban") => {
-    updateParams({ view: v === "table" ? null : v });
-  }, [updateParams]);
-
-  const handleViewTable = useCallback(() => handleViewChange("table"), [handleViewChange]);
-  const handleViewKanban = useCallback(() => handleViewChange("kanban"), [handleViewChange]);
+  const handleViewTable = useCallback(() => updateParams({ view: null }), [updateParams]);
+  const handleViewKanban = useCallback(() => updateParams({ view: "kanban" }), [updateParams]);
+  const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
 
   const handleExport = useCallback(async () => {
     try {
@@ -133,8 +100,6 @@ export default function DealsPage() {
     } catch { toast.error("Export failed"); }
   }, [allDeals]);
 
-  const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
-
   const updateStageMutation = useUpdateDealStage();
   const deleteMutation = useDeleteDeal();
 
@@ -158,7 +123,7 @@ export default function DealsPage() {
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, typeof allDeals> = {};
-    for (const s of STAGES) map[s.key] = [];
+    for (const s of DEAL_STAGES) map[s.key] = [];
     allDeals?.forEach(d => {
       if (map[d.stage]) map[d.stage]!.push(d);
     });
@@ -180,15 +145,14 @@ export default function DealsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 md:grid-cols-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+      <PageWrapper title="Deals Pipeline" subtitle="Track and manage your deals across stages">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+          </div>
+          <Skeleton className="h-96" />
         </div>
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-64" />)}
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -198,330 +162,103 @@ export default function DealsPage() {
       subtitle="Track and manage your deals across stages"
       actions={
         <>
-        <div className="flex items-center border border-border rounded-md">
-          <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-            className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/90 text-white")}
-            onClick={handleViewTable}>
-            <TableIcon className="h-4 w-4" />
-          </Button>
-          <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
-            className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/90 text-white")}
-            onClick={handleViewKanban}>
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />
-          Export
-        </Button>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gold hover:bg-gold/90 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              New Deal
+          <div className="flex items-center border border-border rounded-md">
+            <Button variant={view === "table" ? "default" : "ghost"} size="sm"
+              className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/90 text-white")}
+              onClick={handleViewTable}>
+              <TableIcon className="h-4 w-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Create New Deal</DialogTitle>
-            </DialogHeader>
-            <CreateDealForm
-              employees={employees}
-              onSuccess={handleCreateSuccess}
-            />
-          </DialogContent>
-        </Dialog>
+            <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
+              className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/90 text-white")}
+              onClick={handleViewKanban}>
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />Export
+          </Button>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gold hover:bg-gold/90 text-white">
+                <Plus className="h-4 w-4 mr-2" />New Deal
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create New Deal</DialogTitle>
+              </DialogHeader>
+              <CreateDealForm employees={employees} onSuccess={handleCreateSuccess} />
+            </DialogContent>
+          </Dialog>
         </>
       }
     >
-      <motion.div
-        className="space-y-6"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-      <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {[
-          { label: "Total Deals", value: stats.total, icon: TrendingUp, color: "text-blue-400" },
-          { label: "Pipeline Value", value: formatINR(stats.totalValue), icon: DollarSign, color: "text-gold" },
-          { label: "Won Value", value: formatINR(stats.wonValue), icon: Trophy, color: "text-emerald-400" },
-          { label: "Avg Probability", value: `${stats.avgProbability}%`, icon: Clock, color: "text-purple-400" },
-        ].map(s => (
-          <Card key={s.label} className="shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <s.icon className={cn("h-5 w-5", s.color)} />
-                <span className="text-2xl font-bold tabular-nums">{s.value}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
-      {view === "table" && (
+      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
         <motion.div variants={fadeUp}>
-          <DealTableView
-            deals={allDeals || []}
-            sortColumn={dealSortCol}
-            sortDirection={dealSortDir}
-            onSort={handleDealSort}
-            onStageChange={handleStageChange}
-            isLoading={isLoading}
-          />
+          <DealsStatsBar {...stats} />
         </motion.div>
-      )}
 
-      {view === "kanban" && (
-      <motion.div variants={fadeUp}>
-        <ScrollArea className="w-full" type="auto">
-        <div className="inline-flex gap-3 sm:gap-4 pb-4">
-          {STAGES.map(stage => {
-            const stageDeals = dealsByStage[stage.key] || [];
-            const stageValue = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
-            return (
-              <div key={stage.key} className="w-56 sm:w-64 md:w-72 flex-shrink-0">
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <div className="flex items-center gap-2">
-                    <div className={cn("w-2.5 h-2.5 rounded-full", stage.dot)} />
-                    <span className="text-sm font-semibold">{stage.label}</span>
-                    <Badge variant="secondary" className="text-xs">{stageDeals.length}</Badge>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{formatINR(stageValue)}</span>
-                </div>
-                <div className="space-y-2 min-h-[200px] p-2 rounded-lg bg-muted/30 border border-border/50">
-                  {stageDeals.map(deal => (
-                    <DealKanbanCard
-                      key={deal.id}
-                      deal={deal}
-                      onStageChange={handleStageChange}
-                      onDelete={setDealToDelete}
-                    />
-                  ))}
-                  {stageDeals.length === 0 && (
-                    <div className="text-center py-8 text-xs text-muted-foreground">No deals</div>
-                  )}
-                </div>
+        {view === "table" && (
+          <motion.div variants={fadeUp}>
+            <DealTableView
+              deals={allDeals || []}
+              sortColumn={dealSortCol}
+              sortDirection={dealSortDir}
+              onSort={handleDealSort}
+              onStageChange={handleStageChange}
+              isLoading={isLoading}
+            />
+          </motion.div>
+        )}
+
+        {view === "kanban" && (
+          <motion.div variants={fadeUp}>
+            <ScrollArea className="w-full" type="auto">
+              <div className="inline-flex gap-3 sm:gap-4 pb-4">
+                {DEAL_STAGES.map(stage => {
+                  const stageDeals = dealsByStage[stage.key] || [];
+                  const stageValue = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
+                  return (
+                    <div key={stage.key} className="w-56 sm:w-64 md:w-72 flex-shrink-0">
+                      <div className="flex items-center justify-between mb-3 px-1">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-2.5 h-2.5 rounded-full", stage.dot)} />
+                          <span className="text-sm font-semibold">{stage.label}</span>
+                          <Badge variant="secondary" className="text-xs">{stageDeals.length}</Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{formatINRCompact(stageValue)}</span>
+                      </div>
+                      <div className="space-y-2 min-h-[200px] p-2 rounded-lg bg-muted/30 border border-border/50">
+                        {stageDeals.map(deal => (
+                          <DealKanbanCard
+                            key={deal.id}
+                            deal={deal}
+                            onStageChange={handleStageChange}
+                            onDelete={setDealToDelete}
+                          />
+                        ))}
+                        {stageDeals.length === 0 && (
+                          <div className="text-center py-8 text-xs text-muted-foreground">No deals</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-        </ScrollArea>
-      </motion.div>
-      )}
-      <ConfirmDialog
-        open={dealToDelete !== null}
-        onOpenChange={handleDeleteDialogChange}
-        title="Delete deal?"
-        description="This action cannot be undone."
-        confirmLabel="Delete"
-        destructive
-        onConfirm={handleDeleteConfirm}
-      />
+            </ScrollArea>
+          </motion.div>
+        )}
+
+        <ConfirmDialog
+          open={dealToDelete !== null}
+          onOpenChange={handleDeleteDialogChange}
+          title="Delete deal?"
+          description="This action cannot be undone."
+          confirmLabel="Delete"
+          destructive
+          onConfirm={handleDeleteConfirm}
+        />
       </motion.div>
     </PageWrapper>
-  );
-}
-
-interface StageMenuItemProps {
-  stageKey: string;
-  dot: string;
-  label: string;
-  dealId: number;
-  onStageChange: (id: number, stage: string) => void;
-}
-
-function StageMenuItem({ stageKey, dot, label, dealId, onStageChange }: StageMenuItemProps) {
-  const handleClick = useCallback(() => onStageChange(dealId, stageKey), [dealId, stageKey, onStageChange]);
-  return (
-    <DropdownMenuItem onClick={handleClick}>
-      <div className={cn("w-2 h-2 rounded-full mr-2", dot)} />
-      Move to {label}
-    </DropdownMenuItem>
-  );
-}
-
-interface DealKanbanCardProps {
-  deal: Deal;
-  onStageChange: (id: number, stage: string) => void;
-  onDelete: (id: number) => void;
-}
-
-function DealKanbanCard({ deal, onStageChange, onDelete }: DealKanbanCardProps) {
-  const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
-  return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-      <CardContent className="p-3">
-        <div className="flex items-start justify-between">
-          <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options">
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {STAGES.filter(s => s.key !== deal.stage).map(s => (
-                <StageMenuItem
-                  key={s.key}
-                  stageKey={s.key}
-                  dot={s.dot}
-                  label={s.label}
-                  dealId={deal.id}
-                  onStageChange={onStageChange}
-                />
-              ))}
-              <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
-                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <p className="text-lg font-bold text-gold mt-1">
-          {formatINR(Number(deal.value || 0))}
-        </p>
-
-        {deal.contactPerson && (
-          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {deal.contactPerson}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between mt-2">
-          {deal.assignedTo ? (
-            <div className="flex items-center gap-1.5">
-              <Avatar className="h-5 w-5">
-                <AvatarImage src={resolveImageUrl(deal.assignedTo.image)} />
-                <AvatarFallback className="text-[8px]">
-                  {deal.assignedTo.name?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-xs text-muted-foreground">{deal.assignedTo.name}</span>
-            </div>
-          ) : <span />}
-
-          {deal.expectedCloseDate && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-              <Calendar className="h-2.5 w-2.5" />
-              {new Date(deal.expectedCloseDate).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
-            </span>
-          )}
-        </div>
-
-        {deal.probability !== null && deal.probability > 0 && (
-          <div className="mt-2">
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full bg-gold" style={{ width: `${deal.probability}%` }} />
-            </div>
-            <span className="text-[10px] text-muted-foreground">{deal.probability}% probability</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function CreateDealForm({
-  employees,
-  onSuccess,
-}: {
-  employees: Array<{ id: string; name: string | null }>;
-  onSuccess: () => void;
-}) {
-  const createMutation = useCreateDeal();
-  const [expectedCloseDate, setExpectedCloseDate] = useState("");
-
-  const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    createMutation.mutate(
-      {
-        name: fd.get("name") as string,
-        value: (fd.get("value") as string) || "0",
-        stage: (fd.get("stage") as DealStage) || "LEAD",
-        probability: Number(fd.get("probability") || 0),
-        contactPerson: (fd.get("contactPerson") as string) || undefined,
-        contactEmail: (fd.get("contactEmail") as string) || undefined,
-        contactPhone: (fd.get("contactPhone") as string) || undefined,
-        assignedToId: (fd.get("assignedToId") as string) || undefined,
-        expectedCloseDate: expectedCloseDate || undefined,
-        notes: (fd.get("notes") as string) || undefined,
-      },
-      {
-        onSuccess: () => { toast.success("Deal created"); onSuccess(); },
-        onError: (err) => toast.error(err.message),
-      }
-    );
-  }, [createMutation, expectedCloseDate, onSuccess]);
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <Label htmlFor="name">Deal Name *</Label>
-          <Input id="name" name="name" required placeholder="e.g. Enterprise License" />
-        </div>
-        <div>
-          <Label htmlFor="value">Value (INR)</Label>
-          <Input id="value" name="value" type="number" placeholder="0" />
-        </div>
-        <div>
-          <Label htmlFor="stage">Stage</Label>
-          <Select name="stage" defaultValue="LEAD">
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STAGES.map(s => (
-                <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="probability">Probability (%)</Label>
-          <Input id="probability" name="probability" type="number" min="0" max="100" defaultValue="0" />
-        </div>
-        <div>
-          <Label htmlFor="expectedCloseDate">Expected Close</Label>
-          <DatePicker id="expectedCloseDate" value={expectedCloseDate} onChange={setExpectedCloseDate} placeholder="Select date" />
-        </div>
-        <div>
-          <Label htmlFor="contactPerson">Contact Person</Label>
-          <Input id="contactPerson" name="contactPerson" placeholder="Name" />
-        </div>
-        <div>
-          <Label htmlFor="contactEmail">Contact Email</Label>
-          <Input id="contactEmail" name="contactEmail" type="email" placeholder="email@example.com" />
-        </div>
-        <div>
-          <Label htmlFor="contactPhone">Contact Phone</Label>
-          <Input id="contactPhone" name="contactPhone" placeholder="+91..." />
-        </div>
-        <div>
-          <Label htmlFor="assignedToId">Assigned To</Label>
-          <Select name="assignedToId">
-            <SelectTrigger>
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map(e => (
-                <SelectItem key={e.id} value={e.id}>{e.name || e.id}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" placeholder="Additional notes..." className="min-h-[80px]" />
-      </div>
-      <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createMutation.isPending}>
-        {createMutation.isPending ? "Creating..." : "Create Deal"}
-      </Button>
-    </form>
   );
 }

@@ -105,6 +105,15 @@ export default function SlaPage() {
     });
   }, [editForm]);
 
+  const handleCancelEdit = useCallback(() => setEditingId(null), []);
+
+  const handleDeletePolicy = useCallback((id: number) => {
+    deletePolicy.mutate(id, {
+      onSuccess: () => toast.success("Policy deleted"),
+      onError: (err) => toast.error(err.message),
+    });
+  }, [deletePolicy]);
+
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
@@ -247,32 +256,14 @@ export default function SlaPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {policies.map(policy => {
-                      const pColor = PRIORITY_COLORS[policy.priority] ?? PRIORITY_COLORS.medium;
-                      return (
-                        <TableRow key={policy.id}>
-                          <TableCell className="text-xs font-medium">{policy.name}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-[10px] capitalize">{policy.appliesTo}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={cn("text-[10px] capitalize", pColor.bg, pColor.color)}>{policy.priority}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-right">{policy.firstResponseHours}h</TableCell>
-                          <TableCell className="text-xs text-right">{policy.resolutionHours}h</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(policy)} aria-label="Edit">
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deletePolicy.mutate(policy.id, { onSuccess: () => toast.success("Policy deleted"), onError: (err) => toast.error(err.message) })} aria-label="Delete">
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {policies.map(policy => (
+                      <SlaTableRow
+                        key={policy.id}
+                        policy={policy}
+                        onEdit={startEdit}
+                        onDelete={handleDeletePolicy}
+                      />
+                    ))}
                   </TableBody>
                 </Table>
               ) : (
@@ -347,7 +338,7 @@ export default function SlaPage() {
                       )} />
                     </div>
                     <div className="flex justify-end gap-3">
-                      <Button type="button" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                      <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
                       <Button type="submit" className="bg-gold hover:bg-gold/90 text-white" disabled={updatePolicy.isPending}>
                         {updatePolicy.isPending ? "Saving..." : "Save Changes"}
                       </Button>
@@ -397,5 +388,50 @@ export default function SlaPage() {
         )}
       </motion.div>
     </PageWrapper>
+  );
+}
+
+type SlaPolicyData = {
+  id: number;
+  name: string;
+  appliesTo: string;
+  priority: string;
+  firstResponseHours: number;
+  resolutionHours: number;
+};
+
+interface SlaTableRowProps {
+  policy: SlaPolicyData;
+  onEdit: (policy: SlaPolicyData) => void;
+  onDelete: (id: number) => void;
+}
+
+function SlaTableRow({ policy, onEdit, onDelete }: SlaTableRowProps) {
+  const pColor = PRIORITY_COLORS[policy.priority] ?? PRIORITY_COLORS.medium;
+  const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
+  const handleDelete = useCallback(() => onDelete(policy.id), [policy.id, onDelete]);
+
+  return (
+    <TableRow>
+      <TableCell className="text-xs font-medium">{policy.name}</TableCell>
+      <TableCell>
+        <Badge variant="secondary" className="text-[10px] capitalize">{policy.appliesTo}</Badge>
+      </TableCell>
+      <TableCell>
+        <Badge className={cn("text-[10px] capitalize", pColor.bg, pColor.color)}>{policy.priority}</Badge>
+      </TableCell>
+      <TableCell className="text-xs text-right">{policy.firstResponseHours}h</TableCell>
+      <TableCell className="text-xs text-right">{policy.resolutionHours}h</TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDelete} aria-label="Delete">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }

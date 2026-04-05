@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -66,23 +66,31 @@ export function SettingsPreferences() {
 
   const isPending = updatePrefs.isPending;
 
-  const handleCompactToggle = (checked: boolean) => {
+  const handleCompactToggle = useCallback((checked: boolean) => {
     setCompactView(checked);
     document.documentElement.classList.toggle("compact", checked);
     toast.success(checked ? "Compact view enabled" : "Compact view disabled");
-  };
+  }, []);
 
-  const handlePrefUpdate = (field: string, value: boolean | string | null) => {
+  const handlePrefUpdate = useCallback((field: string, value: boolean | string | null) => {
     updatePrefs.mutate(
       { [field]: value } as Parameters<typeof updatePrefs.mutate>[0],
       { onError: () => toast.error("Failed to save preference") }
     );
-  };
+  }, [updatePrefs]);
+
+  const handleInAppChange = useCallback((v: boolean) => handlePrefUpdate("inAppEnabled", v), [handlePrefUpdate]);
+  const handleEmailChange = useCallback((v: boolean) => handlePrefUpdate("emailEnabled", v), [handlePrefUpdate]);
+  const handlePushChange = useCallback((v: boolean) => handlePrefUpdate("pushEnabled", v), [handlePrefUpdate]);
+  const handleSmsChange = useCallback((v: boolean) => handlePrefUpdate("smsEnabled", v), [handlePrefUpdate]);
 
   const [qhStart, setQhStart] = useState(prefs?.quietHoursStart ?? "");
   const [qhEnd, setQhEnd] = useState(prefs?.quietHoursEnd ?? "");
 
-  const saveQuietHours = () => {
+  const handleQhStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setQhStart(e.target.value), []);
+  const handleQhEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setQhEnd(e.target.value), []);
+
+  const saveQuietHours = useCallback(() => {
     updatePrefs.mutate(
       { quietHoursStart: qhStart || null, quietHoursEnd: qhEnd || null },
       {
@@ -90,7 +98,23 @@ export function SettingsPreferences() {
         onError: () => toast.error("Failed to save quiet hours"),
       }
     );
-  };
+  }, [updatePrefs, qhStart, qhEnd]);
+
+  const handleClearQuietHours = useCallback(() => {
+    setQhStart("");
+    setQhEnd("");
+    updatePrefs.mutate(
+      { quietHoursStart: null, quietHoursEnd: null },
+      { onSuccess: () => toast.success("Quiet hours cleared") }
+    );
+  }, [updatePrefs]);
+
+  const handleCategoryUpdate = useCallback((key: string, value: boolean) => {
+    updatePrefs.mutate(
+      { categories: { ...(prefs?.categories ?? {}), [key]: value } },
+      { onError: () => toast.error("Failed to save") }
+    );
+  }, [updatePrefs, prefs?.categories]);
 
   return (
     <div className="space-y-6">
@@ -107,7 +131,7 @@ export function SettingsPreferences() {
             label="In-app notifications"
             description="Show notifications in the notification bell."
             checked={prefs?.inAppEnabled ?? true}
-            onCheckedChange={(v) => handlePrefUpdate("inAppEnabled", v)}
+            onCheckedChange={handleInAppChange}
             disabled={isPending}
           />
           <PrefRow
@@ -116,7 +140,7 @@ export function SettingsPreferences() {
             label="Email notifications"
             description="Receive important updates and alerts via email."
             checked={prefs?.emailEnabled ?? true}
-            onCheckedChange={(v) => handlePrefUpdate("emailEnabled", v)}
+            onCheckedChange={handleEmailChange}
             disabled={isPending}
           />
           <PrefRow
@@ -125,7 +149,7 @@ export function SettingsPreferences() {
             label="Desktop push notifications"
             description="Receive browser push notifications even when the tab is inactive."
             checked={prefs?.pushEnabled ?? true}
-            onCheckedChange={(v) => handlePrefUpdate("pushEnabled", v)}
+            onCheckedChange={handlePushChange}
             disabled={isPending}
           />
           <PrefRow
@@ -134,7 +158,7 @@ export function SettingsPreferences() {
             label="SMS notifications"
             description="Receive critical alerts via SMS (charges may apply)."
             checked={prefs?.smsEnabled ?? false}
-            onCheckedChange={(v) => handlePrefUpdate("smsEnabled", v)}
+            onCheckedChange={handleSmsChange}
             disabled={isPending}
           />
         </div>
@@ -161,7 +185,7 @@ export function SettingsPreferences() {
                     id="qh-start"
                     type="time"
                     value={qhStart}
-                    onChange={(e) => setQhStart(e.target.value)}
+                    onChange={handleQhStartChange}
                     className="h-8 w-28 text-xs"
                     aria-label="Quiet hours start time"
                   />
@@ -172,7 +196,7 @@ export function SettingsPreferences() {
                     id="qh-end"
                     type="time"
                     value={qhEnd}
-                    onChange={(e) => setQhEnd(e.target.value)}
+                    onChange={handleQhEndChange}
                     className="h-8 w-28 text-xs"
                     aria-label="Quiet hours end time"
                   />
@@ -186,14 +210,7 @@ export function SettingsPreferences() {
                 </button>
                 {(qhStart || qhEnd) && (
                   <button
-                    onClick={() => {
-                      setQhStart("");
-                      setQhEnd("");
-                      updatePrefs.mutate(
-                        { quietHoursStart: null, quietHoursEnd: null },
-                        { onSuccess: () => toast.success("Quiet hours cleared") }
-                      );
-                    }}
+                    onClick={handleClearQuietHours}
                     disabled={isPending}
                     className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-muted disabled:opacity-50 transition-colors"
                   >
@@ -212,25 +229,43 @@ export function SettingsPreferences() {
           <p className="text-xs text-muted-foreground">Toggle specific event types</p>
         </div>
         {NOTIFICATION_CATEGORIES.map(({ key, label, description }) => (
-          <div key={key} className="px-4">
-            <PrefRow
-              id={`cat-${key}`}
-              icon={BellOff}
-              label={label}
-              description={description}
-              checked={prefs?.categories?.[key] !== false}
-              onCheckedChange={(v) =>
-                updatePrefs.mutate(
-                  { categories: { ...(prefs?.categories ?? {}), [key]: v } },
-                  { onError: () => toast.error("Failed to save") }
-                )
-              }
-              disabled={isPending}
-            />
-          </div>
+          <CategoryPrefRow
+            key={key}
+            categoryKey={key}
+            label={label}
+            description={description}
+            checked={prefs?.categories?.[key] !== false}
+            onUpdate={handleCategoryUpdate}
+            disabled={isPending}
+          />
         ))}
       </div>
     </div>
   );
 }
 
+interface CategoryPrefRowProps {
+  categoryKey: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  onUpdate: (key: string, value: boolean) => void;
+  disabled: boolean;
+}
+
+function CategoryPrefRow({ categoryKey, label, description, checked, onUpdate, disabled }: CategoryPrefRowProps) {
+  const handleChange = useCallback((v: boolean) => onUpdate(categoryKey, v), [categoryKey, onUpdate]);
+  return (
+    <div className="px-4">
+      <PrefRow
+        id={`cat-${categoryKey}`}
+        icon={BellOff}
+        label={label}
+        description={description}
+        checked={checked}
+        onCheckedChange={handleChange}
+        disabled={disabled}
+      />
+    </div>
+  );
+}

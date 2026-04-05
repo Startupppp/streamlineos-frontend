@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,9 @@ export default function BranchManagementPage() {
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData(f => ({ ...f, [key]: e.target.value }));
 
+  const handleOpenCreate = useCallback(() => setShowCreate(true), []);
+  const handleCloseCreate = useCallback(() => setShowCreate(false), []);
+
   const handleCreate = () => {
     createMutation.mutate(formData, {
       onSuccess: () => {
@@ -53,7 +56,7 @@ export default function BranchManagementPage() {
       subtitle="Manage your organization's branch offices"
       badge={branches.length > 0 ? String(branches.length) : undefined}
       actions={
-        <Button onClick={() => setShowCreate(true)} className="bg-gold hover:bg-gold/80 text-white">
+        <Button onClick={handleOpenCreate} className="bg-gold hover:bg-gold/80 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Add Branch
         </Button>
@@ -200,7 +203,7 @@ export default function BranchManagementPage() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button variant="outline" className="flex-1" onClick={() => setShowCreate(false)}>Cancel</Button>
+                <Button variant="outline" className="flex-1" onClick={handleCloseCreate}>Cancel</Button>
                 <Button
                   className="flex-1"
                   disabled={!formData.name || !formData.code || createMutation.isPending}

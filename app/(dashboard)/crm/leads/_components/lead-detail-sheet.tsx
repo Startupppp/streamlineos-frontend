@@ -25,6 +25,27 @@ interface LeadDetailSheetProps {
   onMoveStatus: (leadId: number, status: LeadStatus) => void;
 }
 
+interface StatusMoveButtonProps {
+  status: LeadStatus;
+  leadId: number;
+  onMoveStatus: (leadId: number, status: LeadStatus) => void;
+}
+
+function StatusMoveButton({ status: s, leadId, onMoveStatus }: StatusMoveButtonProps) {
+  const handleClick = useCallback(() => onMoveStatus(leadId, s), [leadId, s, onMoveStatus]);
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className={cn("text-xs h-8 gap-1.5", STATUS_CONFIG[s].border, "hover:bg-muted/50")}
+      onClick={handleClick}
+    >
+      <ArrowRight className="h-3 w-3" />
+      {STATUS_CONFIG[s].label}
+    </Button>
+  );
+}
+
 export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDetailSheetProps) {
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
   const logActivity = useLogLeadActivity();
@@ -103,16 +124,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Move to</p>
                 <div className="flex gap-2 flex-wrap">
                   {STATUSES.filter(s => s !== lead.status && s !== "LOST").map(s => (
-                    <Button
-                      key={s}
-                      size="sm"
-                      variant="outline"
-                      className={cn("text-xs h-8 gap-1.5", STATUS_CONFIG[s].border, "hover:bg-muted/50")}
-                      onClick={() => onMoveStatus(lead.id, s)}
-                    >
-                      <ArrowRight className="h-3 w-3" />
-                      {STATUS_CONFIG[s].label}
-                    </Button>
+                    <StatusMoveButton key={s} status={s} leadId={lead.id} onMoveStatus={onMoveStatus} />
                   ))}
                 </div>
               </div>

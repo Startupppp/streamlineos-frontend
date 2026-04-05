@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,6 +43,11 @@ export function ChannelInfoPanel({
   const [editAvatar, setEditAvatar] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const editAvatarRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenAvatarInput = useCallback(() => { editAvatarRef.current?.click(); }, []);
+  const handleCancelEdit = useCallback(() => setEditing(false), []);
+  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value), []);
+  const handleEditDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditDesc(e.target.value), []);
 
   const startEditing = () => {
     setEditName(channel?.name ?? "");
@@ -110,7 +115,7 @@ export function ChannelInfoPanel({
             <div className="space-y-4 mb-6">
               <div className="flex justify-center">
                 <input ref={editAvatarRef} type="file" accept="image/*" onChange={handleEditAvatarUpload} className="hidden" aria-label="Upload channel avatar" />
-                <button type="button" onClick={() => editAvatarRef.current?.click()} disabled={uploadingAvatar} className="relative group">
+                <button type="button" onClick={handleOpenAvatarInput} disabled={uploadingAvatar} className="relative group">
                   {editAvatar ? (
                     <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-border/40">
                       <Image src={resolveImageUrl(editAvatar) ?? ""} alt="Avatar" fill unoptimized className="object-cover" />
@@ -127,14 +132,14 @@ export function ChannelInfoPanel({
               </div>
               <div>
                 <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">Name</Label>
-                <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-8 text-[13px] bg-muted/30" />
+                <Input value={editName} onChange={handleEditNameChange} className="h-8 text-[13px] bg-muted/30" />
               </div>
               <div>
                 <Label className="text-[11px] font-medium text-muted-foreground mb-1 block">Description</Label>
-                <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} placeholder="Add a description..." className="h-8 text-[13px] bg-muted/30" />
+                <Input value={editDesc} onChange={handleEditDescChange} placeholder="Add a description..." className="h-8 text-[13px] bg-muted/30" />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setEditing(false)} className="flex-1 h-8 text-[12px]">Cancel</Button>
+                <Button variant="outline" size="sm" onClick={handleCancelEdit} className="flex-1 h-8 text-[12px]">Cancel</Button>
                 <Button size="sm" onClick={handleSaveEdit} disabled={updateChannel.isPending || !editName.trim()} className="flex-1 h-8 text-[12px] bg-gold hover:bg-gold/90 text-white">
                   {updateChannel.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                 </Button>

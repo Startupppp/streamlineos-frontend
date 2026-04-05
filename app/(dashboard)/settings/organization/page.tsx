@@ -33,6 +33,10 @@ export default function OrganizationSettingsPage() {
     setIsEditing(true);
   }, [org]);
 
+  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value), []);
+  const handleEditSlugChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")), []);
+  const handleCancelEdit = useCallback(() => setIsEditing(false), []);
+
   const handleSave = useCallback(() => {
     if (!editName.trim()) return;
     updateOrg.mutate(
@@ -103,7 +107,7 @@ export default function OrganizationSettingsPage() {
               <Input
                 id="name"
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                onChange={handleEditNameChange}
                 aria-label="Organization name"
               />
             ) : (
@@ -116,7 +120,7 @@ export default function OrganizationSettingsPage() {
               <Input
                 id="slug"
                 value={editSlug}
-                onChange={(e) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                onChange={handleEditSlugChange}
                 aria-label="Organization slug"
               />
             ) : (
@@ -141,7 +145,7 @@ export default function OrganizationSettingsPage() {
                     "Save Changes"
                   )}
                 </Button>
-                <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={updateOrg.isPending}>
+                <Button variant="ghost" onClick={handleCancelEdit} disabled={updateOrg.isPending}>
                   Cancel
                 </Button>
               </>

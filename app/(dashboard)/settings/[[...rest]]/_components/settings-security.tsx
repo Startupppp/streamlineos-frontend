@@ -59,6 +59,8 @@ function PasswordInput({
   error?: string;
 }) {
   const [show, setShow] = useState(false);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value), [onChange]);
+  const handleToggleShow = useCallback(() => setShow((v) => !v), []);
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-[13px] font-medium">{label}</Label>
@@ -67,7 +69,7 @@ function PasswordInput({
           id={id}
           type={show ? "text" : "password"}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleChange}
           placeholder={placeholder}
           maxLength={maxLength}
           autoComplete={autoComplete}
@@ -75,7 +77,7 @@ function PasswordInput({
         />
         <button
           type="button"
-          onClick={() => setShow((v) => !v)}
+          onClick={handleToggleShow}
           tabIndex={-1}
           aria-label={show ? "Hide" : "Show"}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 transition-colors"
@@ -132,6 +134,7 @@ function SessionsSection() {
 
   const [revokeAllOpen, setRevokeAllOpen] = useState(false);
   const otherSessions = sessions?.filter((s) => !s.isCurrent) ?? [];
+  const handleOpenRevokeAll = useCallback(() => setRevokeAllOpen(true), []);
 
   return (
     <div className="rounded-lg border border-border bg-card p-5 space-y-4">
@@ -152,7 +155,7 @@ function SessionsSection() {
               size="sm"
               className="h-8 text-xs"
               disabled={revokeAll.isPending}
-              onClick={() => setRevokeAllOpen(true)}
+              onClick={handleOpenRevokeAll}
             >
               {revokeAll.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Sign out all others"}
             </Button>
@@ -181,35 +184,7 @@ function SessionsSection() {
       ) : (
         <div className="space-y-2">
           {sessions.map((s) => (
-            <div key={s.id} className="flex items-center gap-3 p-3 rounded-md border bg-muted/30">
-              <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s.userAgent)}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-[13px] font-medium truncate">{parseDeviceName(s.userAgent)}</p>
-                  {s.isCurrent && (
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50">
-                      Current
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {s.ipAddress ? `${s.ipAddress} · ` : ""}
-                  Active {formatDistanceToNow(new Date(s.lastActive), { addSuffix: true })}
-                </p>
-              </div>
-              {!s.isCurrent && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                  onClick={() => handleRevokeOne(s.id)}
-                  disabled={revokeOne.isPending}
-                  aria-label="Revoke session"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              )}
-            </div>
+            <SessionRow key={s.id} session={s} onRevoke={handleRevokeOne} revokePending={revokeOne.isPending} />
           ))}
         </div>
       )}
@@ -351,6 +326,55 @@ export function SettingsSecurity() {
       </div>
 
       <SessionsSection />
+    </div>
+  );
+}
+
+type SessionData = {
+  id: string;
+  isCurrent: boolean;
+  userAgent: string | null;
+  ipAddress: string | null;
+  lastActive: string | Date;
+};
+
+interface SessionRowProps {
+  session: SessionData;
+  onRevoke: (id: string) => void;
+  revokePending: boolean;
+}
+
+function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
+  const handleRevoke = useCallback(() => onRevoke(s.id), [s.id, onRevoke]);
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/30">
+      <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s.userAgent)}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-medium truncate">{parseDeviceName(s.userAgent)}</p>
+          {s.isCurrent && (
+            <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50">
+              Current
+            </Badge>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          {s.ipAddress ? `${s.ipAddress} · ` : ""}
+          Active {formatDistanceToNow(new Date(s.lastActive), { addSuffix: true })}
+        </p>
+      </div>
+      {!s.isCurrent && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={handleRevoke}
+          disabled={revokePending}
+          aria-label="Revoke session"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      )}
     </div>
   );
 }

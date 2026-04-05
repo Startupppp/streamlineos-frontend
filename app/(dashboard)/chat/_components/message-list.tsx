@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useRef } from "react";
+import { Fragment, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Loader2, Send } from "lucide-react";
@@ -12,6 +12,54 @@ import { ChatBubble } from "./chat-bubble";
 interface GroupedMessages {
   date: string;
   messages: Message[];
+}
+
+interface MessageItemProps {
+  msg: Message;
+  isOwn: boolean;
+  showHeader: boolean;
+  editingMessageId: number | undefined;
+  editInput: string;
+  onEditInputChange: (value: string) => void;
+  onStartEdit: (msg: Message) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: (messageId: number) => void;
+  onReply: (msg: Message) => void;
+  onDelete: (messageId: number) => void;
+}
+
+function MessageItem({
+  msg,
+  isOwn,
+  showHeader,
+  editingMessageId,
+  editInput,
+  onEditInputChange,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onReply,
+  onDelete,
+}: MessageItemProps) {
+  const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
+  const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
+  const handleReply = useCallback(() => onReply(msg), [msg, onReply]);
+  const handleDelete = useCallback(() => onDelete(msg.id), [msg.id, onDelete]);
+  return (
+    <ChatBubble
+      message={msg}
+      isOwn={isOwn}
+      showSender={showHeader}
+      isEditing={editingMessageId === msg.id}
+      editInput={editingMessageId === msg.id ? editInput : ""}
+      onEditInputChange={onEditInputChange}
+      onStartEdit={handleStartEdit}
+      onCancelEdit={onCancelEdit}
+      onSaveEdit={handleSaveEdit}
+      onReply={handleReply}
+      onDelete={handleDelete}
+    />
+  );
 }
 
 export interface MessageListProps {
@@ -65,6 +113,8 @@ export function MessageList({
   scrollContainerRef,
   onScroll,
 }: MessageListProps) {
+  const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
+
   return (
     <div
       className="flex-1 overflow-y-auto relative"
@@ -87,7 +137,7 @@ export function MessageList({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => fetchNextPage()}
+                onClick={handleFetchNextPage}
                 disabled={isFetchingNextPage}
                 className="h-7 text-[12px] rounded-full px-4"
               >
@@ -126,19 +176,19 @@ export function MessageList({
                 const showHeader = !isSameSender || timeDiff > 2 * 60 * 1000;
 
                 return (
-                  <ChatBubble
+                  <MessageItem
                     key={msg.id}
-                    message={msg}
+                    msg={msg}
                     isOwn={isOwn}
-                    showSender={showHeader}
-                    isEditing={editingMessage?.id === msg.id}
-                    editInput={editingMessage?.id === msg.id ? editInput : ""}
+                    showHeader={showHeader}
+                    editingMessageId={editingMessage?.id}
+                    editInput={editInput}
                     onEditInputChange={onEditInputChange}
-                    onStartEdit={() => onStartEdit(msg)}
+                    onStartEdit={onStartEdit}
                     onCancelEdit={onCancelEdit}
-                    onSaveEdit={() => onSaveEdit(msg.id)}
-                    onReply={() => onReply(msg)}
-                    onDelete={() => onDelete(msg.id)}
+                    onSaveEdit={onSaveEdit}
+                    onReply={onReply}
+                    onDelete={onDelete}
                   />
                 );
               })}

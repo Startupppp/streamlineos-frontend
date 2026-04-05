@@ -14,7 +14,7 @@ const listSchema = z.object({
 
 const createSchema = z.object({
   name: z.string().min(1).max(200),
-  email: z.string().email().optional(),
+  email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   title: z.string().optional(),
   department: z.string().optional(),

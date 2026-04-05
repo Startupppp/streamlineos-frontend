@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { Phone, Mail, StickyNote, ListTodo } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +72,29 @@ const ACTION_BUTTONS = [
   },
 ] as const;
 
+type ActionButtonData = (typeof ACTION_BUTTONS)[number];
+
+interface ActionToggleButtonProps {
+  action: ActionButtonData;
+  isActive: boolean;
+  onSetActiveAction: (action: QuickAction) => void;
+}
+
+function ActionToggleButton({ action, isActive, onSetActiveAction }: ActionToggleButtonProps) {
+  const handleClick = useCallback(() => onSetActiveAction(isActive ? null : action.key), [isActive, action.key, onSetActiveAction]);
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn(action.color, isActive && "ring-2 ring-current/30")}
+      onClick={handleClick}
+    >
+      <action.icon className="h-4 w-4 mr-1.5" />
+      {action.label}
+    </Button>
+  );
+}
+
 export function LeadQuickActions({
   activeAction,
   onSetActiveAction,
@@ -87,6 +111,8 @@ export function LeadQuickActions({
   isEmailPending,
   isCallPending,
 }: LeadQuickActionsProps) {
+  const handleCancelAction = useCallback(() => onSetActiveAction(null), [onSetActiveAction]);
+
   return (
     <Card className="shadow-noir">
       <CardHeader>
@@ -96,23 +122,12 @@ export function LeadQuickActions({
         {/* ── Action toggle buttons ─────────────────────────────────────── */}
         <div className="flex flex-wrap gap-2">
           {ACTION_BUTTONS.map((action) => (
-            <Button
+            <ActionToggleButton
               key={action.key}
-              variant="ghost"
-              size="sm"
-              className={cn(
-                action.color,
-                activeAction === action.key && "ring-2 ring-current/30"
-              )}
-              onClick={() =>
-                onSetActiveAction(
-                  activeAction === action.key ? null : action.key
-                )
-              }
-            >
-              <action.icon className="h-4 w-4 mr-1.5" />
-              {action.label}
-            </Button>
+              action={action}
+              isActive={activeAction === action.key}
+              onSetActiveAction={onSetActiveAction}
+            />
           ))}
         </div>
 
@@ -145,7 +160,7 @@ export function LeadQuickActions({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => onSetActiveAction(null)}
+                  onClick={handleCancelAction}
                 >
                   Cancel
                 </Button>
@@ -200,7 +215,7 @@ export function LeadQuickActions({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => onSetActiveAction(null)}
+                  onClick={handleCancelAction}
                 >
                   Cancel
                 </Button>
@@ -272,7 +287,7 @@ export function LeadQuickActions({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => onSetActiveAction(null)}
+                  onClick={handleCancelAction}
                 >
                   Cancel
                 </Button>
@@ -355,7 +370,7 @@ export function LeadQuickActions({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => onSetActiveAction(null)}
+                  onClick={handleCancelAction}
                 >
                   Cancel
                 </Button>

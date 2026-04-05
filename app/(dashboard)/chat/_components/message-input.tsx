@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +39,76 @@ type OrgUser = {
   image?: string | null;
   role?: string | null;
 };
+
+interface MentionItemProps {
+  user: OrgUser;
+  idx: number;
+  mentionIndex: number;
+  onInsert: (name: string) => void;
+}
+
+function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
+  const handleClick = useCallback(() => onInsert(user.name ?? ""), [user.name, onInsert]);
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
+        idx === mentionIndex && "bg-gold/10"
+      )}
+    >
+      <Avatar className="h-6 w-6">
+        <AvatarImage src={resolveImageUrl(user.image)} />
+        <AvatarFallback className="text-[8px]">{getInitials(user.name)}</AvatarFallback>
+      </Avatar>
+      <span className="text-[13px] font-medium">{user.name}</span>
+      <span className="text-[11px] text-muted-foreground ml-auto">{user.role}</span>
+    </button>
+  );
+}
+
+interface PendingAttachmentItemProps {
+  att: PendingAttachment;
+  idx: number;
+  onRemove: (idx: number) => void;
+}
+
+function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProps) {
+  const handleRemove = useCallback(() => onRemove(idx), [idx, onRemove]);
+  const colors = getFileColor(att.fileName);
+  return (
+    <div className="relative group flex items-center gap-2.5 bg-background border border-border rounded-xl px-3 py-2 shadow-sm">
+      {att.mimeType.startsWith("image/") ? (
+        <Image
+          src={att.fileUrl}
+          alt={att.fileName}
+          width={44}
+          height={44}
+          unoptimized
+          className="h-11 w-11 rounded-lg object-cover border border-border/30"
+        />
+      ) : (
+        <div className={cn("h-11 w-11 rounded-lg flex flex-col items-center justify-center relative", colors.bg)}>
+          <FileText className={cn("h-5 w-5", colors.text)} />
+          <span className={cn("text-[7px] font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+            {getFileExt(att.fileName)}
+          </span>
+        </div>
+      )}
+      <div className="min-w-0 max-w-[140px]">
+        <p className="text-[12px] font-medium truncate">{att.fileName}</p>
+        <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+      </div>
+      <button
+        onClick={handleRemove}
+        aria-label="Remove attachment"
+        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
 
 export interface MessageInputProps {
   // Channel context
@@ -117,6 +188,27 @@ export function MessageInput({
   onKeyDown,
   onInputChange,
 }: MessageInputProps) {
+  const handleCancelReply = useCallback(() => setReplyTo(null), [setReplyTo]);
+  const handleOpenFileInput = useCallback(() => { fileInputRef.current?.click(); }, [fileInputRef]);
+  const handleToggleEmoji = useCallback(() => {
+    setShowEmojiPicker((p) => !p);
+    setShowMentions(false);
+  }, [setShowEmojiPicker, setShowMentions]);
+  const handleInsertMentionAt = useCallback(() => {
+    const el = inputRef.current;
+    if (el) {
+      const pos = el.selectionStart ?? messageInput.length;
+      const newVal = messageInput.slice(0, pos) + "@" + messageInput.slice(pos);
+      setMessageInput(newVal);
+      setShowMentions(true);
+      setShowEmojiPicker(false);
+      setTimeout(() => { el.focus(); el.setSelectionRange(pos + 1, pos + 1); }, 0);
+    }
+  }, [inputRef, messageInput, setMessageInput, setShowMentions, setShowEmojiPicker]);
+  const handleRemoveAttachment = useCallback((idx: number) => {
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }, [setPendingAttachments]);
+
   return (
     <>
       {/* Reply Preview */}
@@ -140,7 +232,7 @@ export function MessageInput({
                 </p>
               </div>
               <button
-                onClick={() => setReplyTo(null)}
+                onClick={handleCancelReply}
                 className="p-1 hover:bg-muted rounded-md"
                 aria-label="Cancel reply"
               >
@@ -169,25 +261,13 @@ export function MessageInput({
                       Members
                     </div>
                     {filteredMentions.slice(0, 8).map((user, idx) => (
-                      <button
+                      <MentionItem
                         key={user.id}
-                        onClick={() => insertMention(user.name ?? "")}
-                        className={cn(
-                          "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
-                          idx === mentionIndex && "bg-gold/10"
-                        )}
-                      >
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={resolveImageUrl(user.image)} />
-                          <AvatarFallback className="text-[8px]">
-                            {getInitials(user.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-[13px] font-medium">{user.name}</span>
-                        <span className="text-[11px] text-muted-foreground ml-auto">
-                          {user.role}
-                        </span>
-                      </button>
+                        user={user}
+                        idx={idx}
+                        mentionIndex={mentionIndex}
+                        onInsert={insertMention}
+                      />
                     ))}
                   </div>
                 </div>
@@ -213,58 +293,14 @@ export function MessageInput({
           {/* Pending attachments preview */}
           {pendingAttachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
-              {pendingAttachments.map((att, idx) => {
-                const colors = getFileColor(att.fileName);
-                return (
-                  <div
-                    key={idx}
-                    className="relative group flex items-center gap-2.5 bg-background border border-border rounded-xl px-3 py-2 shadow-sm"
-                  >
-                    {att.mimeType.startsWith("image/") ? (
-                      <Image
-                        src={att.fileUrl}
-                        alt={att.fileName}
-                        width={44}
-                        height={44}
-                        unoptimized
-                        className="h-11 w-11 rounded-lg object-cover border border-border/30"
-                      />
-                    ) : (
-                      <div
-                        className={cn(
-                          "h-11 w-11 rounded-lg flex flex-col items-center justify-center relative",
-                          colors.bg
-                        )}
-                      >
-                        <FileText className={cn("h-5 w-5", colors.text)} />
-                        <span
-                          className={cn(
-                            "text-[7px] font-bold text-white px-1 rounded mt-0.5",
-                            colors.badge
-                          )}
-                        >
-                          {getFileExt(att.fileName)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="min-w-0 max-w-[140px]">
-                      <p className="text-[12px] font-medium truncate">{att.fileName}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {formatFileSize(att.fileSize)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() =>
-                        setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))
-                      }
-                      aria-label="Remove attachment"
-                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
+              {pendingAttachments.map((att, idx) => (
+                <PendingAttachmentItem
+                  key={idx}
+                  att={att}
+                  idx={idx}
+                  onRemove={handleRemoveAttachment}
+                />
+              ))}
               {uploading && (
                 <div className="flex items-center gap-2 bg-muted/40 border border-border/40 rounded-lg px-3 py-2">
                   <Loader2 className="h-4 w-4 animate-spin text-gold" />
@@ -306,7 +342,7 @@ export function MessageInput({
             <div className="flex items-center justify-between px-3 py-1.5">
               <div className="flex items-center gap-0.5">
                 <button
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={handleOpenFileInput}
                   disabled={uploading}
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
@@ -320,10 +356,7 @@ export function MessageInput({
                   <Paperclip className="h-[18px] w-[18px]" />
                 </button>
                 <button
-                  onClick={() => {
-                    setShowEmojiPicker((p) => !p);
-                    setShowMentions(false);
-                  }}
+                  onClick={handleToggleEmoji}
                   className={cn(
                     "p-2 rounded-lg hover:bg-muted/60 transition-colors",
                     showEmojiPicker
@@ -336,21 +369,7 @@ export function MessageInput({
                   <Smile className="h-[18px] w-[18px]" />
                 </button>
                 <button
-                  onClick={() => {
-                    const el = inputRef.current;
-                    if (el) {
-                      const pos = el.selectionStart ?? messageInput.length;
-                      const newVal =
-                        messageInput.slice(0, pos) + "@" + messageInput.slice(pos);
-                      setMessageInput(newVal);
-                      setShowMentions(true);
-                      setShowEmojiPicker(false);
-                      setTimeout(() => {
-                        el.focus();
-                        el.setSelectionRange(pos + 1, pos + 1);
-                      }, 0);
-                    }
-                  }}
+                  onClick={handleInsertMentionAt}
                   className="p-2 rounded-lg hover:bg-muted/60 text-muted-foreground/70 hover:text-foreground transition-colors"
                   title="Mention someone"
                   aria-label="Mention someone"

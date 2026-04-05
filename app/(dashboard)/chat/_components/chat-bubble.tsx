@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import Image from "next/image";
 import { ArrowDown, CheckCheck, Copy, FileText, Pencil, Reply, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -43,6 +44,16 @@ export function ChatBubble({
   onReply: () => void;
   onDelete: () => void;
 }) {
+  const handleEditInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onEditInputChange(e.target.value), [onEditInputChange]);
+  const handleEditKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSaveEdit(); }
+    if (e.key === "Escape") onCancelEdit();
+  }, [onSaveEdit, onCancelEdit]);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(message.content!);
+    toast.success("Copied");
+  }, [message.content]);
+
   if (message.isDeleted) {
     return (
       <div className={cn("flex mb-[2px]", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
@@ -106,11 +117,8 @@ export function ChatBubble({
             <div className="rounded-xl border border-gold/40 bg-background overflow-hidden shadow-sm">
               <textarea
                 value={editInput}
-                onChange={(e) => onEditInputChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSaveEdit(); }
-                  if (e.key === "Escape") onCancelEdit();
-                }}
+                onChange={handleEditInputChange}
+                onKeyDown={handleEditKeyDown}
                 className="w-full bg-transparent text-[14px] resize-none px-3 py-2 focus:outline-none min-h-[40px]"
                 autoFocus
               />
@@ -232,10 +240,7 @@ export function ChatBubble({
               </button>
               {message.content && (
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(message.content!);
-                    toast.success("Copied");
-                  }}
+                  onClick={handleCopy}
                   className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                   title="Copy"
                   aria-label="Copy"

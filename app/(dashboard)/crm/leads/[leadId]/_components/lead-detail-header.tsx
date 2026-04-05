@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -38,6 +39,36 @@ interface LeadDetailHeaderProps {
   onStatusChange: (status: PipelineStatus) => void;
 }
 
+interface PipelineStepButtonProps {
+  status: PipelineStatus;
+  index: number;
+  isActive: boolean;
+  isPast: boolean;
+  isLast: boolean;
+  onStatusChange: (status: PipelineStatus) => void;
+}
+
+function PipelineStepButton({ status, index: i, isActive, isPast, isLast, onStatusChange }: PipelineStepButtonProps) {
+  const style = STATUS_STYLES[status];
+  const handleClick = useCallback(() => onStatusChange(status), [status, onStatusChange]);
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+        isActive
+          ? cn(style.bg, style.color, "ring-1 ring-current/20")
+          : isPast
+            ? "bg-muted/50 text-muted-foreground"
+            : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
+      )}
+    >
+      {status.charAt(0) + status.slice(1).toLowerCase()}
+      {!isLast && <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground/30" />}
+    </button>
+  );
+}
+
 export function LeadDetailHeader({
   lead,
   isEditing,
@@ -45,6 +76,9 @@ export function LeadDetailHeader({
   onStatusChange,
 }: LeadDetailHeaderProps) {
   const router = useRouter();
+
+  const handleBack = useCallback(() => router.push("/crm/leads"), [router]);
+  const handleConvert = useCallback(() => onStatusChange("CONVERTED"), [onStatusChange]);
 
   const currentStatusIndex = STATUS_PIPELINE.indexOf(
     lead.status as PipelineStatus
@@ -68,7 +102,7 @@ export function LeadDetailHeader({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push("/crm/leads")}
+          onClick={handleBack}
           aria-label="Back to leads"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -135,7 +169,7 @@ export function LeadDetailHeader({
             <Button
               size="sm"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={() => onStatusChange("CONVERTED")}
+              onClick={handleConvert}
             >
               <ArrowRightCircle className="h-4 w-4 mr-1" />
               Convert to Deal
@@ -149,30 +183,17 @@ export function LeadDetailHeader({
         variants={fadeUp}
         className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto"
       >
-        {STATUS_PIPELINE.map((status, i) => {
-          const isActive = status === lead.status;
-          const isPast = i < currentStatusIndex;
-          const style = STATUS_STYLES[status];
-          return (
-            <button
-              key={status}
-              onClick={() => onStatusChange(status)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
-                isActive
-                  ? cn(style.bg, style.color, "ring-1 ring-current/20")
-                  : isPast
-                    ? "bg-muted/50 text-muted-foreground"
-                    : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
-              )}
-            >
-              {status.charAt(0) + status.slice(1).toLowerCase()}
-              {i < STATUS_PIPELINE.length - 1 && (
-                <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground/30" />
-              )}
-            </button>
-          );
-        })}
+        {STATUS_PIPELINE.map((status, i) => (
+          <PipelineStepButton
+            key={status}
+            status={status}
+            index={i}
+            isActive={status === lead.status}
+            isPast={i < currentStatusIndex}
+            isLast={i === STATUS_PIPELINE.length - 1}
+            onStatusChange={onStatusChange}
+          />
+        ))}
       </motion.div>
     </>
   );

@@ -146,6 +146,10 @@ export default function LeadDetailPage({
     [leadId, logActivityMutation]
   );
 
+  const handleBackToPipeline = useCallback(() => router.push("/crm/leads"), [router]);
+  const handleToggleEdit = useCallback(() => setIsEditing((prev) => !prev), []);
+  const handleCancelEdit = useCallback(() => setIsEditing(false), []);
+
   const onCallSubmit = useCallback(
     (data: CallForm) => {
       logActivityMutation.mutate(
@@ -184,7 +188,7 @@ export default function LeadDetailPage({
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
         <p className="text-muted-foreground">Lead not found</p>
-        <Button variant="outline" onClick={() => router.push("/crm/leads")}>
+        <Button variant="outline" onClick={handleBackToPipeline}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Pipeline
         </Button>
@@ -197,7 +201,7 @@ export default function LeadDetailPage({
     <PageWrapper
       title={lead.name}
       actions={
-        <Button variant="outline" size="sm" onClick={() => router.push("/crm/leads")}>
+        <Button variant="outline" size="sm" onClick={handleBackToPipeline}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Pipeline
         </Button>
@@ -212,7 +216,7 @@ export default function LeadDetailPage({
         <LeadDetailHeader
           lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
           isEditing={isEditing}
-          onToggleEdit={() => setIsEditing((prev) => !prev)}
+          onToggleEdit={handleToggleEdit}
           onStatusChange={handleStatusChange}
         />
 
@@ -225,7 +229,7 @@ export default function LeadDetailPage({
               editForm={editForm}
               isUpdatePending={updateLeadMutation.isPending}
               onEditSubmit={onEditSubmit}
-              onCancelEdit={() => setIsEditing(false)}
+              onCancelEdit={handleCancelEdit}
             />
 
             <LeadQuickActions

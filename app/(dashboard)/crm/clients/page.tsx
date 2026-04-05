@@ -38,7 +38,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
   const num = typeof val === "string" ? parseFloat(val) : val;
-  if (isNaN(num)) return "—";
+  if (isNaN(num) || num === 0) return "—";
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
 }
 

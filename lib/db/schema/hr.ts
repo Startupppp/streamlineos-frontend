@@ -8,6 +8,8 @@ import {
   leaveStatusEnum, payrollStatusEnum, expenseStatusEnum, assetStatusEnum,
   documentTypeEnum, reviewStatusEnum, ticketPriorityEnum, ticketStatusEnum,
   wfhRequestStatusEnum, deviceStatusEnum,
+  jobPostingStatusEnum, candidateStatusEnum, interviewTypeEnum,
+  interviewResultEnum, applicationStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -318,6 +320,112 @@ export const helpdeskTickets = pgTable("helpdesk_tickets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ─── Rich Documents ───
+export const richDocuments = pgTable("rich_documents", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  contentJson: jsonb("content_json"),
+  templateType: text("template_type"),
+  isPublished: boolean("is_published").default(false),
+  version: integer("version").default(1),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  updatedBy: text("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_rich_documents_org").on(table.orgId),
+]);
+
+// ─── Recruitment ───
+export const jobPostings = pgTable("job_postings", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  departmentId: integer("department_id").references(() => departments.id),
+  location: text("location"),
+  type: text("type").default("FULL_TIME"),
+  experience: text("experience"),
+  salaryMin: decimal("salary_min"),
+  salaryMax: decimal("salary_max"),
+  description: text("description"),
+  requirements: text("requirements"),
+  benefits: text("benefits"),
+  status: jobPostingStatusEnum("status").default("DRAFT"),
+  openings: integer("openings").default(1),
+  applicationDeadline: date("application_deadline"),
+  postedBy: text("posted_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_job_postings_org").on(table.orgId),
+  index("idx_job_postings_status").on(table.status),
+]);
+
+export const candidates = pgTable("candidates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  resumeUrl: text("resume_url"),
+  linkedinUrl: text("linkedin_url"),
+  portfolioUrl: text("portfolio_url"),
+  currentCompany: text("current_company"),
+  currentRole: text("current_role"),
+  experienceYears: decimal("experience_years"),
+  skills: text("skills").array(),
+  source: text("source").default("DIRECT"),
+  status: candidateStatusEnum("status").default("NEW"),
+  notes: text("notes"),
+  rating: integer("rating"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_candidates_org").on(table.orgId),
+  index("idx_candidates_status").on(table.status),
+  index("idx_candidates_email").on(table.email),
+]);
+
+export const candidateApplications = pgTable("candidate_applications", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id, { onDelete: "cascade" }).notNull(),
+  status: applicationStatusEnum("status").default("APPLIED"),
+  appliedAt: timestamp("applied_at").defaultNow(),
+  coverLetter: text("cover_letter"),
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_applications_candidate").on(table.candidateId),
+  index("idx_applications_job").on(table.jobPostingId),
+]);
+
+export const interviews = pgTable("interviews", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
+  interviewerId: text("interviewer_id").references(() => users.id),
+  type: interviewTypeEnum("type").default("VIDEO"),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  duration: integer("duration").default(60),
+  location: text("location"),
+  meetingLink: text("meeting_link"),
+  result: interviewResultEnum("result").default("PENDING"),
+  feedback: text("feedback"),
+  rating: integer("rating"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_interviews_candidate").on(table.candidateId),
+  index("idx_interviews_interviewer").on(table.interviewerId),
+  index("idx_interviews_scheduled").on(table.scheduledAt),
+]);
+
 // ─── HR Relations ───
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
   organization: one(organizations, {
@@ -400,4 +508,28 @@ export const wfhRequestsRelations = relations(wfhRequests, ({ one }) => ({
 
 export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => ({
   user: one(users, { fields: [employeeDevices.userId], references: [users.id] }),
+}));
+
+// ─── Recruitment Relations ───
+export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
+  organization: one(organizations, { fields: [jobPostings.orgId], references: [organizations.id] }),
+  department: one(departments, { fields: [jobPostings.departmentId], references: [departments.id] }),
+  postedByUser: one(users, { fields: [jobPostings.postedBy], references: [users.id] }),
+  applications: many(candidateApplications),
+}));
+
+export const candidatesRelations = relations(candidates, ({ many }) => ({
+  applications: many(candidateApplications),
+  interviews: many(interviews),
+}));
+
+export const candidateApplicationsRelations = relations(candidateApplications, ({ one }) => ({
+  candidate: one(candidates, { fields: [candidateApplications.candidateId], references: [candidates.id] }),
+  jobPosting: one(jobPostings, { fields: [candidateApplications.jobPostingId], references: [jobPostings.id] }),
+}));
+
+export const interviewsRelations = relations(interviews, ({ one }) => ({
+  candidate: one(candidates, { fields: [interviews.candidateId], references: [candidates.id] }),
+  jobPosting: one(jobPostings, { fields: [interviews.jobPostingId], references: [jobPostings.id] }),
+  interviewer: one(users, { fields: [interviews.interviewerId], references: [users.id] }),
 }));

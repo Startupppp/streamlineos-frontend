@@ -8,7 +8,7 @@ import { z } from "zod";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
-  value: z.string().optional(),
+  value: z.coerce.number().min(0).optional(),
   stage: z.enum(["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]).optional(),
   probability: z.number().min(0).max(100).optional(),
   contactPerson: z.string().optional(),
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
       // Log stage change if changed
       if (existing && existing.stage !== input.stage) {
-        db.insert(dealActivities).values({
+        await db.insert(dealActivities).values({
           orgId: session.orgId!,
           dealId,
           type: "stage_change",
@@ -69,12 +69,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           newValue: input.stage,
           subject: `Stage changed from ${existing.stage} to ${input.stage}`,
           userId: session.user.id,
-        }).catch(() => {});
+        });
       }
     }
 
     for (const [key, val] of Object.entries(input)) {
-      if (val !== undefined) updateData[key] = val;
+      if (val !== undefined) {
+        // DB stores value as string
+        updateData[key] = key === "value" ? String(val) : val;
+      }
     }
 
     const [updated] = await db.update(deals)

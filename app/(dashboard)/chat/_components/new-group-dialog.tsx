@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -19,6 +19,54 @@ import { toast } from "sonner";
 import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/hooks/trpc-hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
+
+type OrgUserItem = { id: string; name?: string | null; email?: string | null; image?: string | null };
+
+interface SelectedUserBadgeProps {
+  id: string;
+  name?: string | null;
+  onRemove: (id: string) => void;
+}
+
+function SelectedUserBadge({ id, name, onRemove }: SelectedUserBadgeProps) {
+  const handleRemove = useCallback(() => onRemove(id), [id, onRemove]);
+  return (
+    <span className="inline-flex items-center gap-1 bg-gold/10 text-gold rounded-full px-2 py-0.5 text-[11px] font-medium">
+      {name?.split(" ")[0]}
+      <button onClick={handleRemove} className="hover:bg-gold/20 rounded-full p-0.5">
+        <X className="h-2.5 w-2.5" />
+      </button>
+    </span>
+  );
+}
+
+interface UserSelectItemProps {
+  user: OrgUserItem;
+  selected: boolean;
+  onToggle: (id: string) => void;
+}
+
+function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
+  const handleClick = useCallback(() => onToggle(user.id), [user.id, onToggle]);
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
+        selected && "bg-gold/5"
+      )}
+    >
+      <div className={cn("h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all", selected ? "bg-gold border-gold text-white" : "border-border/60")}>
+        {selected && <Check className="h-3 w-3" />}
+      </div>
+      <Avatar className="h-7 w-7 shrink-0">
+        <AvatarImage src={resolveImageUrl(user.image)} />
+        <AvatarFallback className="text-[9px]">{getInitials(user.name)}</AvatarFallback>
+      </Avatar>
+      <p className="text-[13px] font-medium truncate flex-1 text-left">{user.name}</p>
+    </button>
+  );
+}
 
 export function NewGroupDialog({
   open,
@@ -41,6 +89,15 @@ export function NewGroupDialog({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [step, setStep] = useState<"info" | "members">("info");
+
+  const handleOpenAvatarInput = useCallback(() => { avatarInputRef.current?.click(); }, []);
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
+  }, []);
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value), []);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleGoToMembers = useCallback(() => setStep("members"), []);
+  const handleGoToInfo = useCallback(() => setStep("info"), []);
 
   const filteredUsers = useMemo(() => {
     if (!orgUsers) return [];
@@ -133,7 +190,7 @@ export function NewGroupDialog({
               <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
               <button
                 type="button"
-                onClick={() => avatarInputRef.current?.click()}
+                onClick={handleOpenAvatarInput}
                 disabled={uploadingAvatar}
                 className="relative group"
               >
@@ -163,9 +220,7 @@ export function NewGroupDialog({
                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
                 <Input
                   value={name}
-                  onChange={(e) =>
-                    setName(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))
-                  }
+                  onChange={handleNameChange}
                   placeholder="e.g. design-team"
                   className="pl-9 h-9 bg-muted/30 border-border/30"
                   autoFocus
@@ -178,13 +233,13 @@ export function NewGroupDialog({
               </Label>
               <Input
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={handleDescriptionChange}
                 placeholder="What's this channel about?"
                 className="h-9 bg-muted/30 border-border/30"
               />
             </div>
             <Button
-              onClick={() => setStep("members")}
+              onClick={handleGoToMembers}
               disabled={!name.trim()}
               className="w-full bg-gold hover:bg-gold/90 text-white h-9"
             >
@@ -200,7 +255,7 @@ export function NewGroupDialog({
                 <Input
                   placeholder="Search people..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={handleSearchChange}
                   className="pl-9 h-9 bg-muted/30 border-border/30"
                   autoFocus
                 />
@@ -210,15 +265,12 @@ export function NewGroupDialog({
                   {Array.from(selectedIds).map((id) => {
                     const user = orgUsers?.find((u) => u.id === id);
                     return (
-                      <span
+                      <SelectedUserBadge
                         key={id}
-                        className="inline-flex items-center gap-1 bg-gold/10 text-gold rounded-full px-2 py-0.5 text-[11px] font-medium"
-                      >
-                        {user?.name?.split(" ")[0]}
-                        <button onClick={() => toggleUser(id)} className="hover:bg-gold/20 rounded-full p-0.5">
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </span>
+                        id={id}
+                        name={user?.name}
+                        onRemove={toggleUser}
+                      />
                     );
                   })}
                 </div>
@@ -226,37 +278,18 @@ export function NewGroupDialog({
             </div>
             <ScrollArea className="h-[240px] border-t border-border/30">
               <div className="p-1">
-                {filteredUsers.map((user) => {
-                  const selected = selectedIds.has(user.id);
-                  return (
-                    <button
-                      key={user.id}
-                      onClick={() => toggleUser(user.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-                        selected && "bg-gold/5"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
-                          selected ? "bg-gold border-gold text-white" : "border-border/60"
-                        )}
-                      >
-                        {selected && <Check className="h-3 w-3" />}
-                      </div>
-                      <Avatar className="h-7 w-7 shrink-0">
-                        <AvatarImage src={resolveImageUrl(user.image)} />
-                        <AvatarFallback className="text-[9px]">{getInitials(user.name)}</AvatarFallback>
-                      </Avatar>
-                      <p className="text-[13px] font-medium truncate flex-1 text-left">{user.name}</p>
-                    </button>
-                  );
-                })}
+                {filteredUsers.map((user) => (
+                  <UserSelectItem
+                    key={user.id}
+                    user={user}
+                    selected={selectedIds.has(user.id)}
+                    onToggle={toggleUser}
+                  />
+                ))}
               </div>
             </ScrollArea>
             <div className="px-4 pt-3 flex gap-2">
-              <Button variant="outline" onClick={() => setStep("info")} className="flex-1 h-9">
+              <Button variant="outline" onClick={handleGoToInfo} className="flex-1 h-9">
                 Back
               </Button>
               <Button

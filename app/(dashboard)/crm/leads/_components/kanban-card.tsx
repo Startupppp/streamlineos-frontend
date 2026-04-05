@@ -1,10 +1,12 @@
 "use client";
 
+import { useCallback } from "react";
 import { Plus, ArrowRight, X, GripVertical, Building2 } from "lucide-react";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { formatINRCompact } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { useSelfAssignLead } from "@/lib/hooks/trpc-hooks";
 import { STATUSES, SOURCE_COLORS, PRIORITY_CONFIG, timeAgo, getInitials } from "./leads-constants";
@@ -18,8 +20,33 @@ interface KanbanCardProps {
   onMoveStatus: (leadId: number, status: LeadStatus, expectedStatus?: LeadStatus) => void;
 }
 
+const PRIORITY_BORDER: Record<string, string> = {
+  HOT: "border-l-red-500",
+  WARM: "border-l-amber-500",
+  COLD: "border-l-blue-400",
+};
+
 export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: KanbanCardProps) {
   const selfAssign = useSelfAssignLead();
+
+  const handleOpen = useCallback(() => onOpen(lead.id), [lead.id, onOpen]);
+  const handleSelfAssign = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    selfAssign.mutate(lead.id, { onSuccess: () => toast.success("Lead assigned to you") });
+  }, [lead.id, selfAssign]);
+  const handleMarkLost = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMoveStatus(lead.id, "LOST", status);
+  }, [lead.id, status, onMoveStatus]);
+  const handleMoveNext = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextIdx = STATUSES.indexOf(status) + 1;
+    if (nextIdx < STATUSES.length - 1) onMoveStatus(lead.id, STATUSES[nextIdx], status);
+  }, [lead.id, status, onMoveStatus]);
+
+  const priorityBorder = lead.priority
+    ? PRIORITY_BORDER[lead.priority] ?? ""
+    : "";
 
   return (
     <Draggable key={lead.id} draggableId={String(lead.id)} index={index}>
@@ -31,12 +58,13 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
         >
           <Card
             className={cn(
-              "cursor-pointer transition-all border-border/40",
+              "cursor-pointer transition-all border-l-[3px]",
+              priorityBorder || "border-l-transparent",
               dragSnapshot.isDragging
                 ? "shadow-xl ring-2 ring-gold/30 rotate-[2deg] scale-105"
-                : "hover:shadow-md hover:border-gold/30"
+                : "hover:shadow-md hover:border-gold/30",
             )}
-            onClick={() => onOpen(lead.id)}
+            onClick={handleOpen}
           >
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
@@ -60,12 +88,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       </Avatar>
                     ) : (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          selfAssign.mutate(lead.id, {
-                            onSuccess: () => toast.success("Lead assigned to you"),
-                          });
-                        }}
+                        onClick={handleSelfAssign}
                         className="h-6 w-6 shrink-0 rounded-full border border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-gold/50 transition-colors"
                         aria-label="Self-assign this lead"
                       >
@@ -99,8 +122,8 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       </span>
                     )}
                     {lead.potentialValue && Number(lead.potentialValue) > 0 && (
-                      <span className="text-[10px] text-emerald-400 font-medium">
-                        ₹{Number(lead.potentialValue).toLocaleString("en-IN")}
+                      <span className="text-[10px] text-gold font-semibold">
+                        {formatINRCompact(lead.potentialValue)}
                       </span>
                     )}
                   </div>
@@ -113,23 +136,14 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                       {status !== "CONVERTED" && status !== "LOST" && (
                         <>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onMoveStatus(lead.id, "LOST", status);
-                            }}
+                            onClick={handleMarkLost}
                             className="h-5 w-5 rounded flex items-center justify-center hover:bg-red-500/20 transition-colors"
                             aria-label="Mark as lost"
                           >
                             <X className="h-3 w-3 text-red-400" />
                           </button>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const nextIdx = STATUSES.indexOf(status) + 1;
-                              if (nextIdx < STATUSES.length - 1) {
-                                onMoveStatus(lead.id, STATUSES[nextIdx], status);
-                              }
-                            }}
+                            onClick={handleMoveNext}
                             className="h-5 w-5 rounded flex items-center justify-center hover:bg-gold/20 transition-colors"
                             aria-label="Move to next stage"
                           >
