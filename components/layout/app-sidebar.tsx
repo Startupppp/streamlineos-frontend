@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Bell } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
 import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
+import { NotificationBell } from "./notification-bell";
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
@@ -45,6 +46,7 @@ export function AppSidebar({
   const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
+
   useEffect(() => {
     if (!isAdmin || !session?.user) return;
     let cancelled = false;
@@ -68,28 +70,35 @@ export function AppSidebar({
   }, [session, isAdmin]);
 
   const { data: chatUnread } = useChatUnreadTotal();
-  const unreadChatCount =
-    typeof chatUnread === "number" ? chatUnread : 0;
+  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
 
   useEffect(() => {
     const base = "Vaivamm CRM";
-    document.title =
-      unreadChatCount > 0 ? `(${unreadChatCount}) ${base}` : base;
+    document.title = unreadChatCount > 0 ? `(${unreadChatCount}) ${base}` : base;
   }, [unreadChatCount]);
 
   const orgName = organizations?.[0]?.name;
 
-  /* ── Loading skeleton ── */
+  const handleSearchClick = useCallback(() => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "k",
+        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
+        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
+        bubbles: true,
+      })
+    );
+  }, []);
+
   if (
     !hasEverLoadedRef.current &&
-    (status === "loading" ||
-      (status === "authenticated" && !role))
+    (status === "loading" || (status === "authenticated" && !role))
   ) {
     return (
       <div className="flex flex-col h-full bg-sidebar">
         <div className="px-3 py-4 flex-1 space-y-6">
           <div className="flex items-center gap-3 px-1">
-            <Skeleton className="h-7 w-7 rounded-lg bg-sidebar-border" />
+            <Skeleton className="h-8 w-8 rounded-xl bg-sidebar-border" />
             <Skeleton className="h-4 w-20 rounded bg-sidebar-border" />
           </div>
           <div className="space-y-1">
@@ -119,7 +128,6 @@ export function AppSidebar({
           isCollapsed ? "w-[3.5rem]" : "w-[17rem]"
         )}
       >
-        {/* ── Top: Logo + collapse toggle ── */}
         <div
           className={cn(
             "flex items-center h-14 shrink-0 border-b border-sidebar-border",
@@ -130,23 +138,27 @@ export function AppSidebar({
             <Link
               href="/dashboard"
               onClick={onNavigate}
-              className="flex items-center gap-2.5 min-w-0"
+              className="flex items-center gap-3 min-w-0 group"
             >
-              <div className="relative h-7 w-7 rounded-lg overflow-hidden bg-gold/10 ring-1 ring-gold/20 shrink-0">
+              <div className="relative h-9 w-9 rounded-xl overflow-hidden bg-gold/15 ring-1 ring-gold/25 shrink-0">
                 <Image
                   src="/logo.svg"
                   alt="Vaivamm"
                   fill
-                  className="object-contain p-0.5"
+                  className="object-contain p-1"
                 />
               </div>
               <div className="min-w-0">
-                <span className="gold-text text-[0.9375rem] font-bold tracking-tight leading-none block">
+                <span className="gold-text text-base font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
                   Vaivamm
                 </span>
-                {orgName && (
+                {orgName ? (
                   <span className="text-[10px] text-sidebar-foreground/35 truncate block mt-0.5 leading-none max-w-[120px]">
                     {orgName}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-sidebar-foreground/25 block mt-0.5 leading-none">
+                    CRM Platform
                   </span>
                 )}
               </div>
@@ -157,10 +169,16 @@ export function AppSidebar({
             <Link
               href="/dashboard"
               onClick={onNavigate}
-              className="h-7 w-7 rounded-lg overflow-hidden bg-gold/10 ring-1 ring-gold/20 flex items-center justify-center"
+              className="h-9 w-9 rounded-xl overflow-hidden bg-gold/15 ring-1 ring-gold/25 flex items-center justify-center"
               aria-label="Go to dashboard"
             >
-              <Image src="/logo.svg" alt="Vaivamm" width={20} height={20} className="object-contain" />
+              <Image
+                src="/logo.svg"
+                alt="Vaivamm"
+                width={24}
+                height={24}
+                className="object-contain"
+              />
             </Link>
           )}
 
@@ -176,7 +194,6 @@ export function AppSidebar({
           )}
         </div>
 
-        {/* ── Expand button (collapsed only) — floats on the right edge ── */}
         {onToggleCollapse && isCollapsed && (
           <button
             type="button"
@@ -188,13 +205,9 @@ export function AppSidebar({
           </button>
         )}
 
-        {/* ── Navigation ── */}
         <ScrollArea className="flex-1 min-h-0">
           <nav
-            className={cn(
-              "py-2",
-              isCollapsed ? "px-1.5" : "px-3"
-            )}
+            className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}
           >
             {navGroups.map((group, i) => (
               <SidebarSection
@@ -210,7 +223,54 @@ export function AppSidebar({
           </nav>
         </ScrollArea>
 
-        {/* ── User menu ── */}
+        <div
+          className={cn(
+            "border-t border-sidebar-border shrink-0",
+            isCollapsed ? "px-1.5 py-2 flex flex-col items-center gap-1" : "px-3 py-2 flex items-center gap-1"
+          )}
+        >
+          {isCollapsed ? (
+            <>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleSearchClick}
+                    aria-label="Search"
+                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5 transition-colors"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={10} className="text-xs">
+                  Search (⌘K)
+                </TooltipContent>
+              </Tooltip>
+              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
+                <NotificationBell />
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleSearchClick}
+                aria-label="Search"
+                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] px-2.5 text-sidebar-foreground/40 text-xs hover:text-sidebar-foreground/70 hover:bg-white/[0.07] transition-colors"
+              >
+                <Search className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 text-left">Search…</span>
+                <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/[0.08] bg-white/[0.04] px-1 font-mono text-[9px] text-sidebar-foreground/25">
+                  ⌘K
+                </kbd>
+              </button>
+              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
+                <NotificationBell />
+              </div>
+            </>
+          )}
+        </div>
+
         <SidebarUserMenu isCollapsed={isCollapsed} isAdmin={isAdmin} />
       </div>
     </TooltipProvider>

@@ -113,6 +113,48 @@
       "when": 1774150000000,
       "tag": "0015_fix_schema_drift",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1774160000000,
+      "tag": "0016_drop_workflows",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774170000000,
+      "tag": "0017_add_totp_mfa",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774180000000,
+      "tag": "0018_add_calendar_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774190000000,
+      "tag": "0019_billing_payments",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1774200000000,
+      "tag": "0020_password_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774210000000,
+      "tag": "0021_sessions_api_keys",
+      "breakpoints": true
     }
   ]
 }

@@ -1,41 +1,39 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { generateQRCode, getQRCodes, deleteQRCode, getQRCodeImageUrl } from "./actions";
-import { Loader2, QrCode as QrCodeIcon, ExternalLink, RefreshCw, FileImage, FileType, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  Loader2,
+  QrCode as QrCodeIcon,
+  ExternalLink,
+  FileImage,
+  FileType,
+  Trash2,
+  Download,
+  RefreshCw,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 type QRCodeData = {
   id: number;
@@ -47,100 +45,29 @@ type QRCodeData = {
 };
 
 function QRCodeImage({ imageUrl }: { imageUrl: string }) {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [src, setSrc] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    if (!imageUrl || !imageUrl.trim()) {
-      setImageSrc("/placeholder.png");
-      setIsLoading(false);
-      return;
-    }
-
-    const trimmedUrl = imageUrl.trim();
-
-    const isValidUrl = trimmedUrl.startsWith("http://") || 
-                       trimmedUrl.startsWith("https://") || 
-                       trimmedUrl.startsWith("/");
-
-    if (isValidUrl) {
-      setImageSrc(trimmedUrl);
-      setIsLoading(false);
+  useCallback(() => {
+    if (!imageUrl?.trim()) { setSrc("/placeholder.png"); return; }
+    const trimmed = imageUrl.trim();
+    if (trimmed.startsWith("http") || trimmed.startsWith("/")) {
+      setSrc(trimmed);
     } else {
-      setIsLoading(true);
-      getQRCodeImageUrl(trimmedUrl)
-        .then((url: string) => {
-          if (url && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/"))) {
-            setImageSrc(url);
-          } else {
-            setImageError(true);
-          }
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setImageError(true);
-          setIsLoading(false);
-        });
+      getQRCodeImageUrl(trimmed).then(setSrc).catch(() => setError(true));
     }
-  }, [imageUrl]);
+  }, [imageUrl])();
 
-  if (imageError) {
-    return (
-      <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-        Error
-      </div>
-    );
-  }
-
-  if (isLoading || !imageSrc) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!imageSrc) {
-    return (
-      <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-        No image
-      </div>
-    );
-  }
-
-  const isValidSrc = imageSrc.startsWith("http://") || 
-                     imageSrc.startsWith("https://") || 
-                     (imageSrc.startsWith("/") && imageSrc.length > 1);
-
-  if (!isValidSrc) {
-    return (
-      <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-        Invalid URL
-      </div>
-    );
-  }
-
-  try {
-    if (imageSrc.startsWith("http://") || imageSrc.startsWith("https://")) {
-      new URL(imageSrc);
-    }
-  } catch {
-    return (
-      <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-        Invalid URL
-      </div>
-    );
-  }
-
+  if (error) return <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Error</div>;
+  if (!src) return <div className="flex items-center justify-center h-full"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
   return (
-    <Image 
-      src={imageSrc} 
-      alt="QR Code" 
-      fill 
+    <Image
+      src={src}
+      alt="QR Code"
+      fill
       className="object-contain"
-      unoptimized={imageSrc.startsWith("http://") || imageSrc.startsWith("https://")}
-      onError={() => setImageError(true)}
+      unoptimized={src.startsWith("http")}
+      onError={() => setError(true)}
     />
   );
 }
@@ -148,308 +75,255 @@ function QRCodeImage({ imageUrl }: { imageUrl: string }) {
 export default function CEOQRCodePage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const qc = useQueryClient();
   const { data: organizations, isLoading: isOrgLoading } = useGetOrganizations();
   const [targetUrl, setTargetUrl] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [qrCodes, setQrCodes] = useState<QRCodeData[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [qrCodeToDelete, setQrCodeToDelete] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (session?.user?.role && session.user.role !== "CEO" && session.user.role !== "HR") {
-      toast.error("Access Denied: Only CEO and HR can access QR codes.");
-      router.push("/dashboard");
-    }
-  }, [session, router]);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const orgId = organizations?.[0]?.id;
 
-  const fetchQRCodes = useCallback(async () => {
-    if (!orgId) return;
-    setIsLoadingData(true);
-    try {
-      const data = await getQRCodes(orgId);
-      setQrCodes(data);
-    } catch {
-      toast.error("Failed to load QR codes");
-    } finally {
-      setIsLoadingData(false);
-    }
-  }, [orgId]);
+  const { data: qrCodes = [], isLoading: isLoadingData, refetch } = useQuery({
+    queryKey: ["qr-codes", orgId],
+    queryFn: () => getQRCodes(orgId!),
+    enabled: !!orgId,
+  });
 
-  useEffect(() => {
-    if (orgId) {
-      fetchQRCodes();
-    }
-  }, [orgId, fetchQRCodes]);
-
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orgId) {
-        toast.error("No organization found");
-        return;
-    }
-    if (!targetUrl) return;
-
-    setIsGenerating(true);
-    const formData = new FormData();
-    formData.append("targetUrl", targetUrl);
-    formData.append("orgId", orgId);
-
-    try {
-      const result = await generateQRCode(formData);
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      if (!orgId) throw new Error("No organization found");
+      const formData = new FormData();
+      formData.append("targetUrl", targetUrl);
+      formData.append("orgId", orgId);
+      return generateQRCode(formData);
+    },
+    onSuccess: (result) => {
       if (result.success) {
         toast.success("QR Code generated successfully");
         setTargetUrl("");
-        fetchQRCodes();
+        qc.invalidateQueries({ queryKey: ["qr-codes", orgId] });
       } else {
-        toast.error(result.error || "Failed to generate QR code");
+        toast.error(result.error ?? "Failed to generate QR code");
       }
-    } catch {
-      toast.error("An error occurred");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    },
+    onError: () => toast.error("An error occurred"),
+  });
 
-  const downloadQRCode = async (imageUrl: string, slug: string, format: "png" | "jpeg" | "svg") => {
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteQRCode(id),
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("QR Code deleted");
+        qc.invalidateQueries({ queryKey: ["qr-codes", orgId] });
+      } else {
+        toast.error(result.error ?? "Failed to delete");
+      }
+      setDeleteId(null);
+    },
+    onError: () => { toast.error("An error occurred"); setDeleteId(null); },
+  });
+
+  const handleGenerate = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetUrl) return;
+    generateMutation.mutate();
+  }, [targetUrl, generateMutation]);
+
+  const handleDownload = useCallback(async (slug: string, format: "png" | "jpeg" | "svg") => {
     try {
-      const downloadUrl = `/api/qr-code/download?slug=${encodeURIComponent(slug)}&format=${format}`;
-      
-      const response = await fetch(downloadUrl, {
-        method: "GET",
+      const res = await fetch(`/api/qr-code/download?slug=${encodeURIComponent(slug)}&format=${format}`, {
         credentials: "include",
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Download failed" }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      
-      if (blob.size === 0) {
-        throw new Error("Downloaded file is empty");
-      }
-
-      const contentType = response.headers.get("content-type");
-      const contentDisposition = response.headers.get("content-disposition");
-      let filename = `qr-code-${slug}.${format === "jpeg" ? "jpg" : format === "svg" ? "svg" : "png"}`;
-      
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
-
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = filename;
-      link.style.display = "none";
+      link.download = `qr-${slug}.${format === "jpeg" ? "jpg" : format}`;
       document.body.appendChild(link);
       link.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      toast.error(`Failed to download QR code: ${errorMessage}`);
-    }
-  };
-
-  const handleDeleteClick = (id: number) => {
-    setQrCodeToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!qrCodeToDelete) return;
-    
-    try {
-      const result = await deleteQRCode(qrCodeToDelete);
-      if (result.success) {
-        toast.success("QR Code deleted successfully");
-        fetchQRCodes();
-      } else {
-        toast.error(result.error || "Failed to delete QR code");
-      }
+      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
     } catch {
-      toast.error("An error occurred");
-    } finally {
-      setDeleteDialogOpen(false);
-      setQrCodeToDelete(null);
+      toast.error("Failed to download QR code");
     }
-  };
+  }, []);
 
   if (!session?.user || session.user.role !== "CEO") {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    router.push("/dashboard");
+    return null;
   }
 
   if (isOrgLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center h-40">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  if (!organizations || organizations.length === 0) {
-      return (
-          <div className="p-8 text-center">
-              <h2 className="text-xl font-bold">No Organization Found</h2>
-              <p className="text-muted-foreground">You need to have an organization to create QR codes.</p>
-          </div>
-      )
+  if (!organizations?.length) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-bold">No Organization Found</h2>
+        <p className="text-muted-foreground mt-1">You need an organization to create QR codes.</p>
+      </div>
+    );
   }
 
+  const typedCodes = qrCodes as QRCodeData[];
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">QR Code Manager</h1>
-        <p className="text-muted-foreground">Generate and track QR codes for your marketing campaigns.</p>
-      </div>
+    <PageWrapper
+      title="QR Code Manager"
+      subtitle="Generate and track QR codes for your marketing campaigns."
+    >
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Generate New QR Code</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleGenerate} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="target-url" className="text-sm">Target URL</Label>
+                <Input
+                  id="target-url"
+                  placeholder="https://example.com/campaign"
+                  value={targetUrl}
+                  onChange={(e) => setTargetUrl(e.target.value)}
+                  required
+                  type="url"
+                  className="h-9"
+                />
+              </div>
+              <Button type="submit" disabled={generateMutation.isPending || !targetUrl} size="sm">
+                {generateMutation.isPending ? (
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <QrCodeIcon className="mr-2 h-3.5 w-3.5" />
+                )}
+                Generate QR Code
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate New QR Code</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleGenerate} className="flex gap-4 items-end">
-            <div className="flex-1 space-y-2">
-              <label className="text-sm font-medium">Target Website URL</label>
-              <Input
-                placeholder="https://example.com/campaign"
-                value={targetUrl}
-                onChange={(e) => setTargetUrl(e.target.value)}
-                required
-                type="url"
-              />
-            </div>
-            <Button type="submit" disabled={isGenerating}>
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
-                </>
-              ) : (
-                <>
-                  <QrCodeIcon className="mr-2 h-4 w-4" /> Generate QR
-                </>
-              )}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <CardTitle className="text-base">Your QR Codes</CardTitle>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => refetch()} disabled={isLoadingData}>
+              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingData ? "animate-spin" : ""}`} />
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Your QR Codes</CardTitle>
-          <Button variant="ghost" size="sm" onClick={fetchQRCodes} disabled={isLoadingData}>
-            <RefreshCw className={`h-4 w-4 ${isLoadingData ? "animate-spin" : ""}`} />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>QR Code</TableHead>
-                <TableHead>Target URL</TableHead>
-                <TableHead>Scans</TableHead>
-                <TableHead>Tracking Link</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {qrCodes.length === 0 ? (
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No QR codes generated yet.
-                  </TableCell>
+                  <TableHead className="w-20">QR</TableHead>
+                  <TableHead>Target URL</TableHead>
+                  <TableHead className="w-20">Scans</TableHead>
+                  <TableHead className="hidden md:table-cell">Tracking Link</TableHead>
+                  <TableHead className="w-24">Created</TableHead>
+                  <TableHead className="w-20 text-right">Actions</TableHead>
                 </TableRow>
-              ) : (
-                  qrCodes.map((qr) => (
+              </TableHeader>
+              <TableBody>
+                {isLoadingData ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                    </TableCell>
+                  </TableRow>
+                ) : typedCodes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">
+                      No QR codes yet. Generate one above.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  typedCodes.map((qr) => (
                     <TableRow key={qr.id}>
                       <TableCell>
-                        <div className="relative h-16 w-16 bg-white p-1 rounded border">
-                            <QRCodeImage imageUrl={qr.imageUrl} />
+                        <div className="relative h-14 w-14 bg-white rounded border p-0.5">
+                          <QRCodeImage imageUrl={qr.imageUrl} />
                         </div>
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        <Link href={qr.targetUrl} target="_blank" className="hover:underline flex items-center gap-1">
-                            {qr.targetUrl} <ExternalLink className="h-3 w-3" />
+                      <TableCell className="max-w-[180px]">
+                        <Link
+                          href={qr.targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline flex items-center gap-1 text-sm truncate"
+                        >
+                          <span className="truncate">{qr.targetUrl}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0" />
                         </Link>
                       </TableCell>
                       <TableCell>
-                        <div className="font-bold text-lg">{qr.scanCount}</div>
+                        <span className="font-bold">{qr.scanCount}</span>
                       </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                            {typeof window !== 'undefined' ? `${window.location.origin}/qr/${qr.slug}` : `/qr/${qr.slug}`}
-                        </span>
+                      <TableCell className="hidden md:table-cell">
+                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                          /qr/{qr.slug}
+                        </code>
                       </TableCell>
-                       <TableCell>
-                        {qr.createdAt ? new Date(qr.createdAt).toLocaleDateString() : "-"}
+                      <TableCell className="text-sm text-muted-foreground">
+                        {qr.createdAt ? new Date(qr.createdAt).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreHorizontal className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Download className="h-3.5 w-3.5" />
                               <span className="sr-only">Actions</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "png")}>
-                                <FileImage className="mr-2 h-4 w-4" /> PNG
+                            <DropdownMenuItem onClick={() => handleDownload(qr.slug, "png")}>
+                              <FileImage className="mr-2 h-3.5 w-3.5" /> PNG
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "jpeg")}>
-                                <FileImage className="mr-2 h-4 w-4" /> JPEG
+                            <DropdownMenuItem onClick={() => handleDownload(qr.slug, "jpeg")}>
+                              <FileImage className="mr-2 h-3.5 w-3.5" /> JPEG
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => downloadQRCode(qr.imageUrl, qr.slug, "svg")}>
-                                <FileType className="mr-2 h-4 w-4" /> SVG
+                            <DropdownMenuItem onClick={() => handleDownload(qr.slug, "svg")}>
+                              <FileType className="mr-2 h-3.5 w-3.5" /> SVG
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(qr.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            <DropdownMenuItem
+                              onClick={() => setDeleteId(qr.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete QR Code</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this QR code? This action cannot be undone.
+              This action cannot be undone. The QR code and its tracking data will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              onClick={() => deleteId !== null && deleteMutation.mutate(deleteId)}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
-              Delete
+              {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageWrapper>
   );
 }

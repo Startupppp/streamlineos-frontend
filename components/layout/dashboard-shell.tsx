@@ -3,17 +3,19 @@
 import { useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { Menu } from "lucide-react";
 import { AppSidebar } from "./app-sidebar";
-import { DashboardHeader } from "./dashboard-header";
 import { CommandPalette } from "./command-palette";
 import { ScrollArea } from "../ui/scroll-area";
 import { NotActivatedPage } from "../auth/not-activated-page";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
+import Image from "next/image";
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
-const SIDEBAR_COLLAPSED_W = "3.5rem";   // 56px
-const SIDEBAR_EXPANDED_W  = "17rem";    // 272px
+const SIDEBAR_COLLAPSED_W = "3.5rem";
+const SIDEBAR_EXPANDED_W = "17rem";
 
 function setSidebarCookie(collapsed: boolean) {
   document.cookie = `${SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
@@ -31,6 +33,7 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const isMobile = useIsMobile();
   usePushSubscription();
@@ -43,12 +46,12 @@ export function DashboardShell({
     });
   }, []);
 
-  // Pages that take full viewport height and manage their own scroll
+  const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
+
   const isProjectPage =
     pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
   const isCrmDetailPage =
-    pathname?.startsWith("/crm/leads/") ||
-    pathname?.startsWith("/crm/deals/");
+    pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
   const isChatPage = pathname === "/chat";
   const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage;
 
@@ -56,7 +59,6 @@ export function DashboardShell({
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
-      {/* Skip to content */}
       <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
@@ -64,7 +66,6 @@ export function DashboardShell({
         Skip to content
       </Link>
 
-      {/* ── Fixed sidebar ── */}
       {hasDashboardAccess && !isMobile && (
         <aside
           aria-label="Sidebar"
@@ -78,7 +79,6 @@ export function DashboardShell({
         </aside>
       )}
 
-      {/* ── Main content column ── */}
       <main
         id="dashboard-content"
         className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden"
@@ -87,18 +87,37 @@ export function DashboardShell({
           <>
             <CommandPalette />
 
-            {/* Header — not shown on full-height pages */}
-            {!isFullHeightPage && <DashboardHeader />}
+            {isMobile && (
+              <header className="md:hidden sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3">
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen(true)}
+                    aria-label="Open navigation"
+                    className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </button>
+                  <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
+                    <SheetTitle className="sr-only">Navigation</SheetTitle>
+                    <AppSidebar onNavigate={handleCloseMobileMenu} />
+                  </SheetContent>
+                </Sheet>
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg overflow-hidden bg-gold/15 ring-1 ring-gold/20 flex items-center justify-center">
+                    <Image src="/logo.svg" alt="Vaivamm" width={20} height={20} className="object-contain" />
+                  </div>
+                  <span className="text-sm font-bold gold-text">Vaivamm</span>
+                </div>
+              </header>
+            )}
 
-            {/* Content area */}
             <div className="flex-1 min-h-0 overflow-hidden">
               {isFullHeightPage ? (
-                /* Full-height: page manages its own scroll */
                 <div className="h-full w-full overflow-auto">
                   {children}
                 </div>
               ) : (
-                /* Normal: outer scroll, no default padding (PageWrapper adds it) */
                 <ScrollArea className="h-full w-full">
                   <div className="min-h-full">
                     {children}

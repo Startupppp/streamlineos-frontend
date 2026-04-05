@@ -55,16 +55,17 @@ export const TimerCard = memo(function TimerCard() {
     return () => clearTimeout(timer);
   }, [localCooldown]);
 
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   const isCheckedIn = statusData?.status === "PRESENT";
   const isOnBreak = statusData?.status === "ON_BREAK";
   const isActive = isCheckedIn || isOnBreak;
   const isInCooldown = localCooldown > 0;
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
+
+  useEffect(() => {
+    if (isOnBreak) return;
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, [isOnBreak]);
 
   const sessionTimer = useMemo(() => {
     if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) {

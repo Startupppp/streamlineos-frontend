@@ -19,6 +19,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -66,61 +67,63 @@ function actionBadgeClass(action: string) {
 function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => void }) {
   return (
     <Sheet open onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-[440px] sm:max-w-[440px]">
-        <SheetHeader className="pb-4 border-b">
+      <SheetContent className="flex flex-col p-0 w-[440px] sm:max-w-[440px]">
+        <SheetHeader className="px-5 pt-5 pb-4 border-b shrink-0">
           <SheetTitle className="flex items-center gap-2 text-[15px]">
             <Activity className="h-4 w-4 text-muted-foreground" />
             Event Details
           </SheetTitle>
         </SheetHeader>
-        <div className="py-4 space-y-5 overflow-y-auto h-[calc(100vh-100px)]">
-          <div className="space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Action</p>
-            <Badge variant="outline" className={`text-[12px] ${actionBadgeClass(log.action)}`}>
-              {log.action}
-            </Badge>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">User</p>
-            <div className="flex items-center gap-2">
-              <Avatar className="h-7 w-7">
-                <AvatarImage src={resolveImageUrl(log.userImage)} />
-                <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium">{log.userName ?? "Unknown"}</p>
-                <p className="text-xs text-muted-foreground">{log.userEmail}</p>
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="px-5 py-4 space-y-5">
+            <div className="space-y-1">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Action</p>
+              <Badge variant="outline" className={`text-[12px] ${actionBadgeClass(log.action)}`}>
+                {log.action}
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">User</p>
+              <div className="flex items-center gap-2">
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={resolveImageUrl(log.userImage)} />
+                  <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium">{log.userName ?? "Unknown"}</p>
+                  <p className="text-xs text-muted-foreground">{log.userEmail}</p>
+                </div>
               </div>
             </div>
+            {log.targetType && (
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Target</p>
+                <p className="text-sm">
+                  <span className="font-medium capitalize">{log.targetType}</span>
+                  {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
+                </p>
+              </div>
+            )}
+            <div className="space-y-1">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Timestamp</p>
+              <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
+            </div>
+            {log.ipAddress && (
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">IP Address</p>
+                <p className="text-sm font-mono">{log.ipAddress}</p>
+              </div>
+            )}
+            {log.metadata && Object.keys(log.metadata).length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Metadata</p>
+                <pre className="text-[11px] bg-muted/50 rounded-lg p-3 overflow-auto max-h-60 border">
+                  {JSON.stringify(log.metadata, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
-          {log.targetType && (
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Target</p>
-              <p className="text-sm">
-                <span className="font-medium capitalize">{log.targetType}</span>
-                {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
-              </p>
-            </div>
-          )}
-          <div className="space-y-1">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Timestamp</p>
-            <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
-          </div>
-          {log.ipAddress && (
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">IP Address</p>
-              <p className="text-sm font-mono">{log.ipAddress}</p>
-            </div>
-          )}
-          {log.metadata && Object.keys(log.metadata).length > 0 && (
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Metadata</p>
-              <pre className="text-[11px] bg-muted/50 rounded-lg p-3 overflow-auto max-h-60 border">
-                {JSON.stringify(log.metadata, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );

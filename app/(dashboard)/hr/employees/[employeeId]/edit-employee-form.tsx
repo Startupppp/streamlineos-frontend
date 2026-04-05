@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,10 +24,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { updateEmployee } from "@/server/actions/hr-actions";
-import { useState, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
 import { useRolesList } from "@/lib/api/hooks/roles";
 
@@ -51,32 +50,32 @@ const formSchema = z.object({
 });
 
 export interface EmployeeData {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-    role: string | null;
-    designation: string | null;
-    departmentId: number | null;
-    phone: string | null;
-    gender: "MALE" | "FEMALE" | "OTHER" | null;
-    joiningDate: string | Date | null;
-    experienceYears: string | number | null;
-    skills: string[] | string | null;
-    taxId: string | null;
-    monthlySalary: string | number | null;
-    bankDetails: {
-        accountNumber?: string;
-        bankName?: string;
-        branch?: string;
-        ifsc?: string;
-        accountHolder?: string;
-    } | null;
-    [key: string]: unknown;
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  role: string | null;
+  designation: string | null;
+  departmentId: number | null;
+  phone: string | null;
+  gender: "MALE" | "FEMALE" | "OTHER" | null;
+  joiningDate: string | Date | null;
+  experienceYears: string | number | null;
+  skills: string[] | string | null;
+  taxId: string | null;
+  monthlySalary: string | number | null;
+  bankDetails: {
+    accountNumber?: string;
+    bankName?: string;
+    branch?: string;
+    ifsc?: string;
+    accountHolder?: string;
+  } | null;
+  [key: string]: unknown;
 }
 
 interface EditEmployeeFormProps {
-    employee: EmployeeData;
+  employee: EmployeeData;
 }
 
 export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
@@ -87,6 +86,7 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
     [orgRoles]
   );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -99,7 +99,9 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       gender: employee.gender || "MALE",
       joiningDate: employee.joiningDate ? new Date(employee.joiningDate) : undefined,
       experienceYears: employee.experienceYears ? Number(employee.experienceYears) : 0,
-      skills: Array.isArray(employee.skills) ? employee.skills.join(", ") : (employee.skills || ""),
+      skills: Array.isArray(employee.skills)
+        ? employee.skills.join(", ")
+        : (employee.skills || ""),
       taxId: employee.taxId || "",
       monthlySalary: employee.monthlySalary ? Number(employee.monthlySalary) : undefined,
       bankAccount: employee.bankDetails?.accountNumber || "",
@@ -110,31 +112,44 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     },
   });
 
+  const handlePhoneChange = useCallback(
+    (onChange: (v: string) => void) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const v = e.target.value;
+        if (/^[\d+\s-]*$/.test(v)) onChange(v);
+      },
+    []
+  );
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
-    const skillsArray = values.skills ? values.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
+    const skillsArray = values.skills
+      ? values.skills.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
 
     const result = await updateEmployee({
-        id: employee.id,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        role: values.role as string,
-        designation: values.designation,
-        departmentId: values.departmentId,
-        phone: values.phone,
-        gender: values.gender,
-        joiningDate: values.joiningDate,
-        experienceYears: values.experienceYears,
-        skills: skillsArray,
-        taxId: values.taxId,
-        monthlySalary: values.monthlySalary,
-        bankDetails: values.bankAccount ? {
+      id: employee.id,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      role: values.role as string,
+      designation: values.designation,
+      departmentId: values.departmentId,
+      phone: values.phone,
+      gender: values.gender,
+      joiningDate: values.joiningDate,
+      experienceYears: values.experienceYears,
+      skills: skillsArray,
+      taxId: values.taxId,
+      monthlySalary: values.monthlySalary,
+      bankDetails: values.bankAccount
+        ? {
             accountNumber: values.bankAccount,
             bankName: values.bankName || "",
             branch: values.branch || "",
             ifsc: values.ifsc || "",
             accountHolder: values.accountHolder || "",
-        } : undefined,
+          }
+        : undefined,
     });
     setLoading(false);
 
@@ -143,274 +158,345 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
       router.push("/hr/employees");
       router.refresh();
     } else {
-        toast.error(result.error || "Failed to update employee");
+      toast.error(result.error || "Failed to update employee");
     }
   }
 
-  const handlePhoneChange = (onChange: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    if (/^[\d+\s-]*$/.test(v)) {
-      onChange(v);
-    }
-  };
-
   return (
-    <div className="grid gap-4">
-    <Card>
-        <CardHeader>
-            <CardTitle>Edit Employee Profile</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Personal Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="+91 9876543210"
+                      {...field}
+                      onChange={handlePhoneChange(field.onChange)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="MALE">Male</SelectItem>
+                      <SelectItem value="FEMALE">Female</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Professional Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="designation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Designation</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {assignableRoles.map((role) => (
+                        <SelectItem key={role.slug} value={role.slug}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                      {assignableRoles.length === 0 && (
+                        <>
+                          <SelectItem value="ENGINEERING">Engineering</SelectItem>
+                          <SelectItem value="HR">HR</SelectItem>
+                          <SelectItem value="SALES">Sales</SelectItem>
+                          <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
+                          <SelectItem value="DESIGN">Design</SelectItem>
+                          <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
+                          <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="departmentId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <FormControl>
+                    <DepartmentCombobox
+                      value={field.value ?? null}
+                      onValueChange={(val) => field.onChange(val ?? undefined)}
+                      placeholder="Select Department"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="joiningDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Joining Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      value={
+                        field.value
+                          ? new Date(field.value).toISOString().split("T")[0]
+                          : ""
+                      }
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? new Date(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="monthlySalary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monthly Salary (₹)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseFloat(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="experienceYears"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Experience (Years)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={field.value ?? ""}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? parseFloat(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="skills"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Skills</FormLabel>
+                  <FormControl>
+                    <Input placeholder="React, TypeScript, Node.js" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-                <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Personal Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="firstName"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>First Name</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="lastName"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Last Name</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="phone"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Phone</FormLabel>
-                                <FormControl>
-                                <Input
-                                    type="tel"
-                                    inputMode="numeric"
-                                    placeholder="+91 9876543210"
-                                    {...field}
-                                    onChange={handlePhoneChange(field.onChange)}
-                                />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="gender"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Gender</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select gender" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="MALE">Male</SelectItem>
-                                    <SelectItem value="FEMALE">Female</SelectItem>
-                                    <SelectItem value="OTHER">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Bank Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="accountHolder"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Account Holder Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="bankAccount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Account Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="bankName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bank Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="ifsc"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>IFSC Code</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="branch"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Branch</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="taxId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tax ID (PAN)</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-
-                <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Professional Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
-
-                          <FormField
-                            control={form.control}
-                            name="bankAccount"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Account Number</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="bankName"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Bank Name</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="branch"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Branch</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="ifsc"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>IFSC Code</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-
-                         <FormField
-                            control={form.control}
-                            name="designation"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Designation</FormLabel>
-                                <FormControl>
-                                <Input {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="monthlySalary"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Monthly Salary (₹)</FormLabel>
-                                <FormControl>
-                                <Input
-                                    type="number"
-                                    placeholder="0"
-                                    value={field.value ?? ""}
-                                    onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                                />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="departmentId"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Department</FormLabel>
-                                <FormControl>
-                                    <DepartmentCombobox
-                                        value={field.value ?? null}
-                                        onValueChange={(val) => field.onChange(val ?? undefined)}
-                                        placeholder="Select Department"
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="role"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Role</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    {assignableRoles.map((role) => (
-                                      <SelectItem key={role.slug} value={role.slug}>
-                                        {role.name}
-                                      </SelectItem>
-                                    ))}
-                                    {assignableRoles.length === 0 && (
-                                      <>
-                                        <SelectItem value="ENGINEERING">Engineering</SelectItem>
-                                        <SelectItem value="HR">HR</SelectItem>
-                                        <SelectItem value="SALES">Sales</SelectItem>
-                                        <SelectItem value="CUSTOMER_SUPPORT">Customer Support</SelectItem>
-                                        <SelectItem value="DESIGN">Design</SelectItem>
-                                        <SelectItem value="VIDEO_EDITOR">Video Editor</SelectItem>
-                                        <SelectItem value="DIGITAL_MARKETING">Digital Marketing</SelectItem>
-                                      </>
-                                    )}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="joiningDate"
-                            render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>Joining Date</FormLabel>
-                                <FormControl>
-                                     <Input type="date"
-                                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
-                                     />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                    </div>
-                </div>
-
-                <div className="flex justify-end gap-4">
-                    <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
-                    <Button type="submit" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Update Employee
-                    </Button>
-                </div>
-                </form>
-            </Form>
-        </CardContent>
-    </Card>
-    </div>
+        <div className="flex justify-end gap-3 pt-1">
+          <Button variant="outline" type="button" onClick={() => router.back()}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
