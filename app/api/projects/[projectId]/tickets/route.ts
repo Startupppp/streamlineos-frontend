@@ -6,7 +6,7 @@
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, toNumber } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tickets, ticketAssignees, users, projects, projectMembers } from "@/lib/db/schema";
+import { tickets, ticketAssignees, ticketWatchers, users, projects, projectMembers } from "@/lib/db/schema";
 import { eq, and, desc, or, sql, count } from "drizzle-orm";
 import { sendTicketAssignmentEmail } from "@/lib/email";
 import { createNotification } from "@/server/actions/create-notification";
@@ -170,6 +170,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
           }))
         );
       }
+
+      // Auto-watch: creator + all assignees
+      const watcherIds = new Set<string>([session.user.id]);
+      allAssigneeIds.forEach((id) => watcherIds.add(id));
+      await tx.insert(ticketWatchers).values(
+        Array.from(watcherIds).map((userId) => ({
+          ticketId: created.id,
+          userId,
+        }))
+      );
 
       return [created];
     });

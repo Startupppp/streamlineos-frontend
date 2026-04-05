@@ -185,10 +185,12 @@ export function KanbanBoard({
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div
-        className="flex h-full gap-3 overflow-x-auto pb-2"
-        style={{ minWidth: "min-content" }}
-      >
+      {/*
+        Outer container: fills parent height, allows horizontal scroll.
+        The horizontal scrollbar sits at the bottom of this container.
+        Each column is flex-col with its own vertical scroll on the droppable area.
+      */}
+      <div className="flex gap-3 h-full overflow-x-auto overflow-y-hidden pb-1 px-1">
         {columns.map((col) => {
           const columnTickets = optimisticTickets
             .filter((t) => t.status === col.id)

@@ -4,9 +4,25 @@ import { db } from "@/lib/db";
 import { pushSubscriptions, chatChannelMembers } from "@/lib/db/schema";
 import { eq, and, ne, inArray } from "drizzle-orm";
 
+/**
+ * web-push requires the VAPID subject to be https: or mailto: only — not http:// (e.g. local dev).
+ */
+function getVapidSubject(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (appUrl?.startsWith("https://")) return appUrl;
+
+  const from = process.env.EMAIL_FROM_ADDRESS?.trim();
+  if (from) {
+    if (from.startsWith("mailto:")) return from;
+    if (from.includes("@")) return `mailto:${from}`;
+  }
+
+  return "https://crm.vaivammcapital.com";
+}
+
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(
-    process.env.NEXT_PUBLIC_APP_URL || "https://crm.vaivammcapital.com",
+    getVapidSubject(),
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );

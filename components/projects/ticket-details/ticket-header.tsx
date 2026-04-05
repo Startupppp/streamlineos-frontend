@@ -9,8 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Trash2, Loader2 } from "lucide-react";
-import { priorityConfig, statusConfig } from "./types";
+import { Trash2, Loader2, X } from "lucide-react";
+import { PriorityBadge } from "../shared/priority-badge";
+import { StatusBadge } from "../shared/status-badge";
 
 interface TicketHeaderProps {
   ticketId: number | null;
@@ -37,92 +38,63 @@ export function TicketHeader({
 }: TicketHeaderProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const currentPriority = (priority as keyof typeof priorityConfig) || "MEDIUM";
-  const statusDisplay = statusConfig[status] || {
-    label: status,
-    color: "bg-slate-100 text-slate-700",
-  };
-
   return (
-    <div className="border-b bg-gradient-to-r from-primary/5 via-transparent to-transparent px-6 py-4">
-      <SheetHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <Badge variant="outline" className="font-mono text-xs shrink-0">
-                #{ticketNumber ?? ticketId}
-              </Badge>
-              {!isLoading && (
-                <>
-                  <Badge
-                    className={
-                      priorityConfig[currentPriority]?.color ||
-                      priorityConfig.MEDIUM.color
-                    }
-                  >
-                    {priorityConfig[currentPriority]?.label || "Medium"}
-                  </Badge>
-                  <Badge className={statusDisplay.color}>
-                    {statusDisplay.label}
-                  </Badge>
-                  {saving && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Saving...
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-            <SheetTitle className="text-xl font-semibold leading-tight">
-              {isLoading ? "Loading..." : title}
-            </SheetTitle>
+    <div className="shrink-0 border-b px-4 py-3">
+      <SheetHeader className="space-y-0">
+        <div className="flex items-center justify-between gap-2">
+          {/* Left: key + badges */}
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+            <Badge variant="outline" className="font-mono text-[11px] shrink-0 h-5 px-1.5">
+              #{ticketNumber ?? ticketId}
+            </Badge>
+            {!isLoading && (
+              <>
+                <StatusBadge status={status} />
+                <PriorityBadge priority={priority} showLabel size="sm" />
+                {saving && (
+                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Saving
+                  </span>
+                )}
+              </>
+            )}
           </div>
 
+          {/* Right: delete */}
           {!isLoading && ticketId && (
             <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
-                  aria-label="Delete"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
+                  aria-label="Delete ticket"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium leading-none text-destructive">
-                      Delete Ticket
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      This action cannot be undone.
-                    </p>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={onDelete}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </Button>
-                  </div>
+              <PopoverContent className="w-64 p-3" align="end">
+                <p className="text-sm font-medium text-destructive mb-1">Delete Ticket</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  This cannot be undone.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setDeleteOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={onDelete} disabled={isDeleting}>
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
           )}
         </div>
+
+        <SheetTitle className="text-base font-semibold leading-snug mt-1.5 line-clamp-2">
+          {isLoading ? "Loading..." : title}
+        </SheetTitle>
       </SheetHeader>
     </div>
   );

@@ -38,13 +38,16 @@ export default async function ProjectLayout({
   }
 
   return (
-    <div className="flex h-full w-full -m-4 md:-m-8">
+    <div className="flex flex-col md:flex-row h-full w-full">
+      {/* ProjectSidebar handles its own desktop/mobile views */}
       <ProjectSidebar
         projectId={projectId}
         projectName={project.name}
         projectKey={project.key}
       />
-      <div className="flex-1 bg-background min-w-0 w-full overflow-y-auto flex flex-col">
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto">
         {children}
       </div>
     </div>

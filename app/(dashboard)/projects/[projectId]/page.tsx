@@ -162,6 +162,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       title={data.name}
       subtitle={data.description ?? undefined}
       noInternalScroll
+      contentClassName="!p-0"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
         <div className="flex items-center gap-2 flex-wrap">
@@ -190,61 +191,56 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       }
     >
-      <div className="flex-1 min-h-0 w-full relative overflow-hidden">
-        {view === "board" && (
-          <div className="h-full w-full overflow-x-auto overflow-y-hidden">
-            <div
-              className="inline-flex h-full pb-4 gap-3 px-4"
-              style={{ minWidth: "max-content" }}
-            >
-              <KanbanBoard
-                tickets={filteredTickets}
-                projectId={projectId}
-                projectKey={data.key}
-                statuses={statuses}
-                onTicketSelect={handleTicketSelect}
-              />
-            </div>
-          </div>
-        )}
+      {/* Board view — fills available height, scrolls independently */}
+      {view === "board" && (
+        <div className="h-full w-full px-3 pt-2 pb-1">
+          <KanbanBoard
+            tickets={filteredTickets}
+            projectId={projectId}
+            projectKey={data.key}
+            statuses={statuses}
+            onTicketSelect={handleTicketSelect}
+          />
+        </div>
+      )}
 
-        {view === "list" && (
-          <div className="h-full overflow-y-auto px-4">
-            <ListView
-              tickets={filteredTickets}
-              onTicketClick={handleTicketSelect}
-              groupBy="status"
-            />
-          </div>
-        )}
+      {/* Other views — vertical scroll only */}
+      {view === "list" && (
+        <div className="h-full overflow-y-auto px-4 py-2">
+          <ListView
+            tickets={filteredTickets}
+            onTicketClick={handleTicketSelect}
+            groupBy="status"
+          />
+        </div>
+      )}
 
-        {view === "table" && (
-          <div className="h-full overflow-y-auto px-4">
-            <TableView
-              tickets={filteredTickets}
-              onTicketClick={handleTicketSelect}
-            />
-          </div>
-        )}
+      {view === "table" && (
+        <div className="h-full overflow-y-auto px-4 py-2">
+          <TableView
+            tickets={filteredTickets}
+            onTicketClick={handleTicketSelect}
+          />
+        </div>
+      )}
 
-        {view === "calendar" && (
-          <div className="h-full overflow-y-auto px-4">
-            <CalendarView
-              tickets={filteredTickets}
-              onTicketClick={handleTicketSelect}
-            />
-          </div>
-        )}
+      {view === "calendar" && (
+        <div className="h-full overflow-y-auto px-4 py-2">
+          <CalendarView
+            tickets={filteredTickets}
+            onTicketClick={handleTicketSelect}
+          />
+        </div>
+      )}
 
-        {view === "gantt" && (
-          <div className="h-full overflow-auto px-4">
-            <GanttView
-              tickets={filteredTickets}
-              onTicketClick={handleTicketSelect}
-            />
-          </div>
-        )}
-      </div>
+      {view === "gantt" && (
+        <div className="h-full overflow-auto px-4 py-2">
+          <GanttView
+            tickets={filteredTickets}
+            onTicketClick={handleTicketSelect}
+          />
+        </div>
+      )}
 
       {/* Ticket detail sheet driven by URL param */}
       <TicketDetailsDialog

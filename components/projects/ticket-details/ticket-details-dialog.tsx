@@ -20,7 +20,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getSignedFileUrl, viewFile } from "@/hooks/use-file-url";
 import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
-import { TicketComments } from "./ticket-comments";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { WatcherList } from "./watcher-list";
 import { ActivityFeed } from "./activity-feed";
@@ -99,7 +98,6 @@ export function TicketDetailsDialog({
   const { data: sprints } = useSprints(projectId);
   const { data: subtasks } = useSubtasks(ticketId || 0);
 
-  // Build members list from project data (includes manager)
   const members: ProjectMember[] = (() => {
     if (!projectData?.members) return [];
     const list = projectData.members
@@ -212,9 +210,9 @@ export function TicketDetailsDialog({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-hidden p-0"
+        className="w-full sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
       >
-        {/* Header */}
+        {/* Sticky header */}
         <TicketHeader
           ticketId={ticketId}
           ticketNumber={ticket?.ticketNumber}
@@ -229,12 +227,12 @@ export function TicketDetailsDialog({
           }
         />
 
-        {/* Body */}
-        <div className="overflow-y-auto h-[calc(100vh-120px)]">
+        {/* Scrollable body — fills remaining height */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {isLoading ? (
             <div className="py-16 text-center">
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-              <p className="text-muted-foreground">Loading ticket details...</p>
+              <p className="text-muted-foreground text-sm">Loading...</p>
             </div>
           ) : ticketError?.message?.includes("don't have access") ||
             ticketError?.message?.includes("FORBIDDEN") ? (
@@ -242,47 +240,48 @@ export function TicketDetailsDialog({
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-6 w-6 text-muted-foreground" />
               </div>
-              <p className="font-medium text-foreground mb-1">
-                Restricted Access
-              </p>
+              <p className="font-medium text-foreground mb-1">Restricted Access</p>
               <p className="text-sm text-muted-foreground">
                 You can only view details of tickets assigned to you.
               </p>
             </div>
           ) : ticket ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-              {/* Main content column */}
-              <div className="lg:col-span-2 p-4 sm:p-6 space-y-6 border-r">
+            <>
+              {/* ── Properties panel (top half — compact two-column grid) ── */}
+              <div className="border-b">
+                <TicketSidebar
+                  ticket={ticket}
+                  ticketId={ticketId!}
+                  members={members}
+                  sprints={sprints || []}
+                  statuses={statuses}
+                  onAutoSave={autoSave}
+                />
+              </div>
+
+              {/* ── Main content ── */}
+              <div className="p-4 space-y-5">
                 {/* Title */}
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">
-                    Title
-                  </label>
-                  <Input
-                    value={localTitle}
-                    onChange={(e) => {
-                      setLocalTitle(e.target.value);
-                      debouncedSave({ title: e.target.value });
-                    }}
-                    className="text-base font-medium border-0 bg-muted/30 focus-visible:bg-background focus-visible:ring-1"
-                  />
-                </div>
+                <Input
+                  value={localTitle}
+                  onChange={(e) => {
+                    setLocalTitle(e.target.value);
+                    debouncedSave({ title: e.target.value });
+                  }}
+                  className="text-base font-semibold border-0 bg-transparent px-0 h-auto focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  placeholder="Ticket title"
+                />
 
                 {/* Description */}
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium block mb-1.5">
-                    Description
-                  </label>
-                  <Textarea
-                    value={localDescription}
-                    onChange={(e) => {
-                      setLocalDescription(e.target.value);
-                      debouncedSave({ description: e.target.value });
-                    }}
-                    className="min-h-[120px] border-0 bg-muted/30 focus-visible:bg-background focus-visible:ring-1 resize-none"
-                    placeholder="Add a detailed description..."
-                  />
-                </div>
+                <Textarea
+                  value={localDescription}
+                  onChange={(e) => {
+                    setLocalDescription(e.target.value);
+                    debouncedSave({ description: e.target.value });
+                  }}
+                  className="min-h-[80px] text-sm border-0 bg-muted/30 focus-visible:bg-background focus-visible:ring-1 resize-none rounded-lg"
+                  placeholder="Add a description..."
+                />
 
                 {/* Subtasks */}
                 <TicketSubtasks
@@ -294,30 +293,26 @@ export function TicketDetailsDialog({
                 {/* Attachments */}
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div>
-                    <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-3">
+                    <h4 className="text-xs font-medium text-muted-foreground mb-2">
                       Attachments
                     </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                       {ticket.attachments.map((att) => (
                         <button
                           key={att.id}
                           type="button"
                           onClick={() => viewFile(att.fileUrl)}
-                          className="group relative aspect-video rounded-lg overflow-hidden bg-muted border hover:border-primary/50 transition-all hover:shadow-md text-left"
+                          className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
                         >
-                          {att.mimeType &&
-                          att.mimeType.startsWith("image/") ? (
-                            <AttachmentImage
-                              fileUrl={att.fileUrl}
-                              fileName={att.fileName}
-                            />
+                          {att.mimeType?.startsWith("image/") ? (
+                            <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
                           ) : (
-                            <div className="flex items-center justify-center h-full text-muted-foreground text-xs p-2 text-center">
+                            <div className="flex items-center justify-center h-full text-muted-foreground text-[10px] p-1 text-center">
                               {att.fileName}
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <ExternalLink className="h-5 w-5 text-white" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <ExternalLink className="h-4 w-4 text-white" />
                           </div>
                         </button>
                       ))}
@@ -325,32 +320,20 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                {/* Activity Feed (comments) */}
+                {/* Watchers */}
+                <WatcherList
+                  projectId={projectId}
+                  ticketId={ticketId!}
+                  members={members}
+                />
+
+                {/* Activity Feed */}
                 <ActivityFeed
                   ticketId={ticketId!}
                   comments={ticket.comments || []}
                 />
               </div>
-
-              {/* Sidebar column */}
-              <div className="space-y-0">
-                <TicketSidebar
-                  ticket={ticket}
-                  ticketId={ticketId!}
-                  members={members}
-                  sprints={sprints || []}
-                  statuses={statuses}
-                  onAutoSave={autoSave}
-                />
-                <div className="px-4 sm:px-6 pb-4 bg-muted/20">
-                  <WatcherList
-                    projectId={projectId}
-                    ticketId={ticketId!}
-                    members={members}
-                  />
-                </div>
-              </div>
-            </div>
+            </>
           ) : (
             <div className="py-16 text-center">
               <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
