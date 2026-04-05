@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DepartmentCombobox } from "@/components/hr/department-combobox";
+import { Briefcase } from "lucide-react";
 import type { EmployeeFormValues } from "../edit-employee-form";
 
 interface ProfessionalInfoSectionProps {
@@ -21,13 +21,12 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
   const { control } = useFormContext<EmployeeFormValues>();
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Professional Information
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Briefcase className="h-4 w-4 text-muted-foreground" />
+        <h3 className="text-sm font-semibold text-foreground">Professional Information</h3>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="designation"
@@ -154,7 +153,7 @@ export function ProfessionalInfoSection({ assignableRoles }: ProfessionalInfoSec
             </FormItem>
           )}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

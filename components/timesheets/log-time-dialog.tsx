@@ -415,7 +415,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
         />
 
         <SheetFooter className="pt-2">
-          <Button type="submit" disabled={mutation.isPending || uploading}>
+          <Button type="submit" className="flex-1" disabled={mutation.isPending || uploading}>
             {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Log Time
           </Button>

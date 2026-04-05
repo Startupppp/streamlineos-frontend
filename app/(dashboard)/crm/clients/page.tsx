@@ -19,6 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
@@ -111,7 +112,8 @@ export default function ClientAccountsPage() {
       {/* Table */}
       <motion.div variants={fadeUp}>
         <Card>
-          <div className="overflow-x-auto">
+          <ScrollArea className="w-full" type="auto">
+            <div className="min-w-max">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -206,7 +208,8 @@ export default function ClientAccountsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </ScrollArea>
           {(data?.totalPages ?? 0) > 1 && (
             <div className="flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>

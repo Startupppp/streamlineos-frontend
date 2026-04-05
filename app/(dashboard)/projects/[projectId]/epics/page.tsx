@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import Link from "next/link";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Popover,
   PopoverContent,
@@ -63,11 +64,11 @@ export default function EpicsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <div className="p-6 md:p-8 lg:p-12">
+      <PageWrapper title="Epics">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -97,17 +98,13 @@ export default function EpicsPage({ params }: PageProps) {
   }
 
   return (
-    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite" aria-atomic="true">
-      <ProjectSubNav projectId={projectId} projectName={project?.name} />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Epics</h1>
-          <p className="text-muted-foreground mt-1">
-            {epics.length} epic{epics.length !== 1 ? "s" : ""} — {stories.length} stories, {tickets.filter(t => t.status === "DONE").length} completed
-          </p>
-        </div>
-        <CreateEpicDialog projectId={projectId} />
-      </div>
+    <PageWrapper
+      title="Epics"
+      subtitle={`${epics.length} epic${epics.length !== 1 ? "s" : ""} — ${stories.length} stories, ${tickets.filter(t => t.status === "DONE").length} completed`}
+      filters={<ProjectSubNav projectId={projectId} projectName={project?.name} />}
+      actions={<CreateEpicDialog projectId={projectId} />}
+    >
+      <div className="space-y-8" aria-live="polite" aria-atomic="true">
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
@@ -225,7 +222,8 @@ export default function EpicsPage({ params }: PageProps) {
           </Card>
         </section>
       )}
-    </div>
+      </div>
+    </PageWrapper>
   );
 }
 

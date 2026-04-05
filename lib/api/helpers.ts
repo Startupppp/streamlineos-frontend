@@ -70,34 +70,42 @@ export async function withAuth<T>(
   // Check if this specific session has been revoked (e.g., user signed out another device)
   const sessionId = (session as { sessionId?: string }).sessionId;
   if (redis && sessionId) {
-    const revoked = await redis.get<boolean>(`revoked:session:${sessionId}`);
-    if (revoked) {
-      return NextResponse.json({ error: "Session revoked" } as T, { status: 401 });
+    try {
+      const revoked = await redis.get<boolean>(`revoked:session:${sessionId}`);
+      if (revoked) {
+        return NextResponse.json({ error: "Session revoked" } as T, { status: 401 });
+      }
+    } catch {
+      // Redis error — allow the request to proceed (JWT is still valid)
     }
   }
 
   // Single Redis check per request: verify session is still valid and hydrate
   // with the freshest user/org data (avoids stale JWT data)
   if (redis) {
-    const cached = await redis.get<UserSessionRedisCache>(`user:session:${session.user.id}`);
-    if (cached !== null) {
-      // Account was explicitly deactivated — reject immediately
-      if (cached.isActive === false) {
-        return NextResponse.json({ error: "Account deactivated" } as T, { status: 403 });
+    try {
+      const cached = await redis.get<UserSessionRedisCache>(`user:session:${session.user.id}`);
+      if (cached !== null) {
+        // Account was explicitly deactivated — reject immediately
+        if (cached.isActive === false) {
+          return NextResponse.json({ error: "Account deactivated" } as T, { status: 403 });
+        }
+        // Hydrate session with fresh Redis data (role/org changes take effect immediately)
+        if (cached.role !== undefined) session.user.role = (cached.role ?? session.user.role) as typeof session.user.role;
+        if (cached.name !== undefined) session.user.name = cached.name ?? session.user.name;
+        if (cached.image !== undefined) session.user.image = cached.image ?? session.user.image;
+        if (cached.isPasswordChangeRequired !== undefined) {
+          session.user.forceChangePassword = cached.isPasswordChangeRequired ?? session.user.forceChangePassword;
+        }
+        // orgId/branchId live at the session level — take the freshest value from Redis
+        if (cached.orgId !== undefined) orgId = cached.orgId ?? orgId;
+        if (cached.branchId !== undefined) branchId = cached.branchId ?? null;
       }
-      // Hydrate session with fresh Redis data (role/org changes take effect immediately)
-      if (cached.role !== undefined) session.user.role = (cached.role ?? session.user.role) as typeof session.user.role;
-      if (cached.name !== undefined) session.user.name = cached.name ?? session.user.name;
-      if (cached.image !== undefined) session.user.image = cached.image ?? session.user.image;
-      if (cached.isPasswordChangeRequired !== undefined) {
-        session.user.forceChangePassword = cached.isPasswordChangeRequired ?? session.user.forceChangePassword;
-      }
-      // orgId/branchId live at the session level — take the freshest value from Redis
-      if (cached.orgId !== undefined) orgId = cached.orgId ?? orgId;
-      if (cached.branchId !== undefined) branchId = cached.branchId ?? null;
+      // If cached === null: Redis miss (key expired or cleared). Gracefully allow —
+      // the JWT callback will repopulate Redis on the next auth() call.
+    } catch {
+      // Redis error — proceed with JWT values
     }
-    // If cached === null: Redis miss (key expired or cleared). Gracefully allow —
-    // the JWT callback will repopulate Redis on the next auth() call.
   }
 
   // Ensure orgId is present (middleware redirects missing-orgId users to /onboarding,

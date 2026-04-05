@@ -13,6 +13,7 @@ import {
   Target,
   ShieldCheck,
 } from "lucide-react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,37 +41,41 @@ export default function PersonDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-9 w-32" />
-        <Skeleton className="h-48" />
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-20" />)}
+      <PageWrapper title="Loading...">
+        <div className="space-y-6">
+          <Skeleton className="h-48" />
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-20" />)}
+          </div>
+          <Skeleton className="h-80" />
         </div>
-        <Skeleton className="h-80" />
-      </div>
+      </PageWrapper>
     );
   }
 
   if (!person) {
     return (
-      <div className="space-y-6">
-        <Link href="/sales">
-          <Button variant="outline" size="sm" className="gap-2">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-        </Link>
+      <PageWrapper
+        title="Person not found"
+        actions={
+          <Link href="/sales">
+            <Button variant="outline" size="sm" className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+          </Link>
+        }
+      >
         <Card>
           <CardContent className="py-16 text-center">
             <div className="flex flex-col items-center gap-3">
               <EmptyPersonIllustration />
-              <p className="text-lg font-medium text-foreground">Person not found</p>
               <p className="text-sm text-muted-foreground">
                 The person you&apos;re looking for doesn&apos;t exist.
               </p>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -90,13 +95,18 @@ export default function PersonDetailPage() {
     : [];
 
   return (
-    <div className="space-y-6">
-      <Link href={backHref} aria-label={`Back to ${backLabel}`}>
-        <Button variant="outline" size="sm" className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> {backLabel}
-        </Button>
-      </Link>
-
+    <PageWrapper
+      title={person.name}
+      subtitle={person.title}
+      actions={
+        <Link href={backHref} aria-label={`Back to ${backLabel}`}>
+          <Button variant="outline" size="sm" className="gap-2">
+            <ArrowLeft className="h-4 w-4" /> {backLabel}
+          </Button>
+        </Link>
+      }
+    >
+      <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -441,6 +451,7 @@ export default function PersonDetailPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

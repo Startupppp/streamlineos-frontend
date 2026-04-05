@@ -9,7 +9,6 @@ import {
   Star,
   ShieldCheck,
   HeadphonesIcon,
-  Clock,
   Zap,
   SmilePlus,
 } from "lucide-react";
@@ -23,6 +22,7 @@ import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-constants";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CustomerExecutiveDashboardPage() {
   const { data: session } = useSession();
@@ -34,44 +34,42 @@ export default function CustomerExecutiveDashboardPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-1">
-          <Skeleton className="h-8 w-72" />
-          <Skeleton className="h-4 w-80" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-7 w-20" />
-                    <Skeleton className="h-3 w-16" />
+      <PageWrapper title="Dashboard" subtitle="Loading...">
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-7 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-12 w-12 rounded-lg" />
                   </div>
-                  <Skeleton className="h-12 w-12 rounded-lg" />
-                </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-12">
+            <Card className="lg:col-span-5">
+              <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>
+              <CardContent className="flex items-center justify-center py-4">
+                <Skeleton className="h-48 w-48 rounded-full" />
               </CardContent>
             </Card>
-          ))}
+            <Card className="lg:col-span-7">
+              <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
+              <CardContent className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-        <div className="grid gap-6 lg:grid-cols-12">
-          <Card className="lg:col-span-5">
-            <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>
-            <CardContent className="flex items-center justify-center py-4">
-              <Skeleton className="h-48 w-48 rounded-full" />
-            </CardContent>
-          </Card>
-          <Card className="lg:col-span-7">
-            <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
-            <CardContent className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
@@ -87,14 +85,11 @@ export default function CustomerExecutiveDashboardPage() {
   } = data;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{isCSRep ? "My Support Hub" : "Customer Executive Dashboard"}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {isCSRep ? "Your client health, tickets, and satisfaction metrics" : "Client health, retention, and satisfaction overview"}
-        </p>
-      </div>
-
+    <PageWrapper
+      title={isCSRep ? "My Support Hub" : "Customer Executive Dashboard"}
+      subtitle={isCSRep ? "Your client health, tickets, and satisfaction metrics" : "Client health, retention, and satisfaction overview"}
+    >
+      <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Total Clients"
@@ -364,6 +359,7 @@ export default function CustomerExecutiveDashboardPage() {
           </Card>
         </motion.div>
       </div>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

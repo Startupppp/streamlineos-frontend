@@ -16,6 +16,7 @@ import {
   type Employee,
   type StatusFilter,
   type RoleFilter,
+  type PageSizeOption,
   ROLE_LABELS,
   PAGE_SIZE,
 } from "./_components/hr-types";
@@ -40,6 +41,7 @@ export default function HRDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Active");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSizeOption>(PAGE_SIZE);
 
   const departments = useMemo(() => {
     const deptSet = new Map<string, string>();
@@ -93,11 +95,16 @@ export default function HRDashboardPage() {
     return result;
   }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
 
-  const totalPages = Math.ceil(filteredEmployees.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
   const paginatedEmployees = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredEmployees.slice(start, start + PAGE_SIZE);
-  }, [filteredEmployees, page]);
+    const start = (page - 1) * pageSize;
+    return filteredEmployees.slice(start, start + pageSize);
+  }, [filteredEmployees, page, pageSize]);
+
+  const handlePageSizeChange = useCallback((size: PageSizeOption) => {
+    setPageSize(size);
+    setPage(1);
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -207,8 +214,8 @@ export default function HRDashboardPage() {
     return <EmployeesLoadingSkeleton />;
   }
 
-  const showFrom = filteredEmployees.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const showTo = Math.min(page * PAGE_SIZE, filteredEmployees.length);
+  const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
+  const showTo = Math.min(page * pageSize, filteredEmployees.length);
   const hasActiveFilters =
     !!searchTerm ||
     deptFilter !== "All" ||
@@ -254,6 +261,7 @@ export default function HRDashboardPage() {
           employees={paginatedEmployees}
           totalCount={filteredEmployees.length}
           page={page}
+          pageSize={pageSize}
           totalPages={totalPages}
           showFrom={showFrom}
           showTo={showTo}
@@ -261,6 +269,7 @@ export default function HRDashboardPage() {
           currentUserId={currentUserId}
           togglingAccess={togglingAccess}
           onPageChange={setPage}
+          onPageSizeChange={handlePageSizeChange}
           onToggleDashboardAccess={handleToggleDashboardAccess}
           onRequestDelete={handleRequestDelete}
         />

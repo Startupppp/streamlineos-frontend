@@ -66,7 +66,7 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
 
   if (isSubmitted) {
     return (
-      <Card className="shadow-noir border-border text-center py-10">
+      <Card className="border-border text-center py-8">
         <CardContent className="flex flex-col items-center space-y-4">
           <motion.div
             variants={staggerContainer}
@@ -83,23 +83,20 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
             </motion.p>
 
             <motion.div variants={fadeUp} className="w-full max-w-sm space-y-2 pt-4">
-              {dataSteps.map((step) => {
-                const StepIcon = step.icon;
-                return (
-                  <div
-                    key={step.id}
-                    className="flex items-center gap-3 p-3 rounded-lg text-left bg-green-500/10"
-                  >
-                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-medium text-green-600">
-                      {step.label}
-                    </span>
-                    <span className="ml-auto text-xs text-green-600">
-                      Completed
-                    </span>
-                  </div>
-                );
-              })}
+              {dataSteps.map((step) => (
+                <div
+                  key={step.id}
+                  className="flex items-center gap-3 p-3 rounded-lg text-left bg-green-500/10"
+                >
+                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+                  <span className="text-sm font-medium text-green-600">
+                    {step.label}
+                  </span>
+                  <span className="ml-auto text-xs text-green-600">
+                    Completed
+                  </span>
+                </div>
+              ))}
 
               <div className="flex items-center gap-3 p-3 rounded-lg text-left bg-primary/10">
                 <Shield className="h-5 w-5 text-primary flex-shrink-0" aria-hidden="true" />
@@ -125,7 +122,7 @@ export function ReviewTab({ completedSteps, steps, reviewStepId, onBack }: Revie
   }
 
   return (
-    <Card className="shadow-noir border-border text-center py-10">
+    <Card className="border-border text-center py-8">
       <CardContent className="flex flex-col items-center space-y-4">
         <motion.div
           variants={staggerContainer}

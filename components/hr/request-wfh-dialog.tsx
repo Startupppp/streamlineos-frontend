@@ -10,6 +10,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -131,7 +132,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
                   <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value} onChange={field.onChange} />
+                      <DatePicker value={field.value} onChange={field.onChange} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -187,13 +188,14 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           </Form>
         </ScrollArea>
 
-        <div className="px-4 py-3 border-t shrink-0 flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={handleClose}>
+        <SheetFooter>
+          <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
             Cancel
           </Button>
           <Button
             type="submit"
             form="wfh-form"
+            className="flex-1"
             disabled={createWfhRequest.isPending}
           >
             {createWfhRequest.isPending && (
@@ -201,7 +203,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
             )}
             Submit Request
           </Button>
-        </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

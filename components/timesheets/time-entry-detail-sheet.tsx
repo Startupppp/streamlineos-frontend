@@ -283,6 +283,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
           <SheetFooter>
             <Button
               variant="outline"
+              className="flex-1"
               onClick={() => {
                 setRejectDialogOpen(false);
                 setRejectionReason("");
@@ -292,6 +293,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
             </Button>
             <Button
               variant="destructive"
+              className="flex-1"
               onClick={handleRejectConfirm}
               disabled={!rejectionReason.trim() || rejectMutation.isPending}
             >

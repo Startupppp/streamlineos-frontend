@@ -135,12 +135,13 @@ export function EditTimeEntryDialog({ entry, open, onOpenChange }: EditTimeEntry
               <Button
                 type="button"
                 variant="outline"
+                className="flex-1"
                 onClick={() => onOpenChange(false)}
                 disabled={mutation.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" className="flex-1" disabled={mutation.isPending}>
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update
               </Button>

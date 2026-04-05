@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { uploadOnboardingDocument } from "@/server/actions/onboarding-actions";
 import { toast } from "sonner";
@@ -101,14 +100,13 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
   );
 
   return (
-    <Card className="shadow-soft border-border">
-      <CardContent className="pt-6">
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-          <motion.div variants={fadeUp} className="mb-5">
-            <h2 className="text-xl font-semibold text-foreground">Documents</h2>
-            <p className="text-sm text-muted-foreground mt-1">Please upload the necessary documents.</p>
-          </motion.div>
-          <form onSubmit={handleFormSubmit}>
+    <div>
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} className="mb-5">
+          <h2 className="text-xl font-semibold text-foreground">Documents</h2>
+          <p className="text-sm text-muted-foreground mt-1">Please upload the necessary documents.</p>
+        </motion.div>
+        <form onSubmit={handleFormSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-live="polite">
               {DOCUMENT_TYPES.map((doc) => {
                 const isUploaded = !!uploadedFiles[doc.type];
@@ -171,9 +169,8 @@ export function DocumentsTab({ onComplete, onBack, savedUploads }: DocumentsTabP
             <motion.div variants={fadeUp} className="mt-5">
               <FormNavButtons onBack={onBack} isLoading={loadingDoc !== null} submitLabel="Continue to Review" />
             </motion.div>
-          </form>
-        </motion.div>
-      </CardContent>
-    </Card>
+        </form>
+      </motion.div>
+    </div>
   );
 }

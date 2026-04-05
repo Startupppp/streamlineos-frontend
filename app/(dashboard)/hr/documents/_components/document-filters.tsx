@@ -59,7 +59,7 @@ export function DocumentFilters({
                 onClick={() => onCategoryChange(cat)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
                   selectedCategory === cat
-                    ? "bg-[#2563eb] text-white border-[#2563eb]"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : "bg-white dark:bg-background text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50"
                 }`}
               >
@@ -93,7 +93,7 @@ export function DocumentFilters({
                 onClick={() => onTypeChange(type.value)}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
                   selectedType === type.value
-                    ? "bg-[#2563eb]/10 text-[#2563eb] dark:bg-[#2563eb]/20"
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >

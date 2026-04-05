@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { User, Landmark, FileText, ClipboardCheck, Check } from "lucide-react";
@@ -170,39 +171,40 @@ export default function OnboardingPage() {
 
       <ScrollArea className="flex-1 min-h-0">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsContent value={STEP_IDS.PERSONAL}>
-              <PersonalInfoTab
-                onComplete={completeHandlers[STEP_IDS.PERSONAL]}
-                defaultValues={savedFormData[STEP_IDS.PERSONAL]}
-              />
-            </TabsContent>
-
-            <TabsContent value={STEP_IDS.BANK}>
-              <BankDetailsTab
-                onComplete={completeHandlers[STEP_IDS.BANK]}
-                onBack={goToHandlers[STEP_IDS.PERSONAL]}
-                defaultValues={savedFormData[STEP_IDS.BANK]}
-              />
-            </TabsContent>
-
-            <TabsContent value={STEP_IDS.DOCS}>
-              <DocumentsTab
-                onComplete={completeHandlers[STEP_IDS.DOCS]}
-                onBack={goToHandlers[STEP_IDS.BANK]}
-                savedUploads={savedFormData[STEP_IDS.DOCS]}
-              />
-            </TabsContent>
-
-            <TabsContent value={STEP_IDS.REVIEW}>
-              <ReviewTab
-                completedSteps={completedSteps}
-                steps={ONBOARDING_STEPS}
-                reviewStepId={STEP_IDS.REVIEW}
-                onBack={goToHandlers[STEP_IDS.DOCS]}
-              />
-            </TabsContent>
-          </Tabs>
+          <Card className="shadow-sm">
+            <CardContent className="pt-6">
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <TabsContent value={STEP_IDS.PERSONAL}>
+                  <PersonalInfoTab
+                    onComplete={completeHandlers[STEP_IDS.PERSONAL]}
+                    defaultValues={savedFormData[STEP_IDS.PERSONAL]}
+                  />
+                </TabsContent>
+                <TabsContent value={STEP_IDS.BANK}>
+                  <BankDetailsTab
+                    onComplete={completeHandlers[STEP_IDS.BANK]}
+                    onBack={goToHandlers[STEP_IDS.PERSONAL]}
+                    defaultValues={savedFormData[STEP_IDS.BANK]}
+                  />
+                </TabsContent>
+                <TabsContent value={STEP_IDS.DOCS}>
+                  <DocumentsTab
+                    onComplete={completeHandlers[STEP_IDS.DOCS]}
+                    onBack={goToHandlers[STEP_IDS.BANK]}
+                    savedUploads={savedFormData[STEP_IDS.DOCS]}
+                  />
+                </TabsContent>
+                <TabsContent value={STEP_IDS.REVIEW}>
+                  <ReviewTab
+                    completedSteps={completedSteps}
+                    steps={ONBOARDING_STEPS}
+                    reviewStepId={STEP_IDS.REVIEW}
+                    onBack={goToHandlers[STEP_IDS.DOCS]}
+                  />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </ScrollArea>
     </div>

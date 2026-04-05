@@ -86,12 +86,6 @@ const SLIDES = [
   },
 ] as const;
 
-const ACTIVITY = [
-  { icon: CheckCircle2, text: "Sprint #12 marked complete", time: "2m ago", color: "text-emerald-400" },
-  { icon: Zap, text: "3 leads moved to Qualified", time: "5m ago", color: "text-amber-400" },
-  { icon: Clock, text: "Payroll run scheduled", time: "12m ago", color: "text-blue-400" },
-  { icon: BarChart3, text: "Sales report generated", time: "1h ago", color: "text-purple-400" },
-];
 
 const accentStyles = {
   amber: {
@@ -330,20 +324,6 @@ export function AuthRightPanel() {
           >
             <ChevronRight className="h-3.5 w-3.5 text-white/50" />
           </button>
-        </div>
-      </div>
-
-      {/* Live activity feed */}
-      <div className="relative z-10 mx-8 mb-8 shrink-0 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 space-y-3">
-        <p className="text-[10px] text-white/30 uppercase tracking-wider font-medium">Live activity</p>
-        <div className="space-y-2">
-          {ACTIVITY.map((item, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <item.icon className={`h-3.5 w-3.5 shrink-0 ${item.color}`} />
-              <span className="text-[12px] text-white/60 flex-1 truncate">{item.text}</span>
-              <span className="text-[10px] text-white/25 shrink-0">{item.time}</span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

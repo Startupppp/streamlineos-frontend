@@ -36,13 +36,20 @@ export async function GET(req: NextRequest) {
       return err("Invalid query params: start and end are required", 400);
     }
 
-    const events = await getCalendarEvents(
-      session.orgId,
-      session.user.id,
-      new Date(params.start),
-      new Date(params.end)
-    );
-    return ok(events);
+    try {
+      const events = await getCalendarEvents(
+        session.orgId,
+        session.user.id,
+        new Date(params.start),
+        new Date(params.end)
+      );
+      return ok(events);
+    } catch (error) {
+      return err(
+        error instanceof Error ? error.message : "Failed to load calendar events",
+        500
+      );
+    }
   });
 }
 

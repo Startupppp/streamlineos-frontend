@@ -8,6 +8,7 @@ import {
   useDeleteView,
 } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptySearchIllustration } from "@/components/illustrations";
@@ -128,32 +129,27 @@ export default function ViewsPage({
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="flex-1 p-6 space-y-3">
+      <PageWrapper title="Views" filters={<ProjectSubNav projectId={projectId} />}>
+        <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-        <ProjectSubNav projectId={projectId} />
-        <div className="flex items-center justify-between mt-4">
-          <h1 className="text-2xl font-bold">Views</h1>
-          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-            <SheetTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> New View
-              </Button>
-            </SheetTrigger>
+    <PageWrapper
+      title="Views"
+      filters={<ProjectSubNav projectId={projectId} />}
+      actions={
+        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+          <SheetTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> New View
+            </Button>
+          </SheetTrigger>
             <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Create View</SheetTitle>
@@ -211,10 +207,9 @@ export default function ViewsPage({
               </form>
             </SheetContent>
           </Sheet>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      }
+    >
+      <div className="space-y-6">
         {!views?.length ? (
           <div className="text-center py-16">
             <EmptySearchIllustration className="mx-auto mb-4 w-36 h-36" />
@@ -344,6 +339,6 @@ export default function ViewsPage({
           </>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

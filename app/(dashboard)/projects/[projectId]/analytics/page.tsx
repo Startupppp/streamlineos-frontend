@@ -6,6 +6,7 @@ import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   BarChart,
   PieChart,
@@ -133,53 +134,33 @@ export default function AnalyticsPage({
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <PageWrapper title="Analytics" filters={<ProjectSubNav projectId={projectId} />}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Array.from({ length: 6 }).map((_: unknown, i: number) => (
             <Skeleton key={i} className="h-72 w-full" />
           ))}
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   if (!analytics) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <ProjectSubNav projectId={projectId} />
-          <div className="mt-4">
-            <h1 className="text-2xl font-bold">Analytics</h1>
-          </div>
+      <PageWrapper title="Analytics" filters={<ProjectSubNav projectId={projectId} />}>
+        <div className="flex flex-col items-center justify-center py-16">
+          <EmptyActivityIllustration className="mx-auto mb-4 w-36 h-36" />
+          <h3 className="text-lg font-semibold mb-1">No data yet</h3>
+          <p className="text-sm text-muted-foreground">
+            Analytics will appear once your project has work items.
+          </p>
         </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center py-16">
-            <EmptyActivityIllustration className="mx-auto mb-4 w-36 h-36" />
-            <h3 className="text-lg font-semibold mb-1">No data yet</h3>
-            <p className="text-sm text-muted-foreground">
-              Analytics will appear once your project has work items.
-            </p>
-          </div>
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-        <ProjectSubNav projectId={projectId} />
-        <div className="mt-4">
-          <h1 className="text-2xl font-bold">Analytics</h1>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <PageWrapper title="Analytics" filters={<ProjectSubNav projectId={projectId} />}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">State Distribution</CardTitle>
@@ -457,7 +438,6 @@ export default function AnalyticsPage({
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </PageWrapper>
   );
 }

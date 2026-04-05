@@ -40,7 +40,7 @@ export function AdminExpenseFilters({
           onClick={() => onStatusChange(item.key)}
           className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
             statusFilter === item.key
-              ? "bg-[#1e293b] dark:bg-white text-white dark:text-[#1e293b] border-[#1e293b] dark:border-white"
+              ? "bg-foreground text-background border-foreground"
               : "bg-white dark:bg-background text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50"
           }`}
         >

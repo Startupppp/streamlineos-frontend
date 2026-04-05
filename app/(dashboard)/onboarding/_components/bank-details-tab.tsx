@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { updateBankDetails } from "@/server/actions/onboarding-actions";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -49,14 +48,13 @@ export function BankDetailsTab({ onComplete, onBack, defaultValues }: BankDetail
   const { errors } = form.formState;
 
   return (
-    <Card className="shadow-soft border-border">
-      <CardContent className="pt-6">
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-          <motion.div variants={fadeUp} className="mb-6">
-            <h2 className="text-xl font-bold text-foreground">Bank & Tax Details</h2>
-            <p className="text-sm text-muted-foreground mt-1">Required for payroll processing.</p>
-          </motion.div>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+    <div>
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div variants={fadeUp} className="mb-6">
+          <h2 className="text-xl font-bold text-foreground">Bank & Tax Details</h2>
+          <p className="text-sm text-muted-foreground mt-1">Required for payroll processing.</p>
+        </motion.div>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="accountHolder">Account Holder Name</Label>
@@ -128,9 +126,8 @@ export function BankDetailsTab({ onComplete, onBack, defaultValues }: BankDetail
             <motion.div variants={fadeUp}>
               <FormNavButtons onBack={onBack} isLoading={isLoading} />
             </motion.div>
-          </form>
-        </motion.div>
-      </CardContent>
-    </Card>
+        </form>
+      </motion.div>
+    </div>
   );
 }

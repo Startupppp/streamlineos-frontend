@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { ChevronRight, FolderPlus, Upload } from "lucide-react";
+import { FolderPlus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -311,50 +312,42 @@ export default function DocumentsPage() {
   /* ---------------------------------------------------------------- */
   /* Render                                                             */
   /* ---------------------------------------------------------------- */
+  const handleNewFolderOpen = useCallback(() => setIsNewFolderOpen(true), []);
+  const handleUploadOpen = useCallback(() => setIsUploadOpen(true), []);
+
+  const pageActions = (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" size="sm" className="gap-2" onClick={handleNewFolderOpen}>
+        <FolderPlus className="h-4 w-4" />
+        New Folder
+      </Button>
+      <Button size="sm" className="gap-2" onClick={handleUploadOpen}>
+        <Upload className="h-4 w-4" />
+        Upload
+      </Button>
+    </div>
+  );
+
+  const filtersBar = (
+    <DocumentFilters
+      searchTerm={searchTerm}
+      onSearchChange={handleSearchChange}
+      selectedType={selectedType}
+      onTypeChange={handleTypeChange}
+      selectedCategory={selectedCategory}
+      onCategoryChange={handleCategoryChange}
+      categoryTabs={categoryTabs}
+    />
+  );
+
   return (
-    <div className="flex-1 space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>HR Admin</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-foreground">Documents</span>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Document Library</h1>
-          <p className="text-sm text-muted-foreground">
-            Centralized repository for all company-wide HR documents, contracts, and policy files.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
-          <Button variant="outline" className="gap-2" onClick={() => setIsNewFolderOpen(true)}>
-            <FolderPlus className="h-4 w-4" />
-            New Folder
-          </Button>
-          <Button
-            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-sm gap-2"
-            onClick={() => setIsUploadOpen(true)}
-          >
-            <Upload className="h-4 w-4" />
-            Upload Document
-          </Button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <DocumentFilters
-        searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
-        selectedType={selectedType}
-        onTypeChange={handleTypeChange}
-        selectedCategory={selectedCategory}
-        onCategoryChange={handleCategoryChange}
-        categoryTabs={categoryTabs}
-      />
-
-      {/* Table */}
+    <PageWrapper
+      title="Document Library"
+      subtitle="Centralized repository for all company-wide HR documents, contracts, and policy files."
+      actions={pageActions}
+      filters={filtersBar}
+    >
+      <div className="space-y-4">
       <DocumentTable
         paginatedDocuments={paginatedDocuments}
         folders={folders}
@@ -366,24 +359,22 @@ export default function DocumentsPage() {
         searchTerm={searchTerm}
         onPageChange={setPage}
         onDelete={handleDelete}
-        onOpenUpload={() => setIsUploadOpen(true)}
+        onOpenUpload={handleUploadOpen}
       />
 
-      {/* Storage usage */}
       <div className="flex items-center gap-3 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="font-medium">{storagePercent}%</span>
         </div>
         <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#2563eb] rounded-full transition-all"
+            className="h-full bg-primary rounded-full transition-all"
             style={{ width: `${storagePercent}%` }}
           />
         </div>
         <span className="text-xs text-muted-foreground">of {maxStorageGB}GB used</span>
       </div>
 
-      {/* Upload dialog */}
       <UploadDocumentDialog
         open={isUploadOpen}
         onOpenChange={setIsUploadOpen}
@@ -395,8 +386,6 @@ export default function DocumentsPage() {
         categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
         isAdmin={isAdmin}
       />
-
-      {/* New folder dialog */}
       <NewFolderDialog
         open={isNewFolderOpen}
         onOpenChange={setIsNewFolderOpen}
@@ -405,6 +394,7 @@ export default function DocumentsPage() {
         existingTabs={categoryTabs}
         onConfirm={handleNewFolder}
       />
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -182,6 +183,8 @@ function InvoicesContent() {
       </div>
 
       <Card>
+        <ScrollArea className="w-full" type="auto">
+          <div className="min-w-[700px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -265,6 +268,8 @@ function InvoicesContent() {
             )}
           </TableBody>
         </Table>
+          </div>
+        </ScrollArea>
       </Card>
 
       <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />

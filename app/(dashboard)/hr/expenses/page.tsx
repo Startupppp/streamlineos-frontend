@@ -209,7 +209,7 @@ export default function ExpensesPage() {
               }
             />
             <Button
-              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-sm gap-2"
+              className="gap-2"
               onClick={() => setIsCreateOpen(true)}
             >
               <Plus className="h-4 w-4" />

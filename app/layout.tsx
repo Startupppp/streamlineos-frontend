@@ -66,7 +66,7 @@ export default function RootLayout({
               <MotionProvider>
                 {children}
               </MotionProvider>
-              <Toaster position="top-right" />
+              <Toaster position="top-right" richColors />
             </QueryProvider>
           </SessionProvider>
         </ThemeProvider>

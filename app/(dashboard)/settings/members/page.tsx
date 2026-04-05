@@ -26,6 +26,7 @@ import { Search, UserPlus, Shield } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ALL_ROLES = [
   { value: "CEO", label: "CEO" },
@@ -170,7 +171,8 @@ export default function MembersSettingsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <ScrollArea className="w-full" type="auto">
+            <div className="min-w-max">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -239,7 +241,8 @@ export default function MembersSettingsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </ScrollArea>
           {membersData && membersData.pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-2 border-t">
               <span className="text-xs text-muted-foreground">

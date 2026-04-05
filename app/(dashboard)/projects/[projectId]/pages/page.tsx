@@ -3,6 +3,7 @@
 import { use, useState, useMemo } from "react";
 import { usePages, useCreatePage, useUpdatePage } from "@/lib/api/hooks/projects";
 import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
@@ -230,79 +231,75 @@ export default function PagesPage({
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="flex-1 flex">
+      <PageWrapper title="Pages" filters={<ProjectSubNav projectId={projectId} />} noInternalScroll contentClassName="p-0">
+        <div className="flex h-full">
           <div className="w-64 border-r p-4 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
           <div className="flex-1 p-6">
-            <Skeleton className="h-full w-full" />
+            <Skeleton className="h-64 w-full" />
           </div>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-        <ProjectSubNav projectId={projectId} />
-        <div className="flex items-center justify-between mt-4">
-          <h1 className="text-2xl font-bold">Pages</h1>
-          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-            <SheetTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> New Page
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Create Page</SheetTitle>
-              </SheetHeader>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4 p-4"
+    <PageWrapper
+      title="Pages"
+      filters={<ProjectSubNav projectId={projectId} />}
+      actions={
+        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+          <SheetTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> New Page
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Create Page</SheetTitle>
+            </SheetHeader>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 p-4"
+            >
+              <div>
+                <Label htmlFor="page-title">Title</Label>
+                <Input id="page-title" {...form.register("title")} />
+                {form.formState.errors.title && (
+                  <p className="text-xs text-destructive mt-1">
+                    {form.formState.errors.title.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="page-icon">Icon Emoji</Label>
+                <Input
+                  id="page-icon"
+                  placeholder="📄"
+                  maxLength={4}
+                  {...form.register("icon")}
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending}
+                className="w-full"
               >
-                <div>
-                  <Label htmlFor="page-title">Title</Label>
-                  <Input id="page-title" {...form.register("title")} />
-                  {form.formState.errors.title && (
-                    <p className="text-xs text-destructive mt-1">
-                      {form.formState.errors.title.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="page-icon">Icon Emoji</Label>
-                  <Input
-                    id="page-icon"
-                    placeholder="📄"
-                    maxLength={4}
-                    {...form.register("icon")}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending}
-                  className="w-full"
-                >
-                  {createMutation.isPending ? "Creating..." : "Create Page"}
-                </Button>
-              </form>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
+                {createMutation.isPending ? "Creating..." : "Create Page"}
+              </Button>
+            </form>
+          </SheetContent>
+        </Sheet>
+      }
+      noInternalScroll
+      contentClassName="p-0"
+    >
       {!pages?.length ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center py-16">
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
             <EmptyDocumentsIllustration className="mx-auto mb-4 w-36 h-36" />
             <h3 className="text-lg font-semibold mb-1">No pages yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
@@ -314,7 +311,7 @@ export default function PagesPage({
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex h-full overflow-hidden">
           <div className="w-64 border-r overflow-y-auto p-3 space-y-1">
             {pinnedPages.length > 0 && (
               <div className="mb-3">
@@ -390,6 +387,6 @@ export default function PagesPage({
           </div>
         </div>
       )}
-    </div>
+    </PageWrapper>
   );
 }

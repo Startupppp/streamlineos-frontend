@@ -251,7 +251,8 @@ export function LeavesTabContent({
                 />
               ) : (
                 <ScrollArea className="h-full">
-                  <div className="overflow-x-auto" role="region" aria-label="Leave requests table" tabIndex={0}>
+                  <ScrollArea className="w-full" type="auto">
+                  <div className="min-w-max">
                     <table className="w-full">
                       <caption className="sr-only">Your leave request history</caption>
                       <thead>
@@ -279,13 +280,14 @@ export function LeavesTabContent({
                       </tbody>
                     </table>
                   </div>
-                  {myLeaveRequests.length > 5 && (
-                    <div className="text-center pt-4">
-                      <button className="text-sm text-gold hover:text-gold/80 font-medium transition-colors">
-                        View All Requests
-                      </button>
-                    </div>
-                  )}
+                </ScrollArea>
+                {myLeaveRequests.length > 5 && (
+                  <div className="text-center pt-4">
+                    <button className="text-sm text-gold hover:text-gold/80 font-medium transition-colors">
+                      View All Requests
+                    </button>
+                  </div>
+                )}
                 </ScrollArea>
               )}
             </CardContent>

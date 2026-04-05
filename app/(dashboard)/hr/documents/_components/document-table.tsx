@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -144,6 +145,8 @@ export function DocumentTable({
   return (
     <Card className="shadow-sm border overflow-hidden">
       <CardContent className="p-0" aria-live="polite">
+        <ScrollArea className="w-full" type="auto">
+        <div className="min-w-[700px]">
         <Table>
           <caption className="sr-only">Document library</caption>
           <TableHeader>
@@ -349,6 +352,8 @@ export function DocumentTable({
             )}
           </TableBody>
         </Table>
+        </div>
+        </ScrollArea>
 
         {/* Pagination */}
         {totalFiltered > 0 && (

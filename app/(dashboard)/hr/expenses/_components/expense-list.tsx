@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -68,7 +69,7 @@ function ExpensePagination({
               key={p}
               variant={p === pagination.page ? "default" : "outline"}
               size="icon"
-              className={`h-8 w-8 text-xs ${p === pagination.page ? "bg-[#2563eb] hover:bg-[#1d4ed8] text-white" : ""}`}
+              className="h-8 w-8 text-xs"
               onClick={() => onPageChange(p)}
             >
               {p}
@@ -273,7 +274,8 @@ export function MemberExpenseList({
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto" role="region" aria-label="Expense claims table" tabIndex={0}>
+            <ScrollArea className="w-full" type="auto" role="region" aria-label="Expense claims table">
+              <div className="min-w-[640px]">
               <Table>
                 <caption className="sr-only">Expense claims</caption>
                 <TableHeader>
@@ -298,7 +300,8 @@ export function MemberExpenseList({
                   ))}
                 </TableBody>
               </Table>
-            </div>
+              </div>
+            </ScrollArea>
 
             <ExpensePagination
               pagination={pagination}

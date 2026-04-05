@@ -354,9 +354,9 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
             </div>
             </div>
 
-            <SheetFooter className="p-6 pt-4 border-t mt-auto shrink-0">
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px]">
+            <SheetFooter className="pt-4 mt-auto shrink-0">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="flex-1">
                 {form.formState.isSubmitting ? "Creating..." : "Create Project"}
               </Button>
             </SheetFooter>

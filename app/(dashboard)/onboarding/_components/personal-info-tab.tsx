@@ -6,7 +6,6 @@ import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updatePersonalDetails } from "@/server/actions/onboarding-actions";
 import { motion } from "framer-motion";
@@ -62,14 +61,13 @@ export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabPr
   const { errors } = form.formState;
 
   return (
-    <Card className="shadow-soft border-border">
-      <CardContent className="pt-6">
-        <motion.div variants={staggerVariants} initial="hidden" animate="visible">
-          <motion.div variants={fadeUpVariants} className="mb-5">
-            <h2 className="text-xl font-semibold text-foreground">Welcome to Vaivamm!</h2>
-            <p className="text-sm text-muted-foreground mt-1">Tell us a bit about yourself to get started.</p>
-          </motion.div>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+    <div>
+      <motion.div variants={staggerVariants} initial="hidden" animate="visible">
+        <motion.div variants={fadeUpVariants} className="mb-5">
+          <h2 className="text-xl font-semibold text-foreground">Welcome to Vaivamm!</h2>
+          <p className="text-sm text-muted-foreground mt-1">Tell us a bit about yourself to get started.</p>
+        </motion.div>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
             <motion.div variants={fadeUpVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -158,9 +156,8 @@ export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabPr
             <motion.div variants={fadeUpVariants}>
               <FormNavButtons isLoading={isLoading} />
             </motion.div>
-          </form>
-        </motion.div>
-      </CardContent>
-    </Card>
+        </form>
+      </motion.div>
+    </div>
   );
 }

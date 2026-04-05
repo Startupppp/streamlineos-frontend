@@ -151,7 +151,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
           <h2 className="text-2xl font-bold text-slate-900">Budget Management</h2>
           <p className="text-slate-600 mt-1">Manage expense categories and budget limits</p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="bg-violet-600 hover:bg-violet-700">
+        <Button onClick={() => setIsCreateOpen(true)} className="">
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
@@ -162,7 +162,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Total Budget</CardTitle>
-            <DollarSign className="h-4 w-4 text-violet-600" />
+            <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalBudget)}</div>
@@ -199,7 +199,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-violet-600" />
+            <PieChart className="h-5 w-5 text-primary" />
             Category Budgets
           </CardTitle>
           <CardDescription>Monitor spending against budget limits by category</CardDescription>
@@ -346,10 +346,10 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
             </div>
           </div>
           <SheetFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+            <Button variant="outline" className="flex-1" onClick={() => setIsCreateOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateCategory} className="bg-violet-600 hover:bg-violet-700">
+            <Button onClick={handleCreateCategory} className="flex-1">
               Create Category
             </Button>
           </SheetFooter>

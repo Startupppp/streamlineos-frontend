@@ -35,7 +35,9 @@ export const ROLE_LABELS: Record<string, string> = {
   DIGITAL_MARKETING: "Digital Marketing",
 };
 
-export const PAGE_SIZE = 6;
+export const PAGE_SIZE = 10;
+export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
+export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
 
 export function canDeleteEmployee(
   targetRole: UserRole,

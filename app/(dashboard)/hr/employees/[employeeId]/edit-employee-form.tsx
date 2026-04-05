@@ -5,6 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { updateEmployee } from "@/server/actions/hr-actions";
@@ -143,18 +144,29 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <PersonalInfoSection />
-        <ProfessionalInfoSection assignableRoles={assignableRoles} />
-        <BankDetailsSection />
-        <div className="flex justify-end gap-3 pt-1">
-          <Button variant="outline" type="button" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
-          </Button>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
+        <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="p-5">
+            <PersonalInfoSection />
+          </div>
+          <Separator />
+          <div className="p-5">
+            <ProfessionalInfoSection assignableRoles={assignableRoles} />
+          </div>
+          <Separator />
+          <div className="p-5">
+            <BankDetailsSection />
+          </div>
+          <Separator />
+          <div className="flex justify-end gap-3 px-5 py-4 bg-muted/30">
+            <Button variant="outline" type="button" onClick={handleCancel} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
         </div>
       </form>
     </FormProvider>

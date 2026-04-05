@@ -66,9 +66,9 @@ export const TimerCard = memo(function TimerCard() {
   const prevBreakHoursRef = useRef<number>(0);
 
   useEffect(() => {
-    if (isOnBreak) {
+    if (isOnBreak && !breakStartRef.current) {
       breakStartRef.current = Date.now();
-    } else if (breakStartRef.current !== null) {
+    } else if (!isOnBreak && breakStartRef.current !== null) {
       const duration = Date.now() - breakStartRef.current;
       setLocalExtraBreakMs((prev) => prev + duration);
       breakStartRef.current = null;
@@ -117,8 +117,11 @@ export const TimerCard = memo(function TimerCard() {
   }, [isActive, isInCooldown, checkInMutation, checkOutMutation]);
 
   const handleBreakToggle = useCallback(() => {
+    if (!isOnBreak) {
+      breakStartRef.current = Date.now();
+    }
     breakMutation.mutate();
-  }, [breakMutation]);
+  }, [breakMutation, isOnBreak]);
 
   const dailyStats = statusData?.dailyStats;
   const checkInTime = statusData?.todayLog?.checkIn;

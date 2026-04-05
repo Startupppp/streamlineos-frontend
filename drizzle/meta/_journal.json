@@ -169,6 +169,13 @@
       "when": 1774230000000,
       "tag": "0023_google_meet_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774240000000,
+      "tag": "0024_fix_schema_drift",
+      "breakpoints": true
     }
   ]
 }
