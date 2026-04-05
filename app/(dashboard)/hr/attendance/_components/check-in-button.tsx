@@ -84,10 +84,9 @@ export const TimerCard = memo(function TimerCard() {
   }, [statusData?.todayLog?.breakHours]);
 
   useEffect(() => {
-    if (isOnBreak) return;
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [isOnBreak]);
+  }, []);
 
   const sessionTimer = useMemo(() => {
     if (!statusData?.todayLog?.checkIn || statusData?.todayLog?.checkOut) {
@@ -96,13 +95,14 @@ export const TimerCard = memo(function TimerCard() {
     const checkInTime = new Date(statusData.todayLog.checkIn);
     const serverBreakMs = (Number(statusData.todayLog.breakHours) || 0) * 3600000;
     const totalBreakMs = serverBreakMs + localExtraBreakMs;
-    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime() - totalBreakMs);
+    const reference = isOnBreak && breakStartRef.current ? breakStartRef.current : now.getTime();
+    const diffMs = Math.max(0, reference - checkInTime.getTime() - totalBreakMs);
     return {
       hours: Math.floor(diffMs / 3600000),
       minutes: Math.floor((diffMs % 3600000) / 60000),
       seconds: Math.floor((diffMs % 60000) / 1000),
     };
-  }, [now, statusData?.todayLog, localExtraBreakMs]);
+  }, [now, statusData?.todayLog, localExtraBreakMs, isOnBreak]);
 
   const handleCheckIn = useCallback(() => {
     checkInMutation.mutate({ location: undefined });

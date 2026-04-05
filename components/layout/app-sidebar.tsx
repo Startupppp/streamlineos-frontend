@@ -140,25 +140,25 @@ export function AppSidebar({
               onClick={onNavigate}
               className="flex items-center gap-3 min-w-0 group"
             >
-              <div className="relative h-9 w-9 rounded-xl overflow-hidden bg-gold/15 ring-1 ring-gold/25 shrink-0">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 shrink-0">
                 <Image
                   src="/logo.svg"
                   alt="Vaivamm"
                   fill
-                  className="object-contain p-1"
+                  className="object-contain p-1.5"
                 />
               </div>
               <div className="min-w-0">
-                <span className="gold-text text-base font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
+                <span className="gold-text text-[17px] font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
                   Vaivamm
                 </span>
                 {orgName ? (
-                  <span className="text-[10px] text-sidebar-foreground/35 truncate block mt-0.5 leading-none max-w-[120px]">
+                  <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[120px]">
                     {orgName}
                   </span>
                 ) : (
-                  <span className="text-[10px] text-sidebar-foreground/25 block mt-0.5 leading-none">
-                    CRM Platform
+                  <span className="text-[11px] text-sidebar-foreground/30 block mt-0.5 leading-none">
+                    Capital CRM
                   </span>
                 )}
               </div>
@@ -169,14 +169,14 @@ export function AppSidebar({
             <Link
               href="/dashboard"
               onClick={onNavigate}
-              className="h-9 w-9 rounded-xl overflow-hidden bg-gold/15 ring-1 ring-gold/25 flex items-center justify-center"
+              className="h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 flex items-center justify-center"
               aria-label="Go to dashboard"
             >
               <Image
                 src="/logo.svg"
                 alt="Vaivamm"
-                width={24}
-                height={24}
+                width={26}
+                height={26}
                 className="object-contain"
               />
             </Link>

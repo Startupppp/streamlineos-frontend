@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Monitor, Rows3, Mail, Bell, BellOff, Smartphone, Moon } from "lucide-react";
+import { Monitor,  Mail, Bell, BellOff, Smartphone, Moon } from "lucide-react";
 import { useNotificationPreferences, useUpdateNotificationPreferences } from "@/lib/api/hooks/hr";
 import { Input } from "@/components/ui/input";
 
@@ -17,6 +17,21 @@ interface PrefRowProps {
   onCheckedChange: (v: boolean) => void;
   disabled?: boolean;
 }
+
+const NOTIFICATION_CATEGORIES = [
+  { key: "lead_assigned", label: "Lead assigned", description: "When a lead is assigned to you." },
+  { key: "lead_converted", label: "Lead converted", description: "When a lead you own is converted." },
+  { key: "deal_stage_change", label: "Deal stage changes", description: "When a deal moves to a new pipeline stage." },
+  { key: "sla_breach", label: "SLA breach warnings", description: "When a lead or ticket is about to breach SLA." },
+  { key: "leave_request", label: "Leave requests", description: "When someone submits a leave request for your approval." },
+  { key: "leave_decision", label: "Leave approved/rejected", description: "When your leave request is approved or rejected." },
+  { key: "expense_approved", label: "Expense approved", description: "When your expense claim is approved or rejected." },
+  { key: "payslip_generated", label: "Payslip generated", description: "When your monthly payslip is ready." },
+  { key: "holiday_reminder", label: "Holiday reminders", description: "Reminders about upcoming holidays." },
+  { key: "chat_message", label: "Chat messages", description: "When you receive a direct message." },
+  { key: "target_achieved", label: "Target achieved", description: "When you hit a sales or performance target." },
+];
+
 
 function PrefRow({ id, icon: Icon, label, description, checked, onCheckedChange, disabled }: PrefRowProps) {
   return (
@@ -79,21 +94,7 @@ export function SettingsPreferences() {
 
   return (
     <div className="space-y-6">
-      <div className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden">
-        <div className="px-4 py-3 bg-muted/30">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Display</p>
-        </div>
-        <div className="px-4">
-          <PrefRow
-            id="compact-view"
-            icon={Rows3}
-            label="Compact view"
-            description="Use a denser layout for tables and lists."
-            checked={compactView}
-            onCheckedChange={handleCompactToggle}
-          />
-        </div>
-      </div>
+      
 
       <div className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden">
         <div className="px-4 py-3 bg-muted/30">
@@ -233,16 +234,3 @@ export function SettingsPreferences() {
   );
 }
 
-const NOTIFICATION_CATEGORIES = [
-  { key: "lead_assigned", label: "Lead assigned", description: "When a lead is assigned to you." },
-  { key: "lead_converted", label: "Lead converted", description: "When a lead you own is converted." },
-  { key: "deal_stage_change", label: "Deal stage changes", description: "When a deal moves to a new pipeline stage." },
-  { key: "sla_breach", label: "SLA breach warnings", description: "When a lead or ticket is about to breach SLA." },
-  { key: "leave_request", label: "Leave requests", description: "When someone submits a leave request for your approval." },
-  { key: "leave_decision", label: "Leave approved/rejected", description: "When your leave request is approved or rejected." },
-  { key: "expense_approved", label: "Expense approved", description: "When your expense claim is approved or rejected." },
-  { key: "payslip_generated", label: "Payslip generated", description: "When your monthly payslip is ready." },
-  { key: "holiday_reminder", label: "Holiday reminders", description: "Reminders about upcoming holidays." },
-  { key: "chat_message", label: "Chat messages", description: "When you receive a direct message." },
-  { key: "target_achieved", label: "Target achieved", description: "When you hit a sales or performance target." },
-];

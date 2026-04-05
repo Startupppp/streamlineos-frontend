@@ -122,7 +122,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
             <form
               id="wfh-form"
               onSubmit={form.handleSubmit(onSubmit)}
-              className="px-4 py-4 space-y-4"
+              className="px-4 py-3 space-y-3"
             >
               <FormField
                 control={form.control}

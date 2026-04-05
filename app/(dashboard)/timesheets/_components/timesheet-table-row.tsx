@@ -4,15 +4,9 @@ import { useCallback } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { formatHoursMinutes } from "@/lib/format-utils";
-import { MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
   APPROVED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
@@ -115,33 +109,27 @@ export function TimesheetTableRow({ entry, onEdit, onDelete }: TimesheetTableRow
         </Badge>
       </TableCell>
       <TableCell className="px-6 py-5 text-right">
-        {canEdit ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                aria-label="More options"
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <span className="text-muted-foreground/30 inline-flex h-8 w-8 items-center justify-center">
-            <MoreVertical className="h-4 w-4" />
-          </span>
+        {canEdit && (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              aria-label="Edit entry"
+              onClick={handleEdit}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              aria-label="Delete entry"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         )}
       </TableCell>
     </TableRow>
