@@ -3,6 +3,41 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
+export interface CalendarOrgMember {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  name: string | null;
+  email: string;
+  image: string | null;
+  role: string;
+}
+
+export function useCalendarOrgMembers() {
+  return useQuery({
+    queryKey: ["org", "members"],
+    queryFn: () => apiClient.get<CalendarOrgMember[]>("/org/members"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useGoogleMeetStatus() {
+  return useQuery({
+    queryKey: ["google-meet", "status"],
+    queryFn: () =>
+      apiClient.get<{ connected: boolean; googleEmail: string | null; authUrl: string }>(
+        "/calendar/create-meet"
+      ),
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useCreateMeetLink() {
+  return useMutation({
+    mutationFn: () => apiClient.post<{ meetLink: string }>("/calendar/create-meet", {}),
+  });
+}
+
 export interface CalendarEvent {
   id: number;
   orgId: string;

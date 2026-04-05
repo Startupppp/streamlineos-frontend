@@ -1,21 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function TimesheetsLoading() {
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-36" />
-        </div>
-      </div>
-
+    <PageWrapper title="Timesheets" subtitle="Log and review your work hours.">
+      <div className="space-y-6">
       {/* Period selector + nav */}
       <div className="flex items-center gap-4">
         <Skeleton className="h-10 w-32" />
@@ -49,6 +39,7 @@ export default function TimesheetsLoading() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

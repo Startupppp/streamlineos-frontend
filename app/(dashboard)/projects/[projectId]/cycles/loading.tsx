@@ -1,26 +1,23 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CyclesLoading() {
   return (
-    <div className="h-full flex flex-col">
-      {/* Header: SubNav + title row */}
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
+    <PageWrapper title="Cycles" subtitle="Manage project cycles.">
+      <div className="flex-1 overflow-y-auto space-y-6">
         {/* SubNav tabs */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-20" />
           ))}
         </div>
-        {/* Title + New Cycle button */}
-        <div className="flex items-center justify-between mt-4">
-          <Skeleton className="h-8 w-28" />
+
+        {/* Action button */}
+        <div className="flex items-center justify-end">
           <Skeleton className="h-9 w-28 rounded-md" />
         </div>
-      </div>
 
-      {/* Content: cycle sections */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Active section */}
         <section>
           <Skeleton className="h-4 w-16 mb-3" />
@@ -63,6 +60,6 @@ export default function CyclesLoading() {
           </div>
         </section>
       </div>
-    </div>
+    </PageWrapper>
   );
 }

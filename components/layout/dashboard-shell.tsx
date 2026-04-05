@@ -54,7 +54,8 @@ export function DashboardShell({
     pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
   const isChatPage = pathname === "/chat";
   const isOnboardingPage = pathname === "/onboarding";
-  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage;
+  const isCalendarPage = pathname === "/calendar";
+  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage || isCalendarPage;
 
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 

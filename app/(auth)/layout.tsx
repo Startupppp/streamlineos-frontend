@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
+      <div className="flex-1 lg:w-1/2 flex flex-col min-w-0 bg-background overflow-hidden">
         <div className="px-6 py-5 flex items-center shrink-0">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="h-8 w-8 rounded-xl bg-gold/10 ring-1 ring-gold/25 flex items-center justify-center overflow-hidden shrink-0">
@@ -43,7 +43,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </footer>
       </div>
 
-      <div className="hidden lg:block w-[480px] xl:w-[520px] shrink-0 h-full">
+      <div className="hidden lg:flex lg:w-1/2 shrink-0 h-full">
         <AuthRightPanel />
       </div>
     </div>

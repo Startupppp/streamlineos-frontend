@@ -302,7 +302,7 @@ export function WfhTabContent({ approvers }: WfhTabContentProps) {
 
         <div className="lg:col-span-8">
           <Card className="border-border">
-            <CardHeader className="pb-0">
+            <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">My WFH Requests</CardTitle>
                 <div className="flex items-center gap-2">
@@ -321,7 +321,7 @@ export function WfhTabContent({ approvers }: WfhTabContentProps) {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-4" aria-live="polite">
+            <CardContent className="pt-0" aria-live="polite">
               {wfhLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

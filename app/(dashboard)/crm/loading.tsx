@@ -1,15 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CRMLoading() {
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="space-y-1">
-        <Skeleton className="h-8 w-36" />
-        <Skeleton className="h-4 w-64" />
-      </div>
-
+    <PageWrapper title="CRM" subtitle="Manage your leads, deals, and client relationships.">
+      <div className="space-y-6">
       {/* Stat cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -40,6 +36,7 @@ export default function CRMLoading() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

@@ -1,30 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function EmployeesLoading() {
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <Skeleton className="h-8 w-44" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
-          <Skeleton className="h-10 w-[130px] rounded-md" />
-          <Skeleton className="h-10 w-[140px] rounded-md" />
-        </div>
-      </div>
-
-      {/* Filters row */}
-      <div className="flex items-center gap-3">
-        <Skeleton className="h-9 w-64 rounded-md" />
-        <Skeleton className="h-9 w-[120px] rounded-md" />
-        <Skeleton className="h-9 w-[120px] rounded-md" />
-      </div>
-
-      {/* Employee table */}
-      <Card className="shadow-sm border overflow-hidden">
+    <PageWrapper title="Employees" subtitle="Manage your team members and their information.">
+      <Card className="overflow-hidden">
         <CardHeader className="pb-3">
           <Skeleton className="h-5 w-32" />
         </CardHeader>
@@ -42,7 +23,7 @@ export default function EmployeesLoading() {
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-6 py-4 border-b last:border-b-0">
               <div className="flex items-center gap-3">
-                <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
+                <Skeleton className="h-9 w-9 rounded-full shrink-0" />
                 <div className="space-y-1">
                   <Skeleton className="h-4 w-36" />
                   <Skeleton className="h-3 w-24" />
@@ -67,6 +48,6 @@ export default function EmployeesLoading() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageWrapper>
   );
 }

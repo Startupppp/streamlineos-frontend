@@ -10,8 +10,9 @@ import {
   projectMembers,
   sprints,
   tickets,
+  crmActivities,
 } from "@/lib/db/schema";
-import { eq, and, desc, or, inArray, count } from "drizzle-orm";
+import { eq, and, desc, or, inArray, count, sql, gte, lt } from "drizzle-orm";
 import { getTodayString } from "@/lib/date-utils";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 
@@ -232,6 +233,33 @@ export async function getActiveSprintSummary(orgId: string, userId: string, role
     totalPoints,
     completedPoints,
   };
+}
+
+export async function getRoleStats(orgId: string): Promise<Record<string, number>> {
+  const rows = await db
+    .select({ role: users.role, cnt: sql<number>`count(*)::int` })
+    .from(organizationMembers)
+    .innerJoin(users, eq(organizationMembers.userId, users.id))
+    .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)))
+    .groupBy(users.role);
+  return Object.fromEntries(rows.map((r) => [r.role, r.cnt]));
+}
+
+export async function getTodayActivities(orgId: string) {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const activities = await db.query.crmActivities.findMany({
+    where: and(
+      eq(crmActivities.orgId, orgId),
+      gte(crmActivities.createdAt, todayStart),
+      lt(crmActivities.createdAt, tomorrowStart)
+    ),
+    orderBy: (t, { asc }) => [asc(t.createdAt)],
+    limit: 20,
+  });
+  return activities.map((a) => ({ type: a.type, subject: a.message }));
 }
 
 export async function getRecentActivity(orgId: string, userId: string, role?: string | null) {

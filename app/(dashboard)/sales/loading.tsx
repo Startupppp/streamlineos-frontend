@@ -1,15 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function SalesLoading() {
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="space-y-1">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-72" />
-      </div>
-
+    <PageWrapper title="Sales" subtitle="Track your revenue, pipeline and sales performance.">
+      <div className="space-y-6">
       {/* 4 Metric cards matching MetricCard layout */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -153,6 +149,7 @@ export default function SalesLoading() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </PageWrapper>
   );
 }

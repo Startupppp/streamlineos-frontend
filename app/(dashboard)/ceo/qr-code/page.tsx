@@ -17,20 +17,22 @@ import {
   Trash2,
   Download,
   RefreshCw,
+  ScanLine,
+  Link2,
+  CalendarDays,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type QRCodeData = {
   id: number;
@@ -41,11 +43,13 @@ type QRCodeData = {
   createdAt: Date | null;
 };
 
-function QRCodeImage({ imageUrl }: { imageUrl: string }) {
+function QRCodeImage({ imageUrl, size = 96 }: { imageUrl: string; size?: number }) {
   const [src, setSrc] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    setError(false);
+    setSrc(null);
     if (!imageUrl?.trim()) { setSrc("/placeholder.png"); return; }
     const trimmed = imageUrl.trim();
     if (trimmed.startsWith("http") || trimmed.startsWith("/")) {
@@ -55,17 +59,140 @@ function QRCodeImage({ imageUrl }: { imageUrl: string }) {
     }
   }, [imageUrl]);
 
-  if (error) return <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Error</div>;
-  if (!src) return <div className="flex items-center justify-center h-full"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full w-full text-xs text-muted-foreground">
+        <QrCodeIcon className="h-8 w-8 text-muted-foreground/30" />
+      </div>
+    );
+  }
+  if (!src) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
+      </div>
+    );
+  }
   return (
     <Image
       src={src}
       alt="QR Code"
-      fill
-      className="object-contain"
+      width={size}
+      height={size}
+      className="object-contain w-full h-full"
       unoptimized={src.startsWith("http")}
       onError={() => setError(true)}
     />
+  );
+}
+
+function QRCard({
+  qr,
+  onDelete,
+  onDownload,
+}: {
+  qr: QRCodeData;
+  onDelete: (id: number) => void;
+  onDownload: (slug: string, format: "png" | "jpeg" | "svg") => void;
+}) {
+  const domain = (() => {
+    try { return new URL(qr.targetUrl).hostname; } catch { return qr.targetUrl; }
+  })();
+
+  return (
+    <div className="rounded-xl border bg-card flex flex-col overflow-hidden hover:shadow-soft transition-shadow">
+      {/* QR preview */}
+      <div className="bg-white flex items-center justify-center p-4 h-36 border-b">
+        <div className="relative h-full aspect-square">
+          <QRCodeImage imageUrl={qr.imageUrl} size={120} />
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <div className="space-y-1.5">
+          <Link
+            href={qr.targetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 group"
+          >
+            <span className="text-sm font-medium truncate group-hover:text-gold transition-colors">
+              {domain}
+            </span>
+            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground group-hover:text-gold transition-colors" />
+          </Link>
+          <p className="text-[11px] text-muted-foreground truncate">{qr.targetUrl}</p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <ScanLine className="h-3 w-3 shrink-0" />
+            <span className="font-semibold text-foreground">{qr.scanCount}</span>
+            <span>scans</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <CalendarDays className="h-3 w-3 shrink-0" />
+            {qr.createdAt ? new Date(qr.createdAt).toLocaleDateString() : "—"}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
+          <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground truncate flex-1">
+            /qr/{qr.slug}
+          </code>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="px-4 pb-4 flex items-center gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => onDownload(qr.slug, "png")}>
+              <FileImage className="mr-2 h-3.5 w-3.5" /> PNG
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDownload(qr.slug, "jpeg")}>
+              <FileImage className="mr-2 h-3.5 w-3.5" /> JPEG
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDownload(qr.slug, "svg")}>
+              <FileType className="mr-2 h-3.5 w-3.5" /> SVG
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+          onClick={() => onDelete(qr.id)}
+          aria-label="Delete QR code"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function QRCardSkeleton() {
+  return (
+    <div className="rounded-xl border bg-card overflow-hidden">
+      <Skeleton className="h-36 w-full rounded-none" />
+      <div className="p-4 space-y-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+      <div className="px-4 pb-4">
+        <Skeleton className="h-8 w-full" />
+      </div>
+    </div>
   );
 }
 
@@ -123,10 +250,6 @@ export default function CEOQRCodePage() {
     if (deleteId !== null) deleteMutation.mutate(deleteId);
   }, [deleteId, deleteMutation]);
 
-  const handleDeleteDialogChange = useCallback((open: boolean) => {
-    if (!open) setDeleteId(null);
-  }, []);
-
   const handleGenerate = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!targetUrl) return;
@@ -179,140 +302,82 @@ export default function CEOQRCodePage() {
   return (
     <PageWrapper
       title="QR Code Manager"
-      subtitle="Generate and track QR codes for your marketing campaigns."
+      subtitle="Generate trackable QR codes for your marketing campaigns."
+      badge={typedCodes.length > 0 ? String(typedCodes.length) : undefined}
+      actions={
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => refetch()} disabled={isLoadingData} aria-label="Refresh">
+          <RefreshCw className={cn("h-3.5 w-3.5", isLoadingData && "animate-spin")} />
+        </Button>
+      }
     >
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Generate New QR Code</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleGenerate} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="target-url" className="text-sm">Target URL</Label>
-                <Input
-                  id="target-url"
-                  placeholder="https://example.com/campaign"
-                  value={targetUrl}
-                  onChange={(e) => setTargetUrl(e.target.value)}
-                  required
-                  type="url"
-                  className="h-9"
-                />
-              </div>
-              <Button type="submit" disabled={generateMutation.isPending || !targetUrl} size="sm">
-                {generateMutation.isPending ? (
-                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <QrCodeIcon className="mr-2 h-3.5 w-3.5" />
-                )}
-                Generate QR Code
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between py-3">
-            <CardTitle className="text-base">Your QR Codes</CardTitle>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => refetch()} disabled={isLoadingData}>
-              <RefreshCw className={`h-3.5 w-3.5 ${isLoadingData ? "animate-spin" : ""}`} />
+        {/* Generator */}
+        <div className="rounded-xl border bg-card p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-9 w-9 rounded-xl bg-gold/10 ring-1 ring-gold/20 flex items-center justify-center shrink-0">
+              <QrCodeIcon className="h-4.5 w-4.5 text-gold" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Generate New QR Code</p>
+              <p className="text-xs text-muted-foreground">Enter the destination URL to create a tracked QR code</p>
+            </div>
+          </div>
+          <form onSubmit={handleGenerate} className="flex gap-2">
+            <div className="flex-1 space-y-1">
+              <Label htmlFor="target-url" className="sr-only">Target URL</Label>
+              <Input
+                id="target-url"
+                placeholder="https://example.com/campaign-landing-page"
+                value={targetUrl}
+                onChange={(e) => setTargetUrl(e.target.value)}
+                required
+                type="url"
+                className="h-9"
+              />
+            </div>
+            <Button type="submit" disabled={generateMutation.isPending || !targetUrl} size="sm" className="h-9 shrink-0">
+              {generateMutation.isPending ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <QrCodeIcon className="mr-2 h-3.5 w-3.5" />
+              )}
+              Generate
             </Button>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-20">QR</TableHead>
-                  <TableHead>Target URL</TableHead>
-                  <TableHead className="w-20">Scans</TableHead>
-                  <TableHead className="hidden md:table-cell">Tracking Link</TableHead>
-                  <TableHead className="w-24">Created</TableHead>
-                  <TableHead className="w-20 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingData ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                ) : typedCodes.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">
-                      No QR codes yet. Generate one above.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  typedCodes.map((qr) => (
-                    <TableRow key={qr.id}>
-                      <TableCell>
-                        <div className="relative h-14 w-14 bg-white rounded border p-0.5">
-                          <QRCodeImage imageUrl={qr.imageUrl} />
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-[180px]">
-                        <Link
-                          href={qr.targetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline flex items-center gap-1 text-sm truncate"
-                        >
-                          <span className="truncate">{qr.targetUrl}</span>
-                          <ExternalLink className="h-3 w-3 shrink-0" />
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-bold">{qr.scanCount}</span>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                          /qr/{qr.slug}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {qr.createdAt ? new Date(qr.createdAt).toLocaleDateString() : "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <Download className="h-3.5 w-3.5" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleDownload(qr.slug, "png")}>
-                              <FileImage className="mr-2 h-3.5 w-3.5" /> PNG
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownload(qr.slug, "jpeg")}>
-                              <FileImage className="mr-2 h-3.5 w-3.5" /> JPEG
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownload(qr.slug, "svg")}>
-                              <FileType className="mr-2 h-3.5 w-3.5" /> SVG
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setDeleteId(qr.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+          </form>
+        </div>
+
+        {/* Cards grid */}
+        <div>
+          {isLoadingData ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => <QRCardSkeleton key={i} />)}
+            </div>
+          ) : typedCodes.length === 0 ? (
+            <div className="rounded-xl border border-dashed bg-muted/20 flex flex-col items-center justify-center py-14 gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
+                <QrCodeIcon className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium">No QR codes yet</p>
+              <p className="text-xs text-muted-foreground">Generate your first QR code above.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {typedCodes.map((qr) => (
+                <QRCard
+                  key={qr.id}
+                  qr={qr}
+                  onDelete={setDeleteId}
+                  onDownload={handleDownload}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={handleDeleteDialogChange}
+        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
         title="Delete QR Code"
         description="This action cannot be undone. The QR code and its tracking data will be permanently deleted."
         confirmLabel="Delete"
