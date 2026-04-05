@@ -266,7 +266,7 @@ export async function getUnreadTotal(userId: string) {
  * Returns users who have been seen within the last 60 seconds in the given org.
  */
 export async function getOnlineUsers(orgId: string) {
-  const oneMinAgo = new Date(Date.now() - 60 * 1000);
+  const oneMinAgo = new Date(Date.now() - 90 * 1000); // 90 s window — heartbeat fires every 15 s
 
   return db
     .select({

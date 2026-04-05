@@ -1,11 +1,32 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, inArray } from "drizzle-orm";
+import { isBranchScoped, getBranchUserIds } from "@/lib/db/branch-filter";
 
 export async function GET() {
   return withAuth(async (session) => {
     try {
+      const ctx = {
+        role: (session.user.role as string) ?? "",
+        branchId: session.branchId,
+        userId: session.user.id,
+      };
+
+      const conditions = [
+        eq(organizationMembers.orgId, session.orgId),
+        eq(users.isActive, true),
+      ];
+
+      // Branch-scoped roles (BRANCH_MANAGER, BRANCH_HR) only see members in their branch
+      if (isBranchScoped(ctx)) {
+        const branchUserIds = await getBranchUserIds(ctx);
+        if (branchUserIds !== null) {
+          const safeIds = branchUserIds.length > 0 ? branchUserIds : ["__no_match__"];
+          conditions.push(inArray(users.id, safeIds));
+        }
+      }
+
       const members = await db
         .select({
           id: users.id,
@@ -18,13 +39,9 @@ export async function GET() {
         })
         .from(organizationMembers)
         .innerJoin(users, eq(organizationMembers.userId, users.id))
-        .where(
-          and(
-            eq(organizationMembers.orgId, session.orgId),
-            eq(users.isActive, true)
-          )
-        )
+        .where(and(...conditions))
         .orderBy(asc(users.firstName));
+
       return ok(members);
     } catch (error) {
       return err(error instanceof Error ? error.message : "Failed", 500);
