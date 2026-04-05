@@ -165,30 +165,33 @@ export default function ProjectBoardPage({ params }: PageProps) {
       contentClassName="!p-0"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
-        <div className="flex items-center gap-2 flex-wrap">
+        <>
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
+          <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
           <TicketFilterBar
             members={members}
             showSprintFilter={false}
           />
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="w-px h-5 bg-border/60 shrink-0 hidden sm:block" />
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
             <Switch
               id="hide-done"
               checked={hideCompleted}
               onCheckedChange={setHideCompleted}
+              className="scale-90"
             />
             <Label
               htmlFor="hide-done"
-              className="text-xs font-normal cursor-pointer flex items-center gap-1"
+              className="text-[11px] font-normal cursor-pointer flex items-center gap-1 whitespace-nowrap"
             >
-              <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
-              Hide done
+              <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
+              Done
               {hideCompleted && doneCount > 0 && (
                 <span className="text-muted-foreground">({doneCount})</span>
               )}
             </Label>
           </div>
-        </div>
+        </>
       }
     >
       {/* Board view — fills available height, scrolls independently */}

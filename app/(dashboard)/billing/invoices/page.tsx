@@ -28,7 +28,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -56,7 +55,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -197,11 +195,10 @@ function InvoicesContent() {
         </Card>
       </div>
 
-      <Card>
-        <ScrollArea className="w-full max-h-[60vh]" type="auto">
+      <div className="border border-border rounded-lg overflow-auto h-[calc(100dvh-20rem)] min-h-[320px]">
           <div className="min-w-[700px]">
-        <Table>
-          <TableHeader>
+        <table className="w-full caption-bottom text-sm">
+          <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow>
               <TableHead>Invoice #</TableHead>
               <TableHead>Client</TableHead>
@@ -282,10 +279,9 @@ function InvoicesContent() {
               })
             )}
           </TableBody>
-        </Table>
+        </table>
           </div>
-        </ScrollArea>
-      </Card>
+      </div>
 
       <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />
       </div>

@@ -65,6 +65,7 @@ interface TicketSidebarProps {
     updatedAt?: Date | string | null;
   };
   ticketId: number;
+  projectId?: number;
   members: ProjectMember[];
   sprints: Array<{ id: number; name: string; status?: string | null }>;
   statuses?: Array<{ name: string; id: number }>;
@@ -92,6 +93,7 @@ function PropertyRow({
 export function TicketSidebar({
   ticket,
   ticketId,
+  projectId,
   members,
   sprints,
   statuses,
@@ -362,6 +364,7 @@ export function TicketSidebar({
       <div className="pt-1">
         <LabelPicker
           ticketId={ticketId}
+          projectId={projectId}
           currentLabels={
             (ticket.labels || []).filter((l) => !!l.label) as Array<{
               label: { id: number; name: string; color: string | null };

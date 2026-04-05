@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -96,7 +96,7 @@ export function LeadTableView({
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100dvh-20rem)] min-h-[320px]">
       {/* Toolbar */}
       <div className="shrink-0 flex items-center justify-between px-1 pb-2">
         <span className="text-xs text-muted-foreground">{totalCount} leads</span>
@@ -132,10 +132,9 @@ export function LeadTableView({
       </div>
 
       {/* Table */}
-      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-hidden">
-        <div className="overflow-auto h-full w-full">
+      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto">
           <div className="min-w-max">
-          <Table>
+          <table className="w-full caption-bottom text-sm">
             <TableHeader className="sticky top-0 z-10 bg-muted/60">
               <TableRow className="hover:bg-muted/60">
                 <TableHead className="w-10 px-3">
@@ -207,9 +206,8 @@ export function LeadTableView({
                 ))
               )}
             </TableBody>
-          </Table>
+          </table>
           </div>
-        </div>
       </div>
 
       {/* Pagination */}

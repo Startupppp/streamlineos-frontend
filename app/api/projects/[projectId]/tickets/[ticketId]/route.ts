@@ -7,7 +7,7 @@
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tickets, ticketAssignees, ticketComments } from "@/lib/db/schema";
+import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { createNotification } from "@/server/actions/create-notification";
@@ -180,9 +180,23 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const id = Number(ticketId);
     if (!id) return err("Invalid ticket id", 400);
 
-    await db
-      .delete(tickets)
-      .where(and(eq(tickets.id, id), eq(tickets.orgId, session.orgId!)));
+    // Verify the ticket belongs to this org
+    const ticket = await db.query.tickets.findFirst({
+      where: and(eq(tickets.id, id), eq(tickets.orgId, session.orgId!)),
+      columns: { id: true },
+    });
+    if (!ticket) return err("Ticket not found", 404);
+
+    // Cascade delete related rows in a transaction
+    await db.transaction(async (tx) => {
+      await tx.delete(ticketAssignees).where(eq(ticketAssignees.ticketId, id));
+      await tx.delete(ticketComments).where(eq(ticketComments.ticketId, id));
+      await tx.delete(ticketAttachments).where(eq(ticketAttachments.ticketId, id));
+      await tx.delete(ticketLabelMappings).where(eq(ticketLabelMappings.ticketId, id));
+      await tx.delete(ticketWatchers).where(eq(ticketWatchers.ticketId, id));
+      await tx.delete(timesheets).where(eq(timesheets.ticketId, id));
+      await tx.delete(tickets).where(eq(tickets.id, id));
+    });
 
     return ok({ success: true });
   });

@@ -183,13 +183,13 @@ export function useDeleteTicketCompat(
 
 /** Add a comment to a ticket. */
 export function useAddComment(
-  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; content: string }>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; content: string }>({
-    mutationFn: ({ ticketId, content }) =>
+  return useMutation<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>({
+    mutationFn: ({ ticketId, projectId = 0, content }) =>
       apiClient.post<{ id: number; content: string; createdAt: string }>(
-        `/projects/tickets/${ticketId}/comments`,
+        `/projects/${projectId}/tickets/${ticketId}/comments`,
         { content }
       ),
     onSuccess: (_data, variables) => {
@@ -203,12 +203,12 @@ export function useAddComment(
 
 /** Add a label to a ticket. */
 export function useAddLabelToTicket(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number; labelId: number }>({
-    mutationFn: ({ ticketId, labelId }) =>
-      apiClient.post<{ success: boolean }>(`/projects/tickets/${ticketId}/labels`, { labelId }),
+  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>({
+    mutationFn: ({ ticketId, projectId = 0, labelId }) =>
+      apiClient.post<{ success: boolean }>(`/projects/${projectId}/tickets/${ticketId}/labels`, { labelId }),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
@@ -220,13 +220,13 @@ export function useAddLabelToTicket(
 
 /** Remove a label from a ticket. */
 export function useRemoveLabelFromTicket(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; labelId: number }>, "mutationFn">
+  options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, { ticketId: number; labelId: number }>({
-    mutationFn: ({ ticketId, labelId }) =>
+  return useMutation<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>({
+    mutationFn: ({ ticketId, projectId = 0, labelId }) =>
       apiClient.delete<{ success: boolean }>(
-        `/projects/tickets/${ticketId}/labels/${labelId}`
+        `/projects/${projectId}/tickets/${ticketId}/labels/${labelId}`
       ),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -240,12 +240,13 @@ export function useRemoveLabelFromTicket(
 /** Fetch subtasks of a ticket. */
 export function useSubtasks(
   ticketId: number,
+  projectId?: number,
   options?: Omit<UseQueryOptions<Ticket[]>, "queryKey" | "queryFn" | "enabled">
 ) {
   return useQuery<Ticket[]>({
     queryKey: [...queryKeys.projects.all, "subtasks", { ticketId }],
-    queryFn: () => apiClient.get<Ticket[]>(`/projects/tickets/${ticketId}/subtasks`),
-    enabled: ticketId > 0,
+    queryFn: () => apiClient.get<Ticket[]>(`/projects/${projectId ?? 0}/tickets/${ticketId}/subtasks`),
+    enabled: ticketId > 0 && (projectId ?? 0) > 0,
     ...options,
   });
 }
@@ -275,6 +276,7 @@ export function useCreateOrgLabel(
 
 type AddAttachmentInput = {
   ticketId: number;
+  projectId?: number;
   fileName: string;
   fileUrl: string;
   fileKey?: string;
@@ -288,8 +290,8 @@ export function useAddAttachment(
 ) {
   const queryClient = useQueryClient();
   return useMutation<{ id: number }, Error, AddAttachmentInput>({
-    mutationFn: ({ ticketId, fileName, fileUrl, fileKey, fileSize, mimeType }) =>
-      apiClient.post<{ id: number }>(`/projects/tickets/${ticketId}/attachments`, {
+    mutationFn: ({ ticketId, projectId = 0, fileName, fileUrl, fileKey, fileSize, mimeType }) =>
+      apiClient.post<{ id: number }>(`/projects/${projectId}/tickets/${ticketId}/attachments`, {
         fileName,
         fileUrl,
         fileKey,

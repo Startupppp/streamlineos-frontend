@@ -22,12 +22,13 @@ import { toast } from "sonner";
 
 interface LabelPickerProps {
   ticketId: number;
+  projectId?: number;
   currentLabels: Array<{ label: { id: number; name: string; color: string | null } }>;
 }
 
 const PRESET_COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#EAB308", "#8B5CF6", "#EC4899", "#F97316", "#06B6D4"];
 
-export function LabelPicker({ ticketId, currentLabels }: LabelPickerProps) {
+export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerProps) {
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
@@ -39,7 +40,7 @@ export function LabelPicker({ ticketId, currentLabels }: LabelPickerProps) {
     onSuccess: (newLabel) => {
       setNewLabelName("");
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
-      addLabel.mutate({ ticketId, labelId: newLabel.id });
+      addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
     },
     onError: (error: Error) => toast.error(error.message || "Failed to create label"),
   });
@@ -77,7 +78,7 @@ export function LabelPicker({ ticketId, currentLabels }: LabelPickerProps) {
           >
             {label.name}
             <button
-              onClick={() => removeLabel.mutate({ ticketId, labelId: label.id })}
+              onClick={() => removeLabel.mutate({ ticketId, projectId, labelId: label.id })}
               className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
             >
               <X className="h-2.5 w-2.5" />
@@ -98,7 +99,7 @@ export function LabelPicker({ ticketId, currentLabels }: LabelPickerProps) {
                     <button
                       key={label.id}
                       onClick={() => {
-                        addLabel.mutate({ ticketId, labelId: label.id });
+                        addLabel.mutate({ ticketId, projectId, labelId: label.id });
                       }}
                       className="flex items-center gap-2 w-full p-1.5 text-sm rounded hover:bg-muted transition-colors text-left"
                     >

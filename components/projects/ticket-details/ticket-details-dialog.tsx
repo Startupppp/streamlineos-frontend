@@ -96,7 +96,7 @@ export function TicketDetailsDialog({
   } = useTicket(projectId, ticketId || 0);
   const { data: projectData } = useProject(projectId);
   const { data: sprints } = useSprints(projectId);
-  const { data: subtasks } = useSubtasks(ticketId || 0);
+  const { data: subtasks } = useSubtasks(ticketId || 0, projectId);
 
   const members: ProjectMember[] = (() => {
     if (!projectData?.members) return [];
@@ -252,6 +252,7 @@ export function TicketDetailsDialog({
                 <TicketSidebar
                   ticket={ticket}
                   ticketId={ticketId!}
+                  projectId={projectId}
                   members={members}
                   sprints={sprints || []}
                   statuses={statuses}
@@ -330,6 +331,7 @@ export function TicketDetailsDialog({
                 {/* Activity Feed */}
                 <ActivityFeed
                   ticketId={ticketId!}
+                  projectId={projectId}
                   comments={ticket.comments || []}
                 />
               </div>

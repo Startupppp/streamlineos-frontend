@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,15 +95,14 @@ export function DealTableView({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
       <div className="shrink-0 flex items-center justify-between px-1 pb-2">
         <span className="text-xs text-muted-foreground">{deals.length} deals</span>
       </div>
 
-      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-hidden">
-        <div className="overflow-auto h-full w-full">
+      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto">
           <div className="min-w-max">
-          <Table>
+          <table className="w-full caption-bottom text-sm">
             <TableHeader className="sticky top-0 z-10 bg-muted/60">
               <TableRow className="hover:bg-muted/60">
                 {columns.map(col => (
@@ -204,9 +203,8 @@ export function DealTableView({
                 })
               )}
             </TableBody>
-          </Table>
+          </table>
           </div>
-        </div>
       </div>
     </div>
   );

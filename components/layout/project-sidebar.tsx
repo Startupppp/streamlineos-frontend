@@ -63,7 +63,7 @@ function useSections(baseUrl: string): NavSection[] {
     {
       label: "More",
       items: [
-        { label: "Wiki", icon: FileText, href: `${baseUrl}/wiki` },
+        { label: "Wiki", icon: FileText, href: `${baseUrl}/pages` },
         { label: "Reports", icon: BarChart3, href: `${baseUrl}/analytics` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },

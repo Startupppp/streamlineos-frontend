@@ -14,13 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
@@ -135,11 +134,11 @@ export default function ClientAccountsPage() {
 
       {/* Table */}
       <motion.div variants={fadeUp}>
-        <Card>
-          <ScrollArea className="w-full max-h-[60vh]" type="auto">
+        <div className="border border-border rounded-lg flex flex-col h-[calc(100dvh-20rem)] min-h-[320px]">
+          <div className="flex-1 min-h-0 overflow-auto">
             <div className="min-w-max">
-            <Table>
-              <TableHeader>
+            <table className="w-full caption-bottom text-sm">
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow>
                   <TableHead className="text-xs">Client</TableHead>
                   <TableHead className="text-xs">Phone</TableHead>
@@ -231,11 +230,11 @@ export default function ClientAccountsPage() {
                   })
                 )}
               </TableBody>
-            </Table>
+            </table>
             </div>
-          </ScrollArea>
+          </div>
           {(data?.totalPages ?? 0) > 1 && (
-            <div className="flex items-center justify-between p-4 border-t">
+            <div className="shrink-0 flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Prev</Button>
@@ -243,7 +242,7 @@ export default function ClientAccountsPage() {
               </div>
             </div>
           )}
-        </Card>
+        </div>
       </motion.div>
       </motion.div>
     </PageWrapper>

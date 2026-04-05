@@ -13,10 +13,11 @@ import type { TicketComment, TicketUser } from "@/types/projects";
 
 interface ActivityFeedProps {
   ticketId: number;
+  projectId?: number;
   comments: TicketComment[];
 }
 
-export function ActivityFeed({ ticketId, comments }: ActivityFeedProps) {
+export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProps) {
   const [newComment, setNewComment] = useState("");
   const addComment = useAddComment({
     onSuccess: () => {
@@ -30,7 +31,7 @@ export function ActivityFeed({ ticketId, comments }: ActivityFeedProps) {
   const handleSubmit = useCallback(() => {
     const content = newComment.trim();
     if (!content) return;
-    addComment.mutate({ ticketId, content });
+    addComment.mutate({ ticketId, projectId, content });
   }, [newComment, ticketId, addComment]);
 
   const handleKeyDown = useCallback(

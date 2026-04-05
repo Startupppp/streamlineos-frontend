@@ -59,8 +59,7 @@ export function DashboardShell({
   const isOnboardingPage = pathname === "/onboarding";
   const isCalendarPage = pathname === "/calendar";
   const isAttendancePage = pathname === "/hr/attendance";
-  const isTablePage = pathname === "/crm/leads" || pathname === "/crm/deals" || pathname === "/billing/invoices" || pathname === "/crm/clients";
-  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage || isCalendarPage || isAttendancePage || isTablePage;
+  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage || isCalendarPage || isAttendancePage;
 
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 
