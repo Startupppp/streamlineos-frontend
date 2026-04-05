@@ -213,6 +213,16 @@ export const ticketLabelMappings = pgTable("ticket_label_mappings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const ticketWatchers = pgTable("ticket_watchers", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").references(() => tickets.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_ticket_watcher").on(table.ticketId, table.userId),
+  index("idx_ticket_watchers_user").on(table.userId),
+]);
+
 export const workItemRelations = pgTable("work_item_relations", {
   id: serial("id").primaryKey(),
   workItemId: integer("work_item_id").references(() => tickets.id, { onDelete: "cascade" }).notNull(),
@@ -350,6 +360,7 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   attachments: many(ticketAttachments),
   labels: many(ticketLabelMappings),
   assignees: many(ticketAssignees),
+  watchers: many(ticketWatchers),
   relations: many(workItemRelations),
 }));
 
@@ -429,6 +440,11 @@ export const projectViewsRelations = relations(projectViews, ({ one }) => ({
   project: one(projects, { fields: [projectViews.projectId], references: [projects.id] }),
   organization: one(organizations, { fields: [projectViews.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [projectViews.createdBy], references: [users.id] }),
+}));
+
+export const ticketWatchersRelations = relations(ticketWatchers, ({ one }) => ({
+  ticket: one(tickets, { fields: [ticketWatchers.ticketId], references: [tickets.id] }),
+  user: one(users, { fields: [ticketWatchers.userId], references: [users.id] }),
 }));
 
 export const timesheetsRelations = relations(timesheets, ({ one }) => ({

@@ -176,6 +176,13 @@
       "when": 1774240000000,
       "tag": "0024_fix_schema_drift",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1774250000000,
+      "tag": "0025_ticket_watchers",
+      "breakpoints": true
     }
   ]
 }
