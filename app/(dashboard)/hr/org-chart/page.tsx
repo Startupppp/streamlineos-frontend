@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
@@ -182,7 +183,8 @@ export default function OrgChartPage() {
         {tree.length > 0 && (
           <motion.div variants={fadeUp}>
             <Card className="shadow-sm">
-              <CardContent className="p-6 overflow-x-auto">
+              <CardContent className="p-6">
+                <ScrollArea className="w-full" type="auto">
                 <div className="flex justify-center min-w-max py-4">
                   <div className="flex flex-col items-center gap-0">
                     {tree.map((root) => (
@@ -190,6 +192,7 @@ export default function OrgChartPage() {
                     ))}
                   </div>
                 </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </motion.div>

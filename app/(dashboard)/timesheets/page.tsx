@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -305,7 +306,8 @@ export default function TimesheetsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto" role="region" aria-label="Timesheets table" tabIndex={0}>
+                  <ScrollArea className="w-full" type="auto" role="region" aria-label="Timesheets table">
+                    <div className="min-w-max">
                     <Table>
                       <caption className="sr-only">Your daily work logs</caption>
                       <TableHeader className="sticky top-0 z-10">
@@ -344,7 +346,8 @@ export default function TimesheetsPage() {
                         )}
                       </TableBody>
                     </Table>
-                  </div>
+                    </div>
+                  </ScrollArea>
 
                   {entries && entries.length > 0 && (
                     <div className="px-6 py-4 bg-muted/20 border-t flex items-center justify-between">

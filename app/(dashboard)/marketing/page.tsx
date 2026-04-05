@@ -31,6 +31,7 @@ import {
   sparkColors,
 } from "@/lib/theme-constants";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ROI_HIGH_THRESHOLD = 4;
 const ROI_MED_THRESHOLD = 2.5;
@@ -161,7 +162,8 @@ export default function MarketingDashboardPage() {
                 <CardTitle className="text-base">Campaigns</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                <ScrollArea className="w-full" type="auto">
+                <div className="min-w-[500px]">
                   <table className="w-full text-sm">
                     <caption className="sr-only">Marketing campaigns with status, leads, spend, and ROI</caption>
                     <thead>
@@ -222,6 +224,7 @@ export default function MarketingDashboardPage() {
                     </tbody>
                   </table>
                 </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </motion.div>
@@ -249,7 +252,8 @@ export default function MarketingDashboardPage() {
                 <CardTitle className="text-base">Content Performance</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                <ScrollArea className="w-full" type="auto">
+                <div className="min-w-[500px]">
                   <table className="w-full text-sm">
                     <caption className="sr-only">Content performance with views, leads, and conversion rates</caption>
                     <thead>
@@ -297,6 +301,7 @@ export default function MarketingDashboardPage() {
                     </tbody>
                   </table>
                 </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </motion.div>

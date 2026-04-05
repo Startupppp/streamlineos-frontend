@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -191,7 +192,8 @@ export default function IncentivesPage() {
 
         {/* Incentives Table */}
         <Card>
-          <div className="overflow-x-auto">
+          <ScrollArea className="w-full" type="auto">
+            <div className="min-w-max">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -265,7 +267,8 @@ export default function IncentivesPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          </ScrollArea>
           {(data?.totalPages ?? 0) > 1 && (
             <div className="flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>

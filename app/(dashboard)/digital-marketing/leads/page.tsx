@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus, Search, Send, CheckCircle2, Loader2,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDmLeads, useCreateDmLead, useVerifyDmLead, useBulkSendDmLeadsToHr, useImportDmLeadToPipeline } from "@/lib/api/hooks/dm";
 import { queryKeys } from "@/lib/query-keys";
@@ -120,7 +121,8 @@ export default function DmLeadsPage() {
       <div className="space-y-6">
         {/* Table */}
         <Card>
-          <div className="overflow-x-auto">
+          <ScrollArea className="w-full" type="auto">
+          <div className="min-w-[700px]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -213,6 +215,7 @@ export default function DmLeadsPage() {
               </TableBody>
             </Table>
           </div>
+          </ScrollArea>
           {(data?.totalPages ?? 0) > 1 && (
             <div className="flex items-center justify-between p-4 border-t">
               <span className="text-xs text-muted-foreground">Page {data?.page} of {data?.totalPages}</span>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useProjects } from "@/lib/api/hooks/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -20,24 +21,37 @@ type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
 
 export default function ProjectsPage() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("ALL");
-  const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [launchDialogOpen, setLaunchDialogOpen] = useState(false);
+
+  const search = searchParams.get("q") || "";
+  const status = (searchParams.get("status") as StatusFilter) || "ALL";
+  const page = Number(searchParams.get("page")) || 1;
+  const viewMode = (searchParams.get("view") as ViewMode) || "grid";
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  // Reset page on filter changes
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    setPage(1);
-  }, []);
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
 
-  const handleStatusChange = useCallback((value: StatusFilter) => {
-    setStatus(value);
-    setPage(1);
-  }, []);
+  const handleSearchChange = useCallback((value: string) => updateParams({ q: value || null, page: null }), [updateParams]);
+  const handleStatusChange = useCallback((value: StatusFilter) => updateParams({ status: value === "ALL" ? null : value, page: null }), [updateParams]);
+  const handleViewModeChange = useCallback((value: ViewMode) => updateParams({ view: value === "grid" ? null : value }), [updateParams]);
+  const setPage = useCallback((p: number) => updateParams({ page: p === 1 ? null : String(p) }), [updateParams]);
 
   const { data, isLoading } = useProjects({
     page,
@@ -67,7 +81,7 @@ export default function ProjectsPage() {
           status={status}
           onStatusChange={handleStatusChange}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
         />
       }
     >
@@ -85,7 +99,7 @@ export default function ProjectsPage() {
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-muted-foreground text-sm">No projects match your filters.</p>
           <button
-            onClick={() => { setSearch(""); setStatus("ALL"); setPage(1); }}
+            onClick={() => updateParams({ q: null, status: null, page: null })}
             className="text-primary text-sm mt-2 hover:underline"
           >
             Clear all filters

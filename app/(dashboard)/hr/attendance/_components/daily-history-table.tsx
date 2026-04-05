@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
@@ -72,7 +73,9 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0">
-        <div className="overflow-x-auto border border-border rounded-md" role="region" aria-label="Attendance records table" tabIndex={0}>
+        <div className="border border-border rounded-md overflow-hidden">
+        <ScrollArea className="w-full" type="auto" role="region" aria-label="Attendance records table">
+          <div className="min-w-max">
           <Table className="border-collapse">
             <caption className="sr-only">Recent attendance history</caption>
             <TableHeader>
@@ -98,6 +101,8 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
               )}
             </TableBody>
           </Table>
+          </div>
+        </ScrollArea>
         </div>
       </CardContent>
     </Card>

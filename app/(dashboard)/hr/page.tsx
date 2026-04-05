@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useTransition } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
@@ -30,18 +31,45 @@ export default function HRDashboardPage() {
   const currentUserRole = session?.user?.role;
   const currentUserId = session?.user?.id;
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [togglingAccess, setTogglingAccess] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter state from URL
+  const searchTerm = searchParams.get("q") || "";
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
-  const [deptFilter, setDeptFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("Active");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<PageSizeOption>(PAGE_SIZE);
+  const deptFilter = searchParams.get("dept") || "All";
+  const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
+  const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const setSearchTerm = useCallback((q: string) => updateParams({ q: q || null, page: null }), [updateParams]);
+  const setDeptFilter = useCallback((d: string) => updateParams({ dept: d === "All" ? null : d, page: null }), [updateParams]);
+  const setStatusFilter = useCallback((s: StatusFilter) => updateParams({ status: s === "Active" ? null : s, page: null }), [updateParams]);
+  const setRoleFilter = useCallback((r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }), [updateParams]);
+  const setPage = useCallback((p: number) => updateParams({ page: p === 1 ? null : String(p) }), [updateParams]);
 
   const departments = useMemo(() => {
     const deptSet = new Map<string, string>();
@@ -101,14 +129,10 @@ export default function HRDashboardPage() {
     return filteredEmployees.slice(start, start + pageSize);
   }, [filteredEmployees, page, pageSize]);
 
-  const handlePageSizeChange = useCallback((size: PageSizeOption) => {
-    setPageSize(size);
-    setPage(1);
-  }, []);
-
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
+  const handlePageSizeChange = useCallback(
+    (size: PageSizeOption) => updateParams({ size: size === PAGE_SIZE ? null : String(size), page: null }),
+    [updateParams],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -198,12 +222,10 @@ export default function HRDashboardPage() {
     toast.success("Employees exported");
   }, [filteredEmployees]);
 
-  const handleClearFilters = useCallback(() => {
-    setSearchTerm("");
-    setDeptFilter("All");
-    setStatusFilter("Active");
-    setRoleFilter("All");
-  }, []);
+  const handleClearFilters = useCallback(
+    () => updateParams({ q: null, dept: null, status: null, role: null, page: null }),
+    [updateParams],
+  );
 
   const handleRequestDelete = useCallback((employee: Employee) => {
     setEmployeeToDelete(employee);

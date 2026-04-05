@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CsvUploadDialog } from "@/components/crm/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/components/crm/lead-distribution-dialog";
 import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
@@ -142,7 +143,8 @@ export default function LeadDistributionPage() {
 
       {/* Leads Table */}
       <Card>
-        <div className="overflow-x-auto">
+        <ScrollArea className="w-full" type="auto">
+          <div className="min-w-max">
           <Table>
             <TableHeader>
               <TableRow>
@@ -195,7 +197,8 @@ export default function LeadDistributionPage() {
               )}
             </TableBody>
           </Table>
-        </div>
+          </div>
+        </ScrollArea>
       </Card>
 
       {/* Distribution Dialog */}

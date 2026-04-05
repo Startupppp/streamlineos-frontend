@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts, useCreateContact } from "@/lib/api/hooks/crm";
+import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
@@ -51,28 +53,37 @@ function capitalize(s: string) {
 }
 
 export default function ContactsPage() {
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
-  // Debounce search — only trigger API after 300ms and min 3 chars (#119)
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    const timer = setTimeout(() => {
-      if (searchInput.length >= 3 || searchInput.length === 0) {
-        setSearch(searchInput);
+  const searchInput = searchParams.get("q") || "";
+  const page = Number(searchParams.get("page")) || 1;
+
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  // Only trigger API for 3+ chars or empty string
+  const apiSearch = debouncedSearch.length >= 3 || debouncedSearch.length === 0 ? debouncedSearch : "";
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
       }
-    }, 300);
-    debounceRef.current = timer;
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
 
   const { data, isLoading } = useContacts({
-    search: search || undefined,
+    search: apiSearch || undefined,
     limit: PAGE_SIZE,
-    offset: page * PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
   });
 
   const createContactMutation = useCreateContact();
@@ -201,7 +212,7 @@ export default function ContactsPage() {
           <Input
             placeholder="Search contacts (min 3 chars)..."
             value={searchInput}
-            onChange={(e) => { setSearchInput(e.target.value); setPage(0); }}
+            onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
             className="pl-9"
           />
         </div>
@@ -299,19 +310,19 @@ export default function ContactsPage() {
           <Button
             variant="outline"
             size="sm"
-            disabled={page === 0}
-            onClick={() => setPage(p => p - 1)}
+            disabled={page <= 1}
+            onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {page + 1} of {totalPages}
+            Page {page} of {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage(p => p + 1)}
+            disabled={page >= totalPages}
+            onClick={() => updateParams({ page: String(page + 1) })}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

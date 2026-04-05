@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +91,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-x-auto">
+      <ScrollArea className="w-full border rounded-lg" type="auto">
         <svg
           width={labelWidth + days.length * dayWidth}
           height={Math.max(datedTickets.length * rowHeight + 40, 200)}
@@ -170,7 +171,7 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
             );
           })}
         </svg>
-      </div>
+      </ScrollArea>
 
       {datedTickets.length === 0 && (
         <div className="text-center py-12 text-muted-foreground text-sm">

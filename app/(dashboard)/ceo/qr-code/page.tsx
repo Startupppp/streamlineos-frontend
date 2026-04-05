@@ -315,7 +315,7 @@ export default function CEOQRCodePage() {
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-9 w-9 rounded-xl bg-gold/10 ring-1 ring-gold/20 flex items-center justify-center shrink-0">
-              <QrCodeIcon className="h-4.5 w-4.5 text-gold" />
+              <QrCodeIcon className="h-4 w-4 text-gold" />
             </div>
             <div>
               <p className="text-sm font-semibold">Generate New QR Code</p>

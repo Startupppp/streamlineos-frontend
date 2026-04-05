@@ -21,6 +21,7 @@ import { staggerContainer, fadeUp, slideInLeft } from "@/lib/motion-variants";
 import { safeMax, calcPercent } from "@/lib/format-utils";
 import { getColorSafe, onlineStatusColors, sparkColors } from "@/lib/theme-constants";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const formatTicketValue = (v: number) => v.toLocaleString();
 
@@ -162,7 +163,8 @@ export default function SupportDashboardPage() {
               <CardTitle className="text-base">Team Access</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              <ScrollArea className="w-full" type="auto">
+              <div className="min-w-[400px]">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Support team members with roles, access levels, and online status</caption>
                   <thead>
@@ -214,6 +216,7 @@ export default function SupportDashboardPage() {
                   </tbody>
                 </table>
               </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </motion.div>

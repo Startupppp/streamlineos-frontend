@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,14 +52,33 @@ function getHealthBadge(score: number | null) {
 }
 
 export default function OrganizationsPage() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
+
+  const search = searchParams.get("q") || "";
+  const page = Number(searchParams.get("page")) || 1;
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
 
   const { data, isLoading } = useCrmOrganizations({
     search: search || undefined,
     limit: PAGE_SIZE,
-    page: page + 1,
+    page,
   });
 
   const createOrgMutation = useCreateCrmOrganization();
@@ -192,7 +212,7 @@ export default function OrganizationsPage() {
           <Input
             placeholder="Search organizations..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+            onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
             className="pl-9"
           />
         </div>
@@ -268,11 +288,11 @@ export default function OrganizationsPage() {
 
       {totalPages > 1 && (
         <motion.div variants={fadeUp} className="flex items-center justify-center gap-2">
-          <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => updateParams({ page: page <= 2 ? null : String(page - 1) })}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm text-muted-foreground">Page {page + 1} of {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+          <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => updateParams({ page: String(page + 1) })}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </motion.div>

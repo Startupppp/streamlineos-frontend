@@ -7,6 +7,7 @@ import {
   GripVertical, User, Calendar, MoreHorizontal, Pencil, Trash2,
   LayoutGrid, TableIcon,
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +36,12 @@ import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 
 const STAGES = [
-  { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
-  { key: "CONTACTED", label: "Contacted", color: "#0EA5E9", bg: "bg-sky-500/10" },
-  { key: "PROPOSAL", label: "Proposal", color: "#F59E0B", bg: "bg-amber-500/10" },
-  { key: "NEGOTIATION", label: "Negotiation", color: "#8B5CF6", bg: "bg-purple-500/10" },
-  { key: "WON", label: "Won", color: "#10B981", bg: "bg-emerald-500/10" },
-  { key: "LOST", label: "Lost", color: "#EF4444", bg: "bg-red-500/10" },
+  { key: "LEAD", label: "Lead", dot: "bg-blue-500", bg: "bg-blue-500/10" },
+  { key: "CONTACTED", label: "Contacted", dot: "bg-sky-500", bg: "bg-sky-500/10" },
+  { key: "PROPOSAL", label: "Proposal", dot: "bg-amber-500", bg: "bg-amber-500/10" },
+  { key: "NEGOTIATION", label: "Negotiation", dot: "bg-purple-500", bg: "bg-purple-500/10" },
+  { key: "WON", label: "Won", dot: "bg-emerald-500", bg: "bg-emerald-500/10" },
+  { key: "LOST", label: "Lost", dot: "bg-red-500", bg: "bg-red-500/10" },
 ] as const;
 
 type DealStage = typeof STAGES[number]["key"];
@@ -96,6 +97,13 @@ export default function DealsPage() {
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDealToDelete(null);
   }, []);
+
+  const handleStageChange = useCallback((id: number, stage: string) => {
+    updateStageMutation.mutate(
+      { id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" },
+      { onSuccess: () => toast.success("Deal stage updated") },
+    );
+  }, [updateStageMutation]);
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, typeof allDeals> = {};
@@ -239,7 +247,7 @@ export default function DealsPage() {
             sortColumn={dealSortCol}
             sortDirection={dealSortDir}
             onSort={handleDealSort}
-            onStageChange={(id, stage) => updateStageMutation.mutate({ id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" }, { onSuccess: () => toast.success("Deal stage updated") })}
+            onStageChange={handleStageChange}
             isLoading={isLoading}
           />
         </motion.div>
@@ -247,8 +255,9 @@ export default function DealsPage() {
 
       {/* Kanban View */}
       {view === "kanban" && (
-      <motion.div variants={fadeUp} className="overflow-x-auto -mx-2 px-2">
-        <div className="inline-flex gap-3 sm:gap-4 min-w-full pb-4">
+      <motion.div variants={fadeUp}>
+        <ScrollArea className="w-full" type="auto">
+        <div className="inline-flex gap-3 sm:gap-4 pb-4">
           {STAGES.map(stage => {
             const stageDeals = dealsByStage[stage.key] || [];
             const stageValue = stageDeals.reduce((s, d) => s + Number(d.value || 0), 0);
@@ -257,7 +266,7 @@ export default function DealsPage() {
               <div key={stage.key} className="w-56 sm:w-64 md:w-72 flex-shrink-0">
                 <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
+                    <div className={cn("w-2.5 h-2.5 rounded-full", stage.dot)} />
                     <span className="text-sm font-semibold">{stage.label}</span>
                     <Badge variant="secondary" className="text-xs">{stageDeals.length}</Badge>
                   </div>
@@ -280,9 +289,9 @@ export default function DealsPage() {
                               {STAGES.filter(s => s.key !== deal.stage).map(s => (
                                 <DropdownMenuItem
                                   key={s.key}
-                                  onClick={() => updateStageMutation.mutate({ id: deal.id, stage: s.key }, { onSuccess: () => toast.success("Deal stage updated") })}
+                                  onClick={() => handleStageChange(deal.id, s.key)}
                                 >
-                                  <div className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: s.color }} />
+                                  <div className={cn("w-2 h-2 rounded-full mr-2", s.dot)} />
                                   Move to {s.label}
                                 </DropdownMenuItem>
                               ))}
@@ -354,6 +363,7 @@ export default function DealsPage() {
             );
           })}
         </div>
+        </ScrollArea>
       </motion.div>
       )}
       <ConfirmDialog

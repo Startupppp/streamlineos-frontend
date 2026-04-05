@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useSupportTickets,
   useSupportTicket,
@@ -87,10 +88,24 @@ export default function SupportInboxPage() {
 }
 
 function InboxContent() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+
+  const statusFilter = searchParams.get("status") || "all";
+  const priorityFilter = searchParams.get("priority") || "all";
+
+  const updateFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") params.delete(key);
+    else params.set(key, value);
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  };
 
   const { data: ticketsData, isLoading } = useSupportTickets({
     ...(statusFilter !== "all" ? { status: statusFilter as SupportTicketStatus } : {}),
@@ -121,7 +136,7 @@ function InboxContent() {
         }
         filters={
           <>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => updateFilter("status", v)}>
               <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -132,7 +147,7 @@ function InboxContent() {
                 <SelectItem value="CLOSED">Closed</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <Select value={priorityFilter} onValueChange={(v) => updateFilter("priority", v)}>
               <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs"><SelectValue placeholder="Priority" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Priority</SelectItem>

@@ -152,8 +152,30 @@ export function useUpdateLeadStatus() {
   return useMutation({
     mutationFn: (input: UpdateLeadStatusInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/status`, input),
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: queryKeys.leads.board() });
+      const previousBoard = qc.getQueryData<LeadBoard>(queryKeys.leads.board());
+      if (previousBoard && vars.expectedStatus) {
+        const from = vars.expectedStatus as keyof LeadBoard;
+        const to = vars.status as keyof LeadBoard;
+        const lead = previousBoard[from]?.find((l) => l.id === vars.leadId);
+        if (lead) {
+          qc.setQueryData<LeadBoard>(queryKeys.leads.board(), {
+            ...previousBoard,
+            [from]: previousBoard[from].filter((l) => l.id !== vars.leadId),
+            [to]: [...(previousBoard[to] ?? []), { ...lead, status: vars.status }],
+          });
+        }
+      }
+      return { previousBoard };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previousBoard) {
+        qc.setQueryData(queryKeys.leads.board(), ctx.previousBoard);
+      }
+    },
+    onSettled: (_data, _err, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.leads.board() });
       qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.leadId) });
     },
   });

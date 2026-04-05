@@ -127,7 +127,7 @@ export function ChatBubble({
             className={cn(
               "relative px-3.5 py-2 shadow-sm",
               isOwn
-                ? "bg-gradient-to-br from-gold to-[#c9963a] text-white rounded-2xl rounded-br-md"
+                ? "bg-gradient-to-br from-gold to-amber-700 text-white rounded-2xl rounded-br-md"
                 : "bg-card border border-border/40 text-foreground rounded-2xl rounded-bl-md"
             )}
           >

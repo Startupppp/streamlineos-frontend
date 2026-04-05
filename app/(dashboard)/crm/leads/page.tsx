@@ -15,6 +15,7 @@ import {
   useBulkUpdateLeads, useBulkDeleteLeads,
 } from "@/lib/api/hooks/leads";
 import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useLeadsFilters } from "@/hooks/use-leads-filters";
 import { toast } from "sonner";
 import { LeadsStatsBar } from "./_components/leads-stats-bar";
 import { LeadsToolbar } from "./_components/leads-toolbar";
@@ -25,27 +26,33 @@ import { isLeadSource, isLeadPriority, STATUS_CONFIG } from "./_components/leads
 import type { BoardLead, LeadStatus } from "./_components/leads-types";
 
 export default function LeadsPipelinePage() {
-  const { data: board, isLoading: boardLoading, refetch: refetchBoard } = useLeadBoard();
+  const { data: board, isLoading: boardLoading } = useLeadBoard();
   const { data: stats, isLoading: statsLoading } = useLeadStats();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+
+  const {
+    view,
+    searchQuery,
+    statusFilter,
+    priorityFilter,
+    sourceFilter,
+    sortColumn,
+    sortDirection,
+    tablePage,
+    pageSize,
+    setView,
+    setSearchQuery,
+    setStatusFilter,
+    setPriorityFilter,
+    setSourceFilter,
+    setSort,
+    setTablePage,
+    setPageSize,
+    clearFilters,
+  } = useLeadsFilters();
+
   const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
-
-  const [view, setView] = useState<"table" | "kanban">(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("leads-view") as "table" | "kanban") || "table";
-    }
-    return "table";
-  });
-
-  const [sortColumn, setSortColumn] = useState("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [tablePage, setTablePage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>();
-  const [priorityFilter, setPriorityFilter] = useState<string | undefined>();
-  const [sourceFilter, setSourceFilter] = useState<string | undefined>();
 
   const { data: tableData, isLoading: tableLoading } = useLeads({
     search: debouncedSearchQuery || undefined,
@@ -75,19 +82,15 @@ export default function LeadsPipelinePage() {
   const isAdmin = true; // HR/CEO check already handled by middleware
 
   const handleSort = useCallback((col: string) => {
-    if (sortColumn === col) {
-      setSortDirection(d => d === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(col);
-      setSortDirection("desc");
-    }
-    setTablePage(1);
-  }, [sortColumn]);
+    const newDir = sortColumn === col
+      ? (sortDirection === "asc" ? "desc" : "asc")
+      : "desc";
+    setSort(col, newDir);
+  }, [sortColumn, sortDirection, setSort]);
 
   const handleViewChange = useCallback((v: "table" | "kanban") => {
     setView(v);
-    localStorage.setItem("leads-view", v);
-  }, []);
+  }, [setView]);
 
   const filteredBoard = useMemo(() => {
     if (!board) return null;
@@ -148,9 +151,8 @@ export default function LeadsPipelinePage() {
       toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
     } catch (err: unknown) {
       toast.error((err as { message?: string })?.message || "Failed to update status");
-      refetchBoard();
     }
-  }, [updateStatus, refetchBoard]);
+  }, [updateStatus]);
 
   const handleDragEnd = useCallback((result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -163,6 +165,58 @@ export default function LeadsPipelinePage() {
       handleMoveStatus(leadId, newStatus, source.droppableId as LeadStatus);
     }
   }, [handleMoveStatus]);
+
+  const handleStatusChange = useCallback((
+    id: number,
+    status: string,
+    extra?: { conversionNotes?: string; lostReason?: string; estimatedAmount?: string; investmentInterest?: string },
+  ) => {
+    if (status === "CONVERTED" && extra) {
+      updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
+      updateStatus.mutate({ leadId: id, status: "CONVERTED" });
+    } else if (status === "LOST" && extra) {
+      updateStatus.mutate({ leadId: id, status: "LOST", lostReason: extra.lostReason });
+    } else {
+      updateStatus.mutate({ leadId: id, status: status as LeadStatus });
+    }
+  }, [updateLeadMutation, updateStatus]);
+
+  const handlePriorityChange = useCallback((id: number, priority: string) => {
+    updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" });
+  }, [updateLeadMutation]);
+
+  const handleAssign = useCallback((id: number, userId: string) => {
+    assignLeadMutation.mutate(
+      { leadId: id, assignedToId: userId },
+      {
+        onSuccess: () => toast.success("Lead assigned"),
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  }, [assignLeadMutation]);
+
+  const handleBulkUpdate = useCallback((
+    ids: number[],
+    update: { status?: string; priority?: string; assignedToId?: string },
+  ) => {
+    bulkUpdateMutation.mutate(
+      { leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } },
+      {
+        onSuccess: (data) => toast.success(`${data.updated} leads updated`),
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  }, [bulkUpdateMutation]);
+
+  const handleBulkDelete = useCallback((ids: number[]) => {
+    bulkDeleteMutation.mutate(
+      { leadIds: ids },
+      {
+        onSuccess: (data) => toast.success(`${data.deleted} leads deleted`),
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  }, [bulkDeleteMutation]);
 
   if (boardLoading || statsLoading) {
     return (
@@ -186,7 +240,7 @@ export default function LeadsPipelinePage() {
       actions={
         <div className="flex items-center gap-2">
           <LeadExportDialog />
-          <CsvUploadDialog onSuccess={() => refetchBoard()} />
+          <CsvUploadDialog />
           <CreateLeadDialog
             open={createOpen}
             onOpenChange={setCreateOpen}
@@ -204,10 +258,10 @@ export default function LeadsPipelinePage() {
           statusFilter={statusFilter}
           priorityFilter={priorityFilter}
           sourceFilter={sourceFilter}
-          onStatusFilterChange={(v) => { setStatusFilter(v); setTablePage(1); }}
-          onPriorityFilterChange={(v) => { setPriorityFilter(v); setTablePage(1); }}
-          onSourceFilterChange={(v) => { setSourceFilter(v); setTablePage(1); }}
-          onClearFilters={() => { setStatusFilter(undefined); setPriorityFilter(undefined); setSourceFilter(undefined); setTablePage(1); }}
+          onStatusFilterChange={setStatusFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          onSourceFilterChange={setSourceFilter}
+          onClearFilters={clearFilters}
         />
       }
     >
@@ -231,21 +285,12 @@ export default function LeadsPipelinePage() {
               sortDirection={sortDirection}
               onSort={handleSort}
               onPageChange={setTablePage}
-              onPageSizeChange={(size) => { setPageSize(size); setTablePage(1); }}
-              onStatusChange={(id, status, extra) => {
-                if (status === "CONVERTED" && extra) {
-                  updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
-                  updateStatus.mutate({ leadId: id, status: "CONVERTED" as const });
-                } else if (status === "LOST" && extra) {
-                  updateStatus.mutate({ leadId: id, status: "LOST" as const, lostReason: extra.lostReason });
-                } else {
-                  updateStatus.mutate({ leadId: id, status: status as "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST" });
-                }
-              }}
-              onPriorityChange={(id, priority) => updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" })}
-              onAssign={(id, userId) => assignLeadMutation.mutate({ leadId: id, assignedToId: userId }, { onSuccess: () => { refetchBoard(); toast.success("Lead assigned"); }, onError: (err) => toast.error(err.message) })}
-              onBulkUpdate={(ids, update) => bulkUpdateMutation.mutate({ leadIds: ids, update: update as { status?: "NEW" | "CONTACTED" | "INTERESTED" | "QUALIFIED" | "CONVERTED" | "LOST"; priority?: "HOT" | "WARM" | "COLD"; assignedToId?: string } }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.updated} leads updated`); }, onError: (err) => toast.error(err.message) })}
-              onBulkDelete={(ids) => bulkDeleteMutation.mutate({ leadIds: ids }, { onSuccess: (data) => { refetchBoard(); toast.success(`${data.deleted} leads deleted`); }, onError: (err) => toast.error(err.message) })}
+              onPageSizeChange={setPageSize}
+              onStatusChange={handleStatusChange}
+              onPriorityChange={handlePriorityChange}
+              onAssign={handleAssign}
+              onBulkUpdate={handleBulkUpdate}
+              onBulkDelete={handleBulkDelete}
               teamMembers={teamMembers}
               isLoading={tableLoading}
               isAdmin={isAdmin}

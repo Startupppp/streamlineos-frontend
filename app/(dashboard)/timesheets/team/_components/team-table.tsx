@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import { resolveImageUrl } from "@/lib/utils";
 import type { TimeEntryWithUser } from "@/types/projects";
@@ -78,12 +79,11 @@ export const TeamTable = memo(function TeamTable({
           </div>
         ) : (
           <>
-            <div
-              className="overflow-x-auto"
-              role="region"
-              aria-label="Team timesheets table"
-              tabIndex={0}
+            <ScrollArea
+              className="w-full"
+              type="auto"
             >
+              <div className="min-w-[700px]">
               <Table>
                 <caption className="sr-only">Team timesheet entries</caption>
                 <TableHeader>
@@ -201,7 +201,8 @@ export const TeamTable = memo(function TeamTable({
                   )}
                 </TableBody>
               </Table>
-            </div>
+              </div>
+            </ScrollArea>
 
             {timesheets && timesheets.length > 0 && (
               <div className="px-6 py-4 border-t flex items-center justify-between">

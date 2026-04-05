@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -73,7 +74,8 @@ export default function CampaignsPage() {
         </div>
 
         <Card>
-          <div className="overflow-x-auto">
+          <ScrollArea className="w-full" type="auto">
+          <div className="min-w-[640px]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -115,6 +117,7 @@ export default function CampaignsPage() {
               </TableBody>
             </Table>
           </div>
+          </ScrollArea>
         </Card>
       </div>
 

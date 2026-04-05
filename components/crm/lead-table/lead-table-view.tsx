@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -133,7 +134,8 @@ export function LeadTableView({
 
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        <ScrollArea className="w-full" type="auto">
+          <div className="min-w-max">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted/60">
               <TableRow className="hover:bg-muted/60">
@@ -207,7 +209,8 @@ export function LeadTableView({
               )}
             </TableBody>
           </Table>
-        </div>
+          </div>
+        </ScrollArea>
       </div>
 
       {/* Pagination */}

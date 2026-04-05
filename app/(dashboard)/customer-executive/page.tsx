@@ -22,6 +22,7 @@ import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import { getColorSafe, healthStatusColors, healthDotColors } from "@/lib/theme-constants";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CustomerExecutiveDashboardPage() {
@@ -155,7 +156,8 @@ export default function CustomerExecutiveDashboardPage() {
               <CardTitle className="text-base">Upcoming Renewals</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              <ScrollArea className="w-full" type="auto">
+              <div className="min-w-[400px]">
                 <table className="w-full text-sm">
                   <caption className="sr-only">Upcoming client renewals</caption>
                   <thead>
@@ -193,6 +195,7 @@ export default function CustomerExecutiveDashboardPage() {
                   </tbody>
                 </table>
               </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </motion.div>

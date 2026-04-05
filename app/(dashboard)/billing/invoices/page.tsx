@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   useInvoices,
   useInvoiceStats,
@@ -85,8 +86,22 @@ export default function InvoicesPage() {
 }
 
 function InvoicesContent() {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
+
+  const statusFilter = searchParams.get("status") || "all";
+
+  const setStatusFilter = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") params.delete("status");
+    else params.set("status", value);
+    startTransition(() => {
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  };
 
   const { data: invoicesData, isLoading } = useInvoices(
     statusFilter !== "all" ? { status: statusFilter as InvoiceStatus } : undefined

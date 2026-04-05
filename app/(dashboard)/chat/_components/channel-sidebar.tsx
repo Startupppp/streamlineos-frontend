@@ -75,8 +75,8 @@ export function ChannelSidebar({
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#bd882c] to-[#d4a544] flex items-center justify-center shadow-sm">
-              <MessageSquareText className="h-4.5 w-4.5 text-white" />
+            <div className="h-9 w-9 rounded-xl bg-gold flex items-center justify-center shadow-sm">
+              <MessageSquareText className="h-4 w-4 text-white" />
             </div>
             <div>
               <h2 className="text-base font-bold leading-tight">Messages</h2>
