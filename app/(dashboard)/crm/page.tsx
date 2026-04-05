@@ -108,7 +108,7 @@ export default function CrmHubPage() {
 
   return (
     <PageWrapper title="CRM" subtitle="Customer Relationship Management hub">
-      <div className="space-y-6">
+      <div className="space-y-6 pb-6">
         <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {quickStats.map((stat, i) => (
             <Card key={stat.label} className="shadow-sm" style={{ animation: `fade-up 0.4s ease-out ${i * 0.1}s both` }}>

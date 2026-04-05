@@ -109,7 +109,7 @@ export default function SalesDashboardPage() {
       subtitle={isSalesRep ? "Your pipeline, deals, and performance at a glance" : "Pipeline overview and sales performance metrics"}
     >
     <motion.div
-      className="space-y-6"
+      className="space-y-6 pb-6"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"

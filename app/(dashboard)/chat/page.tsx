@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useChatHeartbeat } from "@/lib/hooks/trpc-hooks";
+import { useChatHeartbeat, useChatChannels } from "@/lib/hooks/trpc-hooks";
+import { useChatGlobalNotifications } from "@/lib/api/hooks/chat-notifications";
 import { ChannelSidebar } from "./_components/channel-sidebar";
 import { MessagePanel } from "./_components/message-panel";
 import { ChannelInfoPanel } from "./_components/channel-info-panel";
@@ -13,6 +14,21 @@ import { EmptyChatState } from "./_components/empty-chat-state";
 import { NewDMDialog } from "./_components/new-dm-dialog";
 import { NewGroupDialog } from "./_components/new-group-dialog";
 import { ChatAblyProvider } from "./_components/ably-provider";
+import type { Channel } from "@/types/chat";
+
+/** Inner component rendered inside ChatAblyProvider so useAbly() is available. */
+function ChatNotifications({
+  activeChannelId,
+  currentUserId,
+}: {
+  activeChannelId: number | null;
+  currentUserId: string | undefined;
+}) {
+  const { data: rawChannels } = useChatChannels();
+  const channels = rawChannels as Channel[] | undefined;
+  useChatGlobalNotifications(channels, activeChannelId, currentUserId);
+  return null;
+}
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -52,6 +68,7 @@ export default function ChatPage() {
 
   return (
     <ChatAblyProvider>
+      <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
     <div className="flex h-full overflow-hidden bg-background">
       {/* Sidebar */}
       <div

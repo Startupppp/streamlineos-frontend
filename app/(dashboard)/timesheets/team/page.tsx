@@ -231,7 +231,10 @@ export default function TeamTimesheetsPage() {
             paginatedEntries={paginatedEntries}
             page={page}
             totalPages={totalPages}
-            onPageChange={(p) => updateParams({ page: p === 1 ? null : String(p) })}
+            onPageChange={(p) => {
+              const pageNum = typeof p === "function" ? p(page) : p;
+              updateParams({ page: pageNum === 1 ? null : String(pageNum) });
+            }}
             onEntryClick={handleEntryClick}
             onExportCSV={exportToCSV}
           />

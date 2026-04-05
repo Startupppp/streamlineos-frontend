@@ -37,7 +37,7 @@ export default function WorkLogsPage() {
       year: parseInt(searchParams.get("year") ?? "") || currentYear,
       quarter: parseInt(searchParams.get("quarter") ?? "") || currentQuarter,
       selectedUserId: searchParams.get("user") ?? undefined,
-      departmentId: searchParams.get("dept") ? parseInt(searchParams.get("dept")!) : undefined,
+      departmentId: searchParams.get("dept") ?? undefined,
       month: monthParam !== null ? parseInt(monthParam) : undefined,
       dateFrom: searchParams.get("from") ?? undefined,
       dateTo: searchParams.get("to") ?? undefined,
@@ -55,7 +55,7 @@ export default function WorkLogsPage() {
         else params.delete("quarter");
         if (newFilters.selectedUserId) params.set("user", newFilters.selectedUserId);
         else params.delete("user");
-        if (newFilters.departmentId != null) params.set("dept", String(newFilters.departmentId));
+        if (newFilters.departmentId) params.set("dept", newFilters.departmentId);
         else params.delete("dept");
         if (newFilters.month != null) params.set("month", String(newFilters.month));
         else params.delete("month");
@@ -76,7 +76,7 @@ export default function WorkLogsPage() {
       year: parseInt(searchParams.get("year") ?? "") || currentYear,
       quarter: parseInt(searchParams.get("quarter") ?? "") || currentQuarter,
       selectedUserId: searchParams.get("user") ?? undefined,
-      departmentId: searchParams.get("dept") ? parseInt(searchParams.get("dept")!) : undefined,
+      departmentId: searchParams.get("dept") ?? undefined,
       month: monthParam !== null ? parseInt(monthParam) : undefined,
       dateFrom: searchParams.get("from") ?? undefined,
       dateTo: searchParams.get("to") ?? undefined,

@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -89,9 +88,8 @@ export function HrEmployeeTable({
   return (
     <Card className="border-border">
       <CardContent className="p-0">
-        <ScrollArea
-          className="w-full max-h-[60vh]"
-          type="auto"
+        <div
+          className="overflow-auto max-h-[60vh] w-full"
           role="region"
           aria-label="Employee directory table"
         >
@@ -230,7 +228,7 @@ export function HrEmployeeTable({
               </TableBody>
             </Table>
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-border">
           <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ interface AblyMessagePayload {
   id: number;
   channelId: number;
   senderId: string;
+  senderName?: string | null;
   content: string | null;
   createdAt: string | null;
   replyToId: number | null;
@@ -38,12 +39,37 @@ function payloadToMessage(payload: AblyMessagePayload): Message {
   };
 }
 
-export function useChatRealtime(channelId: number | null) {
+export function useChatRealtime(channelId: number | null): { isConnected: boolean } {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const ably = useAbly();
-
+  const currentUserId = session?.user?.id;
   const orgId = session?.orgId;
+
+  const [isConnected, setIsConnected] = useState(
+    () => ably.connection.state === "connected"
+  );
+
+  // Track Ably connection state changes
+  useEffect(() => {
+    const handleConnected = () => setIsConnected(true);
+    const handleDisconnected = () => setIsConnected(false);
+
+    ably.connection.on("connected", handleConnected);
+    ably.connection.on("disconnected", handleDisconnected);
+    ably.connection.on("failed", handleDisconnected);
+    ably.connection.on("suspended", handleDisconnected);
+
+    // Sync initial state
+    setIsConnected(ably.connection.state === "connected");
+
+    return () => {
+      ably.connection.off("connected", handleConnected);
+      ably.connection.off("disconnected", handleDisconnected);
+      ably.connection.off("failed", handleDisconnected);
+      ably.connection.off("suspended", handleDisconnected);
+    };
+  }, [ably]);
 
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0) return;
@@ -74,6 +100,19 @@ export function useChatRealtime(channelId: number | null) {
       });
 
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+
+      // Desktop notification for messages from other users when window is not focused
+      if (
+        payload.senderId !== currentUserId &&
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted" &&
+        document.visibilityState !== "visible"
+      ) {
+        const senderName = payload.senderName ?? "Someone";
+        const body = payload.content?.slice(0, 80) ?? "Sent an attachment";
+        new Notification(senderName, { body, icon: "/favicon.ico" });
+      }
     };
 
     channel.subscribe("message", handler);
@@ -81,5 +120,7 @@ export function useChatRealtime(channelId: number | null) {
     return () => {
       channel.unsubscribe("message", handler);
     };
-  }, [ably, channelId, orgId, queryClient]);
+  }, [ably, channelId, orgId, queryClient, currentUserId]);
+
+  return { isConnected };
 }

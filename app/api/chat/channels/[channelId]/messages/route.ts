@@ -125,6 +125,7 @@ export async function POST(
           id: message.id,
           channelId: message.channelId,
           senderId: message.senderId,
+          senderName: session.user.name ?? null,
           content: message.content,
           createdAt: message.createdAt,
           replyToId: message.replyToId,
