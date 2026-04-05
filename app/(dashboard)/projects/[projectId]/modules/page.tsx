@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useModules, useCreateModule, useProjectMembers } from "@/lib/api/hooks/projects";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,130 +122,123 @@ export default function ModulesPage({
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <PageWrapper title="Modules">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-48 w-full" />
           ))}
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-        <ProjectSubNav projectId={projectId} />
-        <div className="flex items-center justify-between mt-4">
-          <h1 className="text-2xl font-bold">Modules</h1>
-          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-            <SheetTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> New Module
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Create Module</SheetTitle>
-              </SheetHeader>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4 p-4"
-              >
-                <div>
-                  <Label htmlFor="mod-name">Name</Label>
-                  <Input id="mod-name" {...form.register("name")} />
-                  {form.formState.errors.name && (
-                    <p className="text-xs text-destructive mt-1">
-                      {form.formState.errors.name.message}
-                    </p>
+    <PageWrapper
+      title="Modules"
+      actions={
+        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+          <SheetTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> New Module
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Create Module</SheetTitle>
+            </SheetHeader>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 p-4"
+            >
+              <div>
+                <Label htmlFor="mod-name">Name</Label>
+                <Input id="mod-name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive mt-1">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="mod-desc">Description</Label>
+                <Textarea id="mod-desc" {...form.register("description")} />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Controller
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MODULE_STATUSES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="mod-start">Start Date</Label>
+                  <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
                 </div>
                 <div>
-                  <Label htmlFor="mod-desc">Description</Label>
-                  <Textarea id="mod-desc" {...form.register("description")} />
+                  <Label htmlFor="mod-end">End Date</Label>
+                  <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
                 </div>
-                <div>
-                  <Label>Status</Label>
-                  <Controller
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {MODULE_STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="mod-start">Start Date</Label>
-                    <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
-                  </div>
-                  <div>
-                    <Label htmlFor="mod-end">End Date</Label>
-                    <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
-                  </div>
-                </div>
-                <div>
-                  <Label>Lead</Label>
-                  <Controller
-                    control={form.control}
-                    name="leadId"
-                    render={({ field }) => (
-                      <Select
-                        value={field.value?.toString() ?? ""}
-                        onValueChange={(v) =>
-                          field.onChange(v || undefined)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select lead..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {members?.map((m) => (
-                            <SelectItem
-                              key={m.userId}
-                              value={m.userId}
-                            >
-                              {m.user?.name ?? m.user?.email ?? m.userId}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending}
-                  className="w-full"
-                >
-                  {createMutation.isPending ? "Creating..." : "Create Module"}
-                </Button>
-              </form>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6">
+              </div>
+              <div>
+                <Label>Lead</Label>
+                <Controller
+                  control={form.control}
+                  name="leadId"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.toString() ?? ""}
+                      onValueChange={(v) =>
+                        field.onChange(v || undefined)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lead..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {members?.map((m) => (
+                          <SelectItem
+                            key={m.userId}
+                            value={m.userId}
+                          >
+                            {m.user?.name ?? m.user?.email ?? m.userId}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending}
+                className="w-full"
+              >
+                {createMutation.isPending ? "Creating..." : "Create Module"}
+              </Button>
+            </form>
+          </SheetContent>
+        </Sheet>
+      }
+    >
+      <div>
         {!modules?.length ? (
           <div className="text-center py-16">
             <EmptyTasksIllustration className="mx-auto mb-4 w-36 h-36" />
@@ -317,6 +310,6 @@ export default function ModulesPage({
           </div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

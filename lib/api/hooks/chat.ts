@@ -12,7 +12,9 @@ import {
   useMutation,
   useQueryClient,
   useInfiniteQuery,
+  type InfiniteData,
 } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -149,15 +151,75 @@ export function useChatTyping(channelId: number, enabled: boolean) {
 
 // ─── Message mutations ────────────────────────────────────────────────────────
 
-/** Sends a new message. Invalidates the message list and channel list on success. */
+/** Sends a new message with optimistic update for instant UI feedback. */
 export function useSendMessage() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   return useMutation({
     mutationFn: (input: SendMessageInput) =>
       apiClient.post<Message>(
         `/chat/channels/${input.channelId}/messages`,
         input
       ),
+    onMutate: async (variables) => {
+      // Cancel in-flight refetches to avoid race conditions
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.chat.messages(variables.channelId),
+      });
+
+      // Snapshot current data for rollback on error
+      const previousData = queryClient.getQueryData<InfiniteData<MessagesPage>>(
+        queryKeys.chat.messages(variables.channelId)
+      );
+
+      // Build an optimistic message shown immediately
+      const optimisticMsg: Message = {
+        id: -Date.now(),
+        channelId: variables.channelId,
+        senderId: session?.user?.id ?? "__optimistic__",
+        content: variables.content ?? null,
+        replyToId: variables.replyToId ?? null,
+        isEdited: false,
+        isDeleted: false,
+        messageType: "text",
+        metadata: null,
+        actionStatus: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sender: session?.user
+          ? {
+              id: session.user.id,
+              name: session.user.name ?? null,
+              image: session.user.image ?? null,
+            }
+          : null,
+        attachments: [],
+        replyTo: null,
+      };
+
+      if (previousData) {
+        const pages = previousData.pages.map((page, i) =>
+          i === previousData.pages.length - 1
+            ? { ...page, messages: [...page.messages, optimisticMsg] }
+            : page
+        );
+        queryClient.setQueryData<InfiniteData<MessagesPage>>(
+          queryKeys.chat.messages(variables.channelId),
+          { ...previousData, pages }
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (_err, variables, context) => {
+      // Roll back optimistic update on failure
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          queryKeys.chat.messages(variables.channelId),
+          context.previousData
+        );
+      }
+    },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),

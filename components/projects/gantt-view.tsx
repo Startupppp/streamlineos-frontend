@@ -13,9 +13,9 @@ interface Ticket {
   type: string;
   startDate?: string | null;
   dueDate?: string | null;
-  ticketNumber: number;
+  ticketNumber?: number;
   sequenceId?: string | null;
-  assignee: { id: string; firstName?: string; lastName?: string } | null;
+  assignee?: { id: string; firstName?: string | null; lastName?: string | null } | null;
 }
 
 interface GanttViewProps {

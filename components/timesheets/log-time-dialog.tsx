@@ -165,6 +165,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
     }
     const submitValues = {
       ...values,
+      projectId: selectedProjectId!,
       workLink: (values.workLink || "").trim() || undefined,
       imageUrl: imageUrl ?? values.imageUrl ?? "",
     };

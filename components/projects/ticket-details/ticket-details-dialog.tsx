@@ -22,6 +22,8 @@ import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketComments } from "./ticket-comments";
 import { TicketSubtasks } from "./ticket-subtasks";
+import { WatcherList } from "./watcher-list";
+import { ActivityFeed } from "./activity-feed";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
 
 // ─── Attachment image with signed-URL resolution ──────────────────────────────
@@ -323,22 +325,31 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                {/* Comments */}
-                <TicketComments
+                {/* Activity Feed (comments) */}
+                <ActivityFeed
                   ticketId={ticketId!}
                   comments={ticket.comments || []}
                 />
               </div>
 
               {/* Sidebar column */}
-              <TicketSidebar
-                ticket={ticket}
-                ticketId={ticketId!}
-                members={members}
-                sprints={sprints || []}
-                statuses={statuses}
-                onAutoSave={autoSave}
-              />
+              <div className="space-y-0">
+                <TicketSidebar
+                  ticket={ticket}
+                  ticketId={ticketId!}
+                  members={members}
+                  sprints={sprints || []}
+                  statuses={statuses}
+                  onAutoSave={autoSave}
+                />
+                <div className="px-4 sm:px-6 pb-4 bg-muted/20">
+                  <WatcherList
+                    projectId={projectId}
+                    ticketId={ticketId!}
+                    members={members}
+                  />
+                </div>
+              </div>
             </div>
           ) : (
             <div className="py-16 text-center">

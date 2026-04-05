@@ -6,17 +6,18 @@
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, toNumber } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tickets, ticketAssignees, users, projects } from "@/lib/db/schema";
+import { tickets, ticketAssignees, users, projects, projectMembers } from "@/lib/db/schema";
 import { eq, and, desc, or, sql, count } from "drizzle-orm";
 import { sendTicketAssignmentEmail } from "@/lib/email";
 import { createNotification } from "@/server/actions/create-notification";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 const createTicketSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  type: z.string().default("TASK"),
+  type: z.enum(["TASK", "BUG", "STORY", "EPIC", "SUBTASK"]).default("TASK"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   assigneeId: z.string().optional(),
   assigneeIds: z.array(z.string()).optional(),
@@ -32,11 +33,30 @@ const createTicketSchema = z.object({
 
 type RouteParams = { params: Promise<{ projectId: string }> };
 
+async function checkProjectAccess(session: { user: { id: string; role?: string }; orgId: string }, projectId: number) {
+  if (isAdminOrOwner(session.user.role)) return true;
+  const project = await db.query.projects.findFirst({
+    where: and(eq(projects.id, projectId), eq(projects.orgId, session.orgId)),
+    columns: { managerId: true },
+  });
+  if (!project) return false;
+  if (project.managerId === session.user.id) return true;
+  const membership = await db
+    .select({ id: projectMembers.id })
+    .from(projectMembers)
+    .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, session.user.id)))
+    .limit(1);
+  return membership.length > 0;
+}
+
 export async function GET(req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
     const { projectId: id } = await params;
     const projectId = Number(id);
     if (!projectId) return err("Invalid project id", 400);
+
+    const hasAccess = await checkProjectAccess(session, projectId);
+    if (!hasAccess) return err("Not found", 404);
 
     const { searchParams } = req.nextUrl;
     const page = toNumber(searchParams.get("page")) ?? 1;
@@ -92,6 +112,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const { projectId: id } = await params;
     const projectId = Number(id);
     if (!projectId) return err("Invalid project id", 400);
+
+    const hasAccess = await checkProjectAccess(session, projectId);
+    if (!hasAccess) return err("Not found", 404);
 
     const body = await parseBody(req, createTicketSchema);
 

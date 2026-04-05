@@ -106,6 +106,7 @@ export const queryKeys = {
     views: (projectId: number) => [...base, "projects", "views", projectId] as const,
     intake: (projectId: number) => [...base, "projects", "intake", projectId] as const,
     analytics: (projectId: number) => [...base, "projects", "analytics", projectId] as const,
+    watchers: (ticketId: number) => [...base, "projects", "watchers", ticketId] as const,
   },
 
   // ─── Chat ──────────────────────────────────────────────────────────────────

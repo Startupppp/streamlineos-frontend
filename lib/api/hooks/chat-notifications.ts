@@ -85,12 +85,11 @@ export function useChatGlobalNotifications(
         // In-app toast
         toast(title, { description: body, duration: 5_000 });
 
-        // Desktop notification — only when tab is not focused
+        // Always show Chrome desktop notification
         if (
           typeof window !== "undefined" &&
           "Notification" in window &&
-          Notification.permission === "granted" &&
-          document.visibilityState !== "visible"
+          Notification.permission === "granted"
         ) {
           new Notification(title, { body, icon: "/favicon.ico" });
         }

@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Play, Calendar, CheckCircle2, Loader2 } from "lucide-react";
 import { EmptySprintIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { DropResult } from "@hello-pangea/dnd";
 import { SprintCard } from "./_components/sprint-card";
 import { CompleteSprintSheet } from "./_components/complete-sprint-sheet";
@@ -124,23 +124,20 @@ export default function SprintsPage({ params }: PageProps) {
   const completionSprint = completionSprintId ? sprints?.find((s) => s.id === completionSprintId) : null;
   const nextPlannedSprint = sprints?.find((s) => s.status === "PLANNED");
 
+  const subtitleParts: string[] = [];
+  if (activeSprints.length > 0) subtitleParts.push(`${activeSprints.length} active`);
+  if (plannedSprints.length > 0) subtitleParts.push(`${plannedSprints.length} planned`);
+  if (completedSprints.length > 0) subtitleParts.push(`${completedSprints.length} completed`);
+  const subtitle = subtitleParts.length > 0
+    ? subtitleParts.join(", ")
+    : "Create your first sprint to start organizing work";
+
   return (
-    <div className="p-6 md:p-8 lg:p-12 space-y-8" aria-live="polite" aria-atomic="true">
-      <ProjectSubNav projectId={projectId} projectName={project?.name} />
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Sprints</h1>
-          <p className="text-muted-foreground mt-1">
-            {activeSprints.length > 0 && `${activeSprints.length} active`}
-            {activeSprints.length > 0 && plannedSprints.length > 0 && ", "}
-            {plannedSprints.length > 0 && `${plannedSprints.length} planned`}
-            {(activeSprints.length > 0 || plannedSprints.length > 0) && completedSprints.length > 0 && ", "}
-            {completedSprints.length > 0 && `${completedSprints.length} completed`}
-            {sprints?.length === 0 && "Create your first sprint to start organizing work"}
-          </p>
-        </div>
-        <CreateSprintDialog projectId={projectId} />
-      </div>
+    <PageWrapper
+      title="Sprints"
+      subtitle={subtitle}
+      actions={<CreateSprintDialog projectId={projectId} />}
+    >
 
       {planningSprintId && planningSprint && (
         <SprintPlanningPanel
@@ -238,6 +235,6 @@ export default function SprintsPage({ params }: PageProps) {
         onCancel={handleCancelCompletion}
         onConfirm={handleConfirmCompletion}
       />
-    </div>
+    </PageWrapper>
   );
 }

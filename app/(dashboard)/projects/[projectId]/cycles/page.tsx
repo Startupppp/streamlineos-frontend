@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useCycles, useCreateCycle } from "@/lib/api/hooks/projects";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,25 +61,8 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        {/* Header: SubNav + title row */}
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          {/* SubNav tabs */}
-          <div className="flex items-center gap-4 mb-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-20" />
-            ))}
-          </div>
-          {/* Title + New Cycle button */}
-          <div className="flex items-center justify-between mt-4">
-            <Skeleton className="h-8 w-28" />
-            <Skeleton className="h-9 w-28 rounded-md" />
-          </div>
-        </div>
-
-        {/* Content: cycle sections */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Active section */}
+      <PageWrapper title="Cycles">
+        <div className="space-y-6">
           <section>
             <Skeleton className="h-4 w-16 mb-3" />
             <Card className="mb-3">
@@ -99,8 +82,6 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
               </CardContent>
             </Card>
           </section>
-
-          {/* Upcoming section */}
           <section>
             <Skeleton className="h-4 w-24 mb-3" />
             <div className="space-y-3">
@@ -121,58 +102,55 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
             </div>
           </section>
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-        <ProjectSubNav projectId={projectId} />
-        <div className="flex items-center justify-between mt-4">
-          <h1 className="text-2xl font-bold">Cycles</h1>
-          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-            <SheetTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" /> New Cycle
+    <PageWrapper
+      title="Cycles"
+      actions={
+        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+          <SheetTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> New Cycle
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Create Cycle</SheetTitle>
+            </SheetHeader>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" {...form.register("description")} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
+                </div>
+                <div>
+                  <Label htmlFor="endDate">End Date</Label>
+                  <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
+                </div>
+              </div>
+              <Button type="submit" disabled={createMutation.isPending} className="w-full">
+                {createMutation.isPending ? "Creating..." : "Create Cycle"}
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Create Cycle</SheetTitle>
-              </SheetHeader>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" {...form.register("name")} />
-                  {form.formState.errors.name && (
-                    <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" {...form.register("description")} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="startDate">Start Date</Label>
-                    <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
-                  </div>
-                  <div>
-                    <Label htmlFor="endDate">End Date</Label>
-                    <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
-                  </div>
-                </div>
-                <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                  {createMutation.isPending ? "Creating..." : "Create Cycle"}
-                </Button>
-              </form>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            </form>
+          </SheetContent>
+        </Sheet>
+      }
+    >
+      <div className="space-y-6">
         {activeCycles.length > 0 && (
           <section>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Active</h2>
@@ -273,6 +251,6 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
           </div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

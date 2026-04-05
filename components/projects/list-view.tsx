@@ -11,11 +11,11 @@ interface Ticket {
   title: string;
   status: string;
   type: string;
-  priority?: string;
-  points?: number;
-  ticketNumber: number;
+  priority?: string | null;
+  points?: number | null;
+  ticketNumber?: number;
   sequenceId?: string | null;
-  assignee: { id: string; firstName?: string; lastName?: string; image?: string | null } | null;
+  assignee?: { id: string; firstName?: string | null; lastName?: string | null; image?: string | null } | null;
 }
 
 interface ListViewProps {

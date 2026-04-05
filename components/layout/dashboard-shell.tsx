@@ -11,6 +11,7 @@ import { NotActivatedPage } from "../auth/not-activated-page";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
+import { ChatUnreadNotifications } from "@/components/chat/chat-unread-notifications";
 import Image from "next/image";
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
@@ -37,6 +38,7 @@ export function DashboardShell({
   const pathname = usePathname();
   const isMobile = useIsMobile();
   usePushSubscription();
+  // Renders null — subscribes to channel unread counts for cross-page notifications
 
   const handleToggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((prev) => {
@@ -62,6 +64,7 @@ export function DashboardShell({
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
+      {hasDashboardAccess && <ChatUnreadNotifications />}
       <Link
         href="#dashboard-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"

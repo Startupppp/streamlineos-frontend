@@ -32,7 +32,6 @@ import { EmptyTasksIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import Link from "next/link";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Popover,
@@ -101,7 +100,6 @@ export default function EpicsPage({ params }: PageProps) {
     <PageWrapper
       title="Epics"
       subtitle={`${epics.length} epic${epics.length !== 1 ? "s" : ""} — ${stories.length} stories, ${tickets.filter(t => t.status === "DONE").length} completed`}
-      filters={<ProjectSubNav projectId={projectId} projectName={project?.name} />}
       actions={<CreateEpicDialog projectId={projectId} />}
     >
       <div className="space-y-8" aria-live="polite" aria-atomic="true">

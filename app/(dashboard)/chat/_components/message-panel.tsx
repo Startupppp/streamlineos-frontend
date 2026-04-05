@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Hash,
+  PanelLeftOpen,
   Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,12 +44,16 @@ export function MessagePanel({
   onBack,
   onToggleInfo,
   showInfoPanel,
+  sidebarCollapsed,
+  onExpandSidebar,
 }: {
   channelId: number;
   currentUserId: string;
   onBack: () => void;
   onToggleInfo: () => void;
   showInfoPanel: boolean;
+  sidebarCollapsed?: boolean;
+  onExpandSidebar?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { data: channel } = useChatChannel(channelId);
@@ -308,6 +313,15 @@ export function MessagePanel({
     <>
       {/* Header */}
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+        {sidebarCollapsed && onExpandSidebar && (
+          <button
+            onClick={onExpandSidebar}
+            className="hidden md:flex p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"
+            aria-label="Open conversations"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </button>
+        )}
         <button
           onClick={onBack}
           className="md:hidden p-1.5 -ml-1 hover:bg-muted/50 rounded-lg"

@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquareText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChatHeartbeat, useChatChannels } from "@/lib/hooks/trpc-hooks";
 import { useChatGlobalNotifications } from "@/lib/api/hooks/chat-notifications";
@@ -92,18 +91,9 @@ export default function ChatPage() {
       <div
         className={cn(
           "flex-1 flex flex-col min-w-0 relative",
-          showMobileList && "hidden md:flex"
+          showMobileList && !sidebarCollapsed && "hidden md:flex"
         )}
       >
-        {sidebarCollapsed && (
-          <button
-            onClick={() => setSidebarCollapsed(false)}
-            className="absolute top-3 left-3 z-10 h-8 w-8 rounded-lg bg-muted/80 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors border border-border/50"
-            aria-label="Open conversations"
-          >
-            <MessageSquareText className="h-4 w-4" />
-          </button>
-        )}
         {activeChannelId && currentUserId ? (
           <MessagePanel
             channelId={activeChannelId}
@@ -111,12 +101,15 @@ export default function ChatPage() {
             onBack={() => setShowMobileList(true)}
             onToggleInfo={() => setShowInfoPanel((p) => !p)}
             showInfoPanel={showInfoPanel}
+            sidebarCollapsed={sidebarCollapsed}
+            onExpandSidebar={() => setSidebarCollapsed(false)}
           />
         ) : (
           <EmptyChatState
             onNewDM={() => setEmptyDMOpen(true)}
             onNewChannel={() => setEmptyGroupOpen(true)}
             onSearch={() => { setShowMobileList(true); setShowSearchFocus(true); }}
+            onExpandSidebar={sidebarCollapsed ? () => setSidebarCollapsed(false) : undefined}
           />
         )}
       </div>

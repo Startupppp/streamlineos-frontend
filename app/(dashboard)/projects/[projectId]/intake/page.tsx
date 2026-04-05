@@ -5,7 +5,7 @@ import {
   useIntakeRequests, useCreateIntakeRequest, useUpdateIntakeRequest,
   useProjectMembers, useCycles, useModules,
 } from "@/lib/api/hooks/projects";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
@@ -152,63 +152,56 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-        <div className="flex-1 p-6 space-y-3">
+      <PageWrapper title="Intake">
+        <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
-      </div>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-6 sm:px-8 md:px-12 pt-6 sm:pt-8 md:pt-12 pb-4 bg-background border-b">
-        <ProjectSubNav projectId={projectId} />
-        <div className="flex items-center justify-between mt-4">
-          <h1 className="text-2xl font-bold">Intake</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
-              <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
-            </Button>
-            <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-              <SheetTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-1" /> New Item
+    <PageWrapper
+      title="Intake"
+      actions={
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopyFormUrl}>
+            <ExternalLink className="h-4 w-4 mr-1" /> Copy Form URL
+          </Button>
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+            <SheetTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" /> New Item
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Create Intake Item</SheetTitle>
+              </SheetHeader>
+              <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 p-4">
+                <div>
+                  <Label htmlFor="intake-title">Title</Label>
+                  <Input id="intake-title" {...createForm.register("title")} />
+                  {createForm.formState.errors.title && (
+                    <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="intake-desc">Description</Label>
+                  <Textarea id="intake-desc" {...createForm.register("description")} />
+                </div>
+                <Button type="submit" disabled={createMutation.isPending} className="w-full">
+                  {createMutation.isPending ? "Creating..." : "Create Item"}
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>Create Intake Item</SheetTitle>
-                </SheetHeader>
-                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 p-4">
-                  <div>
-                    <Label htmlFor="intake-title">Title</Label>
-                    <Input id="intake-title" {...createForm.register("title")} />
-                    {createForm.formState.errors.title && (
-                      <p className="text-xs text-destructive mt-1">{createForm.formState.errors.title.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="intake-desc">Description</Label>
-                    <Textarea id="intake-desc" {...createForm.register("description")} />
-                  </div>
-                  <Button type="submit" disabled={createMutation.isPending} className="w-full">
-                    {createMutation.isPending ? "Creating..." : "Create Item"}
-                  </Button>
-                </form>
-              </SheetContent>
-            </Sheet>
-          </div>
+              </form>
+            </SheetContent>
+          </Sheet>
         </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      }
+    >
+      <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
           <ExternalLink className="h-4 w-4 shrink-0" />
           <span className="truncate">Public form: {formUrl}</span>
@@ -386,6 +379,6 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           </form>
         </SheetContent>
       </Sheet>
-    </div>
+    </PageWrapper>
   );
 }

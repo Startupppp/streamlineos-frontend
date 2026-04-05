@@ -11,10 +11,10 @@ interface Ticket {
   title: string;
   status: string;
   type: string;
-  priority?: string;
+  priority?: string | null;
   dueDate?: string | null;
   startDate?: string | null;
-  ticketNumber: number;
+  ticketNumber?: number;
   sequenceId?: string | null;
 }
 

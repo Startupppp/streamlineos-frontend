@@ -2,7 +2,6 @@
 
 import { use, useMemo } from "react";
 import { useProjectAnalytics } from "@/lib/api/hooks/projects";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -134,7 +133,7 @@ export default function AnalyticsPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Analytics" filters={<ProjectSubNav projectId={projectId} />}>
+      <PageWrapper title="Analytics">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Array.from({ length: 6 }).map((_: unknown, i: number) => (
             <Skeleton key={i} className="h-72 w-full" />
@@ -146,7 +145,7 @@ export default function AnalyticsPage({
 
   if (!analytics) {
     return (
-      <PageWrapper title="Analytics" filters={<ProjectSubNav projectId={projectId} />}>
+      <PageWrapper title="Analytics">
         <div className="flex flex-col items-center justify-center py-16">
           <EmptyActivityIllustration className="mx-auto mb-4 w-36 h-36" />
           <h3 className="text-lg font-semibold mb-1">No data yet</h3>
@@ -159,7 +158,7 @@ export default function AnalyticsPage({
   }
 
   return (
-    <PageWrapper title="Analytics" filters={<ProjectSubNav projectId={projectId} />}>
+    <PageWrapper title="Analytics">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>

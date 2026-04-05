@@ -121,6 +121,9 @@ export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.cycles(variables.projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
+      });
     },
     ...options,
   });
@@ -162,6 +165,9 @@ export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
     onSuccess: (_data: unknown, variables: UpdateModuleInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.modules(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
       });
     },
     ...options,
@@ -313,6 +319,9 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
     onSuccess: (_data: unknown, variables: UpdateIntakeRequestInput & { projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.intake(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.detail(variables.projectId),
       });
     },
     ...options,

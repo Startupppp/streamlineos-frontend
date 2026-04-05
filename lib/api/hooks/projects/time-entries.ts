@@ -46,9 +46,9 @@ export function useMyTimeEntries(
 export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketId, ...data }: LogTimeInput) =>
+    mutationFn: ({ projectId, ticketId, ...data }: LogTimeInput) =>
       apiClient.post<TimeEntry>(
-        `/projects/0/tickets/${ticketId}/time-entries`,
+        `/projects/${projectId}/tickets/${ticketId}/time-entries`,
         data
       ),
     onSuccess: (_data: unknown, variables: LogTimeInput) => {

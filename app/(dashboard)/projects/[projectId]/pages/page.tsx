@@ -2,7 +2,6 @@
 
 import { use, useState, useMemo } from "react";
 import { usePages, useCreatePage, useUpdatePage } from "@/lib/api/hooks/projects";
-import { ProjectSubNav } from "@/components/projects/project-sub-nav";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -231,7 +230,7 @@ export default function PagesPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Pages" filters={<ProjectSubNav projectId={projectId} />} noInternalScroll contentClassName="p-0">
+      <PageWrapper title="Pages" noInternalScroll contentClassName="p-0">
         <div className="flex h-full">
           <div className="w-64 border-r p-4 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -249,7 +248,6 @@ export default function PagesPage({
   return (
     <PageWrapper
       title="Pages"
-      filters={<ProjectSubNav projectId={projectId} />}
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>

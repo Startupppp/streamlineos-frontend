@@ -101,13 +101,12 @@ export function useChatRealtime(channelId: number | null): { isConnected: boolea
 
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
 
-      // Desktop notification for messages from other users when window is not focused
+      // Always show a Chrome desktop notification for messages from other users
       if (
         payload.senderId !== currentUserId &&
         typeof window !== "undefined" &&
         "Notification" in window &&
-        Notification.permission === "granted" &&
-        document.visibilityState !== "visible"
+        Notification.permission === "granted"
       ) {
         const senderName = payload.senderName ?? "Someone";
         const body = payload.content?.slice(0, 80) ?? "Sent an attachment";

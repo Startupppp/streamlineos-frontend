@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getMessages } from "@/server/queries/chat";
+import { sendPushToChannelMembers } from "@/lib/web-push";
 import { z } from "zod";
 
 const sendMessageSchema = z.object({
@@ -121,7 +122,8 @@ export async function POST(
       try {
         const rest = new Ably.Rest(process.env.ABLY_API_KEY);
         const channelName = `chat:${session.orgId}:${channelId}`;
-        await rest.channels.get(channelName).publish("message", {
+        // Fire-and-forget: don't await so the HTTP response is returned immediately.
+        rest.channels.get(channelName).publish("message", {
           id: message.id,
           channelId: message.channelId,
           senderId: message.senderId,
@@ -129,11 +131,18 @@ export async function POST(
           content: message.content,
           createdAt: message.createdAt,
           replyToId: message.replyToId,
-        });
+        }).catch(() => {});
       } catch {
         // Swallow: delivery falls back to the polling mechanism in the client.
       }
     }
+
+    // Fire-and-forget Web Push to channel members (works even when browser tab is closed)
+    sendPushToChannelMembers(channelId, session.user.id, {
+      title: session.user.name ?? "New message",
+      body: message.content?.slice(0, 80) ?? "Sent an attachment",
+      url: `/chat?channel=${channelId}`,
+    }).catch(() => {});
 
     return ok(message, 201);
   });

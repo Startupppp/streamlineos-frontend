@@ -132,46 +132,50 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       );
 
     if (body.memberIds !== undefined) {
-      const existingMembers = await db
-        .select({ userId: projectMembers.userId })
-        .from(projectMembers)
-        .where(eq(projectMembers.projectId, projectId));
+      const existingMemberIds = await db.transaction(async (tx) => {
+        const existingMembers = await tx
+          .select({ userId: projectMembers.userId })
+          .from(projectMembers)
+          .where(eq(projectMembers.projectId, projectId));
 
-      const existingMemberIds = new Set(existingMembers.map((m) => m.userId));
+        const existing = new Set(existingMembers.map((m) => m.userId));
 
-      await db.delete(projectMembers).where(eq(projectMembers.projectId, projectId));
+        await tx.delete(projectMembers).where(eq(projectMembers.projectId, projectId));
 
-      if (body.memberIds.length > 0) {
-        await db.insert(projectMembers).values(
-          body.memberIds.map((userId) => ({
-            projectId,
-            userId,
-            role: "CONTRIBUTOR",
-          }))
-        );
+        if (body.memberIds!.length > 0) {
+          await tx.insert(projectMembers).values(
+            body.memberIds!.map((userId) => ({
+              projectId,
+              userId,
+              role: "CONTRIBUTOR",
+            }))
+          );
+        }
 
-        const newMemberIds = body.memberIds.filter((id) => !existingMemberIds.has(id));
-        if (newMemberIds.length > 0) {
-          const [currentUser, project, newMembers] = await Promise.all([
-            db.query.users.findFirst({ where: eq(users.id, session.user.id) }),
-            db.query.projects.findFirst({ where: eq(projects.id, projectId) }),
-            db.query.users.findMany({ where: inArray(users.id, newMemberIds) }),
-          ]);
-          if (project) {
-            for (const member of newMembers) {
-              if (member.email) {
-                try {
-                  await sendProjectAssignmentEmail(
-                    member.email,
-                    member.name || member.firstName || "Team Member",
-                    project.name,
-                    project.key,
-                    project.id,
-                    currentUser?.name || currentUser?.firstName || undefined
-                  );
-                } catch (emailError) {
-                  logger.error("Failed to send project update email", { error: emailError });
-                }
+        return existing;
+      });
+
+      const newMemberIds = body.memberIds.filter((id) => !existingMemberIds.has(id));
+      if (newMemberIds.length > 0) {
+        const [currentUser, project, newMembers] = await Promise.all([
+          db.query.users.findFirst({ where: eq(users.id, session.user.id) }),
+          db.query.projects.findFirst({ where: eq(projects.id, projectId) }),
+          db.query.users.findMany({ where: inArray(users.id, newMemberIds) }),
+        ]);
+        if (project) {
+          for (const member of newMembers) {
+            if (member.email) {
+              try {
+                await sendProjectAssignmentEmail(
+                  member.email,
+                  member.name || member.firstName || "Team Member",
+                  project.name,
+                  project.key,
+                  project.id,
+                  currentUser?.name || currentUser?.firstName || undefined
+                );
+              } catch (emailError) {
+                logger.error("Failed to send project update email", { error: emailError });
               }
             }
           }

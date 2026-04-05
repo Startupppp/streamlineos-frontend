@@ -214,6 +214,14 @@ export interface TicketAssignee {
   user?: TicketUser;
 }
 
+export interface TicketWatcher {
+  id: number;
+  ticketId: number;
+  userId: string;
+  createdAt: string | Date | null;
+  user?: TicketUser;
+}
+
 export interface Ticket {
   id: number;
   orgId: string;
@@ -250,6 +258,7 @@ export interface Ticket {
   comments?: TicketComment[];
   attachments?: TicketAttachment[];
   labels?: TicketLabelMapping[];
+  watchers?: TicketWatcher[];
   project?: { id: number; name: string; key: string } | null;
   sprint?: { id: number; name: string } | null;
 }
@@ -540,6 +549,7 @@ export interface UpdateSprintInput {
 }
 
 export interface LogTimeInput {
+  projectId: number;
   ticketId: number;
   date: Date | string;
   hours: number;
