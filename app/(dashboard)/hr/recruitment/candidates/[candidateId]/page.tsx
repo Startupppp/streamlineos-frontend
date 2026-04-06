@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
@@ -51,7 +52,7 @@ export default function CandidateDetailPage() {
     (status: CandidateStatus) => {
       updateCandidate.mutate({ id, status }, {
         onSuccess: () => toast.success("Status updated"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
     [id, updateCandidate]
@@ -63,7 +64,7 @@ export default function CandidateDetailPage() {
       { candidateId: id, type: interviewType, scheduledAt, duration: Number(duration) || 60, meetingLink: meetingLink || undefined },
       {
         onSuccess: () => { toast.success("Interview scheduled"); setInterviewOpen(false); setScheduledAt(""); setMeetingLink(""); },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [id, interviewType, scheduledAt, duration, meetingLink, createInterview]);
@@ -74,7 +75,7 @@ export default function CandidateDetailPage() {
       { candidateId: id, jobPostingId: Number(selectedJobId) },
       {
         onSuccess: () => { toast.success("Application submitted"); setApplyOpen(false); setSelectedJobId(""); },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [id, selectedJobId, createApplication]);

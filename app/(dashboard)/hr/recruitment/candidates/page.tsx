@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -95,7 +96,7 @@ export default function CandidatesPage() {
           setSheetOpen(false);
           setFirstName(""); setLastName(""); setEmail(""); setPhone("");
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [firstName, lastName, email, phone, source, createCandidate]);
@@ -104,7 +105,7 @@ export default function CandidatesPage() {
     (id: number, status: CandidateStatus) => {
       updateCandidate.mutate({ id, status }, {
         onSuccess: () => toast.success("Status updated"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
     [updateCandidate]

@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe } from "lucide-react";
@@ -423,7 +424,7 @@ function RichDocumentsSection() {
   const handleDelete = useCallback((id: number) => {
     deleteMutation.mutate(id, {
       onSuccess: () => toast.success("Document deleted"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteMutation]);
 

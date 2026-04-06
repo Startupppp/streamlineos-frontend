@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -95,7 +96,7 @@ export default function JobPostingsPage() {
           setDescription("");
           setOpenings("1");
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [title, location, type, description, openings, createJob]);
@@ -104,7 +105,7 @@ export default function JobPostingsPage() {
     (id: number, status: JobPostingStatus) => {
       updateJob.mutate({ id, status }, {
         onSuccess: () => toast.success("Status updated"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
     [updateJob]
@@ -114,7 +115,7 @@ export default function JobPostingsPage() {
     (id: number) => {
       deleteJob.mutate(id, {
         onSuccess: () => toast.success("Job posting deleted"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
     [deleteJob]

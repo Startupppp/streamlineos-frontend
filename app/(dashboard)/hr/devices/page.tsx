@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -63,7 +64,7 @@ export default function DevicesPage() {
       { ...values, assignedDate: new Date() },
       {
         onSuccess: () => { toast.success("Device added successfully"); setAddOpen(false); addForm.reset(); },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [createDeviceMutation, addForm]);
@@ -96,7 +97,7 @@ export default function DevicesPage() {
       },
       {
         onSuccess: () => { toast.success("Device updated"); setEditDevice(null); editForm.reset(); },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [editDevice, updateDeviceMutation, editForm]);
@@ -116,7 +117,7 @@ export default function DevicesPage() {
       { deviceId: deleteDeviceId },
       {
         onSuccess: () => { toast.success("Device removed"); setDeleteDeviceId(null); },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [deleteDeviceId, deleteDeviceMutation]);

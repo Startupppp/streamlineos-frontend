@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -168,7 +169,7 @@ export default function PayrollPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll generated for all employees");
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }, [generatePayrollMutation, selectedMonth, qc]);
@@ -205,7 +206,7 @@ export default function PayrollPage() {
           toast.success("Payslip generated successfully");
           resetSheet();
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }, [selectedEmployee, generateEmployeePayslipMutation, selectedMonth, lopDays, halfDays, otherDeductions, bonus, overtimeType, overtimeDays, overtimeHours, overtimeAmount, qc]);
@@ -218,7 +219,7 @@ export default function PayrollPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll approved");
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }, [approvePayrollMutation, selectedMonth, qc]);
@@ -231,7 +232,7 @@ export default function PayrollPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls({ month: selectedMonth }) });
           toast.success("Payroll marked as paid");
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }, [markPaidMutation, selectedMonth, qc]);

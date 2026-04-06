@@ -65,7 +65,7 @@ export const apiClient = { get, post, put, patch, delete: del } as const;
 
 // ─── Error helper ────────────────────────────────────────────────────────────
 
-/** Extracts a human-readable message from an Axios error. */
+/** @deprecated Use `getErrorMessage` from `@/lib/get-error-message` instead */
 export function getApiError(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const msg = (error.response?.data as { error?: string })?.error;
@@ -74,6 +74,8 @@ export function getApiError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return "Something went wrong";
 }
+
+export { getErrorMessage } from "./get-error-message";
 
 // ─── Shared API response type ─────────────────────────────────────────────────
 

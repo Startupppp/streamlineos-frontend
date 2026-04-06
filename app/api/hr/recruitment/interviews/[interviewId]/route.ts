@@ -31,6 +31,7 @@ export async function PATCH(
         ...(body.result !== undefined && { result: body.result as typeof existing.result }),
         ...(body.feedback !== undefined && { feedback: body.feedback as string }),
         ...(body.rating !== undefined && { rating: body.rating as number }),
+        ...(body.rubric !== undefined && { rubric: body.rubric as { category: string; score: number; maxScore: number; comment?: string }[] }),
         ...(body.notes !== undefined && { notes: body.notes as string }),
         updatedAt: new Date(),
       })

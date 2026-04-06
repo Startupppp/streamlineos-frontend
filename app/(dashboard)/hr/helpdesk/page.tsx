@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -153,7 +154,7 @@ export default function HelpdeskPage() {
           setCategory("");
           setPriority("MEDIUM");
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }, [title, description, category, priority, createTicket]);

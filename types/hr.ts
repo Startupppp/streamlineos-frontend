@@ -1010,11 +1010,19 @@ export interface Interview {
   result: InterviewResult | null;
   feedback: string | null;
   rating: number | null;
+  rubric: InterviewRubricEntry[] | null;
   notes: string | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   candidate?: Candidate;
   interviewer?: { id: string; name: string | null; image: string | null };
+}
+
+export interface InterviewRubricEntry {
+  category: string;
+  score: number;
+  maxScore: number;
+  comment?: string;
 }
 
 export interface RecruitmentStats {
@@ -1104,5 +1112,6 @@ export interface UpdateInterviewInput {
   result?: InterviewResult;
   feedback?: string;
   rating?: number;
+  rubric?: InterviewRubricEntry[];
   notes?: string;
 }

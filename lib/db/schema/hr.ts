@@ -461,6 +461,7 @@ export const interviews = pgTable("interviews", {
   result: interviewResultEnum("result").default("PENDING"),
   feedback: text("feedback"),
   rating: integer("rating"),
+  rubric: jsonb("rubric").$type<{ category: string; score: number; maxScore: number; comment?: string }[]>(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

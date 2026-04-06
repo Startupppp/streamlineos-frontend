@@ -1,8 +1,11 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useInterviews, useCreateInterview, useUpdateInterview, useCandidates } from "@/lib/api/hooks/hr";
+import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
+import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +43,7 @@ export default function InterviewsPage() {
   const updateInterview = useUpdateInterview();
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
   const [candidateId, setCandidateId] = useState("");
   const [type, setType] = useState<InterviewType>("VIDEO");
   const [scheduledAt, setScheduledAt] = useState("");
@@ -67,7 +71,7 @@ export default function InterviewsPage() {
           setScheduledAt("");
           setMeetingLink("");
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [candidateId, type, scheduledAt, duration, meetingLink, createInterview]);
@@ -76,7 +80,7 @@ export default function InterviewsPage() {
     (id: number, result: InterviewResult) => {
       updateInterview.mutate({ id, result }, {
         onSuccess: () => toast.success("Interview result updated"),
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
     [updateInterview]
@@ -195,17 +199,14 @@ export default function InterviewsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Select
-                            value={interview.result ?? "PENDING"}
-                            onValueChange={(v) => handleResultChange(interview.id, v as InterviewResult)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setFeedbackInterview(interview as Interview)}
                           >
-                            <SelectTrigger className="h-7 w-[100px] text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {(["PENDING", "PASSED", "FAILED", "NO_SHOW"] as InterviewResult[]).map((r) => (
-                                <SelectItem key={r} value={r}>{r}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            Feedback
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -216,6 +217,13 @@ export default function InterviewsPage() {
           </ScrollArea>
         </CardContent>
       </Card>
+      {feedbackInterview && (
+        <InterviewFeedbackForm
+          interview={feedbackInterview}
+          open={feedbackInterview !== null}
+          onOpenChange={(open) => { if (!open) setFeedbackInterview(null); }}
+        />
+      )}
     </PageWrapper>
   );
 }

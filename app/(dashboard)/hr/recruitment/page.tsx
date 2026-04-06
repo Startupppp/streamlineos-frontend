@@ -41,11 +41,14 @@ export default function RecruitmentDashboardPage() {
       subtitle="Hire the best talent for your team"
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/hr/recruitment/candidates">View Pipeline</Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/recruitment/candidates">Candidates</Link>
           </Button>
-          <Button asChild>
-            <Link href="/hr/recruitment/jobs">Manage Jobs</Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/recruitment/pipeline">Kanban</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/hr/recruitment/jobs">Jobs</Link>
           </Button>
         </div>
       }

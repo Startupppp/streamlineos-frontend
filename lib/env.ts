@@ -37,6 +37,7 @@ const serverSchema = z.object({
 
   // AI
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
 
   // Google OAuth (Calendar / Meet integration)
   GOOGLE_CLIENT_ID: z.string().optional(),

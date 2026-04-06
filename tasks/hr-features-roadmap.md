@@ -55,9 +55,11 @@
 - [x] Candidate applications
 
 ### Performance
-- [x] Performance reviews listing
-- [x] Goals tracking with progress bars
-- [ ] 1-on-1 meeting scheduling
+- [x] Performance reviews listing + creation + completion
+- [x] Review cycles (quarterly/annual/custom) with CRUD
+- [x] Goals CRUD with progress tracking + deletion
+- [x] 1-on-1 meeting scheduling + status management
+- [x] Ad-hoc + cycle-based review support
 
 ### Other
 - [x] Helpdesk ticket system

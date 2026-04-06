@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -129,14 +130,14 @@ function ReviewsTab() {
         setPeriodStart("");
         setPeriodEnd("");
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [employeeId, cycleId, periodStart, periodEnd, createReview]);
 
   const handleComplete = useCallback((id: number) => {
     updateReview.mutate({ id, status: "COMPLETED" }, {
       onSuccess: () => toast.success("Review marked as completed"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [updateReview]);
 
@@ -283,7 +284,7 @@ function GoalsTab() {
         setStartDate("");
         setEndDate("");
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [userId, title, description, targetValue, startDate, endDate, createGoal]);
 
@@ -291,7 +292,7 @@ function GoalsTab() {
     const newProgress = Math.min(100, Math.max(0, progress));
     updateGoal.mutate({ goalId, progress: newProgress, status: newProgress >= 100 ? "COMPLETED" : "IN_PROGRESS" }, {
       onSuccess: () => toast.success("Progress updated"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [updateGoal]);
 
@@ -299,7 +300,7 @@ function GoalsTab() {
     if (!deleteId) return;
     deleteGoal.mutate(deleteId, {
       onSuccess: () => { toast.success("Goal deleted"); setDeleteId(null); },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteId, deleteGoal]);
 
@@ -434,7 +435,7 @@ function OneOnOnesTab() {
           setScheduledAt("");
           setAgenda("");
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [empId, scheduledAt, duration, agenda, createMeeting]);
@@ -442,7 +443,7 @@ function OneOnOnesTab() {
   const handleStatusChange = useCallback((id: number, status: MeetingStatus) => {
     updateMeeting.mutate({ id, status }, {
       onSuccess: () => toast.success("Status updated"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [updateMeeting]);
 
@@ -450,7 +451,7 @@ function OneOnOnesTab() {
     if (!deleteId) return;
     deleteMeeting.mutate(deleteId, {
       onSuccess: () => { toast.success("Meeting deleted"); setDeleteId(null); },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteId, deleteMeeting]);
 
@@ -574,7 +575,7 @@ function CyclesTab() {
           setPeriodEnd("");
           setDeadline("");
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [name, type, periodStart, periodEnd, deadline, createCycle]);

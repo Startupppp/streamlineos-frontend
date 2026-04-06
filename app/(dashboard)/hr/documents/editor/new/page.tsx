@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -99,7 +100,7 @@ export default function NewDocumentPage() {
           toast.success("Document created");
           router.push(`/hr/documents/editor/${doc.id}`);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [title, template, createDoc, router]);

@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -121,7 +122,7 @@ export default function IncentivesPage() {
           toast.success("Incentive approved");
           setApproveModal(null);
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }
@@ -134,7 +135,7 @@ export default function IncentivesPage() {
           qc.invalidateQueries({ queryKey: queryKeys.hr.incentives() });
           toast.success("Incentive rejected");
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }
@@ -148,7 +149,7 @@ export default function IncentivesPage() {
           setShowConfigDialog(false);
           setNewRate("");
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }

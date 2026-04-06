@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -44,7 +45,7 @@ export default function DocumentEditorPage() {
           setIsDirty(false);
           toast.success("Document saved");
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
   }, [documentId, title, contentJson, isDirty, updateDoc]);
@@ -74,7 +75,7 @@ export default function DocumentEditorPage() {
   const handlePublish = useCallback(() => {
     publishDoc.mutate(documentId, {
       onSuccess: () => toast.success(doc?.isPublished ? "Document unpublished" : "Document published"),
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [documentId, publishDoc, doc?.isPublished]);
 
