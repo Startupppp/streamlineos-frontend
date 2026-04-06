@@ -12,9 +12,11 @@ const listSchema = z.object({
   limit: z.coerce.number().min(1).max(50).optional(),
 });
 
+const VALID_STAGES = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"] as const;
+
 const requestSchema = z.object({
   dealId: z.number().int().positive(),
-  requestedStage: z.string().min(1),
+  requestedStage: z.enum(VALID_STAGES),
 });
 
 const resolveSchema = z.object({
@@ -84,7 +86,7 @@ export async function POST(req: NextRequest) {
       if (action === "approve") {
         await db
           .update(deals)
-          .set({ stage: updated.requestedStage as typeof deals.$inferSelect.stage, updatedAt: new Date() })
+          .set({ stage: updated.requestedStage as (typeof VALID_STAGES)[number], updatedAt: new Date() })
           .where(eq(deals.id, updated.dealId));
       }
 

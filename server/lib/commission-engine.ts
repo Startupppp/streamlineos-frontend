@@ -1,4 +1,4 @@
-"server-only";
+import "server-only";
 
 import { db } from "@/lib/db";
 import { commissionRules, commissions, deals } from "@/lib/db/schema";

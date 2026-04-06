@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { clients } from "@/lib/db/schema";
-import { eq, and, lte, asc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { z } from "zod";
 
 const querySchema = z.object({

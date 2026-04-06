@@ -359,6 +359,21 @@ export const exitChecklists = pgTable("exit_checklists", {
   notes: text("notes"),
 });
 
+// ─── Recognition / Kudos ───
+export const recognitions = pgTable("recognitions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  fromUserId: text("from_user_id").references(() => users.id).notNull(),
+  toUserId: text("to_user_id").references(() => users.id).notNull(),
+  message: text("message").notNull(),
+  category: text("category").default("KUDOS"),
+  isPublic: boolean("is_public").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_recognitions_org").on(table.orgId),
+  index("idx_recognitions_to_user").on(table.toUserId),
+]);
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -691,4 +706,9 @@ export const resignationsRelations = relations(resignations, ({ one, many }) => 
 export const exitChecklistsRelations = relations(exitChecklists, ({ one }) => ({
   resignation: one(resignations, { fields: [exitChecklists.resignationId], references: [resignations.id] }),
   assignee: one(users, { fields: [exitChecklists.assignedTo], references: [users.id] }),
+}));
+
+export const recognitionsRelations = relations(recognitions, ({ one }) => ({
+  fromUser: one(users, { fields: [recognitions.fromUserId], references: [users.id], relationName: "recognitionFrom" }),
+  toUser: one(users, { fields: [recognitions.toUserId], references: [users.id], relationName: "recognitionTo" }),
 }));

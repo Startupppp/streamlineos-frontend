@@ -9,3 +9,4 @@ export * from "./performance";
 export * from "./analytics";
 export * from "./training";
 export * from "./exit";
+export * from "./recognition";

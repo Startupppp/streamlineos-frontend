@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -50,7 +50,9 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, attributionSchema);
 
-    // Count leads by source (which maps to UTM source in many cases)
+    const conditions = [eq(leads.orgId, session.orgId)];
+    if (filters.source) conditions.push(sql`${leads.source} = ${filters.source}`);
+
     const attribution = await db
       .select({
         source: leads.source,
@@ -58,7 +60,7 @@ export async function GET(req: NextRequest) {
         totalValue: sql<number>`coalesce(sum(${leads.potentialValue}::numeric), 0)::int`,
       })
       .from(leads)
-      .where(eq(leads.orgId, session.orgId))
+      .where(and(...conditions))
       .groupBy(leads.source);
 
     return ok({ attribution });

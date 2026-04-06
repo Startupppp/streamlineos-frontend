@@ -50,26 +50,23 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
       })),
     );
 
-    // Update campaign status
-    await db.update(emailCampaigns).set({
-      status: "sending",
-      recipientCount: matchedLeads.length,
-      updatedAt: new Date(),
-    }).where(eq(emailCampaigns.id, campaignId));
+    // Mark campaign and recipients as sent in one go
+    // (actual email delivery would be delegated to Inngest background job when SMTP is configured)
+    const now = new Date();
+    await Promise.all([
+      db.update(emailCampaigns).set({
+        status: "sent",
+        recipientCount: matchedLeads.length,
+        sentCount: matchedLeads.length,
+        sentAt: now,
+        updatedAt: now,
+      }).where(eq(emailCampaigns.id, campaignId)),
 
-    // Actual email sending would be handled by a background job (Inngest)
-    // For now, mark as sent since we don't have SMTP configured
-    await db.update(emailCampaigns).set({
-      status: "sent",
-      sentAt: new Date(),
-      sentCount: matchedLeads.length,
-      updatedAt: new Date(),
-    }).where(eq(emailCampaigns.id, campaignId));
-
-    await db.update(emailCampaignRecipients).set({
-      status: "sent",
-      sentAt: new Date(),
-    }).where(eq(emailCampaignRecipients.campaignId, campaignId));
+      db.update(emailCampaignRecipients).set({
+        status: "sent",
+        sentAt: now,
+      }).where(eq(emailCampaignRecipients.campaignId, campaignId)),
+    ]);
 
     return ok({
       sent: matchedLeads.length,

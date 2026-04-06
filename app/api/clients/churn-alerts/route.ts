@@ -1,7 +1,7 @@
 import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { clients, users } from "@/lib/db/schema";
-import { eq, and, or, lte, isNotNull, desc } from "drizzle-orm";
+import { eq, and, or, desc } from "drizzle-orm";
 
 /** GET /api/clients/churn-alerts — List at-risk and critical clients */
 export async function GET() {

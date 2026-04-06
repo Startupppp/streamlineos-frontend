@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
 
     const conditions = [eq(salesQuotas.orgId, session.orgId)];
     if (userId) conditions.push(eq(salesQuotas.userId, userId));
+    if (period) conditions.push(eq(salesQuotas.period, period));
 
     const results = await db
       .select({

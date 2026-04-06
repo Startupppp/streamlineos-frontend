@@ -1,8 +1,8 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { clients, deals, dealActivities, leadActivities, leads, users } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { clients, deals, dealActivities, leadActivities, users } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 type Ctx = { params: Promise<{ clientId: string }> };
 
@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     }
 
     // Deal activities linked to this client
-    const clientDeals = await db.select({ id: deals.id, name: deals.name })
+    const clientDeals = await db.select({ id: deals.id, name: deals.name, createdAt: deals.createdAt })
       .from(deals)
       .where(and(eq(deals.orgId, session.orgId), eq(deals.clientId, clientId)));
 
@@ -50,7 +50,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
         type: "deal_created",
         title: `Deal created: ${deal.name}`,
         description: `New deal associated with this client`,
-        date: new Date().toISOString(), // Would use deal.createdAt
+        date: deal.createdAt ? new Date(deal.createdAt).toISOString() : new Date().toISOString(),
       });
 
       const activities = await db

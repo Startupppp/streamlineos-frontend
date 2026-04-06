@@ -35,13 +35,6 @@ export function AIScoreButton({ leadId, currentScore, compact }: AIScoreButtonPr
     return "text-red-500";
   };
 
-  const scoreBg = (score: number) => {
-    if (score >= 80) return "bg-emerald-500/10 border-emerald-500/20";
-    if (score >= 60) return "bg-amber-500/10 border-amber-500/20";
-    if (score >= 40) return "bg-orange-500/10 border-orange-500/20";
-    return "bg-red-500/10 border-red-500/20";
-  };
-
   if (compact) {
     return (
       <Popover open={open} onOpenChange={setOpen}>

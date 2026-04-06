@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { crmCampaigns } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 
 const listSchema = z.object({
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     const campaigns = await db
       .select()
       .from(crmCampaigns)
-      .where(conditions.length === 1 ? conditions[0] : undefined)
+      .where(and(...conditions))
       .orderBy(desc(crmCampaigns.createdAt))
       .limit(limit ?? 25)
       .offset(offset ?? 0);

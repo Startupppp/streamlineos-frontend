@@ -8,16 +8,15 @@ import { z } from "zod";
 const querySchema = z.object({
   email: z.string().optional(),
   phone: z.string().optional(),
-  name: z.string().optional(),
 });
 
 /** GET /api/leads/check-duplicates?email=...&phone=...&name=... */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const { email, phone, name } = parseQuery(req, querySchema);
+    const { email, phone } = parseQuery(req, querySchema);
 
     // Need at least one search param
-    if (!email && !phone && !name) {
+    if (!email && !phone) {
       return ok({ duplicates: [] });
     }
 
