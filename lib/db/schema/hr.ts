@@ -1077,3 +1077,37 @@ export const surveyResponsesRelations = relations(surveyResponses, ({ one }) => 
   survey: one(pulseSurveys, { fields: [surveyResponses.surveyId], references: [pulseSurveys.id] }),
   user: one(users, { fields: [surveyResponses.userId], references: [users.id] }),
 }));
+
+export const feedbackRequestsRelations = relations(feedbackRequests, ({ one }) => ({
+  subject: one(users, { fields: [feedbackRequests.subjectUserId], references: [users.id], relationName: "feedbackSubject" }),
+  reviewer: one(users, { fields: [feedbackRequests.reviewerUserId], references: [users.id], relationName: "feedbackReviewer" }),
+  cycle: one(reviewCycles, { fields: [feedbackRequests.cycleId], references: [reviewCycles.id] }),
+}));
+
+export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
+  creator: one(users, { fields: [emailTemplates.createdBy], references: [users.id] }),
+}));
+
+export const bonusesRelations = relations(bonuses, ({ one }) => ({
+  user: one(users, { fields: [bonuses.userId], references: [users.id] }),
+  approver: one(users, { fields: [bonuses.approvedBy], references: [users.id], relationName: "bonusApprover" }),
+}));
+
+export const fnfSettlementsRelations = relations(fnfSettlements, ({ one }) => ({
+  user: one(users, { fields: [fnfSettlements.userId], references: [users.id] }),
+  resignation: one(resignations, { fields: [fnfSettlements.resignationId], references: [resignations.id] }),
+}));
+
+export const assetReturnsRelations = relations(assetReturns, ({ one }) => ({
+  user: one(users, { fields: [assetReturns.userId], references: [users.id] }),
+  asset: one(assets, { fields: [assetReturns.assetId], references: [assets.id] }),
+}));
+
+export const alumniProfilesRelations = relations(alumniProfiles, ({ one }) => ({
+  user: one(users, { fields: [alumniProfiles.userId], references: [users.id] }),
+}));
+
+export const handbookVersionsRelations = relations(handbookVersions, ({ one }) => ({
+  document: one(richDocuments, { fields: [handbookVersions.documentId], references: [richDocuments.id] }),
+  publisher: one(users, { fields: [handbookVersions.publishedBy], references: [users.id] }),
+}));
