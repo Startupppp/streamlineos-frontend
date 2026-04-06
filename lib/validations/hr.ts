@@ -233,6 +233,76 @@ export const updateDeviceInputSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const createReviewCycleSchema = z.object({
+  name: z.string().min(1, "Cycle name is required").max(100),
+  type: z.enum(["QUARTERLY", "HALF_YEARLY", "ANNUAL", "CUSTOM"]).optional().default("QUARTERLY"),
+  periodStart: z.string().min(1, "Start date is required"),
+  periodEnd: z.string().min(1, "End date is required"),
+  deadline: z.string().optional(),
+  description: z.string().max(500).optional(),
+});
+
+export const updateReviewCycleSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  type: z.enum(["QUARTERLY", "HALF_YEARLY", "ANNUAL", "CUSTOM"]).optional(),
+  periodStart: z.string().optional(),
+  periodEnd: z.string().optional(),
+  deadline: z.string().optional(),
+  status: z.enum(["DRAFT", "ACTIVE", "COMPLETED", "CANCELLED"]).optional(),
+  description: z.string().max(500).optional(),
+});
+
+export const createPerformanceReviewSchema = z.object({
+  userId: z.string().min(1, "Employee is required"),
+  reviewerId: z.string().optional(),
+  cycleId: z.number().int().positive().optional(),
+  periodStart: z.string().min(1, "Start date is required"),
+  periodEnd: z.string().min(1, "End date is required"),
+  ratings: z.array(z.object({
+    category: z.string().min(1),
+    score: z.number().min(0).max(10),
+    comment: z.string().optional(),
+  })).optional(),
+  strengths: z.string().max(2000).optional(),
+  improvements: z.string().max(2000).optional(),
+  overallRating: z.number().min(0).max(10).optional(),
+  comments: z.string().max(2000).optional(),
+});
+
+export const updatePerformanceReviewSchema = z.object({
+  ratings: z.array(z.object({
+    category: z.string().min(1),
+    score: z.number().min(0).max(10),
+    comment: z.string().optional(),
+  })).optional(),
+  strengths: z.string().max(2000).optional(),
+  improvements: z.string().max(2000).optional(),
+  overallRating: z.number().min(0).max(10).optional(),
+  comments: z.string().max(2000).optional(),
+  status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED", "ARCHIVED"]).optional(),
+});
+
+export const createOneOnOneSchema = z.object({
+  employeeId: z.string().min(1, "Employee is required"),
+  scheduledAt: z.string().min(1, "Date/time is required"),
+  duration: z.number().int().min(15).max(180).optional().default(30),
+  agenda: z.string().max(1000).optional(),
+  meetingLink: z.string().url().optional().or(z.literal("")),
+});
+
+export const updateOneOnOneSchema = z.object({
+  scheduledAt: z.string().optional(),
+  duration: z.number().int().min(15).max(180).optional(),
+  status: z.enum(["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"]).optional(),
+  notes: z.string().max(5000).optional(),
+  actionItems: z.array(z.object({
+    text: z.string().min(1),
+    done: z.boolean(),
+  })).optional(),
+  agenda: z.string().max(1000).optional(),
+  meetingLink: z.string().url().optional().or(z.literal("")),
+});
+
 export const generateEmployeePayslipInputSchema = z.object({
   userId: z.string().min(1),
   month: monthStringSchema,

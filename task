@@ -782,8 +782,6 @@ const data: LeadData[] = result;
 ## CHECKLIST
 
 ### Next.js
-- [ ] Replace all `<a>` tags with `<Link>` (except external/email)
-- [ ] Replace all `<img>` tags with `<Image>`
 - [ ] Use `layout.tsx` instead of shell wrappers
 - [ ] Remove all auth-related `useEffect` (middleware handles it)
 - [ ] Add `loading.tsx` to all routes
@@ -796,7 +794,6 @@ const data: LeadData[] = result;
 - [ ] Replace anonymous inline handlers with named functions
 - [ ] Add proper `key` props to all lists
 - [ ] Fix prop drilling with Context or composition
-- [ ] Remove Zustand dependency (unused)
 - [ ] Use URL state for filters/pagination
 
 ### Code Organization
@@ -817,6 +814,8 @@ const data: LeadData[] = result;
 - [ ] `pnpm lint` passes with zero warnings
 - [ ] All pages render correctly
 - [ ] No console errors in browser
+
+*(Done in tree 2026-04-06, per repo scan: `<Link>` / `<Image>` for internal nav; no Zustand pkg; shared `PageWrapper` + `ConfirmDialog`; chat `ChatAblyProvider`; no API-keys UI route; broad `loading`/`error` coverage — keep PRD rules, drop duplicate checklist rows above.)*
 
 ---
 
@@ -852,54 +851,24 @@ example 2:- in the (auth)/ layout form should if needed it should scroll and rig
 example :- in the dashboard cards top and bottom having the too much padding you should remove it 
 9. if you need any new color you should add it in the global CSS and you should use it and you should follow the color palate only, check each and every component and you should fix it and right now at some places where background color is matching text color so users can't able to see it, and some place where background color and text are looks weird you should fix it and make sure it should looks crazy 
 10. sometime some actions when user click on it, it is not updating in the UI instantly 
-example when user click on the web clock-in then it is showing the success but still that button showing the web clock-in only it should idle showcase the clock-out button similarly so many cases in the entire platform check each and every component and you should fix it, for this sometimes you should need to invalidate the api's as well you should do it properly i think right now it is not happening properly check each and every mutation once again and make sure it should happen efficiently optimized and bug free and try to reduce the unnecessary api calls instead you can update the cache
-11. Calendar screen having all bugs,
-    i. if the calendar is not connected it should connect button at the center with background animations 
-    ii. months calendar it is not even showing you should fix it 
-    iii. when i added even it is showing and when i refresh it is gone 
-    iv. sometimes calendar event needs a meet link, file attachment, updating attendes etc  just like the google calendar so keep this in mind and you should make the components top notch and bug free 
-    v. this calendar will be used by all the Role Peoples, for the example HR for where check the interviews, candidates, checking there resumes etc everything what needs for all the roles and make sure it should be bug free
-    vi. feel free to ask the questions and add what are all needed 
-12. right now chats is not working you should fix it Could not find a parent ChannelProvider in the component tree for channelName="chat:8sFtdewSnl4iTYCkRmeug:3". Make sure your channel based hooks (usePresence, useChannel, useChannelStateListener) are called inside a <ChannelProvider> component, i think you can you can add this at the chat level layout or add it where it is best place and feel to ask the questions amd fix this bugs and make sure chat should be Crazy and top notch and there all the people in the organization should be present in it, and right now UI is not looking crazy you should make it crazy top notch and files attachments, what are needed for the chat it should present, forward, reply, etc what are all needed 
-13. you should make the a pageWrapper components where it takes title, subtitle, extra button and filters so that make everything consistent across the platform make sure all the pages it should updated, right now most of the platform having the differently text size, weight etc everything 
-14. in the QR screen there is huge space between the Text Generate and url and generate button you should fix it and make the cards looks crazy and top notch right now it is not even looking good you should fix it and make sure it should looks crazy there is too much unnecessary gaps 
-15. make sure UI and UX should never be looks AI generated, these unnecessary spacing, padding, margins making it looks and feel that you should remove it check each and every components and you should imagine and you should remove it according and sometimes you are removing unnecessarily where these are needed there you should not remove it 
-16. update the skeletons properly in all the screens and all the components and right now some skeletons are not looking good you should fix it 
-17. you should not hardcode the width and if anything needed scroll it should scroll only that component in the employee component scrolling all the page it should not like that 
-18. when user did something then it is entire screen went into the skeletons it should showcase only the part that needs skeletons example in the employees screen when i did something entire screen it is showing loading you should check each and every page you should fix it 
-19. break every page into multiple reusable components and some components needs specific task with there own api's you can move them to those components level check each and every component 
-20. in all the pages filters are not looking good you should make it looks good, example in the employees page filters having the too much padding, margins, gaps etc similarly so many other pages you should rewrite the filters and move to the pagewrapper component and you should remove the unnecessary padding, gaps, spacing, margins etc 
-21. in the table anywhere where actions items are one then it should be directly showcase over there
-22. we can terminate the user so keep this in mind and you should provide those options as well 
-22. you can showcase the action items if three are there icons in the action items but if it is more than that then you should showcase the 3 dot icon and showcase remaining options 
-23. http://localhost:3000/hr/employees/K10eWlMuasNh4eU9r8oeD?tab=profile it is not even looking good 
-## Error Type
-Console Error
-
-## Error Message
-{"timestamp":"2026-04-05T00:04:26.185Z","level":"error","message":"Route error boundary caught error","meta":{"error":"Could not find a parent ChannelProvider in the component tree for channelName=\"chat:8sFtdewSnl4iTYCkRmeug:4\". Make sure your channel based hooks (usePresence, useChannel, useChannelStateListener) are called inside a <ChannelProvider> component"}}
-
-
-    at Object.error (lib/logger.ts:41:15)
-    at RouteErrorBoundary.useEffect (components/ui/route-error-boundary.tsx:24:12)
-    at ChatError (app/(dashboard)/chat/error.tsx:10:5)
-
-## Code Frame
-  39 |   error(message: string, meta?: unknown) {
-  40 |     if (shouldLog("error")) {
-> 41 |       console.error(JSON.stringify(formatMessage("error", message, meta)));
-     |               ^
-  42 |     }
-  43 |   },
-  44 | };
-
-Next.js version: 16.1.7 (Turbopack)
- it has so many bugs you should fix all of them and make sure it should not display the chat with all the people, every chat should be secure 
- refactor the this screen, and make it more crazy and top notch right now it is not even looking good you should refactor each and every component and make sure it looks perfectly 
+HR platform check each and every component and you should fix it, for this sometimes you should need to invalidate the api's as well you should do it properly i think right now it is not happening properly check each and every mutation once again and make sure it should happen efficiently optimized and bug free and try to reduce the unnecessary api calls instead you can update the cache
+11. ensure every dashboard page uses `PageWrapper` consistently (title, subtitle, actions, filters) — fix any stragglers with one-off typography
+12. in the QR screen there is huge space between the Text Generate and url and generate button you should fix it and make the cards looks crazy and top notch right now it is not even looking good you should fix it and make sure it should looks crazy there is too much unnecessary gaps 
+13. make sure UI and UX should never be looks AI generated, these unnecessary spacing, padding, margins making it looks and feel that you should remove it check each and every components and you should imagine and you should remove it according and sometimes you are removing unnecessarily where these are needed there you should not remove it 
+14. update the skeletons properly in all the screens and all the components and right now some skeletons are not looking good you should fix it 
+15. you should not hardcode the width and if anything needed scroll it should scroll only that component in the employee component scrolling all the page it should not like that 
+16. when user did something then it is entire screen went into the skeletons it should showcase only the part that needs skeletons example in the employees screen when i did something entire screen it is showing loading you should check each and every page you should fix it 
+17. break every page into multiple reusable components and some components needs specific task with there own api's you can move them to those components level check each and every component 
+18. in all the pages filters are not looking good you should make it looks good, example in the employees page filters having the too much padding, margins, gaps etc similarly so many other pages you should rewrite the filters and move to the pagewrapper component and you should remove the unnecessary padding, gaps, spacing, margins etc 
+19. in the table anywhere where actions items are one then it should be directly showcase over there
+20. we can terminate the user so keep this in mind and you should provide those options as well 
+21. you can showcase the action items if three are there icons in the action items but if it is more than that then you should showcase the 3 dot icon and showcase remaining options 
+22. http://localhost:3000/hr/employees/K10eWlMuasNh4eU9r8oeD?tab=profile it is not even looking good 
+23. Chat: fix remaining bugs; ensure users only see chats they belong to; refactor/polish the screen (stack trace / `ChannelProvider` issue should remain mitigated via `ChatAblyProvider` — confirm after upgrades).
 
 24. you should use the calendar component across the platform instead of using html based components 
 25. you should use only the shadcn components only everywhere
-26. make a custom confirmation component and use it everywhere where confirmation needed example where deleting a employee needs it you should do it 
+26. use `ConfirmDialog` everywhere destructive confirmations are still missing (baseline component exists)
 27. right now onboarding form looks so worst and you should refactor it and follow the mentioned all the rules and you should refactor it 
 28. some place where select component also take the space as much as it can example in the onboarding step Gender it should take the most of the space or else DOB should be inline with that space or else you should make it better UI and UX
 29. you should make only form should scroll and you should remove the unnecessary space  and right now it is not all looking good you should refactor it 
@@ -909,8 +878,28 @@ Next.js version: 16.1.7 (Turbopack)
 33. use the shadcn components only and if there are not using then you should replace it because each page having them at the different sizes 
 34. refactor all the components if possible rewrite them from crazy ui and ux should be top notch right now it is not at all looking good 
 35. you should only use the shadcn color pallete only here is the custom command i have pnpm dlx shadcn@latest init --preset bkE9S3WMd --template next  using this you should update it 
-36. remove the api keys screen and api's 
 37. for the audit log you should implement the pagination and also filter should take the proper widths and use the shadcn components 
 38. audit log event details sheet should be refactor and you should remove the unnecessary padding and marigns
 39. refactor all the pages and all the components without missing the single component and if possible redesign each and every page and add the feature required and integrate them as well without breaking anything 
 40. similarly each and every component you should refactor and feel free to ask the questions and make sure it should complete all the points without missing the single point 
+
+---
+
+## Feature structure, APIs, and module UI (Sales, CRM, Marketing, HR)
+
+1. Prefer **`features/<domain-or-feature>/`** (co-located UI + hooks + types for that feature) over route-scoped `_components/` folders; keep routes thin and import from `features/…`.
+2. Do not force types or rely on brittle casts; avoid hard-coded spacing tokens that stack—if a parent section already applies padding/margin/gap, do not repeat the same on the child in a way that doubles visual whitespace (audit section + nested section pairs).
+3. In responsive grids, **`Select` (and similar controls) should grow to use spare column width** instead of leaving large empty gaps beside narrow triggers.
+4. **Sales, CRM, and Marketing — full API pass:** for every route/method, verify payload/response shapes, server errors (500s), and TanStack Query **cache updates vs invalidation** on each mutation; no API skipped.
+5. **Zod (or equivalent) validation** on every API: body, query, and params where applicable; return consistent error responses.
+6. **Multiple distinct sections** on one screen → **multiple scroll regions** (e.g. `ScrollArea` per panel) so only the intended region scrolls.
+7. **Bottom / section padding audit:** many components read “cut off” or uneven at the bottom—fix baseline spacing across the app without **double** or **overlapping** padding (parent + child).
+8. **Sales, CRM, Marketing UX:** refactor screens with product/design judgment so they do not read as generic “AI layout”; align hierarchy, density, and patterns with a coherent system.
+9. **Tabs:** bring **Sales / CRM / Marketing** tab strips and content layout in line with **Projects** (use Projects as the reference for structure and spacing).
+10. **HR module:** clean, strong UI/UX; split into **reusable** feature-level components under `features/` (or existing conventions); avoid monolithic page files.
+11. **Approve, delete, decline** (and similar irreversible actions): always use existing **`ConfirmDialog`** (or equivalent) before proceeding.
+12. **Sheets:** header and footer **fixed**; only the **form / body** scrolls; remove redundant overlapping padding; **`Select` fills available horizontal space** in its row (e.g. “assign employee” full width; paired fields such as device type **half** width in a two-column row as appropriate).
+13. **Pagination:** implement in the UI and **enforce/support at the API** (page/limit or cursor—match product needs); keep list + API contract aligned.
+14. **Responsive:** every screen in these modules must work cleanly from mobile to desktop (breakpoints, overflow, touch targets).
+15. Follow **best coding practices** and the **rules in this `task` file** (typing, handlers, layouts, etc.).
+16. **Gap analysis:** identify **missing screens and features** across **Sales, Marketing, and CRM**; add and wire them without breaking existing flows.

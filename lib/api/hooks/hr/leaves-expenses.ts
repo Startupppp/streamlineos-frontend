@@ -193,18 +193,6 @@ export function useHrPerformanceReviews(userId?: string) {
   });
 }
 
-export function useCreatePerformanceReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreatePerformanceReviewInput) =>
-      apiClient.post<PerformanceReview>("/hr/performance/reviews", data),
-    onSuccess: (_result, variables) =>
-      qc.invalidateQueries({
-        queryKey: queryKeys.hr.performanceReviews(variables.userId),
-      }),
-  });
-}
-
 // ─── Goals ────────────────────────────────────────────────────────────────────
 
 export function useHrGoals(userId?: string) {
@@ -227,16 +215,6 @@ export function useCreateGoal() {
       qc.invalidateQueries({
         queryKey: queryKeys.hr.goals(variables.userId),
       }),
-  });
-}
-
-export function useUpdateGoal() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: UpdateGoalInput) =>
-      apiClient.patch<{ success: boolean }>("/hr/performance/goals", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.goals() }),
   });
 }
 

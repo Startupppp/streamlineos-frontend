@@ -1,0 +1,188 @@
+# HR Module — Complete Feature Roadmap
+
+## Current Status (Implemented)
+
+### Core HR
+- [x] Employee directory with search, filter, pagination, export
+- [x] Employee onboarding wizard (multi-step form)
+- [x] Employee detail page with profile/professional/bank sections
+- [x] Department management
+- [x] Org chart (tree view + department grid)
+- [x] Employee termination
+
+### Attendance & Time
+- [x] Clock in/out with timer
+- [x] Break tracking
+- [x] Monthly attendance calendar
+- [x] Attendance history
+- [x] Work logs (daily entries with admin approval)
+- [x] Timesheet management
+
+### Leave Management
+- [x] Leave types + balances
+- [x] Leave request workflow (apply → approve/reject)
+- [x] WFH requests (apply → approve/reject)
+- [x] Holiday calendar (admin managed)
+
+### Payroll
+- [x] Salary structures
+- [x] Payroll generation (bulk + individual)
+- [x] Payslip preview with LOP/bonus/overtime
+- [x] Payroll approval workflow (Draft → Approved → Paid)
+- [x] Employee payslip view + PDF download
+
+### Expenses
+- [x] Expense submission with receipt upload
+- [x] Expense approval workflow
+- [x] Admin expense management
+- [x] Expense categories
+- [x] Export reports
+
+### Documents
+- [x] Document upload with categories
+- [x] Rich document editor (TipTap) with templates
+- [x] Document publish/unpublish
+- [x] Custom folders
+- [x] Storage usage tracking
+
+### Recruitment
+- [x] Job posting CRUD (Draft → Open → Paused → Closed → Filled)
+- [x] Candidate management with card-based pipeline
+- [x] Candidate status tracking (New → Screening → Interview → Offer → Hired)
+- [x] Interview scheduling with type/duration/link
+- [x] Interview result tracking
+- [x] Recruitment stats dashboard
+- [x] Candidate applications
+
+### Performance
+- [x] Performance reviews listing
+- [x] Goals tracking with progress bars
+- [ ] 1-on-1 meeting scheduling
+
+### Other
+- [x] Helpdesk ticket system
+- [x] Employee devices tracking
+- [x] Incentives management
+- [x] Incentive configuration
+
+---
+
+## Missing Features (To Implement)
+
+### Recruitment Enhancements
+- [ ] Candidate detail page (`/hr/recruitment/candidates/[candidateId]`) with full timeline
+- [ ] Interview feedback forms (structured scoring rubric)
+- [ ] Offer letter generation from template → send to candidate
+- [ ] Candidate resume parser (extract skills/experience)
+- [ ] Recruitment pipeline kanban board (DnD between stages)
+- [ ] Job posting public page / careers page
+- [ ] Referral tracking (which employee referred)
+- [ ] Candidate scorecards (multiple interviewers rate independently)
+- [ ] Hiring funnel analytics (conversion rates per stage)
+- [ ] Email templates for candidate communication
+- [ ] Bulk candidate import (CSV upload)
+
+### Performance Management
+- [ ] Review cycles (quarterly/annual) with auto-scheduling
+- [ ] 360-degree feedback (peer, manager, self-review)
+- [ ] OKR tracking with key results + check-ins
+- [ ] 1-on-1 meeting notes with action items
+- [ ] Performance improvement plans (PIP)
+- [ ] Skills matrix / competency mapping
+- [ ] Employee growth path / career ladder
+
+### Employee Self-Service
+- [ ] My Profile page (edit personal info, bank details)
+- [ ] My Payslips history with PDF download
+- [ ] My Leaves balance + request history
+- [ ] My Attendance history with heatmap
+- [ ] My Goals dashboard
+- [ ] My Training / certifications
+
+### Advanced Payroll
+- [ ] Tax calculation engine (TDS, PF, ESI for India)
+- [ ] Payroll reimbursements
+- [ ] Loan management (salary advance)
+- [ ] Bonus processing (festival/performance)
+- [ ] Full & Final settlement calculation
+- [ ] Payroll compliance reports (Form 16, 24Q)
+
+### Training & Development
+- [ ] Training programs catalog
+- [ ] Course enrollment + completion tracking
+- [ ] Certification management with expiry alerts
+- [ ] Skills assessment tests
+- [ ] Learning path recommendations
+
+### Employee Engagement
+- [ ] Pulse surveys
+- [ ] Anonymous feedback
+- [ ] Employee NPS (eNPS) tracking
+- [ ] Recognition / kudos system
+- [ ] Birthday/anniversary celebrations feed
+- [ ] Team building event management
+
+### Compliance & Legal
+- [ ] Background verification tracking
+- [ ] Policy acknowledgment tracking (digital signatures)
+- [ ] Employee handbook versioning
+- [ ] Statutory compliance dashboard
+- [ ] Document expiry alerts + auto-reminders
+
+### Analytics & Reports
+- [ ] HR analytics dashboard (turnover rate, headcount trends)
+- [ ] Attendance reports (department-wise, monthly summary)
+- [ ] Leave utilization reports
+- [ ] Payroll cost analysis
+- [ ] Recruitment analytics (time-to-hire, source effectiveness)
+- [ ] Attrition analysis
+- [ ] Department-wise headcount
+- [ ] Gender diversity metrics
+- [ ] Compensation benchmarking
+
+### Exit Management
+- [ ] Resignation workflow (notice period tracking)
+- [ ] Exit interview questionnaire
+- [ ] Knowledge transfer checklist
+- [ ] Asset return tracking
+- [ ] Full & final settlement
+- [ ] Experience letter generation
+- [ ] Alumni network
+
+### Integrations
+- [ ] Google Calendar sync for interviews
+- [ ] Slack/Teams notifications for approvals
+- [ ] Accounting software export (Tally, QuickBooks)
+- [ ] Job board integrations (LinkedIn, Naukri, Indeed)
+- [ ] Biometric device integration
+- [ ] Email integration for candidate communication
+
+---
+
+## Priority Order for Implementation
+
+### P0 — Critical (Next Sprint)
+1. Candidate detail page with timeline
+2. Performance review creation flow
+3. Goal creation + update flow
+4. 1-on-1 meeting scheduling
+
+### P1 — High (Next 2 Sprints)
+5. Recruitment pipeline kanban (DnD)
+6. Interview feedback forms
+7. Tax calculation engine
+8. Employee self-service portal
+9. HR analytics dashboard
+
+### P2 — Medium (Next Quarter)
+10. Training & development module
+11. Exit management workflow
+12. Offer letter generation
+13. Compliance dashboard
+14. Background verification tracking
+
+### P3 — Low (Backlog)
+15. Employee engagement features
+16. External integrations
+17. Advanced reporting
+18. AI-powered candidate matching

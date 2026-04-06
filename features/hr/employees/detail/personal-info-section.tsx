@@ -9,6 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { User } from "lucide-react";
 import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
 
@@ -60,13 +61,7 @@ export function PersonalInfoSection() {
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input
-                  type="tel"
-                  inputMode="numeric"
-                  placeholder="+91 9876543210"
-                  {...field}
-                  onChange={handlePhoneChange(field.onChange)}
-                />
+                <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

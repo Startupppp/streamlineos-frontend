@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { Value as PhoneValue } from "react-phone-number-input";
 import {
-  Phone, Mail, MapPin, Building2, User, Target,
+  Mail, MapPin, Building2, User, Target,
   IndianRupee, StickyNote, Share2, Megaphone, Globe, Footprints, Flame, Sun, Snowflake, Users,
-  UserPlus,
+  UserPlus, Phone,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -27,6 +29,7 @@ interface CreateLeadSheetProps {
 export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: CreateLeadSheetProps) {
   const [priority, setPriority] = useState<string>("WARM");
   const [source, setSource] = useState<string>("referral");
+  const [phone, setPhone] = useState<PhoneValue | undefined>();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -38,7 +41,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
       </SheetTrigger>
       <SheetContent className="flex flex-col p-0 sm:max-w-[480px]">
         {/* Header — pinned */}
-        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+        <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center">
               <UserPlus className="h-5 w-5 text-gold" />
@@ -57,9 +60,10 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
             action={(formData) => {
               formData.set("priority", priority);
               formData.set("source", source);
+              if (phone) formData.set("phone", phone);
               onSubmit(formData);
             }}
-            className="px-6 py-5 space-y-5"
+            className="px-6 py-4 space-y-4"
           >
             {/* Contact Information */}
             <div className="space-y-3">
@@ -83,10 +87,14 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-xs font-medium mb-1.5 block">Phone</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="phone" name="phone" placeholder="+91 9876543210" className="pl-9 h-9" />
-                  </div>
+                  <PhoneInput
+                    id="phone"
+                    defaultCountry="IN"
+                    placeholder="Enter phone number"
+                    value={phone}
+                    onChange={setPhone}
+                    className="h-9"
+                  />
                 </div>
                 <div>
                   <Label htmlFor="company" className="text-xs font-medium mb-1.5 block">Company</Label>
@@ -250,7 +258,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
         </ScrollArea>
 
         {/* Footer — pinned */}
-        <SheetFooter className="px-6 py-4 border-t shrink-0">
+        <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

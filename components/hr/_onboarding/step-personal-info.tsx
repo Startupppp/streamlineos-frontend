@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
@@ -73,9 +74,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
           <FormItem>
             <FormLabel>Phone <span className="text-destructive">*</span></FormLabel>
             <FormControl>
-              <Input type="tel" inputMode="numeric" maxLength={10} placeholder="9876543210" {...field} onChange={(e) => {
-                if (/^[\d+\s-]*$/.test(e.target.value)) field.onChange(e.target.value);
-              }} />
+              <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -141,9 +140,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormItem>
               <FormLabel>WhatsApp Number</FormLabel>
               <FormControl>
-                <Input type="tel" inputMode="numeric" maxLength={10} placeholder="9876543210" {...field} onChange={(e) => {
-                  if (/^[\d+\s-]*$/.test(e.target.value)) field.onChange(e.target.value);
-                }} />
+                <PhoneInput defaultCountry="IN" placeholder="WhatsApp number" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

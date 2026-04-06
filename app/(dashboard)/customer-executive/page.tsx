@@ -90,7 +90,7 @@ export default function CustomerExecutiveDashboardPage() {
       title={isCSRep ? "My Support Hub" : "Customer Executive Dashboard"}
       subtitle={isCSRep ? "Your client health, tickets, and satisfaction metrics" : "Client health, retention, and satisfaction overview"}
     >
-      <div className="space-y-4">
+      <div className="space-y-4 pb-2">
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Total Clients"

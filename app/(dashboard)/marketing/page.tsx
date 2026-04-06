@@ -83,7 +83,7 @@ export default function MarketingDashboardPage() {
       subtitle={isDM ? "Your campaigns, lead generation, and marketing ROI" : "Campaign performance, lead generation, and marketing ROI"}
     >
       <motion.div
-        className="space-y-4"
+        className="space-y-4 pb-2"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"

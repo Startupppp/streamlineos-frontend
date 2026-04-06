@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { Value as PhoneValue } from "react-phone-number-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -23,6 +25,7 @@ interface CreateDealFormProps {
 export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
   const createMutation = useCreateDeal();
   const [expectedCloseDate, setExpectedCloseDate] = useState("");
+  const [contactPhone, setContactPhone] = useState<PhoneValue | undefined>();
 
   const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,7 +40,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         probability: Number(fd.get("probability") || 0),
         contactPerson: (fd.get("contactPerson") as string) || undefined,
         contactEmail: (fd.get("contactEmail") as string) || undefined,
-        contactPhone: (fd.get("contactPhone") as string) || undefined,
+        contactPhone: contactPhone || (fd.get("contactPhone") as string) || undefined,
         assignedToId: (fd.get("assignedToId") as string) || undefined,
         expectedCloseDate: expectedCloseDate || undefined,
         notes: (fd.get("notes") as string) || undefined,
@@ -96,7 +99,13 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         </div>
         <div>
           <Label htmlFor="contactPhone">Contact Phone</Label>
-          <Input id="contactPhone" name="contactPhone" placeholder="+91..." />
+          <PhoneInput
+            id="contactPhone"
+            defaultCountry="IN"
+            placeholder="Enter phone number"
+            value={contactPhone}
+            onChange={setContactPhone}
+          />
         </div>
         <div>
           <Label htmlFor="assignedToId">Assigned To</Label>

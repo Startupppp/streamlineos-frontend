@@ -49,6 +49,9 @@ export const queryKeys = {
     candidate: (id: number) => [...base, "hr", "candidate", id] as const,
     interviews: (params?: Record<string, unknown>) => [...base, "hr", "interviews", params] as const,
     recruitmentPipeline: () => [...base, "hr", "recruitmentPipeline"] as const,
+    reviewCycles: () => [...base, "hr", "reviewCycles"] as const,
+    reviewCycle: (id: number) => [...base, "hr", "reviewCycle", id] as const,
+    oneOnOnes: (params?: Record<string, unknown>) => [...base, "hr", "oneOnOnes", params] as const,
   },
 
   // ─── Leads / CRM ───────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import {
   wfhRequestStatusEnum, deviceStatusEnum,
   jobPostingStatusEnum, candidateStatusEnum, interviewTypeEnum,
   interviewResultEnum, applicationStatusEnum,
+  reviewCycleStatusEnum, meetingStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -223,12 +224,31 @@ export const documents = pgTable("documents", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ─── Review Cycles ───
+export const reviewCycles = pgTable("review_cycles", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  type: text("type").default("QUARTERLY"),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  deadline: date("deadline"),
+  status: reviewCycleStatusEnum("status").default("DRAFT"),
+  description: text("description"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_review_cycles_org").on(table.orgId),
+]);
+
 // ─── Performance ───
 export const performanceReviews = pgTable("performance_reviews", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").notNull().references(() => users.id),
   reviewerId: text("reviewer_id").references(() => users.id),
+  cycleId: integer("cycle_id").references(() => reviewCycles.id),
   periodStart: date("period_start").notNull(),
   periodEnd: date("period_end").notNull(),
   status: reviewStatusEnum("status").default("DRAFT"),
@@ -240,7 +260,31 @@ export const performanceReviews = pgTable("performance_reviews", {
   comments: text("comments"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_perf_reviews_org_cycle").on(table.orgId, table.cycleId),
+  index("idx_perf_reviews_user").on(table.userId),
+]);
+
+// ─── 1-on-1 Meetings ───
+export const oneOnOneMeetings = pgTable("one_on_one_meetings", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  managerId: text("manager_id").references(() => users.id).notNull(),
+  employeeId: text("employee_id").references(() => users.id).notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  duration: integer("duration").default(30),
+  status: meetingStatusEnum("status").default("SCHEDULED"),
+  notes: text("notes"),
+  actionItems: jsonb("action_items").$type<{ text: string; done: boolean }[]>(),
+  agenda: text("agenda"),
+  meetingLink: text("meeting_link"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_one_on_ones_org").on(table.orgId),
+  index("idx_one_on_ones_manager").on(table.managerId),
+  index("idx_one_on_ones_scheduled").on(table.scheduledAt),
+]);
 
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
@@ -487,9 +531,22 @@ export const documentsRelations = relations(documents, ({ one }) => ({
   parent: one(documents, { fields: [documents.parentDocumentId], references: [documents.id] }),
 }));
 
+export const reviewCyclesRelations = relations(reviewCycles, ({ one, many }) => ({
+  organization: one(organizations, { fields: [reviewCycles.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [reviewCycles.createdBy], references: [users.id] }),
+  reviews: many(performanceReviews),
+}));
+
 export const performanceReviewsRelations = relations(performanceReviews, ({ one }) => ({
   user: one(users, { fields: [performanceReviews.userId], references: [users.id], relationName: "reviewUser" }),
   reviewer: one(users, { fields: [performanceReviews.reviewerId], references: [users.id], relationName: "reviewReviewer" }),
+  cycle: one(reviewCycles, { fields: [performanceReviews.cycleId], references: [reviewCycles.id] }),
+}));
+
+export const oneOnOneMeetingsRelations = relations(oneOnOneMeetings, ({ one }) => ({
+  organization: one(organizations, { fields: [oneOnOneMeetings.orgId], references: [organizations.id] }),
+  manager: one(users, { fields: [oneOnOneMeetings.managerId], references: [users.id], relationName: "meetingManager" }),
+  employee: one(users, { fields: [oneOnOneMeetings.employeeId], references: [users.id], relationName: "meetingEmployee" }),
 }));
 
 export const goalsRelations = relations(goals, ({ one }) => ({

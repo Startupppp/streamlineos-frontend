@@ -5,3 +5,4 @@ export * from "./leaves-expenses";
 export * from "./sessions";
 export * from "./recruitment";
 export * from "./rich-documents";
+export * from "./performance";

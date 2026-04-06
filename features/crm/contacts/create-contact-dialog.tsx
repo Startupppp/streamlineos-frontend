@@ -4,9 +4,11 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -19,7 +21,7 @@ import { toast } from "sonner";
 const createContactSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")).refine((val) => !val || isValidPhoneNumber(val), { message: "Invalid phone number" }),
   title: z.string().optional(),
   department: z.string().optional(),
   company: z.string().optional(),
@@ -97,7 +99,9 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone</FormLabel>
-                  <FormControl><Input {...field} placeholder="+91..." /></FormControl>
+                  <FormControl>
+                    <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

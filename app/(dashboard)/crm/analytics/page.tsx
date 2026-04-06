@@ -2,15 +2,13 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Filter, Users, DollarSign, Target, Percent } from "lucide-react";
+import { Users, DollarSign, Target, Percent } from "lucide-react";
 import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import { StatCard } from "@/components/ui/stat-card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -28,15 +26,13 @@ import { DealValueChart } from "@/features/crm/analytics/deal-value-chart";
 import { AnalyticsChartCard } from "@/features/crm/analytics/analytics-chart-card";
 
 export default function CrmAnalyticsPage() {
-  const [draftDateFrom, setDraftDateFrom] = useState("");
-  const [draftDateTo, setDraftDateTo] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  const applyFilters = useCallback(() => {
-    setDateFrom(draftDateFrom);
-    setDateTo(draftDateTo);
-  }, [draftDateFrom, draftDateTo]);
+  const handleDateRangeChange = useCallback((range: { from: string; to: string }) => {
+    setDateFrom(range.from);
+    setDateTo(range.to);
+  }, []);
 
   const { data: leadStats, isLoading: statsLoading } = useLeadStats({
     dateFrom: dateFrom || undefined,
@@ -146,19 +142,12 @@ export default function CrmAnalyticsPage() {
       title="CRM Analytics"
       subtitle="Pipeline insights and performance metrics"
       filters={
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">From</Label>
-            <DatePicker value={draftDateFrom} onChange={setDraftDateFrom} placeholder="From" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">To</Label>
-            <DatePicker value={draftDateTo} onChange={setDraftDateTo} placeholder="To" />
-          </div>
-          <Button size="sm" className="h-8 bg-gold hover:bg-gold/90 text-white" onClick={applyFilters}>
-            <Filter className="mr-1.5 h-3.5 w-3.5" />Apply
-          </Button>
-        </div>
+        <DateRangePicker
+          from={dateFrom}
+          to={dateTo}
+          onChange={handleDateRangeChange}
+          placeholder="Filter by date range"
+        />
       }
     >
       <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
