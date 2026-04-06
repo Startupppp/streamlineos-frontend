@@ -26,12 +26,19 @@ export const crmCampaigns = pgTable("crm_campaigns", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
   status: crmCampaignStatusEnum("status").default("active"),
+  channel: text("channel"),
+  description: text("description"),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  targetAudience: text("target_audience"),
   leads: integer("leads").default(0),
   spend: decimal("spend").default("0"),
   roi: decimal("roi").default("0"),
   budgetAllocated: decimal("budget_allocated", { precision: 15, scale: 2 }),
   budgetSpent: decimal("budget_spent", { precision: 15, scale: 2 }),
+  ownerId: text("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // ─── Leads ───
@@ -65,6 +72,8 @@ export const leads = pgTable("leads", {
   website: text("website"),
   subSource: text("sub_source"),
   dmLeadId: integer("dm_lead_id"),
+  followUpDate: timestamp("follow_up_date"),
+  followUpNotes: text("follow_up_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -215,6 +224,8 @@ export const deals = pgTable("deals", {
   linkedLeadId: integer("linked_lead_id").references(() => leads.id),
   linkedClientId: integer("linked_client_id").references(() => clients.id),
   slaDeadline: timestamp("sla_deadline"),
+  followUpDate: timestamp("follow_up_date"),
+  followUpNotes: text("follow_up_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -237,6 +248,24 @@ export const dealActivities = pgTable("deal_activities", {
 }, (table) => [
   index("idx_deal_activities_deal").on(table.dealId),
   index("idx_deal_activities_org").on(table.orgId),
+]);
+
+// ─── Sales Quotas ───
+export const salesQuotas = pgTable("sales_quotas", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  period: text("period").default("monthly").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  targetRevenue: decimal("target_revenue").default("0").notNull(),
+  actualRevenue: decimal("actual_revenue").default("0").notNull(),
+  notes: text("notes"),
+  setById: text("set_by_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_sales_quotas_org_user").on(table.orgId, table.userId),
 ]);
 
 // ─── CRM Legacy Tables ───

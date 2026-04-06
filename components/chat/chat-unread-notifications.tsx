@@ -12,18 +12,14 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useChatChannels } from "@/lib/api/hooks/chat";
 import type { Channel } from "@/types/chat";
 
-export function ChatUnreadNotifications() {
+export function ChatUnreadNotifications({ currentUserId }: { currentUserId: string }) {
   const pathname = usePathname();
   // Chat page handles its own Ably real-time notifications; skip polling there.
   const isChatPage = pathname === "/chat";
-
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
 
   const { data: rawChannels } = useChatChannels(!isChatPage);
   const channels = rawChannels as Channel[] | undefined;

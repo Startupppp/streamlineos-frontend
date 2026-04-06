@@ -57,6 +57,21 @@ export function useDeals(filters?: DealFilters) {
   });
 }
 
+export interface DealForecast {
+  totalWeighted: number;
+  totalBestCase: number;
+  totalDeals: number;
+  byMonth: Array<{ month: string; label: string; weighted: number; bestCase: number; dealCount: number }>;
+  byStage: Array<{ stage: string; count: number; totalValue: number; weightedValue: number; avgProbability: number }>;
+}
+
+export function useDealForecast() {
+  return useQuery({
+    queryKey: queryKeys.deals.forecast(),
+    queryFn: () => apiClient.get<DealForecast>("/deals/forecast"),
+  });
+}
+
 export function useDealDetail(id: number) {
   return useQuery({
     queryKey: queryKeys.deals.detail(id),
@@ -290,6 +305,40 @@ export function useLogTargetProgress() {
 
 // ─── CRM Dashboards ──────────────────────────────────────────────────────────
 
+/* ─── Sales Quotas ─────────────────────────────────────────────────────────── */
+
+export interface SalesQuota {
+  id: number;
+  userId: string;
+  userName: string | null;
+  period: string;
+  startDate: string;
+  endDate: string;
+  targetRevenue: string;
+  actualRevenue: string;
+  attainmentPct: number;
+  notes: string | null;
+  createdAt: string | null;
+}
+
+export function useSalesQuotas(params?: { userId?: string; period?: string }) {
+  return useQuery({
+    queryKey: queryKeys.salesQuotas.list(params as Record<string, unknown>),
+    queryFn: () => apiClient.get<SalesQuota[]>("/sales/quotas", params as Record<string, unknown>),
+  });
+}
+
+export function useCreateSalesQuota() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { userId: string; period: string; startDate: string; endDate: string; targetRevenue: string; notes?: string }) =>
+      apiClient.post<SalesQuota>("/sales/quotas", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.salesQuotas.all });
+    },
+  });
+}
+
 export function useSalesDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.salesDashboard(),
@@ -301,6 +350,79 @@ export function useMarketingDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.marketingDashboard(),
     queryFn: () => apiClient.get<MarketingDashboard>("/crm/marketing-dashboard"),
+  });
+}
+
+/* ─── Marketing Campaigns CRUD ─────────────────────────────────────────────── */
+
+export interface MarketingCampaign {
+  id: number;
+  orgId: string;
+  name: string;
+  status: "active" | "paused" | "completed";
+  channel: string | null;
+  description: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  targetAudience: string | null;
+  leads: number;
+  spend: string;
+  roi: string;
+  budgetAllocated: string | null;
+  budgetSpent: string | null;
+  ownerId: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export function useMarketingCampaigns(params?: { status?: string }) {
+  return useQuery({
+    queryKey: queryKeys.marketingCampaigns.list(params as Record<string, unknown>),
+    queryFn: () => apiClient.get<MarketingCampaign[]>("/marketing/campaigns", params as Record<string, unknown>),
+  });
+}
+
+export function useMarketingCampaignDetail(id: number) {
+  return useQuery({
+    queryKey: queryKeys.marketingCampaigns.detail(id),
+    queryFn: () => apiClient.get<MarketingCampaign>(`/marketing/campaigns/${id}`),
+    enabled: id > 0,
+  });
+}
+
+export function useCreateMarketingCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; status?: string; channel?: string; description?: string; startDate?: string; endDate?: string; targetAudience?: string; budgetAllocated?: string }) =>
+      apiClient.post<MarketingCampaign>("/marketing/campaigns", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.marketingDashboard() });
+    },
+  });
+}
+
+export function useUpdateMarketingCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number } & Partial<{ name: string; status: string; channel: string; description: string; startDate: string; endDate: string; targetAudience: string; budgetAllocated: string; budgetSpent: string }>) =>
+      apiClient.patch<MarketingCampaign>(`/marketing/campaigns/${id}`, data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all });
+      qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.marketingDashboard() });
+    },
+  });
+}
+
+export function useDeleteMarketingCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/marketing/campaigns/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.marketingDashboard() });
+    },
   });
 }
 

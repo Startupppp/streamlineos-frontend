@@ -84,6 +84,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
+            { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
         },
         {
@@ -146,6 +147,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
+            { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
         },
         {

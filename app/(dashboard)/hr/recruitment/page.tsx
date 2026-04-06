@@ -76,16 +76,72 @@ export default function RecruitmentDashboardPage() {
           ))}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Open Jobs */}
+        {stats && (stats.funnel || stats.sources?.length > 0) && (
+          <div className="grid md:grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Hiring Funnel</h3>
+                <div className="space-y-1.5">
+                  {["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"].map((stage) => {
+                    const cnt = stats.funnel[stage] ?? 0;
+                    const max = Math.max(...Object.values(stats.funnel), 1);
+                    return (
+                      <div key={stage} className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground w-16 shrink-0">{stage}</span>
+                        <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${stage === "HIRED" ? "bg-green-500" : stage === "REJECTED" ? "bg-red-400" : "bg-primary"}`}
+                            style={{ width: `${Math.max(2, (cnt / max) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-medium tabular-nums w-6 text-right">{cnt}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Source Effectiveness</h3>
+                {stats.sources.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {stats.sources.map((s) => {
+                      const max = Math.max(...stats.sources.map((x) => x.count), 1);
+                      return (
+                        <div key={s.source} className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground w-16 shrink-0 truncate">{s.source}</span>
+                          <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-primary/70 rounded-full" style={{ width: `${Math.max(2, (s.count / max) * 100)}%` }} />
+                          </div>
+                          <span className="text-xs font-medium tabular-nums w-6 text-right">{s.count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-4">No source data</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex flex-col items-center justify-center h-full">
+                <p className="text-3xl font-bold tabular-nums">{stats.avgTimeToHireDays}</p>
+                <p className="text-xs text-muted-foreground mt-1">Avg. Days to Hire</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-2 gap-3">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Open Positions</CardTitle>
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Open Positions</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/hr/recruitment/jobs">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 pt-0 space-y-2">
               {!recentJobs?.length ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">No open positions yet.</p>
               ) : (
@@ -104,13 +160,13 @@ export default function RecruitmentDashboardPage() {
 
           {/* Upcoming Interviews */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Upcoming Interviews</CardTitle>
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Upcoming Interviews</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/hr/recruitment/interviews">View all <ArrowRight className="ml-1 h-3 w-3" /></Link>
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 pt-0 space-y-2">
               {!upcomingInterviews?.length ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">No upcoming interviews.</p>
               ) : (

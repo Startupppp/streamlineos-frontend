@@ -300,6 +300,57 @@ export function useSalesTeamCapacity() {
   });
 }
 
+// ─── Follow-up Reminders ──────────────────────────────────────────────────────
+
+interface FollowUpLead {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  company: string | null;
+  status: string;
+  priority: string | null;
+  followUpDate: string | null;
+  followUpNotes: string | null;
+  assignedToId: string | null;
+  assigneeName: string | null;
+}
+
+export function useOverdueFollowUps(limit?: number) {
+  return useQuery({
+    queryKey: [...queryKeys.leads.all, "followUps", "overdue"] as const,
+    queryFn: () =>
+      apiClient.get<{ items: FollowUpLead[]; total: number }>(
+        "/leads/follow-ups",
+        { overdue: "true", limit: limit ?? 10 } as Record<string, unknown>,
+      ),
+  });
+}
+
+// ─── Duplicate Detection ──────────────────────────────────────────────────────
+
+interface DuplicateCheckResult {
+  duplicates: Array<{
+    id: number;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    company: string | null;
+    status: string;
+    createdAt: string | null;
+  }>;
+}
+
+export function useCheckLeadDuplicates(params: { email?: string; phone?: string }, options?: { enabled?: boolean }) {
+  const hasParams = !!(params.email || params.phone);
+  return useQuery({
+    queryKey: [...queryKeys.leads.all, "duplicateCheck", params] as const,
+    queryFn: () => apiClient.get<DuplicateCheckResult>("/leads/check-duplicates", params as Record<string, unknown>),
+    enabled: hasParams && (options?.enabled !== false),
+    staleTime: 30_000,
+  });
+}
+
 // ─── Backward-compatibility alias ─────────────────────────────────────────────
 
 /** Alias for useLeadSlaAlerts — kept for backward compatibility. */

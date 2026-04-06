@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AIScoreButton } from "../ai-score-button";
+import { AIEmailDialog } from "../ai-email-dialog";
 import { fadeUp } from "@/lib/motion-variants";
 import {
   STATUS_PIPELINE,
@@ -159,6 +161,19 @@ export function LeadDetailHeader({
           >
             {lead.status}
           </Badge>
+
+          <AIScoreButton
+            leadId={(lead as Record<string, unknown>).id as number}
+            currentScore={(lead as Record<string, unknown>).score as number | null}
+            compact
+          />
+
+          <AIEmailDialog
+            leadName={lead.name}
+            company={lead.company}
+            designation={lead.designation}
+            potentialValue={(lead as Record<string, unknown>).potentialValue as string | undefined}
+          />
 
           <Button variant="outline" size="sm" onClick={onToggleEdit}>
             <Edit2 className="h-4 w-4 mr-1" />

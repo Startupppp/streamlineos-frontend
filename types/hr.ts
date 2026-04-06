@@ -1032,6 +1032,9 @@ export interface RecruitmentStats {
   newCandidates: number;
   upcomingInterviews: number;
   hiredThisMonth: number;
+  funnel: Record<string, number>;
+  sources: { source: string; count: number }[];
+  avgTimeToHireDays: number;
 }
 
 export interface CreateJobPostingInput {

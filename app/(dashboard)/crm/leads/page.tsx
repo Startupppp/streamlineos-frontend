@@ -12,6 +12,7 @@ import {
   useLeads, useSalesTeamCapacity, useUpdateLead, useAssignLead,
   useBulkUpdateLeads, useBulkDeleteLeads,
 } from "@/lib/api/hooks/leads";
+import { useCreateDeal } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { useLeadsFilters } from "@/hooks/use-leads-filters";
 import { useSession } from "next-auth/react";
@@ -73,6 +74,7 @@ export default function LeadsPipelinePage() {
 
   const updateLeadMutation = useUpdateLead();
   const assignLeadMutation = useAssignLead();
+  const createDealMutation = useCreateDeal();
   const bulkUpdateMutation = useBulkUpdateLeads();
   const bulkDeleteMutation = useBulkDeleteLeads();
 
@@ -172,17 +174,34 @@ export default function LeadsPipelinePage() {
   const handleStatusChange = useCallback((
     id: number,
     status: string,
-    extra?: { conversionNotes?: string; lostReason?: string; estimatedAmount?: string; investmentInterest?: string },
+    extra?: { conversionNotes?: string; lostReason?: string; estimatedAmount?: string; investmentInterest?: string; createDeal?: boolean; dealName?: string },
   ) => {
     if (status === "CONVERTED" && extra) {
       updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
       updateStatus.mutate({ leadId: id, status: "CONVERTED" });
+
+      // Auto-create deal from converted lead
+      if (extra.createDeal && extra.dealName) {
+        createDealMutation.mutate(
+          {
+            name: extra.dealName,
+            value: extra.estimatedAmount || undefined,
+            stage: "LEAD",
+            notes: extra.conversionNotes,
+            leadId: id,
+          },
+          {
+            onSuccess: () => toast.success("Deal created from converted lead"),
+            onError: (err) => toast.error(`Deal creation failed: ${err.message}`),
+          },
+        );
+      }
     } else if (status === "LOST" && extra) {
       updateStatus.mutate({ leadId: id, status: "LOST", lostReason: extra.lostReason });
     } else {
       updateStatus.mutate({ leadId: id, status: status as LeadStatus });
     }
-  }, [updateLeadMutation, updateStatus]);
+  }, [updateLeadMutation, updateStatus, createDealMutation]);
 
   const handlePriorityChange = useCallback((id: number, priority: string) => {
     updateLeadMutation.mutate({ id, priority: priority as "HOT" | "WARM" | "COLD" });

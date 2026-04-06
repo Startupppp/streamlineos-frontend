@@ -24,6 +24,8 @@ interface ConversionModalProps {
     conversionNotes: string;
     investmentInterest: string;
     estimatedAmount: string;
+    createDeal: boolean;
+    dealName: string;
   }) => void;
 }
 
@@ -31,31 +33,51 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
   const [conversionNotes, setConversionNotes] = useState("");
   const [investmentInterest, setInvestmentInterest] = useState("");
   const [estimatedAmount, setEstimatedAmount] = useState("");
+  const [createDeal, setCreateDeal] = useState(true);
+  const [dealName, setDealName] = useState("");
 
   const handleSubmit = useCallback(() => {
     if (!conversionNotes.trim()) {
       toast.error("Please add conversion notes");
       return;
     }
+    if (createDeal && !dealName.trim()) {
+      toast.error("Please enter a deal name");
+      return;
+    }
     onSubmit({
       conversionNotes: conversionNotes.trim(),
       investmentInterest: investmentInterest.trim(),
       estimatedAmount: estimatedAmount.trim(),
+      createDeal,
+      dealName: dealName.trim() || `Deal - ${leadName}`,
     });
     setConversionNotes("");
     setInvestmentInterest("");
     setEstimatedAmount("");
-  }, [conversionNotes, investmentInterest, estimatedAmount, onSubmit]);
+    setCreateDeal(true);
+    setDealName("");
+  }, [conversionNotes, investmentInterest, estimatedAmount, createDeal, dealName, leadName, onSubmit]);
 
   const handleClose = useCallback(() => {
     setConversionNotes("");
     setInvestmentInterest("");
     setEstimatedAmount("");
+    setCreateDeal(true);
+    setDealName("");
     onClose();
   }, [onClose]);
 
+  // Auto-populate deal name from lead name when opening
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    if (isOpen && leadName && !dealName) {
+      setDealName(`Deal - ${leadName}`);
+    }
+    if (!isOpen) handleClose();
+  }, [leadName, dealName, handleClose]);
+
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Convert Lead: {leadName}</DialogTitle>
@@ -81,7 +103,7 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="estimated-amount">Estimated Investment Amount</Label>
+            <Label htmlFor="estimated-amount">Estimated Investment Amount (₹)</Label>
             <Input
               id="estimated-amount"
               type="number"
@@ -90,11 +112,37 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
               onChange={(e) => setEstimatedAmount(e.target.value)}
             />
           </div>
+
+          {/* Auto-create deal toggle */}
+          <label className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-3 py-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={createDeal}
+              onChange={(e) => setCreateDeal(e.target.checked)}
+              className="h-4 w-4 rounded border-input accent-gold"
+            />
+            <div>
+              <p className="text-sm font-medium leading-none">Auto-create Deal</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Create a new deal pre-filled with lead data</p>
+            </div>
+          </label>
+
+          {createDeal && (
+            <div className="space-y-2">
+              <Label htmlFor="deal-name">Deal Name *</Label>
+              <Input
+                id="deal-name"
+                placeholder="e.g., Investment - Rahul Sharma"
+                value={dealName}
+                onChange={(e) => setDealName(e.target.value)}
+              />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700">
-            Convert Lead
+          <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            {createDeal ? "Convert & Create Deal" : "Convert Lead"}
           </Button>
         </DialogFooter>
       </DialogContent>

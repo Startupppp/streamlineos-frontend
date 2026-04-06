@@ -37,16 +37,16 @@
 ### Missing — To Build
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| C1 | Activity Logging (Calls/Meetings) | High | Structured call/meeting log linked to leads/deals. Fields: type, duration, outcome, notes, next action, scheduled follow-up |
-| C2 | Lead-to-Deal Conversion Flow | High | When lead status → CONVERTED, auto-create deal pre-filled with lead data (name, value, contact, source). One-click flow |
-| C3 | Lead Duplicate Detection | High | On create/import, check existing leads by email/phone. Show merge dialog if duplicate found |
+| C1 | Activity Logging (Calls/Meetings) | ✅ Done | API at /api/leads/[leadId]/activities (call, email, whatsapp, meeting, site_visit). Full Zod validation. Quick Actions UI in lead detail |
+| C2 | Lead-to-Deal Conversion Flow | ✅ Done | Conversion modal has "Auto-create Deal" checkbox. Pre-fills deal name, value, notes from lead. Creates deal via useCreateDeal |
+| C3 | Lead Duplicate Detection | ✅ Done | API at /api/leads/check-duplicates (email/phone fuzzy match). Warning banner in create-lead-sheet with duplicate details |
 | C4 | Deal Approval Workflow | High | Deals above configurable threshold (e.g. ₹10L) require manager approval before stage change to WON |
-| C5 | Pipeline Forecasting | High | Probability-weighted revenue by month. Sum of (deal value × stage probability) grouped by expected close date |
+| C5 | Pipeline Forecasting | ✅ Done | API at /api/deals/forecast. Weighted revenue by month + stage breakdown. Default probabilities per stage. Hook: useDealForecast() |
 | C6 | Bulk Email Campaigns | Medium | Select leads by filter → pick template → send bulk. Track open/click/bounce per campaign |
 | C7 | Custom Fields (JSONB) | Medium | Admin UI to define custom fields on leads/deals/contacts. Render dynamically in forms/tables |
 | C8 | Contact-to-Lead Linking | Medium | Link contacts to leads/deals/orgs. Show relationship graph |
 | C9 | Lead Source Attribution | Medium | Track which campaign/channel/UTM generated each lead. Attribution reporting |
-| C10 | Follow-up Reminders | Medium | Set reminders on leads/deals. Show overdue follow-ups on dashboard |
+| C10 | Follow-up Reminders | ✅ Done | Schema: followUpDate + followUpNotes on leads & deals. API: /api/leads/follow-ups?overdue=true. Hook: useOverdueFollowUps(). Migration: 0030 |
 | C11 | Territory Management | Low | Define geographic territories (state/city). Assign reps to territories. Filter leads/deals by territory |
 | C12 | Web-to-Lead Form | Low | Embeddable form (iframe/JS widget) that creates leads via API. For website integration |
 
@@ -73,8 +73,8 @@
 ### Missing — To Build
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| S1 | Real Data Aggregation | Critical | Replace `useSalesDashboard()` mock with real DB queries. Aggregate from deals, leads, activities tables |
-| S2 | Quota vs Actual Tracking | High | Set monthly/quarterly revenue quota per rep. Show attainment % on leaderboard and person detail |
+| S1 | Real Data Aggregation | ✅ Done | getSalesDashboard() in server/queries/crm-dashboards.ts — real SQL aggregations on crmDeals, crmActivities, crmMonthlyMetrics tables |
+| S2 | Quota vs Actual Tracking | ✅ Done | sales_quotas table + API at /api/sales/quotas (GET+POST). Zod validation. Hooks: useSalesQuotas(), useCreateSalesQuota(). Migration: 0031 |
 | S3 | Commission Calculator | High | Configurable commission rules (flat %, tiered %, per-deal bonus). Auto-calculate on deal WON |
 | S4 | Call Logging | High | Log calls with: contact, duration, outcome (connected/voicemail/no-answer), notes, next action |
 | S5 | Meeting Notes | Medium | Log meetings linked to deals. Agenda, attendees, action items, recording link |
@@ -105,8 +105,8 @@
 ### Missing — To Build
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| M1 | Real Data Aggregation | Critical | Replace `useMarketingDashboard()` mock with real DB queries |
-| M2 | Campaign Builder | High | Full CRUD for campaigns: name, type, budget, channel, start/end date, target audience, assigned leads |
+| M1 | Real Data Aggregation | ✅ Done | getMarketingDashboard() — real SQL on crmCampaigns, crmLeads, crmContent, crmEvents |
+| M2 | Campaign Builder | ✅ Done | Full CRUD at /api/marketing/campaigns (GET/POST) + /[campaignId] (GET/PATCH/DELETE). Enhanced schema with channel, dates, audience, owner. Migration: 0032. Hooks: useMarketingCampaigns(), useCreateMarketingCampaign(), useUpdateMarketingCampaign(), useDeleteMarketingCampaign() |
 | M3 | Email Campaign System | High | Compose → select recipients (filtered leads) → send bulk via SMTP. Track opens, clicks, bounces, unsubscribes |
 | M4 | UTM Link Generator | Medium | Auto-generate UTM-tagged URLs per campaign. Track traffic/leads from each UTM |
 | M5 | Landing Page Analytics | Medium | Track page views, form submissions, conversion rate per landing page URL |
@@ -137,7 +137,7 @@
 ### Missing — To Build
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| CE1 | Real Data Aggregation | Critical | Replace `useCustomerExecutiveDashboard()` mock with real queries |
+| CE1 | Real Data Aggregation | ✅ Done | getCustomerExecutiveDashboard() — real SQL on crmCompanies, crmSupportTickets, crmActivities |
 | CE2 | Client Health Scoring | High | Auto-score: last activity recency (30%), ticket volume (20%), renewal proximity (20%), CSAT (15%), engagement (15%). Color-code: Green (80+), Yellow (50-79), Red (<50) |
 | CE3 | Churn Risk Alerts | High | Flag clients with declining health score. Notify CSM. Dashboard widget showing at-risk count |
 | CE4 | Client Activity Timeline | Medium | Unified timeline per client: meetings, emails, tickets, deals, notes. Filterable by type |
@@ -156,17 +156,17 @@
 ### Lead Intelligence
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| AI1 | AI Lead Scoring | High | Analyze lead data (company, value, source, engagement history) → generate 0-100 score with reasoning. Runs on lead create + daily batch. Uses Claude Haiku |
-| AI2 | Lead Enrichment Summary | High | Given a lead's name + company + email, generate a brief research summary: company size, industry, likely budget range, talking points. Uses Claude Sonnet |
+| AI1 | AI Lead Scoring | ✅ Done | GPT-4o-mini scores leads 0-100 with reasoning, strengths, weaknesses, suggested actions. Button on lead detail header + popover. API: POST /api/ai/score-lead |
+| AI2 | Lead Enrichment Summary | High | Given a lead's name + company + email, generate a brief research summary: company size, industry, likely budget range, talking points |
 | AI3 | Duplicate Lead Detection (AI) | Medium | Fuzzy-match leads by name/company similarity beyond exact email/phone match. "Rahul Sharma at Acme" ≈ "R. Sharma — Acme Corp" |
 
 ### Sales Copilot
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| AI4 | AI Follow-up Email Generator | High | Given lead context (name, company, last activity, deal stage), generate personalized follow-up email. Rep can edit before sending. 3 tone options: formal / friendly / urgent |
-| AI5 | Deal Win/Loss Prediction | High | Analyze deal attributes (value, stage duration, activity count, lead score) → predict win probability (%). Show on deal card. Retrain monthly on historical data |
+| AI4 | AI Follow-up Email Generator | ✅ Done | GPT-4o-mini generates personalized emails with 3 tones (formal/friendly/urgent). Dialog with copy-to-clipboard. API: POST /api/ai/generate-email |
+| AI5 | Deal Win/Loss Prediction | ✅ Done | GPT-4o-mini predicts win probability with risk factors, positive signals, actions. API: POST /api/ai/predict-deal. Hook: usePredictDeal(). Auto-updates deal probability |
 | AI6 | Conversation Summary | Medium | After a call/meeting log, AI summarizes key points, action items, and next steps. Auto-populate the notes field |
-| AI7 | Smart Next-Best-Action | Medium | For each lead/deal, suggest the next action: "Schedule meeting", "Send proposal", "Follow up (3 days overdue)". Based on stage + last activity |
+| AI7 | Smart Next-Best-Action | ✅ Done | GPT-4o-mini suggests next action with urgency level + reasoning. API: POST /api/ai/next-action. Hook: useNextBestAction(). Considers stage, recency, follow-ups |
 | AI8 | Objection Handler | Medium | Given a deal's lost reason or objection text, suggest counter-arguments and talking points from historical winning deals |
 
 ### Marketing AI

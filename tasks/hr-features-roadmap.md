@@ -72,23 +72,22 @@
 ## Missing Features (To Implement)
 
 ### Recruitment Enhancements
-- [ ] Candidate detail page (`/hr/recruitment/candidates/[candidateId]`) with full timeline
-- [ ] Interview feedback forms (structured scoring rubric)
-- [ ] Offer letter generation from template → send to candidate
-- [ ] Candidate resume parser (extract skills/experience)
-- [ ] Recruitment pipeline kanban board (DnD between stages)
+- [x] Candidate detail page with applications + interviews + status change
+- [x] Interview feedback forms with structured scoring rubric (slider-based)
+- [x] Recruitment pipeline kanban board (DnD between stages)
+- [ ] Offer letter generation from template
 - [ ] Job posting public page / careers page
 - [ ] Referral tracking (which employee referred)
-- [ ] Candidate scorecards (multiple interviewers rate independently)
 - [ ] Hiring funnel analytics (conversion rates per stage)
 - [ ] Email templates for candidate communication
 - [ ] Bulk candidate import (CSV upload)
 
 ### Performance Management
-- [ ] Review cycles (quarterly/annual) with auto-scheduling
+- [x] Review cycles (quarterly/annual/custom) with CRUD
+- [x] Review creation (ad-hoc + cycle-based) with ratings
+- [x] 1-on-1 meeting scheduling + notes + action items
 - [ ] 360-degree feedback (peer, manager, self-review)
 - [ ] OKR tracking with key results + check-ins
-- [ ] 1-on-1 meeting notes with action items
 - [ ] Performance improvement plans (PIP)
 - [ ] Skills matrix / competency mapping
 - [ ] Employee growth path / career ladder

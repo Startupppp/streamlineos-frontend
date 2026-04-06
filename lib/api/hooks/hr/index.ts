@@ -6,3 +6,4 @@ export * from "./sessions";
 export * from "./recruitment";
 export * from "./rich-documents";
 export * from "./performance";
+export * from "./analytics";

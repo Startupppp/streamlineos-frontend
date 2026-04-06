@@ -5,9 +5,12 @@ import type { Value as PhoneValue } from "react-phone-number-input";
 import {
   Mail, MapPin, Building2, User, Target,
   IndianRupee, StickyNote, Share2, Megaphone, Globe, Footprints, Flame, Sun, Snowflake, Users,
-  UserPlus, Phone,
+  UserPlus, Phone, AlertTriangle,
 } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { useCheckLeadDuplicates } from "@/lib/api/hooks/leads";
+import { useDebouncedValue } from "@/hooks/use-debounce";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -30,6 +33,16 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
   const [priority, setPriority] = useState<string>("WARM");
   const [source, setSource] = useState<string>("referral");
   const [phone, setPhone] = useState<PhoneValue | undefined>();
+  const [emailInput, setEmailInput] = useState("");
+
+  const debouncedEmail = useDebouncedValue(emailInput, 500);
+  const debouncedPhone = useDebouncedValue(phone ?? "", 500);
+
+  const { data: dupCheck } = useCheckLeadDuplicates(
+    { email: debouncedEmail || undefined, phone: debouncedPhone || undefined },
+    { enabled: open && (!!debouncedEmail || !!debouncedPhone) },
+  );
+  const hasDuplicates = (dupCheck?.duplicates?.length ?? 0) > 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -82,7 +95,15 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                   <Label htmlFor="email" className="text-xs font-medium mb-1.5 block">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="email" name="email" type="email" placeholder="john@example.com" className="pl-9 h-9" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="john@example.com"
+                      className="pl-9 h-9"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                    />
                   </div>
                 </div>
                 <div>
@@ -112,6 +133,30 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                 </div>
               </div>
             </div>
+
+            {/* Duplicate Warning */}
+            {hasDuplicates && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                    Possible duplicate{dupCheck!.duplicates.length > 1 ? "s" : ""} found
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {dupCheck!.duplicates.map((dup) => (
+                    <div key={dup.id} className="flex items-center justify-between text-[11px]">
+                      <span className="font-medium truncate">{dup.name}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {dup.email && <span className="text-muted-foreground">{dup.email}</span>}
+                        <Badge variant="outline" className="text-[9px] px-1 py-0">{dup.status}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">You can still create this lead if it&apos;s a different person.</p>
+              </div>
+            )}
 
             {/* Lead Classification */}
             <div className="space-y-3">

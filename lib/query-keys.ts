@@ -74,6 +74,7 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => [...base, "deals", "list", params] as const,
     detail: (id: number) => [...base, "deals", "detail", id] as const,
     pipeline: (params?: Record<string, unknown>) => [...base, "deals", "pipeline", params] as const,
+    forecast: () => [...base, "deals", "forecast"] as const,
   },
 
   contacts: {
@@ -242,9 +243,20 @@ export const queryKeys = {
     list: () => [...base, "salesTeamCapacity", "list"] as const,
   },
 
+  salesQuotas: {
+    all: [...base, "salesQuotas"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "salesQuotas", "list", params] as const,
+  },
+
   salesLeaderboard: {
     all: [...base, "salesLeaderboard"] as const,
     list: () => [...base, "salesLeaderboard", "list"] as const,
+  },
+
+  marketingCampaigns: {
+    all: [...base, "marketingCampaigns"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "marketingCampaigns", "list", params] as const,
+    detail: (id: number) => [...base, "marketingCampaigns", "detail", id] as const,
   },
 
   dmLeads: {
@@ -279,5 +291,10 @@ export const queryKeys = {
   globalSearch: {
     all: [...base, "globalSearch"] as const,
     results: (query: string) => [...base, "globalSearch", query] as const,
+  },
+
+  ai: {
+    all: [...base, "ai"] as const,
+    leadScore: (leadId: number) => [...base, "ai", "leadScore", leadId] as const,
   },
 } as const;
