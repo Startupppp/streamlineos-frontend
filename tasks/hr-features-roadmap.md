@@ -76,20 +76,19 @@
 - [x] Interview feedback forms with structured scoring rubric (slider-based)
 - [x] Recruitment pipeline kanban board (DnD between stages)
 - [x] Offer letter generation from candidate + job posting → TipTap document
+- [x] Referral tracking (referredBy field on candidates)
+- [x] Bulk candidate import (CSV/JSON up to 500 at once)
 - [ ] Job posting public page / careers page
-- [ ] Referral tracking (which employee referred)
-- [ ] Hiring funnel analytics (conversion rates per stage)
 - [ ] Email templates for candidate communication
-- [ ] Bulk candidate import (CSV upload)
 
 ### Performance Management
 - [x] Review cycles (quarterly/annual/custom) with CRUD
 - [x] Review creation (ad-hoc + cycle-based) with ratings
 - [x] 1-on-1 meeting scheduling + notes + action items
+- [x] OKR tracking with key results (CRUD for key results per goal)
+- [x] Performance improvement plans (PIP) with objectives, tracking, outcome
+- [x] Skills matrix (employee skills with 1-5 levels, verification)
 - [ ] 360-degree feedback (peer, manager, self-review)
-- [ ] OKR tracking with key results + check-ins
-- [ ] Performance improvement plans (PIP)
-- [ ] Skills matrix / competency mapping
 - [ ] Employee growth path / career ladder
 
 ### Employee Self-Service
@@ -114,21 +113,21 @@
 - [x] Training programs catalog (CRUD with publish/archive)
 - [x] Course enrollment (self-enroll + admin enroll)
 - [x] Enrollment status tracking (Enrolled → In Progress → Completed)
-- [ ] Certification management with expiry alerts
+- [x] Certification management with expiry tracking (30-day alert query)
 - [ ] Skills assessment tests
 - [ ] Learning path recommendations
 
 ### Employee Engagement
 - [x] Recognition / kudos system (social feed, 5 categories, cross-org)
-- [ ] Pulse surveys
-- [ ] Anonymous feedback
+- [x] Pulse surveys (create → publish → collect anonymous/named responses)
+- [x] Anonymous feedback (via anonymous survey responses)
 - [ ] Employee NPS (eNPS) tracking
-- [ ] Birthday/anniversary celebrations feed
+- [x] Birthday/anniversary celebrations feed (today + upcoming 7 days)
 - [ ] Team building event management
 
 ### Compliance & Legal
 - [x] Policy acknowledgment tracking (send → acknowledge/decline workflow)
-- [ ] Background verification tracking
+- [x] Background verification tracking (initiate → track → pass/fail)
 - [ ] Employee handbook versioning
 - [ ] Statutory compliance dashboard
 - [ ] Document expiry alerts + auto-reminders
@@ -149,7 +148,7 @@
 - [x] Exit checklist system (admin can add checklist items)
 - [ ] Asset return tracking
 - [ ] Full & final settlement
-- [ ] Experience letter generation
+- [x] Experience letter generation (auto-generates TipTap document from employee data)
 - [ ] Alumni network
 
 ### Integrations

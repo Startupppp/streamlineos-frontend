@@ -14,6 +14,8 @@ import {
   trainingStatusEnum, enrollmentStatusEnum,
   resignationStatusEnum, exitChecklistStatusEnum,
   ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
+  pipStatusEnum, surveyStatusEnum,
+  feedbackTypeEnum, bonusTypeEnum, fnfStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -469,6 +471,226 @@ export const backgroundVerifications = pgTable("background_verifications", {
   index("idx_bgv_user").on(table.userId),
 ]);
 
+// ─── Performance Improvement Plans ───
+export const performanceImprovementPlans = pgTable("performance_improvement_plans", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  managerId: text("manager_id").references(() => users.id).notNull(),
+  reason: text("reason").notNull(),
+  objectives: jsonb("objectives").$type<{ objective: string; metric: string; deadline: string }[]>(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  status: pipStatusEnum("status").default("ACTIVE"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_pip_user").on(table.userId),
+]);
+
+// ─── OKR Key Results ───
+export const keyResults = pgTable("key_results", {
+  id: serial("id").primaryKey(),
+  goalId: integer("goal_id").references(() => goals.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  targetValue: decimal("target_value"),
+  currentValue: decimal("current_value").default("0"),
+  unit: text("unit"),
+  progress: integer("progress").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_key_results_goal").on(table.goalId),
+]);
+
+// ─── Skills Matrix ───
+export const employeeSkills = pgTable("employee_skills", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  skillName: text("skill_name").notNull(),
+  level: integer("level").default(1),
+  verifiedBy: text("verified_by").references(() => users.id),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_employee_skills_user").on(table.userId),
+  index("idx_employee_skills_name").on(table.skillName),
+]);
+
+// ─── Pulse Surveys ───
+export const pulseSurveys = pgTable("pulse_surveys", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  questions: jsonb("questions").$type<{ id: string; text: string; type: "rating" | "text" | "choice"; options?: string[] }[]>(),
+  status: surveyStatusEnum("status").default("DRAFT"),
+  isAnonymous: boolean("is_anonymous").default(true),
+  createdBy: text("created_by").references(() => users.id),
+  closesAt: timestamp("closes_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_surveys_org").on(table.orgId),
+]);
+
+export const surveyResponses = pgTable("survey_responses", {
+  id: serial("id").primaryKey(),
+  surveyId: integer("survey_id").references(() => pulseSurveys.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id),
+  answers: jsonb("answers").$type<{ questionId: string; value: string | number }[]>(),
+  submittedAt: timestamp("submitted_at").defaultNow(),
+}, (table) => [
+  index("idx_survey_responses_survey").on(table.surveyId),
+]);
+
+// ─── 360 Feedback ───
+export const feedbackRequests = pgTable("feedback_requests", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  subjectUserId: text("subject_user_id").references(() => users.id).notNull(),
+  reviewerUserId: text("reviewer_user_id").references(() => users.id).notNull(),
+  type: feedbackTypeEnum("type").notNull(),
+  cycleId: integer("cycle_id").references(() => reviewCycles.id),
+  ratings: jsonb("ratings").$type<{ category: string; score: number; comment?: string }[]>(),
+  strengths: text("strengths"),
+  improvements: text("improvements"),
+  overallRating: integer("overall_rating"),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_feedback_subject").on(table.subjectUserId),
+  index("idx_feedback_reviewer").on(table.reviewerUserId),
+]);
+
+// ─── Email Templates ───
+export const emailTemplates = pgTable("hr_email_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  category: text("category").default("GENERAL"),
+  variables: text("variables").array(),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_email_templates_org").on(table.orgId),
+]);
+
+// ─── Career Ladder / Growth Paths ───
+export const careerLadders = pgTable("career_ladders", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  department: text("department"),
+  levels: jsonb("levels").$type<{ level: number; title: string; description: string; minExperience: number; skills: string[] }[]>(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_career_ladders_org").on(table.orgId),
+]);
+
+// ─── Bonus Processing ───
+export const bonuses = pgTable("bonuses", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  type: bonusTypeEnum("type").notNull(),
+  amount: decimal("amount").notNull(),
+  reason: text("reason"),
+  month: text("month"),
+  status: text("status").default("PENDING"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_bonuses_user").on(table.userId),
+]);
+
+// ─── Full & Final Settlement ───
+export const fnfSettlements = pgTable("fnf_settlements", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  resignationId: integer("resignation_id").references(() => resignations.id),
+  basicDues: decimal("basic_dues").default("0"),
+  leaveEncashment: decimal("leave_encashment").default("0"),
+  bonusDue: decimal("bonus_due").default("0"),
+  deductions: decimal("deductions").default("0"),
+  loanRecovery: decimal("loan_recovery").default("0"),
+  netPayable: decimal("net_payable").default("0"),
+  status: fnfStatusEnum("status").default("DRAFT"),
+  approvedBy: text("approved_by").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_fnf_user").on(table.userId),
+]);
+
+// ─── Asset Return Tracking ───
+export const assetReturns = pgTable("asset_returns", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  assetId: integer("asset_id").references(() => assets.id),
+  assetName: text("asset_name").notNull(),
+  status: text("status").default("PENDING"),
+  returnedAt: timestamp("returned_at"),
+  condition: text("condition"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_asset_returns_user").on(table.userId),
+]);
+
+// ─── Alumni Network ───
+export const alumniProfiles = pgTable("alumni_profiles", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  currentCompany: text("current_company"),
+  currentRole: text("current_role"),
+  linkedinUrl: text("linkedin_url"),
+  email: text("email"),
+  leftDate: date("left_date"),
+  isOptedIn: boolean("is_opted_in").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_alumni_org").on(table.orgId),
+]);
+
+// ─── Employee NPS ───
+export const enpsScores = pgTable("enps_scores", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id),
+  score: integer("score").notNull(),
+  comment: text("comment"),
+  isAnonymous: boolean("is_anonymous").default(true),
+  period: text("period"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_enps_org_period").on(table.orgId, table.period),
+]);
+
+// ─── Handbook Versions ───
+export const handbookVersions = pgTable("handbook_versions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  version: text("version").notNull(),
+  documentId: integer("document_id").references(() => richDocuments.id),
+  changelog: text("changelog"),
+  publishedAt: timestamp("published_at"),
+  publishedBy: text("published_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_handbook_org").on(table.orgId),
+]);
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -830,4 +1052,28 @@ export const certificationsRelations = relations(certifications, ({ one }) => ({
 
 export const backgroundVerificationsRelations = relations(backgroundVerifications, ({ one }) => ({
   user: one(users, { fields: [backgroundVerifications.userId], references: [users.id] }),
+}));
+
+export const pipRelations = relations(performanceImprovementPlans, ({ one }) => ({
+  user: one(users, { fields: [performanceImprovementPlans.userId], references: [users.id] }),
+  manager: one(users, { fields: [performanceImprovementPlans.managerId], references: [users.id], relationName: "pipManager" }),
+}));
+
+export const keyResultsRelations = relations(keyResults, ({ one }) => ({
+  goal: one(goals, { fields: [keyResults.goalId], references: [goals.id] }),
+}));
+
+export const employeeSkillsRelations = relations(employeeSkills, ({ one }) => ({
+  user: one(users, { fields: [employeeSkills.userId], references: [users.id] }),
+  verifier: one(users, { fields: [employeeSkills.verifiedBy], references: [users.id], relationName: "skillVerifier" }),
+}));
+
+export const pulseSurveysRelations = relations(pulseSurveys, ({ one, many }) => ({
+  creator: one(users, { fields: [pulseSurveys.createdBy], references: [users.id] }),
+  responses: many(surveyResponses),
+}));
+
+export const surveyResponsesRelations = relations(surveyResponses, ({ one }) => ({
+  survey: one(pulseSurveys, { fields: [surveyResponses.surveyId], references: [pulseSurveys.id] }),
+  user: one(users, { fields: [surveyResponses.userId], references: [users.id] }),
 }));

@@ -373,6 +373,22 @@ export function useDealApprovals(params?: { status?: string }) {
   });
 }
 
+export function useDealApprovalRules() {
+  return useQuery({
+    queryKey: [...queryKeys.deals.all, "approvalRules"] as const,
+    queryFn: () => apiClient.get<Array<{ id: number; minValue: string; approverRole: string; isActive: boolean; createdAt: string | null }>>("/deals/approval-rules"),
+  });
+}
+
+export function useCreateDealApprovalRule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { minValue: string; approverRole?: string }) =>
+      apiClient.post("/deals/approval-rules", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvalRules"] }),
+  });
+}
+
 export function useRequestDealApproval() {
   const qc = useQueryClient();
   return useMutation({
@@ -592,6 +608,22 @@ export function useDeleteEmailCampaign() {
   return useMutation({
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/marketing/email-campaigns/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all }),
+  });
+}
+
+/* ─── UTM Link Generator + Attribution ──────────────────────────────────────── */
+
+export function useGenerateUtmLink() {
+  return useMutation({
+    mutationFn: (input: { baseUrl: string; source: string; medium: string; campaign: string; term?: string; content?: string }) =>
+      apiClient.post<{ url: string; params: Record<string, string | undefined> }>("/marketing/utm", input),
+  });
+}
+
+export function useUtmAttribution(params?: { source?: string }) {
+  return useQuery({
+    queryKey: [...queryKeys.marketingCampaigns.all, "utmAttribution", params] as const,
+    queryFn: () => apiClient.get<{ attribution: Array<{ source: string | null; count: number; totalValue: number }> }>("/marketing/utm", params as Record<string, unknown>),
   });
 }
 

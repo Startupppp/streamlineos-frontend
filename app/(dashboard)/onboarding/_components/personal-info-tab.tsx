@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updatePersonalDetails } from "@/server/actions/onboarding-actions";
@@ -19,8 +21,8 @@ const MAX_EXPERIENCE_YEARS = 60;
 const personalSchema = z.object({
   phone: z
     .string()
-    .regex(/^\+?[\d\s()-]+$/, "Only digits, spaces, parentheses, and hyphens allowed")
-    .refine((val) => val.replace(/\D/g, "").length === 10, "Phone number must be exactly 10 digits"),
+    .min(1, "Phone number is required")
+    .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"], { error: "Please select a gender" }),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   experienceYears: z
@@ -71,15 +73,20 @@ export function PersonalInfoTab({ onComplete, defaultValues }: PersonalInfoTabPr
             <motion.div variants={fadeUpVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  {...form.register("phone")}
-                  placeholder="+91 98765 43210"
-                  maxLength={10}
-                  inputMode="tel"
-                  autoComplete="tel"
-                  aria-required="true"
-                  aria-invalid={!!errors.phone}
+                <Controller
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <PhoneInput
+                      id="phone"
+                      defaultCountry="IN"
+                      placeholder="Enter phone number"
+                      value={field.value}
+                      onChange={(v) => field.onChange(v ?? "")}
+                      aria-required="true"
+                      aria-invalid={!!errors.phone}
+                    />
+                  )}
                 />
                 {errors.phone && <p role="alert" className="text-xs text-destructive">{errors.phone.message}</p>}
               </div>
