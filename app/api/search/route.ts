@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery } from "@/lib/api/helpers";
+import { cached, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { leads, deals, contacts, clients, tickets } from "@/lib/db/schema";
 import { eq, and, or, ilike, sql } from "drizzle-orm";
@@ -23,9 +24,19 @@ interface SearchResult {
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { q, limit } = parseQuery(req, querySchema);
+    const queryHash = Buffer.from(q + (limit ?? "")).toString("base64url").slice(0, 32);
+    const data = await cached(
+      CACHE_KEYS.searchResults(session.orgId, queryHash),
+      () => executeSearch(session.orgId, q, limit),
+      { ttlSeconds: CACHE_TTL.SHORT },
+    );
+    return ok(data);
+  });
+}
+
+async function executeSearch(orgId: string, q: string, limit?: number) {
     const maxPer = Math.min(limit ?? 5, 10);
     const pattern = `%${q}%`;
-    const orgId = session.orgId;
 
     const [leadResults, dealResults, contactResults, clientResults, ticketResults] = await Promise.all([
       // Leads
@@ -63,6 +74,5 @@ export async function GET(req: NextRequest) {
       ...ticketResults.map(t => ({ id: t.id, type: "ticket" as const, title: t.title, subtitle: `Ticket #${t.id}`, href: `/projects`, status: t.status })),
     ];
 
-    return ok({ results, total: results.length });
-  });
+    return { results, total: results.length };
 }

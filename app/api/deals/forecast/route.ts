@@ -1,4 +1,5 @@
 import { withAuth, ok } from "@/lib/api/helpers";
+import { cached, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
 import { eq, and, notInArray } from "drizzle-orm";
@@ -40,12 +41,22 @@ interface ForecastSummary {
 /** GET /api/deals/forecast — Pipeline forecast with probability weighting */
 export async function GET() {
   return withAuth(async (session) => {
+    const summary = await cached(
+      CACHE_KEYS.dealsForecast(session.orgId),
+      () => buildForecast(session.orgId),
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
+    return ok(summary);
+  });
+}
+
+async function buildForecast(orgId: string): Promise<ForecastSummary> {
     const allDeals = await db
       .select()
       .from(deals)
       .where(
         and(
-          eq(deals.orgId, session.orgId),
+          eq(deals.orgId, orgId),
           notInArray(deals.stage, ["WON", "LOST"]),
         ),
       );
@@ -93,14 +104,11 @@ export async function GET() {
       avgProbability: data.count > 0 ? Math.round(data.probSum / data.count) : 0,
     }));
 
-    const summary: ForecastSummary = {
+    return {
       totalWeighted: byMonth.reduce((sum, m) => sum + m.weighted, 0),
       totalBestCase: byMonth.reduce((sum, m) => sum + m.bestCase, 0),
       totalDeals: allDeals.length,
       byMonth,
       byStage,
     };
-
-    return ok(summary);
-  });
 }

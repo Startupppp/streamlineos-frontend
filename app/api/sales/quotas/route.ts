@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { salesQuotas, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -26,11 +27,14 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { userId, period, limit } = parseQuery(req, listSchema);
 
-    const conditions = [eq(salesQuotas.orgId, session.orgId)];
-    if (userId) conditions.push(eq(salesQuotas.userId, userId));
-    if (period) conditions.push(eq(salesQuotas.period, period));
+    const data = await cached(
+      CACHE_KEYS.quotasList(session.orgId),
+      async () => {
+        const conditions = [eq(salesQuotas.orgId, session.orgId)];
+        if (userId) conditions.push(eq(salesQuotas.userId, userId));
+        if (period) conditions.push(eq(salesQuotas.period, period));
 
-    const results = await db
+        const results = await db
       .select({
         id: salesQuotas.id,
         userId: salesQuotas.userId,
@@ -49,15 +53,18 @@ export async function GET(req: NextRequest) {
       .orderBy(desc(salesQuotas.startDate))
       .limit(limit ?? 20);
 
-    // Calculate attainment in JS (since GENERATED ALWAYS isn't in Drizzle)
-    const enriched = results.map((q) => ({
-      ...q,
-      attainmentPct: Number(q.targetRevenue) > 0
-        ? Math.round((Number(q.actualRevenue) / Number(q.targetRevenue)) * 100)
-        : 0,
-    }));
+        // Calculate attainment in JS (since GENERATED ALWAYS isn't in Drizzle)
+        return results.map((q) => ({
+          ...q,
+          attainmentPct: Number(q.targetRevenue) > 0
+            ? Math.round((Number(q.actualRevenue) / Number(q.targetRevenue)) * 100)
+            : 0,
+        }));
+      },
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
 
-    return ok(enriched);
+    return ok(data);
   });
 }
 
@@ -85,6 +92,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
+    await invalidateCache(CACHE_KEYS.quotasList(session.orgId));
     return ok(quota, 201);
   });
 }

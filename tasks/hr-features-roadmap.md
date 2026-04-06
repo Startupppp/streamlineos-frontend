@@ -78,8 +78,8 @@
 - [x] Offer letter generation from candidate + job posting → TipTap document
 - [x] Referral tracking (referredBy field on candidates)
 - [x] Bulk candidate import (CSV/JSON up to 500 at once)
-- [ ] Job posting public page / careers page
-- [ ] Email templates for candidate communication
+- [x] Public careers page (/careers — no auth, shows open jobs)
+- [x] Email templates (CRUD for HR email templates with variables)
 
 ### Performance Management
 - [x] Review cycles (quarterly/annual/custom) with CRUD
@@ -88,25 +88,25 @@
 - [x] OKR tracking with key results (CRUD for key results per goal)
 - [x] Performance improvement plans (PIP) with objectives, tracking, outcome
 - [x] Skills matrix (employee skills with 1-5 levels, verification)
-- [ ] 360-degree feedback (peer, manager, self-review)
-- [ ] Employee growth path / career ladder
+- [x] 360-degree feedback (self, peer, manager, skip-level with rubric)
+- [x] Career ladder / growth paths (levels with skills + experience)
 
 ### Employee Self-Service
 - [x] My Payslips page (accessible to all roles via sidebar)
 - [x] My Leaves (already accessible via sidebar)
 - [x] My Attendance (already accessible via sidebar)
 - [x] My Expenses (already accessible via sidebar)
-- [ ] My Profile page (edit personal info, bank details)
+- [x] My Profile API (edit personal info, bank details, emergency contact)
 - [ ] My Attendance heatmap visualization
-- [ ] My Goals dashboard
-- [ ] My Training / certifications
+- [x] My Goals API (personal goals + key results)
+- [x] My Training API (enrollments + certifications)
 
 ### Advanced Payroll
 - [x] Payroll reimbursements (submit → approve → pay workflow)
 - [x] Loan management / salary advance (apply → approve → disburse → EMI tracking)
 - [ ] Tax calculation engine (TDS, PF, ESI for India)
-- [ ] Bonus processing (festival/performance)
-- [ ] Full & Final settlement calculation
+- [x] Bonus processing (performance, festival, referral, spot, annual)
+- [x] Full & Final settlement (dues, encashment, deductions, loan recovery)
 - [ ] Payroll compliance reports (Form 16, 24Q)
 
 ### Training & Development
@@ -121,16 +121,16 @@
 - [x] Recognition / kudos system (social feed, 5 categories, cross-org)
 - [x] Pulse surveys (create → publish → collect anonymous/named responses)
 - [x] Anonymous feedback (via anonymous survey responses)
-- [ ] Employee NPS (eNPS) tracking
+- [x] Employee NPS tracking (anonymous scoring 0-10 by period)
 - [x] Birthday/anniversary celebrations feed (today + upcoming 7 days)
 - [ ] Team building event management
 
 ### Compliance & Legal
 - [x] Policy acknowledgment tracking (send → acknowledge/decline workflow)
 - [x] Background verification tracking (initiate → track → pass/fail)
-- [ ] Employee handbook versioning
+- [x] Handbook versioning (linked to rich documents, changelog)
 - [ ] Statutory compliance dashboard
-- [ ] Document expiry alerts + auto-reminders
+- [x] Document + cert expiry alerts API (configurable days ahead)
 
 ### Analytics & Reports
 - [x] HR analytics dashboard (headcount, dept distribution, gender diversity, role distribution)
@@ -139,17 +139,17 @@
 - [x] Leave requests by status + monthly trend
 - [x] Recruitment analytics (hiring funnel, source effectiveness, avg time-to-hire)
 - [x] Attendance reports (department-wise, daily summary by month)
-- [ ] Attrition analysis
-- [ ] Compensation benchmarking
+- [x] Attrition analysis API (rate, resigned count, monthly trend)
+- [x] Compensation benchmarking API (avg/min/max/median by dept + role)
 
 ### Exit Management
 - [x] Resignation workflow (submit → approve → complete) with notice period tracking
 - [x] Exit interview notes + structured feedback questionnaire
 - [x] Exit checklist system (admin can add checklist items)
-- [ ] Asset return tracking
-- [ ] Full & final settlement
+- [x] Asset return tracking (pending → returned/damaged/lost)
+- [x] Full & final settlement (API complete)
 - [x] Experience letter generation (auto-generates TipTap document from employee data)
-- [ ] Alumni network
+- [x] Alumni network (profiles with current company, LinkedIn, opt-in)
 
 ### Integrations
 - [ ] Google Calendar sync for interviews

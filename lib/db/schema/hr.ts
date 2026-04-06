@@ -520,6 +520,72 @@ export const employeeSkills = pgTable("employee_skills", {
   index("idx_employee_skills_name").on(table.skillName),
 ]);
 
+// ─── Skills Assessments ───
+export const skillAssessments = pgTable("skill_assessments", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  skillName: text("skill_name").notNull(),
+  questions: jsonb("questions").$type<{ id: string; question: string; options: string[]; correctIndex: number }[]>(),
+  passingScore: integer("passing_score").default(70),
+  timeLimit: integer("time_limit"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_skill_assessments_org").on(table.orgId),
+]);
+
+export const assessmentAttempts = pgTable("assessment_attempts", {
+  id: serial("id").primaryKey(),
+  assessmentId: integer("assessment_id").references(() => skillAssessments.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  answers: jsonb("answers").$type<{ questionId: string; selectedIndex: number }[]>(),
+  score: integer("score"),
+  passed: boolean("passed").default(false),
+  completedAt: timestamp("completed_at").defaultNow(),
+}, (table) => [
+  index("idx_assessment_attempts_user").on(table.userId),
+]);
+
+// ─── Learning Paths ───
+export const learningPaths = pgTable("learning_paths", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  targetRole: text("target_role"),
+  steps: jsonb("steps").$type<{ order: number; type: "training" | "assessment" | "certification"; referenceId: number; title: string }[]>(),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_learning_paths_org").on(table.orgId),
+]);
+
+// ─── Team Events ───
+export const teamEvents = pgTable("team_events", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: text("type").default("TEAM_BUILDING"),
+  date: date("date").notNull(),
+  time: text("time"),
+  location: text("location"),
+  maxParticipants: integer("max_participants"),
+  organizedBy: text("organized_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_team_events_org").on(table.orgId),
+]);
+
+export const teamEventParticipants = pgTable("team_event_participants", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => teamEvents.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  status: text("status").default("GOING"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
 // ─── Pulse Surveys ───
 export const pulseSurveys = pgTable("pulse_surveys", {
   id: serial("id").primaryKey(),
@@ -1110,4 +1176,28 @@ export const alumniProfilesRelations = relations(alumniProfiles, ({ one }) => ({
 export const handbookVersionsRelations = relations(handbookVersions, ({ one }) => ({
   document: one(richDocuments, { fields: [handbookVersions.documentId], references: [richDocuments.id] }),
   publisher: one(users, { fields: [handbookVersions.publishedBy], references: [users.id] }),
+}));
+
+export const skillAssessmentsRelations = relations(skillAssessments, ({ one, many }) => ({
+  creator: one(users, { fields: [skillAssessments.createdBy], references: [users.id] }),
+  attempts: many(assessmentAttempts),
+}));
+
+export const assessmentAttemptsRelations = relations(assessmentAttempts, ({ one }) => ({
+  assessment: one(skillAssessments, { fields: [assessmentAttempts.assessmentId], references: [skillAssessments.id] }),
+  user: one(users, { fields: [assessmentAttempts.userId], references: [users.id] }),
+}));
+
+export const learningPathsRelations = relations(learningPaths, ({ one }) => ({
+  creator: one(users, { fields: [learningPaths.createdBy], references: [users.id] }),
+}));
+
+export const teamEventsRelations = relations(teamEvents, ({ one, many }) => ({
+  organizer: one(users, { fields: [teamEvents.organizedBy], references: [users.id] }),
+  participants: many(teamEventParticipants),
+}));
+
+export const teamEventParticipantsRelations = relations(teamEventParticipants, ({ one }) => ({
+  event: one(teamEvents, { fields: [teamEventParticipants.eventId], references: [teamEvents.id] }),
+  user: one(users, { fields: [teamEventParticipants.userId], references: [users.id] }),
 }));

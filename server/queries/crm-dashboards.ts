@@ -1,6 +1,7 @@
 "server-only";
 
 import { db } from "@/lib/db";
+import { cached, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import {
   crmDeals,
   crmCampaigns,
@@ -37,6 +38,10 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export async function getSalesDashboard(orgId: string) {
+  return cached(CACHE_KEYS.salesDashboard(orgId), () => _getSalesDashboard(orgId), { ttlSeconds: CACHE_TTL.MEDIUM });
+}
+
+async function _getSalesDashboard(orgId: string) {
   // SQL aggregation: count and sum per stage
   const [stageAggs, topDealsRaw, leaderboardRaw, metrics, recentActivities, leadMetrics] =
     await Promise.all([
@@ -209,6 +214,10 @@ export async function getSalesDashboard(orgId: string) {
 }
 
 export async function getMarketingDashboard(orgId: string) {
+  return cached(CACHE_KEYS.marketingDashboard(orgId), () => _getMarketingDashboard(orgId), { ttlSeconds: CACHE_TTL.MEDIUM });
+}
+
+async function _getMarketingDashboard(orgId: string) {
   const [allCampaigns, metrics, leadsByStatus, leadsByChannel, contentList, events] =
     await Promise.all([
       db.query.crmCampaigns.findMany({ where: eq(crmCampaigns.orgId, orgId) }),
@@ -319,6 +328,10 @@ export async function getMarketingDashboard(orgId: string) {
 }
 
 export async function getSupportDashboard(orgId: string) {
+  return cached(CACHE_KEYS.supportDashboard(orgId), () => _getSupportDashboard(orgId), { ttlSeconds: CACHE_TTL.MEDIUM });
+}
+
+async function _getSupportDashboard(orgId: string) {
   const [statusAggs, priorityAggs, metrics, supportActivities, teamMembers, resolvedTickets] =
     await Promise.all([
       // SQL GROUP BY status
@@ -422,6 +435,10 @@ export async function getSupportDashboard(orgId: string) {
 }
 
 export async function getCustomerExecutiveDashboard(orgId: string) {
+  return cached(CACHE_KEYS.ceDashboard(orgId), () => _getCustomerExecutiveDashboard(orgId), { ttlSeconds: CACHE_TTL.MEDIUM });
+}
+
+async function _getCustomerExecutiveDashboard(orgId: string) {
   const [healthAggs, companies, ceMetrics, ceActivities, supportTicketStats, resolvedCeTickets] =
     await Promise.all([
       // SQL GROUP BY health

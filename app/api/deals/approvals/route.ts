@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { cached, invalidateCache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { dealApprovals, dealApprovalRules, deals, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -30,31 +31,37 @@ export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit } = parseQuery(req, listSchema);
 
-    const conditions = [eq(dealApprovals.orgId, session.orgId)];
-    if (status) conditions.push(eq(dealApprovals.status, status));
+    const data = await cached(
+      CACHE_KEYS.approvalsList(session.orgId),
+      async () => {
+        const conditions = [eq(dealApprovals.orgId, session.orgId)];
+        if (status) conditions.push(eq(dealApprovals.status, status));
 
-    const results = await db
-      .select({
-        id: dealApprovals.id,
-        dealId: dealApprovals.dealId,
-        dealName: deals.name,
-        dealValue: deals.value,
-        requestedBy: dealApprovals.requestedBy,
-        requesterName: users.name,
-        requestedStage: dealApprovals.requestedStage,
-        status: dealApprovals.status,
-        rejectionReason: dealApprovals.rejectionReason,
-        createdAt: dealApprovals.createdAt,
-        resolvedAt: dealApprovals.resolvedAt,
-      })
-      .from(dealApprovals)
-      .leftJoin(deals, eq(dealApprovals.dealId, deals.id))
-      .leftJoin(users, eq(dealApprovals.requestedBy, users.id))
-      .where(and(...conditions))
-      .orderBy(desc(dealApprovals.createdAt))
-      .limit(limit ?? 20);
+        return db
+          .select({
+            id: dealApprovals.id,
+            dealId: dealApprovals.dealId,
+            dealName: deals.name,
+            dealValue: deals.value,
+            requestedBy: dealApprovals.requestedBy,
+            requesterName: users.name,
+            requestedStage: dealApprovals.requestedStage,
+            status: dealApprovals.status,
+            rejectionReason: dealApprovals.rejectionReason,
+            createdAt: dealApprovals.createdAt,
+            resolvedAt: dealApprovals.resolvedAt,
+          })
+          .from(dealApprovals)
+          .leftJoin(deals, eq(dealApprovals.dealId, deals.id))
+          .leftJoin(users, eq(dealApprovals.requestedBy, users.id))
+          .where(and(...conditions))
+          .orderBy(desc(dealApprovals.createdAt))
+          .limit(limit ?? 20);
+      },
+      { ttlSeconds: CACHE_TTL.MEDIUM },
+    );
 
-    return ok(results);
+    return ok(data);
   });
 }
 
@@ -102,6 +109,7 @@ export async function POST(req: NextRequest) {
         link: `/crm/deals/${updated.dealId}`,
       });
 
+      await invalidateCache(CACHE_KEYS.approvalsList(session.orgId));
       return ok(updated);
     }
 
@@ -136,6 +144,7 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
+    await invalidateCache(CACHE_KEYS.approvalsList(session.orgId));
     return ok(approval, 201);
   });
 }

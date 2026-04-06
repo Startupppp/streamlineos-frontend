@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { getDeals } from "@/server/queries/crm";
 import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
       clientId: input.clientId || null,
     }).returning();
 
+    await invalidateCache(CACHE_KEYS.dealsForecast(session.orgId));
     return ok(deal, 201);
   });
 }

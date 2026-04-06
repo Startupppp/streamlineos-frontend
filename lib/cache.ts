@@ -83,8 +83,34 @@ export const CACHE_KEYS = {
   ticketsList: (orgId: string, projectId: number, hash: string) =>
     `tickets:list:${orgId}:${projectId}:${hash}`,
 
-  // CRM
+  // CRM dashboards
   salesDashboard: (orgId: string) => `sales:dashboard:${orgId}`,
+  marketingDashboard: (orgId: string) => `marketing:dashboard:${orgId}`,
+  ceDashboard: (orgId: string) => `ce:dashboard:${orgId}`,
+  supportDashboard: (orgId: string) => `support:dashboard:${orgId}`,
+
+  // Deals
+  dealsForecast: (orgId: string) => `deals:forecast:${orgId}`,
+  approvalsList: (orgId: string) => `deals:approvals:${orgId}`,
+
+  // Clients
+  clientsHealth: (orgId: string) => `clients:health:${orgId}`,
+  churnAlerts: (orgId: string) => `clients:churn:${orgId}`,
+
+  // Sales
+  quotasList: (orgId: string) => `sales:quotas:${orgId}`,
+  commissionsList: (orgId: string) => `sales:commissions:${orgId}`,
+
+  // Marketing
+  campaignsList: (orgId: string) => `marketing:campaigns:${orgId}`,
+  emailCampaignsList: (orgId: string) => `marketing:emailCampaigns:${orgId}`,
+
+  // Search
+  searchResults: (orgId: string, hash: string) => `search:${orgId}:${hash}`,
+
+  // Lead board & stats
+  leadBoard: (orgId: string, hash: string) => `leads:board:${orgId}:${hash}`,
+  leadStats: (orgId: string, hash: string) => `leads:stats:${orgId}:${hash}`,
 } as const;
 
 export const CACHE_TTL = {

@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
+import { invalidateCachePattern } from "@/lib/cache";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
 import { leads, notifications } from "@/lib/db/schema";
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
       logger.error("Auto-trigger: SLA policy failed", { leadId: newLead.id, error: e });
     }
 
+    await invalidateCachePattern(`leads:*:${orgId}:*`);
     return ok(newLead, 201);
   });
 }

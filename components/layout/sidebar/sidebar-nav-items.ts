@@ -40,6 +40,9 @@ import {
   BookOpen,
   Heart,
   UserMinus,
+  Target,
+  Megaphone,
+  Mail,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -99,6 +102,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "CRM Hub", icon: Contact2, href: "/crm" },
             { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
             { label: "Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "Deal Approvals", icon: Briefcase, href: "/crm/deals/approvals" },
             { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
             { label: "Organizations", icon: Network, href: "/crm/organizations" },
             { label: "Analytics", icon: BarChart3, href: "/crm/analytics" },
@@ -110,7 +114,16 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Dashboards",
           routes: [
             { label: "Sales", icon: DollarSign, href: "/sales" },
+            { label: "Quotas", icon: Target, href: "/sales/quotas" },
+            { label: "Commissions", icon: DollarSign, href: "/sales/commissions" },
             { label: "Customer Exec", icon: Handshake, href: "/customer-executive" },
+          ],
+        },
+        {
+          label: "Marketing",
+          routes: [
+            { label: "Campaigns", icon: Megaphone, href: "/marketing/campaigns" },
+            { label: "Email Campaigns", icon: Mail, href: "/marketing/email-campaigns" },
           ],
         },
         {
@@ -209,6 +222,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leads", icon: Contact2, href: "/crm/leads" },
             { label: "My Deals", icon: Handshake, href: "/crm/deals" },
             { label: "My Targets", icon: Trophy, href: "/crm/targets" },
+            { label: "My Commissions", icon: DollarSign, href: "/sales/commissions" },
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
@@ -251,6 +265,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
             { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Marketing Hub", icon: BarChart3, href: "/marketing" },
+            { label: "Campaigns", icon: Megaphone, href: "/marketing/campaigns" },
+            { label: "Email Campaigns", icon: Mail, href: "/marketing/email-campaigns" },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
