@@ -1,11 +1,7 @@
 import { vi } from "vitest";
 
-// Mock server-only module — Next.js server-only packages throw when imported
-// outside of a Next.js server context (e.g., in Vitest's node environment).
 vi.mock("server-only", () => ({}));
 
-// Mock next-auth — prevents the auth library from trying to resolve
-// next/server via its own module resolution which fails in Vitest's node env.
 vi.mock("next-auth", () => ({
   default: vi.fn(),
   signIn: vi.fn(),
@@ -19,8 +15,6 @@ vi.mock("@/lib/auth", () => ({
   signOut: vi.fn(),
 }));
 
-// Mock Redis — prevents real network calls in tests.
-// Individual tests can override these mocks with vi.mocked(...).mockResolvedValue(...)
 vi.mock("@/lib/redis", () => ({
   redis: {
     get: vi.fn(),
@@ -33,9 +27,17 @@ vi.mock("@/lib/redis", () => ({
   redisHealth: vi.fn().mockResolvedValue({ status: "healthy" }),
 }));
 
-// Mock DB — prevents real DB connections in unit/integration tests.
-// The mock is intentionally shallow; tests that need specific return values
-// should use vi.mocked(db.query.xxx.findMany).mockResolvedValue([...]) etc.
+function createChainableQuery(finalValue: unknown = []): unknown {
+  const chain: Record<string, unknown> = {};
+  const methods = ["from", "where", "orderBy", "groupBy", "limit", "offset", "innerJoin", "leftJoin", "returning", "values", "set", "on"];
+  for (const method of methods) {
+    chain[method] = vi.fn(() => chain);
+  }
+  chain.then = (resolve: (v: unknown) => void) => Promise.resolve(finalValue).then(resolve);
+  (chain as Record<string | symbol, unknown>)[Symbol.toStringTag] = "Promise";
+  return chain;
+}
+
 vi.mock("@/lib/db", () => ({
   db: {
     query: new Proxy(
@@ -45,36 +47,19 @@ vi.mock("@/lib/db", () => ({
           new Proxy(
             {},
             {
-              get: () => ({
-                findMany: vi.fn().mockResolvedValue([]),
-                findFirst: vi.fn().mockResolvedValue(null),
-              }),
+              get: (_t, prop) => {
+                if (prop === "findMany") return vi.fn().mockResolvedValue([]);
+                if (prop === "findFirst") return vi.fn().mockResolvedValue(null);
+                return vi.fn().mockResolvedValue([]);
+              },
             }
           ),
       }
     ),
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve([])),
-        orderBy: vi.fn(() => ({
-          limit: vi.fn(() => Promise.resolve([])),
-        })),
-        limit: vi.fn(() => Promise.resolve([])),
-      })),
-    })),
-    insert: vi.fn(() => ({
-      values: vi.fn(() => ({
-        returning: vi.fn(() => Promise.resolve([])),
-      })),
-    })),
-    update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve([])),
-      })),
-    })),
-    delete: vi.fn(() => ({
-      where: vi.fn(() => Promise.resolve([])),
-    })),
+    select: vi.fn(() => createChainableQuery([])),
+    insert: vi.fn(() => createChainableQuery([{ id: 1 }])),
+    update: vi.fn(() => createChainableQuery([])),
+    delete: vi.fn(() => createChainableQuery([])),
   },
   client: {},
 }));

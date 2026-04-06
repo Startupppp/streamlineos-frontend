@@ -5,10 +5,12 @@ import {
   payrolls, departments, expenses,
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, count, desc } from "drizzle-orm";
+import { cached, HR_CACHE, CACHE_TTL } from "@/lib/hr-cache";
 
 export async function GET() {
   return withAdmin(async (session) => {
     const orgId = session.orgId;
+    const data = await cached(HR_CACHE.analytics(orgId), async () => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
@@ -122,7 +124,7 @@ export async function GET() {
       leavesByStatus[row.status ?? "UNKNOWN"] = Number(row.count);
     }
 
-    return ok({
+    return {
       headcount: {
         total: Number(totalEmployeesResult[0]?.count ?? 0),
         active: Number(activeEmployeesResult[0]?.count ?? 0),
@@ -156,6 +158,9 @@ export async function GET() {
       expenses: {
         approvedYTD: expenseTotalResult[0]?.total ?? "0",
       },
-    });
+    };
+    }, { ttlSeconds: CACHE_TTL.MEDIUM });
+
+    return ok(data);
   });
 }

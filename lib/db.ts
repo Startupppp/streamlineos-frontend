@@ -31,15 +31,15 @@ const isNeonHost = /\.neon\.tech/i.test(connectionString);
 const isDev = process.env.NODE_ENV === "development";
 const isServerless = process.env.VERCEL === "1";
 
-const max = isServerless ? 10 : isDev ? 5 : 25;
+const max = isServerless ? 15 : isDev ? 5 : 75;
 
 function createPostgresClient() {
   return postgres(connectionString, {
     prepare: false,
     max,
-    idle_timeout: isServerless ? 10 : isDev ? 20 : 30,
-    // Neon cold start / slow networks; 10s dev timeout caused CONNECT_TIMEOUT storms.
+    idle_timeout: isServerless ? 10 : isDev ? 20 : 60,
     connect_timeout: isNeonHost ? 60 : 30,
+    max_lifetime: isServerless ? 60 * 5 : 60 * 30,
     ...(isNeonHost ? { ssl: "require" as const } : {}),
   });
 }
