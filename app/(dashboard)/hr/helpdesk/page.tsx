@@ -286,50 +286,27 @@ export default function HelpdeskPage() {
     >
       <div className="space-y-6">
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Ticket className="h-4 w-4" />
-                <span className="text-sm">Total</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <AlertCircle className="h-4 w-4 text-orange-500" />
-                <span className="text-sm">Open</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.open}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Clock className="h-4 w-4 text-blue-500" />
-                <span className="text-sm">In Progress</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.inProgress}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Resolved</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.resolved}</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Total", value: stats.total, icon: Ticket, color: "" },
+            { label: "Open", value: stats.open, icon: AlertCircle, color: "text-orange-500" },
+            { label: "In Progress", value: stats.inProgress, icon: Clock, color: "text-blue-500" },
+            { label: "Resolved", value: stats.resolved, icon: CheckCircle2, color: "text-green-500" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <Card key={label}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Icon className={`h-3.5 w-3.5 ${color}`} />
+                  <span className="text-xs">{label}</span>
+                </div>
+                <p className="text-xl font-bold">{value}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Tickets table */}
         <Card>
-          <CardHeader>
-            <CardTitle>Tickets</CardTitle>
-          </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[700px]">

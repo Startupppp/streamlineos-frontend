@@ -52,7 +52,7 @@ export default function RecruitmentDashboardPage() {
     >
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
             { label: "Total Jobs", value: stats?.totalJobs ?? 0, icon: Briefcase },
             { label: "Open Positions", value: stats?.openJobs ?? 0, icon: Briefcase },
@@ -62,12 +62,12 @@ export default function RecruitmentDashboardPage() {
             { label: "Hired (Month)", value: stats?.hiredThisMonth ?? 0, icon: UserCheck },
           ].map(({ label, value, icon: Icon }) => (
             <Card key={label}>
-              <CardContent className="pt-6">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5" />
                   <span className="text-xs">{label}</span>
                 </div>
-                <p className="text-2xl font-bold">{value}</p>
+                <p className="text-xl font-bold">{value}</p>
               </CardContent>
             </Card>
           ))}

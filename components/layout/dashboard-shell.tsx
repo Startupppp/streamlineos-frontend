@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { AppSidebar } from "./app-sidebar";
 import { CommandPalette } from "./command-palette";
-import { ScrollArea } from "../ui/scroll-area";
 import { NotActivatedPage } from "../auth/not-activated-page";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -37,7 +35,6 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
   const isMobile = useIsMobile();
   usePushSubscription(userId);
 
@@ -50,16 +47,6 @@ export function DashboardShell({
   }, []);
 
   const handleCloseMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
-
-  const isProjectPage =
-    pathname?.startsWith("/projects/") && pathname.split("/").length > 2;
-  const isCrmDetailPage =
-    pathname?.startsWith("/crm/leads/") || pathname?.startsWith("/crm/deals/");
-  const isChatPage = pathname === "/chat";
-  const isOnboardingPage = pathname === "/onboarding";
-  const isCalendarPage = pathname === "/calendar";
-  const isAttendancePage = pathname === "/hr/attendance";
-  const isFullHeightPage = isProjectPage || isChatPage || isCrmDetailPage || isOnboardingPage || isCalendarPage || isAttendancePage;
 
   const sidebarW = isSidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_EXPANDED_W;
 
@@ -120,17 +107,9 @@ export function DashboardShell({
             )}
 
             <div className="flex-1 min-h-0 overflow-hidden">
-              {isFullHeightPage ? (
-                <div className="h-full w-full overflow-auto">
-                  {children}
-                </div>
-              ) : (
-                <ScrollArea className="h-full w-full">
-                  <div className="min-h-full">
-                    {children}
-                  </div>
-                </ScrollArea>
-              )}
+              <div className="h-full w-full overflow-auto">
+                {children}
+              </div>
             </div>
           </>
         ) : (

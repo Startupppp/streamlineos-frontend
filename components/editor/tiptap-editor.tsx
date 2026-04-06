@@ -25,6 +25,7 @@ export function TiptapEditor({
   const hasInitialized = useRef(false);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder }),

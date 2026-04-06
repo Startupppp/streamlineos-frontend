@@ -1,52 +1,21 @@
 "use client";
 
 import * as React from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface PageWrapperProps {
-  /** Page title shown in the header bar */
   title: string;
-  /** Optional subtitle / description */
   subtitle?: string;
-  /** Optional badge next to title — e.g. record count */
   badge?: React.ReactNode;
-  /** Right-side action buttons */
   actions?: React.ReactNode;
-  /**
-   * Sticky filter bar rendered below the title row.
-   * Sticks to the top while the content scrolls.
-   */
   filters?: React.ReactNode;
-  /** Main content */
   children: React.ReactNode;
   className?: string;
-  /** Extra class for the scrollable content area */
   contentClassName?: string;
-  /**
-   * If true the content area handles its own scroll internally.
-   * Use for pages where YOU manage the scroll container (e.g. kanban).
-   * Default: false — DashboardShell's outer ScrollArea handles scroll.
-   */
   noInternalScroll?: boolean;
 }
 
-/**
- * PageWrapper — the single, consistent page layout used across every dashboard
- * page.
- *
- * Structure
- * ─────────
- * ┌──────────────────────────────────────┐
- * │ title  [badge]        [actions]      │  ← not scrollable
- * │ subtitle                             │
- * ├──────────────────────────────────────┤
- * │ [filters bar — sticky]               │  ← sticks on scroll
- * ├──────────────────────────────────────┤
- * │                                      │
- * │     children (scrolled by parent)    │
- * │                                      │
- * └──────────────────────────────────────┘
- */
 export function PageWrapper({
   title,
   subtitle,
@@ -59,13 +28,12 @@ export function PageWrapper({
   noInternalScroll = false,
 }: PageWrapperProps) {
   return (
-    <div className={cn("flex flex-col min-h-0", noInternalScroll && "h-full", className)}>
-      {/* ── Header ── */}
-      <div className="px-4 sm:px-6 pt-4 pb-3">
+    <div className={cn("flex flex-col h-full min-h-0", className)}>
+      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-[1.375rem] font-semibold tracking-tight text-foreground leading-tight">
+              <h1 className="text-lg font-semibold tracking-tight text-foreground leading-tight">
                 {title}
               </h1>
               {badge && (
@@ -75,7 +43,7 @@ export function PageWrapper({
               )}
             </div>
             {subtitle && (
-              <p className="mt-0.5 text-sm text-muted-foreground leading-snug">
+              <p className="mt-0.5 text-[13px] text-muted-foreground leading-snug">
                 {subtitle}
               </p>
             )}
@@ -89,38 +57,31 @@ export function PageWrapper({
         </div>
       </div>
 
-      {/* ── Filters bar ── */}
       {filters && (
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/60">
-          <div className="px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto scrollbar-thin">
+        <div className="shrink-0 border-b border-border/60 bg-background">
+          <div className="px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto scrollbar-thin">
             {filters}
           </div>
         </div>
       )}
 
-      {/* ── Divider (when no filters) ── */}
-      {!filters && (
-        <div className="mx-4 sm:mx-6 h-px bg-border/60" />
-      )}
+      {!filters && <div className="shrink-0 mx-4 sm:mx-6 h-px bg-border/60" />}
 
-      {/* ── Content ── */}
-      <div
-        className={cn(
-          "px-4 sm:px-6 py-4",
-          noInternalScroll && "flex-1 min-h-0 overflow-hidden",
-          contentClassName
-        )}
-      >
-        {children}
-      </div>
+      {noInternalScroll ? (
+        <div className={cn("flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pt-3 pb-4", contentClassName)}>
+          {children}
+        </div>
+      ) : (
+        <ScrollArea className="flex-1 min-h-0">
+          <div className={cn("px-4 sm:px-6 pt-3 pb-6", contentClassName)}>
+            {children}
+          </div>
+        </ScrollArea>
+      )}
     </div>
   );
 }
 
-/**
- * PageSection — a visual section divider within a PageWrapper.
- * Use to group related content blocks.
- */
 export function PageSection({
   title,
   description,
