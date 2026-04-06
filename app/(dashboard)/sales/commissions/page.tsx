@@ -44,7 +44,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useCommissions, useCommissionRules, useCreateCommissionRule } from "@/lib/api/hooks/crm";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -62,7 +62,6 @@ export default function CommissionsPage() {
   const { data, isLoading } = useCommissions({ status: statusFilter });
   const { data: rules } = useCommissionRules();
   const createRule = useCreateCommissionRule();
-  const { toast } = useToast();
 
   const items = (data?.items ?? []) as Array<{
     id: number;
@@ -86,10 +85,10 @@ export default function CommissionsPage() {
       },
       {
         onSuccess: () => {
-          toast({ title: "Commission rule created" });
+          toast.success("Commission rule created");
           setRuleDialogOpen(false);
         },
-        onError: () => toast({ title: "Failed to create rule", variant: "destructive" }),
+        onError: () => toast.error("Failed to create rule"),
       },
     );
   }

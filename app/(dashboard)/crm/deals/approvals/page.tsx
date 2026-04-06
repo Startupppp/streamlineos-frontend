@@ -37,7 +37,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useDealApprovals, useResolveDealApproval } from "@/lib/api/hooks/crm";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -68,9 +68,8 @@ export default function DealApprovalsPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const { data, isLoading } = useDealApprovals({ status: statusFilter });
   const resolve = useResolveDealApproval();
-  const { toast } = useToast();
 
-  const items: Approval[] = Array.isArray(data) ? data : [];
+  const items: Approval[] = Array.isArray(data) ? (data as unknown as Approval[]) : [];
 
   const handleResolve = useCallback(() => {
     if (!confirmAction) return;
@@ -82,11 +81,11 @@ export default function DealApprovalsPage() {
       },
       {
         onSuccess: () => {
-          toast({ title: confirmAction.action === "approve" ? "Deal approved" : "Deal rejected" });
+          toast.success(confirmAction.action === "approve" ? "Deal approved" : "Deal rejected");
           setConfirmAction(null);
           setRejectionReason("");
         },
-        onError: () => toast({ title: "Action failed", variant: "destructive" }),
+        onError: () => toast.error("Action failed"),
       },
     );
   }, [confirmAction, rejectionReason, resolve, toast]);

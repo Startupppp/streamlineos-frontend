@@ -42,7 +42,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useEmailCampaigns, useCreateEmailCampaign, useSendEmailCampaign } from "@/lib/api/hooks/crm";
 import type { EmailCampaign } from "@/lib/api/hooks/crm";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   draft: { label: "Draft", variant: "secondary" },
@@ -58,7 +58,6 @@ export default function EmailCampaignsPage() {
   const { data, isLoading } = useEmailCampaigns();
   const createCampaign = useCreateEmailCampaign();
   const sendCampaign = useSendEmailCampaign();
-  const { toast } = useToast();
 
   const items: EmailCampaign[] = Array.isArray(data) ? data : [];
 
@@ -73,10 +72,10 @@ export default function EmailCampaignsPage() {
       },
       {
         onSuccess: () => {
-          toast({ title: "Email campaign created" });
+          toast.success("Email campaign created");
           setSheetOpen(false);
         },
-        onError: () => toast({ title: "Failed to create campaign", variant: "destructive" }),
+        onError: () => toast.error("Failed to create campaign"),
       },
     );
   }
@@ -84,11 +83,11 @@ export default function EmailCampaignsPage() {
   function handleSend() {
     if (!sendId) return;
     sendCampaign.mutate(sendId, {
-      onSuccess: (data) => {
-        toast({ title: `Campaign sent to ${data?.sent ?? 0} recipients` });
+      onSuccess: (result) => {
+        toast.success(`Campaign sent to ${result?.sent ?? 0} recipients`);
         setSendId(null);
       },
-      onError: () => toast({ title: "Failed to send campaign", variant: "destructive" }),
+      onError: () => toast.error("Failed to send campaign"),
     });
   }
 

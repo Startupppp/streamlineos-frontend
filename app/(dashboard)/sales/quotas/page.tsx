@@ -42,7 +42,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useSalesQuotas, useCreateSalesQuota } from "@/lib/api/hooks/crm";
 import { useHrEmployees } from "@/lib/api/hooks";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { SalesQuota } from "@/lib/api/hooks/crm";
 
 function fmt(amount: string | number) {
@@ -54,10 +54,10 @@ export default function SalesQuotasPage() {
   const { data: quotas, isLoading } = useSalesQuotas();
   const { data: employeesData } = useHrEmployees({ limit: 100 });
   const createQuota = useCreateSalesQuota();
-  const { toast } = useToast();
 
   const items: SalesQuota[] = Array.isArray(quotas) ? quotas : [];
-  const employees = employeesData?.items ?? employeesData?.employees ?? [];
+  const employees = (employeesData as { data?: Array<{ id: string; name: string }>; items?: Array<{ id: string; name: string }> } | Array<{ id: string; name: string }> | undefined);
+  const employeeList: Array<{ id: string; name: string }> = Array.isArray(employees) ? employees : (employees?.data ?? employees?.items ?? []);
 
   const totalTarget = items.reduce((s, q) => s + Number(q.targetRevenue), 0);
   const totalActual = items.reduce((s, q) => s + Number(q.actualRevenue), 0);
@@ -77,10 +77,10 @@ export default function SalesQuotasPage() {
       },
       {
         onSuccess: () => {
-          toast({ title: "Quota created" });
+          toast.success("Quota created");
           setSheetOpen(false);
         },
-        onError: () => toast({ title: "Failed to create quota", variant: "destructive" }),
+        onError: () => toast.error("Failed to create quota"),
       },
     );
   }
@@ -173,7 +173,7 @@ export default function SalesQuotasPage() {
               <Select name="userId" required>
                 <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
                 <SelectContent>
-                  {(employees as Array<{ id: string; name: string }>).map((emp) => (
+                  {employeeList.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
                   ))}
                 </SelectContent>

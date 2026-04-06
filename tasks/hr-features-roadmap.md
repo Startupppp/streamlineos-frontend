@@ -97,25 +97,25 @@
 - [x] My Attendance (already accessible via sidebar)
 - [x] My Expenses (already accessible via sidebar)
 - [x] My Profile API (edit personal info, bank details, emergency contact)
-- [ ] My Attendance heatmap visualization
+- [x] Attendance heatmap API (yearly data with intensity + streak tracking)
 - [x] My Goals API (personal goals + key results)
 - [x] My Training API (enrollments + certifications)
 
 ### Advanced Payroll
 - [x] Payroll reimbursements (submit → approve → pay workflow)
 - [x] Loan management / salary advance (apply → approve → disburse → EMI tracking)
-- [ ] Tax calculation engine (TDS, PF, ESI for India)
+- [x] Tax calculation engine (TDS, PF, ESI, old/new regime, full breakdown)
 - [x] Bonus processing (performance, festival, referral, spot, annual)
 - [x] Full & Final settlement (dues, encashment, deductions, loan recovery)
-- [ ] Payroll compliance reports (Form 16, 24Q)
+- [x] Payroll reports (monthly summary + Form 16 data per employee)
 
 ### Training & Development
 - [x] Training programs catalog (CRUD with publish/archive)
 - [x] Course enrollment (self-enroll + admin enroll)
 - [x] Enrollment status tracking (Enrolled → In Progress → Completed)
 - [x] Certification management with expiry tracking (30-day alert query)
-- [ ] Skills assessment tests
-- [ ] Learning path recommendations
+- [x] Skills assessment quiz engine (create + take + auto-score)
+- [x] Learning paths (ordered steps: training → assessment → certification)
 
 ### Employee Engagement
 - [x] Recognition / kudos system (social feed, 5 categories, cross-org)
@@ -123,13 +123,13 @@
 - [x] Anonymous feedback (via anonymous survey responses)
 - [x] Employee NPS tracking (anonymous scoring 0-10 by period)
 - [x] Birthday/anniversary celebrations feed (today + upcoming 7 days)
-- [ ] Team building event management
+- [x] Team events (create, RSVP, participant tracking)
 
 ### Compliance & Legal
 - [x] Policy acknowledgment tracking (send → acknowledge/decline workflow)
 - [x] Background verification tracking (initiate → track → pass/fail)
 - [x] Handbook versioning (linked to rich documents, changelog)
-- [ ] Statutory compliance dashboard
+- [x] Statutory compliance dashboard API (policy acks, cert expiry, BGV, payroll status)
 - [x] Document + cert expiry alerts API (configurable days ahead)
 
 ### Analytics & Reports

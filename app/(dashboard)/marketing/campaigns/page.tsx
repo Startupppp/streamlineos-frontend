@@ -39,7 +39,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useMarketingCampaigns, useCreateMarketingCampaign, useDeleteMarketingCampaign } from "@/lib/api/hooks/crm";
 import type { MarketingCampaign } from "@/lib/api/hooks/crm";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -57,7 +57,6 @@ export default function CampaignsPage() {
   const { data, isLoading } = useMarketingCampaigns();
   const createCampaign = useCreateMarketingCampaign();
   const deleteCampaign = useDeleteMarketingCampaign();
-  const { toast } = useToast();
 
   const items: MarketingCampaign[] = Array.isArray(data) ? data : [];
 
@@ -75,10 +74,10 @@ export default function CampaignsPage() {
       },
       {
         onSuccess: () => {
-          toast({ title: "Campaign created" });
+          toast.success("Campaign created");
           setSheetOpen(false);
         },
-        onError: () => toast({ title: "Failed to create campaign", variant: "destructive" }),
+        onError: () => toast.error("Failed to create campaign"),
       },
     );
   }
@@ -87,10 +86,10 @@ export default function CampaignsPage() {
     if (!deleteId) return;
     deleteCampaign.mutate(deleteId, {
       onSuccess: () => {
-        toast({ title: "Campaign deleted" });
+        toast.success("Campaign deleted");
         setDeleteId(null);
       },
-      onError: () => toast({ title: "Failed to delete", variant: "destructive" }),
+      onError: () => toast.error("Failed to delete"),
     });
   }
 
