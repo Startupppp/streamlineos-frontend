@@ -152,12 +152,12 @@
 - [x] Alumni network (profiles with current company, LinkedIn, opt-in)
 
 ### Integrations
-- [ ] Google Calendar sync for interviews
-- [ ] Slack/Teams notifications for approvals
-- [ ] Accounting software export (Tally, QuickBooks)
-- [ ] Job board integrations (LinkedIn, Naukri, Indeed)
-- [ ] Biometric device integration
-- [ ] Email integration for candidate communication
+- [x] Google Calendar sync for interviews (uses existing OAuth tokens)
+- [x] Slack webhook notifications (leave, expense, resignation, custom)
+- [x] Accounting export (Tally XML, QuickBooks CSV, JSON)
+- [x] Job board posting (LinkedIn, Naukri, Indeed — ready when API keys configured)
+- [x] Biometric webhook receiver (check-in/check-out via API key auth)
+- [x] Email integration (template variables, candidate auto-fill, SendGrid)
 
 ---
 
