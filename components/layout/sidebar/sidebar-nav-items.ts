@@ -38,6 +38,8 @@ import {
   UserSearch,
   TrendingUp,
   BookOpen,
+  Heart,
+  UserMinus,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -85,6 +87,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
             { label: "Training", icon: BookOpen, href: "/hr/training" },
+            { label: "Recognition", icon: Heart, href: "/hr/recognition" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
             { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
@@ -149,6 +153,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
             { label: "Training", icon: BookOpen, href: "/hr/training" },
+            { label: "Recognition", icon: Heart, href: "/hr/recognition" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
             { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],

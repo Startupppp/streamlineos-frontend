@@ -119,10 +119,10 @@
 - [ ] Learning path recommendations
 
 ### Employee Engagement
+- [x] Recognition / kudos system (social feed, 5 categories, cross-org)
 - [ ] Pulse surveys
 - [ ] Anonymous feedback
 - [ ] Employee NPS (eNPS) tracking
-- [ ] Recognition / kudos system
 - [ ] Birthday/anniversary celebrations feed
 - [ ] Team building event management
 
@@ -144,9 +144,9 @@
 - [ ] Compensation benchmarking
 
 ### Exit Management
-- [ ] Resignation workflow (notice period tracking)
-- [ ] Exit interview questionnaire
-- [ ] Knowledge transfer checklist
+- [x] Resignation workflow (submit → approve → complete) with notice period tracking
+- [x] Exit interview notes + structured feedback questionnaire
+- [x] Exit checklist system (admin can add checklist items)
 - [ ] Asset return tracking
 - [ ] Full & final settlement
 - [ ] Experience letter generation

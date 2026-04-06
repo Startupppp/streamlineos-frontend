@@ -34,6 +34,9 @@ export const trainingStatusEnum = pgEnum("training_status", ["DRAFT", "PUBLISHED
 export const enrollmentStatusEnum = pgEnum("enrollment_status", ["ENROLLED", "IN_PROGRESS", "COMPLETED", "DROPPED"]);
 export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "APPROVED", "WITHDRAWN", "COMPLETED"]);
 export const exitChecklistStatusEnum = pgEnum("exit_checklist_status", ["PENDING", "DONE"]);
+export const ackStatusEnum = pgEnum("ack_status", ["PENDING", "ACKNOWLEDGED", "DECLINED"]);
+export const reimbursementStatusEnum = pgEnum("reimbursement_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
+export const loanStatusEnum = pgEnum("loan_status", ["PENDING", "APPROVED", "ACTIVE", "REPAID", "REJECTED"]);
 
 // ─── CRM / Leads / Deals ───
 export const leadPipelineStatusEnum = pgEnum("lead_pipeline_status", ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]);

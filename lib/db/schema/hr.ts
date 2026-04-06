@@ -13,6 +13,7 @@ import {
   reviewCycleStatusEnum, meetingStatusEnum,
   trainingStatusEnum, enrollmentStatusEnum,
   resignationStatusEnum, exitChecklistStatusEnum,
+  ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -374,6 +375,63 @@ export const recognitions = pgTable("recognitions", {
   index("idx_recognitions_to_user").on(table.toUserId),
 ]);
 
+// ─── Compliance: Policy Acknowledgments ───
+export const policyAcknowledgments = pgTable("policy_acknowledgments", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  documentId: integer("document_id").references(() => documents.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  status: ackStatusEnum("status").default("PENDING"),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_policy_ack_doc").on(table.documentId),
+  index("idx_policy_ack_user").on(table.userId),
+]);
+
+// ─── Payroll: Reimbursements ───
+export const reimbursements = pgTable("reimbursements", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  category: text("category").notNull(),
+  amount: decimal("amount").notNull(),
+  description: text("description"),
+  receiptUrl: text("receipt_url"),
+  status: reimbursementStatusEnum("status").default("PENDING"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  paidAt: timestamp("paid_at"),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_reimbursements_org").on(table.orgId),
+  index("idx_reimbursements_user").on(table.userId),
+]);
+
+// ─── Payroll: Salary Advance / Loans ───
+export const salaryLoans = pgTable("salary_loans", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  amount: decimal("amount").notNull(),
+  reason: text("reason"),
+  emiAmount: decimal("emi_amount"),
+  totalEmis: integer("total_emis"),
+  paidEmis: integer("paid_emis").default(0),
+  status: loanStatusEnum("status").default("PENDING"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  disbursedAt: timestamp("disbursed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_loans_org").on(table.orgId),
+  index("idx_loans_user").on(table.userId),
+]);
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -711,4 +769,19 @@ export const exitChecklistsRelations = relations(exitChecklists, ({ one }) => ({
 export const recognitionsRelations = relations(recognitions, ({ one }) => ({
   fromUser: one(users, { fields: [recognitions.fromUserId], references: [users.id], relationName: "recognitionFrom" }),
   toUser: one(users, { fields: [recognitions.toUserId], references: [users.id], relationName: "recognitionTo" }),
+}));
+
+export const policyAcknowledgmentsRelations = relations(policyAcknowledgments, ({ one }) => ({
+  document: one(documents, { fields: [policyAcknowledgments.documentId], references: [documents.id] }),
+  user: one(users, { fields: [policyAcknowledgments.userId], references: [users.id] }),
+}));
+
+export const reimbursementsRelations = relations(reimbursements, ({ one }) => ({
+  user: one(users, { fields: [reimbursements.userId], references: [users.id] }),
+  approver: one(users, { fields: [reimbursements.approvedBy], references: [users.id], relationName: "reimbursementApprover" }),
+}));
+
+export const salaryLoansRelations = relations(salaryLoans, ({ one }) => ({
+  user: one(users, { fields: [salaryLoans.userId], references: [users.id] }),
+  approver: one(users, { fields: [salaryLoans.approvedBy], references: [users.id], relationName: "loanApprover" }),
 }));

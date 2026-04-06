@@ -10,3 +10,6 @@ export * from "./analytics";
 export * from "./training";
 export * from "./exit";
 export * from "./recognition";
+export * from "./compliance";
+export * from "./reimbursements";
+export * from "./loans";
