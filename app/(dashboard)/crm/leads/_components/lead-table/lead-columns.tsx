@@ -6,6 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ArrowUpDown, ArrowUp, ArrowDown, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -13,7 +16,7 @@ import {
   Lead, TeamMember,
   STATUSES, PRIORITIES,
   STATUS_COLORS, PRIORITY_COLORS, SOURCE_COLORS,
-  formatINR, timeAgo,
+  formatINR, timeAgo, formatDate,
 } from "./types";
 
 /* ─── SortIcon ─── */
@@ -61,10 +64,13 @@ export function useLeadCellRenderer({
     const isEditing = editingCell?.leadId === lead.id && editingCell?.column === colKey;
 
     switch (colKey) {
+      case "createdAt":
+        return <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">{formatDate(lead.createdAt)}</span>;
+
       case "name":
         return (
           <button
-            className="font-medium text-sm hover:text-gold hover:underline text-left truncate max-w-[180px]"
+            className="font-medium text-[12px] hover:text-gold hover:underline text-left truncate max-w-[140px] block"
             onClick={() => router.push(`/crm/leads/${lead.id}`)}
           >
             {lead.name}
@@ -75,21 +81,21 @@ export function useLeadCellRenderer({
         return lead.email ? (
           <button
             onClick={() => copyToClipboard(lead.email!, "Email")}
-            className="text-xs text-muted-foreground hover:text-foreground truncate max-w-[160px] block"
+            className="text-[11px] text-muted-foreground hover:text-foreground truncate max-w-[140px] block"
           >
             {lead.email}
           </button>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
       case "phone":
         return lead.phone ? (
           <button
             onClick={() => copyToClipboard(lead.phone!, "Phone")}
-            className="text-xs text-muted-foreground hover:text-foreground font-mono"
+            className="text-[11px] text-muted-foreground hover:text-foreground font-mono whitespace-nowrap"
           >
             {lead.phone}
           </button>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
       case "whatsapp":
         return lead.whatsappNumber ? (
@@ -97,26 +103,28 @@ export function useLeadCellRenderer({
             href={`https://wa.me/${lead.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi ${lead.name}, this is from Vaivamm Capital.`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300"
-            title={`WhatsApp ${lead.whatsappNumber}`}
+            className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300"
           >
-            <MessageCircle className="h-4 w-4" />
+            <MessageCircle className="h-3 w-3" />
             <span className="font-mono">{lead.whatsappNumber}</span>
           </a>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
       case "company":
-        return <span className="text-xs truncate max-w-[120px] block">{lead.company || "—"}</span>;
+        return <span className="text-[11px] truncate max-w-[100px] block">{lead.company || "—"}</span>;
+
+      case "city":
+        return <span className="text-[11px]">{lead.city || "—"}</span>;
 
       case "source":
         return lead.source ? (
           <Badge
             variant="outline"
-            className={cn("text-[10px] border-0", SOURCE_COLORS[lead.source] || SOURCE_COLORS.other)}
+            className={cn("text-[9px] px-1.5 py-0 h-5 border-0 font-medium", SOURCE_COLORS[lead.source] || SOURCE_COLORS.other)}
           >
             {lead.source.replace("_", " ")}
           </Badge>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
       case "status":
         if (isEditing) {
@@ -128,10 +136,10 @@ export function useLeadCellRenderer({
                 setEditingCell(null);
               }}
             >
-              <SelectTrigger className="h-7 text-xs w-[120px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+                  <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -140,7 +148,7 @@ export function useLeadCellRenderer({
         return (
           <Badge
             variant="outline"
-            className={cn("text-[10px] cursor-pointer border", STATUS_COLORS[lead.status])}
+            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STATUS_COLORS[lead.status])}
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "status" })}
           >
             {lead.status}
@@ -157,10 +165,10 @@ export function useLeadCellRenderer({
                 setEditingCell(null);
               }}
             >
-              <SelectTrigger className="h-7 text-xs w-[90px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-6 text-[10px] w-[80px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {PRIORITIES.map((p) => (
-                  <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
+                  <SelectItem key={p} value={p} className="text-[11px]">{p}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -169,23 +177,58 @@ export function useLeadCellRenderer({
         return lead.priority ? (
           <Badge
             variant="outline"
-            className={cn("text-[10px] cursor-pointer border", PRIORITY_COLORS[lead.priority])}
+            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", PRIORITY_COLORS[lead.priority])}
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "priority" })}
           >
             {lead.priority}
           </Badge>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+
+      case "notes":
+        return lead.notes ? (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-[11px] text-muted-foreground truncate max-w-[100px] block cursor-help">
+                  {lead.notes}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p className="text-xs whitespace-pre-wrap">{lead.notes}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+
+      case "followUpDate":
+        if (!lead.followUpDate) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        const fDate = new Date(lead.followUpDate);
+        const isOverdue = fDate < new Date();
+        return (
+          <span className={cn(
+            "text-[11px] tabular-nums whitespace-nowrap font-medium",
+            isOverdue ? "text-red-400" : "text-emerald-400",
+          )}>
+            {formatDate(lead.followUpDate)}
+          </span>
+        );
+
+      case "investmentInterest":
+        return <span className="text-[11px] font-mono tabular-nums text-gold">{formatINR(lead.investmentInterest)}</span>;
+
+      case "potentialValue":
+        return <span className="text-[11px] font-mono tabular-nums">{formatINR(lead.potentialValue)}</span>;
 
       case "assignedTo":
         if (isEditing) {
           return (
             <Select onValueChange={(v) => { onAssign(lead.id, v); setEditingCell(null); }}>
-              <SelectTrigger className="h-7 text-xs w-[140px]">
+              <SelectTrigger className="h-6 text-[10px] w-[120px]">
                 <SelectValue placeholder="Select..." />
               </SelectTrigger>
               <SelectContent>
                 {teamMembers.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-xs">
+                  <SelectItem key={m.id} value={m.id} className="text-[11px]">
                     {m.name || "Unknown"}
                   </SelectItem>
                 ))}
@@ -195,56 +238,50 @@ export function useLeadCellRenderer({
         }
         return lead.assignedTo?.name ? (
           <div
-            className="flex items-center gap-1.5 cursor-pointer"
+            className="flex items-center gap-1 cursor-pointer"
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "assignedTo" })}
           >
-            <Avatar className="h-5 w-5">
+            <Avatar className="h-4 w-4">
               <AvatarImage src={lead.assignedTo.image || ""} />
-              <AvatarFallback className="text-[8px]">
+              <AvatarFallback className="text-[7px]">
                 {lead.assignedTo.name?.charAt(0) || "?"}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs truncate max-w-[90px]">{lead.assignedTo.name}</span>
+            <span className="text-[11px] truncate max-w-[70px]">{lead.assignedTo.name}</span>
           </div>
         ) : (
           <span
-            className="text-xs text-muted-foreground cursor-pointer hover:text-foreground"
+            className="text-[11px] text-muted-foreground/50 cursor-pointer hover:text-foreground"
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "assignedTo" })}
           >
-            Unassigned
+            —
           </span>
         );
 
       case "score":
-        return <span className="text-xs font-mono">{lead.score ?? 0}</span>;
-
-      case "potentialValue":
-        return <span className="text-xs font-mono">{formatINR(lead.potentialValue)}</span>;
-
-      case "city":
-        return <span className="text-xs">{lead.city || "—"}</span>;
+        return <span className="text-[11px] font-mono tabular-nums">{lead.score ?? 0}</span>;
 
       case "tags":
         return lead.tags?.length ? (
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-0.5 flex-wrap">
             {lead.tags.slice(0, 2).map((t) => (
-              <Badge key={t} variant="secondary" className="text-[9px] px-1">{t}</Badge>
+              <Badge key={t} variant="secondary" className="text-[8px] px-1 py-0 h-4">{t}</Badge>
             ))}
             {lead.tags.length > 2 && (
-              <span className="text-[9px] text-muted-foreground">+{lead.tags.length - 2}</span>
+              <span className="text-[8px] text-muted-foreground">+{lead.tags.length - 2}</span>
             )}
           </div>
-        ) : <span className="text-xs text-muted-foreground">—</span>;
+        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
 
       case "sla": {
-        if (!lead.slaDeadline) return <span className="text-xs text-muted-foreground">—</span>;
+        if (!lead.slaDeadline) return <span className="text-[11px] text-muted-foreground/50">—</span>;
         const deadline = new Date(lead.slaDeadline);
         const overdue = deadline < new Date();
         return (
           <Badge
             variant="outline"
             className={cn(
-              "text-[10px]",
+              "text-[9px] px-1.5 py-0 h-5",
               overdue
                 ? "bg-red-500/10 text-red-400 border-red-500/20"
                 : "bg-green-500/10 text-green-400 border-green-500/20",
@@ -254,9 +291,6 @@ export function useLeadCellRenderer({
           </Badge>
         );
       }
-
-      case "createdAt":
-        return <span className="text-xs text-muted-foreground">{timeAgo(lead.createdAt)}</span>;
 
       default:
         return null;

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { FolderPlus, Upload } from "lucide-react";
+import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +19,9 @@ import {
 import { isDocumentType } from "@/lib/theme-constants";
 import { UploadDocumentDialog } from "./upload-document-dialog";
 import { useSession } from "next-auth/react";
+import { useRichDocuments, useDeleteRichDocument } from "@/lib/api/hooks/hr";
+import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNow } from "date-fns";
 
 import { DocumentFilters, DOCUMENT_TYPES } from "./_components/document-filters";
 import { DocumentTable, type Document, type FolderItem } from "./_components/document-table";
@@ -320,11 +324,17 @@ export default function DocumentsPage() {
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" className="gap-2" onClick={handleNewFolderOpen}>
         <FolderPlus className="h-4 w-4" />
-        New Folder
+        <span className="hidden sm:inline">New Folder</span>
       </Button>
-      <Button size="sm" className="gap-2" onClick={handleUploadOpen}>
+      <Button variant="outline" size="sm" className="gap-2" onClick={handleUploadOpen}>
         <Upload className="h-4 w-4" />
-        Upload
+        <span className="hidden sm:inline">Upload</span>
+      </Button>
+      <Button size="sm" className="gap-2" asChild>
+        <Link href="/hr/documents/editor/new">
+          <FilePlus2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Create Document</span>
+        </Link>
       </Button>
     </div>
   );
@@ -363,6 +373,8 @@ export default function DocumentsPage() {
         onOpenUpload={handleUploadOpen}
       />
 
+      <RichDocumentsSection />
+
       <div className="flex items-center gap-3 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span className="font-medium">{storagePercent}%</span>
@@ -397,5 +409,101 @@ export default function DocumentsPage() {
       />
       </div>
     </PageWrapper>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Rich Documents Section                                               */
+/* ------------------------------------------------------------------ */
+
+function RichDocumentsSection() {
+  const { data: richDocs, isLoading } = useRichDocuments();
+  const deleteMutation = useDeleteRichDocument();
+
+  const handleDelete = useCallback((id: number) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => toast.success("Document deleted"),
+      onError: (e) => toast.error(e.message),
+    });
+  }, [deleteMutation]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!richDocs?.length) return null;
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-sm">Created Documents</h3>
+          <span className="text-xs text-muted-foreground">{richDocs.length} documents</span>
+        </div>
+        <div className="space-y-2">
+          {richDocs.map((doc) => (
+            <div
+              key={doc.id}
+              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{doc.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {doc.templateType && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {doc.templateType}
+                      </Badge>
+                    )}
+                    {doc.isPublished && (
+                      <Badge variant="default" className="text-[10px] px-1.5 py-0 gap-0.5">
+                        <Globe className="h-2.5 w-2.5" />
+                        Published
+                      </Badge>
+                    )}
+                    {doc.updatedAt && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                  <Link href={`/hr/documents/editor/${doc.id}`}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(doc.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

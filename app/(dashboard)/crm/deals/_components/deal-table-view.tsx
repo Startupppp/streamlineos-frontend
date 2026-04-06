@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-} from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/* ─── Types ─── */
 interface Deal {
   id: number;
   name: string;
@@ -54,19 +49,27 @@ const STAGE_COLORS: Record<string, string> = {
 function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
   const num = typeof val === "string" ? parseFloat(val) : val;
-  if (isNaN(num)) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
+  if (isNaN(num) || num === 0) return "—";
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(0)}K`;
+  return `₹${num.toLocaleString("en-IN")}`;
+}
+
+function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return "—";
+  const d = new Date(date);
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
 function timeAgo(date: string | Date | null | undefined): string {
   if (!date) return "—";
   const d = new Date(date);
   const diff = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
   const days = Math.floor(diff / 86400);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return `${days}d`;
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
@@ -78,12 +81,12 @@ export function DealTableView({
 
   const columns = [
     { key: "name", label: "Deal Name", sortable: true },
-    { key: "value", label: "Value (INR)", sortable: true },
+    { key: "value", label: "Value", sortable: true },
     { key: "stage", label: "Stage", sortable: true },
-    { key: "probability", label: "Probability", sortable: true },
+    { key: "probability", label: "Prob%", sortable: true },
     { key: "contactPerson", label: "Contact", sortable: false },
-    { key: "assignedTo", label: "Assigned To", sortable: false },
-    { key: "expectedCloseDate", label: "Expected Close", sortable: false },
+    { key: "assignedTo", label: "Assigned", sortable: false },
+    { key: "expectedCloseDate", label: "Close", sortable: false },
     { key: "createdAt", label: "Created", sortable: true },
   ];
 
@@ -95,21 +98,22 @@ export function DealTableView({
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
-      <div className="shrink-0 flex items-center justify-between px-1 pb-2">
-        <span className="text-xs text-muted-foreground">{deals.length} deals</span>
+    <div className="flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
+      <div className="shrink-0 flex items-center px-1 pb-1.5">
+        <span className="text-[11px] text-muted-foreground tabular-nums">{deals.length} deals</span>
       </div>
 
-      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto">
-          <div className="min-w-max">
-          <table className="w-full caption-bottom text-sm">
-            <TableHeader className="sticky top-0 z-10 bg-muted/60">
-              <TableRow className="hover:bg-muted/60">
+      <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
+        <div className="min-w-max">
+          <table className="w-full caption-bottom text-[11px]">
+            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+              <TableRow className="hover:bg-muted/80 border-b-2 border-border">
                 {columns.map(col => (
                   <TableHead
                     key={col.key}
-                    className={cn("text-[11px] uppercase tracking-wider font-semibold px-3 py-2.5 whitespace-nowrap",
-                      col.sortable && "cursor-pointer select-none hover:text-foreground"
+                    className={cn(
+                      "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
+                      col.sortable && "cursor-pointer select-none hover:text-foreground",
                     )}
                     onClick={() => col.sortable && onSort(col.key)}
                   >
@@ -123,16 +127,16 @@ export function DealTableView({
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
+                Array.from({ length: 8 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={columns.length} className="h-12">
-                      <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
+                    <TableCell colSpan={columns.length} className="h-7 px-2">
+                      <div className="h-3 w-full bg-muted/50 rounded animate-pulse" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : deals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={columns.length} className="text-center py-12 text-muted-foreground text-xs">
                     No deals found
                   </TableCell>
                 </TableRow>
@@ -142,60 +146,58 @@ export function DealTableView({
                   return (
                     <TableRow
                       key={deal.id}
-                      className={cn(idx % 2 === 1 && "bg-muted/20", "hover:bg-muted/40 transition-colors")}
+                      className={cn("h-8", idx % 2 === 1 && "bg-muted/10", "hover:bg-muted/30 transition-colors")}
                     >
-                      <TableCell className="px-3 py-2">
+                      <TableCell className="px-2 py-1">
                         <button
-                          className="font-medium text-sm hover:text-gold hover:underline text-left truncate max-w-[200px]"
+                          className="font-medium text-[12px] hover:text-gold hover:underline text-left truncate max-w-[160px] block"
                           onClick={() => router.push(`/crm/deals/${deal.id}`)}
                         >
                           {deal.name}
                         </button>
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs font-mono">
+                      <TableCell className="px-2 py-1 font-mono tabular-nums text-gold font-medium">
                         {formatINR(deal.value)}
                       </TableCell>
-                      <TableCell className="px-3 py-2">
+                      <TableCell className="px-2 py-1">
                         {isEditingStage ? (
                           <Select defaultValue={deal.stage} onValueChange={(v) => { onStageChange(deal.id, v); setEditingCell(null); }}>
-                            <SelectTrigger className="h-7 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {STAGES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                              {STAGES.map(s => <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         ) : (
                           <Badge
                             variant="outline"
-                            className={cn("text-[10px] cursor-pointer border", STAGE_COLORS[deal.stage])}
+                            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STAGE_COLORS[deal.stage])}
                             onDoubleClick={() => setEditingCell({ dealId: deal.id, column: "stage" })}
                           >
                             {deal.stage}
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs">
+                      <TableCell className="px-2 py-1 tabular-nums">
                         {deal.probability != null ? `${deal.probability}%` : "—"}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs truncate max-w-[120px]">
+                      <TableCell className="px-2 py-1 truncate max-w-[100px]">
                         {deal.contactPerson || "—"}
                       </TableCell>
-                      <TableCell className="px-3 py-2">
+                      <TableCell className="px-2 py-1">
                         {deal.assignedTo?.name ? (
-                          <div className="flex items-center gap-1.5">
-                            <Avatar className="h-5 w-5">
+                          <div className="flex items-center gap-1">
+                            <Avatar className="h-4 w-4">
                               <AvatarImage src={deal.assignedTo.image || ""} />
-                              <AvatarFallback className="text-[8px]">
-                                {deal.assignedTo.name.charAt(0)}
-                              </AvatarFallback>
+                              <AvatarFallback className="text-[7px]">{deal.assignedTo.name.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <span className="text-xs truncate max-w-[90px]">{deal.assignedTo.name}</span>
+                            <span className="truncate max-w-[70px]">{deal.assignedTo.name}</span>
                           </div>
-                        ) : <span className="text-xs text-muted-foreground">Unassigned</span>}
+                        ) : <span className="text-muted-foreground/50">—</span>}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs text-muted-foreground">
-                        {deal.expectedCloseDate || "—"}
+                      <TableCell className="px-2 py-1 text-muted-foreground tabular-nums">
+                        {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "—"}
                       </TableCell>
-                      <TableCell className="px-3 py-2 text-xs text-muted-foreground">
+                      <TableCell className="px-2 py-1 text-muted-foreground tabular-nums">
                         {timeAgo(deal.createdAt)}
                       </TableCell>
                     </TableRow>
@@ -204,7 +206,7 @@ export function DealTableView({
               )}
             </TableBody>
           </table>
-          </div>
+        </div>
       </div>
     </div>
   );

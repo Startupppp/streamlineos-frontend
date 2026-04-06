@@ -31,13 +31,9 @@ export function LeadTableView({
   const [editingCell, setEditingCell] = useState<{ leadId: number; column: string } | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(getStoredColumns);
 
-  /* ─── Conversion modal state ─── */
   const [conversionModal, setConversionModal] = useState<{ leadId: number; leadName: string } | null>(null);
-
-  /* ─── Lost modal state ─── */
   const [lostModal, setLostModal] = useState<{ leadId: number; leadName: string } | null>(null);
 
-  /* ─── Selection ─── */
   const allSelected = leads.length > 0 && leads.every((l) => selectedIds.has(l.id));
 
   const toggleSelect = useCallback((id: number) => {
@@ -54,7 +50,6 @@ export function LeadTableView({
 
   const selectedArray = useMemo(() => [...selectedIds], [selectedIds]);
 
-  /* ─── Column visibility ─── */
   const toggleColumn = useCallback((key: string) => {
     setVisibleColumns((prev) => {
       const next = new Set(prev);
@@ -69,7 +64,6 @@ export function LeadTableView({
     [visibleColumns],
   );
 
-  /* ─── Status change — intercept CONVERTED / LOST ─── */
   const handleStatusChange = useCallback(
     (leadId: number, newStatus: string, leadName: string) => {
       if (newStatus === "CONVERTED") {
@@ -85,7 +79,6 @@ export function LeadTableView({
     [onStatusChange],
   );
 
-  /* ─── Cell renderer (hook) ─── */
   const renderCell = useLeadCellRenderer({
     editingCell,
     setEditingCell,
@@ -95,33 +88,38 @@ export function LeadTableView({
     onAssign,
   });
 
+  const fromRow = (page - 1) * pageSize + 1;
+  const toRow = Math.min(page * pageSize, totalCount);
+
   return (
-    <div className="flex flex-col h-[calc(100dvh-20rem)] min-h-[320px]">
-      {/* Toolbar */}
-      <div className="shrink-0 flex items-center justify-between px-1 pb-2">
-        <span className="text-xs text-muted-foreground">{totalCount} leads</span>
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
+      {/* Toolbar — compact */}
+      <div className="shrink-0 flex items-center justify-between px-1 pb-1.5">
+        <span className="text-[11px] text-muted-foreground tabular-nums">
+          {totalCount > 0 ? `${fromRow}–${toRow} of ${totalCount}` : "0 leads"}
+        </span>
+        <div className="flex items-center gap-1.5">
           <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-            <SelectTrigger className="h-7 w-[80px] text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-6 w-[70px] text-[10px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {PAGE_SIZES.map((s) => (
-                <SelectItem key={s} value={String(s)} className="text-xs">{s} / page</SelectItem>
+                <SelectItem key={s} value={String(s)} className="text-[11px]">{s}/pg</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs">
-                <Columns3 className="h-3.5 w-3.5 mr-1" /> Columns
+              <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2">
+                <Columns3 className="h-3 w-3 mr-1" />Cols
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-44 max-h-80 overflow-y-auto">
               {ALL_COLUMNS.map((col) => (
                 <DropdownMenuCheckboxItem
                   key={col.key}
                   checked={visibleColumns.has(col.key)}
                   onCheckedChange={() => toggleColumn(col.key)}
-                  className="text-xs"
+                  className="text-[11px]"
                 >
                   {col.label}
                 </DropdownMenuCheckboxItem>
@@ -131,20 +129,20 @@ export function LeadTableView({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="flex-1 min-h-0 border border-border rounded-lg overflow-auto">
-          <div className="min-w-max">
-          <table className="w-full caption-bottom text-sm">
-            <TableHeader className="sticky top-0 z-10 bg-muted/60">
-              <TableRow className="hover:bg-muted/60">
-                <TableHead className="w-10 px-3">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+      {/* Table — Bloomberg-dense */}
+      <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
+        <div className="min-w-max">
+          <table className="w-full caption-bottom text-[11px]">
+            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+              <TableRow className="hover:bg-muted/80 border-b-2 border-border">
+                <TableHead className="w-8 px-2 py-1.5">
+                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />
                 </TableHead>
                 {cols.map((col) => (
                   <TableHead
                     key={col.key}
                     className={cn(
-                      "text-[11px] uppercase tracking-wider font-semibold px-3 py-2.5 whitespace-nowrap",
+                      "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
                       col.sortable && "cursor-pointer select-none hover:text-foreground",
                     )}
                     onClick={() => col.sortable && onSort(col.key)}
@@ -152,11 +150,7 @@ export function LeadTableView({
                     <span className="flex items-center">
                       {col.label}
                       {col.sortable && (
-                        <SortIcon
-                          column={col.key}
-                          sortColumn={sortColumn}
-                          sortDirection={sortDirection}
-                        />
+                        <SortIcon column={col.key} sortColumn={sortColumn} sortDirection={sortDirection} />
                       )}
                     </span>
                   </TableHead>
@@ -165,20 +159,17 @@ export function LeadTableView({
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
+                Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={cols.length + 1} className="h-12">
-                      <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
+                    <TableCell colSpan={cols.length + 1} className="h-7 px-2">
+                      <div className="h-3 w-full bg-muted/50 rounded animate-pulse" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : leads.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={cols.length + 1}
-                    className="text-center py-12 text-muted-foreground"
-                  >
-                    No leads found
+                  <TableCell colSpan={cols.length + 1} className="text-center py-12 text-muted-foreground text-xs">
+                    No leads match your filters
                   </TableCell>
                 </TableRow>
               ) : (
@@ -186,19 +177,21 @@ export function LeadTableView({
                   <TableRow
                     key={lead.id}
                     className={cn(
-                      idx % 2 === 1 && "bg-muted/20",
-                      selectedIds.has(lead.id) && "bg-gold/5",
-                      "hover:bg-muted/40 transition-colors",
+                      "h-8",
+                      idx % 2 === 1 && "bg-muted/10",
+                      selectedIds.has(lead.id) && "bg-gold/5 hover:bg-gold/10",
+                      "hover:bg-muted/30 transition-colors",
                     )}
                   >
-                    <TableCell className="px-3">
+                    <TableCell className="px-2 py-1">
                       <Checkbox
                         checked={selectedIds.has(lead.id)}
                         onCheckedChange={() => toggleSelect(lead.id)}
+                        className="h-3.5 w-3.5"
                       />
                     </TableCell>
                     {cols.map((col) => (
-                      <TableCell key={col.key} className="px-3 py-2">
+                      <TableCell key={col.key} className="px-2 py-1">
                         {renderCell(lead, col.key)}
                       </TableCell>
                     ))}
@@ -207,35 +200,26 @@ export function LeadTableView({
               )}
             </TableBody>
           </table>
-          </div>
+        </div>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination — compact */}
       {totalPages > 1 && (
-        <div className="shrink-0 flex items-center justify-between pt-3 px-1">
-          <span className="text-xs text-muted-foreground">
-            Page {page} of {totalPages}
+        <div className="shrink-0 flex items-center justify-between pt-1.5 px-1">
+          <span className="text-[10px] text-muted-foreground tabular-nums">
+            Page {page}/{totalPages}
           </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline" size="sm"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-0.5">
+            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+              <ChevronLeft className="h-3 w-3" />
             </Button>
-            <Button
-              variant="outline" size="sm"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
+            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+              <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
         </div>
       )}
 
-      {/* Bulk Actions Bar */}
       <BulkActionsBar
         selectedIds={selectedIds}
         selectedArray={selectedArray}
@@ -247,23 +231,17 @@ export function LeadTableView({
         onClearSelection={() => setSelectedIds(new Set())}
       />
 
-      {/* Conversion Modal */}
       <ConversionModal
         open={!!conversionModal}
         leadName={conversionModal?.leadName}
         onClose={() => setConversionModal(null)}
         onSubmit={({ conversionNotes, investmentInterest, estimatedAmount }) => {
           if (!conversionModal) return;
-          onStatusChange(conversionModal.leadId, "CONVERTED", {
-            conversionNotes,
-            investmentInterest,
-            estimatedAmount,
-          });
+          onStatusChange(conversionModal.leadId, "CONVERTED", { conversionNotes, investmentInterest, estimatedAmount });
           setConversionModal(null);
         }}
       />
 
-      {/* Lost Reason Modal */}
       <LostModal
         open={!!lostModal}
         leadName={lostModal?.leadName}

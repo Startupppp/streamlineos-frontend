@@ -13,7 +13,6 @@ interface LeadsToolbarProps {
   onSearchChange: (value: string) => void;
   view: "table" | "kanban";
   onViewChange: (view: "table" | "kanban") => void;
-  // Filter props (only relevant in table view)
   statusFilter?: string;
   priorityFilter?: string;
   sourceFilter?: string;
@@ -24,16 +23,9 @@ interface LeadsToolbarProps {
 }
 
 export function LeadsToolbar({
-  searchQuery,
-  onSearchChange,
-  view,
-  onViewChange,
-  statusFilter,
-  priorityFilter,
-  sourceFilter,
-  onStatusFilterChange,
-  onPriorityFilterChange,
-  onSourceFilterChange,
+  searchQuery, onSearchChange, view, onViewChange,
+  statusFilter, priorityFilter, sourceFilter,
+  onStatusFilterChange, onPriorityFilterChange, onSourceFilterChange,
   onClearFilters,
 }: LeadsToolbarProps) {
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
@@ -43,100 +35,70 @@ export function LeadsToolbar({
   const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v === "all" ? undefined : v), [onPriorityFilterChange]);
   const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v === "all" ? undefined : v), [onSourceFilterChange]);
 
+  const hasFilters = !!(statusFilter || priorityFilter || sourceFilter);
+
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap">
       {/* Search */}
-      <div className="relative flex-1 max-w-sm min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="relative flex-1 max-w-xs min-w-[160px]">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           placeholder="Search leads..."
           value={searchQuery}
           onChange={handleSearchChange}
-          className="pl-9"
+          className="pl-8 h-8 text-xs"
         />
       </div>
 
       {/* View Toggle */}
       <div className="flex items-center border border-border rounded-md">
-        <Button
-          variant={view === "table" ? "default" : "ghost"}
-          size="sm"
-          className={cn("rounded-r-none", view === "table" && "bg-gold hover:bg-gold/80 text-white")}
-          onClick={handleViewTable}
-        >
-          <TableIcon className="h-4 w-4" />
+        <Button variant={view === "table" ? "default" : "ghost"} size="sm"
+          className={cn("rounded-r-none h-8 px-2.5", view === "table" && "bg-gold hover:bg-gold/80 text-white")}
+          onClick={handleViewTable}>
+          <TableIcon className="h-3.5 w-3.5" />
         </Button>
-        <Button
-          variant={view === "kanban" ? "default" : "ghost"}
-          size="sm"
-          className={cn("rounded-l-none", view === "kanban" && "bg-gold hover:bg-gold/80 text-white")}
-          onClick={handleViewKanban}
-        >
-          <LayoutGrid className="h-4 w-4" />
+        <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
+          className={cn("rounded-l-none h-8 px-2.5", view === "kanban" && "bg-gold hover:bg-gold/80 text-white")}
+          onClick={handleViewKanban}>
+          <LayoutGrid className="h-3.5 w-3.5" />
         </Button>
       </div>
 
-      {/* Filters — shown only in table view */}
-      {view === "table" && (
-        <>
-          <Select
-            value={statusFilter || "all"}
-            onValueChange={handleStatusFilter}
-          >
-            <SelectTrigger className="w-[130px] h-9 text-xs">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">All Status</SelectItem>
-              {STATUSES.map(s => (
-                <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Filters */}
+      <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
+        <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all" className="text-[11px]">All Status</SelectItem>
+          {STATUSES.map(s => (
+            <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-          <Select
-            value={priorityFilter || "all"}
-            onValueChange={handlePriorityFilter}
-          >
-            <SelectTrigger className="w-[110px] h-9 text-xs">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">All Priority</SelectItem>
-              {LEAD_PRIORITIES.map(p => (
-                <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <Select value={priorityFilter || "all"} onValueChange={handlePriorityFilter}>
+        <SelectTrigger className="w-[100px] h-8 text-[11px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all" className="text-[11px]">All Priority</SelectItem>
+          {LEAD_PRIORITIES.map(p => (
+            <SelectItem key={p} value={p} className="text-[11px]">{p}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-          <Select
-            value={sourceFilter || "all"}
-            onValueChange={handleSourceFilter}
-          >
-            <SelectTrigger className="w-[130px] h-9 text-xs">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">All Sources</SelectItem>
-              {LEAD_SOURCES.map(s => (
-                <SelectItem key={s} value={s} className="text-xs">
-                  {s.replace("_", " ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <Select value={sourceFilter || "all"} onValueChange={handleSourceFilter}>
+        <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Source" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all" className="text-[11px]">All Sources</SelectItem>
+          {LEAD_SOURCES.map(s => (
+            <SelectItem key={s} value={s} className="text-[11px]">{s.replace("_", " ")}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-          {(statusFilter || priorityFilter || sourceFilter) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs h-9"
-              onClick={onClearFilters}
-            >
-              <X className="h-3.5 w-3.5 mr-1" /> Clear
-            </Button>
-          )}
-        </>
+      {hasFilters && (
+        <Button variant="ghost" size="sm" className="h-8 text-[11px] px-2" onClick={onClearFilters}>
+          <X className="h-3 w-3 mr-1" />Clear
+        </Button>
       )}
     </div>
   );

@@ -107,28 +107,28 @@ export default function ContactsPage() {
             placeholder="Search contacts (min 3 chars)..."
             value={searchInput}
             onChange={(e) => updateParams({ q: e.target.value || null, page: null })}
-            className="pl-9"
+            className="pl-8 h-8 text-xs"
           />
         </div>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         {/* Table View (default) */}
         {view === "table" && (
           <motion.div variants={fadeUp}>
-            <div className="border border-border rounded-lg flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
+            <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
               <div className="flex-1 min-h-0 overflow-auto">
                 <div className="min-w-max">
-                  <table className="w-full caption-bottom text-sm">
-                    <TableHeader className="sticky top-0 z-10 bg-card">
-                      <TableRow>
-                        <TableHead className="text-xs">Name</TableHead>
-                        <TableHead className="text-xs">Email</TableHead>
-                        <TableHead className="text-xs">Phone</TableHead>
-                        <TableHead className="text-xs">Company</TableHead>
-                        <TableHead className="text-xs">Title</TableHead>
-                        <TableHead className="text-xs">Tags</TableHead>
-                        <TableHead className="text-xs w-10"></TableHead>
+                  <table className="w-full caption-bottom text-[11px]">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                      <TableRow className="border-b-2 border-border">
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Email</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Phone</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Company</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Title</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Tags</TableHead>
+                        <TableHead className="text-[10px] w-8 px-2"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -141,29 +141,29 @@ export default function ContactsPage() {
                           </TableCell>
                         </TableRow>
                       ) : data?.items.map(contact => (
-                        <TableRow key={contact.id} className="hover:bg-muted/40">
-                          <TableCell>
-                            <div className="flex items-center gap-2.5">
-                              <div className="h-8 w-8 rounded-full bg-gold/10 flex items-center justify-center text-xs font-semibold text-gold shrink-0">
+                        <TableRow key={contact.id} className="h-8 hover:bg-muted/30 transition-colors">
+                          <TableCell className="px-2 py-1">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-[9px] font-bold text-gold shrink-0">
                                 {contact.name[0]?.toUpperCase() ?? "?"}
                               </div>
-                              <span className="text-sm font-medium">{contact.name}</span>
+                              <span className="text-[12px] font-medium truncate max-w-[120px]">{contact.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{contact.email || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground font-mono">{contact.phone || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{contact.company || "—"}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{contact.title || "—"}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[140px]">{contact.email || "—"}</TableCell>
+                          <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">{contact.phone || "—"}</TableCell>
+                          <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.company || "—"}</TableCell>
+                          <TableCell className="text-[11px] text-muted-foreground px-2 py-1 truncate max-w-[100px]">{contact.title || "—"}</TableCell>
+                          <TableCell className="px-2 py-1">
                             {contact.tags && (contact.tags as string[]).length > 0 && (
-                              <div className="flex flex-wrap gap-1">
+                              <div className="flex flex-wrap gap-0.5">
                                 {(contact.tags as string[]).slice(0, 2).map(tag => (
-                                  <Badge key={tag} variant="secondary" className="text-[10px]">{tag}</Badge>
+                                  <Badge key={tag} variant="secondary" className="text-[8px] px-1 py-0 h-4">{tag}</Badge>
                                 ))}
                               </div>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-2 py-1">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">

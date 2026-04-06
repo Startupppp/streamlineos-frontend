@@ -134,21 +134,21 @@ export default function ClientAccountsPage() {
 
       {/* Table */}
       <motion.div variants={fadeUp}>
-        <div className="border border-border rounded-lg flex flex-col h-[calc(100dvh-20rem)] min-h-[320px]">
+        <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
           <div className="flex-1 min-h-0 overflow-auto">
             <div className="min-w-max">
-            <table className="w-full caption-bottom text-sm">
-              <TableHeader className="sticky top-0 z-10 bg-card">
-                <TableRow>
-                  <TableHead className="text-xs">Client</TableHead>
-                  <TableHead className="text-xs">Phone</TableHead>
-                  <TableHead className="text-xs">Stage</TableHead>
-                  <TableHead className="text-xs">Sales Rep</TableHead>
-                  <TableHead className="text-xs">CRM Rep</TableHead>
-                  <TableHead className="text-xs">Est. Investment</TableHead>
-                  <TableHead className="text-xs">Investment</TableHead>
-                  <TableHead className="text-xs">Converted</TableHead>
-                  <TableHead className="text-xs w-10"></TableHead>
+            <table className="w-full caption-bottom text-[11px]">
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <TableRow className="border-b-2 border-border">
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Client</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Phone</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Stage</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Sales Rep</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">CRM Rep</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Est. Inv.</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Investment</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Converted</TableHead>
+                  <TableHead className="text-[10px] w-8 px-2"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -172,14 +172,14 @@ export default function ClientAccountsPage() {
                   accounts.map((account) => {
                     const config = STATUS_CONFIG[account.status] || STATUS_CONFIG.ACCOUNT_OPENING;
                     return (
-                      <TableRow key={account.id} className="hover:bg-muted/40">
-                        <TableCell>
+                      <TableRow key={account.id} className="h-8 hover:bg-muted/30 transition-colors">
+                        <TableCell className="px-2 py-1">
                           <div>
-                            <p className="text-sm font-medium">{account.clientName}</p>
-                            <p className="text-xs text-muted-foreground">{account.clientEmail || "—"}</p>
+                            <p className="text-[12px] font-medium truncate max-w-[140px]">{account.clientName}</p>
+                            <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">{account.clientEmail || "—"}</p>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground font-mono">
+                        <TableCell className="text-[11px] text-muted-foreground font-mono px-2 py-1">
                           {account.clientPhone || "—"}
                         </TableCell>
                         <TableCell>
