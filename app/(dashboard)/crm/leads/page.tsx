@@ -21,7 +21,7 @@ import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
 import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
 import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
 import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
-import { CreateLeadDialog } from "@/features/crm/leads/create-lead-dialog";
+import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
 import { isLeadSource, isLeadPriority, STATUS_CONFIG } from "@/features/crm/leads/leads-constants";
 import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
@@ -245,7 +245,7 @@ export default function LeadsPipelinePage() {
         <div className="flex items-center gap-2">
           <LeadExportDialog />
           <CsvUploadDialog />
-          <CreateLeadDialog
+          <CreateLeadSheet
             open={createOpen}
             onOpenChange={setCreateOpen}
             onSubmit={handleCreateLead}

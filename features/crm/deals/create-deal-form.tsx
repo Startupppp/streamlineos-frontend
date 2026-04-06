@@ -63,7 +63,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         <div>
           <Label htmlFor="stage">Stage</Label>
           <Select name="stage" defaultValue="LEAD">
-            <SelectTrigger>
+            <SelectTrigger className="w-full h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -101,7 +101,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
         <div>
           <Label htmlFor="assignedToId">Assigned To</Label>
           <Select name="assignedToId">
-            <SelectTrigger>
+            <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="Select..." />
             </SelectTrigger>
             <SelectContent>

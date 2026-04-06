@@ -196,14 +196,14 @@ export default function TargetsPage() {
         />
       ) : undefined}
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         {myTargets && myTargets.length > 0 && (
           <motion.div variants={fadeUp}>
             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <Target className="h-5 w-5 text-gold" />
               My Targets
             </h2>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
               {myTargets.map((target) => {
                 const progress = Number(target.targetValue) > 0
                   ? Math.min(100, Math.round((Number(target.currentValue ?? 0) / Number(target.targetValue)) * 100))

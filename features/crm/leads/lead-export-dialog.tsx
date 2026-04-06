@@ -117,7 +117,7 @@ export function LeadExportDialog() {
             <div className="space-y-1.5">
               <Label className="text-xs">Status</Label>
               <Select value={filters.status} onValueChange={(v) => setFilters(f => ({ ...f, status: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
                   {STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
@@ -127,7 +127,7 @@ export function LeadExportDialog() {
             <div className="space-y-1.5">
               <Label className="text-xs">Source</Label>
               <Select value={filters.source} onValueChange={(v) => setFilters(f => ({ ...f, source: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="text-xs">All Sources</SelectItem>
                   {SOURCES.map(s => <SelectItem key={s} value={s} className="text-xs">{s.replace("_", " ")}</SelectItem>)}
@@ -137,7 +137,7 @@ export function LeadExportDialog() {
             <div className="space-y-1.5">
               <Label className="text-xs">Priority</Label>
               <Select value={filters.priority} onValueChange={(v) => setFilters(f => ({ ...f, priority: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="text-xs">All Priorities</SelectItem>
                   {PRIORITIES.map(p => <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>)}

@@ -10,7 +10,7 @@ import {
   useHrCheckIn,
   useHrCheckOut,
   useHrToggleBreak,
-} from "../../lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks/hr";
 import { useAttendanceTimer } from "../../hooks/use-attendance-timer";
 import { type AttendanceStatus, type TodayLog } from "../../types/api";
 

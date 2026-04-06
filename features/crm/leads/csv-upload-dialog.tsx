@@ -3,8 +3,8 @@
 import { useState, useCallback } from "react";
 import { Upload, FileText, Download, AlertCircle, CheckCircle2, X } from "lucide-react";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -294,17 +294,17 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Upload className="h-4 w-4 mr-2" />
           Import Leads
         </Button>
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-lg overflow-y-auto p-6">
-        <SheetHeader className="mb-4">
-          <SheetTitle>Import Leads</SheetTitle>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader className="mb-4">
+          <DialogTitle>Import Leads</DialogTitle>
+        </DialogHeader>
 
         {!parsed && !isParsing ? (
           <div className="space-y-4">
@@ -476,7 +476,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             )}
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -86,12 +86,12 @@ export function HrEmployeeTable({
   );
 
   return (
-    <Card className="border-border">
-      <CardContent className="p-0">
-        <div className="overflow-auto w-full" role="region" aria-label="Employee directory table">
+    <Card className="border-border flex flex-col flex-1 min-h-0">
+      <CardContent className="p-0 flex flex-col flex-1 min-h-0">
+        <div className="overflow-auto max-h-[calc(100vh-280px)]" role="region" aria-label="Employee directory table">
           <div className="min-w-[700px]">
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-background">
+              <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
@@ -226,7 +226,7 @@ export function HrEmployeeTable({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-border">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2 border-t border-border shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-muted-foreground">Rows per page</span>
             <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>

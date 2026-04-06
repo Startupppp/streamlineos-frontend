@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
-import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/hooks/trpc-hooks";
+import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/api/hooks/hr";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

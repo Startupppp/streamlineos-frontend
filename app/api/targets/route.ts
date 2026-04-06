@@ -84,18 +84,18 @@ export async function POST(req: NextRequest) {
     const metricLabel = input.metricType.replace(/_/g, " ");
     for (const uid of resolvedUserIds) {
       if (uid === callerId) continue;
-      createNotification({
+      await createNotification({
         orgId,
         userId: uid,
         type: "INFO",
         title: "New target assigned",
         message: `You have a new ${input.period} target: ${input.targetValue} ${metricLabel}`,
         link: "/crm/targets",
-      }).catch(() => {});
+      });
     }
 
     for (const t of created) {
-      createAuditLog({
+      await createAuditLog({
         action: "target.created",
         userId: callerId,
         orgId,
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
           targetValue: input.targetValue,
           period: input.period,
         },
-      }).catch(() => {});
+      });
     }
 
     return ok(created, 201);

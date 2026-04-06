@@ -83,12 +83,12 @@ export default function MarketingDashboardPage() {
       subtitle={isDM ? "Your campaigns, lead generation, and marketing ROI" : "Campaign performance, lead generation, and marketing ROI"}
     >
       <motion.div
-        className="space-y-6"
+        className="space-y-4"
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <motion.div variants={fadeUp} className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Active Campaigns"
             value={marketingStats.campaigns.value}
@@ -120,7 +120,7 @@ export default function MarketingDashboardPage() {
           />
         </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
           <motion.div className="lg:col-span-7" variants={fadeUp}>
             <Card className="h-full shadow-noir">
               <CardHeader>
@@ -155,7 +155,7 @@ export default function MarketingDashboardPage() {
           </motion.div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
           <motion.div className="lg:col-span-7" variants={fadeUp}>
             <Card className="h-full shadow-noir">
               <CardHeader>
@@ -245,7 +245,7 @@ export default function MarketingDashboardPage() {
           </motion.div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <motion.div variants={fadeUp}>
             <Card className="h-full shadow-noir">
               <CardHeader>

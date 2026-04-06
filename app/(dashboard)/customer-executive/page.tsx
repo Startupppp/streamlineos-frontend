@@ -53,7 +53,7 @@ export default function CustomerExecutiveDashboardPage() {
               </Card>
             ))}
           </div>
-          <div className="grid gap-6 lg:grid-cols-12">
+          <div className="grid gap-4 lg:grid-cols-12">
             <Card className="lg:col-span-5">
               <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>
               <CardContent className="flex items-center justify-center py-4">
@@ -90,8 +90,8 @@ export default function CustomerExecutiveDashboardPage() {
       title={isCSRep ? "My Support Hub" : "Customer Executive Dashboard"}
       subtitle={isCSRep ? "Your client health, tickets, and satisfaction metrics" : "Client health, retention, and satisfaction overview"}
     >
-      <div className="space-y-6 pb-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Total Clients"
           value={customerStats.totalClients.value}
@@ -124,7 +124,7 @@ export default function CustomerExecutiveDashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-4 lg:grid-cols-12">
         <motion.div
           className="lg:col-span-5"
           initial={{ opacity: 0, y: 16 }}
@@ -201,7 +201,7 @@ export default function CustomerExecutiveDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -274,7 +274,7 @@ export default function CustomerExecutiveDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -288,8 +288,8 @@ export default function CustomerExecutiveDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-border p-3 text-center">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-border p-2.5 text-center">
                   <p className="text-2xl font-bold text-foreground">{supportStats.openTickets}</p>
                   <p className="text-xs text-muted-foreground mt-1">Open Tickets</p>
                 </div>

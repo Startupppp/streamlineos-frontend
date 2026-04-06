@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useHrAttendanceStatus } from "@/lib/hooks/trpc-hooks";
+import { useHrAttendanceStatus } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
 import { AttendanceLogRow } from "./attendance-log-row";

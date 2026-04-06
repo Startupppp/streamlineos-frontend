@@ -40,8 +40,8 @@ interface AnalyticsChartCardProps {
 export function AnalyticsChartCard({ title, data, filename, children }: AnalyticsChartCardProps) {
   const handleDownload = useCallback(() => downloadXLSX(data, filename), [data, filename]);
   return (
-    <motion.div variants={fadeUp}>
-      <Card className="shadow-sm">
+    <motion.div variants={fadeUp} className="h-full">
+      <Card className="shadow-sm h-full">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDownload} aria-label="Download">

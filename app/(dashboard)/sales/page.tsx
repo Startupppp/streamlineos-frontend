@@ -89,7 +89,7 @@ export default function SalesDashboardPage() {
             </Card>
           ))}
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
           <Card className="lg:col-span-7">
             <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
             <CardContent><Skeleton className="h-[240px] w-full" /></CardContent>
@@ -109,13 +109,13 @@ export default function SalesDashboardPage() {
       subtitle={isSalesRep ? "Your pipeline, deals, and performance at a glance" : "Pipeline overview and sales performance metrics"}
     >
     <motion.div
-      className="space-y-6 pb-6"
+      className="space-y-4"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
 
-      <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div variants={fadeUp} className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Pipeline Value"
           value={formatCurrency(salesStats.pipeline.value)}
@@ -157,7 +157,7 @@ export default function SalesDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-7">
+              <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-7">
                 {[
                   { label: "Active Clients", value: enhanced.activeClients, icon: Users, color: "text-emerald-500" },
                   { label: "Inactive Clients", value: enhanced.inactiveClients, icon: UserX, color: "text-red-400" },
@@ -179,7 +179,7 @@ export default function SalesDashboardPage() {
         </motion.div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-12">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
         <motion.div className="lg:col-span-7" variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>
@@ -214,7 +214,7 @@ export default function SalesDashboardPage() {
         </motion.div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <motion.div variants={fadeUp}>
           <Card className="h-full shadow-noir">
             <CardHeader>

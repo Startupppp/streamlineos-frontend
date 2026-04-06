@@ -128,7 +128,7 @@ export default function CrmAnalyticsPage() {
     return (
       <PageWrapper title="CRM Analytics" subtitle="Pipeline insights and performance metrics">
         <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <Card key={i} className="shadow-sm">
                 <CardHeader className="pb-2"><Skeleton className="h-4 w-36" /></CardHeader>
@@ -161,9 +161,9 @@ export default function CrmAnalyticsPage() {
         </div>
       }
     >
-      <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
+      <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
         {analyticsSummary && (
-          <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <motion.div variants={fadeUp} className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               label="Total Leads" value={analyticsSummary.totalLeads} icon={Users} index={0}
               trend={analyticsSummary.totalLeadsPrevPeriod > 0 ? {
@@ -183,7 +183,7 @@ export default function CrmAnalyticsPage() {
           </motion.div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           <PipelineFunnelChart data={funnelData} />
           <LeadVolumeChart data={leadVolumeTrend} />
           <SourceBreakdownChart data={sourceBreakdown} />

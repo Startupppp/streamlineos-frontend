@@ -95,14 +95,14 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     if (!updated) return err("Target not found", 404);
 
-    createAuditLog({
+    await createAuditLog({
       action: "target.updated",
       userId: session.user.id,
       orgId,
       targetId: String(targetId),
       targetType: "target",
       metadata: { changes },
-    }).catch(() => {});
+    });
 
     return ok(updated);
   });
@@ -140,14 +140,14 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
     await db.delete(targets)
       .where(and(eq(targets.id, targetId), eq(targets.orgId, orgId)));
 
-    createAuditLog({
+    await createAuditLog({
       action: "target.deleted",
       userId: session.user.id,
       orgId,
       targetId: String(targetId),
       targetType: "target",
       metadata: { assignedTo: existing.userId, metricType: existing.metricType },
-    }).catch(() => {});
+    });
 
     return ok({ success: true });
   });

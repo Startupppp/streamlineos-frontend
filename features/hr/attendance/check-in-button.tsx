@@ -11,7 +11,7 @@ import {
   useHrCheckIn,
   useHrCheckOut,
   useHrToggleBreak,
-} from "@/lib/hooks/trpc-hooks";
+} from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { Clock, Coffee, LogIn, LogOut, Loader2, Play, Pause } from "lucide-react";
 import { formatDuration, formatTimerSegment } from "./attendance-utils";
@@ -38,9 +38,14 @@ export const TimerCard = memo(function TimerCard() {
     onError: (err) => toast.error(err.message),
   });
 
+  const [localBreakOverride, setLocalBreakOverride] = useState<boolean | null>(null);
+
   const breakMutation = useHrToggleBreak({
     onSuccess: () => toast.success("Break toggled"),
-    onError: (err) => toast.error(err.message),
+    onError: () => {
+      setLocalBreakOverride(null);
+      toast.error("Failed to toggle break");
+    },
   });
 
   useEffect(() => {
@@ -55,8 +60,12 @@ export const TimerCard = memo(function TimerCard() {
     return () => clearTimeout(timer);
   }, [localCooldown]);
 
-  const isCheckedIn = statusData?.status === "PRESENT";
-  const isOnBreak = statusData?.status === "ON_BREAK";
+  useEffect(() => {
+    if (statusData) setLocalBreakOverride(null);
+  }, [statusData?.status]);
+
+  const isCheckedIn = statusData?.status === "PRESENT" || (localBreakOverride === false && statusData?.status === "ON_BREAK");
+  const isOnBreak = localBreakOverride !== null ? localBreakOverride : statusData?.status === "ON_BREAK";
   const isActive = isCheckedIn || isOnBreak;
   const isInCooldown = localCooldown > 0;
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
@@ -95,8 +104,9 @@ export const TimerCard = memo(function TimerCard() {
     const checkInTime = new Date(statusData.todayLog.checkIn);
     const serverBreakMs = (Number(statusData.todayLog.breakHours) || 0) * 3600000;
     const totalBreakMs = serverBreakMs + localExtraBreakMs;
-    const reference = isOnBreak && breakStartRef.current ? breakStartRef.current : now.getTime();
-    const diffMs = Math.max(0, reference - checkInTime.getTime() - totalBreakMs);
+    const currentBreakMs = isOnBreak && breakStartRef.current ? now.getTime() - breakStartRef.current : 0;
+    const allBreakMs = totalBreakMs + currentBreakMs;
+    const diffMs = Math.max(0, now.getTime() - checkInTime.getTime() - allBreakMs);
     return {
       hours: Math.floor(diffMs / 3600000),
       minutes: Math.floor((diffMs % 3600000) / 60000),
@@ -117,7 +127,9 @@ export const TimerCard = memo(function TimerCard() {
   }, [isActive, isInCooldown, checkInMutation, checkOutMutation]);
 
   const handleBreakToggle = useCallback(() => {
-    if (!isOnBreak) {
+    const goingOnBreak = !isOnBreak;
+    setLocalBreakOverride(goingOnBreak);
+    if (goingOnBreak) {
       breakStartRef.current = Date.now();
     }
     breakMutation.mutate();

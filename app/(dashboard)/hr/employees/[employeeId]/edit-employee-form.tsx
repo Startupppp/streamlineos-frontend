@@ -146,24 +146,24 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
         <div className="rounded-lg border bg-card overflow-hidden">
-          <div className="p-5">
+          <div className="p-4">
             <PersonalInfoSection />
           </div>
           <Separator />
-          <div className="p-5">
+          <div className="p-4">
             <ProfessionalInfoSection assignableRoles={assignableRoles} />
           </div>
           <Separator />
-          <div className="p-5">
+          <div className="p-4">
             <BankDetailsSection />
           </div>
           <Separator />
-          <div className="flex justify-end gap-3 px-5 py-4 bg-muted/30">
-            <Button variant="outline" type="button" onClick={handleCancel} disabled={loading}>
+          <div className="flex justify-end gap-2 px-4 py-3 bg-muted/30">
+            <Button variant="outline" size="sm" type="button" onClick={handleCancel} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button size="sm" type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
               Save Changes
             </Button>
           </div>
