@@ -32,9 +32,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { Employee } from "@/types/hr";
 
-import { PayrollSummaryCards } from "./_components/payroll-summary-cards";
-import { PayrollTable } from "./_components/payroll-table";
-import { GeneratePayrollSheet } from "./_components/generate-payroll-sheet";
+import { PayrollSummaryCards } from "@/features/hr/payroll/payroll-summary-cards";
+import { PayrollTable } from "@/features/hr/payroll/payroll-table";
+import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-sheet";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => {
   const date = subMonths(new Date(), i);

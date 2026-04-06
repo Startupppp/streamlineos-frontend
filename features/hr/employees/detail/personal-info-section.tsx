@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { User } from "lucide-react";
-import type { EmployeeFormValues } from "../edit-employee-form";
+import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
 
 export function PersonalInfoSection() {
   const { control } = useFormContext<EmployeeFormValues>();

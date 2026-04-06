@@ -17,8 +17,8 @@ import { formatINRCompact } from "@/lib/format-utils";
 import { useLeadStats } from "@/lib/api/hooks/leads";
 import { useDeals } from "@/lib/api/hooks/crm";
 import { useContacts, useCrmOrganizations } from "@/lib/api/hooks/crm";
-import { CrmPipelineMini } from "./_components/crm-pipeline-mini";
-import { CrmRecentActivity } from "./_components/crm-recent-activity";
+import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
+import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
 
 const NAV_CARDS = [
   { title: "Leads", description: "Pipeline tracking", href: "/crm/leads", icon: UserPlus, color: "text-blue-400", bg: "bg-blue-500/10" },

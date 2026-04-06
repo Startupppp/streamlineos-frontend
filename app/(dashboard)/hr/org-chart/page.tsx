@@ -1,23 +1,28 @@
 "use client";
 
 import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { Users, Building2 } from "lucide-react";
+import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { fadeUp, staggerContainer } from "@/lib/motion-variants";
-import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
+import { Users, Network, Building2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
 
 interface TreeNode {
   employee: Employee;
   children: TreeNode[];
 }
+
+const ROLE_DOT: Record<string, string> = {
+  CEO: "bg-amber-500",
+  HR: "bg-purple-500",
+  ADMIN: "bg-blue-500",
+};
 
 function buildTree(employees: Employee[]): TreeNode[] {
   const map = new Map<string, TreeNode>();
@@ -29,96 +34,57 @@ function buildTree(employees: Employee[]): TreeNode[] {
 
   for (const emp of employees) {
     const node = map.get(emp.id)!;
-    const reportingTo = (emp as Employee & { reportingTo?: string | null }).reportingTo;
-    if (reportingTo && map.has(reportingTo)) {
-      map.get(reportingTo)!.children.push(node);
+    if (emp.reportingTo && map.has(emp.reportingTo)) {
+      map.get(emp.reportingTo)!.children.push(node);
     } else {
       roots.push(node);
     }
   }
 
-  // Sort: CEO first, then by role, then by name
-  const rolePriority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
-  const sortNodes = (nodes: TreeNode[]) => {
+  const priority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
+  function sortNodes(nodes: TreeNode[]) {
     nodes.sort((a, b) => {
-      const pa = rolePriority[a.employee.role ?? ""] ?? 99;
-      const pb = rolePriority[b.employee.role ?? ""] ?? 99;
-      if (pa !== pb) return pa - pb;
-      return (a.employee.name || "").localeCompare(b.employee.name || "");
+      const pa = priority[a.employee.role] ?? 99;
+      const pb = priority[b.employee.role] ?? 99;
+      return pa !== pb ? pa - pb : (a.employee.name ?? "").localeCompare(b.employee.name ?? "");
     });
-    nodes.forEach(n => sortNodes(n.children));
-  };
+    nodes.forEach((n) => sortNodes(n.children));
+  }
   sortNodes(roots);
-
   return roots;
 }
 
-const ROLE_COLORS: Record<string, string> = {
-  CEO: "bg-gold/10 text-gold border-gold/30",
-  ADMIN: "bg-blue-500/10 text-blue-500 border-blue-500/30",
-  HR: "bg-purple-500/10 text-purple-500 border-purple-500/30",
-  MEMBER: "bg-gray-500/10 text-gray-500 border-gray-500/30",
-};
-
-function OrgNode({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
-  const emp = node.employee;
-  const roleColor = ROLE_COLORS[emp.role ?? ""] || ROLE_COLORS.MEMBER;
-
+function PersonCard({ emp, size = "md" }: { emp: Employee; size?: "sm" | "md" }) {
+  const isSm = size === "sm";
   return (
-    <div className="flex flex-col items-center">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: depth * 0.05 }}
-      >
-        <Card className={cn(
-          "w-52 shadow-sm hover:shadow-md transition-shadow border-l-4",
-          depth === 0 ? "ring-2 ring-gold/30 border-l-gold" :
-          depth === 1 ? "border-l-blue-500" :
-          depth === 2 ? "border-l-purple-500" :
-          "border-l-gray-400"
-        )}>
-          <CardContent className="p-3 flex flex-col items-center text-center">
-            <Avatar className="h-12 w-12 mb-2">
-              <AvatarImage src={resolveImageUrl(emp.image)} />
-              <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                {emp.name?.[0] || "?"}
-              </AvatarFallback>
-            </Avatar>
-            <p className="text-sm font-semibold line-clamp-1">{emp.name || "Unknown"}</p>
-            <p className="text-[11px] text-muted-foreground line-clamp-1">
-              {emp.designation || emp.role}
-            </p>
-            <Badge variant="outline" className={cn("text-[10px] mt-1.5 border", roleColor)}>
-              {emp.role}
-            </Badge>
-          </CardContent>
-        </Card>
-      </motion.div>
+    <div className={cn(
+      "flex items-center gap-2.5 rounded-lg border bg-card p-2.5 hover:shadow-sm transition-shadow",
+      isSm ? "min-w-[160px]" : "min-w-[200px]"
+    )}>
+      <Avatar className={isSm ? "h-8 w-8" : "h-9 w-9"}>
+        <AvatarImage src={resolveImageUrl(emp.image)} />
+        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+          {emp.name?.[0] ?? "?"}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <p className={cn("font-medium truncate", isSm ? "text-xs" : "text-sm")}>{emp.name ?? "Unknown"}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{emp.designation ?? emp.role}</p>
+      </div>
+      <span className={cn("h-2 w-2 rounded-full shrink-0", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
+    </div>
+  );
+}
 
+function TreeBranch({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
+  return (
+    <div className="flex flex-col">
+      <PersonCard emp={node.employee} size={depth > 1 ? "sm" : "md"} />
       {node.children.length > 0 && (
-        <div className="flex flex-col items-center">
-          <div className="w-0.5 h-8 bg-border" />
-          <div className="relative flex gap-8">
-            {node.children.length > 1 && (
-              <div
-                className="absolute top-0 h-0.5 bg-border"
-                style={{
-                  left: `calc(50% / ${node.children.length})`,
-                  right: `calc(50% / ${node.children.length})`,
-                  width: `calc(100% - 100% / ${node.children.length})`,
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                }}
-              />
-            )}
-            {node.children.map((child) => (
-              <div key={child.employee.id} className="flex flex-col items-center relative">
-                <div className="w-0.5 h-8 bg-border" />
-                <OrgNode node={child} depth={depth + 1} />
-              </div>
-            ))}
-          </div>
+        <div className="ml-5 mt-1 border-l-2 border-border/60 pl-4 space-y-1">
+          {node.children.map((child) => (
+            <TreeBranch key={child.employee.id} node={child} depth={depth + 1} />
+          ))}
         </div>
       )}
     </div>
@@ -134,36 +100,31 @@ export default function OrgChartPage() {
     [employeesRaw]
   );
 
-  const tree = useMemo(() => {
-    if (!employees.length) return [];
-    return buildTree(employees);
-  }, [employees]);
+  const tree = useMemo(() => buildTree(employees), [employees]);
 
   const deptMap = useMemo(() => {
     const map = new Map<number, string>();
-    departments?.forEach(d => map.set(d.id, d.name));
+    departments?.forEach((d) => map.set(d.id, d.name));
     return map;
   }, [departments]);
 
   const deptGroups = useMemo(() => {
-    if (!employees.length) return [];
     const groups = new Map<string, Employee[]>();
     for (const emp of employees) {
-      const deptName = emp.departmentId ? (deptMap.get(emp.departmentId) || "Other") : "Unassigned";
-      if (!groups.has(deptName)) groups.set(deptName, []);
-      groups.get(deptName)!.push(emp);
+      const name = emp.departmentId ? (deptMap.get(emp.departmentId) ?? "Other") : "Unassigned";
+      if (!groups.has(name)) groups.set(name, []);
+      groups.get(name)!.push(emp);
     }
     return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [employees, deptMap]);
 
   if (isLoading) {
     return (
-      <PageWrapper title="Organization Chart" subtitle="Loading...">
-        <div className="space-y-6">
-          <Skeleton className="h-10 w-48" />
-          <div className="flex justify-center">
-            <Skeleton className="h-96 w-full max-w-4xl" />
-          </div>
+      <PageWrapper title="Organization" subtitle="Team structure and departments">
+        <div className="space-y-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full" />
+          ))}
         </div>
       </PageWrapper>
     );
@@ -171,78 +132,75 @@ export default function OrgChartPage() {
 
   return (
     <PageWrapper
-      title="Organization Chart"
-      subtitle={`${employees.length} team members across ${deptGroups.length} departments`}
+      title="Organization"
+      subtitle={`${employees.length} members across ${deptGroups.length} departments`}
     >
-      <motion.div
-        className="space-y-8"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        {tree.length > 0 && (
-          <motion.div variants={fadeUp}>
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <ScrollArea className="w-full" type="auto">
-                <div className="flex justify-center min-w-max py-4">
-                  <div className="flex flex-col items-center gap-0">
-                    {tree.map((root) => (
-                      <OrgNode key={root.employee.id} node={root} />
-                    ))}
-                  </div>
-                </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+      <Tabs defaultValue="tree">
+        <TabsList className="h-9 mb-4">
+          <TabsTrigger value="tree" className="text-xs gap-1.5 px-3">
+            <Network className="h-3.5 w-3.5" />
+            Hierarchy
+          </TabsTrigger>
+          <TabsTrigger value="departments" className="text-xs gap-1.5 px-3">
+            <Building2 className="h-3.5 w-3.5" />
+            Departments
+          </TabsTrigger>
+        </TabsList>
 
-        <motion.div variants={fadeUp}>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-gold" />
-            By Department
-          </h3>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {deptGroups.map(([deptName, members]) => (
-              <Card key={deptName} className="shadow-sm">
+        <TabsContent value="tree">
+          <Card>
+            <CardContent className="p-4">
+              <ScrollArea className="w-full" type="auto">
+                <div className="space-y-1 min-w-max">
+                  {tree.map((root) => (
+                    <TreeBranch key={root.employee.id} node={root} />
+                  ))}
+                  {tree.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">No reporting structure found.</p>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="departments">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {deptGroups.map(([name, members]) => (
+              <Card key={name}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold">{deptName}</h4>
-                    <Badge variant="secondary" className="text-xs">
-                      <Users className="h-3 w-3 mr-1" />
+                    <h3 className="text-sm font-semibold">{name}</h3>
+                    <Badge variant="secondary" className="text-[10px] gap-1">
+                      <Users className="h-3 w-3" />
                       {members.length}
                     </Badge>
                   </div>
-                  <div className="space-y-2">
-                    {members.slice(0, 8).map(emp => (
+                  <div className="space-y-1.5">
+                    {members.slice(0, 6).map((emp) => (
                       <div key={emp.id} className="flex items-center gap-2">
-                        <Avatar className="h-7 w-7">
+                        <Avatar className="h-6 w-6">
                           <AvatarImage src={resolveImageUrl(emp.image)} />
-                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                          <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
                             {emp.name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium line-clamp-1">{emp.name}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">
-                            {emp.designation || emp.role}
-                          </p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium truncate">{emp.name}</p>
                         </div>
+                        <span className="text-[10px] text-muted-foreground">{emp.designation ?? emp.role}</span>
                       </div>
                     ))}
-                    {members.length > 8 && (
-                      <p className="text-[10px] text-muted-foreground text-center pt-1">
-                        +{members.length - 8} more
-                      </p>
+                    {members.length > 6 && (
+                      <p className="text-[10px] text-muted-foreground text-center">+{members.length - 6} more</p>
                     )}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </motion.div>
-      </motion.div>
+        </TabsContent>
+      </Tabs>
     </PageWrapper>
   );
 }

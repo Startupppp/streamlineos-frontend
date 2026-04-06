@@ -15,7 +15,7 @@ import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { AdminExpenseItem } from "./expense-item";
 import { MemberExpenseItem } from "./expense-item";
 import type { ExpenseWithRelations } from "@/server/actions/expense-query";
-import type { ExpenseToEdit } from "../create-expense-dialog";
+import type { ExpenseToEdit } from "@/app/(dashboard)/hr/expenses/create-expense-dialog";
 import type { StatusFilter } from "./expense-constants";
 
 /* ─── Shared Pagination ─── */

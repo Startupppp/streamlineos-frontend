@@ -23,9 +23,9 @@ import { useRichDocuments, useDeleteRichDocument } from "@/lib/api/hooks/hr";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
-import { DocumentFilters, DOCUMENT_TYPES } from "./_components/document-filters";
-import { DocumentTable, type Document, type FolderItem } from "./_components/document-table";
-import { NewFolderDialog } from "./_components/new-folder-dialog";
+import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
+import { DocumentTable, type Document, type FolderItem } from "@/features/hr/documents/document-table";
+import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 
 /* ------------------------------------------------------------------ */
 /* Constants                                                            */

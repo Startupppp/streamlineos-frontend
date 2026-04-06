@@ -18,14 +18,14 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadStats, useLeads, useLeadAnalyticsSummary, useSalesLeaderboard } from "@/lib/api/hooks/leads";
 import { useDeals } from "@/lib/api/hooks/crm";
 import { useSlaReport } from "@/lib/api/hooks/crm-settings";
-import { CHART_TOOLTIP_STYLE, AXIS_TICK, CHART_COLORS } from "../_constants";
-import { PipelineFunnelChart } from "./_components/pipeline-funnel-chart";
-import { SourceBreakdownChart } from "./_components/source-breakdown-chart";
-import { RepPerformanceTable } from "./_components/rep-performance-table";
-import { LeadVolumeChart } from "./_components/lead-volume-chart";
-import { ConversionChart } from "./_components/conversion-chart";
-import { DealValueChart } from "./_components/deal-value-chart";
-import { AnalyticsChartCard } from "./_components/analytics-chart-card";
+import { CHART_TOOLTIP_STYLE, AXIS_TICK, CHART_COLORS } from "@/features/crm/shared/constants";
+import { PipelineFunnelChart } from "@/features/crm/analytics/pipeline-funnel-chart";
+import { SourceBreakdownChart } from "@/features/crm/analytics/source-breakdown-chart";
+import { RepPerformanceTable } from "@/features/crm/analytics/rep-performance-table";
+import { LeadVolumeChart } from "@/features/crm/analytics/lead-volume-chart";
+import { ConversionChart } from "@/features/crm/analytics/conversion-chart";
+import { DealValueChart } from "@/features/crm/analytics/deal-value-chart";
+import { AnalyticsChartCard } from "@/features/crm/analytics/analytics-chart-card";
 
 export default function CrmAnalyticsPage() {
   const [draftDateFrom, setDraftDateFrom] = useState("");

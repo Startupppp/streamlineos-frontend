@@ -1,7 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { CHART_TOOLTIP_STYLE, CHART_COLORS } from "../../_constants";
+import { CHART_TOOLTIP_STYLE, CHART_COLORS } from "@/features/crm/shared/constants";
 import { AnalyticsChartCard } from "./analytics-chart-card";
 
 interface SourceBreakdownChartProps {

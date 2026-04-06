@@ -28,7 +28,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { formatDistanceToNow } from "date-fns";
-import { CreateTargetSheet } from "./_components/create-target-sheet";
+import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
 
 const METRIC_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },

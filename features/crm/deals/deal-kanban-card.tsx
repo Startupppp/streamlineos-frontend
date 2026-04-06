@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINRCompact } from "@/lib/format-utils";
-import { DEAL_STAGES } from "../../_constants";
+import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { Deal } from "@/types/crm";
 
 interface DealKanbanCardProps {

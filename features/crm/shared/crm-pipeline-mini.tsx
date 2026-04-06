@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { PIPELINE_STAGES } from "../_constants";
+import { PIPELINE_STAGES } from "@/features/crm/shared/constants";
 
 interface CrmPipelineMiniProps {
   byStatus: Record<string, number>;

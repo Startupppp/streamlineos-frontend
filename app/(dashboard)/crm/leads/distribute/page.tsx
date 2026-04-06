@@ -15,8 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CsvUploadDialog } from "../_components/csv-upload-dialog";
-import { LeadDistributionDialog } from "../_components/lead-distribution-dialog";
+import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
+import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
 import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/lib/api/hooks/leads";
 import { useQueryClient } from "@tanstack/react-query";

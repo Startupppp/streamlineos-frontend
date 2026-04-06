@@ -13,7 +13,7 @@ import { formatINR } from "@/lib/format-utils";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
 import { toast } from "sonner";
 import type { ExpenseWithRelations } from "@/server/actions/expense-query";
-import type { ExpenseToEdit } from "../create-expense-dialog";
+import type { ExpenseToEdit } from "@/app/(dashboard)/hr/expenses/create-expense-dialog";
 import {
   getCategoryConfig,
   ADMIN_CATEGORY_LABELS,

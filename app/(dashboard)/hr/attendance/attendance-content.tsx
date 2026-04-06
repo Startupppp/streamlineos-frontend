@@ -2,11 +2,11 @@
 
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { TimerCard } from "./_components/check-in-button";
-import { WfhBalancesCard } from "./_components/wfh-balances-card";
-import { AttendanceCalendar } from "./_components/attendance-calendar";
-import { ManageHolidaysCard } from "./_components/manage-holidays-card";
-import { DailyHistoryTable } from "./_components/daily-history-table";
+import { TimerCard } from "@/features/hr/attendance/check-in-button";
+import { WfhBalancesCard } from "@/features/hr/attendance/wfh-balances-card";
+import { AttendanceCalendar } from "@/features/hr/attendance/attendance-calendar";
+import { ManageHolidaysCard } from "@/features/hr/attendance/manage-holidays-card";
+import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
 
 export function AttendanceContent({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
   return (

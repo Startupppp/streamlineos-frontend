@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CreditCard } from "lucide-react";
-import type { EmployeeFormValues } from "../edit-employee-form";
+import type { EmployeeFormValues } from "@/app/(dashboard)/hr/employees/[employeeId]/edit-employee-form";
 
 export function BankDetailsSection() {
   const { control } = useFormContext<EmployeeFormValues>();

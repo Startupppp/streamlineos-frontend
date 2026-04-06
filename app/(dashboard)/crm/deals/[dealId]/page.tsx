@@ -19,9 +19,9 @@ import {
 } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 import Link from "next/link";
-import { DealEditForm, type EditFormValues } from "./_components/deal-edit-form";
-import { ActivityTimeline } from "./_components/activity-timeline";
-import { LogActivityDialog } from "./_components/log-activity-dialog";
+import { DealEditForm, type EditFormValues } from "@/features/crm/deals/detail/deal-edit-form";
+import { ActivityTimeline } from "@/features/crm/deals/detail/activity-timeline";
+import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },

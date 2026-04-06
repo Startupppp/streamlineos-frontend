@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DealTableView } from "./_components/deal-table-view";
+import { DealTableView } from "@/features/crm/deals/deal-table-view";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -20,10 +20,10 @@ import { formatINRCompact } from "@/lib/format-utils";
 import { useDeals, useUpdateDealStage, useDeleteDeal } from "@/lib/api/hooks/crm";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
-import { DEAL_STAGES } from "../_constants";
-import { CreateDealForm } from "./_components/create-deal-form";
-import { DealKanbanCard } from "./_components/deal-kanban-card";
-import { DealsStatsBar } from "./_components/deals-stats-bar";
+import { DEAL_STAGES } from "@/features/crm/shared/constants";
+import { CreateDealForm } from "@/features/crm/deals/create-deal-form";
+import { DealKanbanCard } from "@/features/crm/deals/deal-kanban-card";
+import { DealsStatsBar } from "@/features/crm/deals/deals-stats-bar";
 
 export default function DealsPage() {
   const searchParams = useSearchParams();

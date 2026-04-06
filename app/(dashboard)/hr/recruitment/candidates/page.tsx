@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCandidates, useCreateCandidate, useUpdateCandidate } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -123,47 +124,53 @@ export default function CandidatesPage() {
       subtitle="Manage your talent pipeline"
       badge={`${filteredCandidates.length} candidates`}
       actions={
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/hr/recruitment">Back</Link>
+          </Button>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />Add Candidate</Button></SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Add Candidate</SheetTitle>
-              <SheetDescription>Add a new candidate to the pipeline.</SheetDescription>
+          <SheetTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" />Add Candidate</Button></SheetTrigger>
+          <SheetContent className="flex flex-col p-0 gap-0">
+            <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
+              <SheetTitle className="text-base">Add Candidate</SheetTitle>
+              <SheetDescription className="text-xs">Add a new candidate to the pipeline.</SheetDescription>
             </SheetHeader>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium">First Name</label>
                   <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium">Last Name</label>
                   <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium">Email</label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Phone</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Source</label>
-                <Select value={source} onValueChange={setSource}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DIRECT">Direct</SelectItem>
-                    <SelectItem value="REFERRAL">Referral</SelectItem>
-                    <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
-                    <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
-                    <SelectItem value="CAMPUS">Campus</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Source</label>
+                  <Select value={source} onValueChange={setSource}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DIRECT">Direct</SelectItem>
+                      <SelectItem value="REFERRAL">Referral</SelectItem>
+                      <SelectItem value="LINKEDIN">LinkedIn</SelectItem>
+                      <SelectItem value="JOB_PORTAL">Job Portal</SelectItem>
+                      <SelectItem value="CAMPUS">Campus</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-            <SheetFooter>
+            <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
               <Button className="flex-1" onClick={handleCreate} disabled={createCandidate.isPending}>
                 {createCandidate.isPending ? "Adding..." : "Add Candidate"}
@@ -171,6 +178,7 @@ export default function CandidatesPage() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
+        </div>
       }
       filters={
         <div className="flex items-center gap-3">
@@ -204,11 +212,12 @@ export default function CandidatesPage() {
           </Card>
         ) : (
           filteredCandidates.map((candidate) => (
-            <Card key={candidate.id} className="hover:border-primary/30 transition-colors">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between mb-3">
+            <Link key={candidate.id} href={`/hr/recruitment/candidates/${candidate.id}`}>
+            <Card className="hover:border-primary/30 transition-colors cursor-pointer">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="font-semibold">
+                    <h3 className="text-sm font-semibold">
                       {candidate.firstName} {candidate.lastName}
                     </h3>
                     {candidate.currentRole && (
@@ -251,6 +260,7 @@ export default function CandidatesPage() {
                 </div>
               </CardContent>
             </Card>
+            </Link>
           ))
         )}
       </div>

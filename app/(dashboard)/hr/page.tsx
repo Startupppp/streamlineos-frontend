@@ -20,11 +20,11 @@ import {
   type PageSizeOption,
   ROLE_LABELS,
   PAGE_SIZE,
-} from "./_components/hr-types";
-import { EmployeesLoadingSkeleton } from "./_components/employees-loading-skeleton";
-import { HrFilterBar } from "./_components/hr-filter-bar";
-import { HrEmployeeTable } from "./_components/hr-employee-table";
-import { HrDeleteDialog } from "./_components/hr-delete-dialog";
+} from "@/features/hr/employees/hr-types";
+import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
+import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
+import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 export default function HRDashboardPage() {
   const { data: session } = useSession();
@@ -313,10 +313,13 @@ export default function HRDashboardPage() {
         />
       )}
 
-      <HrDeleteDialog
+      <ConfirmActionDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        employee={employeeToDelete}
+        title="Terminate Employee"
+        description={employeeToDelete ? `Are you sure you want to terminate ${employeeToDelete.firstName ?? ""} ${employeeToDelete.lastName ?? ""}? This action cannot be undone.` : ""}
+        confirmLabel="Terminate"
+        variant="destructive"
         onConfirm={handleDelete}
       />
     </PageWrapper>

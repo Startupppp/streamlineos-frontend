@@ -15,7 +15,7 @@ import { uploadDocument } from "@/server/actions/document-actions";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import {
   formSchema, type DocumentFormData, DocumentFormFields,
-} from "./_components/document-form-fields";
+} from "@/features/hr/documents/document-form-fields";
 
 interface UploadDocumentDialogProps {
   open: boolean;

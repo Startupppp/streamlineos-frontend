@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useJobPostings, useCreateJobPosting, useUpdateJobPosting, useDeleteJobPosting } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -133,14 +134,18 @@ export default function JobPostingsPage() {
       subtitle="Manage open positions"
       badge={`${jobs?.length ?? 0} jobs`}
       actions={
+        <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/hr/recruitment">Back</Link>
+        </Button>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />New Job</Button></SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Create Job Posting</SheetTitle>
-              <SheetDescription>Add a new position to recruit for.</SheetDescription>
+          <SheetTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" />New Job</Button></SheetTrigger>
+          <SheetContent className="flex flex-col p-0 gap-0">
+            <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
+              <SheetTitle className="text-base">Create Job Posting</SheetTitle>
+              <SheetDescription className="text-xs">Add a new position to recruit for.</SheetDescription>
             </SheetHeader>
-            <div className="space-y-4 py-4">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title</label>
                 <Input placeholder="e.g. Senior React Developer" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -172,7 +177,7 @@ export default function JobPostingsPage() {
                 <Textarea placeholder="Job description..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
               </div>
             </div>
-            <SheetFooter>
+            <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
               <Button className="flex-1" onClick={handleCreate} disabled={createJob.isPending}>
                 {createJob.isPending ? "Creating..." : "Create Job"}
@@ -180,6 +185,7 @@ export default function JobPostingsPage() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
+        </div>
       }
       filters={
         <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>

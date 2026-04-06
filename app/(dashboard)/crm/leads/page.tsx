@@ -5,9 +5,9 @@ import type { DropResult } from "@hello-pangea/dnd";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { CsvUploadDialog } from "./_components/csv-upload-dialog";
-import { LeadTableView } from "./_components/lead-table-view";
-import { LeadExportDialog } from "./_components/lead-export-dialog";
+import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
+import { LeadTableView } from "@/features/crm/leads/lead-table-view";
+import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
 import { fadeUp } from "@/lib/motion-variants";
 import {
   useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,
@@ -19,13 +19,13 @@ import { useLeadsFilters } from "@/hooks/use-leads-filters";
 import { useSession } from "next-auth/react";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { toast } from "sonner";
-import { LeadsStatsBar } from "./_components/leads-stats-bar";
-import { LeadsToolbar } from "./_components/leads-toolbar";
-import { LeadsKanban } from "./_components/leads-kanban";
-import { LeadDetailSheet } from "./_components/lead-detail-sheet";
-import { CreateLeadDialog } from "./_components/create-lead-dialog";
-import { isLeadSource, isLeadPriority, STATUS_CONFIG } from "./_components/leads-constants";
-import type { BoardLead, LeadStatus } from "./_components/leads-types";
+import { LeadsStatsBar } from "@/features/crm/leads/leads-stats-bar";
+import { LeadsToolbar } from "@/features/crm/leads/leads-toolbar";
+import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
+import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
+import { CreateLeadDialog } from "@/features/crm/leads/create-lead-dialog";
+import { isLeadSource, isLeadPriority, STATUS_CONFIG } from "@/features/crm/leads/leads-constants";
+import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
 export default function LeadsPipelinePage() {
   const { data: board, isLoading: boardLoading } = useLeadBoard();

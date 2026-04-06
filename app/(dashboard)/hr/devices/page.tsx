@@ -28,8 +28,8 @@ import { isDeviceStatus } from "@/lib/theme-constants";
 import type { Device, Employee } from "@/types/hr";
 import {
   DeviceFormContent, deviceSchema, type DeviceFormValues,
-} from "./_components/device-form-content";
-import { DeviceTableRow } from "./_components/device-table-row";
+} from "@/features/hr/devices/device-form-content";
+import { DeviceTableRow } from "@/features/hr/devices/device-table-row";
 
 const DEVICE_ICONS: Record<string, React.ElementType> = {
   Laptop, Phone: Smartphone, Monitor, Keyboard,

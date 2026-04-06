@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useCreateDeal } from "@/lib/api/hooks/crm";
-import { DEAL_STAGES } from "../../_constants";
-import type { DealStage } from "../../_constants";
+import { DEAL_STAGES } from "@/features/crm/shared/constants";
+import type { DealStage } from "@/features/crm/shared/constants";
 import { toast } from "sonner";
 
 interface CreateDealFormProps {

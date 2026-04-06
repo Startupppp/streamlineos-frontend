@@ -25,7 +25,7 @@ import { EmptyTeamIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useContacts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import { CreateContactDialog } from "./_components/create-contact-dialog";
+import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
 
 const PAGE_SIZE = 20;
 

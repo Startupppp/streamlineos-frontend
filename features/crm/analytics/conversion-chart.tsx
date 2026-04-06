@@ -1,7 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { CHART_TOOLTIP_STYLE } from "../../_constants";
+import { CHART_TOOLTIP_STYLE } from "@/features/crm/shared/constants";
 import { AnalyticsChartCard } from "./analytics-chart-card";
 
 interface ConversionChartProps {

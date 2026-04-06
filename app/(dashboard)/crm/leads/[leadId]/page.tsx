@@ -13,10 +13,10 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
-import { LeadDetailHeader } from "./_components/lead-detail-header";
-import { LeadInfoCard } from "./_components/lead-info-card";
-import { LeadQuickActions } from "./_components/lead-quick-actions";
-import { LeadSidebar } from "./_components/lead-sidebar";
+import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
+import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
+import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions";
+import { LeadSidebar } from "@/features/crm/leads/detail/lead-sidebar";
 import {
   noteSchema,
   taskSchema,
@@ -30,7 +30,7 @@ import {
   type EmailForm,
   type CallForm,
   type EditForm,
-} from "./_components/lead-types";
+} from "@/features/crm/leads/detail/lead-types";
 
 export default function LeadDetailPage({
   params,

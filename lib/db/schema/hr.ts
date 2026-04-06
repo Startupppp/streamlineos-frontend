@@ -533,3 +533,8 @@ export const interviewsRelations = relations(interviews, ({ one }) => ({
   jobPosting: one(jobPostings, { fields: [interviews.jobPostingId], references: [jobPostings.id] }),
   interviewer: one(users, { fields: [interviews.interviewerId], references: [users.id] }),
 }));
+
+export const richDocumentsRelations = relations(richDocuments, ({ one }) => ({
+  organization: one(organizations, { fields: [richDocuments.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [richDocuments.createdBy], references: [users.id] }),
+}));

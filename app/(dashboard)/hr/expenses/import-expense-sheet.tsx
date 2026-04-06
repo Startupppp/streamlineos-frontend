@@ -12,7 +12,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ImportValidationPreview } from "./_components/import-validation-preview";
+import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",

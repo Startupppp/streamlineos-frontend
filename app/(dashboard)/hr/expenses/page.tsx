@@ -28,10 +28,10 @@ import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
   type StatusFilter,
-} from "./_components/expense-constants";
-import { AdminExpenseStats, MemberExpenseStats } from "./_components/expense-stats";
-import { AdminExpenseFilters, MemberExpenseFilters } from "./_components/expense-filters";
-import { AdminExpenseList, MemberExpenseList } from "./_components/expense-list";
+} from "@/features/hr/expenses/expense-constants";
+import { AdminExpenseStats, MemberExpenseStats } from "@/features/hr/expenses/expense-stats";
+import { AdminExpenseFilters, MemberExpenseFilters } from "@/features/hr/expenses/expense-filters";
+import { AdminExpenseList, MemberExpenseList } from "@/features/hr/expenses/expense-list";
 import type { ExpenseToEdit } from "./create-expense-dialog";
 
 /* ─── Page Component ─── */

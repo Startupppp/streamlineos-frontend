@@ -12,9 +12,9 @@ import { updateEmployee } from "@/server/actions/hr-actions";
 import { Loader2 } from "lucide-react";
 import { useRolesList } from "@/lib/api/hooks/roles";
 import { useState } from "react";
-import { PersonalInfoSection } from "./_components/personal-info-section";
-import { ProfessionalInfoSection } from "./_components/professional-info-section";
-import { BankDetailsSection } from "./_components/bank-details-section";
+import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
+import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
+import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name is required"),

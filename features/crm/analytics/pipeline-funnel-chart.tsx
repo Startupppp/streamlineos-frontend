@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { CHART_TOOLTIP_STYLE, AXIS_TICK } from "../../_constants";
+import { CHART_TOOLTIP_STYLE, AXIS_TICK } from "@/features/crm/shared/constants";
 import { AnalyticsChartCard } from "./analytics-chart-card";
 
 interface PipelineFunnelChartProps {

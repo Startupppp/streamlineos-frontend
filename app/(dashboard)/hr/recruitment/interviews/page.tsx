@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { useInterviews, useCreateInterview, useUpdateInterview, useCandidates } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -95,15 +96,19 @@ export default function InterviewsPage() {
       subtitle="Schedule and track interviews"
       badge={`${interviews?.length ?? 0} interviews`}
       actions={
+        <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/hr/recruitment">Back</Link>
+        </Button>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild><Button><Plus className="mr-2 h-4 w-4" />Schedule Interview</Button></SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Schedule Interview</SheetTitle>
-              <SheetDescription>Set up an interview with a candidate.</SheetDescription>
+          <SheetTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" />Schedule Interview</Button></SheetTrigger>
+          <SheetContent className="flex flex-col p-0 gap-0">
+            <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
+              <SheetTitle className="text-base">Schedule Interview</SheetTitle>
+              <SheetDescription className="text-xs">Set up an interview with a candidate.</SheetDescription>
             </SheetHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium">Candidate</label>
                 <Select value={candidateId} onValueChange={setCandidateId}>
                   <SelectTrigger><SelectValue placeholder="Select candidate" /></SelectTrigger>
@@ -116,31 +121,33 @@ export default function InterviewsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Type</label>
-                <Select value={type} onValueChange={(v) => setType(v as InterviewType)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {(["PHONE", "VIDEO", "ONSITE", "TECHNICAL", "HR", "FINAL"] as InterviewType[]).map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Type</label>
+                  <Select value={type} onValueChange={(v) => setType(v as InterviewType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(["PHONE", "VIDEO", "ONSITE", "TECHNICAL", "HR", "FINAL"] as InterviewType[]).map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Duration (min)</label>
+                  <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Scheduled At</label>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Date & Time</label>
                 <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Duration (min)</label>
-                <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
-              </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium">Meeting Link</label>
                 <Input placeholder="https://meet.google.com/..." value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} />
               </div>
             </div>
-            <SheetFooter>
+            <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
               <Button className="flex-1" onClick={handleCreate} disabled={createInterview.isPending}>
                 {createInterview.isPending ? "Scheduling..." : "Schedule"}
@@ -148,6 +155,7 @@ export default function InterviewsPage() {
             </SheetFooter>
           </SheetContent>
         </Sheet>
+        </div>
       }
     >
       <Card>

@@ -17,8 +17,8 @@ import {
   WorkLogFilterActions,
   WorkLogFiltersPanel,
   type WorkLogFilters as WorkLogFiltersType,
-} from "./_components/work-log-filters";
-import { WorkLogMonthGroup } from "./_components/work-log-month-group";
+} from "@/features/hr/work-logs/work-log-filters";
+import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();
