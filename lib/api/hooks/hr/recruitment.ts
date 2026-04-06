@@ -188,3 +188,12 @@ export function useRecruitmentPipeline() {
       apiClient.get<Record<string, Candidate[]>>("/hr/recruitment/pipeline"),
   });
 }
+
+export function useGenerateOfferLetter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { candidateId: number; jobPostingId: number; salary: string; startDate: string }) =>
+      apiClient.post<{ documentId: number; title: string }>("/hr/recruitment/offer-letter", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() }),
+  });
+}
