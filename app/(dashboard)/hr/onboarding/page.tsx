@@ -6,12 +6,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 export default function OnboardingPage() {
   return (
     <PageWrapper
-      title="Employee Onboarding"
-      subtitle="Add a new team member to your organization."
+      title="Add Employee"
+      subtitle="Complete the steps to onboard a new team member"
     >
-      <div className="bg-slate-50/50 dark:bg-slate-950/20 rounded-lg">
-        <OnboardingWizard />
-      </div>
+      <OnboardingWizard />
     </PageWrapper>
   );
 }

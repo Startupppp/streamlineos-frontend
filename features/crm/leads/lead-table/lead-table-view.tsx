@@ -92,9 +92,8 @@ export function LeadTableView({
   const toRow = Math.min(page * pageSize, totalCount);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
-      {/* Toolbar — compact */}
-      <div className="shrink-0 flex items-center justify-between px-1 pb-1.5">
+    <div className="flex flex-col h-full min-h-0">
+      <div className="shrink-0 flex items-center justify-between px-1 pb-1">
         <span className="text-[11px] text-muted-foreground tabular-nums">
           {totalCount > 0 ? `${fromRow}–${toRow} of ${totalCount}` : "0 leads"}
         </span>
@@ -205,7 +204,7 @@ export function LeadTableView({
 
       {/* Pagination — compact */}
       {totalPages > 1 && (
-        <div className="shrink-0 flex items-center justify-between pt-1.5 px-1">
+        <div className="shrink-0 flex items-center justify-between pt-1 px-1">
           <span className="text-[10px] text-muted-foreground tabular-nums">
             Page {page}/{totalPages}
           </span>

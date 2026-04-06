@@ -2,13 +2,11 @@
 
 import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
-import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadTableView } from "@/features/crm/leads/lead-table-view";
 import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
-import { fadeUp } from "@/lib/motion-variants";
 import {
   useLeadBoard, useLeadStats, useCreateLead, useUpdateLeadStatus,
   useLeads, useSalesTeamCapacity, useUpdateLead, useAssignLead,
@@ -242,6 +240,7 @@ export default function LeadsPipelinePage() {
       title="Lead Pipeline"
       subtitle="Track and manage leads through the conversion funnel"
       badge={view === "table" && tableData ? String(tableData.totalCount) : undefined}
+      noInternalScroll
       actions={
         <div className="flex items-center gap-2">
           <LeadExportDialog />
@@ -270,16 +269,15 @@ export default function LeadsPipelinePage() {
         />
       }
     >
-      <div className="space-y-6">
+      <div className="flex flex-col h-full min-h-0">
         {stats && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <div className="shrink-0">
             <LeadsStatsBar stats={stats} />
-          </motion.div>
+          </div>
         )}
 
-        {/* Table View */}
         {view === "table" && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <div className="flex-1 min-h-0 mt-2">
             <LeadTableView
               leads={tableData?.leads || []}
               totalCount={tableData?.totalCount || 0}
@@ -300,19 +298,18 @@ export default function LeadsPipelinePage() {
               isLoading={tableLoading}
               isAdmin={isAdmin}
             />
-          </motion.div>
+          </div>
         )}
 
-        {/* Kanban View */}
         {view === "kanban" && (
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <div className="flex-1 min-h-0 mt-2 overflow-auto">
             <LeadsKanban
               filteredBoard={filteredBoard as Record<string, BoardLead[]> | null}
               onDragEnd={handleDragEnd}
               onOpenLead={setSelectedLeadId}
               onMoveStatus={handleMoveStatus}
             />
-          </motion.div>
+          </div>
         )}
 
         <LeadDetailSheet
