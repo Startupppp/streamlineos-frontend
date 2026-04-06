@@ -1,8 +1,8 @@
 import { type NextRequest } from "next/server";
-import { withAuth, withAdmin, ok, err, parseQuery, parseBody, toNumber } from "@/lib/api/helpers";
+import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
-import { leads, leadActivities, notifications } from "@/lib/db/schema";
+import { leads, notifications } from "@/lib/db/schema";
 import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
 import { z } from "zod";

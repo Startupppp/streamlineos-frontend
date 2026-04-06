@@ -75,7 +75,7 @@
 - [x] Candidate detail page with applications + interviews + status change
 - [x] Interview feedback forms with structured scoring rubric (slider-based)
 - [x] Recruitment pipeline kanban board (DnD between stages)
-- [ ] Offer letter generation from template
+- [x] Offer letter generation from candidate + job posting → TipTap document
 - [ ] Job posting public page / careers page
 - [ ] Referral tracking (which employee referred)
 - [ ] Hiring funnel analytics (conversion rates per stage)
@@ -103,9 +103,9 @@
 - [ ] My Training / certifications
 
 ### Advanced Payroll
+- [x] Payroll reimbursements (submit → approve → pay workflow)
+- [x] Loan management / salary advance (apply → approve → disburse → EMI tracking)
 - [ ] Tax calculation engine (TDS, PF, ESI for India)
-- [ ] Payroll reimbursements
-- [ ] Loan management (salary advance)
 - [ ] Bonus processing (festival/performance)
 - [ ] Full & Final settlement calculation
 - [ ] Payroll compliance reports (Form 16, 24Q)
@@ -127,8 +127,8 @@
 - [ ] Team building event management
 
 ### Compliance & Legal
+- [x] Policy acknowledgment tracking (send → acknowledge/decline workflow)
 - [ ] Background verification tracking
-- [ ] Policy acknowledgment tracking (digital signatures)
 - [ ] Employee handbook versioning
 - [ ] Statutory compliance dashboard
 - [ ] Document expiry alerts + auto-reminders
@@ -139,7 +139,7 @@
 - [x] Expense tracking (approved YTD)
 - [x] Leave requests by status + monthly trend
 - [x] Recruitment analytics (hiring funnel, source effectiveness, avg time-to-hire)
-- [ ] Attendance reports (department-wise, monthly summary)
+- [x] Attendance reports (department-wise, daily summary by month)
 - [ ] Attrition analysis
 - [ ] Compensation benchmarking
 

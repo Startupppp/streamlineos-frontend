@@ -73,7 +73,6 @@ export const queryKeys = {
     all: [...base, "deals"] as const,
     list: (params?: Record<string, unknown>) => [...base, "deals", "list", params] as const,
     detail: (id: number) => [...base, "deals", "detail", id] as const,
-    pipeline: (params?: Record<string, unknown>) => [...base, "deals", "pipeline", params] as const,
     forecast: () => [...base, "deals", "forecast"] as const,
   },
 
@@ -293,8 +292,4 @@ export const queryKeys = {
     results: (query: string) => [...base, "globalSearch", query] as const,
   },
 
-  ai: {
-    all: [...base, "ai"] as const,
-    leadScore: (leadId: number) => [...base, "ai", "leadScore", leadId] as const,
-  },
 } as const;

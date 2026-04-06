@@ -44,14 +44,6 @@ export const LEAD_PRIORITIES = [
   { value: "COLD", label: "Cold", color: "text-blue-400", bg: "bg-blue-400/15", border: "border-blue-400/30", icon: Snowflake },
 ] as const;
 
-/* ───── Client Statuses ───── */
-export const CLIENT_STATUSES = [
-  { key: "ACCOUNT_OPENING", label: "Account Opening", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { key: "QUERIES", label: "Queries", color: "text-amber-400", bg: "bg-amber-500/10" },
-  { key: "PLAN_SELECTED", label: "Plan Selected", color: "text-purple-400", bg: "bg-purple-500/10" },
-  { key: "INVESTED", label: "Invested", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-] as const;
-
 /* ───── Activity Types ───── */
 export const ACTIVITY_TYPES = [
   { value: "call", label: "Call", icon: Phone },

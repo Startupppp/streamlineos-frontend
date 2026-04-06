@@ -13,3 +13,6 @@ export * from "./recognition";
 export * from "./compliance";
 export * from "./reimbursements";
 export * from "./loans";
+export * from "./certifications";
+export * from "./background-verification";
+export * from "./celebrations";

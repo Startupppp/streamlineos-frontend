@@ -1,7 +1,7 @@
 import { inngest } from "../client";
 import { db } from "@/lib/db";
 import { deals, leads, organizations, organizationMembers } from "@/lib/db/schema";
-import { eq, and, gte, count, sum, sql } from "drizzle-orm";
+import { eq, and, gte, count, sql } from "drizzle-orm";
 import { subDays } from "date-fns";
 import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";

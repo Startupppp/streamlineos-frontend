@@ -432,6 +432,43 @@ export const salaryLoans = pgTable("salary_loans", {
   index("idx_loans_user").on(table.userId),
 ]);
 
+// ─── Certifications ───
+export const certifications = pgTable("certifications", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  issuingOrganization: text("issuing_organization"),
+  issueDate: date("issue_date"),
+  expiryDate: date("expiry_date"),
+  credentialId: text("credential_id"),
+  credentialUrl: text("credential_url"),
+  documentUrl: text("document_url"),
+  reminderSent: boolean("reminder_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_certifications_user").on(table.userId),
+  index("idx_certifications_expiry").on(table.expiryDate),
+]);
+
+// ─── Background Verification ───
+export const backgroundVerifications = pgTable("background_verifications", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(),
+  status: text("status").default("PENDING"),
+  provider: text("provider"),
+  referenceNumber: text("reference_number"),
+  result: text("result"),
+  notes: text("notes"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_bgv_user").on(table.userId),
+]);
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -570,6 +607,7 @@ export const candidates = pgTable("candidates", {
   status: candidateStatusEnum("status").default("NEW"),
   notes: text("notes"),
   rating: integer("rating"),
+  referredBy: text("referred_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -784,4 +822,12 @@ export const reimbursementsRelations = relations(reimbursements, ({ one }) => ({
 export const salaryLoansRelations = relations(salaryLoans, ({ one }) => ({
   user: one(users, { fields: [salaryLoans.userId], references: [users.id] }),
   approver: one(users, { fields: [salaryLoans.approvedBy], references: [users.id], relationName: "loanApprover" }),
+}));
+
+export const certificationsRelations = relations(certifications, ({ one }) => ({
+  user: one(users, { fields: [certifications.userId], references: [users.id] }),
+}));
+
+export const backgroundVerificationsRelations = relations(backgroundVerifications, ({ one }) => ({
+  user: one(users, { fields: [backgroundVerifications.userId], references: [users.id] }),
 }));

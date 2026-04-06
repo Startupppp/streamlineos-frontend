@@ -21,8 +21,8 @@ export function isOpenAIConfigured(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
 
-/** Shared model constants. Use mini for cost-efficient bulk ops, standard for complex analysis. */
-export const MODELS = {
+/** Model constants. Use mini for cost-efficient bulk ops, standard for complex analysis. */
+const MODELS = {
   /** GPT-4o-mini — fast, cheap, good for structured output. ~$0.15/1M input tokens */
   fast: "gpt-4o-mini" as const,
   /** GPT-4o — best quality for complex reasoning. ~$2.50/1M input tokens */
