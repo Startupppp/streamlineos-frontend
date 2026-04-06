@@ -93,10 +93,12 @@
 - [ ] Employee growth path / career ladder
 
 ### Employee Self-Service
+- [x] My Payslips page (accessible to all roles via sidebar)
+- [x] My Leaves (already accessible via sidebar)
+- [x] My Attendance (already accessible via sidebar)
+- [x] My Expenses (already accessible via sidebar)
 - [ ] My Profile page (edit personal info, bank details)
-- [ ] My Payslips history with PDF download
-- [ ] My Leaves balance + request history
-- [ ] My Attendance history with heatmap
+- [ ] My Attendance heatmap visualization
 - [ ] My Goals dashboard
 - [ ] My Training / certifications
 
@@ -109,8 +111,9 @@
 - [ ] Payroll compliance reports (Form 16, 24Q)
 
 ### Training & Development
-- [ ] Training programs catalog
-- [ ] Course enrollment + completion tracking
+- [x] Training programs catalog (CRUD with publish/archive)
+- [x] Course enrollment (self-enroll + admin enroll)
+- [x] Enrollment status tracking (Enrolled → In Progress → Completed)
 - [ ] Certification management with expiry alerts
 - [ ] Skills assessment tests
 - [ ] Learning path recommendations
@@ -131,14 +134,13 @@
 - [ ] Document expiry alerts + auto-reminders
 
 ### Analytics & Reports
-- [ ] HR analytics dashboard (turnover rate, headcount trends)
+- [x] HR analytics dashboard (headcount, dept distribution, gender diversity, role distribution)
+- [x] Payroll cost analysis (YTD)
+- [x] Expense tracking (approved YTD)
+- [x] Leave requests by status + monthly trend
+- [x] Recruitment analytics (hiring funnel, source effectiveness, avg time-to-hire)
 - [ ] Attendance reports (department-wise, monthly summary)
-- [ ] Leave utilization reports
-- [ ] Payroll cost analysis
-- [ ] Recruitment analytics (time-to-hire, source effectiveness)
 - [ ] Attrition analysis
-- [ ] Department-wise headcount
-- [ ] Gender diversity metrics
 - [ ] Compensation benchmarking
 
 ### Exit Management

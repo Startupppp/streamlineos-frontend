@@ -159,6 +159,11 @@ export const clients = pgTable("clients", {
   status: text("status").default("active").notNull(),
   accountManagerId: text("account_manager_id").references(() => users.id),
   notes: text("notes"),
+  healthScore: integer("health_score").default(50),
+  healthStatus: text("health_status").default("healthy"), // healthy | at_risk | critical
+  lastHealthCheck: timestamp("last_health_check"),
+  churnRiskScore: integer("churn_risk_score"),
+  churnRiskReasoning: text("churn_risk_reasoning"),
   convertedAt: timestamp("converted_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -266,6 +271,102 @@ export const salesQuotas = pgTable("sales_quotas", {
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_sales_quotas_org_user").on(table.orgId, table.userId),
+]);
+
+// ─── Commission Rules & Earned Commissions ───
+export const commissionRules = pgTable("commission_rules", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  type: text("type").default("flat_percent").notNull(), // flat_percent | tiered
+  flatRate: decimal("flat_rate"),
+  tiers: jsonb("tiers"), // Array<{ minValue, maxValue?, rate }>
+  appliesTo: text("applies_to").default("all").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const commissions = pgTable("commissions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  dealId: integer("deal_id").references(() => deals.id).notNull(),
+  ruleId: integer("rule_id").references(() => commissionRules.id),
+  dealValue: decimal("deal_value").default("0").notNull(),
+  commissionRate: decimal("commission_rate").default("0").notNull(),
+  commissionAmount: decimal("commission_amount").default("0").notNull(),
+  status: text("status").default("pending").notNull(), // pending | approved | paid
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_commissions_org_user").on(table.orgId, table.userId),
+  index("idx_commissions_deal").on(table.dealId),
+]);
+
+// ─── Deal Approval Workflow ───
+export const dealApprovalRules = pgTable("deal_approval_rules", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  minValue: decimal("min_value").default("0").notNull(),
+  approverRole: text("approver_role").default("CEO").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const dealApprovals = pgTable("deal_approvals", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  dealId: integer("deal_id").references(() => deals.id).notNull(),
+  requestedBy: text("requested_by").references(() => users.id).notNull(),
+  requestedStage: text("requested_stage").notNull(),
+  status: text("status").default("pending").notNull(), // pending | approved | rejected
+  approvedBy: text("approved_by").references(() => users.id),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+}, (table) => [
+  index("idx_deal_approvals_org").on(table.orgId, table.status),
+  index("idx_deal_approvals_deal").on(table.dealId),
+]);
+
+// ─── Email Campaigns ───
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  templateId: integer("template_id"),
+  status: text("status").default("draft").notNull(),
+  recipientFilter: jsonb("recipient_filter"),
+  recipientCount: integer("recipient_count").default(0),
+  sentCount: integer("sent_count").default(0),
+  failedCount: integer("failed_count").default(0),
+  openCount: integer("open_count").default(0),
+  clickCount: integer("click_count").default(0),
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_email_campaigns_org").on(table.orgId, table.status),
+]);
+
+export const emailCampaignRecipients = pgTable("email_campaign_recipients", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => emailCampaigns.id, { onDelete: "cascade" }).notNull(),
+  leadId: integer("lead_id").references(() => leads.id),
+  email: text("email").notNull(),
+  name: text("name"),
+  status: text("status").default("pending").notNull(),
+  sentAt: timestamp("sent_at"),
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+  errorMessage: text("error_message"),
+}, (table) => [
+  index("idx_ecr_campaign").on(table.campaignId, table.status),
 ]);
 
 // ─── CRM Legacy Tables ───

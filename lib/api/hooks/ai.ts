@@ -3,7 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult, NextActionResult } from "@/lib/ai/prompts";
+import type {
+  LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
+  NextActionResult, ChurnRiskResult, ConversationSummaryResult, LeadEnrichmentResult,
+} from "@/lib/ai/prompts";
 
 /* ─── AI Lead Scoring ─────────────────────────────────────────────────────── */
 
@@ -86,5 +89,36 @@ export function useNextBestAction() {
   return useMutation({
     mutationFn: (leadId: number) =>
       apiClient.post<NextActionResult>("/ai/next-action", { leadId }),
+  });
+}
+
+/* ─── AI Churn Risk Analysis ──────────────────────────────────────────────── */
+
+export function useAnalyzeChurnRisk() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { clientId: number; openTickets?: number; ticketsLast90Days?: number; daysSinceLastActivity?: number | null }) =>
+      apiClient.post<ChurnRiskResult>("/ai/churn-risk", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+    },
+  });
+}
+
+/* ─── AI Conversation Summary ─────────────────────────────────────────────── */
+
+export function useSummarizeConversation() {
+  return useMutation({
+    mutationFn: (input: { activityType: string; subject?: string; notes: string; leadName?: string; dealName?: string }) =>
+      apiClient.post<ConversationSummaryResult>("/ai/summarize", input),
+  });
+}
+
+/* ─── AI Lead Enrichment ──────────────────────────────────────────────────── */
+
+export function useEnrichLead() {
+  return useMutation({
+    mutationFn: (input: { name: string; company?: string; email?: string; designation?: string; city?: string }) =>
+      apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input),
   });
 }

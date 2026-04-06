@@ -37,6 +37,7 @@ import {
   HeadphonesIcon,
   UserSearch,
   TrendingUp,
+  BookOpen,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -83,6 +84,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Devices", icon: Laptop, href: "/hr/devices" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
+            { label: "Training", icon: BookOpen, href: "/hr/training" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
             { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
@@ -146,6 +148,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Devices", icon: Laptop, href: "/hr/devices" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
+            { label: "Training", icon: BookOpen, href: "/hr/training" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
             { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
@@ -205,6 +208,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
           ],
         },
       ];
@@ -228,6 +232,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
           ],
         },
       ];
@@ -251,6 +256,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
           ],
         },
       ];
@@ -275,6 +281,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
           ],
         },
       ];
@@ -298,6 +305,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+            { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
           ],
         },
       ];

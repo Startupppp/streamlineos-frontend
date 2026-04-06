@@ -339,6 +339,114 @@ export function useCreateSalesQuota() {
   });
 }
 
+/* ─── Commissions ──────────────────────────────────────────────────────────── */
+
+export function useCommissions(params?: { userId?: string; status?: string }) {
+  return useQuery({
+    queryKey: [...queryKeys.deals.all, "commissions", params] as const,
+    queryFn: () => apiClient.get<{ items: Array<Record<string, unknown>>; totalPending: number; totalPaid: number }>("/sales/commissions", params as Record<string, unknown>),
+  });
+}
+
+export function useCommissionRules() {
+  return useQuery({
+    queryKey: [...queryKeys.deals.all, "commissionRules"] as const,
+    queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/sales/commission-rules"),
+  });
+}
+
+export function useCreateCommissionRule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; type: string; flatRate?: string; tiers?: Array<{ minValue: number; maxValue?: number; rate: number }>; appliesTo?: string }) =>
+      apiClient.post("/sales/commission-rules", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissionRules"] }),
+  });
+}
+
+/* ─── Deal Approvals ───────────────────────────────────────────────────────── */
+
+export function useDealApprovals(params?: { status?: string }) {
+  return useQuery({
+    queryKey: [...queryKeys.deals.all, "approvals", params] as const,
+    queryFn: () => apiClient.get<Array<Record<string, unknown>>>("/deals/approvals", params as Record<string, unknown>),
+  });
+}
+
+export function useRequestDealApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { dealId: number; requestedStage: string }) =>
+      apiClient.post("/deals/approvals", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvals"] }),
+  });
+}
+
+export function useResolveDealApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { approvalId: number; action: "approve" | "reject"; rejectionReason?: string }) =>
+      apiClient.post("/deals/approvals", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "approvals"] });
+      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+    },
+  });
+}
+
+/* ─── Client Health ────────────────────────────────────────────────────────── */
+
+export interface ClientHealth {
+  id: number;
+  name: string;
+  company: string | null;
+  healthScore: number | null;
+  healthStatus: string | null;
+  churnRiskScore: number | null;
+  churnRiskReasoning: string | null;
+  lastHealthCheck: string | null;
+  investmentValue: string | null;
+  status: string;
+}
+
+export function useClientHealth(params?: { status?: string }) {
+  return useQuery({
+    queryKey: [...queryKeys.clients.all, "health", params] as const,
+    queryFn: () => apiClient.get<{ items: ClientHealth[]; summary: { healthy: number; at_risk: number; critical: number } }>("/clients/health", params as Record<string, unknown>),
+  });
+}
+
+/* ─── Churn Alerts ──────────────────────────────────────────────────��──────── */
+
+export function useChurnAlerts() {
+  return useQuery({
+    queryKey: [...queryKeys.clients.all, "churnAlerts"] as const,
+    queryFn: () => apiClient.get<{
+      alerts: ClientHealth[];
+      summary: { critical: number; atRisk: number; total: number };
+    }>("/clients/churn-alerts"),
+  });
+}
+
+/* ─── Client Timeline ──────────────────────────────────────────────────────── */
+
+export interface ClientTimelineEvent {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  date: string;
+  user?: string;
+}
+
+export function useClientTimeline(clientId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.clients.detail(clientId), "timeline"] as const,
+    queryFn: () => apiClient.get<{ events: ClientTimelineEvent[]; total: number }>(`/clients/${clientId}/timeline`),
+    enabled: clientId > 0,
+  });
+}
+
 export function useSalesDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.salesDashboard(),
@@ -423,6 +531,67 @@ export function useDeleteMarketingCampaign() {
       qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.marketingDashboard() });
     },
+  });
+}
+
+/* ─── Email Campaigns ──────────────────────────────────────────────────────── */
+
+export interface EmailCampaign {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+  status: string;
+  recipientFilter: Record<string, unknown> | null;
+  recipientCount: number;
+  sentCount: number;
+  failedCount: number;
+  openCount: number;
+  clickCount: number;
+  scheduledAt: string | null;
+  sentAt: string | null;
+  createdAt: string | null;
+}
+
+export function useEmailCampaigns(params?: { status?: string }) {
+  return useQuery({
+    queryKey: [...queryKeys.marketingCampaigns.all, "email", params] as const,
+    queryFn: () => apiClient.get<EmailCampaign[]>("/marketing/email-campaigns", params as Record<string, unknown>),
+  });
+}
+
+export function useCreateEmailCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; subject: string; body: string; templateId?: number; recipientFilter?: Record<string, unknown>; scheduledAt?: string }) =>
+      apiClient.post<EmailCampaign>("/marketing/email-campaigns", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all }),
+  });
+}
+
+export function useUpdateEmailCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number } & Partial<{ name: string; subject: string; body: string; status: string }>) =>
+      apiClient.patch<EmailCampaign>(`/marketing/email-campaigns/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all }),
+  });
+}
+
+export function useSendEmailCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (campaignId: number) =>
+      apiClient.post<{ sent: number; campaignId: number; status: string }>(`/marketing/email-campaigns/${campaignId}/send`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all }),
+  });
+}
+
+export function useDeleteEmailCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/marketing/email-campaigns/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all }),
   });
 }
 

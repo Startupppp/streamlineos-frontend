@@ -11,6 +11,8 @@ import {
   jobPostingStatusEnum, candidateStatusEnum, interviewTypeEnum,
   interviewResultEnum, applicationStatusEnum,
   reviewCycleStatusEnum, meetingStatusEnum,
+  trainingStatusEnum, enrollmentStatusEnum,
+  resignationStatusEnum, exitChecklistStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -285,6 +287,77 @@ export const oneOnOneMeetings = pgTable("one_on_one_meetings", {
   index("idx_one_on_ones_manager").on(table.managerId),
   index("idx_one_on_ones_scheduled").on(table.scheduledAt),
 ]);
+
+// ─── Training & Development ───
+export const trainingPrograms = pgTable("training_programs", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category"),
+  duration: text("duration"),
+  instructor: text("instructor"),
+  maxParticipants: integer("max_participants"),
+  status: trainingStatusEnum("status").default("DRAFT"),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  location: text("location"),
+  meetingLink: text("meeting_link"),
+  materials: text("materials"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_training_programs_org").on(table.orgId),
+]);
+
+export const trainingEnrollments = pgTable("training_enrollments", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  programId: integer("program_id").references(() => trainingPrograms.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  status: enrollmentStatusEnum("status").default("ENROLLED"),
+  completedAt: timestamp("completed_at"),
+  score: integer("score"),
+  feedback: text("feedback"),
+  certificateUrl: text("certificate_url"),
+  enrolledAt: timestamp("enrolled_at").defaultNow(),
+}, (table) => [
+  index("idx_enrollments_program").on(table.programId),
+  index("idx_enrollments_user").on(table.userId),
+]);
+
+// ─── Exit Management ───
+export const resignations = pgTable("resignations", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  reason: text("reason"),
+  lastWorkingDate: date("last_working_date"),
+  noticePeriodDays: integer("notice_period_days").default(30),
+  status: resignationStatusEnum("status").default("SUBMITTED"),
+  approvedBy: text("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  exitInterviewNotes: text("exit_interview_notes"),
+  exitInterviewDate: timestamp("exit_interview_date"),
+  exitInterviewConductedBy: text("exit_interview_conducted_by").references(() => users.id),
+  feedback: jsonb("feedback").$type<{ question: string; answer: string }[]>(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_resignations_org").on(table.orgId),
+  index("idx_resignations_user").on(table.userId),
+]);
+
+export const exitChecklists = pgTable("exit_checklists", {
+  id: serial("id").primaryKey(),
+  resignationId: integer("resignation_id").references(() => resignations.id, { onDelete: "cascade" }).notNull(),
+  item: text("item").notNull(),
+  assignedTo: text("assigned_to").references(() => users.id),
+  status: exitChecklistStatusEnum("status").default("PENDING"),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+});
 
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
@@ -595,4 +668,27 @@ export const interviewsRelations = relations(interviews, ({ one }) => ({
 export const richDocumentsRelations = relations(richDocuments, ({ one }) => ({
   organization: one(organizations, { fields: [richDocuments.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [richDocuments.createdBy], references: [users.id] }),
+}));
+
+export const trainingProgramsRelations = relations(trainingPrograms, ({ one, many }) => ({
+  organization: one(organizations, { fields: [trainingPrograms.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [trainingPrograms.createdBy], references: [users.id] }),
+  enrollments: many(trainingEnrollments),
+}));
+
+export const trainingEnrollmentsRelations = relations(trainingEnrollments, ({ one }) => ({
+  program: one(trainingPrograms, { fields: [trainingEnrollments.programId], references: [trainingPrograms.id] }),
+  user: one(users, { fields: [trainingEnrollments.userId], references: [users.id] }),
+}));
+
+export const resignationsRelations = relations(resignations, ({ one, many }) => ({
+  user: one(users, { fields: [resignations.userId], references: [users.id] }),
+  approver: one(users, { fields: [resignations.approvedBy], references: [users.id], relationName: "resignationApprover" }),
+  interviewer: one(users, { fields: [resignations.exitInterviewConductedBy], references: [users.id], relationName: "exitInterviewer" }),
+  checklists: many(exitChecklists),
+}));
+
+export const exitChecklistsRelations = relations(exitChecklists, ({ one }) => ({
+  resignation: one(resignations, { fields: [exitChecklists.resignationId], references: [resignations.id] }),
+  assignee: one(users, { fields: [exitChecklists.assignedTo], references: [users.id] }),
 }));

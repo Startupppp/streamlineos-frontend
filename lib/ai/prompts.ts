@@ -213,6 +213,139 @@ Notes: ${input.notes || "None"}`,
   };
 }
 
+/* ─── Client Churn Risk Analysis ──────────────────────────────────────────── */
+
+export interface ChurnRiskInput {
+  clientName: string;
+  company?: string | null;
+  healthScore: number;
+  investmentValue?: number | null;
+  daysSinceLastActivity: number | null;
+  openTickets: number;
+  totalTicketsLast90Days: number;
+  accountManagerName?: string | null;
+  status: string;
+  daysSinceConversion: number;
+}
+
+export interface ChurnRiskResult {
+  churnRiskScore: number;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  reasoning: string;
+  riskFactors: string[];
+  retentionActions: string[];
+}
+
+export function churnRiskPrompt(input: ChurnRiskInput) {
+  return {
+    system: `You are a customer success analyst for an Indian investment/financial services company.
+Assess the churn risk for this client (0-100, where 100 = certain to churn).
+
+Scoring factors:
+- Activity recency: no activity >30 days = high risk
+- Support ticket volume: increasing tickets = frustration signal
+- Investment value: higher value clients need proactive retention
+- Account age: newer clients (<90 days) are more volatile
+- Health score: existing score provides baseline
+
+Return JSON:
+{
+  "churnRiskScore": <number 0-100>,
+  "riskLevel": "<low|medium|high|critical>",
+  "reasoning": "<1-2 sentences>",
+  "riskFactors": ["<factor1>", "<factor2>"],
+  "retentionActions": ["<action1>", "<action2>"]
+}`,
+    user: `Assess churn risk for:
+Client: ${input.clientName}${input.company ? ` (${input.company})` : ""}
+Current Health Score: ${input.healthScore}/100
+Investment Value: ${input.investmentValue ? `₹${input.investmentValue.toLocaleString("en-IN")}` : "Unknown"}
+Last Activity: ${input.daysSinceLastActivity !== null ? `${input.daysSinceLastActivity} days ago` : "No activity recorded"}
+Open Tickets: ${input.openTickets}
+Tickets in Last 90 Days: ${input.totalTicketsLast90Days}
+Account Manager: ${input.accountManagerName || "Unassigned"}
+Status: ${input.status}
+Client Since: ${input.daysSinceConversion} days ago`,
+  };
+}
+
+/* ─── Conversation Summary ─────────────────────────────────────────────────── */
+
+export interface ConversationSummaryInput {
+  activityType: string;
+  subject?: string;
+  notes: string;
+  leadName?: string;
+  dealName?: string;
+}
+
+export interface ConversationSummaryResult {
+  summary: string;
+  keyPoints: string[];
+  actionItems: string[];
+  sentiment: "positive" | "neutral" | "negative";
+}
+
+export function conversationSummaryPrompt(input: ConversationSummaryInput) {
+  return {
+    system: `You are a sales assistant. Summarize this ${input.activityType} log into structured insights.
+Return JSON:
+{
+  "summary": "<1-2 sentence summary>",
+  "keyPoints": ["<point1>", "<point2>"],
+  "actionItems": ["<action1>", "<action2>"],
+  "sentiment": "<positive|neutral|negative>"
+}`,
+    user: `Summarize this ${input.activityType}:
+${input.subject ? `Subject: ${input.subject}` : ""}
+${input.leadName ? `Lead: ${input.leadName}` : ""}${input.dealName ? `Deal: ${input.dealName}` : ""}
+Notes: ${input.notes}`,
+  };
+}
+
+/* ─── Lead Enrichment ─────────────────────────────────────────────────────── */
+
+export interface LeadEnrichmentInput {
+  name: string;
+  company?: string | null;
+  email?: string | null;
+  designation?: string | null;
+  city?: string | null;
+}
+
+export interface LeadEnrichmentResult {
+  companyInsight: string;
+  estimatedCompanySize: string;
+  industry: string;
+  talkingPoints: string[];
+  potentialNeeds: string[];
+  recommendedApproach: string;
+}
+
+export function leadEnrichmentPrompt(input: LeadEnrichmentInput) {
+  return {
+    system: `You are a sales research assistant for an Indian investment/financial services company.
+Given a lead's basic info, generate a research brief to help the sales rep prepare.
+Base your analysis on the company name, designation, and city. Make educated estimates.
+
+Return JSON:
+{
+  "companyInsight": "<1-2 sentences about the company or type of business>",
+  "estimatedCompanySize": "<e.g. 50-200 employees, Mid-market>",
+  "industry": "<industry sector>",
+  "talkingPoints": ["<point1>", "<point2>", "<point3>"],
+  "potentialNeeds": ["<need1>", "<need2>"],
+  "recommendedApproach": "<1 sentence recommended sales approach>"
+}`,
+    user: `Research brief for:
+Name: ${input.name}
+Company: ${input.company || "Unknown"}
+Email: ${input.email || "Not provided"}
+Designation: ${input.designation || "Not provided"}
+City: ${input.city || "Not provided"}`,
+  };
+}
+
 const TONE_INSTRUCTIONS: Record<EmailTone, string> = {
   formal: "Use formal, professional business language. Address with 'Dear'. Sign off with 'Best regards'.",
   friendly: "Use warm, conversational tone. First-name basis. Sign off with 'Cheers' or 'Looking forward'.",

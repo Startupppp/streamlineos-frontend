@@ -1,0 +1,139 @@
+import { type NextRequest } from "next/server";
+import { withAuth, ok, err, parseBody, parseQuery } from "@/lib/api/helpers";
+import { db } from "@/lib/db";
+import { dealApprovals, dealApprovalRules, deals, users } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { ADMIN_ROLES } from "@/lib/constants/roles";
+import { createNotification } from "@/server/actions/create-notification";
+import { z } from "zod";
+
+const listSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+  limit: z.coerce.number().min(1).max(50).optional(),
+});
+
+const requestSchema = z.object({
+  dealId: z.number().int().positive(),
+  requestedStage: z.string().min(1),
+});
+
+const resolveSchema = z.object({
+  approvalId: z.number().int().positive(),
+  action: z.enum(["approve", "reject"]),
+  rejectionReason: z.string().optional(),
+});
+
+/** GET /api/deals/approvals — List pending/all approvals */
+export async function GET(req: NextRequest) {
+  return withAuth(async (session) => {
+    const { status, limit } = parseQuery(req, listSchema);
+
+    const conditions = [eq(dealApprovals.orgId, session.orgId)];
+    if (status) conditions.push(eq(dealApprovals.status, status));
+
+    const results = await db
+      .select({
+        id: dealApprovals.id,
+        dealId: dealApprovals.dealId,
+        dealName: deals.name,
+        dealValue: deals.value,
+        requestedBy: dealApprovals.requestedBy,
+        requesterName: users.name,
+        requestedStage: dealApprovals.requestedStage,
+        status: dealApprovals.status,
+        rejectionReason: dealApprovals.rejectionReason,
+        createdAt: dealApprovals.createdAt,
+        resolvedAt: dealApprovals.resolvedAt,
+      })
+      .from(dealApprovals)
+      .leftJoin(deals, eq(dealApprovals.dealId, deals.id))
+      .leftJoin(users, eq(dealApprovals.requestedBy, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(dealApprovals.createdAt))
+      .limit(limit ?? 20);
+
+    return ok(results);
+  });
+}
+
+/** POST /api/deals/approvals — Request approval or resolve an approval */
+export async function POST(req: NextRequest) {
+  return withAuth<unknown>(async (session) => {
+    const body = await req.json();
+
+    // Resolve an existing approval
+    if (body.approvalId) {
+      const { approvalId, action, rejectionReason } = resolveSchema.parse(body);
+      const role = session.user.role ?? "";
+      if (!ADMIN_ROLES.includes(role)) return err("Only admins can resolve approvals", 403);
+
+      const [updated] = await db
+        .update(dealApprovals)
+        .set({
+          status: action === "approve" ? "approved" : "rejected",
+          approvedBy: session.user.id,
+          rejectionReason: action === "reject" ? rejectionReason : null,
+          resolvedAt: new Date(),
+        })
+        .where(and(eq(dealApprovals.id, approvalId), eq(dealApprovals.orgId, session.orgId)))
+        .returning();
+
+      if (!updated) return err("Approval not found", 404);
+
+      // If approved, update the deal stage
+      if (action === "approve") {
+        await db
+          .update(deals)
+          .set({ stage: updated.requestedStage as typeof deals.$inferSelect.stage, updatedAt: new Date() })
+          .where(eq(deals.id, updated.dealId));
+      }
+
+      // Notify the requester
+      await createNotification({
+        orgId: session.orgId,
+        userId: updated.requestedBy,
+        type: "INFO",
+        title: action === "approve" ? "Deal approved" : "Deal approval rejected",
+        message: action === "approve"
+          ? `Your deal has been approved to move to ${updated.requestedStage}`
+          : `Your deal approval was rejected: ${rejectionReason || "No reason given"}`,
+        link: `/crm/deals/${updated.dealId}`,
+      });
+
+      return ok(updated);
+    }
+
+    // Request a new approval
+    const { dealId, requestedStage } = requestSchema.parse(body);
+
+    // Check if deal needs approval
+    const [deal] = await db.select().from(deals).where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
+    if (!deal) return err("Deal not found", 404);
+
+    const rules = await db
+      .select()
+      .from(dealApprovalRules)
+      .where(and(eq(dealApprovalRules.orgId, session.orgId), eq(dealApprovalRules.isActive, true)));
+
+    const needsApproval = rules.some(r => Number(deal.value ?? 0) >= Number(r.minValue));
+
+    if (!needsApproval) {
+      // No approval needed — just update the stage directly
+      await db.update(deals).set({ stage: requestedStage as typeof deals.$inferSelect.stage, updatedAt: new Date() }).where(eq(deals.id, dealId));
+      return ok({ approved: true, directUpdate: true });
+    }
+
+    // Create approval request
+    const [approval] = await db
+      .insert(dealApprovals)
+      .values({
+        orgId: session.orgId,
+        dealId,
+        requestedBy: session.user.id,
+        requestedStage,
+      })
+      .returning();
+
+    return ok(approval, 201);
+  });
+}

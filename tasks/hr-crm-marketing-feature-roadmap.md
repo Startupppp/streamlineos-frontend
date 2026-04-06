@@ -40,7 +40,7 @@
 | C1 | Activity Logging (Calls/Meetings) | ✅ Done | API at /api/leads/[leadId]/activities (call, email, whatsapp, meeting, site_visit). Full Zod validation. Quick Actions UI in lead detail |
 | C2 | Lead-to-Deal Conversion Flow | ✅ Done | Conversion modal has "Auto-create Deal" checkbox. Pre-fills deal name, value, notes from lead. Creates deal via useCreateDeal |
 | C3 | Lead Duplicate Detection | ✅ Done | API at /api/leads/check-duplicates (email/phone fuzzy match). Warning banner in create-lead-sheet with duplicate details |
-| C4 | Deal Approval Workflow | High | Deals above configurable threshold (e.g. ₹10L) require manager approval before stage change to WON |
+| C4 | Deal Approval Workflow | ✅ Done | deal_approval_rules + deal_approvals tables. API: /api/deals/approvals (request + resolve) + /api/deals/approval-rules. Auto-notifies requester. Migration: 0033 |
 | C5 | Pipeline Forecasting | ✅ Done | API at /api/deals/forecast. Weighted revenue by month + stage breakdown. Default probabilities per stage. Hook: useDealForecast() |
 | C6 | Bulk Email Campaigns | Medium | Select leads by filter → pick template → send bulk. Track open/click/bounce per campaign |
 | C7 | Custom Fields (JSONB) | Medium | Admin UI to define custom fields on leads/deals/contacts. Render dynamically in forms/tables |
@@ -75,8 +75,8 @@
 |---|---------|----------|-------------|
 | S1 | Real Data Aggregation | ✅ Done | getSalesDashboard() in server/queries/crm-dashboards.ts — real SQL aggregations on crmDeals, crmActivities, crmMonthlyMetrics tables |
 | S2 | Quota vs Actual Tracking | ✅ Done | sales_quotas table + API at /api/sales/quotas (GET+POST). Zod validation. Hooks: useSalesQuotas(), useCreateSalesQuota(). Migration: 0031 |
-| S3 | Commission Calculator | High | Configurable commission rules (flat %, tiered %, per-deal bonus). Auto-calculate on deal WON |
-| S4 | Call Logging | High | Log calls with: contact, duration, outcome (connected/voicemail/no-answer), notes, next action |
+| S3 | Commission Calculator | ✅ Done | commission_rules + commissions tables. Flat % or tiered rules. Engine at server/lib/commission-engine.ts. API: /api/sales/commission-rules + /api/sales/commissions. Migration: 0033 |
+| S4 | Call Logging | ✅ Done | API at /api/deals/[dealId]/activities (GET+POST). Types: call, email, meeting, note, document. Zod validated. Hook: useLogDealActivity() already existed |
 | S5 | Meeting Notes | Medium | Log meetings linked to deals. Agenda, attendees, action items, recording link |
 | S6 | Win/Loss Analysis | Medium | On deal WON/LOST, capture structured reason (competitor, price, timing, fit). Aggregate for trends |
 | S7 | Sales Activity Dashboard | Medium | Daily/weekly activity metrics per rep: calls made, emails sent, meetings held, proposals sent |
@@ -107,8 +107,8 @@
 |---|---------|----------|-------------|
 | M1 | Real Data Aggregation | ✅ Done | getMarketingDashboard() — real SQL on crmCampaigns, crmLeads, crmContent, crmEvents |
 | M2 | Campaign Builder | ✅ Done | Full CRUD at /api/marketing/campaigns (GET/POST) + /[campaignId] (GET/PATCH/DELETE). Enhanced schema with channel, dates, audience, owner. Migration: 0032. Hooks: useMarketingCampaigns(), useCreateMarketingCampaign(), useUpdateMarketingCampaign(), useDeleteMarketingCampaign() |
-| M3 | Email Campaign System | High | Compose → select recipients (filtered leads) → send bulk via SMTP. Track opens, clicks, bounces, unsubscribes |
-| M4 | UTM Link Generator | Medium | Auto-generate UTM-tagged URLs per campaign. Track traffic/leads from each UTM |
+| M3 | Email Campaign System | ✅ Done | email_campaigns + email_campaign_recipients tables. Full CRUD + send API (/api/marketing/email-campaigns). Filter leads by status/source/priority. Migration: 0034 |
+| M4 | UTM Link Generator | ✅ Done | API at /api/marketing/utm (POST=generate, GET=attribution). UTM params: source, medium, campaign, term, content |
 | M5 | Landing Page Analytics | Medium | Track page views, form submissions, conversion rate per landing page URL |
 | M6 | A/B Testing | Medium | Email subject line A/B tests. Split audience, track winner by open rate |
 | M7 | Marketing Calendar | Medium | Visual calendar showing all campaigns, events, content deadlines. Drag-to-reschedule |
@@ -138,9 +138,9 @@
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
 | CE1 | Real Data Aggregation | ✅ Done | getCustomerExecutiveDashboard() — real SQL on crmCompanies, crmSupportTickets, crmActivities |
-| CE2 | Client Health Scoring | High | Auto-score: last activity recency (30%), ticket volume (20%), renewal proximity (20%), CSAT (15%), engagement (15%). Color-code: Green (80+), Yellow (50-79), Red (<50) |
-| CE3 | Churn Risk Alerts | High | Flag clients with declining health score. Notify CSM. Dashboard widget showing at-risk count |
-| CE4 | Client Activity Timeline | Medium | Unified timeline per client: meetings, emails, tickets, deals, notes. Filterable by type |
+| CE2 | Client Health Scoring | ✅ Done | healthScore, healthStatus, churnRiskScore columns on clients. API: /api/clients/health (with summary). AI churn analysis updates score. Migration: 0033 |
+| CE3 | Churn Risk Alerts | ✅ Done | API at /api/clients/churn-alerts. Lists at-risk + critical clients. Summary counts. Hook: useChurnAlerts() |
+| CE4 | Client Activity Timeline | ✅ Done | API at /api/clients/[clientId]/timeline. Aggregates deal activities, lead activities, conversion events. Sorted by date. Hook: useClientTimeline() |
 | CE5 | CSAT Survey Builder | Medium | Create simple 1-5 star surveys. Send via email. Aggregate results per client |
 | CE6 | Upsell/Cross-sell Tracker | Medium | Log expansion opportunities per client. Track from identified → proposed → won/lost |
 | CE7 | Client Onboarding Checklist | Medium | Template-based checklist for new clients. Track completion %, assign tasks to team |
@@ -157,7 +157,7 @@
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
 | AI1 | AI Lead Scoring | ✅ Done | GPT-4o-mini scores leads 0-100 with reasoning, strengths, weaknesses, suggested actions. Button on lead detail header + popover. API: POST /api/ai/score-lead |
-| AI2 | Lead Enrichment Summary | High | Given a lead's name + company + email, generate a brief research summary: company size, industry, likely budget range, talking points |
+| AI2 | Lead Enrichment Summary | ✅ Done | GPT-4o generates company insight, estimated size, industry, talking points, potential needs, recommended approach. API: POST /api/ai/enrich-lead. Hook: useEnrichLead() |
 | AI3 | Duplicate Lead Detection (AI) | Medium | Fuzzy-match leads by name/company similarity beyond exact email/phone match. "Rahul Sharma at Acme" ≈ "R. Sharma — Acme Corp" |
 
 ### Sales Copilot
@@ -165,7 +165,7 @@
 |---|---------|----------|-------------|
 | AI4 | AI Follow-up Email Generator | ✅ Done | GPT-4o-mini generates personalized emails with 3 tones (formal/friendly/urgent). Dialog with copy-to-clipboard. API: POST /api/ai/generate-email |
 | AI5 | Deal Win/Loss Prediction | ✅ Done | GPT-4o-mini predicts win probability with risk factors, positive signals, actions. API: POST /api/ai/predict-deal. Hook: usePredictDeal(). Auto-updates deal probability |
-| AI6 | Conversation Summary | Medium | After a call/meeting log, AI summarizes key points, action items, and next steps. Auto-populate the notes field |
+| AI6 | Conversation Summary | ✅ Done | GPT-4o-mini summarizes activity notes into key points, action items, sentiment. API: POST /api/ai/summarize. Hook: useSummarizeConversation() |
 | AI7 | Smart Next-Best-Action | ✅ Done | GPT-4o-mini suggests next action with urgency level + reasoning. API: POST /api/ai/next-action. Hook: useNextBestAction(). Considers stage, recency, follow-ups |
 | AI8 | Objection Handler | Medium | Given a deal's lost reason or objection text, suggest counter-arguments and talking points from historical winning deals |
 
@@ -179,7 +179,7 @@
 ### Customer Executive AI
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| AI12 | Churn Risk Analysis | High | Analyze client signals (declining engagement, increasing tickets, delayed payments) → generate churn risk score + recommended retention actions |
+| AI12 | Churn Risk Analysis | ✅ Done | GPT-4o-mini analyzes engagement, tickets, investment value → churn score + risk level + retention actions. API: POST /api/ai/churn-risk. Hook: useAnalyzeChurnRisk() |
 | AI13 | Client Sentiment Analysis | Medium | Analyze ticket/chat history tone → flag negative sentiment trends before they become churn |
 | AI14 | Account Summary Generator | Low | Generate a 1-page account summary for any client: key metrics, recent interactions, open issues, renewal status. For executive briefings |
 
@@ -273,8 +273,8 @@ app/(dashboard)/settings/integrations/
 ### Missing — To Build
 | # | Feature | Priority | Description |
 |---|---------|----------|-------------|
-| X1 | Global Search | High | Full-text search across leads, contacts, deals, tickets. Cmd+K shortcut. Powered by PostgreSQL `tsvector` or AI natural language (AI15) |
-| X2 | Scheduled Reports | Medium | Configure daily/weekly email digests: sales summary, lead pipeline, overdue follow-ups. Cron job via Inngest |
+| X1 | Global Search | ✅ Done | API at /api/search?q=... searches leads, deals, contacts, clients, tickets. Cmd+K command palette enhanced with entity search + page navigation. ILIKE queries |
+| X2 | Scheduled Reports | ✅ Done | Daily sales digest via Inngest (8:30 AM IST weekdays). Notifies CEO/managers with: new leads, deals won, pipeline value, overdue follow-ups |
 | X3 | Webhook System | Medium | Admin can create webhooks: on lead.created, deal.won, etc. POST to external URL with JSON payload |
 | X4 | Notification Preferences | Medium | Per-user: choose which events trigger push/email/in-app notifications |
 | X5 | API Documentation (OpenAPI) | Low | Auto-generated from route handlers. Swagger UI at `/api/docs` |

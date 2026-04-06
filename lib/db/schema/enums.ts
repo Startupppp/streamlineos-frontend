@@ -30,6 +30,10 @@ export const wfhRequestStatusEnum = pgEnum("wfh_request_status", ["PENDING", "AP
 export const deviceStatusEnum = pgEnum("device_status", ["ACTIVE", "INACTIVE", "LOST", "RETURNED"]);
 export const reviewCycleStatusEnum = pgEnum("review_cycle_status", ["DRAFT", "ACTIVE", "COMPLETED", "CANCELLED"]);
 export const meetingStatusEnum = pgEnum("meeting_status", ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"]);
+export const trainingStatusEnum = pgEnum("training_status", ["DRAFT", "PUBLISHED", "ARCHIVED"]);
+export const enrollmentStatusEnum = pgEnum("enrollment_status", ["ENROLLED", "IN_PROGRESS", "COMPLETED", "DROPPED"]);
+export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "APPROVED", "WITHDRAWN", "COMPLETED"]);
+export const exitChecklistStatusEnum = pgEnum("exit_checklist_status", ["PENDING", "DONE"]);
 
 // ─── CRM / Leads / Deals ───
 export const leadPipelineStatusEnum = pgEnum("lead_pipeline_status", ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]);
