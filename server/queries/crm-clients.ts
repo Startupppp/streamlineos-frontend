@@ -1,0 +1,88 @@
+"server-only";
+
+import { db } from "@/lib/db";
+import { clientAccounts, clientAccountActivities } from "@/lib/db/schema";
+import { eq, and, desc, sql, count, or } from "drizzle-orm";
+import type { ClientAccountFilters } from "@/types/crm";
+import { ROLES } from "@/lib/constants/roles";
+
+// ─── Client Accounts ─────────────────────────────────────────────────────────
+
+export async function getClientAccounts(
+  orgId: string,
+  filters?: ClientAccountFilters & { role?: string; userId?: string }
+) {
+  const f: ReturnType<typeof eq>[] = [eq(clientAccounts.orgId, orgId)];
+  if (filters?.role === ROLES.SALES && filters.userId) {
+    f.push(eq(clientAccounts.salesRepId, filters.userId));
+  }
+  if (filters?.role === ROLES.CUSTOMER_SUPPORT && filters.userId) {
+    f.push(eq(clientAccounts.assignedCrmId, filters.userId));
+  }
+  if (filters?.status) f.push(eq(clientAccounts.status, filters.status));
+  if (filters?.search) {
+    f.push(
+      or(
+        sql`${clientAccounts.clientName} ILIKE ${"%" + filters.search + "%"}`,
+        sql`${clientAccounts.clientEmail} ILIKE ${"%" + filters.search + "%"}`,
+        sql`${clientAccounts.clientPhone} ILIKE ${"%" + filters.search + "%"}`
+      )!
+    );
+  }
+
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 25;
+  const offset = (page - 1) * limit;
+
+  const [items, [countResult]] = await Promise.all([
+    db.query.clientAccounts.findMany({
+      where: and(...f),
+      orderBy: [desc(clientAccounts.createdAt)],
+      limit,
+      offset,
+      with: {
+        salesRep: { columns: { id: true, name: true, image: true } },
+        assignedCrm: { columns: { id: true, name: true, image: true } },
+      },
+    }),
+    db.select({ count: count() }).from(clientAccounts).where(and(...f)),
+  ]);
+
+  return {
+    accounts: items,
+    totalCount: countResult?.count ?? 0,
+    page,
+    totalPages: Math.ceil((countResult?.count ?? 0) / limit),
+  };
+}
+
+export async function getClientAccount(orgId: string, id: number) {
+  const account = await db.query.clientAccounts.findFirst({
+    where: and(eq(clientAccounts.id, id), eq(clientAccounts.orgId, orgId)),
+    with: {
+      salesRep: { columns: { id: true, name: true, image: true, email: true } },
+      assignedCrm: {
+        columns: { id: true, name: true, image: true, email: true },
+      },
+      lead: { columns: { id: true, name: true, source: true, priority: true } },
+    },
+  });
+
+  if (!account) return null;
+
+  const activities = await db.query.clientAccountActivities.findMany({
+    where: eq(clientAccountActivities.clientAccountId, id),
+    orderBy: [desc(clientAccountActivities.createdAt)],
+    with: { user: { columns: { id: true, name: true, image: true } } },
+  });
+
+  return { ...account, activities };
+}
+
+export async function getClientActivities(orgId: string, clientAccountId: number) {
+  return db.query.clientAccountActivities.findMany({
+    where: eq(clientAccountActivities.clientAccountId, clientAccountId),
+    orderBy: [desc(clientAccountActivities.createdAt)],
+    with: { user: { columns: { id: true, name: true, image: true } } },
+  });
+}

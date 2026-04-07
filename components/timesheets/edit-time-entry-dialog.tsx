@@ -5,13 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { api } from "@/trpc/react";
+import { useUpdateTimeEntry } from "@/lib/api/hooks/projects";
 import { Loader2 } from "lucide-react";
 
 interface EditTimeEntryDialogProps {
@@ -44,18 +44,7 @@ const formSchema = z.object({
 });
 
 export function EditTimeEntryDialog({ entry, open, onOpenChange }: EditTimeEntryDialogProps) {
-  const utils = api.useUtils();
-  
-  const mutation = api.project.updateTimeEntry.useMutation({
-    onSuccess: () => {
-      toast.success("Time entry updated successfully");
-      onOpenChange(false);
-      utils.project.getTimeEntries.invalidate();
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update time entry");
-    },
-  });
+  const mutation = useUpdateTimeEntry();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,22 +64,33 @@ export function EditTimeEntryDialog({ entry, open, onOpenChange }: EditTimeEntry
   }, [open, entry, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    mutation.mutate({
-      entryId: entry.id,
-      description: values.description,
-      hours: values.hours,
-    });
+    mutation.mutate(
+      {
+        entryId: entry.id,
+        description: values.description,
+        hours: values.hours,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Time entry updated successfully");
+          onOpenChange(false);
+        },
+        onError: (err) => {
+          toast.error((err as Error).message || "Failed to update time entry");
+        },
+      }
+    );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Time Entry</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Edit Time Entry</SheetTitle>
+          <SheetDescription>
             Update the description or hours for this time entry.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -131,23 +131,24 @@ export function EditTimeEntryDialog({ entry, open, onOpenChange }: EditTimeEntry
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <SheetFooter>
               <Button
                 type="button"
                 variant="outline"
+                className="flex-1"
                 onClick={() => onOpenChange(false)}
                 disabled={mutation.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
+              <Button type="submit" className="flex-1" disabled={mutation.isPending}>
                 {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

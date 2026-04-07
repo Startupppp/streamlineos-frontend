@@ -1,0 +1,236 @@
+"server-only";
+
+/**
+ * Server-side DB query functions for the Leads domain — list/board/stats queries.
+ * Import only in Server Components, Route Handlers, or Server Actions.
+ */
+
+import { db } from "@/lib/db";
+import {
+  leads,
+  departmentMembers,
+} from "@/lib/db/schema";
+import {
+  eq,
+  and,
+  desc,
+  asc,
+  sql,
+  count,
+  gte,
+  lte,
+  or,
+  inArray,
+} from "drizzle-orm";
+import type {
+  LeadFilters,
+} from "@/types/leads";
+import { pushBranchAssigneeFilter, type BranchContext } from "@/lib/db/branch-filter";
+
+// ─── getLeads ────────────────────────────────────────────────────────────────
+
+export async function getLeads(
+  orgId: string,
+  filters?: LeadFilters & { role?: string; userId?: string; branch?: BranchContext }
+) {
+  const where = [eq(leads.orgId, orgId)];
+
+  // Branch isolation: BRANCH_MANAGER/BRANCH_HR see only leads assigned to users in their branch
+  if (filters?.branch) {
+    await pushBranchAssigneeFilter(where, leads.assignedToId, filters.branch);
+  }
+
+  if (filters?.role === "SALES" && filters.userId) {
+    where.push(eq(leads.assignedToId, filters.userId));
+  }
+  if (filters?.status) where.push(eq(leads.status, filters.status));
+  if (filters?.priority) where.push(eq(leads.priority, filters.priority));
+  if (filters?.source) where.push(eq(leads.source, filters.source));
+  if (filters?.assignedToId) where.push(eq(leads.assignedToId, filters.assignedToId));
+  if (filters?.dateFrom) where.push(gte(leads.createdAt, new Date(filters.dateFrom)));
+  if (filters?.dateTo) where.push(lte(leads.createdAt, new Date(filters.dateTo)));
+  if (filters?.search) {
+    const s = `%${filters.search.toLowerCase()}%`;
+    where.push(
+      or(
+        sql`LOWER(${leads.name}) LIKE ${s}`,
+        sql`LOWER(${leads.email}) LIKE ${s}`,
+        sql`${leads.phone} LIKE ${s}`,
+        sql`LOWER(${leads.company}) LIKE ${s}`,
+      )!
+    );
+  }
+
+  const colMap = {
+    name: leads.name,
+    email: leads.email,
+    company: leads.company,
+    status: leads.status,
+    priority: leads.priority,
+    source: leads.source,
+    score: leads.score,
+    potentialValue: leads.potentialValue,
+    createdAt: leads.createdAt,
+  } as const;
+
+  const sortBy = filters?.sortBy ?? "createdAt";
+  const sortOrder = filters?.sortOrder ?? "desc";
+  const orderCol = colMap[sortBy as keyof typeof colMap] ?? leads.createdAt;
+  const orderFn = sortOrder === "asc" ? asc(orderCol) : desc(orderCol);
+
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 50;
+  const offset = (page - 1) * limit;
+  const whereClause = and(...where);
+
+  const [allLeads, totalResult] = await Promise.all([
+    db.query.leads.findMany({
+      where: whereClause,
+      with: {
+        assignedTo: { columns: { id: true, name: true, image: true } },
+        campaign: { columns: { id: true, name: true } },
+      },
+      orderBy: [orderFn],
+      limit,
+      offset,
+    }),
+    db.select({ count: count() }).from(leads).where(whereClause),
+  ]);
+
+  const totalCount = totalResult[0]?.count ?? 0;
+  return {
+    leads: allLeads,
+    totalCount,
+    page,
+    totalPages: Math.ceil(totalCount / limit),
+  };
+}
+
+// ─── getLeadBoard ─────────────────────────────────────────────────────────────
+
+export async function getLeadBoard(
+  orgId: string,
+  opts?: { role?: string; userId?: string; branch?: BranchContext }
+) {
+  const filters = [eq(leads.orgId, orgId)];
+  const role = opts?.role;
+  const userId = opts?.userId;
+
+  // Branch isolation for BRANCH_MANAGER/BRANCH_HR
+  if (opts?.branch) {
+    await pushBranchAssigneeFilter(filters, leads.assignedToId, opts.branch);
+  }
+
+  if (role === "SALES" && userId) {
+    filters.push(eq(leads.assignedToId, userId));
+  } else if (userId && role && !["CEO", "HR"].includes(role)) {
+    const teamLeadDepts = await db.query.departmentMembers.findMany({
+      where: and(
+        eq(departmentMembers.userId, userId),
+        eq(departmentMembers.role, "lead")
+      ),
+    });
+    if (teamLeadDepts.length > 0) {
+      const deptIds = teamLeadDepts.map((d) => d.departmentId);
+      const teamMembers = await db.query.departmentMembers.findMany({
+        where: inArray(departmentMembers.departmentId, deptIds),
+      });
+      const teamUserIds = [...new Set(teamMembers.map((m) => m.userId))];
+      filters.push(inArray(leads.assignedToId, teamUserIds));
+    } else {
+      filters.push(eq(leads.assignedToId, userId));
+    }
+  }
+
+  const allLeads = await db.query.leads.findMany({
+    where: and(...filters),
+    with: { assignedTo: { columns: { id: true, name: true, image: true } } },
+    orderBy: [desc(leads.createdAt)],
+  });
+
+  const board: Record<string, typeof allLeads> = {
+    NEW: [],
+    CONTACTED: [],
+    INTERESTED: [],
+    QUALIFIED: [],
+    CONVERTED: [],
+    LOST: [],
+  };
+
+  for (const lead of allLeads) {
+    if (board[lead.status]) {
+      board[lead.status].push(lead);
+    }
+  }
+
+  return board as {
+    NEW: typeof allLeads;
+    CONTACTED: typeof allLeads;
+    INTERESTED: typeof allLeads;
+    QUALIFIED: typeof allLeads;
+    CONVERTED: typeof allLeads;
+    LOST: typeof allLeads;
+  };
+}
+
+// ─── getLeadStats ─────────────────────────────────────────────────────────────
+
+export async function getLeadStats(
+  orgId: string,
+  filters?: { dateFrom?: string; dateTo?: string; role?: string; userId?: string; branch?: BranchContext }
+) {
+  const statsFilters = [eq(leads.orgId, orgId)];
+  if (filters?.branch) {
+    await pushBranchAssigneeFilter(statsFilters, leads.assignedToId, filters.branch);
+  }
+  if (filters?.role === "SALES" && filters.userId) {
+    statsFilters.push(eq(leads.assignedToId, filters.userId));
+  }
+
+  let allLeads = await db.query.leads.findMany({ where: and(...statsFilters) });
+
+  if (filters?.dateFrom) {
+    const from = new Date(filters.dateFrom);
+    allLeads = allLeads.filter((l) => new Date(l.createdAt!) >= from);
+  }
+  if (filters?.dateTo) {
+    const to = new Date(filters.dateTo);
+    to.setHours(23, 59, 59, 999);
+    allLeads = allLeads.filter((l) => new Date(l.createdAt!) <= to);
+  }
+
+  const total = allLeads.length;
+  const byStatus = {
+    NEW: allLeads.filter((l) => l.status === "NEW").length,
+    CONTACTED: allLeads.filter((l) => l.status === "CONTACTED").length,
+    INTERESTED: allLeads.filter((l) => l.status === "INTERESTED").length,
+    QUALIFIED: allLeads.filter((l) => l.status === "QUALIFIED").length,
+    CONVERTED: allLeads.filter((l) => l.status === "CONVERTED").length,
+    LOST: allLeads.filter((l) => l.status === "LOST").length,
+  };
+
+  const conversionRate = total > 0 ? (byStatus.CONVERTED / total) * 100 : 0;
+  const totalPotentialValue = allLeads.reduce(
+    (s, l) => s + Number(l.potentialValue ?? 0),
+    0
+  );
+  const unassigned = allLeads.filter((l) => !l.assignedToId).length;
+
+  const now = new Date();
+  const thisMonth = allLeads.filter((l) => {
+    const created = new Date(l.createdAt!);
+    return (
+      created.getMonth() === now.getMonth() &&
+      created.getFullYear() === now.getFullYear()
+    );
+  }).length;
+
+  return {
+    total,
+    byStatus,
+    conversionRate: Math.round(conversionRate * 10) / 10,
+    totalPotentialValue,
+    unassigned,
+    thisMonth,
+  };
+}

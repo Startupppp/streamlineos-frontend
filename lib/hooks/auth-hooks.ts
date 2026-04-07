@@ -1,478 +1,163 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseMutationOptions,
-} from "@tanstack/react-query";
-import { vaivammTrpcClient } from "../trpc";
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import type { RouterInputs, RouterOutputs } from "@/server/api/root";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
-type AuthRouterInputs = RouterInputs["auth"];
-type AuthRouterOutputs = RouterOutputs["auth"];
+/* ------------------------------------------------------------------ */
+/*  Auth                                                               */
+/* ------------------------------------------------------------------ */
 
-type MutationOnSuccess<TData, TVariables, TContext> = (
-  data: TData,
-  variables: TVariables,
-  context: TContext
-) => void | Promise<void>;
-
-// Sign Up
-export const useSignUp = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["signUp"],
-    Error,
-    AuthRouterInputs["signUp"],
-    unknown
-  >
-) => {
-  const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["signUp"],
-        AuthRouterInputs["signUp"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["signUp"],
-    Error,
-    AuthRouterInputs["signUp"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.signUp.mutate(variables) as Promise<
-        AuthRouterOutputs["signUp"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Verify Email
-export const useVerifyEmail = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["verifyEmail"],
-    Error,
-    AuthRouterInputs["verifyEmail"],
-    unknown
-  >
-) => {
-  const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["verifyEmail"],
-        AuthRouterInputs["verifyEmail"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["verifyEmail"],
-    Error,
-    AuthRouterInputs["verifyEmail"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.verifyEmail.mutate(variables) as Promise<
-        AuthRouterOutputs["verifyEmail"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Forgot Password
-export const useForgotPassword = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["forgotPassword"],
-    Error,
-    AuthRouterInputs["forgotPassword"],
-    unknown
-  >
-) => {
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["forgotPassword"],
-        AuthRouterInputs["forgotPassword"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["forgotPassword"],
-    Error,
-    AuthRouterInputs["forgotPassword"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.forgotPassword.mutate(variables) as Promise<
-        AuthRouterOutputs["forgotPassword"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Reset Password
-export const useResetPassword = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["resetPassword"],
-    Error,
-    AuthRouterInputs["resetPassword"],
-    unknown
-  >
-) => {
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["resetPassword"],
-        AuthRouterInputs["resetPassword"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["resetPassword"],
-    Error,
-    AuthRouterInputs["resetPassword"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.resetPassword.mutate(variables) as Promise<
-        AuthRouterOutputs["resetPassword"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Accept Invitation
-export const useAcceptInvitation = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["acceptInvitation"],
-    Error,
-    AuthRouterInputs["acceptInvitation"],
-    unknown
-  >
-) => {
-  const router = useRouter();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["acceptInvitation"],
-        AuthRouterInputs["acceptInvitation"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["acceptInvitation"],
-    Error,
-    AuthRouterInputs["acceptInvitation"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.acceptInvitation.mutate(variables) as Promise<
-        AuthRouterOutputs["acceptInvitation"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Resend Verification Email
-export const useResendVerificationEmail = (
-  options?: UseMutationOptions<
-    AuthRouterOutputs["resendVerificationEmail"],
-    Error,
-    AuthRouterInputs["resendVerificationEmail"],
-    unknown
-  >
-) => {
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        AuthRouterOutputs["resendVerificationEmail"],
-        AuthRouterInputs["resendVerificationEmail"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    AuthRouterOutputs["resendVerificationEmail"],
-    Error,
-    AuthRouterInputs["resendVerificationEmail"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.auth.resendVerificationEmail.mutate(
-        variables
-      ) as Promise<AuthRouterOutputs["resendVerificationEmail"]>,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Sign In (using NextAuth)
-export const useSignIn = () => {
+export function useVerifyEmail() {
   return useMutation({
-    mutationFn: async (credentials: {
-      email: string;
+    mutationFn: (variables: { token: string }) =>
+      apiClient.post<{ success: boolean }>("/auth/verify-email", variables),
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (variables: { email: string }) =>
+      apiClient.post<{ success: boolean }>("/auth/forgot-password", variables),
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (variables: { token: string; password: string }) =>
+      apiClient.post<{ success: boolean }>("/auth/reset-password", variables),
+  });
+}
+
+export function useAcceptInvitation() {
+  return useMutation({
+    mutationFn: (variables: {
+      token: string;
       password: string;
-      callbackUrl?: string;
-    }) => {
+      firstName?: string;
+      lastName?: string;
+    }) =>
+      apiClient.post<{ success: boolean }>("/auth/accept-invitation", variables),
+  });
+}
+
+export function useResendVerificationEmail() {
+  return useMutation({
+    mutationFn: (variables: { email: string }) =>
+      apiClient.post<{ success: boolean }>("/auth/resend-verification", variables),
+  });
+}
+
+export function useSignIn() {
+  return useMutation({
+    mutationFn: async (credentials: { email: string; password: string; callbackUrl?: string }) => {
       const result = await signIn("credentials", {
         email: credentials.email,
         password: credentials.password,
         redirect: false,
       });
-
-      if (result?.error) {
-        throw new Error(result.error);
-      }
-
-      return result;
+      if (result?.error) throw new Error(result.error);
+      return { result, callbackUrl: credentials.callbackUrl };
     },
-    onSuccess: (_, variables) => {
-      const callbackUrl = variables.callbackUrl || "/dashboard";
-      window.location.href = callbackUrl;
+    onSuccess: ({ callbackUrl }) => {
+      const url = callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/dashboard";
+      window.location.href = url;
     },
   });
-};
+}
 
-// Sign Out (using NextAuth)
-export const useSignOut = () => {
+export function useSignOut() {
   const router = useRouter();
-
   return useMutation({
-    mutationFn: async () => {
-      await signOut({ redirect: false });
-    },
+    mutationFn: () => signOut({ redirect: false }),
     onSuccess: () => {
       router.push("/signin");
       router.refresh();
     },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Organization                                                       */
+/* ------------------------------------------------------------------ */
+
+type OrgSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  joinedAt: string | null;
 };
 
-// Get Organizations
-type OrgRouterInputs = RouterInputs["organization"];
-type OrgRouterOutputs = RouterOutputs["organization"];
+export function useGetOrganizations() {
+  return useQuery<OrgSummary[]>({
+    queryKey: queryKeys.organization.all,
+    queryFn: () => apiClient.get<OrgSummary[]>("/organization"),
+    staleTime: 60_000,
+  });
+}
 
-export const useGetOrganizations = () => {
+export function useCreateOrganization() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { name: string; slug: string }) =>
+      apiClient.post<{ id: string; name: string; slug: string }>("/organization", variables),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.all });
+    },
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { email: string; role: string }) =>
+      apiClient.post<{ success: boolean; invitationId: string }>("/organization/members", variables),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.invitations() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
+    },
+  });
+}
+
+export function useGetInvitations() {
   return useQuery({
-    queryKey: ["organizations"],
-    queryFn: async () => {
-      return await vaivammTrpcClient.organization.getOrganizations.query();
-    },
+    queryKey: queryKeys.organization.invitations(),
+    queryFn: () => apiClient.get("/organization/invitations"),
   });
-};
+}
 
-// Create Organization
-export const useCreateOrganization = (
-  options?: UseMutationOptions<
-    OrgRouterOutputs["createOrganization"],
-    Error,
-    OrgRouterInputs["createOrganization"],
-    unknown
-  >
-) => {
+export function useCancelInvitation() {
   const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        OrgRouterOutputs["createOrganization"],
-        OrgRouterInputs["createOrganization"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    OrgRouterOutputs["createOrganization"],
-    Error,
-    OrgRouterInputs["createOrganization"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.organization.createOrganization.mutate(
-        variables
-      ) as Promise<OrgRouterOutputs["createOrganization"]>,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ["organizations"] });
-      if (userOnSuccess) userOnSuccess(data, variables, context);
+  return useMutation({
+    mutationFn: (variables: { invitationId: string }) =>
+      apiClient.delete("/organization/invitations", { data: variables }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.invitations() });
     },
   });
-};
+}
 
-// Invite User
-export const useInviteUser = (
-  options?: UseMutationOptions<
-    OrgRouterOutputs["inviteUser"],
-    Error,
-    OrgRouterInputs["inviteUser"],
-    unknown
-  >
-) => {
+export function useUpdateMemberRole() {
   const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        OrgRouterOutputs["inviteUser"],
-        OrgRouterInputs["inviteUser"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    OrgRouterOutputs["inviteUser"],
-    Error,
-    OrgRouterInputs["inviteUser"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.organization.inviteUser.mutate(variables) as Promise<
-        OrgRouterOutputs["inviteUser"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({
-        queryKey: ["invitations", variables.orgId],
-      });
-      if (userOnSuccess) userOnSuccess(data, variables, context);
+  return useMutation({
+    mutationFn: (variables: { userId: string; role: string }) =>
+      apiClient.patch(`/organization/members/${variables.userId}`, { role: variables.role }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
-};
+}
 
-// Get Invitations
-export const useGetInvitations = (orgId: string) => {
-  return useQuery({
-    queryKey: ["invitations", orgId],
-    queryFn: async () => {
-      return await vaivammTrpcClient.organization.getInvitations.query({
-        orgId,
-      });
-    },
-    enabled: !!orgId,
-  });
-};
-
-// Cancel Invitation
-export const useCancelInvitation = (
-  options?: UseMutationOptions<
-    OrgRouterOutputs["cancelInvitation"],
-    Error,
-    OrgRouterInputs["cancelInvitation"],
-    unknown
-  >
-) => {
+export function useRemoveMember() {
   const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        OrgRouterOutputs["cancelInvitation"],
-        OrgRouterInputs["cancelInvitation"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    OrgRouterOutputs["cancelInvitation"],
-    Error,
-    OrgRouterInputs["cancelInvitation"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.organization.cancelInvitation.mutate(
-        variables
-      ) as Promise<OrgRouterOutputs["cancelInvitation"]>,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({
-        queryKey: ["invitations", variables.orgId],
-      });
-      if (userOnSuccess) userOnSuccess(data, variables, context);
+  return useMutation({
+    mutationFn: (variables: { userId: string }) =>
+      apiClient.delete(`/organization/members/${variables.userId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.organization.members() });
     },
   });
-};
-
-// Update Member Role
-export const useUpdateMemberRole = (
-  options?: UseMutationOptions<
-    OrgRouterOutputs["updateMemberRole"],
-    Error,
-    OrgRouterInputs["updateMemberRole"],
-    unknown
-  >
-) => {
-  const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        OrgRouterOutputs["updateMemberRole"],
-        OrgRouterInputs["updateMemberRole"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    OrgRouterOutputs["updateMemberRole"],
-    Error,
-    OrgRouterInputs["updateMemberRole"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.organization.updateMemberRole.mutate(
-        variables
-      ) as Promise<OrgRouterOutputs["updateMemberRole"]>,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ["organizations"] });
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
-
-// Remove Member
-export const useRemoveMember = (
-  options?: UseMutationOptions<
-    OrgRouterOutputs["removeMember"],
-    Error,
-    OrgRouterInputs["removeMember"],
-    unknown
-  >
-) => {
-  const queryClient = useQueryClient();
-  const userOnSuccess = options?.onSuccess as
-    | MutationOnSuccess<
-        OrgRouterOutputs["removeMember"],
-        OrgRouterInputs["removeMember"],
-        unknown
-      >
-    | undefined;
-
-  return useMutation<
-    OrgRouterOutputs["removeMember"],
-    Error,
-    OrgRouterInputs["removeMember"],
-    unknown
-  >({
-    mutationFn: (variables) =>
-      vaivammTrpcClient.organization.removeMember.mutate(variables) as Promise<
-        OrgRouterOutputs["removeMember"]
-      >,
-    ...options,
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ["organizations"] });
-      if (userOnSuccess) userOnSuccess(data, variables, context);
-    },
-  });
-};
+}

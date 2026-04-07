@@ -6,13 +6,26 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
+import { ROLES, ADMIN_ROLES } from "@/lib/constants/roles";
 
 export async function resetPassword(password: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-  
+
+  if (!password || password.length < 8) {
+    return { error: "Password must be at least 8 characters" };
+  }
+  if (password.length > 15) {
+    return { error: "Password must be at most 15 characters" };
+  }
+  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!PASSWORD_REGEX.test(password)) {
+    return { error: "Password must contain uppercase, lowercase, a number, and a special character (@$!%*?&)" };
+  }
+
   try {
-     const hashedPassword = await bcrypt.hash(password, 10);
+     const hashedPassword = await bcrypt.hash(password, 12);
      
      await db.update(users)
         .set({
@@ -22,7 +35,8 @@ export async function resetPassword(password: string) {
         .where(eq(users.id, session.user.id));
         
      return { success: true };
-  } catch {
+  } catch (error) {
+      logger.error("Failed to reset password", error);
       return { error: "Failed to reset password" };
   }
 }
@@ -32,11 +46,11 @@ export async function createEmployee(data: {
     lastName: string;
     email: string;
     gender: "MALE" | "FEMALE" | "OTHER";
-    role: "ADMIN" | "MEMBER";
+    role: string;
     initialPassword?: string;
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
+    if (!session?.user?.id || !ADMIN_ROLES.includes(session.user.role ?? "")) {
         return { error: "Unauthorized: Insufficient permissions" };
     }
 
@@ -45,11 +59,13 @@ export async function createEmployee(data: {
             where: eq(users.email, data.email)
         });
         if (existing) {
-            return { error: "User with this email already exists" };
+            return { error: "Unable to create user. Please check the details and try again." };
         }
 
-        const rawPassword = data.initialPassword || "123456"; 
-        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+        if (!data.initialPassword || data.initialPassword.length < 8) {
+            return { error: "A secure initial password (8+ characters) is required" };
+        }
+        const hashedPassword = await bcrypt.hash(data.initialPassword, 12);
 
         const creatorOrg = await db.query.organizationMembers.findFirst({
             where: eq(organizationMembers.userId, session.user.id)
@@ -59,29 +75,32 @@ export async function createEmployee(data: {
 
         const newUserId = crypto.randomUUID();
         
-        await db.insert(users).values({
-            id: newUserId,
-            email: data.email,
-            password: hashedPassword,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            name: `${data.firstName} ${data.lastName}`,
-            role: data.role,
-            gender: data.gender,
-            isPasswordChangeRequired: true,
-            emailVerified: null, 
-        });
+        await db.transaction(async (tx) => {
+            await tx.insert(users).values({
+                id: newUserId,
+                email: data.email,
+                password: hashedPassword,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                name: `${data.firstName} ${data.lastName}`,
+                role: data.role,
+                gender: data.gender,
+                isPasswordChangeRequired: true,
+                emailVerified: new Date(),
+            });
 
-        await db.insert(organizationMembers).values({
-            userId: newUserId,
-            orgId: creatorOrg.orgId,
-            role: data.role,
+            await tx.insert(organizationMembers).values({
+                userId: newUserId,
+                orgId: creatorOrg.orgId,
+                role: data.role,
+            });
         });
 
         revalidatePath("/hr");
         return { success: true };
 
-    } catch (err) {
+    } catch (error) {
+        logger.error("Failed to create employee", error);
         return { error: "Failed to create employee" };
     }
 }

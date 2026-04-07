@@ -135,3 +135,37 @@ export function getFileKeyFromUrl(url: string): string {
   }
   return url;
 }
+export function getFileNameFromKey(key: string): string {
+  const parts = key.split("/");
+  const last = parts[parts.length - 1] ?? "download";
+  const match = last.match(/^\d+-(.+)$/);
+  return match ? match[1] : last;
+}
+
+export interface GetFileStreamResult {
+  body: import("stream").Readable;
+  contentType?: string;
+  contentLength?: number;
+}
+
+export async function getFileStream(key: string): Promise<GetFileStreamResult> {
+  const config = getR2Config();
+  if (!config.bucketName) {
+    throw new Error("R2 bucket not configured");
+  }
+  const s3Client = getS3Client();
+  const response = await s3Client.send(
+    new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+    })
+  );
+  if (!response.Body) {
+    throw new Error("File not found or empty");
+  }
+  return {
+    body: response.Body as import("stream").Readable,
+    contentType: response.ContentType ?? "application/octet-stream",
+    contentLength: response.ContentLength,
+  };
+}

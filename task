@@ -1,0 +1,905 @@
+
+You are an experienced full stack engineer specializing in React-based applications using Next.js, TypeScript, Tailwind CSS, and shadcn/ui components. Your role is to analyze the existing repository, understand its structure, color palette, components, hooks, and APIs, then implement the specified task efficiently. Always prioritize reusing existing code, folder structures, and libraries before creating new ones. If something doesn't exist, install or create it only as needed (e.g., via pnpm for libraries, or write minimal new components/hooks). Ensure 100% functionality, with no bugs, lint errors, or type issues—test mentally for edge cases like errors, loading, empty states.
+
+Key Guidelines:
+- **Code Quality**: Write readable, reusable, efficient, optimized, scalable, maintainable, robust, and ure code. Use strict TypeScript typing without any ignores or forces. Eliminate all dead code, unused imports, unnecessary components/functions/hooks/files/APIs, and comments.
+- **Component Architecture**: Break into multiple components/files only if logically necessary (e.g., for separation of concerns). Use @custom/ or @shared/ components if available; fallback to @ui/ (e.g., shadcn/ui). For error/loading/empty states, use @pre-ui/ if exists, else create minimal ones.
+- **State & Effects**: Minimize useState and useEffect; prefer Zustand for global state if needed, or integrate with existing state management.
+- **Forms & Validation**: Use react-hook-form with Zod for schemas; implement proper field validations and display error messages.
+- **API Handling**: Use TanStack Query (react-query) for data fetching/mutations. Handle loading/errors with appropriate states.
+- **UI/UX**: If screens/UI elements are missing, design professional, modern interfaces following shadcn color palette (or existing repo's palette if detected—e.g., primary/accent colors). Make it visually appealing, responsive, and accessible (ARIA attributes, keyboard nav).
+- **Notifications**: Use Sonner for toasts to show success/errors/info messages.
+- **Repo Awareness**: Scan for existing folders (e.g., components/, hooks/, lib/), files, and patterns. Adapt to them; don't assume structure—create only if absent.
+- **Optimizations**: Lazy-load components where possible. Ensure mobile-first responsiveness. Use memoization (React.memo, useMemo) for performance-critical parts.
+- **Security**: Sanitize inputs, avoid inline styles/scripts, use secure API practices (e.g., no hard-coded secrets).
+- **Testing/Edge Cases**: Implicitly ensure code handles network failures, invalid data, auth checks. If auth exists in repo, integrate it.
+- **Output Format**: Provide only the modified/added code files in a structured response (e.g., file paths with code blocks). No explanations unless clarifying changes. If questions arise (e.g., ambiguities in task), ask briefly.
+- **Code**: Readable, reusable, efficient, optimized, clean, extensible, scalable, maintainable, robust, secure. Strict TypeScript. Follow best practices (e.g., SOLID, error handling, logging). Remove unused code/files/functions/APIs.
+- **Structure**: Use existing folders (e.g., controllers/, services/, models/, routes/). Create minimally if needed. Avoid unnecessary files/functions.
+- **DB/APIs**: Use Neon dbfor drizzle schemas/queries; handle connections, indexes, transactions. For caching, use Redis if present else add it. Implement REST/GraphQL endpoints with validation.
+- **State/Async**: Use async/await; minimize globals. Integrate repo's state management (e.g., sessions, JWT auth).
+- **Validation**: Use Zod/Joi for schemas; proper error responses (HTTP codes, messages).
+- **Security**: Sanitize inputs (e.g., via validator.js), implement rate limiting (e.g., express-rate-limit), auth/authorization (integrate JWT/OAuth if present, use bcrypt for passwords, helmet for headers), avoid vulnerabilities (e.g., SQL/NoSQL injection via ORM/parameterized queries, XSS/CSRF protection, secure cookies with httpOnly/SameSite), validate file uploads, use HTTPS, manage secrets with env vars/Dotenv, audit dependencies (e.g., npm audit), handle CORS properly, log sensitive actions without exposing data.
+- **Optimizations**: Efficient queries (pagination, indexing), caching, lazy loading. Ensure scalability (e.g., clustering).
+- **Logging/Errors**: Use Winston or repo's logger; handle global errors, 500s gracefully.
+- **Repo**: Scan existing files; install libraries (e.g., pnpm) only if absent. Handle edge cases (network failures, invalid data, concurrency).
+- **Testing**: Implicitly ensure code is testable; add minimal tests if repo has setup
+don't hardcode/ force the types, don't ignore the types and don't add any
+don't use the anonymous functions and make the proper handlers
+don't add the comments and remove the unwanted comments and dead code
+make sure well typed
+- **Dynamic Route Naming**: Always use descriptive param names in dynamic route folders — NEVER generic `[id]`. This applies to BOTH `app/(dashboard)/` page routes AND `app/api/v1/` API route handlers. Use the entity name that matches the domain:
+  - HR: `[employeeId]`, `[leaveId]`, `[expenseId]`, `[assetId]`, `[documentId]`, `[reviewId]`, `[goalId]`, `[ticketId]`
+  - Projects: `[projectId]`, `[sprintId]`, `[ticketId]`, `[cycleId]`, `[moduleId]`, `[pageId]`, `[viewId]`
+  - CRM: `[leadId]`, `[dealId]`, `[contactId]`, `[clientId]`, `[targetId]`
+  - Chat: `[channelId]`, `[messageId]`
+  - Org: `[memberId]`, `[roleId]`, `[branchId]`, `[notificationId]`
+  - The param name inside the handler/page MUST match the folder name exactly: folder `[leadId]` → `params.leadId`.
+
+
+rules:- 
+## PRD
+
+### Problem Statement
+The codebase violates React/Next.js best practices and has accumulated technical debt that impacts performance, maintainability, and developer experience.
+
+### Goals
+- **Max 500 lines per file** — Split large files into logical modules
+- **Zero unnecessary hooks** — Remove redundant `useEffect`/`useState`
+- **Zero comments** — Code should be self-documenting
+- **Strict typing** — No `any`, proper interfaces
+- **Next.js patterns** — Use all Next.js features correctly
+- **React best practices** — Follow all React conventions
+
+### Success Criteria
+- No file exceeds 500 lines
+- `pnpm lint` passes with zero warnings
+- `pnpm build` passes with zero TypeScript errors
+- All rules below are followed
+
+---
+
+## NEXT.JS RULES (Must Follow)
+
+### Rule 1: Use `<Link>` Instead of `<a>` for Internal Navigation
+
+```tsx
+// ❌ BAD - Uses native anchor tag
+<a href="/dashboard">Go to Dashboard</a>
+<a href="/crm/leads">View Leads</a>
+<a href={`/users/${user.id}`}>View Profile</a>
+
+// ✅ GOOD - Uses Next.js Link component
+import Link from "next/link";
+
+<Link href="/dashboard">Go to Dashboard</Link>
+<Link href="/crm/leads">View Leads</Link>
+<Link href={`/users/${user.id}`}>View Profile</Link>
+
+// ✅ GOOD - Link with custom styling
+<Link href="/dashboard" className="text-blue-500 hover:underline">
+  Dashboard
+</Link>
+
+// ✅ GOOD - Link wrapping a button
+<Link href="/create">
+  <Button>Create New</Button>
+</Link>
+
+// ⚠️ EXCEPTION - Keep <a> for external links and email templates
+<a href="https://external-site.com" target="_blank" rel="noopener noreferrer">
+  External Link
+</a>
+```
+
+**Why**: `<Link>` enables client-side navigation, prefetching, and faster page transitions.
+
+---
+
+### Rule 2: Use `layout.tsx` Instead of Shell/Wrapper Components
+
+```tsx
+// ❌ BAD - Shell wrapper component in page
+export default function DashboardPage() {
+  return (
+    <DashboardShell>
+      <Sidebar />
+      <main>
+        <Header />
+        <PageContent />
+      </main>
+    </DashboardShell>
+  );
+}
+
+// ❌ BAD - Repeating layout structure in every page
+export default function LeadsPage() {
+  return (
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-1">
+        <Header />
+        <LeadsContent />
+      </div>
+    </div>
+  );
+}
+
+// ✅ GOOD - Use layout.tsx for shared structure
+// app/(dashboard)/layout.tsx
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-1">
+        <Header />
+        <main>{children}</main>
+      </div>
+    </div>
+  );
+}
+
+// app/(dashboard)/leads/page.tsx - Clean, focused page
+export default function LeadsPage() {
+  return <LeadsContent />;
+}
+```
+
+**Why**: Layouts persist across navigation, preserve state, and avoid unnecessary re-renders.
+
+---
+
+### Rule 3: Use Middleware for Auth, NOT useEffect
+
+```tsx
+// ❌ BAD - Client-side auth redirect with useEffect
+"use client";
+export default function ProtectedPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
+  }, [status, router]);
+
+  if (status === "loading") return <Loading />;
+  if (!session) return null;
+
+  return <PageContent />;
+}
+
+// ❌ BAD - Conditional rendering based on session
+"use client";
+export default function Dashboard() {
+  const { data: session } = useSession();
+
+  if (!session) {
+    return <Redirect to="/signin" />;
+  }
+
+  return <DashboardContent />;
+}
+
+// ✅ GOOD - Middleware handles auth (already implemented in middleware.ts)
+// middleware.ts
+export default function middleware(req: NextRequest) {
+  const token = await getToken({ req });
+  if (!token && isProtectedRoute(req.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL("/signin", req.url));
+  }
+  return NextResponse.next();
+}
+
+// page.tsx - No auth check needed, middleware already handled it
+export default function ProtectedPage() {
+  return <PageContent />;
+}
+
+// For server components - use auth() directly
+export default async function DashboardPage() {
+  const session = await auth();
+  return <DashboardContent user={session.user} />;
+}
+```
+
+**Why**: Middleware runs before the page loads, preventing flash of unauthenticated content.
+
+---
+
+### Rule 4: Server Components by Default
+
+```tsx
+// ❌ BAD - Unnecessary "use client" on data-fetching page
+"use client";
+export default function LeadsPage() {
+  const { data } = useQuery(...);
+  return <LeadsList leads={data} />;
+}
+
+// ✅ GOOD - Server Component for data fetching
+export default async function LeadsPage() {
+  const leads = await getLeads();
+  return <LeadsClient initialLeads={leads} />;
+}
+
+// ✅ GOOD - Only client component for interactivity
+"use client";
+export function LeadsClient({ initialLeads }: Props) {
+  const [leads, setLeads] = useState(initialLeads);
+  return <LeadsList leads={leads} />;
+}
+```
+
+**When to use `"use client"`**:
+- `useState`, `useEffect`, `useContext`, `useReducer`
+- Event handlers (`onClick`, `onChange`, `onSubmit`)
+- Browser APIs (`window`, `document`, `localStorage`)
+- Third-party client libraries (charts, drag-and-drop)
+
+---
+
+### Rule 5: Use Next.js Image Instead of `<img>`
+
+```tsx
+// ❌ BAD - Native img tag
+<img src="/logo.png" alt="Logo" width="100" height="100" />
+<img src={user.avatar} alt={user.name} className="rounded-full" />
+
+// ✅ GOOD - Next.js Image component
+import Image from "next/image";
+
+<Image src="/logo.png" alt="Logo" width={100} height={100} />
+<Image 
+  src={user.avatar || "/default-avatar.png"} 
+  alt={user.name}
+  width={40}
+  height={40}
+  className="rounded-full"
+/>
+
+// ✅ GOOD - Fill mode for responsive images
+<div className="relative h-48 w-full">
+  <Image src="/hero.jpg" alt="Hero" fill className="object-cover" />
+</div>
+```
+
+**Why**: Automatic optimization, lazy loading, and responsive images.
+
+---
+
+### Rule 6: Every Route Must Have loading.tsx and error.tsx
+
+```
+app/(dashboard)/crm/leads/
+├── page.tsx       # Page content
+├── loading.tsx    # Skeleton UI while loading
+├── error.tsx      # Error boundary
+└── not-found.tsx  # 404 state (for dynamic routes)
+```
+
+```tsx
+// loading.tsx
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function Loading() {
+  return (
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-[400px] w-full" />
+    </div>
+  );
+}
+
+// error.tsx
+"use client";
+
+export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-6">
+      <h2>Something went wrong</h2>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  );
+}
+```
+
+---
+
+### Rule 7: Use Server Actions for Mutations
+
+```tsx
+// ❌ BAD - Client-side fetch for mutations
+"use client";
+async function handleSubmit(data: FormData) {
+  await fetch("/api/leads", { method: "POST", body: data });
+}
+
+// ✅ GOOD - Server Action
+// actions.ts
+"use server";
+export async function createLead(formData: FormData) {
+  const data = Object.fromEntries(formData);
+  await db.insert(leads).values(data);
+  revalidatePath("/crm/leads");
+}
+
+// page.tsx
+import { createLead } from "./actions";
+
+export default function CreateLeadPage() {
+  return (
+    <form action={createLead}>
+      <input name="name" />
+      <button type="submit">Create</button>
+    </form>
+  );
+}
+```
+
+---
+
+### Rule 8: Use Route Handlers for API, Not Pages
+
+```tsx
+// ❌ BAD - API logic in page component
+export default function ApiPage() {
+  // This is wrong
+}
+
+// ✅ GOOD - Route handler in app/api/
+// app/api/leads/route.ts
+export async function GET(request: Request) {
+  const leads = await getLeads();
+  return Response.json(leads);
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const lead = await createLead(body);
+  return Response.json(lead);
+}
+```
+
+---
+
+## REACT RULES (Must Follow)
+
+### Rule 9: No Unnecessary useEffect
+
+```tsx
+// ❌ BAD - useEffect for derived state
+const [filteredItems, setFilteredItems] = useState([]);
+
+useEffect(() => {
+  setFilteredItems(items.filter(item => item.status === status));
+}, [items, status]);
+
+// ✅ GOOD - Compute directly or use useMemo
+const filteredItems = useMemo(
+  () => items.filter(item => item.status === status),
+  [items, status]
+);
+
+// ❌ BAD - useEffect for formatting
+useEffect(() => {
+  setFormattedDate(format(date, "PPP"));
+}, [date]);
+
+// ✅ GOOD - Compute directly
+const formattedDate = format(date, "PPP");
+
+// ❌ BAD - useEffect for initial data transformation
+useEffect(() => {
+  if (data) {
+    setProcessedData(transformData(data));
+  }
+}, [data]);
+
+// ✅ GOOD - Transform during render or in useMemo
+const processedData = useMemo(() => data ? transformData(data) : null, [data]);
+```
+
+---
+
+### Rule 10: No Anonymous Inline Handlers
+
+```tsx
+// ❌ BAD - Anonymous inline handler
+<Button onClick={() => handleDelete(item.id)}>Delete</Button>
+
+// ❌ BAD - Complex inline logic
+<Button onClick={() => {
+  setLoading(true);
+  deleteItem(item.id).finally(() => setLoading(false));
+}}>
+  Delete
+</Button>
+
+// ✅ GOOD - Named handler with useCallback
+const handleDeleteClick = useCallback(() => {
+  handleDelete(item.id);
+}, [item.id]);
+
+<Button onClick={handleDeleteClick}>Delete</Button>
+
+// ✅ GOOD - For lists, use data attributes
+const handleItemDelete = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+  const id = e.currentTarget.dataset.id;
+  if (id) deleteItem(id);
+}, [deleteItem]);
+
+{items.map(item => (
+  <Button key={item.id} data-id={item.id} onClick={handleItemDelete}>
+    Delete
+  </Button>
+))}
+```
+
+---
+
+### Rule 11: Proper Key Props in Lists
+
+```tsx
+// ❌ BAD - Using index as key
+{items.map((item, index) => (
+  <ListItem key={index} item={item} />
+))}
+
+// ❌ BAD - Missing key
+{items.map(item => (
+  <ListItem item={item} />
+))}
+
+// ✅ GOOD - Unique identifier as key
+{items.map(item => (
+  <ListItem key={item.id} item={item} />
+))}
+
+// ✅ GOOD - Composite key when needed
+{items.map(item => (
+  <ListItem key={`${item.type}-${item.id}`} item={item} />
+))}
+```
+
+---
+
+### Rule 12: No Prop Drilling (3+ Levels)
+
+```tsx
+// ❌ BAD - Prop drilling through multiple levels
+<Parent user={user}>
+  <Child user={user}>
+    <GrandChild user={user}>
+      <GreatGrandChild user={user} />
+    </GrandChild>
+  </Child>
+</Parent>
+
+// ✅ GOOD - Use Context for deeply shared state
+const UserContext = createContext<User | null>(null);
+
+function Parent({ user }: { user: User }) {
+  return (
+    <UserContext.Provider value={user}>
+      <Child />
+    </UserContext.Provider>
+  );
+}
+
+function GreatGrandChild() {
+  const user = useContext(UserContext);
+  return <div>{user?.name}</div>;
+}
+
+// ✅ GOOD - Use composition pattern
+<Parent>
+  <Child>
+    <GrandChild>
+      <UserDisplay user={user} />
+    </GrandChild>
+  </Child>
+</Parent>
+```
+
+---
+
+## STATE MANAGEMENT RULES
+
+### Rule 13: Remove Zustand (Unused)
+
+```bash
+# Zustand is installed but NEVER used in codebase - DELETE
+pnpm remove zustand
+```
+
+**Use instead**:
+- React Query for server state
+- React Context for shared UI state
+- URL state for filters/pagination
+- Local state for component-specific state
+
+---
+
+### Rule 14: Use URL State for Filters/Pagination
+
+```tsx
+// ❌ BAD - useState for filters (lost on refresh)
+const [status, setStatus] = useState("all");
+const [page, setPage] = useState(1);
+
+// ✅ GOOD - URL state with searchParams
+import { useSearchParams, useRouter } from "next/navigation";
+
+function LeadsFilters() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const status = searchParams.get("status") || "all";
+  const page = parseInt(searchParams.get("page") || "1");
+
+  function updateFilters(key: string, value: string) {
+    const params = new URLSearchParams(searchParams);
+    params.set(key, value);
+    router.push(`?${params.toString()}`);
+  }
+
+  return (
+    <Select value={status} onValueChange={(v) => updateFilters("status", v)}>
+      ...
+    </Select>
+  );
+}
+```
+
+---
+
+### Rule 15: Use localStorage/sessionStorage Correctly
+
+```tsx
+// ❌ BAD - Direct access (crashes on server)
+const theme = localStorage.getItem("theme");
+
+// ❌ BAD - useEffect just to read storage
+useEffect(() => {
+  setTheme(localStorage.getItem("theme"));
+}, []);
+
+// ✅ GOOD - Safe storage access with hook
+function useLocalStorage<T>(key: string, initialValue: T) {
+  const [value, setValue] = useState<T>(() => {
+    if (typeof window === "undefined") return initialValue;
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+
+// ✅ GOOD - Use existing next-themes for theme
+import { useTheme } from "next-themes";
+const { theme, setTheme } = useTheme();
+```
+
+---
+
+## CODE ORGANIZATION RULES
+
+### Rule 16: Max 500 Lines Per File
+
+**Files to split**:
+
+| File | Lines | Split Into |
+|------|-------|------------|
+| `chat/page.tsx` | 2000+ | `chat-sidebar.tsx`, `chat-messages.tsx`, `chat-input.tsx`, `chat-header.tsx` |
+| `crm/leads/page.tsx` | 1500+ | `leads-table.tsx`, `leads-filters.tsx`, `leads-kanban.tsx`, `lead-dialogs.tsx` |
+| `crm/deals/page.tsx` | 1200+ | `deals-table.tsx`, `deals-filters.tsx`, `deals-pipeline.tsx` |
+| `hr/employees/page.tsx` | 1000+ | `employees-table.tsx`, `employees-filters.tsx`, `employee-dialogs.tsx` |
+| `illustrations/index.tsx` | 50KB | Individual files per illustration |
+
+**Pattern**:
+```
+app/(dashboard)/crm/leads/
+├── page.tsx              # Under 200 lines - composition only
+├── _components/
+│   ├── leads-table.tsx
+│   ├── leads-filters.tsx
+│   ├── leads-kanban.tsx
+│   └── index.ts
+└── _hooks/
+    └── use-leads-filters.ts
+```
+
+---
+
+### Rule 17: Consistent File Naming
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | `kebab-case.tsx` | `lead-card.tsx`, `expense-dialog.tsx` |
+| Hooks | `use-kebab-case.ts` | `use-debounce.ts`, `use-disclosure.ts` |
+| Utilities | `kebab-case.ts` | `format-date.ts`, `cn.ts` |
+| Constants | `kebab-case.ts` | `roles.ts`, `pipeline.ts` |
+| Types | `kebab-case.ts` | `api.ts`, `next-auth.d.ts` |
+
+---
+
+### Rule 18: Consistent Function Naming
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Event handlers | `handle{Event}` | `handleClick`, `handleSubmit`, `handleDelete` |
+| Callback props | `on{Event}` | `onClick`, `onSubmit`, `onChange` |
+| Getters | `get{Thing}` | `getUser`, `getLeadById`, `getSession` |
+| Async fetchers | `fetch{Thing}` | `fetchLeads`, `fetchUser` |
+| Mutations | `{verb}{Noun}` | `createLead`, `updateUser`, `deleteExpense` |
+| Booleans | `is/has/can/should` | `isLoading`, `hasAccess`, `canEdit`, `shouldRefetch` |
+
+---
+
+### Rule 19: Extract Reusable Utilities
+
+**Create centralized utilities**:
+
+```typescript
+// lib/utils/format-date.ts
+export function formatDate(date: Date | string, pattern = "PPP"): string
+export function formatRelativeTime(date: Date | string): string
+export function formatDateRange(start: Date, end: Date): string
+
+// lib/utils/format-currency.ts
+export function formatCurrency(amount: number, currency = "INR"): string
+export function formatCompactNumber(num: number): string
+
+// lib/utils/array.ts
+export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]>
+export function unique<T>(arr: T[]): T[]
+export function chunk<T>(arr: T[], size: number): T[][]
+
+// lib/utils/string.ts
+export function truncate(str: string, length: number): string
+export function slugify(str: string): string
+export function capitalize(str: string): string
+```
+
+---
+
+## CLEANUP RULES
+
+### Rule 20: No Comments
+
+```typescript
+// ❌ BAD - Any comments
+// This function fetches leads
+function fetchLeads() { ... }
+
+/* Set the user state */
+setUser(data);
+
+// TODO: Fix this later
+// FIXME: This is a hack
+// HACK: Temporary solution
+
+// ✅ GOOD - Self-documenting code (no comments needed)
+function fetchLeadsForOrganization(orgId: string) { ... }
+
+// Code should be clear from naming alone
+const activeLeads = leads.filter(lead => lead.status === "ACTIVE");
+```
+
+**Exception**: Complex algorithms that cannot be simplified
+
+---
+
+### Rule 21: No Dead Code
+
+```typescript
+// ❌ BAD - Remove all of these
+const unusedVariable = "never used";
+import { UnusedComponent } from "./unused";
+// const oldCode = something;
+console.log("debug:", data);
+
+function neverCalledFunction() { ... }
+```
+
+---
+
+### Rule 22: No Type Assertions
+
+```typescript
+// ❌ BAD
+const data = result as any[];
+const user = response as User;
+
+// ✅ GOOD - Proper typing
+type LeadRow = InferSelectModel<typeof leads>;
+const data: LeadRow[] = result;
+
+// ✅ GOOD - Type guards
+function isUser(obj: unknown): obj is User {
+  return typeof obj === "object" && obj !== null && "id" in obj;
+}
+```
+
+---
+
+### Rule 23: No eslint-disable Comments
+
+```typescript
+// ❌ BAD - Never suppress errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any = result;
+
+/* eslint-disable */
+// Bad code here
+/* eslint-enable */
+
+// ✅ GOOD - Fix the underlying issue
+const data: LeadData[] = result;
+```
+
+---
+
+## FILES TO DELETE
+
+**Orphan components** (never imported):
+- `components/shared/command-palette.tsx`
+- `components/shared/empty-state.tsx`
+- `components/shared/metric-card.tsx`
+- `components/shared/page-header.tsx`
+- `components/ai/assistant-bot.tsx`
+- `components/ai/task-suggestions.tsx`
+- `components/attendance/daily-log.tsx`
+- `components/attendance/monthly-log.tsx`
+- `components/crm/mini-bar-chart.tsx`
+- `components/expenses/expense-filter-bar.tsx`
+- `components/expenses/expense-pagination.tsx`
+- `components/expenses/receipt-viewer.tsx`
+- `components/hr/attendance-page-client.tsx`
+- `components/hr/employee-profile-form.tsx`
+- `components/hr/leave-request-form.tsx`
+- `components/hr/salary-structure-form.tsx`
+- `components/projects/epic-view.tsx`
+- `components/projects/sprint-board.tsx`
+- `components/projects/time-tracking.tsx`
+- `components/shared/ai-sidebar.tsx`
+- `components/shared/data-table.tsx`
+- `components/shared/section-card.tsx`
+- `components/shared/status-badge.tsx`
+- `components/storage/file-viewer.tsx`
+- `components/ui/leaves-skeleton.tsx`
+- `components/ui/project-skeleton.tsx`
+- `components/ui/section-header.tsx`
+
+---
+
+## CHECKLIST
+
+### Next.js
+- [ ] Use `layout.tsx` instead of shell wrappers
+- [ ] Remove all auth-related `useEffect` (middleware handles it)
+- [ ] Add `loading.tsx` to all routes
+- [ ] Add `error.tsx` to all routes
+- [ ] Use Server Components by default
+- [ ] Use Server Actions for mutations
+
+### React
+- [ ] Remove unnecessary `useEffect` hooks
+- [ ] Replace anonymous inline handlers with named functions
+- [ ] Add proper `key` props to all lists
+- [ ] Fix prop drilling with Context or composition
+- [ ] Use URL state for filters/pagination
+
+### Code Organization
+- [ ] Split all files over 500 lines
+- [ ] Follow naming conventions (files, functions)
+- [ ] Extract reusable utilities to `lib/utils/`
+- [ ] Centralize constants in `lib/constants/`
+
+### Cleanup
+- [ ] Remove ALL comments
+- [ ] Remove dead code and unused files
+- [ ] Fix all `as any` type assertions
+- [ ] Fix all `eslint-disable` comments
+- [ ] Remove `console.log` statements
+
+### Verification
+- [ ] `pnpm build` passes
+- [ ] `pnpm lint` passes with zero warnings
+- [ ] All pages render correctly
+- [ ] No console errors in browser
+
+*(Done in tree 2026-04-06, per repo scan: `<Link>` / `<Image>` for internal nav; no Zustand pkg; shared `PageWrapper` + `ConfirmDialog`; chat `ChatAblyProvider`; no API-keys UI route; broad `loading`/`error` coverage — keep PRD rules, drop duplicate checklist rows above.)*
+
+---
+
+## ACCEPTANCE CRITERIA
+
+1. **No file exceeds 500 lines**
+2. **Zero `<a>` tags** for internal navigation
+3. **Zero `<img>` tags** (use Next.js Image)
+4. **Zero shell wrapper components** (use layouts)
+5. **Zero `useEffect` for auth/session checks**
+6. **Zero anonymous inline handlers**
+7. **Zero comments** (except complex algorithms)
+8. **Zero dead code**
+9. **Zero `as any` assertions**
+10. **Zero `eslint-disable` comments**
+11. **Zero `console.log` statements**
+12. `pnpm build` and `pnpm lint` pass with zero warnings
+
+also check other points in the tasks folder 
+
+
+you should check all the pages and components view each and every component and you should fix the bugs in that code your job is to check what are features that needed in that page and you should implement it 
+1. you should refactor the all the authentication pages, where left side will be form and right side should be a crazy animation about the app offer feature and feel free to ask the questions ad i think you can make that in the layout level of the (auth)/ 
+2. rule only form should scroll or whatever that needs to scroll only that scroll rest should not, 
+example if it is sheet then header and footer should not scroll and instead only sheet content should scroll using the scrollarea component keep this in mind that bottom buttons should visible properly
+example 2:- in the (auth)/ layout form should if needed it should scroll and right side part should not go beyond the screen 
+3. in the auth screen there should not any header i think this header is coming from the layout check once and you should fix it 
+4. Make the landing page as well CraZY looking and feel and use the framer motion and make it animated and feel free to ask the questions 
+5. After login page there is a header i think you can try to remove it and instead search and notification you should move to the sidebar level i think that would be the best UI and UX
+6. you should make the logo and brand name should bigger and better 
+7. make the dashboard should looks top notch and refactor it with the more optimized, efficient api's and remove some components and add the components which analytics makes more sense, for the For each role based
+8. in the across app there are some unnecessary paddings, margins, spacing and gaps you should remove it and some are overlapping padding and margins you should remove it 
+example :- in the dashboard cards top and bottom having the too much padding you should remove it 
+9. if you need any new color you should add it in the global CSS and you should use it and you should follow the color palate only, check each and every component and you should fix it and right now at some places where background color is matching text color so users can't able to see it, and some place where background color and text are looks weird you should fix it and make sure it should looks crazy 
+10. sometime some actions when user click on it, it is not updating in the UI instantly 
+HR platform check each and every component and you should fix it, for this sometimes you should need to invalidate the api's as well you should do it properly i think right now it is not happening properly check each and every mutation once again and make sure it should happen efficiently optimized and bug free and try to reduce the unnecessary api calls instead you can update the cache
+11. ensure every dashboard page uses `PageWrapper` consistently (title, subtitle, actions, filters) — fix any stragglers with one-off typography
+12. in the QR screen there is huge space between the Text Generate and url and generate button you should fix it and make the cards looks crazy and top notch right now it is not even looking good you should fix it and make sure it should looks crazy there is too much unnecessary gaps 
+13. make sure UI and UX should never be looks AI generated, these unnecessary spacing, padding, margins making it looks and feel that you should remove it check each and every components and you should imagine and you should remove it according and sometimes you are removing unnecessarily where these are needed there you should not remove it 
+14. update the skeletons properly in all the screens and all the components and right now some skeletons are not looking good you should fix it 
+15. you should not hardcode the width and if anything needed scroll it should scroll only that component in the employee component scrolling all the page it should not like that 
+16. when user did something then it is entire screen went into the skeletons it should showcase only the part that needs skeletons example in the employees screen when i did something entire screen it is showing loading you should check each and every page you should fix it 
+17. break every page into multiple reusable components and some components needs specific task with there own api's you can move them to those components level check each and every component 
+18. in all the pages filters are not looking good you should make it looks good, example in the employees page filters having the too much padding, margins, gaps etc similarly so many other pages you should rewrite the filters and move to the pagewrapper component and you should remove the unnecessary padding, gaps, spacing, margins etc 
+19. in the table anywhere where actions items are one then it should be directly showcase over there
+20. we can terminate the user so keep this in mind and you should provide those options as well 
+21. you can showcase the action items if three are there icons in the action items but if it is more than that then you should showcase the 3 dot icon and showcase remaining options 
+22. http://localhost:3000/hr/employees/K10eWlMuasNh4eU9r8oeD?tab=profile it is not even looking good 
+23. Chat: fix remaining bugs; ensure users only see chats they belong to; refactor/polish the screen (stack trace / `ChannelProvider` issue should remain mitigated via `ChatAblyProvider` — confirm after upgrades).
+
+24. you should use the calendar component across the platform instead of using html based components 
+25. you should use only the shadcn components only everywhere
+26. use `ConfirmDialog` everywhere destructive confirmations are still missing (baseline component exists)
+27. right now onboarding form looks so worst and you should refactor it and follow the mentioned all the rules and you should refactor it 
+28. some place where select component also take the space as much as it can example in the onboarding step Gender it should take the most of the space or else DOB should be inline with that space or else you should make it better UI and UX
+29. you should make only form should scroll and you should remove the unnecessary space  and right now it is not all looking good you should refactor it 
+30. in the attendace page when user click on the take a break still time is counting fix this issue and also you should make the independent scrolling and also this time tracking and all it is not at all working you should update it and make them as a seperate components 
+31. WFH sheet it has the too much padding and select drop down should take the full with and button should be at the bottom possible 
+32. every page you should replace with the pagewrapper and only the body should scroll title and subtitle it should not scroll 
+33. use the shadcn components only and if there are not using then you should replace it because each page having them at the different sizes 
+34. refactor all the components if possible rewrite them from crazy ui and ux should be top notch right now it is not at all looking good 
+35. you should only use the shadcn color pallete only here is the custom command i have pnpm dlx shadcn@latest init --preset bkE9S3WMd --template next  using this you should update it 
+37. for the audit log you should implement the pagination and also filter should take the proper widths and use the shadcn components 
+38. audit log event details sheet should be refactor and you should remove the unnecessary padding and marigns
+39. refactor all the pages and all the components without missing the single component and if possible redesign each and every page and add the feature required and integrate them as well without breaking anything 
+40. similarly each and every component you should refactor and feel free to ask the questions and make sure it should complete all the points without missing the single point 
+
+---
+
+## Feature structure, APIs, and module UI (Sales, CRM, Marketing, HR)
+
+1. Prefer **`features/<domain-or-feature>/`** (co-located UI + hooks + types for that feature) over route-scoped `_components/` folders; keep routes thin and import from `features/…`.
+2. Do not force types or rely on brittle casts; avoid hard-coded spacing tokens that stack—if a parent section already applies padding/margin/gap, do not repeat the same on the child in a way that doubles visual whitespace (audit section + nested section pairs).
+3. In responsive grids, **`Select` (and similar controls) should grow to use spare column width** instead of leaving large empty gaps beside narrow triggers.
+4. **Sales, CRM, and Marketing — full API pass:** for every route/method, verify payload/response shapes, server errors (500s), and TanStack Query **cache updates vs invalidation** on each mutation; no API skipped.
+5. **Zod (or equivalent) validation** on every API: body, query, and params where applicable; return consistent error responses.
+6. **Multiple distinct sections** on one screen → **multiple scroll regions** (e.g. `ScrollArea` per panel) so only the intended region scrolls.
+7. **Bottom / section padding audit:** many components read “cut off” or uneven at the bottom—fix baseline spacing across the app without **double** or **overlapping** padding (parent + child).
+8. **Sales, CRM, Marketing UX:** refactor screens with product/design judgment so they do not read as generic “AI layout”; align hierarchy, density, and patterns with a coherent system.
+9. **Tabs:** bring **Sales / CRM / Marketing** tab strips and content layout in line with **Projects** (use Projects as the reference for structure and spacing).
+10. **HR module:** clean, strong UI/UX; split into **reusable** feature-level components under `features/` (or existing conventions); avoid monolithic page files.
+11. **Approve, delete, decline** (and similar irreversible actions): always use existing **`ConfirmDialog`** (or equivalent) before proceeding.
+12. **Sheets:** header and footer **fixed**; only the **form / body** scrolls; remove redundant overlapping padding; **`Select` fills available horizontal space** in its row (e.g. “assign employee” full width; paired fields such as device type **half** width in a two-column row as appropriate).
+13. **Pagination:** implement in the UI and **enforce/support at the API** (page/limit or cursor—match product needs); keep list + API contract aligned.
+14. **Responsive:** every screen in these modules must work cleanly from mobile to desktop (breakpoints, overflow, touch targets).
+15. Follow **best coding practices** and the **rules in this `task` file** (typing, handlers, layouts, etc.).
+16. **Gap analysis:** identify **missing screens and features** across **Sales, Marketing, and CRM**; add and wire them without breaking existing flows.

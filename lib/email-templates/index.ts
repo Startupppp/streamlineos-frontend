@@ -1,0 +1,43 @@
+export { getEmailTemplate, baseUrl, logoUrl } from "./base";
+export type { EmailTemplateProps } from "./base";
+
+export {
+  getVerificationEmailTemplate,
+  getPasswordResetEmailTemplate,
+  getWelcomeEmailTemplate,
+  getPasswordChangeConfirmationEmailTemplate,
+  getAccountDeactivationEmailTemplate,
+} from "./auth";
+
+export {
+  getInvitationEmailTemplate,
+  getHolidayAnnouncementEmailTemplate,
+  getCompanyAnnouncementEmailTemplate,
+} from "./organization";
+
+export {
+  getProjectAssignmentEmailTemplate,
+  getTicketAssignmentEmailTemplate,
+  getTicketReviewRequestEmailTemplate,
+  getTicketChangesRequestedEmailTemplate,
+} from "./project";
+
+export {
+  getLeaveRequestEmailTemplate,
+  getLeaveStatusUpdateEmailTemplate,
+  getLeaveCancellationEmailTemplate,
+  getDocumentExpiryReminderEmailTemplate,
+} from "./hr";
+
+export {
+  getExpenseSubmittedEmailTemplate,
+  getExpenseApprovedEmailTemplate,
+  getExpenseRejectedEmailTemplate,
+  getExpensePaidEmailTemplate,
+} from "./expense";
+
+export {
+  getWeeklyAttendanceReportTemplate,
+  getMonthlyExpenseReportTemplate,
+} from "./reports";
+export type { MonthlyExpenseReportRow } from "./reports";
