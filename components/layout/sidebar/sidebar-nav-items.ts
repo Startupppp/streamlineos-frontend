@@ -43,6 +43,7 @@ import {
   Target,
   Megaphone,
   Mail,
+  Package,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -87,6 +88,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "Documents", icon: FileText, href: "/hr/documents" },
             { label: "Devices", icon: Laptop, href: "/hr/devices" },
+            { label: "Assets", icon: Package, href: "/hr/assets" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
             { label: "Training", icon: BookOpen, href: "/hr/training" },
@@ -163,6 +165,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "Documents", icon: FileText, href: "/hr/documents" },
             { label: "Devices", icon: Laptop, href: "/hr/devices" },
+            { label: "Assets", icon: Package, href: "/hr/assets" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
             { label: "Training", icon: BookOpen, href: "/hr/training" },

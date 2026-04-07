@@ -178,7 +178,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               </div>
             </TabsContent>
 
-            <TabsContent value="attendance" className="mt-3">
+            <TabsContent value="attendance" className="mt-3 pb-6">
               <EmployeeAttendanceHistory userId={employee.id} />
             </TabsContent>
 

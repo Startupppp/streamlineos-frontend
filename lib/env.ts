@@ -65,10 +65,9 @@ const serverSchema = z.object({
   // Real-time (Ably)
   ABLY_API_KEY: z.string().optional(),
 
-  // Sentry (error tracking)
-  SENTRY_ORG: z.string().optional(),
-  SENTRY_PROJECT: z.string().optional(),
-  SENTRY_AUTH_TOKEN: z.string().optional(),
+  // Integrations
+  BIOMETRIC_API_KEY: z.string().optional(),
+  SLACK_WEBHOOK_URL: z.string().optional(),
 
   // Test helpers
   ALLOW_TEST_EMAIL: z.string().optional(),
@@ -80,7 +79,6 @@ const clientSchema = z.object({
   NEXT_PUBLIC_QR_REDIRECT_BASE_URL: z.string().optional(),
   NEXT_PUBLIC_R2_PUBLIC_URL: z.string().optional(),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
 });
 
 function validateEnv() {
@@ -108,7 +106,6 @@ function validateClientEnv() {
     NEXT_PUBLIC_QR_REDIRECT_BASE_URL: process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL,
     NEXT_PUBLIC_R2_PUBLIC_URL: process.env.NEXT_PUBLIC_R2_PUBLIC_URL,
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   });
 
   return result.success ? result.data : ({} as z.infer<typeof clientSchema>);

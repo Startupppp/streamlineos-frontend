@@ -298,6 +298,11 @@
   to   { opacity: 1; transform: translateX(0);     }
 }
 
+@keyframes scan {
+  0%, 100% { top: 12%; opacity: 0.6; }
+  50%       { top: 80%; opacity: 1;   }
+}
+
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1);    }

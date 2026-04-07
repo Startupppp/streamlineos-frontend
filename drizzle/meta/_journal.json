@@ -183,6 +183,146 @@
       "when": 1774250000000,
       "tag": "0025_ticket_watchers",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1774260000000,
+      "tag": "0026_recruitment_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1774270000000,
+      "tag": "0027_rich_documents",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1774280000000,
+      "tag": "0028_performance_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1774290000000,
+      "tag": "0029_interview_rubric",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1774300000000,
+      "tag": "0030_follow_up_reminders",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1774300100000,
+      "tag": "0030_training_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1774310000000,
+      "tag": "0031_exit_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1774310100000,
+      "tag": "0031_sales_quotas",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1774320000000,
+      "tag": "0032_campaigns_enhance",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1774320100000,
+      "tag": "0032_recognition_kudos",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1774330000000,
+      "tag": "0033_commissions_and_approvals",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1774330100000,
+      "tag": "0033_compliance_reimbursements_loans",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1774340000000,
+      "tag": "0034_email_campaigns",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1774340100000,
+      "tag": "0034_referrals_certs_bgv",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1774350000000,
+      "tag": "0035_pip_okr_skills_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1774360000000,
+      "tag": "0036_remaining_hr_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1774370000000,
+      "tag": "0037_assessments_paths_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1774380000000,
+      "tag": "0038_optimization_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1774380100000,
+      "tag": "0038_performance_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1774390000000,
+      "tag": "0039_ensure_schema_columns",
+      "breakpoints": true
     }
   ]
 }

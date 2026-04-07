@@ -15,23 +15,22 @@ import {
   FileImage,
   FileType,
   Trash2,
-  Download,
   RefreshCw,
   ScanLine,
   Link2,
   CalendarDays,
+  MoreVertical,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +59,8 @@ function QRCodeImage({ imageUrl, size = 96 }: { imageUrl: string; size?: number 
     }
   }, [imageUrl]);
 
+  const handleError = useCallback(() => setError(true), []);
+
   if (error) {
     return (
       <div className="flex items-center justify-center h-full w-full text-xs text-muted-foreground">
@@ -74,7 +75,6 @@ function QRCodeImage({ imageUrl, size = 96 }: { imageUrl: string; size?: number 
       </div>
     );
   }
-  const handleError = useCallback(() => setError(true), []);
 
   return (
     <Image
@@ -108,99 +108,138 @@ function QRCard({
   const handleDownloadSvg = useCallback(() => onDownload(qr.slug, "svg"), [qr.slug, onDownload]);
 
   return (
-    <Card className="flex flex-col overflow-hidden">
-      {/* QR preview */}
-      <div className="bg-white flex items-center justify-center p-4 h-36 border-b rounded-t-xl">
-        <div className="relative h-full aspect-square">
+    <div className="group relative rounded-2xl overflow-hidden border border-border/40 bg-card flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_8px_40px_rgba(189,136,44,0.18)]">
+
+      {/* ── QR preview ──────────────────────────────────────────────── */}
+      <div
+        className="relative flex items-center justify-center p-6 h-48 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #0a0c18 0%, #0f1420 50%, #0d0f1c 100%)" }}
+      >
+        {/* Grid texture overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+
+        {/* Ambient gold glow — brightens on hover */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(189,136,44,0.12) 0%, transparent 70%)" }}
+        />
+
+        {/* Corner scanner brackets */}
+        <span className="absolute top-3 left-3 h-5 w-5 border-t-2 border-l-2 border-gold/50 rounded-tl-sm" />
+        <span className="absolute top-3 right-3 h-5 w-5 border-t-2 border-r-2 border-gold/50 rounded-tr-sm" />
+        <span className="absolute bottom-3 left-3 h-5 w-5 border-b-2 border-l-2 border-gold/50 rounded-bl-sm" />
+        <span className="absolute bottom-3 right-3 h-5 w-5 border-b-2 border-r-2 border-gold/50 rounded-br-sm" />
+
+        {/* Scan-line sweep animation */}
+        <span className="absolute left-3 right-3 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent opacity-0 group-hover:opacity-100 animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
+
+        {/* Scan count badge — top-left */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/60 border border-emerald-500/30 backdrop-blur-sm rounded-full px-2.5 py-1">
+          {qr.scanCount > 0 && (
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          )}
+          <ScanLine className="h-3 w-3 text-emerald-400 shrink-0" />
+          <span className="text-[11px] font-bold text-emerald-400 tabular-nums">{qr.scanCount}</span>
+          <span className="text-[9px] text-emerald-400/70">scans</span>
+        </div>
+
+        {/* QR code in white card */}
+        <div className="relative h-28 w-28 bg-white rounded-2xl p-2 shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_0_1px_rgba(189,136,44,0.3),0_8px_40px_rgba(0,0,0,0.8)] transition-shadow duration-300">
           <QRCodeImage imageUrl={qr.imageUrl} size={120} />
         </div>
       </div>
 
-      {/* Info */}
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        <div className="space-y-1.5">
+      {/* ── Info ────────────────────────────────────────────────────── */}
+      <div className="p-4 flex flex-col gap-3 flex-1 border-t border-border/30">
+        {/* Domain + URL */}
+        <div>
           <Link
             href={qr.targetUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 group"
+            className="group/link flex items-center gap-1.5 w-fit max-w-full"
           >
-            <span className="text-sm font-medium truncate group-hover:text-gold transition-colors">
+            <span className="text-sm font-semibold truncate leading-tight group-hover/link:text-gold transition-colors">
               {domain}
             </span>
-            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground group-hover:text-gold transition-colors" />
+            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/40 group-hover/link:text-gold transition-colors" />
           </Link>
-          <p className="text-[11px] text-muted-foreground truncate">{qr.targetUrl}</p>
+          <p className="text-[10px] text-muted-foreground/50 truncate mt-0.5">{qr.targetUrl}</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <ScanLine className="h-3 w-3 shrink-0" />
-            <span className="font-semibold text-foreground">{qr.scanCount}</span>
-            <span>scans</span>
-          </div>
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <CalendarDays className="h-3 w-3 shrink-0" />
-            {qr.createdAt ? new Date(qr.createdAt).toLocaleDateString() : "—"}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <Link2 className="h-3 w-3 text-muted-foreground shrink-0" />
-          <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground truncate flex-1">
-            /qr/{qr.slug}
-          </code>
+        {/* Chips row */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="flex items-center gap-1 bg-muted/60 border border-border/40 rounded-lg px-2 py-1 text-[10px] text-muted-foreground font-mono">
+            <Link2 className="h-2.5 w-2.5 shrink-0" />
+            <span className="truncate max-w-[72px]">/qr/{qr.slug}</span>
+          </span>
+          <span className="flex items-center gap-1 bg-muted/60 border border-border/40 rounded-lg px-2 py-1 text-[10px] text-muted-foreground">
+            <CalendarDays className="h-2.5 w-2.5 shrink-0" />
+            {qr.createdAt
+              ? new Date(qr.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+              : "—"}
+          </span>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="px-4 pb-4 flex items-center gap-2">
+      {/* ── Hover 3-dot menu ────────────────────────────────────────── */}
+      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-1 h-8 text-xs gap-1.5">
-              <Download className="h-3.5 w-3.5" />
-              Download
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/80"
+              aria-label="QR code options"
+            >
+              <MoreVertical className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuLabel className="text-[11px] text-muted-foreground font-normal truncate">/qr/{qr.slug}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-semibold px-2 py-1">Download</DropdownMenuLabel>
             <DropdownMenuItem onClick={handleDownloadPng}>
-              <FileImage className="mr-2 h-3.5 w-3.5" /> PNG
+              <FileImage className="mr-2 h-3.5 w-3.5 text-blue-400" /> PNG
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDownloadJpeg}>
-              <FileImage className="mr-2 h-3.5 w-3.5" /> JPEG
+              <FileImage className="mr-2 h-3.5 w-3.5 text-purple-400" /> JPEG
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDownloadSvg}>
-              <FileType className="mr-2 h-3.5 w-3.5" /> SVG
+              <FileType className="mr-2 h-3.5 w-3.5 text-emerald-400" /> SVG
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-          onClick={handleDeleteClick}
-          aria-label="Delete QR code"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
       </div>
-    </Card>
+    </div>
   );
 }
 
 function QRCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
-      <Skeleton className="h-36 w-full rounded-none" />
-      <div className="p-4 space-y-3">
+    <div className="rounded-2xl overflow-hidden border border-border/40">
+      <Skeleton className="h-48 w-full rounded-none" />
+      <div className="p-4 space-y-3 border-t border-border/30">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-full" />
-        <Skeleton className="h-3 w-1/2" />
+        <div className="flex gap-1.5">
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-16" />
+        </div>
       </div>
       <div className="px-4 pb-4">
         <Skeleton className="h-8 w-full" />
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -261,6 +300,8 @@ export default function CEOQRCodePage() {
   const handleRefetch = useCallback(() => { refetch(); }, [refetch]);
   const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
 
+  const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTargetUrl(e.target.value), []);
+
   const handleGenerate = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!targetUrl) return;
@@ -286,8 +327,13 @@ export default function CEOQRCodePage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (session && (!session.user || session.user.role !== "CEO")) {
+      router.push("/dashboard");
+    }
+  }, [session, router]);
+
   if (!session?.user || session.user.role !== "CEO") {
-    router.push("/dashboard");
     return null;
   }
 
@@ -340,7 +386,7 @@ export default function CEOQRCodePage() {
                 id="target-url"
                 placeholder="https://example.com/campaign-landing-page"
                 value={targetUrl}
-                onChange={(e) => setTargetUrl(e.target.value)}
+                onChange={handleUrlChange}
                 required
                 type="url"
                 className="h-9"
