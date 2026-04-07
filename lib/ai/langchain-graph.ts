@@ -10,7 +10,7 @@ import {
   payrolls,
 } from "../db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { getTodayString } from "../date-utils";
+import { format } from "date-fns";
 
 interface GraphState {
   messages: Array<{ role: string; content: string }>;
@@ -34,7 +34,7 @@ interface GraphState {
 }
 
 async function fetchContext(userId: string, orgId: string) {
-  const today = getTodayString();
+  const today = format(new Date(), "yyyy-MM-dd");
 
   const [
     projectCount,

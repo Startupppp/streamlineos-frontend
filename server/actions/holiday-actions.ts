@@ -1,17 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { holidays, organizationMembers, users, /* notifications */ } from "@/lib/db/schema";
+import { holidays, organizationMembers, users, organizations } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendBulkHolidayAnnouncement } from "@/lib/email";
-import { ROLES } from "@/lib/constants/roles";
-
-function capitalizeWords(str: string): string {
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 export async function addHoliday(data: {
   name: string;
@@ -20,18 +14,20 @@ export async function addHoliday(data: {
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
+
+  // Only ADMIN or OWNER can add holidays
   const member = await db.query.organizationMembers.findFirst({
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== ROLES.ADMIN && member.role !== ROLES.CEO)) {
+  if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
     return { error: "Permission denied" };
   }
 
   try {
     await db.insert(holidays).values({
       orgId: member.orgId,
-      name: capitalizeWords(data.name),
+      name: data.name,
       date: data.date.toISOString().split('T')[0],
       message: data.message,
       notificationSent: false,
@@ -76,96 +72,94 @@ export async function deleteHoliday(holidayId: number) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== ROLES.ADMIN && member.role !== ROLES.CEO)) {
+  if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
     return { error: "Permission denied" };
   }
 
   try {
-    await db.delete(holidays).where(and(eq(holidays.id, holidayId), eq(holidays.orgId, member.orgId)));
+    await db.delete(holidays).where(eq(holidays.id, holidayId));
     revalidatePath("/settings");
     return { success: true };
   } catch (e) {
     return { error: "Failed to delete holiday" };
   }
 }
+
+/**
+ * Check for upcoming holidays (tomorrow) and send notifications
+ * This should be run by a cron job daily at 12:00 PM
+ */
 export async function sendHolidayNotifications() {
   try {
+    // Get tomorrow's date
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowDate = tomorrow.toISOString().split('T')[0];
+
+    // Find all holidays scheduled for tomorrow that haven't been notified
     const upcomingHolidays = await db.query.holidays.findMany({
       where: and(
         eq(holidays.date, tomorrowDate),
         eq(holidays.notificationSent, false)
       ),
     });
-    // Cache org members to avoid duplicate fetches for holidays in the same org
-    const orgMembersCache = new Map<string, { userId: string; email: string | null; name: string | null }[]>();
 
+    // Process each holiday
     for (const holiday of upcomingHolidays) {
-      let members = orgMembersCache.get(holiday.orgId);
-      if (!members) {
-        members = await db
-          .select({
-            userId: organizationMembers.userId,
-            email: users.email,
-            name: users.name,
-          })
-          .from(organizationMembers)
-          .innerJoin(users, eq(organizationMembers.userId, users.id))
-          .where(
-            and(
-              eq(organizationMembers.orgId, holiday.orgId),
-              eq(users.isActive, true)
-            )
-          );
-        orgMembersCache.set(holiday.orgId, members);
-      }
+      // Get all active employees in the organization
+      const members = await db
+        .select({
+          email: users.email,
+          name: users.name,
+        })
+        .from(organizationMembers)
+        .innerJoin(users, eq(organizationMembers.userId, users.id))
+        .where(
+          and(
+            eq(organizationMembers.orgId, holiday.orgId),
+            eq(users.isActive, true)
+          )
+        );
 
       const emails = members
-        .map((m) => m.email)
+        .map(m => m.email)
         .filter((email): email is string => !!email);
 
       if (emails.length > 0) {
+        // Send bulk emails
         await sendBulkHolidayAnnouncement(
           emails,
           holiday.name,
-          tomorrow.toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
+          tomorrow.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
           }),
           holiday.message || undefined
         );
+
+        // Mark notification as sent
+        await db
+          .update(holidays)
+          .set({ notificationSent: true })
+          .where(eq(holidays.id, holiday.id));
+
+        console.log(`✅ Holiday notification sent for: ${holiday.name} to ${emails.length} employees`);
       }
-
-      const dateLabel = tomorrow.toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-      const message = `${holiday.name} is tomorrow (${dateLabel}).${holiday.message ? ` ${holiday.message}` : ""}`;
-      // In-app notifications disabled
-      // for (const row of members) {
-      //   if (row.userId) {
-      //     await db.insert(notifications).values({...});
-      //   }
-      // }
-
-      await db
-        .update(holidays)
-        .set({ notificationSent: true })
-        .where(eq(holidays.id, holiday.id));
     }
 
     return { success: true, count: upcomingHolidays.length };
   } catch (error) {
-    logger.error("Failed to send holiday notifications", error);
+    console.error("Failed to send holiday notifications:", error);
     return { error: "Failed to send notifications" };
   }
 }
+
+/**
+ * Bulk import holidays for the year
+ * Useful for importing all festival dates at once
+ */
 export async function bulkAddHolidays(holidayList: Array<{
   name: string;
   date: string;
@@ -178,14 +172,14 @@ export async function bulkAddHolidays(holidayList: Array<{
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || (member.role !== ROLES.ADMIN && member.role !== ROLES.CEO)) {
+  if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
     return { error: "Permission denied" };
   }
 
   try {
     const holidayRecords = holidayList.map(h => ({
       orgId: member.orgId,
-      name: capitalizeWords(h.name),
+      name: h.name,
       date: h.date,
       message: h.message,
       notificationSent: false,
@@ -195,8 +189,7 @@ export async function bulkAddHolidays(holidayList: Array<{
 
     revalidatePath("/settings");
     return { success: true, count: holidayList.length };
-  } catch (error) {
-    logger.error("Failed to import holidays", error);
+  } catch {
     return { error: "Failed to import holidays" };
   }
 }

@@ -1,332 +1,397 @@
 "use client";
-import { getErrorMessage } from "@/lib/get-error-message";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useHrDevices,
-  useHrEmployees,
-  useCreateDevice,
-  useUpdateDevice,
-  useDeleteDevice,
-} from "@/lib/api/hooks/hr";
+import { z } from "zod";
+import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
-  Table, TableBody, TableHead, TableHeader, TableRow,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 import { toast } from "sonner";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Download } from "lucide-react";
-import { EmptyDevicesIllustration } from "@/components/illustrations";
+import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { isDeviceStatus } from "@/lib/theme-constants";
-import type { Device, Employee } from "@/types/hr";
-import {
-  DeviceFormContent, deviceSchema, type DeviceFormValues,
-} from "@/features/hr/devices/device-form-content";
-import { DeviceTableRow } from "@/features/hr/devices/device-table-row";
 
-const DEVICE_ICONS: Record<string, React.ElementType> = {
-  Laptop, Phone: Smartphone, Monitor, Keyboard,
+const deviceSchema = z.object({
+  userId: z.string().min(1, "Employee is required"),
+  deviceType: z.string().min(1, "Device type is required"),
+  deviceName: z.string().min(1, "Device name is required"),
+  serialNumber: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type DeviceFormValues = z.infer<typeof deviceSchema>;
+
+const deviceIcons: Record<string, React.ElementType> = {
+  Laptop: Laptop,
+  Phone: Smartphone,
+  Monitor: Monitor,
+  Keyboard: Keyboard,
+};
+
+const statusColors: Record<string, string> = {
+  ACTIVE: "bg-green-500/10 text-green-700 border-green-200",
+  INACTIVE: "bg-gray-500/10 text-gray-700 border-gray-200",
+  LOST: "bg-red-500/10 text-red-700 border-red-200",
+  RETURNED: "bg-blue-500/10 text-blue-700 border-blue-200",
 };
 
 export default function DevicesPage() {
-  const [addOpen, setAddOpen] = useState(false);
-  const [editDevice, setEditDevice] = useState<Device | null>(null);
-  const [viewDeviceId, setViewDeviceId] = useState<number | null>(null);
-  const [deleteDeviceId, setDeleteDeviceId] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
 
-  const { data: devices, isLoading } = useHrDevices({});
-  const { data: employeesRaw } = useHrEmployees(undefined);
-  const employees = (employeesRaw ?? []) as Employee[];
+  const { data: devices, isLoading, refetch } = api.hr.getDevices.useQuery({});
+  const { data: employees } = api.hr.getEmployees.useQuery();
 
-  const createDeviceMutation = useCreateDevice();
-  const updateDeviceMutation = useUpdateDevice();
-  const deleteDeviceMutation = useDeleteDevice();
-
-  const addForm = useForm<DeviceFormValues>({
-    resolver: zodResolver(deviceSchema),
-    defaultValues: { userId: "", deviceType: "", deviceName: "", serialNumber: "", brand: "", model: "", notes: "" },
+  const createDeviceMutation = api.hr.createDevice.useMutation({
+    onSuccess: () => {
+      toast.success("Device added successfully");
+      setOpen(false);
+      form.reset();
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 
-  const editForm = useForm<DeviceFormValues>({
-    resolver: zodResolver(deviceSchema),
+  const updateDeviceMutation = api.hr.updateDevice.useMutation({
+    onSuccess: () => {
+      toast.success("Device updated");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
   });
 
-  const handleAddDevice = useCallback((values: DeviceFormValues) => {
-    createDeviceMutation.mutate(
-      { ...values, assignedDate: new Date() },
-      {
-        onSuccess: () => { toast.success("Device added successfully"); setAddOpen(false); addForm.reset(); },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }, [createDeviceMutation, addForm]);
+  const deleteDeviceMutation = api.hr.deleteDevice.useMutation({
+    onSuccess: () => {
+      toast.success("Device removed");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
-  const handleEditDevice = useCallback((device: Device) => {
-    setEditDevice(device);
-    editForm.reset({
-      userId: device.userId,
-      deviceType: device.deviceType,
-      deviceName: device.deviceName,
-      serialNumber: device.serialNumber || "",
-      brand: device.brand || "",
-      model: device.model || "",
-      notes: device.notes || "",
+  const form = useForm<DeviceFormValues>({
+    resolver: zodResolver(deviceSchema),
+    defaultValues: {
+      userId: "",
+      deviceType: "",
+      deviceName: "",
+      serialNumber: "",
+      brand: "",
+      model: "",
+      notes: "",
+    },
+  });
+
+  const onSubmit = (values: DeviceFormValues) => {
+    createDeviceMutation.mutate({
+      ...values,
+      assignedDate: new Date(),
     });
-  }, [editForm]);
+  };
 
-  const handleUpdateDevice = useCallback((values: DeviceFormValues) => {
-    if (!editDevice) return;
-    updateDeviceMutation.mutate(
-      {
-        deviceId: editDevice.id,
-        userId: values.userId,
-        deviceType: values.deviceType,
-        deviceName: values.deviceName,
-        serialNumber: values.serialNumber || undefined,
-        brand: values.brand || undefined,
-        model: values.model || undefined,
-        notes: values.notes || undefined,
-      },
-      {
-        onSuccess: () => { toast.success("Device updated"); setEditDevice(null); editForm.reset(); },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }, [editDevice, updateDeviceMutation, editForm]);
-
-  const handleStatusChange = useCallback((deviceId: number, value: string) => {
-    if (!isDeviceStatus(value)) return;
+  const handleStatusChange = (deviceId: number, status: "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED") => {
     updateDeviceMutation.mutate({
       deviceId,
-      status: value,
-      ...(value === "RETURNED" ? { returnDate: new Date() } : {}),
+      status,
+      ...(status === "RETURNED" ? { returnDate: new Date() } : {}),
     });
-  }, [updateDeviceMutation]);
-
-  const handleConfirmDelete = useCallback(() => {
-    if (deleteDeviceId === null) return;
-    deleteDeviceMutation.mutate(
-      { deviceId: deleteDeviceId },
-      {
-        onSuccess: () => { toast.success("Device removed"); setDeleteDeviceId(null); },
-        onError: (error) => toast.error(getErrorMessage(error)),
-      },
-    );
-  }, [deleteDeviceId, deleteDeviceMutation]);
-
-  const handleExport = useCallback(async () => {
-    try {
-      const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      await downloadXlsx("devices-export.xlsx", [{
-        name: "Devices",
-        columns: [
-          { header: "Device Name", key: "deviceName", width: 20 },
-          { header: "Type", key: "deviceType", width: 12 },
-          { header: "Brand", key: "brand", width: 12 },
-          { header: "Model", key: "model", width: 12 },
-          { header: "Serial Number", key: "serialNumber", width: 18 },
-          { header: "Assigned To", key: "assignedTo", width: 20 },
-          { header: "Assigned Date", key: "assignedDate", width: 14 },
-          { header: "Status", key: "status", width: 12 },
-        ],
-        rows: (devices || []).map(d => ({
-          deviceName: d.deviceName,
-          deviceType: d.deviceType,
-          brand: d.brand || "",
-          model: d.model || "",
-          serialNumber: d.serialNumber || "",
-          assignedTo: d.user ? `${d.user.firstName} ${d.user.lastName}` : "",
-          assignedDate: d.assignedDate ? format(new Date(d.assignedDate), "yyyy-MM-dd") : "",
-          status: d.status || "ACTIVE",
-        })),
-      }]);
-      toast.success("Devices exported");
-    } catch {
-      toast.error("Export failed");
-    }
-  }, [devices]);
-
-  const handleCloseEditSheet = useCallback((open: boolean) => {
-    if (!open) setEditDevice(null);
-  }, []);
-
-  const handleCloseViewSheet = useCallback((open: boolean) => {
-    if (!open) setViewDeviceId(null);
-  }, []);
-
-  const handleCloseDeleteDialog = useCallback((open: boolean) => {
-    if (!open) setDeleteDeviceId(null);
-  }, []);
+  };
 
   if (isLoading) {
     return (
-      <PageWrapper title="Device Management" subtitle="Track devices assigned to employees">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </PageWrapper>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
-  const viewedDevice = devices?.find(d => d.id === viewDeviceId);
-
   return (
-    <PageWrapper
-      title="Device Management"
-      subtitle="Track devices assigned to employees"
-      actions={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={!devices?.length}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Sheet open={addOpen} onOpenChange={setAddOpen}>
-            <SheetTrigger asChild>
-              <Button aria-label="Add new device">
+    <div className="space-y-6">
+      <PageHeader
+        title="Device Management"
+        description="Track devices assigned to employees"
+        actions={
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Device
               </Button>
-            </SheetTrigger>
-            <SheetContent className="flex flex-col p-0 sm:max-w-lg">
-              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-                <SheetTitle>Add New Device</SheetTitle>
-              </SheetHeader>
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-                <DeviceFormContent
-                  form={addForm}
-                  employees={employees}
-                  isPending={createDeviceMutation.isPending}
-                  submitLabel="Add Device"
-                  onSubmit={handleAddDevice}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      }
-    >
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>All Devices ({devices?.length || 0})</CardTitle>
-          </CardHeader>
-          <CardContent aria-live="polite">
-            {devices && devices.length > 0 ? (
-              <Table>
-                <caption className="sr-only">Company devices assigned to employees</caption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead scope="col">Device</TableHead>
-                    <TableHead scope="col">Assigned To</TableHead>
-                    <TableHead scope="col">Serial Number</TableHead>
-                    <TableHead scope="col">Assigned Date</TableHead>
-                    <TableHead scope="col">Status</TableHead>
-                    <TableHead scope="col" className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {devices.map((device) => (
-                    <DeviceTableRow
-                      key={device.id}
-                      device={device}
-                      onView={setViewDeviceId}
-                      onEdit={handleEditDevice}
-                      onDelete={setDeleteDeviceId}
-                      onStatusChange={handleStatusChange}
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add New Device</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="userId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assign to Employee</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select employee" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {employees?.map((emp) => (
+                              <SelectItem key={emp.id} value={emp.id}>
+                                {emp.firstName} {emp.lastName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="deviceType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Device Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Laptop">Laptop</SelectItem>
+                              <SelectItem value="Phone">Phone</SelectItem>
+                              <SelectItem value="Monitor">Monitor</SelectItem>
+                              <SelectItem value="Keyboard">Keyboard</SelectItem>
+                              <SelectItem value="Mouse">Mouse</SelectItem>
+                              <SelectItem value="Headset">Headset</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <EmptyDevicesIllustration className="mb-3 mx-auto" />
-                <p>No devices assigned yet</p>
-                <p className="text-sm">Click &quot;Add Device&quot; to assign devices to employees</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
-      <Sheet open={viewDeviceId !== null} onOpenChange={handleCloseViewSheet}>
-        <SheetContent className="sm:max-w-md p-6">
-          <SheetHeader className="mb-6">
-            <SheetTitle>Device Details</SheetTitle>
-          </SheetHeader>
-          {viewedDevice ? (() => {
-            const Icon = DEVICE_ICONS[viewedDevice.deviceType] ?? Laptop;
-            const rows = [
-              { label: "Device Name", value: viewedDevice.deviceName },
-              { label: "Type", value: viewedDevice.deviceType },
-              { label: "Brand", value: viewedDevice.brand || "—" },
-              { label: "Model", value: viewedDevice.model || "—" },
-              { label: "Serial Number", value: viewedDevice.serialNumber || "—" },
-              { label: "Assigned To", value: viewedDevice.user ? `${viewedDevice.user.firstName} ${viewedDevice.user.lastName}` : "—" },
-              { label: "Assigned Date", value: viewedDevice.assignedDate ? format(new Date(viewedDevice.assignedDate), "MMM d, yyyy") : "—" },
-              { label: "Status", value: viewedDevice.status || "ACTIVE" },
-              { label: "Notes", value: viewedDevice.notes || "—" },
-            ];
-            return (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 pb-4 border-b">
-                  <div className="h-12 w-12 rounded-lg bg-gold/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-gold" />
+                    <FormField
+                      control={form.control}
+                      name="deviceName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Device Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="MacBook Pro 14" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div>
-                    <p className="font-semibold text-lg">{viewedDevice.deviceName}</p>
-                    <p className="text-sm text-muted-foreground">{viewedDevice.brand} {viewedDevice.model}</p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="brand"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Brand</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Apple" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="model"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Model</FormLabel>
+                          <FormControl>
+                            <Input placeholder="M3 Pro" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                </div>
-                <div className="space-y-3">
-                  {rows.map((row) => (
-                    <div key={row.label} className="flex justify-between items-start">
-                      <span className="text-sm text-muted-foreground">{row.label}</span>
-                      <span className="text-sm font-medium text-right max-w-[60%]">{row.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })() : (
-            <p className="text-sm text-muted-foreground">Device not found</p>
-          )}
-        </SheetContent>
-      </Sheet>
 
-      <Sheet open={editDevice !== null} onOpenChange={handleCloseEditSheet}>
-        <SheetContent className="flex flex-col p-0 sm:max-w-lg">
-          <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-            <SheetTitle>Edit Device</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
-            <DeviceFormContent
-              form={editForm}
-              employees={employees}
-              isPending={updateDeviceMutation.isPending}
-              submitLabel="Save Changes"
-              onSubmit={handleUpdateDevice}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+                  <FormField
+                    control={form.control}
+                    name="serialNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Serial Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="SN123456789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-      <ConfirmDialog
-        open={deleteDeviceId !== null}
-        onOpenChange={handleCloseDeleteDialog}
-        title="Remove Device"
-        description="Are you sure you want to remove this device? This action cannot be undone."
-        confirmLabel="Remove"
-        destructive
-        onConfirm={handleConfirmDelete}
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Any additional notes..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full" disabled={createDeviceMutation.isPending}>
+                    {createDeviceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Add Device
+                  </Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        }
       />
-    </PageWrapper>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>All Devices ({devices?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {devices && devices.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Assigned To</TableHead>
+                  <TableHead>Serial Number</TableHead>
+                  <TableHead>Assigned Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {devices.map((device) => {
+                  const Icon = deviceIcons[device.deviceType] || Laptop;
+                  return (
+                    <TableRow key={device.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{device.deviceName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {device.brand} {device.model}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {device.user ? (
+                          <span>{device.user.firstName} {device.user.lastName}</span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm">{device.serialNumber || "-"}</span>
+                      </TableCell>
+                      <TableCell>
+                        {device.assignedDate ? format(new Date(device.assignedDate), "MMM d, yyyy") : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={device.status || "ACTIVE"}
+                          onValueChange={(val) => handleStatusChange(device.id, val as "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED")}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <Badge variant="outline" className={statusColors[device.status || "ACTIVE"]}>
+                              {device.status || "ACTIVE"}
+                            </Badge>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ACTIVE">Active</SelectItem>
+                            <SelectItem value="INACTIVE">Inactive</SelectItem>
+                            <SelectItem value="LOST">Lost</SelectItem>
+                            <SelectItem value="RETURNED">Returned</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => deleteDeviceMutation.mutate({ deviceId: device.id })}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Laptop className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No devices assigned yet</p>
+              <p className="text-sm">Click &quot;Add Device&quot; to assign devices to employees</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+

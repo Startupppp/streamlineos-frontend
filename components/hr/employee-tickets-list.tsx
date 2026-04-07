@@ -11,6 +11,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import Link from "next/link";
+
+
+// Helper for types if not easily available
 type Ticket = {
     id: number;
     title: string;

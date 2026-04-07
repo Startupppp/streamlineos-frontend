@@ -1,13 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
 import { organizations, organizationMembers } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
-import { invalidateUserSession } from "@/lib/auth";
 
 export interface CreateOrganizationResult {
   success?: boolean;
@@ -15,6 +13,11 @@ export interface CreateOrganizationResult {
   orgId?: string;
   slug?: string;
 }
+
+/**
+ * Creates a new organization and adds the current user as the owner.
+ * This is called during the initial onboarding flow for new users.
+ */
 export async function createOrganization(formData: FormData): Promise<CreateOrganizationResult> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -31,12 +34,15 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
   if (!slug || slug.trim().length < 2) {
     return { error: "Organization slug must be at least 2 characters" };
   }
+
+  // Validate slug format (lowercase, alphanumeric with hyphens)
   const slugRegex = /^[a-z0-9-]+$/;
   if (!slugRegex.test(slug)) {
     return { error: "Slug must be lowercase letters, numbers, and hyphens only" };
   }
 
   try {
+    // Check if slug is already taken
     const existing = await db.query.organizations.findFirst({
       where: eq(organizations.slug, slug),
     });
@@ -46,28 +52,35 @@ export async function createOrganization(formData: FormData): Promise<CreateOrga
     }
 
     const orgId = nanoid();
+
+    // Create organization
     await db.insert(organizations).values({
       id: orgId,
       name: name.trim(),
       slug: slug.trim(),
     });
+
+    // Add creator as owner
     await db.insert(organizationMembers).values({
       userId: session.user.id,
       orgId,
-      role: "CEO",
+      role: "OWNER",
     });
 
-    await invalidateUserSession(session.user.id);
     revalidatePath("/dashboard");
     revalidatePath("/settings/organization");
 
     return { success: true, orgId, slug };
   } catch (error) {
-    logger.error("Failed to create organization", error);
+    console.error("Failed to create organization:", error);
     return { error: "Failed to create organization. Please try again." };
   }
 }
 
+/**
+ * Checks if the current user has any organization memberships.
+ * Used to determine if onboarding is needed.
+ */
 export async function checkUserHasOrganization(): Promise<{ hasOrg: boolean; orgSlug?: string }> {
   const session = await auth();
   if (!session?.user?.id) {

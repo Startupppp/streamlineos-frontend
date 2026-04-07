@@ -5,8 +5,6 @@ import { documents, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc, or, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { logger } from "@/lib/logger";
-import { ensureOrgMembership, isAdminOrOwner } from "@/lib/auth-helpers";
 
 type DocumentType = "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
 
@@ -30,21 +28,16 @@ export async function uploadDocument(data: CreateDocumentInput) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
 
-  const membership = await ensureOrgMembership(session.user.id, session.user.role);
-  if (!membership) return { error: "No organization found" };
-
   const member = await db.query.organizationMembers.findFirst({
     where: eq(organizationMembers.userId, session.user.id),
   });
-  if (!member) return { error: "No organization found" };
 
-  const isAdmin = isAdminOrOwner(member.role);
-  const targetUserId = (data.userId && isAdmin) ? data.userId : session.user.id;
+  if (!member) return { error: "Not a member of any organization" };
 
   try {
     const [document] = await db.insert(documents).values({
       orgId: member.orgId,
-      userId: targetUserId,
+      userId: data.userId || session.user.id,
       departmentId: data.departmentId,
       name: data.name,
       description: data.description,
@@ -63,8 +56,7 @@ export async function uploadDocument(data: CreateDocumentInput) {
 
     revalidatePath("/hr/documents");
     return { success: true, document };
-  } catch (error) {
-    logger.error("Failed to upload document", error);
+  } catch {
     return { error: "Failed to upload document" };
   }
 }
@@ -85,7 +77,7 @@ export async function getDocuments(filters?: {
 
   if (!member) return [];
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
   const conditions = [
     eq(documents.orgId, member.orgId),
     eq(documents.isActive, true),
@@ -155,7 +147,7 @@ export async function getEmployeeDocuments(employeeId: string) {
 
   if (!member) return [];
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
   const isOwn = employeeId === session.user.id;
 
   if (!isAdmin && !isOwn) return [];
@@ -199,31 +191,6 @@ export async function getCompanyPolicies() {
   });
 }
 
-export async function getPublicDocuments(limit: number = 6) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
-
-  const member = await db.query.organizationMembers.findFirst({
-    where: eq(organizationMembers.userId, session.user.id),
-  });
-
-  if (!member) return [];
-
-  return await db.query.documents.findMany({
-    where: and(
-      eq(documents.orgId, member.orgId),
-      eq(documents.isActive, true),
-      eq(documents.isPublic, true)
-    ),
-    with: {
-      user: true,
-      uploader: true,
-    },
-    orderBy: [desc(documents.createdAt)],
-    limit,
-  });
-}
-
 export async function getExpiringDocuments(daysAhead: number = 30) {
   const session = await auth();
   if (!session?.user?.id) return [];
@@ -232,7 +199,7 @@ export async function getExpiringDocuments(daysAhead: number = 30) {
     where: eq(organizationMembers.userId, session.user.id),
   });
 
-  if (!member || !isAdminOrOwner(member.role)) {
+  if (!member || (member.role !== "OWNER" && member.role !== "ADMIN")) {
     return [];
   }
 
@@ -272,7 +239,7 @@ export async function updateDocument(documentId: number, data: Partial<CreateDoc
 
   if (!existingDoc) return { error: "Document not found" };
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
   const isUploader = existingDoc.uploadedBy === session.user.id;
 
   if (!isAdmin && !isUploader) {
@@ -294,8 +261,7 @@ export async function updateDocument(documentId: number, data: Partial<CreateDoc
 
     revalidatePath("/hr/documents");
     return { success: true };
-  } catch (error) {
-    logger.error("Failed to update document", error);
+  } catch {
     return { error: "Failed to update document" };
   }
 }
@@ -351,8 +317,7 @@ export async function uploadNewVersion(documentId: number, data: {
 
     revalidatePath("/hr/documents");
     return { success: true, document: newDoc };
-  } catch (error) {
-    logger.error("Failed to upload new version", error);
+  } catch {
     return { error: "Failed to upload new version" };
   }
 }
@@ -376,7 +341,7 @@ export async function deleteDocument(documentId: number) {
 
   if (!existingDoc) return { error: "Document not found" };
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
   const isUploader = existingDoc.uploadedBy === session.user.id;
 
   if (!isAdmin && !isUploader) {
@@ -390,8 +355,7 @@ export async function deleteDocument(documentId: number) {
 
     revalidatePath("/hr/documents");
     return { success: true };
-  } catch (error) {
-    logger.error("Failed to delete document", error);
+  } catch {
     return { error: "Failed to delete document" };
   }
 }
@@ -406,7 +370,7 @@ export async function getDocumentStats() {
 
   if (!member) return null;
 
-  const isAdmin = isAdminOrOwner(member.role);
+  const isAdmin = member.role === "OWNER" || member.role === "ADMIN";
   const conditions = [
     eq(documents.orgId, member.orgId),
     eq(documents.isActive, true),

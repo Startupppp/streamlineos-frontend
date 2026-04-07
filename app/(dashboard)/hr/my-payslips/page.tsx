@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useHrEmployeePayslips } from "@/lib/api/hooks/hr";
+import { api } from "@/trpc/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,19 +17,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageHeader } from "@/components/ui/page-header";
 import { format, parseISO } from "date-fns";
 import { Download, FileText, Loader2, ArrowLeft } from "lucide-react";
-import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
-import { numberToWords } from "@/lib/format-utils";
+
+const numberToWords = (num: number): string => {
+  const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  
+  if (num === 0) return "Zero";
+  
+  const convertLessThanThousand = (n: number): string => {
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+    return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 ? " and " + convertLessThanThousand(n % 100) : "");
+  };
+
+  if (num < 1000) return convertLessThanThousand(num);
+  if (num < 100000) {
+    const thousands = Math.floor(num / 1000);
+    const remainder = num % 1000;
+    return convertLessThanThousand(thousands) + " Thousand" + (remainder ? " " + convertLessThanThousand(remainder) : "");
+  }
+  if (num < 10000000) {
+    const lakhs = Math.floor(num / 100000);
+    const remainder = num % 100000;
+    return convertLessThanThousand(lakhs) + " Lakh" + (remainder ? " " + numberToWords(remainder) : "");
+  }
+  const crores = Math.floor(num / 10000000);
+  const remainder = num % 10000000;
+  return convertLessThanThousand(crores) + " Crore" + (remainder ? " " + numberToWords(remainder) : "");
+};
 
 export default function MyPayslipsPage() {
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const payslipRef = useRef<HTMLDivElement>(null);
 
-  const { data: payslips, isLoading } = useHrEmployeePayslips({});
+  const { data: payslips, isLoading } = api.hr.getEmployeePayslips.useQuery({});
 
   const selectedPayslip = payslips?.find((p) => p.month === selectedMonth);
 
@@ -46,37 +73,29 @@ export default function MyPayslipsPage() {
     try {
       const html2canvas = (await import("html2canvas")).default;
       const jsPDF = (await import("jspdf")).default;
-
+      
       const convertLabColors = (element: HTMLElement) => {
-        const unsupportedColorPattern = /lab\(|oklch\(|oklab\(|lch\(/;
         const allElements = element.querySelectorAll('*');
         allElements.forEach((el) => {
           const htmlEl = el as HTMLElement;
           const computedStyle = window.getComputedStyle(htmlEl);
-
+          
           const color = computedStyle.color;
           const bgColor = computedStyle.backgroundColor;
           const borderColor = computedStyle.borderColor;
-
-          if (color && unsupportedColorPattern.test(color)) {
+          
+          if (color && (color.includes('lab(') || color.includes('oklch('))) {
             htmlEl.style.color = '#1f2937';
           }
-          if (bgColor && unsupportedColorPattern.test(bgColor)) {
-            htmlEl.style.backgroundColor = 'transparent';
+          if (bgColor && (bgColor.includes('lab(') || bgColor.includes('oklch('))) {
+            htmlEl.style.backgroundColor = '#ffffff';
           }
-          if (borderColor && unsupportedColorPattern.test(borderColor)) {
+          if (borderColor && (borderColor.includes('lab(') || borderColor.includes('oklch('))) {
             htmlEl.style.borderColor = '#e5e7eb';
           }
         });
-        const rootStyle = window.getComputedStyle(element);
-        if (rootStyle.color && unsupportedColorPattern.test(rootStyle.color)) {
-          element.style.color = '#1f2937';
-        }
-        if (rootStyle.backgroundColor && unsupportedColorPattern.test(rootStyle.backgroundColor)) {
-          element.style.backgroundColor = '#ffffff';
-        }
       };
-
+      
       const canvas = await html2canvas(payslipRef.current, {
         scale: 2,
         backgroundColor: "#ffffff",
@@ -87,8 +106,8 @@ export default function MyPayslipsPage() {
           clonedElement.style.transform = 'none';
           convertLabColors(clonedElement);
           const watermark = clonedElement.querySelector('[data-watermark]');
-          if (watermark instanceof HTMLElement) {
-            watermark.style.display = 'none';
+          if (watermark) {
+            (watermark as HTMLElement).style.display = 'none';
           }
         },
       });
@@ -120,7 +139,7 @@ export default function MyPayslipsPage() {
       const employeeName = `${selectedPayslip.user?.firstName || ""}_${selectedPayslip.user?.lastName || ""}`.replace(/\s+/g, "_");
       const monthYear = format(parseISO(selectedMonth + "-01"), "MMM_yyyy");
       const fileName = `Payslip_${employeeName}_${monthYear}.pdf`;
-
+      
       pdf.save(fileName);
       toast.success("Payslip downloaded successfully!", { id: "pdf-download" });
     } catch (error: unknown) {
@@ -143,67 +162,63 @@ export default function MyPayslipsPage() {
   const grossSalary = parseFloat(selectedPayslip?.grossSalary || "0");
   const deductions = parseFloat(selectedPayslip?.deductions || "0");
   const netSalary = parseFloat(selectedPayslip?.netSalary || "0");
-  const overtimeAmount = parseFloat(selectedPayslip?.overtimeAmount || "0");
-  const overtimeType = selectedPayslip?.overtimeType;
-  const overtimeDays = parseFloat(selectedPayslip?.overtimeDays || "0");
-  const overtimeHoursVal = parseFloat(selectedPayslip?.overtimeHours || "0");
 
-  const getBankDetail = (key: string): string => {
-    const details = selectedPayslip?.user?.bankDetails;
-    if (!details || typeof details !== "object" || Array.isArray(details)) return "-";
-    const record = details as Record<string, unknown>;
-    const value = record[key];
-    return typeof value === "string" && value ? value : "-";
+  const getBankName = () => {
+    if (!selectedPayslip?.user?.bankDetails) return "-";
+    const details = selectedPayslip.user.bankDetails as { bankName?: string };
+    return details.bankName || "-";
+  };
+
+  const getAccountNumber = () => {
+    if (!selectedPayslip?.user?.bankDetails) return "-";
+    const details = selectedPayslip.user.bankDetails as { accountNumber?: string };
+    return details.accountNumber || "-";
   };
 
   return (
-    <PageWrapper
-      title="My Payslips"
-      subtitle="View and download your salary slips"
-      actions={
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.back()}
-            className="h-9 w-9"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[200px]" aria-label="Select payslip month">
-              <SelectValue placeholder="Select month" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              {availableMonths.length > 0 ? (
-                availableMonths.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))
-              ) : (
-                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                  No payslips available
-                </div>
-              )}
-            </SelectContent>
-          </Select>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => router.back()}
+          className="h-9 w-9"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex-1">
+          <PageHeader
+            title="My Payslips"
+            description="View and download your salary slips"
+            actions={
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableMonths.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
+          />
         </div>
-      }
-    >
+      </div>
 
       {!selectedMonth ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <EmptyDocumentsIllustration className="mb-3 mx-auto" />
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">Select a month to view your payslip</p>
           </CardContent>
         </Card>
       ) : selectedPayslip ? (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={handleDownload} aria-label="Download payslip as PDF">
+            <Button onClick={handleDownload}>
               <Download className="mr-2 h-4 w-4" />
               Download Payslip
             </Button>
@@ -215,13 +230,13 @@ export default function MyPayslipsPage() {
             className="bg-white p-8 rounded-lg shadow-lg max-w-3xl mx-auto relative overflow-hidden"
             style={{ fontFamily: "Arial, sans-serif" }}
           >
-
-            <div
+            {/* Watermark */}
+            <div 
               data-watermark
               className="absolute pointer-events-none"
-              style={{
-                top: "50%",
-                left: "50%",
+              style={{ 
+                top: "50%", 
+                left: "50%", 
                 transform: "translate(-50%, -50%)",
                 zIndex: 0,
                 opacity: 0.06,
@@ -235,12 +250,12 @@ export default function MyPayslipsPage() {
             </div>
 
             <div className="relative" style={{ zIndex: 1 }}>
-
+              {/* Header */}
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "8px" }}>
-                <div style={{
-                  width: "64px",
-                  height: "64px",
-                  backgroundColor: "#0f2b7f",
+                <div style={{ 
+                  width: "64px", 
+                  height: "64px", 
+                  backgroundColor: "#0f2b7f", 
                   borderRadius: "8px",
                   display: "flex",
                   alignItems: "center",
@@ -271,7 +286,7 @@ export default function MyPayslipsPage() {
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Date of Joining:</span>
                   <span style={{ fontWeight: 500, color: "#111827" }}>
-                    {selectedPayslip.user?.joiningDate
+                    {selectedPayslip.user?.joiningDate 
                       ? format(new Date(selectedPayslip.user.joiningDate), "dd-MM-yyyy")
                       : "-"}
                   </span>
@@ -300,7 +315,7 @@ export default function MyPayslipsPage() {
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Bank Name:</span>
-                  <span style={{ fontWeight: 500, color: "#111827" }}>{getBankDetail("bankName")}</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>{getBankName()}</span>
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>LOP:</span>
@@ -308,18 +323,17 @@ export default function MyPayslipsPage() {
                 </div>
                 <div style={{ display: "flex" }}>
                   <span style={{ color: "#374151", width: "160px" }}>Bank Acc Number:</span>
-                  <span style={{ fontWeight: 500, color: "#111827" }}>{getBankDetail("accountNumber")}</span>
+                  <span style={{ fontWeight: 500, color: "#111827" }}>{getAccountNumber()}</span>
                 </div>
               </div>
 
               <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px", fontSize: "14px" }}>
-                <caption className="sr-only">Payslip earnings and deductions breakdown</caption>
                 <thead>
                   <tr style={{ backgroundColor: "#f3f4f6" }}>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Deductions</th>
-                    <th scope="col" style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
+                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Earnings</th>
+                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
+                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "left", fontWeight: 600, color: "#111827" }}>Deductions</th>
+                    <th style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -341,20 +355,6 @@ export default function MyPayslipsPage() {
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
                   </tr>
-                  {overtimeAmount > 0 && (
-                    <tr>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>
-                        {overtimeType === "days"
-                          ? `Overtime Pay (${overtimeDays} days)`
-                          : overtimeType === "hours"
-                          ? `Overtime Pay (${overtimeHoursVal} hours)`
-                          : "Overtime Pay"}
-                      </td>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{overtimeAmount.toLocaleString()}/-</td>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                      <td style={{ border: "1px solid #9ca3af", padding: "8px 16px" }}></td>
-                    </tr>
-                  )}
                   <tr style={{ backgroundColor: "#f9fafb" }}>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", fontWeight: 600, color: "#111827" }}>Total Earnings</td>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", fontWeight: 600, color: "#111827" }}>₹{grossSalary.toLocaleString()}/-</td>
@@ -416,7 +416,7 @@ export default function MyPayslipsPage() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <EmptyDocumentsIllustration className="mb-3 mx-auto" />
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">No payslip found for this month</p>
           </CardContent>
         </Card>
@@ -433,16 +433,7 @@ export default function MyPayslipsPage() {
                 <div
                   key={payslip.id}
                   className="flex items-center justify-between p-4 rounded-lg border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`View payslip for ${format(parseISO(payslip.month + "-01"), "MMMM yyyy")}`}
                   onClick={() => setSelectedMonth(payslip.month)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedMonth(payslip.month);
-                    }
-                  }}
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -469,6 +460,6 @@ export default function MyPayslipsPage() {
           </CardContent>
         </Card>
       )}
-    </PageWrapper>
+    </div>
   );
 }

@@ -20,7 +20,9 @@ export async function getProjects() {
     });
     if (!member) return [];
 
-    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
+    const isOwnerOrAdmin = member.role === "OWNER" || member.role === "ADMIN";
+
+    // OWNER/ADMIN can see all projects in the list
     if (isOwnerOrAdmin) {
         return await db.query.projects.findMany({
             where: eq(projects.orgId, member.orgId),
@@ -30,6 +32,8 @@ export async function getProjects() {
             orderBy: [desc(projects.id)]
         });
     }
+
+    // Regular users can only see projects they are assigned to
     const memberOf = await db
         .select({ projectId: projectMembers.projectId })
         .from(projectMembers)
@@ -66,31 +70,37 @@ export async function createProject(data: {
         where: eq(organizationMembers.userId, session.user.id)
     });
     if (!member) return { error: "No organization found" };
-    const baseKey = data.key.replace(/[^A-Za-z]/g, "").toUpperCase() || "PROJ";
-    if (!/^[A-Z]+$/.test(baseKey)) {
+
+    // Validate Key
+    if (!/^[A-Z]+$/.test(data.key)) {
         return { error: "Project Key must be uppercase letters only (e.g. PROJ)" };
     }
-    let keyToUse = baseKey;
-    for (let n = 2; n < 1000; n++) {
-        const existing = await db.query.projects.findFirst({
-            where: eq(projects.key, keyToUse),
-            columns: { id: true },
-        });
-        if (!existing) break;
-        keyToUse = `${baseKey}${n}`;
+
+    // Check if key exists in org
+    const existing = await db.query.projects.findFirst({
+        where: and(
+            eq(projects.orgId, member.orgId),
+            eq(projects.key, data.key)
+        )
+    });
+
+    if (existing) {
+        return { error: "Project Key already exists" };
     }
 
     try {
         const [project] = await db.insert(projects).values({
             orgId: member.orgId,
             name: data.name,
-            key: keyToUse,
+            key: data.key,
             description: data.description,
             managerId: data.managerId || session.user.id,
             status: "ACTIVE"
         }).returning();
 
         const projectId = project.id;
+
+        // Seed default statuses
         const defaultStatuses = [
             { name: "TODO", order: 0, color: "#e2e8f0" },
             { name: "IN_PROGRESS", order: 1, color: "#3b82f6" },
@@ -107,6 +117,8 @@ export async function createProject(data: {
                 color: s.color,
             }))
         );
+
+        // Add members if provided
         if (data.memberIds && data.memberIds.length > 0) {
             await db.insert(projectMembers).values(
                 data.memberIds.map(userId => ({
@@ -127,6 +139,8 @@ export async function createProject(data: {
 export async function getProjectById(projectId: number) {
     const session = await auth();
     if (!session?.user?.id) return null;
+
+    // Check if user is manager or member of this project
     const member = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id)
     });
@@ -143,8 +157,8 @@ export async function getProjectById(projectId: number) {
     });
 
     if (!project) return null;
-    const isOwnerOrAdmin = member.role === "CEO" || member.role === "ADMIN";
-    if (isOwnerOrAdmin) return project;
+
+    // Check if user has access: manager or member
     const isManager = project.managerId === session.user.id;
     if (isManager) return project;
 

@@ -1,47 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { checkUserHasOrganization } from "@/server/actions/organization-actions";
 import { Loader2 } from "lucide-react";
-
-const ORG_CACHE_KEY = "vaivamm_org_verified";
 
 interface OrganizationGuardProps {
   children: React.ReactNode;
 }
+
+/**
+ * Client-side guard that checks if user has an organization.
+ * Redirects to /setup-organization if no org membership found.
+ */
 export function OrganizationGuard({ children }: OrganizationGuardProps) {
   const [isChecking, setIsChecking] = useState(true);
   const [hasOrg, setHasOrg] = useState(false);
-  const didRun = useRef(false);
 
   useEffect(() => {
-    if (didRun.current) return;
-    didRun.current = true;
-
-    // If already verified this session, skip the async check entirely
-    if (sessionStorage.getItem(ORG_CACHE_KEY) === "true") {
-      setHasOrg(true);
-      setIsChecking(false);
-      return;
-    }
-
-    let cancelled = false;
     const checkOrg = async () => {
       try {
         await checkUserHasOrganization();
-        if (!cancelled) {
-          setHasOrg(true);
-          sessionStorage.setItem(ORG_CACHE_KEY, "true");
-        }
+        // Always allow access, don't redirect to setup-organization
+        setHasOrg(true);
       } catch {
-        if (!cancelled) setHasOrg(true);
+        // If check fails, allow access (fail open for better UX)
+        setHasOrg(true);
       } finally {
-        if (!cancelled) setIsChecking(false);
+        setIsChecking(false);
       }
     };
 
     checkOrg();
-    return () => { cancelled = true; };
   }, []);
 
   if (isChecking) {

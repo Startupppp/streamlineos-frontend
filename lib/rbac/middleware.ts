@@ -1,14 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { rolePermissions, userPermissions, roles } from "../db/schema";
+import { permissions, rolePermissions, userPermissions } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
-import type { db as database } from "../db";
-
-type DbClient = Pick<typeof database, "query">;
 
 export function requirePermission(permissionName: string) {
   return async (opts: {
-    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string } };
-    next: () => Promise<unknown>;
+    ctx: { db: any; session: { userId: string; orgId: string; role?: string } };
+    next: () => Promise<any>;
   }) => {
     const { ctx, next } = opts;
     const { userId, orgId, role } = ctx.session;
@@ -33,7 +30,7 @@ export function requirePermission(permissionName: string) {
 }
 
 export async function checkPermission(
-  db: DbClient,
+  db: any,
   userId: string,
   orgId: string,
   role?: string,
@@ -41,35 +38,33 @@ export async function checkPermission(
 ): Promise<boolean> {
   if (!permissionName) return true;
 
-  // CEO always has full access
-  if (role === "CEO") {
-    return true;
-  }
-
-  // 1. Check user-level overrides first
-  const userPerms = await db.query.userPermissions.findMany({
+  const userPerm = await db.query.userPermissions.findFirst({
     where: and(
       eq(userPermissions.userId, userId),
-      eq(userPermissions.orgId, orgId)
+      eq(userPermissions.orgId, orgId),
+      eq(userPermissions.granted, true)
     ),
     with: {
       permission: true,
     },
   });
 
-  const matchingUserPerm = userPerms.find(
-    (up) => up.permission?.name === permissionName
-  );
-
-  if (matchingUserPerm) {
-    return matchingUserPerm.granted;
+  if (userPerm && userPerm.permission?.name === permissionName) {
+    return true;
   }
 
-  // 2. Check role_permissions table (legacy per-permission grants)
+  if (
+    userPerm &&
+    userPerm.permission?.name === permissionName &&
+    !userPerm.granted
+  ) {
+    return false;
+  }
+
   if (role) {
-    const rolePerms = await db.query.rolePermissions.findMany({
+    const rolePerm = await db.query.rolePermissions.findFirst({
       where: and(
-        eq(rolePermissions.role, role),
+        eq(rolePermissions.role, role as any),
         or(eq(rolePermissions.orgId, orgId), isNull(rolePermissions.orgId))
       ),
       with: {
@@ -77,32 +72,12 @@ export async function checkPermission(
       },
     });
 
-    const hasRolePerm = rolePerms.some(
-      (rp) => rp.permission?.name === permissionName
-    );
-
-    if (hasRolePerm) {
+    if (rolePerm && rolePerm.permission?.name === permissionName) {
       return true;
     }
   }
 
-  // 3. Check the roles table (primary source — permissions stored as jsonb)
-  if (role) {
-    const dbRole = await db.query.roles.findFirst({
-      where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
-    });
-
-    if (dbRole?.permissions && Array.isArray(dbRole.permissions)) {
-      if ((dbRole.permissions as string[]).includes(permissionName)) {
-        return true;
-      }
-    }
-  }
-
-  // 4. Fallback to hardcoded defaults (for backward compat)
-  const { ROLE_DEFAULT_PERMISSIONS } = await import("./permissions");
-  const defaults = role ? ROLE_DEFAULT_PERMISSIONS[role] ?? [] : [];
-  if (defaults.includes(permissionName)) {
+  if (role === "OWNER") {
     return true;
   }
 
@@ -111,8 +86,8 @@ export async function checkPermission(
 
 export function hasAnyPermission(permissionNames: string[]) {
   return async (opts: {
-    ctx: { db: DbClient; session: { userId: string; orgId: string; role?: string } };
-    next: () => Promise<unknown>;
+    ctx: { db: any; session: { userId: string; orgId: string; role?: string } };
+    next: () => Promise<any>;
   }) => {
     const { ctx, next } = opts;
     const { userId, orgId, role } = ctx.session;
