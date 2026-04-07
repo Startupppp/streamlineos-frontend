@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import {
   approveExpense,
   rejectExpense,
-  markExpenseAsPaid,
   deleteExpense,
 } from "@/server/actions/expense-actions";
 import {
@@ -24,6 +23,7 @@ import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filter
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   EXPENSE_CATEGORIES,
   PAYMENT_METHODS,
@@ -76,8 +76,8 @@ export default function ExpensesPage() {
       const result = await getExpensePageData({ ...currentFilters, search: debouncedSearch });
       if ("error" in result) { toast.error(result.error); return; }
       setPageData(result);
-    } catch {
-      toast.error("Failed to load expenses");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -100,18 +100,28 @@ export default function ExpensesPage() {
 
   const handleApprove = async (expenseId: number) => {
     optimisticUpdate(expenseId, { status: "APPROVED" });
-    const result = await approveExpense(expenseId);
-    if (result.success) toast.success("Expense approved");
-    else { toast.error(result.error); loadData(filters); }
+    try {
+      const result = await approveExpense(expenseId);
+      if (result.success) toast.success("Expense approved");
+      else { toast.error(result.error || "Failed to approve"); loadData(filters); }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      loadData(filters);
+    }
   };
 
   const handleReject = async (expenseId: number) => {
     if (!rejectionReason) return;
     optimisticUpdate(expenseId, { status: "REJECTED", rejectionReason });
     setRejectingId(null);
-    const result = await rejectExpense(expenseId, rejectionReason);
-    if (result.success) { toast.success("Expense rejected"); setRejectionReason(""); }
-    else { toast.error(result.error); loadData(filters); }
+    try {
+      const result = await rejectExpense(expenseId, rejectionReason);
+      if (result.success) { toast.success("Expense rejected"); setRejectionReason(""); }
+      else { toast.error(result.error || "Failed to reject"); loadData(filters); }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      loadData(filters);
+    }
   };
 
   const handleDelete = async (expenseId: number) => {
@@ -124,9 +134,14 @@ export default function ExpensesPage() {
         pendingExpenses: prev.pendingExpenses.filter((e) => e.id !== expenseId),
       };
     });
-    const result = await deleteExpense(expenseId);
-    if (result.success) toast.success("Expense deleted");
-    else { toast.error(result.error); loadData(filters); }
+    try {
+      const result = await deleteExpense(expenseId);
+      if (result.success) toast.success("Expense deleted");
+      else { toast.error(result.error || "Failed to delete"); loadData(filters); }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      loadData(filters);
+    }
   };
 
   const handleImportSuccess = () => {

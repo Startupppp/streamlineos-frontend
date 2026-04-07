@@ -17,6 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { Approver } from "@/app/(dashboard)/hr/leaves/leaves-shared";
 
 const WFH_REASONS = [
@@ -88,7 +89,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to submit WFH request");
+          toast.error(getErrorMessage(error));
         },
       }
     );

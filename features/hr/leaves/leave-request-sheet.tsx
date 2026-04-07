@@ -22,6 +22,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
 import { submitLeaveRequest } from "@/server/actions/leave-actions";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { LeaveType, Approver } from "@/app/(dashboard)/hr/leaves/leaves-shared";
 
 const leaveFormSchema = z.object({
@@ -94,24 +95,29 @@ export function LeaveRequestSheet({
     const approverId = data.approverId || approvers[0]?.id;
     if (!approverId) { toast.error("No approver available"); return; }
     setIsLoading(true);
-    const result = await submitLeaveRequest({
-      leaveTypeId: parseInt(data.leaveTypeId),
-      startDate: new Date(data.startDate),
-      endDate: new Date(data.endDate),
-      reason: data.reason,
-      priority: data.priority,
-      approverId,
-      attachmentUrl: attachmentUrl || undefined,
-    });
-    setIsLoading(false);
-    if (result.success) {
-      toast.success("Leave requested successfully!");
-      form.reset();
-      setAttachmentUrl(null);
-      onOpenChange(false);
-      router.refresh();
-    } else {
-      toast.error(result.error || "Failed to submit request");
+    try {
+      const result = await submitLeaveRequest({
+        leaveTypeId: parseInt(data.leaveTypeId),
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        reason: data.reason,
+        priority: data.priority,
+        approverId,
+        attachmentUrl: attachmentUrl || undefined,
+      });
+      if (result.success) {
+        toast.success("Leave requested successfully!");
+        form.reset();
+        setAttachmentUrl(null);
+        onOpenChange(false);
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to submit request");
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsLoading(false);
     }
   }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, router]);
 

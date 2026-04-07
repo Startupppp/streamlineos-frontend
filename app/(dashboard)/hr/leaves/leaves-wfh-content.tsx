@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Plus, Users, Home } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
+import { Plus, Users, Home, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 
 import { LeaveRequestSheet } from "@/features/hr/leaves/leave-request-sheet";
@@ -61,6 +62,11 @@ export function LeavesWfhContent({
   const handleOpenLeaveSheet = useCallback(() => setLeaveSheetOpen(true), []);
   const handleOpenWfhSheet = useCallback(() => setWfhSheetOpen(true), []);
 
+  // Stats
+  const totalAvailable = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
+  const pendingCount = myLeaveRequests.filter((r) => r.status === "PENDING").length;
+  const approvedCount = myLeaveRequests.filter((r) => r.status === "APPROVED").length;
+
   return (
     <>
       <PageWrapper
@@ -89,6 +95,28 @@ export function LeavesWfhContent({
         }
       >
         <div className="space-y-5">
+          {/* Stat Cards */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard
+              label="Available Days"
+              value={totalAvailable}
+              icon={CalendarCheck}
+              color="green"
+            />
+            <StatCard
+              label="Pending Requests"
+              value={pendingCount}
+              icon={Clock3}
+              color="gold"
+            />
+            <StatCard
+              label="Approved (YTD)"
+              value={approvedCount}
+              icon={BadgeCheck}
+              color="blue"
+            />
+          </div>
+
           {/* Who's Out Banner */}
           {approvedLeavesThisWeek.length > 0 && (
             <Card className="border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10">

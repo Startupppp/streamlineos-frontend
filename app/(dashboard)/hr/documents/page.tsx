@@ -6,6 +6,8 @@ import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe } from "
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard } from "@/components/ui/stat-card";
+import { FileText, FolderOpen, HardDrive, Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -360,6 +362,33 @@ export default function DocumentsPage() {
       filters={filtersBar}
     >
       <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total Documents"
+          value={documents.length}
+          icon={FileText}
+          color="blue"
+        />
+        <StatCard
+          label="Folders"
+          value={folders.length + customFolders.length}
+          icon={FolderOpen}
+          color="gold"
+        />
+        <StatCard
+          label={`Storage (${maxStorageGB}GB)`}
+          value={`${storagePercent}%`}
+          icon={HardDrive}
+          color={storagePercent > 80 ? "red" : storagePercent > 50 ? "gold" : "green"}
+        />
+        <StatCard
+          label="Public Documents"
+          value={documents.filter((d) => d.isPublic).length}
+          icon={Star}
+          color="purple"
+        />
+      </div>
+
       <DocumentTable
         paginatedDocuments={paginatedDocuments}
         folders={folders}

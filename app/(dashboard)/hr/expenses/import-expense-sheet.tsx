@@ -3,16 +3,15 @@
 import { useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import {
-  Upload, Download, FileSpreadsheet, X, Loader2, CheckCircle2, FileText,
+  Upload, Download, FileSpreadsheet, X, CheckCircle2, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
-} from "@/components/ui/sheet";
+import { HrSheet } from "@/features/hr/hr-sheet";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const TEMPLATE_COLUMNS = [
   "category", "amount", "description", "merchant", "payment_method", "expense_date",
@@ -135,8 +134,8 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
         mapping[cat] = match || "Other";
       });
       setCategoryMapping(mapping);
-    } catch {
-      toast.error("Failed to parse file");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsParsing(false);
     }
@@ -189,8 +188,8 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
         rows: [],
       }]);
       toast.success("Template downloaded");
-    } catch {
-      toast.error("Failed to download template");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   }, []);
 
@@ -213,8 +212,8 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
         toast.error(result.error || "Failed to import expenses");
         setImportResult(null);
       }
-    } catch {
-      toast.error("Failed to import expenses");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsImporting(false);
     }
@@ -223,20 +222,23 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
   const validCount = parsedRows.filter((r) => r.valid).length;
 
   return (
-    <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="flex flex-col p-0 sm:max-w-lg">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-          <SheetTitle className="text-xl font-semibold flex items-center gap-2">
-            <Upload className="h-5 w-5 text-gold" />
-            Import Expenses
-          </SheetTitle>
-          <SheetDescription>
-            Upload a CSV file to bulk-import expenses. All data (including previous months) will be stored.
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-          <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+    <HrSheet
+      open={open}
+      onOpenChange={handleSheetOpenChange}
+      title="Import Expenses"
+      description="Upload a CSV file to bulk-import expenses."
+      onSubmit={handleImport}
+      submitLabel={
+        importResult
+          ? "Close"
+          : isImporting
+            ? "Importing..."
+            : `Import${validCount > 0 ? ` (${validCount} rows)` : ""}`
+      }
+      isPending={isImporting || isParsing}
+    >
+      <div className="space-y-4">
+        <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">1</div>
               <Label className="text-sm font-semibold">Download Template</Label>
@@ -333,32 +335,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1" onClick={handleCancel}>
-              {importResult ? "Close" : "Cancel"}
-            </Button>
-            {!importResult && (
-              <Button
-                className="flex-1 bg-gold hover:bg-gold/90 text-white"
-                disabled={!file || isImporting || isParsing}
-                onClick={handleImport}
-              >
-                {isImporting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import {validCount > 0 ? `(${validCount} rows)` : ""}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </HrSheet>
   );
 }
