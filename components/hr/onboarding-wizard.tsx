@@ -121,8 +121,8 @@ export function OnboardingWizard() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center gap-1 mb-6">
+    <div className="max-w-3xl mx-auto flex flex-col h-full">
+      <div className="flex items-center gap-1 mb-6 shrink-0">
         {STEPS.map((step, i) => {
           const isCompleted = step.id < currentStep;
           const isActive = step.id === currentStep;
@@ -156,8 +156,8 @@ export function OnboardingWizard() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <div className="min-h-[320px]">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
               <StepEmployment
@@ -172,7 +172,7 @@ export function OnboardingWizard() {
             {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
           </div>
 
-          <div className="flex items-center justify-between pt-4 mt-4 border-t">
+          <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t">
             <Button
               type="button"
               variant="outline"

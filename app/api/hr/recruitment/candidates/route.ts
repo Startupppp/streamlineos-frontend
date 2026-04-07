@@ -1,13 +1,35 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, parseBody, parseQuery } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { candidates } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
-import type { CandidateStatus } from "@/types/hr";
+
+const listSchema = z.object({
+  status: z.enum(["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"]).optional(),
+  limit: z.coerce.number().min(1).max(100).default(50),
+  offset: z.coerce.number().min(0).default(0),
+});
+
+const createCandidateSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().optional(),
+  resumeUrl: z.string().url().optional().or(z.literal("")),
+  linkedinUrl: z.string().url().optional().or(z.literal("")),
+  portfolioUrl: z.string().url().optional().or(z.literal("")),
+  currentCompany: z.string().optional(),
+  currentRole: z.string().optional(),
+  experienceYears: z.number().min(0).max(50).optional(),
+  skills: z.array(z.string()).optional(),
+  source: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const status = req.nextUrl.searchParams.get("status") as CandidateStatus | null;
+    const { status, limit, offset } = parseQuery(req, listSchema);
 
     const conditions = [eq(candidates.orgId, session.orgId)];
     if (status) conditions.push(eq(candidates.status, status));
@@ -15,6 +37,8 @@ export async function GET(req: NextRequest) {
     const data = await db.query.candidates.findMany({
       where: and(...conditions),
       orderBy: [desc(candidates.createdAt)],
+      limit,
+      offset,
     });
 
     return ok(data);
@@ -23,25 +47,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone?: string;
-      resumeUrl?: string;
-      linkedinUrl?: string;
-      portfolioUrl?: string;
-      currentCompany?: string;
-      currentRole?: string;
-      experienceYears?: number;
-      skills?: string[];
-      source?: string;
-      notes?: string;
-    };
-
-    if (!body.firstName || !body.lastName || !body.email) {
-      return err("firstName, lastName, and email are required.", 400);
-    }
+    const body = await parseBody(req, createCandidateSchema);
 
     const [candidate] = await db
       .insert(candidates)

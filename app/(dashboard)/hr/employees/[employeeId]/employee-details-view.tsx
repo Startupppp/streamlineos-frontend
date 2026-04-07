@@ -96,9 +96,10 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             </Button>
           </div>
         }
+      noInternalScroll
       >
-        <div className="space-y-4">
-          <Card>
+        <div className="flex flex-col h-full gap-3">
+          <Card className="shrink-0">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Avatar className="h-16 w-16 shrink-0">
@@ -144,8 +145,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             </CardContent>
           </Card>
 
-          <Tabs defaultValue={defaultTab}>
-            <TabsList className="h-9">
+          <Tabs defaultValue={defaultTab} className="flex flex-col flex-1 min-h-0">
+            <TabsList className="h-9 shrink-0">
               <TabsTrigger value="overview" className="text-xs gap-1.5">
                 <Briefcase className="h-3 w-3" />Overview
               </TabsTrigger>
@@ -157,7 +158,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="mt-3 space-y-3">
+            <TabsContent value="overview" className="mt-3 flex-1 min-h-0 overflow-y-auto space-y-3 pb-4">
               <div className="grid gap-3 lg:grid-cols-2">
                 <Card>
                   <CardContent className="p-4">
@@ -178,11 +179,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               </div>
             </TabsContent>
 
-            <TabsContent value="attendance" className="mt-3 pb-6">
+            <TabsContent value="attendance" className="mt-3 flex-1 min-h-0 overflow-y-auto pb-6">
               <EmployeeAttendanceHistory userId={employee.id} />
             </TabsContent>
 
-            <TabsContent value="profile" className="mt-3">
+            <TabsContent value="profile" className="mt-3 flex-1 min-h-0 flex flex-col">
               <EditEmployeeForm employee={employee} />
             </TabsContent>
           </Tabs>

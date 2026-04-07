@@ -21,10 +21,15 @@ export async function GET(req: NextRequest) {
     else if (!isAdmin) conditions.push(eq(performanceReviews.userId, session.user.id));
     if (cycleId) conditions.push(eq(performanceReviews.cycleId, Number(cycleId)));
 
+    const limit = Math.min(Number(req.nextUrl.searchParams.get("limit") ?? 50), 100);
+    const offset = Math.max(Number(req.nextUrl.searchParams.get("offset") ?? 0), 0);
+
     const data = await db.query.performanceReviews.findMany({
       where: and(...conditions),
       with: { user: true, reviewer: true, cycle: true },
       orderBy: [desc(performanceReviews.createdAt)],
+      limit,
+      offset,
     });
     return ok(data);
   });

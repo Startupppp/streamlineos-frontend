@@ -1,7 +1,7 @@
 import { withAuth, withAdmin, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { feedbackRequests } from "@/lib/db/schema";
-import { eq, or, desc } from "drizzle-orm";
+import { and, eq, or, desc } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -18,12 +18,16 @@ export async function GET() {
       .select()
       .from(feedbackRequests)
       .where(
-        or(
-          eq(feedbackRequests.subjectUserId, session.user.id),
-          eq(feedbackRequests.reviewerUserId, session.user.id)
+        and(
+          eq(feedbackRequests.orgId, session.orgId),
+          or(
+            eq(feedbackRequests.subjectUserId, session.user.id),
+            eq(feedbackRequests.reviewerUserId, session.user.id)
+          )
         )
       )
-      .orderBy(desc(feedbackRequests.createdAt));
+      .orderBy(desc(feedbackRequests.createdAt))
+      .limit(100);
 
     return ok(data);
   });

@@ -11,6 +11,7 @@ export default function OnboardingPage() {
     <PageWrapper
       title="Add Employee"
       subtitle="Complete the steps to onboard a new team member"
+      noInternalScroll
       actions={
         <Button variant="ghost" size="sm" asChild>
           <Link href="/hr"><ArrowLeft className="mr-1.5 h-3.5 w-3.5" />Back to Employees</Link>

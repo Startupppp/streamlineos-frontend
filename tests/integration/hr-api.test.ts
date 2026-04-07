@@ -15,7 +15,9 @@ function mockAuthAs(session: typeof mockSession | null = mockSession) {
 
 function req(url: string, options?: { method?: string; body?: unknown; headers?: Record<string, string> }) {
   const fullUrl = `http://localhost:3000/api${url}`;
-  const init: RequestInit = { method: options?.method ?? "GET" };
+  const init: { method: string; body?: string; headers?: Record<string, string> } = {
+    method: options?.method ?? "GET",
+  };
   if (options?.body) {
     init.body = JSON.stringify(options.body);
     init.headers = { "Content-Type": "application/json", ...options?.headers };
