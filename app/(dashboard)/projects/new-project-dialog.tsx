@@ -5,14 +5,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -28,8 +28,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { createProject } from "@/server/actions/project-actions";
-import { Plus, Check, User } from "lucide-react";
-import { api } from "@/trpc/react";
+import { Plus, Check, User, Search } from "lucide-react";
+import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
@@ -45,9 +45,21 @@ const formSchema = z.object({
   }),
 });
 
-export function NewProjectDialog() {
-  const [open, setOpen] = useState(false);
-  const { data: employees } = api.hr.getEmployees.useQuery();
+interface NewProjectDialogProps {
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }: NewProjectDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+  const [memberSearch, setMemberSearch] = useState("");
+  const { data: employeesData } = useHrEmployees();
+  const employees = Array.isArray(employeesData)
+    ? employeesData
+    : employeesData?.data ?? [];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,7 +78,11 @@ export function NewProjectDialog() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const res = await createProject(values);
+    const capitalizedValues = {
+      ...values,
+      name: values.name.replace(/^\w/, (c) => c.toUpperCase()),
+    };
+    const res = await createProject(capitalizedValues);
     if (res.success) {
       toast.success("Project created successfully");
       setOpen(false);
@@ -75,12 +91,9 @@ export function NewProjectDialog() {
       toast.error(res.error || "Failed to create project");
     }
   }
-
-  // Auto-generate key from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const name = e.target.value;
       form.setValue("name", name);
-      // Generate key: First 3-4 letters of name, uppercase
       if (name) {
           const key = name.replace(/[^a-zA-Z]/g, "").substring(0, 4).toUpperCase();
           form.setValue("key", key);
@@ -88,25 +101,26 @@ export function NewProjectDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        {trigger ?? (
+          <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
             New Project
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-0 shadow-lg">
-        <div className="bg-muted/40 p-6 pb-4 border-b">
-            <DialogHeader>
-                <DialogTitle className="text-xl font-semibold tracking-tight">Create Project</DialogTitle>
-                <DialogDescription className="text-muted-foreground mt-1.5">
-                    Launch a new initiative and assemble your team.
-                </DialogDescription>
-            </DialogHeader>
-        </div>
-        
+          </Button>
+        )}
+      </SheetTrigger>
+      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col overflow-hidden">
+        <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
+          <SheetTitle className="text-xl font-semibold tracking-tight">Create Project</SheetTitle>
+          <SheetDescription className="text-muted-foreground mt-1.5">
+            Launch a new initiative and assemble your team.
+          </SheetDescription>
+        </SheetHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6 pt-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto space-y-6 p-6 pt-4">
             <div className="space-y-4">
                 <FormField
                     control={form.control}
@@ -127,7 +141,7 @@ export function NewProjectDialog() {
                     )}
                 />
                 
-                {/* Key is hidden but auto-generated */}
+                
                 <FormField
                     control={form.control}
                     name="key"
@@ -166,7 +180,7 @@ export function NewProjectDialog() {
                         <FormItem>
                             <FormLabel className="text-sm font-medium">Team Customization</FormLabel>
                             <FormControl>
-                                <Popover>
+                                <Popover onOpenChange={(open) => { if (!open) setMemberSearch(""); }}>
                                     <PopoverTrigger asChild>
                                         <Button variant="outline" className="w-full justify-between h-10 px-3 font-normal text-muted-foreground hover:text-foreground">
                                             {field.value?.length && field.value.length > 0 
@@ -175,12 +189,31 @@ export function NewProjectDialog() {
                                             <User className="h-4 w-4 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-[450px] p-0" align="start">
-                                        <div className="p-3 border-b bg-muted/40">
+                                    <PopoverContent className="w-[450px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                                        <div className="p-3 border-b bg-muted/40 space-y-2">
                                             <h4 className="font-medium text-sm">Select Team Members</h4>
+                                            <div className="relative">
+                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Search by name or email..."
+                                                    value={memberSearch}
+                                                    onChange={(e) => setMemberSearch(e.target.value)}
+                                                    onKeyDown={(e) => e.stopPropagation()}
+                                                    autoFocus
+                                                    className="pl-8 h-9 bg-background"
+                                                />
+                                            </div>
                                         </div>
                                         <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
-                                            {employees?.map((emp) => {
+                                            {(employees ?? [])
+                                                .filter((emp) => {
+                                                    if (!memberSearch.trim()) return true;
+                                                    const q = memberSearch.trim().toLowerCase();
+                                                    const name = (emp.name ?? "").toLowerCase();
+                                                    const email = (emp.email ?? "").toLowerCase();
+                                                    return name.includes(q) || email.includes(q);
+                                                })
+                                                .map((emp) => {
                                                 const isSelected = field.value?.includes(emp.id);
                                                 return (
                                                     <div key={emp.id} 
@@ -224,6 +257,14 @@ export function NewProjectDialog() {
                                                 );
                                             })}
                                             {!employees?.length && <div className="text-sm text-center py-6 text-muted-foreground">No employees available</div>}
+                                            {employees?.length && memberSearch.trim() && (employees ?? []).filter((emp) => {
+                                                const q = memberSearch.trim().toLowerCase();
+                                                const name = (emp.name ?? "").toLowerCase();
+                                                const email = (emp.email ?? "").toLowerCase();
+                                                return name.includes(q) || email.includes(q);
+                                            }).length === 0 && (
+                                                <div className="text-sm text-center py-6 text-muted-foreground">No members match your search</div>
+                                            )}
                                         </div>
                                     </PopoverContent>
                                 </Popover>
@@ -311,16 +352,17 @@ export function NewProjectDialog() {
                     </div>
                 </div>
             </div>
+            </div>
 
-            <DialogFooter className="pt-2">
-               <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-               <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px]">
-                  {form.formState.isSubmitting ? "Creating..." : "Create Project"}
-               </Button>
-            </DialogFooter>
+            <SheetFooter className="pt-4 mt-auto shrink-0">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="flex-1">
+                {form.formState.isSubmitting ? "Creating..." : "Create Project"}
+              </Button>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

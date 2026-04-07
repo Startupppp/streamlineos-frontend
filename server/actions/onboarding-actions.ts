@@ -1,34 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, documents, onboardingSteps, organizationMembers } from "@/lib/db/schema";
+import { users, documents, onboardingSteps, organizationMembers, leaveTypes, leaveBalances } from "@/lib/db/schema";
 
 import { eq, and } from "drizzle-orm";
 import { uploadFile, isStorageConfigured } from "@/lib/storage";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-
-// Local storage fallback when R2 is not configured or fails
-async function uploadFileLocally(file: File, folder: string) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-  const fileName = `${Date.now()}-${sanitizedName}`;
-  
-  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
-  await mkdir(uploadDir, { recursive: true });
-  
-  const filePath = path.join(uploadDir, fileName);
-  await writeFile(filePath, buffer);
-  
-  return {
-    url: `/uploads/${folder}/${fileName}`,
-    key: `${folder}/${fileName}`,
-    size: buffer.length,
-    mimeType: file.type,
-  };
-}
 
 export async function updatePersonalDetails(formData: FormData) {
   const session = await auth();
@@ -38,17 +16,25 @@ export async function updatePersonalDetails(formData: FormData) {
   const phone = formData.get("phone") as string;
   const skills = (formData.get("skills") as string)?.split(",").map(s => s.trim()).filter(Boolean);
   const experienceYears = formData.get("experienceYears") as string;
+  const genderRaw = formData.get("gender") as string | null;
+  const dateOfBirth = formData.get("dateOfBirth") as string | null;
+
+  const gender = genderRaw === "MALE" || genderRaw === "FEMALE" || genderRaw === "OTHER"
+    ? genderRaw
+    : undefined;
 
   try {
     await db.update(users).set({
       phone,
       skills,
       experienceYears: experienceYears ? experienceYears.toString() : undefined,
+      ...(gender ? { gender } : {}),
+      ...(dateOfBirth ? { dateOfBirth } : {}),
     }).where(eq(users.id, userId));
 
     await updateOnboardingStep(userId, "Personal Details", "COMPLETED");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update profile" };
   }
 }
@@ -75,7 +61,7 @@ export async function updateBankDetails(formData: FormData) {
 
     await updateOnboardingStep(userId, "Bank Details", "COMPLETED");
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update bank details" };
   }
 }
@@ -90,20 +76,13 @@ export async function uploadOnboardingDocument(formData: FormData) {
   if (!file) return { error: "No file provided" };
 
   try {
-    let fileUrl = "";
-    // Try R2 first, fall back to local storage
-    if (isStorageConfigured()) {
-      try {
-        const result = await uploadFile(file, "onboarding");
-        fileUrl = result.url;
-      } catch (r2Error) {
-        const localResult = await uploadFileLocally(file, "onboarding");
-        fileUrl = localResult.url;
-      }
-    } else {
-      const localResult = await uploadFileLocally(file, "onboarding");
-      fileUrl = localResult.url;
+    if (!isStorageConfigured()) {
+      return { error: "Cloud storage (R2) is not configured. Contact your administrator." };
     }
+
+    let fileUrl = "";
+    const result = await uploadFile(file, "onboarding");
+    fileUrl = result.url;
     const userOrg = await db.query.organizationMembers.findFirst({
         where: eq(organizationMembers.userId, session.user.id),
     });
@@ -120,20 +99,37 @@ export async function uploadOnboardingDocument(formData: FormData) {
       mimeType: file.type,
       uploadedBy: session.user.id,
     });
-    
-    // Mark step as completed if it exists, or create it
     await updateOnboardingStep(session.user.id, `Upload ${docType}`, "COMPLETED", userOrg.orgId);
 
     revalidatePath("/onboarding");
     return { success: true, url: fileUrl };
-  } catch (error) {
+  } catch {
     return { error: "Failed to upload document" };
   }
 }
+export async function submitOnboarding() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
-// Helper to update or insert step status
+  try {
+    const userOrg = await db.query.organizationMembers.findFirst({
+      where: eq(organizationMembers.userId, session.user.id),
+    });
+
+    if (!userOrg) return { error: "No organization found" };
+
+    await updateOnboardingStep(session.user.id, "Final Review", "COMPLETED", userOrg.orgId);
+    await allocateDefaultLeaves(session.user.id, userOrg.orgId);
+
+    revalidatePath("/onboarding");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to submit onboarding" };
+  }
+}
+
 async function updateOnboardingStep(userId: string, stepName: string, status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED", orgId?: string) {
-    // If orgId is not provided, fetch it
     let targetOrgId = orgId;
     if (!targetOrgId) {
          const userOrg = await db.query.organizationMembers.findFirst({
@@ -142,9 +138,7 @@ async function updateOnboardingStep(userId: string, stepName: string, status: "P
         targetOrgId = userOrg?.orgId;
     }
     
-    if (!targetOrgId) return; // Should handle error
-    
-    // Check if step exists
+    if (!targetOrgId) return;
     const existing = await db.query.onboardingSteps.findFirst({
         where: and(
             eq(onboardingSteps.userId, userId),
@@ -165,4 +159,33 @@ async function updateOnboardingStep(userId: string, stepName: string, status: "P
             completedAt: status === 'COMPLETED' ? new Date() : null 
         });
     }
+}
+
+async function allocateDefaultLeaves(userId: string, orgId: string) {
+  const currentYear = new Date().getFullYear();
+
+  const existingBalances = await db.query.leaveBalances.findFirst({
+    where: and(
+      eq(leaveBalances.userId, userId),
+      eq(leaveBalances.year, currentYear)
+    ),
+  });
+
+  if (existingBalances) return;
+
+  const orgLeaveTypes = await db.query.leaveTypes.findMany({
+    where: eq(leaveTypes.orgId, orgId),
+  });
+
+  if (orgLeaveTypes.length === 0) return;
+
+  await db.insert(leaveBalances).values(
+    orgLeaveTypes.map((lt) => ({
+      orgId,
+      userId,
+      leaveTypeId: lt.id,
+      balance: String(lt.daysPerYear),
+      year: currentYear,
+    }))
+  );
 }

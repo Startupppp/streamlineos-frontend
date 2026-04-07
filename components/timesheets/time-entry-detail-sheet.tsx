@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import Image from "next/image";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -14,41 +15,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, Loader2, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/trpc/react";
-
-interface TimeEntry {
-  id: number;
-  userId: string | null;
-  ticketId: number | null;
-  date: string;
-  hours: string | null;
-  description: string | null;
-  imageUrl: string | null;
-  workLink: string | null;
-  status: string | null;
-  rejectionReason: string | null;
-  user?: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string | null;
-    image: string | null;
-  } | null;
-  ticket?: {
-    id: number;
-    projectId: number;
-    project?: {
-      name: string;
-    };
-  } | null;
-  approverName?: string | null;
-}
+import { resolveImageUrl } from "@/lib/utils";
+import {
+  useApproveTimesheet,
+  useRejectTimesheet,
+} from "@/lib/api/hooks/projects";
+import type { TimeEntryWithUser } from "@/types/projects";
 
 interface TimeEntryDetailSheetProps {
-  entry: TimeEntry | null;
+  entry: TimeEntryWithUser | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -56,36 +33,25 @@ interface TimeEntryDetailSheetProps {
 export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDetailSheetProps) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [imageError, setImageError] = useState(false);
 
-  const utils = api.useUtils();
-
-  const approveMutation = api.project.approveTimesheet.useMutation({
-    onSuccess: () => {
-      toast.success("Timesheet approved successfully");
-      utils.project.getAllTeamTimesheets.invalidate();
-      onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to approve timesheet");
-    },
-  });
-
-  const rejectMutation = api.project.rejectTimesheet.useMutation({
-    onSuccess: () => {
-      toast.success("Timesheet rejected");
-      utils.project.getAllTeamTimesheets.invalidate();
-      setRejectDialogOpen(false);
-      setRejectionReason("");
-      onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to reject timesheet");
-    },
-  });
+  const approveMutation = useApproveTimesheet();
+  const rejectMutation = useRejectTimesheet();
 
   const handleApprove = () => {
     if (!entry) return;
-    approveMutation.mutate({ timesheetId: entry.id });
+    approveMutation.mutate(
+      { timesheetId: entry.id },
+      {
+        onSuccess: () => {
+          toast.success("Timesheet approved successfully");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to approve timesheet");
+        },
+      }
+    );
   };
 
   const handleRejectClick = () => {
@@ -94,10 +60,23 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
 
   const handleRejectConfirm = () => {
     if (!entry) return;
-    rejectMutation.mutate({
-      timesheetId: entry.id,
-      reason: rejectionReason,
-    });
+    rejectMutation.mutate(
+      {
+        timesheetId: entry.id,
+        reason: rejectionReason,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Timesheet rejected");
+          setRejectDialogOpen(false);
+          setRejectionReason("");
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error((error as Error).message || "Failed to reject timesheet");
+        },
+      }
+    );
   };
 
   if (!entry) return null;
@@ -118,7 +97,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
           <div className="mt-6 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b px-6">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={entry.user?.image || undefined} />
+                <AvatarImage src={resolveImageUrl(entry.user?.image)} />
                 <AvatarFallback>
                   {entry.user?.firstName?.[0]}
                   {entry.user?.lastName?.[0]}
@@ -208,7 +187,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                           : `/uploads/${imageUrl}`;
                         const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(imageUrl);
                         
-                        return isImage ? (
+                        return isImage && !imageError ? (
                           <div className="relative w-full max-h-[500px] flex items-center justify-center">
                             <Image
                               src={normalizedUrl}
@@ -217,29 +196,15 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                               height={500}
                               className="w-full h-auto max-h-[500px] object-contain"
                               unoptimized
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  parent.innerHTML = `
-                                    <div class="p-4 text-center">
-                                      <p class="text-sm text-muted-foreground mb-2">Unable to load image</p>
-                                      <a href="${normalizedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                        </svg>
-                                        Open file
-                                      </a>
-                                    </div>
-                                  `;
-                                }
-                              }}
+                              onError={() => setImageError(true)}
                             />
                           </div>
                         ) : (
                           <div className="p-4 text-center">
                             <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                            <p className="text-sm text-muted-foreground mb-2">Document attachment</p>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {imageError ? "Unable to load image" : "Document attachment"}
+                            </p>
                             <a
                               href={normalizedUrl}
                               target="_blank"
@@ -257,10 +222,10 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                 </div>
               )}
 
-              {entry.status === "APPROVED" && entry.approverName && (
+              {entry.status === "APPROVED" && entry.approvedBy && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Approved By</label>
-                  <p className="mt-1 text-sm">{entry.approverName}</p>
+                  <p className="mt-1 text-sm">{entry.approvedBy}</p>
                 </div>
               )}
 
@@ -276,7 +241,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               <div className="pt-4 border-t flex gap-2 px-6">
                 <Button
                   onClick={handleApprove}
-                  disabled={approveMutation.isPending}
+                  disabled={approveMutation.isPending || rejectMutation.isPending}
                   className="flex-1"
                   variant="default"
                 >
@@ -286,7 +251,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                 </Button>
                 <Button
                   onClick={handleRejectClick}
-                  disabled={rejectMutation.isPending}
+                  disabled={rejectMutation.isPending || approveMutation.isPending}
                   className="flex-1"
                   variant="destructive"
                 >
@@ -299,14 +264,14 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
         </SheetContent>
       </Sheet>
 
-      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Timesheet</DialogTitle>
-            <DialogDescription>
+      <Sheet open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Reject Timesheet</SheetTitle>
+            <SheetDescription>
               Please provide a reason for rejecting this timesheet entry.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
           <div className="py-4">
             <Textarea
               placeholder="Enter rejection reason..."
@@ -315,9 +280,10 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
               rows={4}
             />
           </div>
-          <DialogFooter>
+          <SheetFooter>
             <Button
               variant="outline"
+              className="flex-1"
               onClick={() => {
                 setRejectDialogOpen(false);
                 setRejectionReason("");
@@ -327,15 +293,16 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
             </Button>
             <Button
               variant="destructive"
+              className="flex-1"
               onClick={handleRejectConfirm}
               disabled={!rejectionReason.trim() || rejectMutation.isPending}
             >
               {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Reject
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
