@@ -6,14 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  SheetFooter,
-} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Calculator, Check, Loader2 } from "lucide-react";
+import { Calculator, Check } from "lucide-react";
 import { format } from "date-fns";
+import { HrSheet } from "@/features/hr/hr-sheet";
 import type { Employee } from "@/types/hr";
 
 export interface PayslipPreview {
@@ -38,6 +35,8 @@ export interface PayslipPreview {
 }
 
 interface PayslipDetailSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   payslipPreview: PayslipPreview | null;
   selectedEmployeeData: Employee | null;
   selectedMonth: string;
@@ -47,6 +46,8 @@ interface PayslipDetailSheetProps {
 }
 
 export function PayslipDetailSheet({
+  open,
+  onOpenChange,
   payslipPreview,
   selectedEmployeeData,
   selectedMonth,
@@ -55,15 +56,34 @@ export function PayslipDetailSheet({
   isGenerating,
 }: PayslipDetailSheetProps) {
   return (
-    <div className="space-y-6 pt-6">
+    <HrSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Payslip Preview"
+      description={`Review the payslip for ${selectedEmployeeData?.firstName ?? "employee"} before generating.`}
+      onSubmit={onConfirmGenerate}
+      submitLabel={
+        <>
+          <Check className="h-4 w-4 mr-1.5" />
+          Confirm & Generate
+        </>
+      }
+      cancelLabel={
+        <>
+          <Calculator className="h-4 w-4 mr-1.5" />
+          Edit
+        </>
+      }
+      isPending={isGenerating}
+    >
       <Card className="border-2">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start gap-4">
             <div className="min-w-0">
-              <CardTitle className="text-lg">
+              <CardTitle className="text-base">
                 {selectedEmployeeData?.firstName} {selectedEmployeeData?.lastName}
               </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {selectedEmployeeData?.designation || "Employee"}
               </p>
             </div>
@@ -74,24 +94,24 @@ export function PayslipDetailSheet({
         </CardHeader>
         <CardContent className="space-y-5">
           <div>
-            <h4 className="font-semibold text-sm mb-3 text-green-700">Earnings</h4>
+            <h4 className="font-semibold text-xs mb-3 text-emerald-600 uppercase tracking-wider">Earnings</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Basic Pay</span>
-                <span>₹{payslipPreview?.basicPay.toLocaleString()}</span>
+                <span className="tabular-nums">₹{payslipPreview?.basicPay.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">HRA</span>
-                <span>₹{payslipPreview?.hra.toLocaleString()}</span>
+                <span className="tabular-nums">₹{payslipPreview?.hra.toLocaleString("en-IN")}</span>
               </div>
               {(payslipPreview?.bonus || 0) > 0 && (
-                <div className="flex justify-between text-green-600">
+                <div className="flex justify-between text-emerald-600">
                   <span>Bonus / Incentive</span>
-                  <span>+₹{payslipPreview?.bonus.toLocaleString()}</span>
+                  <span className="tabular-nums">+₹{payslipPreview?.bonus.toLocaleString("en-IN")}</span>
                 </div>
               )}
               {(payslipPreview?.overtimeAmount || 0) > 0 && (
-                <div className="flex justify-between text-green-600">
+                <div className="flex justify-between text-emerald-600">
                   <span>
                     Overtime Pay
                     {payslipPreview?.overtimeType === "days"
@@ -100,24 +120,24 @@ export function PayslipDetailSheet({
                       ? ` (${payslipPreview.overtimeHours} hrs)`
                       : ""}
                   </span>
-                  <span>+₹{payslipPreview?.overtimeAmount.toLocaleString()}</span>
+                  <span className="tabular-nums">+₹{payslipPreview?.overtimeAmount.toLocaleString("en-IN")}</span>
                 </div>
               )}
               <Separator className="my-2" />
               <div className="flex justify-between font-medium">
                 <span>Gross Salary</span>
-                <span>₹{payslipPreview?.grossSalary.toLocaleString()}</span>
+                <span className="tabular-nums">₹{payslipPreview?.grossSalary.toLocaleString("en-IN")}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm mb-3 text-red-700">Deductions</h4>
+            <h4 className="font-semibold text-xs mb-3 text-red-600 uppercase tracking-wider">Deductions</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Professional Tax</span>
-                <span className="text-red-600">
-                  -₹{payslipPreview?.professionalTax.toLocaleString()}
+                <span className="text-red-600 tabular-nums">
+                  -₹{payslipPreview?.professionalTax.toLocaleString("en-IN")}
                 </span>
               </div>
               {(payslipPreview?.lopDays || 0) > 0 && (
@@ -125,34 +145,34 @@ export function PayslipDetailSheet({
                   <span className="text-muted-foreground">
                     LOP Deduction ({payslipPreview?.lopDays} days)
                   </span>
-                  <span className="text-red-600">
-                    -₹{Math.round(payslipPreview?.lopDeduction || 0).toLocaleString()}
+                  <span className="text-red-600 tabular-nums">
+                    -₹{Math.round(payslipPreview?.lopDeduction || 0).toLocaleString("en-IN")}
                   </span>
                 </div>
               )}
               {(payslipPreview?.halfDays || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    Half Day Deduction ({payslipPreview?.halfDays} days)
+                    Half Day ({payslipPreview?.halfDays} days)
                   </span>
-                  <span className="text-red-600">
-                    -₹{Math.round(payslipPreview?.halfDayDeduction || 0).toLocaleString()}
+                  <span className="text-red-600 tabular-nums">
+                    -₹{Math.round(payslipPreview?.halfDayDeduction || 0).toLocaleString("en-IN")}
                   </span>
                 </div>
               )}
               {(payslipPreview?.otherDeductions || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Other Deductions</span>
-                  <span className="text-red-600">
-                    -₹{payslipPreview?.otherDeductions.toLocaleString()}
+                  <span className="text-red-600 tabular-nums">
+                    -₹{payslipPreview?.otherDeductions.toLocaleString("en-IN")}
                   </span>
                 </div>
               )}
               <Separator className="my-2" />
               <div className="flex justify-between font-medium">
                 <span>Total Deductions</span>
-                <span className="text-red-600">
-                  -₹{Math.round(payslipPreview?.totalDeductions || 0).toLocaleString()}
+                <span className="text-red-600 tabular-nums">
+                  -₹{Math.round(payslipPreview?.totalDeductions || 0).toLocaleString("en-IN")}
                 </span>
               </div>
             </div>
@@ -161,39 +181,32 @@ export function PayslipDetailSheet({
           <Separator />
 
           <div className="flex justify-between items-center pt-2">
-            <span className="text-lg font-bold">Net Salary</span>
-            <span className="text-2xl font-bold text-green-600">
-              ₹{Math.round(payslipPreview?.netSalary || 0).toLocaleString()}
+            <span className="text-base font-bold">Net Salary</span>
+            <span className="text-2xl font-bold text-emerald-600 tabular-nums">
+              ₹{Math.round(payslipPreview?.netSalary || 0).toLocaleString("en-IN")}
             </span>
           </div>
 
-          <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+          <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-1">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Working Days</span>
-              <span>{payslipPreview?.workingDays}</span>
+              <span className="tabular-nums">{payslipPreview?.workingDays}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Effective Days</span>
-              <span>{payslipPreview?.effectiveDays}</span>
+              <span className="tabular-nums">{payslipPreview?.effectiveDays}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <SheetFooter className="pt-4 gap-2 sm:gap-0">
-        <Button variant="outline" onClick={onBackToEdit}>
-          <Calculator className="mr-2 h-4 w-4" />
-          Edit Details
-        </Button>
-        <Button onClick={onConfirmGenerate} disabled={isGenerating}>
-          {isGenerating ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Check className="mr-2 h-4 w-4" />
-          )}
-          Confirm & Generate
-        </Button>
-      </SheetFooter>
-    </div>
+      <button
+        type="button"
+        onClick={onBackToEdit}
+        className="w-full text-xs text-muted-foreground hover:text-foreground py-2 underline-offset-4 hover:underline"
+      >
+        ← Back to Edit
+      </button>
+    </HrSheet>
   );
 }

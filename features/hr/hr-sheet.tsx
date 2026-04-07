@@ -19,7 +19,8 @@ interface HrSheetProps {
   description?: string;
   children: React.ReactNode;
   onSubmit: () => void;
-  submitLabel?: string;
+  submitLabel?: React.ReactNode;
+  cancelLabel?: React.ReactNode;
   isPending?: boolean;
   side?: "right" | "left";
 }
@@ -32,6 +33,7 @@ export function HrSheet({
   children,
   onSubmit,
   submitLabel = "Save",
+  cancelLabel = "Cancel",
   isPending = false,
   side = "right",
 }: HrSheetProps) {
@@ -56,7 +58,7 @@ export function HrSheet({
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
-            Cancel
+            {cancelLabel}
           </Button>
           <Button className="flex-1" onClick={onSubmit} disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

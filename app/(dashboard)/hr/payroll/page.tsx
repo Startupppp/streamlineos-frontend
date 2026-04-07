@@ -25,15 +25,16 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subMonths } from "date-fns";
 import { toast } from "sonner";
-import { Users, Loader2 } from "lucide-react";
+import { Users, Loader2, DollarSign, CreditCard, FileText, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { Employee } from "@/types/hr";
 
-import { PayrollSummaryCards } from "@/features/hr/payroll/payroll-summary-cards";
 import { PayrollTable } from "@/features/hr/payroll/payroll-table";
 import { GeneratePayrollSheet } from "@/features/hr/payroll/generate-payroll-sheet";
 
@@ -319,6 +320,11 @@ export default function PayrollPage() {
             </SelectContent>
           </Select>
 
+          <Button variant="outline" size="sm" onClick={() => setGenerateSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Individual
+          </Button>
+
           <GeneratePayrollSheet
             open={generateSheetOpen}
             onOpenChange={(open) => {
@@ -366,20 +372,43 @@ export default function PayrollPage() {
       }
     >
       <div className="space-y-6">
-        <PayrollSummaryCards
-          totalEmployees={allPayrolls?.length || 0}
-          totalGross={totalGross}
-          totalNet={totalNet}
-        />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard
+            label="Total Employees"
+            value={allPayrolls?.length || 0}
+            icon={Users}
+            color="blue"
+          />
+          <StatCard
+            label="Total Gross"
+            value={`₹${totalGross.toLocaleString("en-IN")}`}
+            icon={DollarSign}
+            color="gold"
+          />
+          <StatCard
+            label="Total Net Payout"
+            value={`₹${totalNet.toLocaleString("en-IN")}`}
+            icon={CreditCard}
+            color="green"
+          />
+        </div>
 
-        <PayrollTable
-          payrolls={allPayrolls ?? []}
-          selectedMonth={selectedMonth}
-          onApprove={handleApprovePayroll}
-          onMarkPaid={handleMarkPaid}
-          isApprovePending={approvePayrollMutation.isPending}
-          isMarkPaidPending={markPaidMutation.isPending}
-        />
+        {(allPayrolls?.length ?? 0) === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="No payroll records yet"
+            description={`No payroll generated for ${format(new Date(selectedMonth + "-01"), "MMMM yyyy")}. Generate payroll for all employees or create one for an individual.`}
+          />
+        ) : (
+          <PayrollTable
+            payrolls={allPayrolls ?? []}
+            selectedMonth={selectedMonth}
+            onApprove={handleApprovePayroll}
+            onMarkPaid={handleMarkPaid}
+            isApprovePending={approvePayrollMutation.isPending}
+            isMarkPaidPending={markPaidMutation.isPending}
+          />
+        )}
       </div>
     </PageWrapper>
   );

@@ -1,25 +1,16 @@
 "use client";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from "@/components/ui/sheet";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
+import { HrSheet } from "@/features/hr/hr-sheet";
 import type { Employee } from "@/types/hr";
 import { PayslipDetailSheet, type PayslipPreview } from "./payslip-detail-sheet";
 
@@ -86,203 +77,176 @@ export function GeneratePayrollSheet({
   onConfirmGenerate,
   isGenerating,
 }: GeneratePayrollSheetProps) {
+  // Preview mode renders its own dedicated sheet (PayslipDetailSheet) — open it conditionally
+  if (showPreview) {
+    return (
+      <PayslipDetailSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        payslipPreview={payslipPreview}
+        selectedEmployeeData={selectedEmployeeData}
+        selectedMonth={selectedMonth}
+        onBackToEdit={onBackToEdit}
+        onConfirmGenerate={onConfirmGenerate}
+        isGenerating={isGenerating}
+      />
+    );
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <Button variant="outline">
-          <FileText className="mr-2 h-4 w-4" />
-          Generate Individual
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
-            {showPreview ? "Payslip Preview" : "Generate Payslip for Employee"}
-          </SheetTitle>
-        </SheetHeader>
+    <HrSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Generate Payslip"
+      description="Select an employee and adjust attendance, overtime, and bonus before previewing."
+      onSubmit={onShowPreview}
+      submitLabel={
+        <>
+          <Eye className="h-4 w-4 mr-1.5" />
+          Preview Payslip
+        </>
+      }
+      isPending={false}
+    >
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Employee</label>
+        <Select value={selectedEmployee} onValueChange={onSelectedEmployeeChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select employee" />
+          </SelectTrigger>
+          <SelectContent>
+            {employees.map((emp) => (
+              <SelectItem key={emp.id} value={emp.id}>
+                {emp.firstName} {emp.lastName} — ₹{parseFloat(emp.monthlySalary || "0").toLocaleString("en-IN")}/month
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          className="sr-only"
-        >
-          {showPreview
-            ? `Payslip preview for ${selectedEmployeeData?.firstName ?? "employee"}`
-            : ""}
-        </div>
+      {selectedEmployeeData && (
+        <>
+          <Separator />
 
-        {!showPreview ? (
-          <div className="space-y-6 pt-6">
-            <div className="space-y-2">
-              <Label>Select Employee</Label>
-              <Select value={selectedEmployee} onValueChange={onSelectedEmployeeChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.firstName} {emp.lastName} -{" "}
-                      ₹{parseFloat(emp.monthlySalary || "0").toLocaleString()}/month
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-3">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              Attendance Adjustments
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">LOP Days</label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="30"
+                  value={lopDays}
+                  onChange={(e) => onLopDaysChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Half Days</label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="30"
+                  value={halfDays}
+                  onChange={(e) => onHalfDaysChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
             </div>
-
-            {selectedEmployeeData && (
-              <>
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Attendance Adjustments
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="lopDays">LOP Days (Loss of Pay)</Label>
-                      <Input
-                        id="lopDays"
-                        type="number"
-                        min="0"
-                        max="30"
-                        value={lopDays}
-                        onChange={(e) => onLopDaysChange(e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="halfDays">Half Days</Label>
-                      <Input
-                        id="halfDays"
-                        type="number"
-                        min="0"
-                        max="30"
-                        value={halfDays}
-                        onChange={(e) => onHalfDaysChange(e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Additional Adjustments
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="bonus">Bonus / Incentive (₹)</Label>
-                      <Input
-                        id="bonus"
-                        type="number"
-                        min="0"
-                        value={bonus}
-                        onChange={(e) => onBonusChange(e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="otherDeductions">Other Deductions (₹)</Label>
-                      <Input
-                        id="otherDeductions"
-                        type="number"
-                        min="0"
-                        value={otherDeductions}
-                        onChange={(e) => onOtherDeductionsChange(e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm text-muted-foreground">
-                    Overtime
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label id="overtime-type-label">Overtime Type</Label>
-                      <Select value={overtimeType} onValueChange={onOvertimeTypeChange}>
-                        <SelectTrigger aria-labelledby="overtime-type-label">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="days">Days</SelectItem>
-                          <SelectItem value="hours">Hours</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {overtimeType === "days" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="overtimeDays">Overtime Days</Label>
-                        <Input
-                          id="overtimeDays"
-                          type="number"
-                          min="0"
-                          value={overtimeDays}
-                          onChange={(e) => onOvertimeDaysChange(e.target.value)}
-                          placeholder="0"
-                        />
-                      </div>
-                    )}
-                    {overtimeType === "hours" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="overtimeHours">Overtime Hours</Label>
-                        <Input
-                          id="overtimeHours"
-                          type="number"
-                          min="0"
-                          value={overtimeHours}
-                          onChange={(e) => onOvertimeHoursChange(e.target.value)}
-                          placeholder="0"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {overtimeType && (
-                    <div className="space-y-2">
-                      <Label htmlFor="overtimeAmount">Overtime Amount (₹)</Label>
-                      <Input
-                        id="overtimeAmount"
-                        type="number"
-                        min="0"
-                        value={overtimeAmount}
-                        onChange={(e) => onOvertimeAmountChange(e.target.value)}
-                        placeholder="0"
-                      />
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            <SheetFooter className="pt-4 gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button onClick={onShowPreview} disabled={!selectedEmployee}>
-                <Eye className="mr-2 h-4 w-4" />
-                Preview Payslip
-              </Button>
-            </SheetFooter>
           </div>
-        ) : (
-          <PayslipDetailSheet
-            payslipPreview={payslipPreview}
-            selectedEmployeeData={selectedEmployeeData}
-            selectedMonth={selectedMonth}
-            onBackToEdit={onBackToEdit}
-            onConfirmGenerate={onConfirmGenerate}
-            isGenerating={isGenerating}
-          />
-        )}
-      </SheetContent>
-    </Sheet>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              Additional Adjustments
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Bonus / Incentive (₹)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={bonus}
+                  onChange={(e) => onBonusChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Other Deductions (₹)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={otherDeductions}
+                  onChange={(e) => onOtherDeductionsChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+              Overtime
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Overtime Type</label>
+                <Select value={overtimeType} onValueChange={onOvertimeTypeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="days">Days</SelectItem>
+                    <SelectItem value="hours">Hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {overtimeType === "days" && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Overtime Days</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={overtimeDays}
+                    onChange={(e) => onOvertimeDaysChange(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              )}
+              {overtimeType === "hours" && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Overtime Hours</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={overtimeHours}
+                    onChange={(e) => onOvertimeHoursChange(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              )}
+            </div>
+            {overtimeType && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Overtime Amount (₹)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={overtimeAmount}
+                  onChange={(e) => onOvertimeAmountChange(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </HrSheet>
   );
 }
