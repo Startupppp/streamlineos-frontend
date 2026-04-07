@@ -51,7 +51,7 @@ import { EditTimeEntryDialog } from "@/components/timesheets/edit-time-entry-dia
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { Loader2, Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { TimesheetTableRow, type EditEntry } from "./_components/timesheet-table-row";
+import { TimesheetTableRow, type EditEntry } from "@/features/timesheets/timesheet-table-row";
 
 const ITEMS_PER_PAGE = 10;
 

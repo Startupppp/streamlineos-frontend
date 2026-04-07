@@ -21,10 +21,10 @@ import { LogTimeDialog } from "@/components/timesheets/log-time-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { WeeklyProductivityChart } from "./_components/weekly-productivity-chart";
-import { ViewSettingsCard } from "./_components/view-settings-card";
-import { TeamSummary } from "./_components/team-summary";
-import { TeamTable } from "./_components/team-table";
+import { WeeklyProductivityChart } from "@/features/timesheets/team/weekly-productivity-chart";
+import { ViewSettingsCard } from "@/features/timesheets/team/view-settings-card";
+import { TeamSummary } from "@/features/timesheets/team/team-summary";
+import { TeamTable } from "@/features/timesheets/team/team-table";
 
 type TimesheetEntry = TimeEntryWithUser;
 type ViewMode = "day" | "week" | "month";

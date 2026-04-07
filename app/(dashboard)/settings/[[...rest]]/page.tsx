@@ -1,9 +1,9 @@
 "use client";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SettingsProfile } from "./_components/settings-profile";
-import { SettingsSecurity } from "./_components/settings-security";
-import { SettingsPreferences } from "./_components/settings-preferences";
+import { SettingsProfile } from "@/features/settings/settings-profile";
+import { SettingsSecurity } from "@/features/settings/settings-security";
+import { SettingsPreferences } from "@/features/settings/settings-preferences";
 import { MfaSettings } from "@/components/settings/mfa-settings";
 import { Separator } from "@/components/ui/separator";
 

@@ -6,13 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useChatHeartbeat, useChatChannels } from "@/lib/hooks/trpc-hooks";
 import { useChatGlobalNotifications } from "@/lib/api/hooks/chat-notifications";
-import { ChannelSidebar } from "./_components/channel-sidebar";
-import { MessagePanel } from "./_components/message-panel";
-import { ChannelInfoPanel } from "./_components/channel-info-panel";
-import { EmptyChatState } from "./_components/empty-chat-state";
-import { NewDMDialog } from "./_components/new-dm-dialog";
-import { NewGroupDialog } from "./_components/new-group-dialog";
-import { ChatAblyProvider } from "./_components/ably-provider";
+import { ChannelSidebar } from "@/features/chat/channel-sidebar";
+import { MessagePanel } from "@/features/chat/message-panel";
+import { ChannelInfoPanel } from "@/features/chat/channel-info-panel";
+import { EmptyChatState } from "@/features/chat/empty-chat-state";
+import { NewDMDialog } from "@/features/chat/new-dm-dialog";
+import { NewGroupDialog } from "@/features/chat/new-group-dialog";
+import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import type { Channel } from "@/types/chat";
 
 /** Inner component rendered inside ChatAblyProvider so useAbly() is available. */

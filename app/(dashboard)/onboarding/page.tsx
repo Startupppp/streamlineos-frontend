@@ -7,10 +7,10 @@ import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { User, Landmark, FileText, ClipboardCheck, Check } from "lucide-react";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { PersonalInfoTab } from "./_components/personal-info-tab";
-import { BankDetailsTab } from "./_components/bank-details-tab";
-import { DocumentsTab } from "./_components/documents-tab";
-import { ReviewTab } from "./_components/review-tab";
+import { PersonalInfoTab } from "@/features/onboarding/personal-info-tab";
+import { BankDetailsTab } from "@/features/onboarding/bank-details-tab";
+import { DocumentsTab } from "@/features/onboarding/documents-tab";
+import { ReviewTab } from "@/features/onboarding/review-tab";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Variants } from "framer-motion";
 

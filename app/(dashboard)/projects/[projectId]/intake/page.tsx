@@ -25,7 +25,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { IntakeItemCard } from "./_components/intake-item-card";
+import { IntakeItemCard } from "@/features/projects/intake/intake-item-card";
 
 const createIntakeSchema = z.object({
   title: z.string().min(1, "Title is required"),

@@ -13,9 +13,9 @@ import { EmptySprintIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { DropResult } from "@hello-pangea/dnd";
-import { SprintCard } from "./_components/sprint-card";
-import { CompleteSprintSheet } from "./_components/complete-sprint-sheet";
-import { SprintPlanningPanel } from "./_components/sprint-planning-panel";
+import { SprintCard } from "@/features/projects/sprints/sprint-card";
+import { CompleteSprintSheet } from "@/features/projects/sprints/complete-sprint-sheet";
+import { SprintPlanningPanel } from "@/features/projects/sprints/sprint-planning-panel";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;

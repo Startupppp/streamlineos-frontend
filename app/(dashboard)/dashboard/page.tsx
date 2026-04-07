@@ -45,13 +45,13 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
-import { QuickActions } from "./_components/quick-actions";
-import { SprintCard } from "./_components/sprint-card";
-import { TeamCard } from "./_components/team-card";
-import { MyIssuesCard, type DashboardTicket } from "./_components/my-issues-card";
-import { RecentProjectsCard } from "./_components/recent-projects-card";
-import { RecentActivityCard } from "./_components/recent-activity-card";
-import { PublicDocumentsCard } from "./_components/public-documents-card";
+import { QuickActions } from "@/features/dashboard/quick-actions";
+import { SprintCard } from "@/features/dashboard/sprint-card";
+import { TeamCard } from "@/features/dashboard/team-card";
+import { MyIssuesCard, type DashboardTicket } from "@/features/dashboard/my-issues-card";
+import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
+import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
+import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
 
 export default function DashboardPage() {
   const router = useRouter();

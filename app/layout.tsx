@@ -7,27 +7,6 @@ import { ThemeProvider } from "../components/theme-provider";
 import { MotionProvider } from "../components/providers/motion-provider";
 import { QueryProvider } from "../components/providers/query-provider";
 
-import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: {
     default: "Vaivamm Capital CRM",
@@ -52,9 +31,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${playfair.variable} ${jetbrains.variable} font-sans min-h-screen bg-background text-foreground antialiased selection:bg-gold/30 selection:text-gold noir-grain`}
-      >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&family=Playfair+Display:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-gold/30 selection:text-gold noir-grain">
         <ThemeProvider
             attribute="class"
             defaultTheme="light"

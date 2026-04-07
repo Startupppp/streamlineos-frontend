@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { LandingPage } from "./_components/landing-page";
+import { LandingPage } from "@/features/landing/landing-page";
 
 export const metadata: Metadata = {
   title: "Vaivamm Capital CRM — HR, Projects & Sales Platform",

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AuthRightPanel } from "./_components/auth-right-panel";
+import { AuthRightPanel } from "@/features/auth/auth-right-panel";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
