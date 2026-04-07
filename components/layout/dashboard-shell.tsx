@@ -106,10 +106,8 @@ export function DashboardShell({
               </header>
             )}
 
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <div className="h-full w-full overflow-auto">
-                {children}
-              </div>
+            <div className="flex-1 min-h-0 overflow-auto flex flex-col">
+              {children}
             </div>
           </>
         ) : (

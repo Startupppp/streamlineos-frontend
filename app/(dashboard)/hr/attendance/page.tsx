@@ -33,6 +33,8 @@ export default function AttendancePage() {
     <PageWrapper
       title="Attendance"
       subtitle="Track your work hours and manage check-ins"
+      noInternalScroll
+      contentClassName="flex flex-col"
     >
       <AttendanceContent userId={userId} isAdmin={isAdmin} />
     </PageWrapper>
