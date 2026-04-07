@@ -93,10 +93,10 @@ const nextConfig: NextConfig = {
           value: [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com https://crm.vaivammcapital.com",
-            "font-src 'self'",
-            "connect-src 'self' https://*.r2.cloudflarestorage.com",
+            "font-src 'self' https://fonts.gstatic.com",
+            "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://*.r2.cloudflarestorage.com",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
