@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { helpdeskReplyPrompt, type HelpdeskReplyInput, type HelpdeskReplyResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { helpdeskReplyPrompt, type HelpdeskReplyInput } from "./prompts";
+import { HelpdeskReplySchema, type HelpdeskReplyResult } from "./schemas";
 import { db } from "@/lib/db";
 import { helpdeskTickets, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -42,12 +43,11 @@ export async function aiSuggestHelpdeskReply(
 
   const prompt = helpdeskReplyPrompt(input);
 
-  const result = await aiJSON<HelpdeskReplyResult>({
+  return aiInvoke({
     model: "fast",
+    schema: HelpdeskReplySchema,
+    schemaName: "helpdesk_reply",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 500,
   });
-
-  return result;
 }

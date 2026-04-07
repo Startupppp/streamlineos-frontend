@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Pencil, UserX, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
+import { AIAttritionRiskButton } from "./ai-attrition-risk-button";
 import {
   canDeleteEmployee,
   getDisplayName,
@@ -101,6 +102,7 @@ export function HrEmployeeTable({
                   {canManageAccess && (
                     <TableHead className="text-center">Dashboard</TableHead>
                   )}
+                  {canManageAccess && <TableHead>AI Risk</TableHead>}
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -189,6 +191,12 @@ export function HrEmployeeTable({
                               aria-label={`Toggle dashboard access for ${displayName}`}
                             />
                           )}
+                        </TableCell>
+                      )}
+
+                      {canManageAccess && (
+                        <TableCell>
+                          <AIAttritionRiskButton userId={user.id} compact />
                         </TableCell>
                       )}
 

@@ -1,12 +1,13 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
 import {
   emailGeneratorPrompt,
   type EmailGeneratorInput,
   type EmailTone,
   type GeneratedEmail,
 } from "./prompts";
+import { GeneratedEmailSchema } from "./schemas";
 
 /**
  * Generate a follow-up email for a lead/deal.
@@ -19,11 +20,12 @@ export async function generateFollowUpEmail(
 
   const prompt = emailGeneratorPrompt(input);
 
-  return aiJSON<GeneratedEmail>({
+  return aiInvoke({
     model: "fast",
+    schema: GeneratedEmailSchema,
+    schemaName: "generated_email",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 1024,
   });
 }
 

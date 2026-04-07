@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { attritionRiskPrompt, type AttritionRiskInput, type AttritionRiskResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { attritionRiskPrompt, type AttritionRiskInput } from "./prompts";
+import { AttritionRiskSchema, type AttritionRiskResult } from "./schemas";
 import { db } from "@/lib/db";
 import {
   users,
@@ -60,10 +61,10 @@ export async function aiAnalyzeAttritionRisk(
     ? Math.round((Number(attRate.present) / attRate.total) * 100)
     : null;
 
-  // Recent leaves
+  // Recent leaves — count days from start/end date diff
   const [leaveCount] = await db
     .select({
-      total: sql<number>`COALESCE(SUM(${leaveRequests.totalDays}), 0)::int`,
+      total: sql<number>`COALESCE(SUM(GREATEST(${leaveRequests.endDate}::date - ${leaveRequests.startDate}::date + 1, 0)), 0)::int`,
     })
     .from(leaveRequests)
     .where(
@@ -126,11 +127,12 @@ export async function aiAnalyzeAttritionRisk(
 
   const prompt = attritionRiskPrompt(input);
 
-  const result = await aiJSON<AttritionRiskResult>({
+  const result = await aiInvoke({
     model: "fast",
+    schema: AttritionRiskSchema,
+    schemaName: "attrition_risk",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 600,
   });
 
   result.attritionRiskScore = Math.max(0, Math.min(100, Math.round(result.attritionRiskScore)));

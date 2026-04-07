@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { dealPredictionPrompt, type DealPredictionInput, type DealPredictionResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { dealPredictionPrompt, type DealPredictionInput } from "./prompts";
+import { DealPredictionSchema, type DealPredictionResult } from "./schemas";
 import { db } from "@/lib/db";
 import { deals, dealActivities } from "@/lib/db/schema";
 import { eq, and, count, max } from "drizzle-orm";
@@ -65,11 +66,12 @@ export async function predictDealOutcome(
   };
 
   const prompt = dealPredictionPrompt(input);
-  const result = await aiJSON<DealPredictionResult>({
+  const result = await aiInvoke({
     model: "fast",
+    schema: DealPredictionSchema,
+    schemaName: "deal_prediction",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 512,
   });
 
   result.winProbability = Math.max(0, Math.min(100, Math.round(result.winProbability)));

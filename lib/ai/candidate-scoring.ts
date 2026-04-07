@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { candidateScoringPrompt, type CandidateScoringInput, type CandidateScoreResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { candidateScoringPrompt, type CandidateScoringInput } from "./prompts";
+import { CandidateScoreSchema, type CandidateScoreResult } from "./schemas";
 import { db } from "@/lib/db";
 import { candidates, jobPostings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -25,13 +26,13 @@ export async function aiScoreCandidate(
 
   if (!candidate) return null;
 
-  let job: { title: string; description: string | null; requiredSkills: string[] | null } | null = null;
+  let job: { title: string; description: string | null; requirements: string | null } | null = null;
   if (jobId) {
     const [jobRecord] = await db
       .select({
         title: jobPostings.title,
         description: jobPostings.description,
-        requiredSkills: jobPostings.requiredSkills,
+        requirements: jobPostings.requirements,
       })
       .from(jobPostings)
       .where(and(eq(jobPostings.id, jobId), eq(jobPostings.orgId, orgId)));
@@ -50,16 +51,17 @@ export async function aiScoreCandidate(
     notes: candidate.notes,
     jobTitle: job?.title,
     jobDescription: job?.description,
-    jobRequiredSkills: job?.requiredSkills,
+    jobRequiredSkills: job?.requirements ? [job.requirements] : null,
   };
 
   const prompt = candidateScoringPrompt(input);
 
-  const result = await aiJSON<CandidateScoreResult>({
+  const result = await aiInvoke({
     model: "fast",
+    schema: CandidateScoreSchema,
+    schemaName: "candidate_score",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 600,
   });
 
   result.score = Math.max(0, Math.min(100, Math.round(result.score)));

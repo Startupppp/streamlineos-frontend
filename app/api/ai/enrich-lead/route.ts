@@ -1,7 +1,8 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
-import { aiJSON, isOpenAIConfigured } from "@/lib/ai/openai";
-import { leadEnrichmentPrompt, type LeadEnrichmentResult } from "@/lib/ai/prompts";
+import { aiInvoke, isOpenAIConfigured } from "@/lib/ai/openai";
+import { leadEnrichmentPrompt } from "@/lib/ai/prompts";
+import { LeadEnrichmentSchema } from "@/lib/ai/schemas";
 import { z } from "zod";
 
 const schema = z.object({
@@ -20,11 +21,12 @@ export async function POST(req: NextRequest) {
     const input = await parseBody(req, schema);
     const prompt = leadEnrichmentPrompt(input);
 
-    const result = await aiJSON<LeadEnrichmentResult>({
+    const result = await aiInvoke({
       model: "standard", // Use GPT-4o for better research quality
+      schema: LeadEnrichmentSchema,
+      schemaName: "lead_enrichment",
       system: prompt.system,
       user: prompt.user,
-      maxTokens: 1024,
     });
 
     return ok(result);

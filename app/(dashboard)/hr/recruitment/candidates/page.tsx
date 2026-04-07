@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Plus, Search, Mail, Phone, Building2, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CandidateStatus } from "@/types/hr";
+import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
 
 const STATUSES: { value: CandidateStatus; label: string; color: string }[] = [
   { value: "NEW", label: "New", color: "bg-blue-500" },
@@ -243,21 +244,24 @@ export default function CandidatesPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-muted-foreground">
                     {candidate.createdAt ? formatDistanceToNow(new Date(candidate.createdAt), { addSuffix: true }) : ""}
                   </span>
-                  <Select
-                    value={candidate.status ?? "NEW"}
-                    onValueChange={(v) => handleStatusChange(candidate.id, v as CandidateStatus)}
-                  >
-                    <SelectTrigger className="h-7 w-[120px] text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <AIScoreCandidateButton candidateId={candidate.id} compact />
+                    <Select
+                      value={candidate.status ?? "NEW"}
+                      onValueChange={(v) => handleStatusChange(candidate.id, v as CandidateStatus)}
+                    >
+                      <SelectTrigger className="h-7 w-[120px] text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {STATUSES.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { leadScoringPrompt, type LeadScoringInput, type LeadScoreResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { leadScoringPrompt, type LeadScoringInput } from "./prompts";
+import { LeadScoreSchema, type LeadScoreResult } from "./schemas";
 import { db } from "@/lib/db";
 import { leads, leadActivities } from "@/lib/db/schema";
 import { eq, and, count } from "drizzle-orm";
@@ -58,11 +59,12 @@ export async function aiScoreLead(
 
   const prompt = leadScoringPrompt(input);
 
-  const result = await aiJSON<LeadScoreResult>({
+  const result = await aiInvoke({
     model: "fast",
+    schema: LeadScoreSchema,
+    schemaName: "lead_score",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 512,
   });
 
   // Clamp score to 0-100

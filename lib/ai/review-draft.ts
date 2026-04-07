@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { reviewDraftPrompt, type ReviewDraftInput, type ReviewDraftResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { reviewDraftPrompt, type ReviewDraftInput } from "./prompts";
+import { ReviewDraftSchema, type ReviewDraftResult } from "./schemas";
 import { db } from "@/lib/db";
 import { users, goals, attendance } from "@/lib/db/schema";
 import { eq, and, gte, lte, count, sql } from "drizzle-orm";
@@ -81,11 +82,12 @@ export async function aiGenerateReview(
 
   const prompt = reviewDraftPrompt(input);
 
-  const result = await aiJSON<ReviewDraftResult>({
+  const result = await aiInvoke({
     model: "fast",
+    schema: ReviewDraftSchema,
+    schemaName: "review_draft",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 1024,
   });
 
   // Clamp ratings to 1-5

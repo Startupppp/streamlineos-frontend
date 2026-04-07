@@ -5,6 +5,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useHrHelpdeskTickets, useCreateHelpdeskTicket } from "@/lib/api/hooks/hr";
+import { AISuggestReplyButton } from "@/features/hr/helpdesk/ai-suggest-reply-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -324,12 +325,13 @@ export default function HelpdeskPage() {
                       <TableHead>Priority</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
+                      <TableHead>AI</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTickets.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           {searchQuery ? "No tickets match your search." : "No tickets yet. Create your first one!"}
                         </TableCell>
                       </TableRow>
@@ -363,6 +365,9 @@ export default function HelpdeskPage() {
                             {ticket.createdAt
                               ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })
                               : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <AISuggestReplyButton ticketId={ticket.id} compact />
                           </TableCell>
                         </TableRow>
                       ))

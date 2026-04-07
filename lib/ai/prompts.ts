@@ -9,7 +9,6 @@
 
 export type {
   LeadScoreResult,
-  EmailTone,
   GeneratedEmail,
   EmailVariations,
   DealPredictionResult,
@@ -22,6 +21,9 @@ export type {
   HelpdeskReplyResult,
   AttritionRiskResult,
 } from "./schemas";
+
+import type { EmailTone } from "./schemas";
+export type { EmailTone };
 
 /* ─── Lead Scoring ────────────────────────────────────────────────────────── */
 

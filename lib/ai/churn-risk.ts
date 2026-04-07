@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { churnRiskPrompt, type ChurnRiskInput, type ChurnRiskResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { churnRiskPrompt, type ChurnRiskInput } from "./prompts";
+import { ChurnRiskSchema, type ChurnRiskResult } from "./schemas";
 import { db } from "@/lib/db";
 import { clients } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -46,11 +47,12 @@ export async function analyzeChurnRisk(
   };
 
   const prompt = churnRiskPrompt(input);
-  const result = await aiJSON<ChurnRiskResult>({
+  const result = await aiInvoke({
     model: "fast",
+    schema: ChurnRiskSchema,
+    schemaName: "churn_risk",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 512,
   });
 
   result.churnRiskScore = Math.max(0, Math.min(100, Math.round(result.churnRiskScore)));

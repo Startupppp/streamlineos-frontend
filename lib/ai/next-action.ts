@@ -1,7 +1,8 @@
 import "server-only";
 
-import { aiJSON, isOpenAIConfigured } from "./openai";
-import { nextActionPrompt, type NextActionInput, type NextActionResult } from "./prompts";
+import { aiInvoke, isOpenAIConfigured } from "./openai";
+import { nextActionPrompt, type NextActionInput } from "./prompts";
+import { NextActionSchema, type NextActionResult } from "./schemas";
 import { db } from "@/lib/db";
 import { leads, leadActivities } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -59,10 +60,11 @@ export async function getNextBestAction(
   };
 
   const prompt = nextActionPrompt(input);
-  return aiJSON<NextActionResult>({
+  return aiInvoke({
     model: "fast",
+    schema: NextActionSchema,
+    schemaName: "next_action",
     system: prompt.system,
     user: prompt.user,
-    maxTokens: 256,
   });
 }

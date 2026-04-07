@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { AIGenerateReviewButton } from "@/features/hr/performance/ai-generate-review-button";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -235,6 +236,17 @@ function ReviewsTab() {
             <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
           </div>
         </div>
+        {employeeId && periodStart && periodEnd && (
+          <div className="pt-2 border-t border-border">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">AI Assist</p>
+            <AIGenerateReviewButton
+              userId={employeeId}
+              userName={employees.find((e) => e.id === employeeId)?.name ?? "Employee"}
+              periodStart={periodStart}
+              periodEnd={periodEnd}
+            />
+          </div>
+        )}
       </HrSheet>
     </div>
   );
