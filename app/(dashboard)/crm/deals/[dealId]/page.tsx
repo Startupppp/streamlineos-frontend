@@ -22,6 +22,7 @@ import Link from "next/link";
 import { DealEditForm, type EditFormValues } from "@/features/crm/deals/detail/deal-edit-form";
 import { ActivityTimeline } from "@/features/crm/deals/detail/activity-timeline";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
+import { AIPredictDealButton } from "@/features/crm/deals/ai-predict-deal-button";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
@@ -170,6 +171,7 @@ export default function DealDetailPage({
           {deal.probability !== null && (
             <Badge variant="secondary" className="text-xs">{deal.probability}% probability</Badge>
           )}
+          <AIPredictDealButton dealId={dealId} compact />
           <Button variant="outline" size="sm" onClick={handleToggleEdit}>
             <Edit2 className="h-4 w-4 mr-1" />
             {isEditing ? "Cancel" : "Edit"}

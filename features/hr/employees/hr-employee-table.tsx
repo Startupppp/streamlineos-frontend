@@ -88,7 +88,7 @@ export function HrEmployeeTable({
   return (
     <Card className="border-border flex flex-col flex-1 min-h-0">
       <CardContent className="p-0 flex flex-col flex-1 min-h-0">
-        <div className="overflow-auto max-h-[calc(100vh-280px)]" role="region" aria-label="Employee directory table">
+        <div className="overflow-auto flex-1 min-h-0" role="region" aria-label="Employee directory table">
           <div className="min-w-[700px]">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-card">

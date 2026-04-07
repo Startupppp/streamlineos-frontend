@@ -97,8 +97,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           </div>
         }
       noInternalScroll
+      contentClassName="flex flex-col gap-3"
       >
-        <div className="flex flex-col h-full gap-3">
           <Card className="shrink-0">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -158,36 +158,39 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="mt-3 flex-1 min-h-0 overflow-y-auto space-y-3 pb-4">
-              <div className="grid gap-3 lg:grid-cols-2">
-                <Card>
-                  <CardContent className="p-4">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Projects</h3>
-                    <EmployeeProjectsList
-                      projects={(projects ?? []) as unknown as Parameters<typeof EmployeeProjectsList>[0]["projects"]}
-                    />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Assigned Tickets</h3>
-                    <EmployeeTicketsList
-                      tickets={(ticketsResult?.data ?? []) as Parameters<typeof EmployeeTicketsList>[0]["tickets"]}
-                    />
-                  </CardContent>
-                </Card>
+            <TabsContent value="overview" className="flex-1 min-h-0 overflow-y-auto">
+              <div className="space-y-3 pb-4">
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Projects</h3>
+                      <EmployeeProjectsList
+                        projects={(projects ?? []) as unknown as Parameters<typeof EmployeeProjectsList>[0]["projects"]}
+                      />
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Assigned Tickets</h3>
+                      <EmployeeTicketsList
+                        tickets={(ticketsResult?.data ?? []) as Parameters<typeof EmployeeTicketsList>[0]["tickets"]}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="attendance" className="mt-3 flex-1 min-h-0 overflow-y-auto pb-6">
-              <EmployeeAttendanceHistory userId={employee.id} />
+            <TabsContent value="attendance" className="flex-1 min-h-0 overflow-y-auto">
+              <div className="pb-6">
+                <EmployeeAttendanceHistory userId={employee.id} />
+              </div>
             </TabsContent>
 
-            <TabsContent value="profile" className="mt-3 flex-1 min-h-0 flex flex-col">
+            <TabsContent value="profile" className="flex-1 min-h-0 flex flex-col">
               <EditEmployeeForm employee={employee} />
             </TabsContent>
           </Tabs>
-        </div>
       </PageWrapper>
 
       <ConfirmDialog

@@ -23,6 +23,7 @@ import {
   ArrowRight, Plus, User,
 } from "lucide-react";
 import { useClientAccount, useUpdateClientAccount, useLogClientActivity } from "@/lib/api/hooks/crm";
+import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
@@ -132,18 +133,21 @@ export default function ClientAccountDetailPage() {
       title={account.clientName}
       subtitle={`Client Account #${account.id}`}
       actions={
-        account.status !== "INVESTED" ? (
-          <Select onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px] h-8 text-xs">
-              <SelectValue placeholder="Change stage..." />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUSES.filter(s => s !== account.status).map(s => (
-                <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : undefined
+        <>
+          <AIChurnRiskButton clientId={clientId} compact />
+          {account.status !== "INVESTED" && (
+            <Select onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue placeholder="Change stage..." />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.filter(s => s !== account.status).map(s => (
+                  <SelectItem key={s} value={s} className="text-xs">{STATUS_CONFIG[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </>
       }
     >
       {/* Status Pipeline Tracker */}

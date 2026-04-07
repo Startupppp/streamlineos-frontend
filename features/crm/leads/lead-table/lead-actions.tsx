@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Trash2, Download, X } from "lucide-react";
 import { toast } from "sonner";
 import { Lead, TeamMember, STATUSES, PRIORITIES, LOST_REASONS } from "./types";
+import { AIBulkScoreButton } from "../ai-bulk-score-button";
 
 interface ConversionModalProps {
   leadName: string | undefined;
@@ -339,6 +340,8 @@ export function BulkActionsBar({
         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleExport}>
           <Download className="h-3 w-3 mr-1" /> Export
         </Button>
+
+        <AIBulkScoreButton leadIds={selectedArray.slice(0, 50)} onComplete={onClearSelection} />
 
         {isAdmin && (
           <Button

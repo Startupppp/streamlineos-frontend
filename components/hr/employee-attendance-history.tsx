@@ -32,13 +32,27 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
   });
 
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  const totalHours = attendance?.reduce((acc, curr) => acc + parseFloat(curr.workHours || "0"), 0) || 0;
+  const totalHours =
+    attendance?.reduce(
+      (acc, curr) => acc + parseFloat(curr.workHours || "0"),
+      0,
+    ) || 0;
 
   function handleMonthChange(val: string) {
     const newDate = new Date(date);
@@ -53,8 +67,8 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
         <Select
           value={date.getMonth().toString()}
           onValueChange={handleMonthChange}
@@ -64,7 +78,9 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
           </SelectTrigger>
           <SelectContent>
             {months.map((m, i) => (
-              <SelectItem key={i} value={i.toString()}>{m}</SelectItem>
+              <SelectItem key={i} value={i.toString()}>
+                {m}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -78,18 +94,20 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
           </SelectTrigger>
           <SelectContent>
             {years.map((y) => (
-              <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+              <SelectItem key={y} value={y.toString()}>
+                {y}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-4">
             <div className="text-2xl font-bold">{totalHours.toFixed(1)}h</div>
           </CardContent>
         </Card>
@@ -97,17 +115,17 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Days Present</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pb-4">
             <div className="text-2xl font-bold">{attendance?.length || 0}</div>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle>Daily Attendance</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-4">
           {isLoading ? (
             <div className="flex justify-center p-4">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -126,20 +144,42 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
               <TableBody>
                 {attendance?.map((record) => (
                   <TableRow key={record.id}>
-                    <TableCell>{format(new Date(record.date), "MMM d, yyyy")}</TableCell>
                     <TableCell>
-                      <Badge variant={(record.status === "PRESENT" || record.status === "WORK_FROM_HOME") ? "default" : "secondary"}>
+                      {format(new Date(record.date), "MMM d, yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          record.status === "PRESENT" ||
+                          record.status === "WORK_FROM_HOME"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
                         {record.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{record.checkIn ? format(new Date(record.checkIn), "hh:mm a") : "-"}</TableCell>
-                    <TableCell>{record.checkOut ? format(new Date(record.checkOut), "hh:mm a") : "-"}</TableCell>
-                    <TableCell className="font-bold">{record.workHours}h</TableCell>
+                    <TableCell>
+                      {record.checkIn
+                        ? format(new Date(record.checkIn), "hh:mm a")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {record.checkOut
+                        ? format(new Date(record.checkOut), "hh:mm a")
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="font-bold">
+                      {record.workHours}h
+                    </TableCell>
                   </TableRow>
                 ))}
                 {!attendance?.length && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-4 text-muted-foreground"
+                    >
                       No attendance records found for this month.
                     </TableCell>
                   </TableRow>

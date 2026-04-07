@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { AIScoreButton } from "../ai-score-button";
 import { AIEmailDialog } from "../ai-email-dialog";
+import { AINextActionButton } from "../ai-next-action-button";
+import { AIEnrichLeadButton } from "../ai-enrich-lead-button";
 import { fadeUp } from "@/lib/motion-variants";
 import {
   STATUS_PIPELINE,
@@ -173,6 +175,19 @@ export function LeadDetailHeader({
             company={lead.company}
             designation={lead.designation}
             potentialValue={(lead as Record<string, unknown>).potentialValue as string | undefined}
+          />
+
+          <AINextActionButton
+            leadId={(lead as Record<string, unknown>).id as number}
+            compact
+          />
+
+          <AIEnrichLeadButton
+            leadName={lead.name}
+            company={lead.company}
+            email={(lead as Record<string, unknown>).email as string | null | undefined}
+            designation={lead.designation}
+            city={(lead as Record<string, unknown>).city as string | null | undefined}
           />
 
           <Button variant="outline" size="sm" onClick={onToggleEdit}>
