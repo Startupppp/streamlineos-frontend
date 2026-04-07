@@ -17,6 +17,16 @@ function isLoopbackHostname(hostname: string): boolean {
   );
 }
 
+/** Must match Auth.js session cookie: `__Secure-` prefix only when the response uses a secure cookie (HTTPS). */
+function authJsSessionCookieName(req: NextRequest): string {
+  if (process.env.NODE_ENV !== "production") {
+    return "authjs.session-token";
+  }
+  const forwarded = req.headers.get("x-forwarded-proto");
+  const isHttps = forwarded === "https" || req.nextUrl.protocol === "https:";
+  return isHttps ? "__Secure-authjs.session-token" : "authjs.session-token";
+}
+
 const PROTECTED_ROUTES = [
   "/dashboard",
   "/projects",
@@ -208,10 +218,7 @@ export default async function middleware(req: NextRequest) {
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
-    cookieName:
-      process.env.NODE_ENV === "production"
-        ? "__Secure-authjs.session-token"
-        : "authjs.session-token",
+    cookieName: authJsSessionCookieName(req),
   });
 
   const isAuthenticated = !!token;

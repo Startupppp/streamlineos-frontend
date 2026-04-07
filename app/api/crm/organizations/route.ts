@@ -1,7 +1,7 @@
 import { withAuth, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { crmOrganizations } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 
@@ -15,15 +15,57 @@ const createSchema = z.object({
   description: z.string().optional(),
 });
 
-export async function GET() {
+const listQuerySchema = z.object({
+  search: z.string().optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(20),
+});
+
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
-    const data = await db
-      .select()
-      .from(crmOrganizations)
-      .where(eq(crmOrganizations.orgId, session.orgId))
-      .orderBy(desc(crmOrganizations.createdAt))
-      .limit(100);
-    return ok(data);
+    const parsed = listQuerySchema.safeParse({
+      search: req.nextUrl.searchParams.get("search") ?? undefined,
+      page: req.nextUrl.searchParams.get("page") ?? undefined,
+      limit: req.nextUrl.searchParams.get("limit") ?? undefined,
+    });
+
+    const { search, page, limit } = parsed.success
+      ? parsed.data
+      : { search: undefined, page: 1, limit: 20 };
+
+    const where = and(
+      eq(crmOrganizations.orgId, session.orgId),
+      search
+        ? ilike(crmOrganizations.name, `%${search.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`)
+        : undefined
+    );
+
+    const offset = (page - 1) * limit;
+
+    const [organizations, countRow] = await Promise.all([
+      db
+        .select()
+        .from(crmOrganizations)
+        .where(where)
+        .orderBy(desc(crmOrganizations.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(crmOrganizations)
+        .where(where)
+        .then((rows) => rows[0]),
+    ]);
+
+    const totalCount = Number(countRow?.count ?? 0);
+    const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / limit);
+
+    return ok({
+      organizations,
+      totalCount,
+      page,
+      totalPages,
+    });
   });
 }
 

@@ -65,8 +65,10 @@ export default function SignInPage() {
     },
     onSuccess: (result) => {
       toast.success("Welcome back!");
-      if (result?.ok && result?.url) {
-        window.location.href = result.url;
+      if (result?.ok) {
+        const target =
+          result.url && result.url.length > 0 ? result.url : getCallbackUrl();
+        window.location.href = target;
       }
     },
     onError: (error: Error) => {

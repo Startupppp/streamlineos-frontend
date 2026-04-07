@@ -86,6 +86,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         {
           label: "HR",
           routes: [
+
             { label: "Employees", icon: Users, href: "/hr" },
             { label: "Add employee", icon: UserPlus, href: "/hr/employees/new", isSubItem: true },
             { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
@@ -96,9 +97,12 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "Documents", icon: FileText, href: "/hr/documents" },
             { label: "Devices", icon: Laptop, href: "/hr/devices" },
+
             { label: "Assets", icon: Package, href: "/hr/assets" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
+            
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
+            {label:"Billing", icon: Receipt, href: "/billing"},
             { label: "Jobs", icon: Briefcase, href: "/hr/recruitment/jobs", isSubItem: true },
             { label: "Candidates", icon: Users, href: "/hr/recruitment/candidates", isSubItem: true },
             { label: "Pipeline", icon: TrendingUp, href: "/hr/recruitment/pipeline", isSubItem: true },
