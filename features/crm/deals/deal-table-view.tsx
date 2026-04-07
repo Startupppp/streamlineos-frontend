@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AIPredictDealButton } from "./ai-predict-deal-button";
 
 interface Deal {
   id: number;
@@ -84,6 +85,7 @@ export function DealTableView({
     { key: "value", label: "Value", sortable: true },
     { key: "stage", label: "Stage", sortable: true },
     { key: "probability", label: "Prob%", sortable: true },
+    { key: "ai", label: "AI", sortable: false },
     { key: "contactPerson", label: "Contact", sortable: false },
     { key: "assignedTo", label: "Assigned", sortable: false },
     { key: "expectedCloseDate", label: "Close", sortable: false },
@@ -179,6 +181,9 @@ export function DealTableView({
                       </TableCell>
                       <TableCell className="px-2 py-1 tabular-nums">
                         {deal.probability != null ? `${deal.probability}%` : "—"}
+                      </TableCell>
+                      <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                        <AIPredictDealButton dealId={deal.id} compact />
                       </TableCell>
                       <TableCell className="px-2 py-1 truncate max-w-[100px]">
                         {deal.contactPerson || "—"}

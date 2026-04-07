@@ -102,7 +102,7 @@ function ReviewsTab() {
   const updateReview = useUpdatePerformanceReview();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [employeeId, setEmployeeId] = useState("");
-  const [cycleId, setCycleId] = useState("");
+  const [cycleId, setCycleId] = useState("none");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
 
@@ -118,7 +118,7 @@ function ReviewsTab() {
     }
     createReview.mutate({
       userId: employeeId,
-      cycleId: cycleId ? Number(cycleId) : undefined,
+      cycleId: cycleId !== "none" ? Number(cycleId) : undefined,
       periodStart,
       periodEnd,
     }, {
@@ -126,7 +126,7 @@ function ReviewsTab() {
         toast.success("Review created");
         setSheetOpen(false);
         setEmployeeId("");
-        setCycleId("");
+        setCycleId("none");
         setPeriodStart("");
         setPeriodEnd("");
       },
@@ -218,7 +218,7 @@ function ReviewsTab() {
           <Select value={cycleId} onValueChange={setCycleId}>
             <SelectTrigger><SelectValue placeholder="Ad-hoc review" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Ad-hoc (no cycle)</SelectItem>
+              <SelectItem value="none">Ad-hoc (no cycle)</SelectItem>
               {cycles?.map((c: ReviewCycle) => (
                 <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
               ))}

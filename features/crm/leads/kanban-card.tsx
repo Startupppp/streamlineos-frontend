@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useSelfAssignLead } from "@/lib/hooks/trpc-hooks";
 import { STATUSES, SOURCE_COLORS, PRIORITY_CONFIG, timeAgo, getInitials } from "./leads-constants";
 import type { BoardLead, LeadStatus } from "./leads-types";
+import { AIScoreButton } from "./ai-score-button";
 
 interface KanbanCardProps {
   lead: BoardLead;
@@ -129,9 +130,14 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
                   </div>
 
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                    <span className="text-[10px] text-muted-foreground">
-                      {lead.createdAt ? timeAgo(lead.createdAt) : "—"}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-muted-foreground">
+                        {lead.createdAt ? timeAgo(lead.createdAt) : "—"}
+                      </span>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <AIScoreButton leadId={lead.id} currentScore={lead.score} compact />
+                      </div>
+                    </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       {status !== "CONVERTED" && status !== "LOST" && (
                         <>

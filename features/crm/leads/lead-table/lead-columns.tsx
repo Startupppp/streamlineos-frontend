@@ -18,6 +18,7 @@ import {
   STATUS_COLORS, PRIORITY_COLORS, SOURCE_COLORS,
   formatINR, timeAgo, formatDate,
 } from "./types";
+import { AIScoreButton } from "../ai-score-button";
 
 /* ─── SortIcon ─── */
 interface SortIconProps {
@@ -259,7 +260,11 @@ export function useLeadCellRenderer({
         );
 
       case "score":
-        return <span className="text-[11px] font-mono tabular-nums">{lead.score ?? 0}</span>;
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <AIScoreButton leadId={lead.id} currentScore={lead.score} compact />
+          </div>
+        );
 
       case "tags":
         return lead.tags?.length ? (

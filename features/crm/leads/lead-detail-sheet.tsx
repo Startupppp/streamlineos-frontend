@@ -17,6 +17,10 @@ import { toast } from "sonner";
 import { STATUSES, STATUS_CONFIG, isActivityType, timeAgo, getInitials } from "./leads-constants";
 import type { LeadStatus, LeadActivity } from "./leads-types";
 import { ActivityForm } from "./activity-form";
+import { AIScoreButton } from "./ai-score-button";
+import { AIEmailDialog } from "./ai-email-dialog";
+import { AINextActionButton } from "./ai-next-action-button";
+import { AIEnrichLeadButton } from "./ai-enrich-lead-button";
 
 interface LeadDetailSheetProps {
   leadId: number | null;
@@ -119,6 +123,28 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
             </div>
 
             <div className="px-6 py-5 space-y-6">
+              {/* AI Actions */}
+              <div className="space-y-2.5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">AI Tools</p>
+                <div className="flex gap-2 flex-wrap items-center">
+                  <AIScoreButton leadId={lead.id} currentScore={lead.score} compact />
+                  <AINextActionButton leadId={lead.id} compact />
+                  <AIEmailDialog
+                    leadName={lead.name}
+                    company={lead.company}
+                    designation={lead.designation}
+                    potentialValue={lead.potentialValue ?? undefined}
+                  />
+                  <AIEnrichLeadButton
+                    leadName={lead.name}
+                    company={lead.company}
+                    email={lead.email}
+                    designation={lead.designation}
+                    city={lead.city}
+                  />
+                </div>
+              </div>
+
               {/* Status Actions */}
               <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Move to</p>

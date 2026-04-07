@@ -12,6 +12,7 @@ import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINRCompact } from "@/lib/format-utils";
 import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { Deal } from "@/types/crm";
+import { AIPredictDealButton } from "./ai-predict-deal-button";
 
 interface DealKanbanCardProps {
   deal: Deal;
@@ -107,6 +108,10 @@ export function DealKanbanCard({ deal, onStageChange, onDelete }: DealKanbanCard
             <span className="text-[10px] text-muted-foreground">{deal.probability}% probability</span>
           </div>
         )}
+
+        <div className="mt-2 pt-2 border-t border-border/30 flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <AIPredictDealButton dealId={deal.id} compact />
+        </div>
       </CardContent>
     </Card>
   );

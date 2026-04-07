@@ -25,6 +25,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccountStats, useClientAccounts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
+import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
 
@@ -148,6 +149,7 @@ export default function ClientAccountsPage() {
                   <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Est. Inv.</TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Investment</TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Converted</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">AI</TableHead>
                   <TableHead className="text-[10px] w-8 px-2"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -217,6 +219,9 @@ export default function ClientAccountsPage() {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {account.convertedAt ? new Date(account.convertedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <AIChurnRiskButton clientId={account.id} compact />
                         </TableCell>
                         <TableCell>
                           <Link href={`/crm/clients/${account.id}`}>

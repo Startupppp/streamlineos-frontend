@@ -1,77 +1,149 @@
 import "server-only";
 
-import OpenAI from "openai";
+import { ChatOpenAI } from "@langchain/openai";
+import type { z } from "zod";
 
-let _client: OpenAI | null = null;
+/**
+ * Centralized LangChain client for all AI features.
+ *
+ * Why LangChain?
+ *   - Provider-agnostic (swap models with one line)
+ *   - Native Zod schema support via .withStructuredOutput()
+ *   - Built-in retries, timeouts, structured output guarantees
+ *   - Composable chains for complex workflows
+ *   - Same TypeScript types end-to-end
+ */
 
-export function getOpenAIClient(): OpenAI {
-  if (_client) return _client;
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set");
-  }
-
-  _client = new OpenAI({ apiKey });
-  return _client;
-}
+let _fastModel: ChatOpenAI | null = null;
+let _standardModel: ChatOpenAI | null = null;
 
 /** Check if OpenAI is configured (without throwing). */
 export function isOpenAIConfigured(): boolean {
   return !!process.env.OPENAI_API_KEY;
 }
 
-/** Model constants. Use mini for cost-efficient bulk ops, standard for complex analysis. */
-const MODELS = {
-  /** GPT-4o-mini — fast, cheap, good for structured output. ~$0.15/1M input tokens */
-  fast: "gpt-4o-mini" as const,
-  /** GPT-4o — best quality for complex reasoning. ~$2.50/1M input tokens */
-  standard: "gpt-4o" as const,
-};
+function getFastModel(): ChatOpenAI {
+  if (_fastModel) return _fastModel;
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not set");
+  }
+  _fastModel = new ChatOpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    model: "gpt-4o-mini",
+    temperature: 0.3,
+    timeout: 30000,
+    maxRetries: 2,
+  });
+  return _fastModel;
+}
 
-/** Reusable call with retry + timeout. Returns parsed JSON or throws. */
+function getStandardModel(): ChatOpenAI {
+  if (_standardModel) return _standardModel;
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not set");
+  }
+  _standardModel = new ChatOpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    model: "gpt-4o",
+    temperature: 0.3,
+    timeout: 60000,
+    maxRetries: 2,
+  });
+  return _standardModel;
+}
+
+type ModelTier = "fast" | "standard";
+
+/**
+ * Invoke an AI model with a Zod schema and get a typed, validated response.
+ *
+ * This is the SINGLE entry point for all AI calls in this codebase.
+ * Built on LangChain's `withStructuredOutput()` which uses OpenAI's native
+ * structured outputs feature for guaranteed schema-compliant JSON.
+ *
+ * @example
+ *   const result = await aiInvoke({
+ *     model: "fast",
+ *     schema: LeadScoreSchema,
+ *     schemaName: "lead_score",
+ *     system: "You are a sales analyst.",
+ *     user: "Score this lead: ...",
+ *   });
+ *   // result is fully typed via z.infer<typeof LeadScoreSchema>
+ */
+export async function aiInvoke<T extends z.ZodTypeAny>(opts: {
+  model?: ModelTier;
+  schema: T;
+  /** Short, lowercase, snake_case name. Required by structured outputs. */
+  schemaName: string;
+  system: string;
+  user: string;
+}): Promise<z.infer<T>> {
+  const model = opts.model === "standard" ? getStandardModel() : getFastModel();
+
+  const structured = model.withStructuredOutput(opts.schema, {
+    name: opts.schemaName,
+    method: "jsonSchema",
+    strict: true,
+  });
+
+  const result = await structured.invoke([
+    { role: "system", content: opts.system },
+    { role: "user", content: opts.user },
+  ]);
+
+  return result as z.infer<T>;
+}
+
+/**
+ * Invoke an AI model with a plain text response.
+ * Use only for free-form output where schema validation is not needed.
+ */
+export async function aiText(opts: {
+  model?: ModelTier;
+  system: string;
+  user: string;
+  temperature?: number;
+}): Promise<string> {
+  const baseModel = opts.model === "standard" ? getStandardModel() : getFastModel();
+
+  // Override temperature if explicitly provided
+  const model = opts.temperature !== undefined
+    ? new ChatOpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+        model: opts.model === "standard" ? "gpt-4o" : "gpt-4o-mini",
+        temperature: opts.temperature,
+        timeout: 30000,
+        maxRetries: 2,
+      })
+    : baseModel;
+
+  const result = await model.invoke([
+    { role: "system", content: opts.system },
+    { role: "user", content: opts.user },
+  ]);
+
+  return typeof result.content === "string" ? result.content : JSON.stringify(result.content);
+}
+
+/* ─── Backward compatibility shim ─────────────────────────────────────────── */
+
+/** @deprecated Use aiInvoke() with a Zod schema instead. */
 export async function aiJSON<T>(opts: {
-  model?: keyof typeof MODELS;
+  model?: ModelTier;
   system: string;
   user: string;
   maxTokens?: number;
 }): Promise<T> {
-  const client = getOpenAIClient();
-  const response = await client.chat.completions.create({
-    model: MODELS[opts.model ?? "fast"],
-    messages: [
-      { role: "system", content: opts.system },
+  const baseModel = opts.model === "standard" ? getStandardModel() : getFastModel();
+  const result = await baseModel.invoke(
+    [
+      { role: "system", content: `${opts.system}\n\nRespond with valid JSON only.` },
       { role: "user", content: opts.user },
     ],
-    max_tokens: opts.maxTokens ?? 1024,
-    temperature: 0.3,
-    response_format: { type: "json_object" },
-  });
-
-  const text = response.choices[0]?.message?.content;
-  if (!text) throw new Error("Empty AI response");
-
-  return JSON.parse(text) as T;
-}
-
-/** Reusable call that returns plain text. */
-export async function aiText(opts: {
-  model?: keyof typeof MODELS;
-  system: string;
-  user: string;
-  maxTokens?: number;
-  temperature?: number;
-}): Promise<string> {
-  const client = getOpenAIClient();
-  const response = await client.chat.completions.create({
-    model: MODELS[opts.model ?? "fast"],
-    messages: [
-      { role: "system", content: opts.system },
-      { role: "user", content: opts.user },
-    ],
-    max_tokens: opts.maxTokens ?? 2048,
-    temperature: opts.temperature ?? 0.7,
-  });
-
-  return response.choices[0]?.message?.content ?? "";
+  );
+  const text = typeof result.content === "string" ? result.content : "";
+  // Strip markdown fences if present
+  const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+  return JSON.parse(cleaned) as T;
 }

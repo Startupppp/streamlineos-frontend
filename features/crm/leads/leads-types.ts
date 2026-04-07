@@ -12,6 +12,7 @@ export interface BoardLead {
   source?: string | null;
   priority?: string | null;
   potentialValue?: string | null;
+  score?: number | null;
   createdAt?: string | Date | null;
   assignedTo?: { name?: string | null; image?: string | null } | null;
 }

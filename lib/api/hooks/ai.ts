@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
   NextActionResult, ChurnRiskResult, ConversationSummaryResult, LeadEnrichmentResult,
+  CandidateScoreResult, ReviewDraftResult, HelpdeskReplyResult, AttritionRiskResult,
 } from "@/lib/ai/prompts";
 
 /* ─── AI Lead Scoring ─────────────────────────────────────────────────────── */
@@ -120,5 +121,45 @@ export function useEnrichLead() {
   return useMutation({
     mutationFn: (input: { name: string; company?: string; email?: string; designation?: string; city?: string }) =>
       apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input),
+  });
+}
+
+/* ─── HR AI: Score Candidate ──────────────────────────────────────────────── */
+
+export function useAIScoreCandidate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { candidateId: number; jobId?: number }) =>
+      apiClient.post<CandidateScoreResult>("/ai/score-candidate", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+    },
+  });
+}
+
+/* ─── HR AI: Generate Performance Review Draft ─────────────────────────────── */
+
+export function useAIGenerateReview() {
+  return useMutation({
+    mutationFn: (input: { userId: string; periodStart: string; periodEnd: string }) =>
+      apiClient.post<ReviewDraftResult>("/ai/generate-review", input),
+  });
+}
+
+/* ─── HR AI: Helpdesk Reply Suggestion ─────────────────────────────────────── */
+
+export function useAISuggestHelpdeskReply() {
+  return useMutation({
+    mutationFn: (ticketId: number) =>
+      apiClient.post<HelpdeskReplyResult>("/ai/helpdesk-reply", { ticketId }),
+  });
+}
+
+/* ─── HR AI: Employee Attrition Risk ───────────────────────────────────────── */
+
+export function useAIAttritionRisk() {
+  return useMutation({
+    mutationFn: (userId: string) =>
+      apiClient.post<AttritionRiskResult>("/ai/attrition-risk", { userId }),
   });
 }
