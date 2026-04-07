@@ -2,13 +2,13 @@ import { z } from "zod";
 
 export const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
-export const ticketTypeSchema = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
-export const ticketStatusSchema = z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
+export const ticketTypeSchema = z.string().min(1, "Ticket type is required");
+export const ticketStatusSchema = z.string();
 export const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 export const updateProjectSettingsInputSchema = z.object({
   projectId: z.number().int().positive(),
-  name: z.string().min(1, "Project name is required").max(200),
-  description: z.string().max(2000).optional(),
+  name: z.string().min(1, "Project name is required"),
+  description: z.string().optional(),
   status: projectStatusSchema,
   managerId: z.string().optional(),
   clientId: z.string().optional(),
@@ -18,9 +18,9 @@ export const updateProjectSettingsInputSchema = z.object({
 });
 
 export const createProjectInputSchema = z.object({
-  key: z.string().min(2).max(10).optional(),
-  name: z.string().min(1, "Project name is required").max(200),
-  description: z.string().max(2000).optional(),
+  key: z.string().min(2).optional(),
+  name: z.string().min(1, "Project name is required"),
+  description: z.string().optional(),
   managerId: z.string().optional(),
   clientId: z.string().optional(),
   startDate: z.date().optional(),
@@ -34,22 +34,20 @@ export const createProjectInputSchema = z.object({
   }).optional(),
 });
 
+
 export const createTicketInputSchema = z.object({
   projectId: z.number().int().positive(),
-  title: z.string().min(1, "Title is required").max(500),
-  description: z.string().max(5000).optional(),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
   type: ticketTypeSchema,
   priority: ticketPrioritySchema.optional(),
   assigneeId: z.string().optional(),
-  assigneeIds: z.array(z.string()).optional(),
   reporterId: z.string().optional(),
   sprintId: z.number().int().positive().optional(),
   epicId: z.number().int().positive().optional(),
   points: z.number().int().min(0).optional(),
-  link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  link: z.string().optional(),
   originalEstimate: z.number().positive().optional(),
-  parentTicketId: z.number().int().positive().optional(),
-  status: ticketStatusSchema.optional(),
 });
 
 export const updateTicketInputSchema = z.object({
@@ -60,7 +58,6 @@ export const updateTicketInputSchema = z.object({
   status: ticketStatusSchema.optional(),
   priority: ticketPrioritySchema.optional(),
   assigneeId: z.string().optional(),
-  assigneeIds: z.array(z.string()).optional(),
   sprintId: z.number().int().positive().optional(),
   epicId: z.number().int().positive().optional(),
   points: z.number().int().min(0).optional(),
@@ -74,13 +71,10 @@ export const updateTicketStatusInputSchema = z.object({
 
 export const createSprintInputSchema = z.object({
   projectId: z.number().int().positive(),
-  name: z.string().min(1, "Sprint name is required").max(200),
+  name: z.string().min(1, "Sprint name is required"),
   startDate: z.date(),
   endDate: z.date(),
   goal: z.string().optional(),
-}).refine((data) => data.endDate > data.startDate, {
-  message: "End date must be after start date",
-  path: ["endDate"],
 });
 
 export const updateSprintInputSchema = z.object({
@@ -94,13 +88,17 @@ export const updateSprintInputSchema = z.object({
 
 export const addCommentInputSchema = z.object({
   ticketId: z.number().int().positive(),
-  content: z.string().min(1, "Comment is required").max(5000),
+  content: z.string().min(1, "Comment is required"),
   parentCommentId: z.number().int().positive().optional(),
 });
 
 export const addAttachmentInputSchema = z.object({
   ticketId: z.number().int().positive(),
-  fileUrl: z.string().min(1),
+  // Accept both full URLs (for cloud storage like R2) and relative paths (for local storage)
+  fileUrl: z.string().min(1).refine(
+    (val) => val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://'),
+    { message: "File URL must be a valid URL or a relative path starting with /" }
+  ),
   fileName: z.string().min(1),
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),
@@ -122,9 +120,9 @@ export const deleteTimeEntryInputSchema = z.object({
 });
 
 export const addTimeEntryInputSchema = z.object({
-  ticketId: z.number({ error: "Please select a ticket" }).int().positive("Please select a ticket"),
-  date: z.date().refine((d) => d <= new Date(), { message: "Cannot log time for future dates" }),
-  hours: z.number().positive().max(24, "Cannot log more than 24 hours per entry"),
+  ticketId: z.number().int().positive(),
+  date: z.date(),
+  hours: z.number().positive(),
   description: z.string().optional(),
   imageUrl: z.string().optional().or(z.literal("")),
   workLink: z.string().optional().or(z.literal("")).refine(

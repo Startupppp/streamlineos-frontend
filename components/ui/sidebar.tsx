@@ -9,9 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
@@ -65,7 +63,7 @@ const SidebarProvider = React.forwardRef<
       }
 
       if (!isMobile) {
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState};path=/;max-age=${SIDEBAR_COOKIE_MAX_AGE};SameSite=Lax`
+        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState};path=/;max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       }
     },
     [isMobile, onOpenChange, open]
@@ -300,9 +298,10 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentProps<"div
 SidebarFooter.displayName = "SidebarFooter"
 
 const SidebarSeparator = React.forwardRef<
-  React.ElementRef<typeof Separator>,
-  React.ComponentProps<typeof Separator>
+  React.ElementRef<typeof import("@/components/ui/separator").Separator>,
+  React.ComponentProps<typeof import("@/components/ui/separator").Separator>
 >(({ className, ...props }, ref) => {
+  const { Separator } = require("@/components/ui/separator")
   return (
     <Separator
       ref={ref}
@@ -555,6 +554,7 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
+  const { Skeleton } = require("@/components/ui/skeleton")
   return (
     <div
       ref={ref}

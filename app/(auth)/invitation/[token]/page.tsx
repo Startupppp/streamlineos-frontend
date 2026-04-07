@@ -1,274 +1,272 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Label } from "../../../../components/ui/label";
+import { Badge } from "../../../../components/ui/badge";
 import { toast } from "sonner";
-import { apiClient } from "@/lib/api-client";
-import { useAcceptInvitation } from "@/lib/hooks/auth-hooks";
-import { getPasswordStrength, PASSWORD_REGEX } from "@/lib/password-utils";
-import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
-import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
-import { motion } from "framer-motion";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { Users, Mail, User, Lock, Loader2, Eye, EyeOff, ArrowRight, X, Shield } from "lucide-react";
-
-const invitationSchema = z.object({
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(PASSWORD_REGEX, "Must include uppercase, lowercase, number, and special character"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-type InvitationFormValues = z.infer<typeof invitationSchema>;
+import { vaivammTrpcClient } from "../../../../lib/trpc";
+import { Users, Mail, User, Shield, Loader2, Eye, EyeOff, PartyPopper } from "lucide-react";
 
 export default function InvitationPage() {
   const router = useRouter();
   const params = useParams();
-  const token = typeof params.token === "string" ? params.token : "";
+  const token = params.token as string;
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const form = useForm<InvitationFormValues>({
-    resolver: zodResolver(invitationSchema),
-    defaultValues: { firstName: "", lastName: "", password: "", confirmPassword: "" },
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [invitation, setInvitation] = useState<{
+    email: string;
+    organizationName: string;
+    role: string;
+  } | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const password = form.watch("password");
-  const confirmPassword = form.watch("confirmPassword");
-  const strength = useMemo(() => getPasswordStrength(password), [password]);
-
-  const { data: invitation, error: invitationError } = useQuery({
-    queryKey: ["invitation", token],
-    queryFn: () => apiClient.get<{ email: string; organizationName: string; role: string }>("/auth/invitation", { token }),
-    enabled: !!token,
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (invitationError) {
-      const message = invitationError instanceof Error ? invitationError.message : "Invalid invitation";
+  const loadInvitation = useCallback(async () => {
+    try {
+      const data = await vaivammTrpcClient.organization.getInvitationByToken.query({ token });
+      setInvitation(data);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Invalid invitation";
       toast.error(message);
       router.push("/signin");
     }
-  }, [invitationError, router]);
+  }, [token, router]);
 
-  const acceptInvitation = useAcceptInvitation();
+  useEffect(() => {
+    if (token) {
+      loadInvitation();
+    }
+  }, [token, loadInvitation]);
 
-  const onSubmit = (values: InvitationFormValues) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      toast.error(
+        "Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+      );
+      return;
+    }
+
     if (!token || !invitation) {
       toast.error("Invalid invitation");
       return;
     }
-    acceptInvitation.mutate(
-      {
+
+    setIsLoading(true);
+
+    try {
+      await vaivammTrpcClient.auth.acceptInvitation.mutate({
         token,
-        firstName: values.firstName || undefined,
-        lastName: values.lastName || undefined,
-        password: values.password,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Account created! Redirecting to dashboard...");
-          router.push("/dashboard");
-        },
-        onError: (error) => {
-          toast.error(error.message || "An error occurred");
-        },
-      }
-    );
+        firstName: formData.firstName || undefined,
+        lastName: formData.lastName || undefined,
+        password: formData.password,
+      });
+
+      toast.success("Account created! Redirecting to dashboard...");
+      await new Promise(resolve => setTimeout(resolve, 100));
+      window.location.href = "/dashboard";
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!invitation) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-10 w-10 animate-spin text-gold" />
-        <p className="text-sm text-muted-foreground">Verifying your invitation...</p>
+      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+            <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+          </div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Loading Invitation</h1>
+          <p className="text-blue-100 mt-2">Please wait...</p>
+        </div>
+
+        <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Verifying your invitation...</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <div className="mt-8 text-white/40 text-sm">
+          &copy; 2025 Vaivamm Capital
+        </div>
       </div>
     );
   }
 
   return (
-    <motion.div
-      className="w-full max-w-lg"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={fadeUp}>
-        <Card className="shadow-2xl border-border overflow-hidden">
-          {/* Illustration Header */}
-          <div
-            className="relative h-40 flex items-center justify-center overflow-hidden gradient-brand"
-          >
-            {/* Abstract team illustration with circles */}
-            <div className="relative flex items-end gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
-              <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
-              <div className="w-16 h-16 rounded-full bg-white/25 border-2 border-white/45 flex items-center justify-center">
-                <Users className="w-7 h-7 text-white/80" />
-              </div>
-              <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
-              <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
-            </div>
-            {/* Decorative dots */}
-            <div className="absolute top-4 left-6 w-2 h-2 rounded-full bg-white/20" />
-            <div className="absolute top-8 right-10 w-3 h-3 rounded-full bg-white/15" />
-            <div className="absolute bottom-6 left-12 w-2.5 h-2.5 rounded-full bg-white/15" />
-            <div className="absolute top-12 left-20 w-1.5 h-1.5 rounded-full bg-white/25" />
-            <div className="absolute bottom-4 right-16 w-2 h-2 rounded-full bg-white/20" />
-          </div>
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+      <div className="flex flex-col items-center mb-8">
+        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+          <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+        </div>
+        <h1 className="text-3xl font-bold text-white tracking-tight">You&apos;re Invited!</h1>
+        <p className="text-blue-100 mt-2">Join the team and start collaborating</p>
+      </div>
 
-          <CardContent className="px-6 md:px-8 pt-6 pb-8">
-            {/* Heading */}
-            <div className="text-center mb-6">
-              <div className="mx-auto w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center mb-3">
-                <Mail className="w-6 h-6 text-gold" />
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white">
+        <CardHeader className="space-y-1 text-center pb-4">
+          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+            <PartyPopper className="w-8 h-8 text-primary" />
+          </div>
+          <CardTitle className="text-2xl text-primary">Accept Invitation</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            You have been invited to join
+          </CardDescription>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Users className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-lg text-foreground">{invitation.organizationName}</span>
+            <Badge variant="secondary" className="ml-2">{invitation.role}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Display */}
+            <div className="space-y-2">
+              <Label className="text-foreground">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  value={invitation.email} 
+                  disabled 
+                  className="pl-10 bg-gray-50 cursor-not-allowed"
+                />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">Join Organization</h1>
-              <p className="text-sm text-muted-foreground mt-1.5">
-                You&apos;ve been invited to join <span className="font-semibold text-foreground">{invitation.organizationName}</span>
+              <p className="text-xs text-muted-foreground">
+                This email will be used for your account
               </p>
             </div>
 
-            {/* Info Blocks */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Invited By</p>
-                <p className="text-sm font-medium text-foreground truncate">{invitation.organizationName}</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Shield className="w-3 h-3 text-muted-foreground" />
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assigned Role</p>
-                </div>
-                <p className="text-sm font-medium text-foreground">{invitation.role}</p>
-              </div>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={acceptInvitation.isPending}>
+            {/* Name Fields */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-foreground text-xs font-medium">Email</Label>
+                <Label htmlFor="firstName" className="text-foreground">First Name</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input value={invitation.email} disabled className="pl-10 bg-muted/30 cursor-not-allowed text-sm" aria-label="Invitation email address" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-foreground text-xs font-medium">First Name</Label>
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="firstName"
                     type="text"
                     placeholder="John"
-                    {...form.register("firstName")}
-                    disabled={acceptInvitation.isPending}
-                    className="text-sm"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    disabled={isLoading}
+                    className="pl-10 focus-visible:ring-primary"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-foreground text-xs font-medium">Last Name</Label>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-foreground">Last Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="lastName"
                     type="text"
                     placeholder="Doe"
-                    {...form.register("lastName")}
-                    disabled={acceptInvitation.isPending}
-                    className="text-sm"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    disabled={isLoading}
+                    className="pl-10 focus-visible:ring-primary"
                   />
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground text-xs font-medium">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a strong password"
-                    {...form.register("password")}
-                    disabled={acceptInvitation.isPending}
-                    aria-required="true"
-                    aria-invalid={!!form.formState.errors.password}
-                    aria-describedby={form.formState.errors.password ? "password-error" : undefined}
-                    className="pl-10 pr-10 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showPassword}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {form.formState.errors.password && (
-                  <p id="password-error" role="alert" className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-                )}
-                {password.length > 0 && <PasswordStrengthIndicator strength={strength} />}
-              </div>
-
-              <PasswordConfirmField
-                value={confirmPassword}
-                onChange={(val) => form.setValue("confirmPassword", val, { shouldDirty: true })}
-                password={password}
-                disabled={acceptInvitation.isPending}
-                showIcon
-              />
-
-              <div className="pt-2 space-y-3">
-                <Button
-                  type="submit"
-                  className="w-full gap-2 text-white font-medium h-11 gradient-gold"
-                  disabled={acceptInvitation.isPending}
-                >
-                  {acceptInvitation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      Accept Invitation
-                      <ArrowRight className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-
-                <Button
+            {/* Password Fields */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-foreground">Password</Label>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  className="pl-10 pr-10 focus-visible:ring-primary"
+                />
+                <button
                   type="button"
-                  variant="outline"
-                  className="w-full gap-2 h-10"
-                  onClick={() => router.push("/signin")}
-                  disabled={acceptInvitation.isPending}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" />
-                  Decline
-                </Button>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-
-              <p className="text-[11px] text-center text-muted-foreground pt-2">
-                By accepting this invitation, you will have access to shared leads, deal pipelines, and team analytics within this organization.
+              <p className="text-xs text-muted-foreground">
+                Must be at least 8 characters with uppercase, lowercase, number, and special character
               </p>
-            </form>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </motion.div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                  disabled={isLoading}
+                  className="pl-10 pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-11 text-base bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Accept & Create Account"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      
+      <div className="mt-8 text-white/40 text-sm">
+        &copy; 2025 Vaivamm Capital
+      </div>
+    </div>
   );
 }

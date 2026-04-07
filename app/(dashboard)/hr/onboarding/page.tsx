@@ -1,24 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { OnboardingWizard } from "../../../../components/hr/onboarding-wizard";
 
 export default function OnboardingPage() {
   return (
-    <PageWrapper
-      title="Add Employee"
-      subtitle="Complete the steps to onboard a new team member"
-      noInternalScroll
-      actions={
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/hr"><ArrowLeft className="mr-1.5 h-3.5 w-3.5" />Back to Employees</Link>
-        </Button>
-      }
-    >
+    <div className="h-full w-full bg-slate-50/50 dark:bg-slate-950/20">
       <OnboardingWizard />
-    </PageWrapper>
+    </div>
   );
 }

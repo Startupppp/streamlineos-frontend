@@ -1,0 +1,77 @@
+import { initTRPC, TRPCError } from "@trpc/server";
+import superjson from "superjson";
+import { ZodError } from "zod";
+import { auth } from "../../lib/auth";
+import { db } from "../../lib/db";
+import { organizationMembers } from "../../lib/db/schema";
+import { eq } from "drizzle-orm";
+
+// 1. CONTEXT
+export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const session = await auth();
+  return {
+    db,
+    session,
+    ...opts,
+  };
+};
+
+// 2. INITIALIZATION
+const t = initTRPC.context<typeof createTRPCContext>().create({
+  transformer: superjson,
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
+});
+
+// 3. ROUTER & PROCEDURE
+export const createTRPCRouter = t.router;
+
+export const publicProcedure = t.procedure;
+
+/**
+ * Reusable middleware that enforces users are logged in.
+ * Gets the user's organization and adds orgId to the session context.
+ */
+const enforceUserIsAuthed = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.session || !ctx.session.user?.id) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  // Get user's first organization (for now, we'll use the first one)
+  // In the future, this could be selected via a header or query param
+  const userMemberships = await ctx.db.query.organizationMembers.findMany({
+    where: eq(organizationMembers.userId, ctx.session.user.id),
+    limit: 1,
+  });
+
+  let orgId = userMemberships[0]?.orgId || null;
+
+  // Fallback: If no membership, try to find ANY organization (Development fallback)
+  if (!orgId) {
+    const anyOrg = await ctx.db.query.organizations.findFirst();
+    if (anyOrg) {
+      orgId = anyOrg.id;
+    }
+  }
+
+  return next({
+    ctx: {
+      session: {
+        ...ctx.session,
+        userId: ctx.session.user.id,
+        user: ctx.session.user,
+        orgId: orgId || "",
+      },
+    },
+  });
+});
+
+export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);

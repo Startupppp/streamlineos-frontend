@@ -1,207 +1,776 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useForm, type FieldPath, type DefaultValues, type Resolver } from "react-hook-form";
+import { useState, useMemo } from "react";
+import { useForm, FieldPath, DefaultValues, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { onboardEmployeeInputSchema } from "@/lib/validations/hr";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { onboardEmployeeInputSchema } from "../../lib/validations/hr";
+
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Card, CardContent } from "../ui/card";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
-import { useHrDepartments, useOnboardEmployee } from "@/lib/api/hooks/hr";
-import { useRolesList } from "@/lib/api/hooks/roles";
+import { motion, AnimatePresence } from "framer-motion";
+import { Calendar } from "../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { cn } from "../../lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon, CheckCircle2, ChevronRight, ChevronLeft, Loader2, User, Briefcase, CreditCard, CheckSquare } from "lucide-react";
+
+// Hook needed
+import { api } from "../../trpc/react"; // Assuming we can use direct api or hooks
 import { useRouter } from "next/navigation";
-import { StepPersonalInfo } from "./_onboarding/step-personal-info";
-import { StepEmployment } from "./_onboarding/step-employment";
-import { StepSkillsPay } from "./_onboarding/step-skills-pay";
-import { StepBanking } from "./_onboarding/step-banking";
-import { StepReview } from "./_onboarding/step-review";
 
-type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
-
+// Steps definition
 const STEPS = [
-  { id: 1, label: "Personal" },
-  { id: 2, label: "Job Details" },
-  { id: 3, label: "Skills & Pay" },
-  { id: 4, label: "Banking" },
-  { id: 5, label: "Review" },
+  { id: 1, title: "Personal Details", icon: User },
+  { id: 2, title: "Role & Department", icon: Briefcase },
+  { id: 3, title: "Skills & Experience", icon: CheckSquare },
+  { id: 4, title: "Banking Info", icon: CreditCard },
+  { id: 5, title: "Review & Submit", icon: CheckCircle2 },
 ];
 
-const STEP_FIELDS: Record<number, FieldPath<FormValues>[]> = {
-  1: ["firstName", "lastName", "email", "phone", "gender", "dateOfBirth"],
-  2: ["designation", "departmentId", "role", "joiningDate"],
-  3: ["skills", "experienceYears", "taxId"],
-  4: ["bankDetails.accountNumber", "bankDetails.bankName", "bankDetails.branch", "bankDetails.ifsc", "bankDetails.accountHolder"],
-};
-
-const COMMON_DEPARTMENTS = ["HR", "Sales", "Customer Support", "Engineering", "Design", "Video Editing"];
-
-const KNOWN_ACRONYMS = new Set(["CEO", "CTO", "CFO", "COO", "CMO", "CIO", "CHRO", "VP", "SVP", "EVP", "AVP", "HR", "IT", "QA", "UI", "UX"]);
-
-function toTitleCase(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-
-function formatDesignation(str: string) {
-  return str.trim().replace(/\s+/g, " ").split(" ").map((word) => {
-    const upper = word.toUpperCase();
-    return KNOWN_ACRONYMS.has(upper) ? upper : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  }).join(" ");
-}
+// Common role-based departments that should always be available
+const COMMON_ROLE_DEPARTMENTS = [
+  "Admin",
+  "HR",
+  "Sales",
+  "Customer Support",
+  "Graphic Designer",
+  "Digital Marketing",
+  "Social Media Manager",
+  "Engineering",
+  "Product",
+  "Design",
+  "Marketing",
+  "Finance",
+  "Operations",
+];
 
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const router = useRouter();
-  const { data: departments } = useHrDepartments();
-  const { data: orgRoles } = useRolesList();
-  const onboardEmployee = useOnboardEmployee();
 
-  const assignableRoles = useMemo(
-    () => (orgRoles ?? []).filter((r) => r.slug !== "CEO"),
-    [orgRoles]
-  );
-
+  // Fetch departments for dropdown
+  const { data: departments } = api.hr.getDepartments.useQuery();
+  
+  // Combine database departments with common roles
+  // If a department from DB matches a common role, use DB one; otherwise add common roles
   const allDepartmentOptions = useMemo(() => {
-    const dbNames = new Set(departments?.map((d) => d.name.toLowerCase()) ?? []);
-    const extras = COMMON_DEPARTMENTS
-      .filter((name) => !dbNames.has(name.toLowerCase()))
-      .map((name, i) => ({ id: -(i + 1), name, isCommon: true }));
-    return [...(departments ?? []), ...extras];
+    const dbDeptNames = new Set(departments?.map(d => d.name.toLowerCase()) || []);
+    const commonRoles = COMMON_ROLE_DEPARTMENTS
+      .filter(role => !dbDeptNames.has(role.toLowerCase()))
+      .map((role, idx) => ({ id: -(idx + 1), name: role, isCommon: true }));
+    
+    return [
+      ...(departments || []),
+      ...commonRoles
+    ];
   }, [departments]);
+
+  // Mutation
+  const onboardEmployee = api.hr.onboardEmployee.useMutation({
+    onSuccess: () => {
+      toast.success("Employee onboarding initiated successfully!");
+      router.push("/hr/employees");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to onboard employee");
+    },
+  });
+
+  type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(onboardEmployeeInputSchema) as unknown as Resolver<FormValues>,
     defaultValues: {
-      firstName: "", lastName: "", email: "", phone: "",
-      whatsappSameAsPhone: true, whatsappNumber: "", gender: "MALE",
-      password: "", designation: "", departmentId: undefined,
-      role: "ENGINEERING", employeeId: "", joiningDate: new Date(),
-      dateOfBirth: undefined, skills: "", experienceYears: undefined,
-      taxId: "", monthlySalary: undefined,
-      bankDetails: { accountNumber: "", bankName: "", branch: "", ifsc: "", accountHolder: "", pfUanNumber: "" },
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      whatsappSameAsPhone: true,
+      whatsappNumber: "",
+      gender: "MALE",
+      password: "", 
+      designation: "",
+      departmentId: undefined, 
+      role: "MEMBER",
+      joiningDate: new Date(),
+      dateOfBirth: undefined, 
+      skills: "",
+      experienceYears: 0,
+      taxId: "",
+      monthlySalary: undefined,
+      bankDetails: {
+          accountNumber: "",
+          bankName: "",
+          branch: "",
+          ifsc: "",
+          accountHolder: ""
+      }
     } as DefaultValues<FormValues>,
     mode: "onChange",
   });
 
-  const handleNext = useCallback(async () => {
-    const fields = STEP_FIELDS[currentStep];
-    if (fields) {
-      const valid = await form.trigger(fields);
-      if (!valid) return;
+  const { trigger, getValues } = form;
+
+  const nextStep = async () => {
+    let fieldsToValidate: FieldPath<FormValues>[] = [];
+    
+    switch (currentStep) {
+        case 1: fieldsToValidate = ['firstName', 'lastName', 'email', 'phone', 'gender', 'dateOfBirth']; break;
+        case 2: fieldsToValidate = ['designation', 'departmentId', 'role', 'joiningDate']; break;
+        case 3: fieldsToValidate = ['skills', 'experienceYears', 'taxId']; break;
+        case 4: fieldsToValidate = ['bankDetails.accountNumber', 'bankDetails.bankName', 'bankDetails.ifsc', 'bankDetails.accountHolder']; break;
     }
-    setCurrentStep((prev) => Math.min(STEPS.length, prev + 1));
-  }, [currentStep, form]);
 
-  const handlePrev = useCallback(() => {
-    setCurrentStep((prev) => Math.max(1, prev - 1));
-  }, []);
+    const isValid = await trigger(fieldsToValidate);
+    if (isValid) {
+        setCurrentStep((p) => Math.min(STEPS.length, p + 1));
+    }
+  };
 
-  const handleSubmit = useCallback(
-    (data: FormValues) => {
-      onboardEmployee.mutate(
-        {
-          ...data,
-          firstName: toTitleCase(data.firstName),
-          lastName: toTitleCase(data.lastName),
-          designation: formatDesignation(data.designation),
-          password: data.password ?? "",
-        } as import("@/types/hr").OnboardEmployeeInput,
-        {
-          onSuccess: () => {
-            toast.success("Employee onboarded successfully");
-            router.push("/hr");
-          },
-          onError: (err) => toast.error(err.message || "Failed to onboard employee"),
-        }
-      );
-    },
-    [onboardEmployee, router]
-  );
+  const prevStep = () => setCurrentStep((p) => Math.max(1, p - 1));
+
+  const onSubmit = (data: z.infer<typeof onboardEmployeeInputSchema>) => {
+    onboardEmployee.mutate(data);
+  };
+
+  const progress = (currentStep / STEPS.length) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col h-full">
-      <div className="flex items-center gap-1 mb-6 shrink-0">
-        {STEPS.map((step, i) => {
-          const isCompleted = step.id < currentStep;
-          const isActive = step.id === currentStep;
-          return (
-            <div key={step.id} className="flex items-center gap-1 flex-1">
-              <button
-                type="button"
-                onClick={() => step.id < currentStep && setCurrentStep(step.id)}
-                disabled={step.id > currentStep}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors w-full",
-                  isCompleted && "bg-primary/10 text-primary cursor-pointer hover:bg-primary/15",
-                  isActive && "bg-primary text-primary-foreground",
-                  !isCompleted && !isActive && "bg-muted text-muted-foreground cursor-not-allowed"
-                )}
-              >
-                <span className={cn(
-                  "flex items-center justify-center h-5 w-5 rounded-full text-[10px] font-bold shrink-0",
-                  isCompleted && "bg-primary text-primary-foreground",
-                  isActive && "bg-primary-foreground text-primary",
-                  !isCompleted && !isActive && "bg-muted-foreground/20 text-muted-foreground"
-                )}>
-                  {isCompleted ? <Check className="h-3 w-3" /> : step.id}
-                </span>
-                <span className="hidden sm:inline truncate">{step.label}</span>
-              </button>
-              {i < STEPS.length - 1 && <div className="h-px w-2 bg-border shrink-0" />}
-            </div>
-          );
-        })}
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      {/* Progress Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+             Onboard New Talent
+        </h1>
+        <p className="text-muted-foreground mb-6">Complete the steps below to add a new employee to the organization.</p>
+        
+        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+            <motion.div 
+                className="absolute left-0 top-0 h-full bg-primary"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+            />
+        </div>
+        
+        <div className="flex justify-between mt-4">
+            {STEPS.map((step) => {
+                const isActive = step.id === currentStep;
+                const isCompleted = step.id < currentStep;
+                return (
+                    <div key={step.id} className={cn("flex flex-col items-center gap-2 transition-colors", 
+                        isActive ? "text-primary" : isCompleted ? "text-primary/70" : "text-muted-foreground"
+                    )}>
+                        <div className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
+                            isActive ? "border-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--primary),0.3)] scale-110" : 
+                            isCompleted ? "border-primary bg-primary text-primary-foreground" : "border-muted bg-muted/50"
+                        )}>
+                            <step.icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-xs font-medium hidden md:block">{step.title}</span>
+                    </div>
+                )
+            })}
+        </div>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            {currentStep === 1 && <StepPersonalInfo form={form} />}
-            {currentStep === 2 && (
-              <StepEmployment
-                form={form}
-                departments={departments}
-                allDepartmentOptions={allDepartmentOptions}
-                assignableRoles={assignableRoles}
-              />
-            )}
-            {currentStep === 3 && <StepSkillsPay form={form} />}
-            {currentStep === 4 && <StepBanking form={form} />}
-            {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
-          </div>
+      <Card className="border-border/50 shadow-xl overflow-hidden relative">
+        <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+        <CardContent className="p-6 md:p-8 min-h-[400px]">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                >
+                  {currentStep === 1 && (
+                    <div className="grid gap-6 md:grid-cols-2">
+                      <div className="md:col-span-2 mb-2">
+                          <h2 className="text-xl font-semibold">Personal Required Information</h2>
+                          <p className="text-sm text-muted-foreground">Basic details to identify the employee.</p>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="John" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="Doe" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="john.doe@company.com" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="+91 9876543210" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="whatsappSameAsPhone"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center gap-3 space-y-0 pt-4">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal cursor-pointer">WhatsApp number same as phone</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      {!form.watch("whatsappSameAsPhone") && (
+                        <FormField
+                          control={form.control}
+                          name="whatsappNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>WhatsApp Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="+91 9876543210" {...field} className="bg-background/50" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                       <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Gender" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="MALE">Male</SelectItem>
+                                <SelectItem value="FEMALE">Female</SelectItem>
+                                <SelectItem value="OTHER">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="dateOfBirth"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                                onChange={(e) => {
+                                  const date = e.target.value ? new Date(e.target.value) : null;
+                                  field.onChange(date);
+                                }}
+                                max={format(new Date(), "yyyy-MM-dd")}
+                                className="bg-background/50"
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Enter date of birth (YYYY-MM-DD format).
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Initial Password (Optional)</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Set initial password..." {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormDescription className="text-xs">If left blank, user will set via invite.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
 
-          <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handlePrev}
-              disabled={currentStep === 1 || onboardEmployee.isPending}
-              className="gap-1"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              Back
-            </Button>
+                  {currentStep === 2 && (
+                    <div className="space-y-6">
+                        <div className="mb-4">
+                          <h2 className="text-xl font-semibold">Role & Organization</h2>
+                          <p className="text-sm text-muted-foreground">Define their position within the company.</p>
+                      </div>
 
-            {currentStep < STEPS.length ? (
-              <Button type="button" size="sm" onClick={handleNext} className="gap-1">
-                Next
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            ) : (
-              <Button type="submit" size="sm" disabled={onboardEmployee.isPending} className="gap-1 min-w-[100px]">
-                {onboardEmployee.isPending ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Saving...</>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="departmentId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Department <span className="text-red-500">*</span></FormLabel>
+                              <Select 
+                                  value={field.value !== undefined && field.value !== null ? field.value.toString() : ""}
+                                  onValueChange={(val) => {
+                                    if (val && val !== "") {
+                                      const numVal = parseInt(val, 10);
+                                      if (!isNaN(numVal)) {
+                                        field.onChange(numVal);
+                                        // Trigger validation to clear error immediately
+                                        form.trigger("departmentId");
+                                      }
+                                    } else {
+                                      field.onChange(undefined);
+                                    }
+                                  }}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Department" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {/* Database departments */}
+                                  {departments?.map((dept) => (
+                                      <SelectItem key={dept.id} value={dept.id.toString()}>
+                                          {dept.name}
+                                      </SelectItem>
+                                  ))}
+                                  {/* Common role-based departments */}
+                                  {allDepartmentOptions
+                                    .filter(dept => dept.id < 0) // Only show common roles (negative IDs)
+                                    .map((dept) => (
+                                      <SelectItem key={dept.id} value={dept.id.toString()}>
+                                          {dept.name}
+                                      </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription className="text-xs">
+                                Select from existing departments or common roles.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="designation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Designation <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Senior Software Engineer" {...field} className="bg-background/50" />
+                              </FormControl>
+                              <FormDescription className="text-xs">
+                                Enter the job title or position.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="role"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>System Role <span className="text-red-500">*</span></FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select Role" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="MEMBER">Member (Employee)</SelectItem>
+                                  <SelectItem value="ADMIN">Admin (HR/Manager)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription className="text-xs">
+                                Permission level for system access.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="joiningDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Joining Date <span className="text-red-500">*</span></FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-full pl-3 text-left font-normal bg-background/50",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, "PPP")
+                                      ) : (
+                                        <span>Pick a date</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) =>
+                                      date > new Date() || date < new Date("1900-01-01")
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {currentStep === 3 && (
+                    <div className="space-y-6">
+                        <div className="mb-2">
+                          <h2 className="text-xl font-semibold">Skills, Experience & Salary</h2>
+                          <p className="text-sm text-muted-foreground">Professional background and compensation.</p>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="skills"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Skills (Comma Separated)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="React, Node.js, Leadership..." {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormDescription>Enter skills separated by commas.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="grid md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="experienceYears"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Years of Experience</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1" 
+                                    placeholder="5.5" 
+                                    value={field.value ?? ""}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    className="bg-background/50" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="taxId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>PAN Number</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="ABCDE1234F" {...field} className="bg-background/50" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <h3 className="text-lg font-medium mb-4">Salary Information</h3>
+                        <FormField
+                          control={form.control}
+                          name="monthlySalary"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Monthly Salary (CTC) <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="25000" 
+                                    value={field.value ?? ""}
+                                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    className="bg-background/50 pl-8" 
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormDescription>
+                                Salary breakdown: Basic (50%) + HRA (25%) + Special Allowance (25%) - Professional Tax (₹200)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {form.watch("monthlySalary") && Number(form.watch("monthlySalary")) > 0 && (
+                          <div className="mt-4 p-4 bg-muted/30 rounded-lg border text-sm">
+                            <div className="grid grid-cols-2 gap-2">
+                              <span className="text-muted-foreground">Basic Pay:</span>
+                              <span className="font-medium">₹{(Number(form.watch("monthlySalary")) * 0.5).toLocaleString()}</span>
+                              <span className="text-muted-foreground">HRA:</span>
+                              <span className="font-medium">₹{(Number(form.watch("monthlySalary")) * 0.25).toLocaleString()}</span>
+                              <span className="text-muted-foreground">Special Allowance:</span>
+                              <span className="font-medium">₹{(Number(form.watch("monthlySalary")) * 0.25).toLocaleString()}</span>
+                              <span className="text-muted-foreground">Professional Tax:</span>
+                              <span className="font-medium text-red-600">-₹200</span>
+                              <span className="text-muted-foreground font-semibold border-t pt-2">Net Salary:</span>
+                              <span className="font-bold text-green-600 border-t pt-2">₹{(Number(form.watch("monthlySalary")) - 200).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {currentStep === 4 && (
+                      <div className="grid gap-6 md:grid-cols-2">
+                         <div className="md:col-span-2 mb-2">
+                          <h2 className="text-xl font-semibold">Banking Details</h2>
+                          <p className="text-sm text-muted-foreground">Required for payroll processing.</p>
+                      </div>
+                      
+                      <FormField
+                        control={form.control}
+                        name="bankDetails.accountHolder"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account Holder Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="Name as per bank records" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bankDetails.bankName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bank Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. Chase, HDFC" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="bankDetails.branch"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Branch Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. Down Town Branch" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bankDetails.accountNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account Number <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="XXXX-XXXX-XXXX" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="bankDetails.ifsc"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Routing / IFSC Code <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Input placeholder="Routing / IFSC" {...field} className="bg-background/50" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {currentStep === 5 && (
+                    <div className="space-y-6">
+                         <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle2 className="w-8 h-8" />
+                            </div>
+                            <h2 className="text-2xl font-bold">Ready to Onboard?</h2>
+                            <p className="text-muted-foreground">Please review the details below before submitting.</p>
+                        </div>
+                        
+                        <div className="bg-muted/30 rounded-lg p-6 space-y-4 border text-sm">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><span className="text-muted-foreground">Full Name:</span> <span className="font-medium">{getValues("firstName")} {getValues("lastName")}</span></div>
+                                <div><span className="text-muted-foreground">Email:</span> <span className="font-medium">{getValues("email")}</span></div>
+                                <div><span className="text-muted-foreground">Role:</span> <span className="font-medium">{getValues("designation")}</span></div>
+                                <div><span className="text-muted-foreground">Department:</span> <span className="font-medium">{allDepartmentOptions?.find(d => d.id === getValues("departmentId"))?.name}</span></div>
+                                <div><span className="text-muted-foreground">Joining:</span> <span className="font-medium">{format(getValues("joiningDate"), "PPP")}</span></div>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900 p-4 rounded-lg flex gap-3 text-sm text-yellow-800 dark:text-yellow-200">
+                            <CheckSquare className="w-5 h-5 shrink-0" />
+                            <p>By clicking submit, the employee account will be created, and they will be added to the onboarding workflow automatically.</p>
+                        </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+               {/* Navigation Buttons */}
+              <div className="flex justify-between pt-6 border-t mt-8">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 1 || onboardEmployee.isPending}
+                  className="w-24"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                
+                {currentStep < 5 ? (
+                    <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="w-24 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
                 ) : (
-                  <><Check className="h-3.5 w-3.5" />Submit</>
+                    <Button
+                    type="submit"
+                    disabled={onboardEmployee.isPending}
+                    className="w-32 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg shadow-green-500/25"
+                    >
+                    {onboardEmployee.isPending ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            Submit
+                            <CheckCircle2 className="w-4 h-4 ml-2" />
+                        </>
+                    )}
+                    </Button>
                 )}
-              </Button>
-            )}
-          </div>
-        </form>
-      </Form>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

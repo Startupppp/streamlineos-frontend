@@ -1,42 +1,48 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, organizationMembers, departments } from "@/lib/db/schema";
+import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendAccountDeactivationEmail } from "@/lib/email";
-import { ROLES, ADMIN_ROLES, EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
 
 export async function getEmployees() {
   const session = await auth();
   if (!session?.user?.id) return [];
+  
+  // Get org context
   const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id)
   });
+  
   if (!member) return [];
 
   const orgMembers = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, member.orgId),
     with: {
-        user: {
-          with: {
-            department: true,
-          },
-        },
+        user: true
     }
   });
-  return orgMembers.map(m => m.user);
+
+  // Filter out inactive users
+  return orgMembers.map(m => m.user).filter(u => u.isActive !== false);
 }
 
 export async function getEmployeeById(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return null;
+
+  // We need to verify the requester has access to this user's org.
+  // 1. Get requester's org
   const requesterOrgMember = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id)
   });
 
   if (!requesterOrgMember) return null;
+
+  // 2. Fetch target user if they are in the same org
+  // 2. Fetch target user if they are in the same org
   const rows = await db.select({
       user: users
   })
@@ -52,13 +58,15 @@ export async function getEmployeeById(userId: string) {
 
   return rows[0].user;
 
+
+
 }
 
 export async function updateEmployee(data: {
     id: string;
     firstName: string;
     lastName: string;
-    role: string;
+    role: "ADMIN" | "MEMBER";
     designation?: string;
     departmentId?: number;
     phone?: string;
@@ -67,7 +75,6 @@ export async function updateEmployee(data: {
     skills?: string[];
     experienceYears?: number;
     taxId?: string;
-    monthlySalary?: number;
     bankDetails?: {
         accountNumber: string;
         bankName: string;
@@ -77,26 +84,12 @@ export async function updateEmployee(data: {
     };
 }) {
     const session = await auth();
-    if (!session?.user?.id || !EXPENSE_ADMIN_ROLES.includes(session.user.role ?? "")) {
+    // RBAC: Only OWNER or ADMIN can edit
+    if (!session?.user?.id || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
         return { error: "Unauthorized" };
     }
 
     try {
-        const requesterOrgMember = await db.query.organizationMembers.findFirst({
-            where: eq(organizationMembers.userId, session.user.id)
-        });
-
-        if (!requesterOrgMember) return { error: "Organization context not found" };
-
-        const targetOrgMember = await db.query.organizationMembers.findFirst({
-            where: and(
-                eq(organizationMembers.userId, data.id),
-                eq(organizationMembers.orgId, requesterOrgMember.orgId)
-            )
-        });
-
-        if (!targetOrgMember) return { error: "Employee not found in your organization" };
-
         await db.update(users)
             .set({
                 firstName: data.firstName,
@@ -109,12 +102,20 @@ export async function updateEmployee(data: {
                 gender: data.gender,
                 joiningDate: data.joiningDate ? data.joiningDate.toISOString().split('T')[0] : undefined,
                 skills: data.skills,
-                experienceYears: data.experienceYears ? String(data.experienceYears) : undefined,
+                experienceYears: data.experienceYears ? String(data.experienceYears) : undefined, // Schema uses decimal/string
                 taxId: data.taxId,
-                monthlySalary: data.monthlySalary !== undefined ? String(data.monthlySalary) : undefined,
                 bankDetails: data.bankDetails,
             })
             .where(eq(users.id, data.id));
+        
+        // Also update role in organizationMembers
+        // Find the record for this user in the current org context
+        // (Assuming 1 org for now, but safer to lookup)
+        
+        // We need the orgId context. 
+        const requesterOrgMember = await db.query.organizationMembers.findFirst({
+            where: eq(organizationMembers.userId, session.user.id)
+        });
 
         if (requesterOrgMember) {
              await db.update(organizationMembers)
@@ -133,73 +134,23 @@ export async function updateEmployee(data: {
     }
 }
 
-export async function toggleDashboardAccess(userId: string, hasDashboardAccess: boolean) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
-  const { role, id: currentUserId } = session.user;
-  if (!EXPENSE_ADMIN_ROLES.includes(role ?? "")) {
-    return { error: "Permission denied" };
-  }
-  if (userId === currentUserId) {
-    return { error: "You cannot toggle your own dashboard access" };
-  }
-
-  try {
-    const requesterOrgMember = await db.query.organizationMembers.findFirst({
-      where: eq(organizationMembers.userId, session.user.id),
-    });
-    if (!requesterOrgMember) return { error: "Organization context not found" };
-
-    const targetOrgMember = await db.query.organizationMembers.findFirst({
-      where: and(
-        eq(organizationMembers.userId, userId),
-        eq(organizationMembers.orgId, requesterOrgMember.orgId)
-      ),
-    });
-    if (!targetOrgMember) return { error: "Employee not found in your organization" };
-
-    const employee = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-    });
-    if (!employee) return { error: "User not found" };
-    if (employee.role === ROLES.CEO) return { error: "Cannot modify dashboard access for the CEO" };
-
-    await db.update(users)
-      .set({ hasDashboardAccess })
-      .where(eq(users.id, userId));
-
-    revalidatePath("/hr");
-    return { success: true };
-  } catch {
-    return { error: "Failed to toggle dashboard access" };
-  }
-}
-
 export async function deleteEmployee(userId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
   const { role, id: currentUserId } = session.user;
-  if (role !== ROLES.CEO && role !== ROLES.ADMIN) {
+
+  // Only Owners and Admins can delete employees
+  if (role !== "OWNER" && role !== "ADMIN") {
       return { error: "Permission denied" };
   }
+
+  // Prevent self-deletion
   if (userId === currentUserId) {
       return { error: "You cannot delete your own account" };
   }
 
   try {
-      const requesterOrgMember = await db.query.organizationMembers.findFirst({
-        where: eq(organizationMembers.userId, session.user.id),
-      });
-      if (!requesterOrgMember) return { error: "Organization context not found" };
-
-      const targetOrgMember = await db.query.organizationMembers.findFirst({
-        where: and(
-          eq(organizationMembers.userId, userId),
-          eq(organizationMembers.orgId, requesterOrgMember.orgId)
-        ),
-      });
-      if (!targetOrgMember) return { error: "Employee not found in your organization" };
-
+      // Get employee details before deactivation
       const employee = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });
@@ -207,15 +158,23 @@ export async function deleteEmployee(userId: string) {
       if (!employee) {
         return { error: "User not found" };
       }
-      if (role === ROLES.ADMIN && (employee.role === ROLES.ADMIN || employee.role === ROLES.CEO)) {
+
+      // Admins can only delete MEMBER accounts, not other ADMINs or OWNERs
+      if (role === "ADMIN" && (employee.role === "ADMIN" || employee.role === "OWNER")) {
         return { error: "Admins can only delete Member accounts" };
       }
-      if (role === ROLES.CEO && employee.role === ROLES.CEO) {
+
+      // Owners cannot delete other Owners
+      if (role === "OWNER" && employee.role === "OWNER") {
         return { error: "Cannot delete another Owner account" };
       }
+
+      // Soft delete
       await db.update(users)
         .set({ isActive: false })
         .where(eq(users.id, userId));
+      
+      // Send deactivation email
       if (employee?.email) {
         await sendAccountDeactivationEmail(
           employee.email,

@@ -1,16 +1,23 @@
 "use client";
 
-import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -26,7 +33,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -35,115 +41,43 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import {
-  useProjects,
-  useProject,
-  useLogTime,
-} from "@/lib/api/hooks/projects";
-import { Plus, Loader2, Link as LinkIcon, Upload, X, FileText } from "lucide-react";
+import { api } from "@/trpc/react";
+import { Plus, Loader2, Link as LinkIcon } from "lucide-react";
 import { addTimeEntryInputSchema } from "@/lib/validations/project";
-import type { ProjectListItem, Ticket } from "@/types/projects";
+import type { Project, Ticket } from "@/types/api";
 
 interface LogTimeDialogProps {
+  variant?: "dialog" | "sheet";
   trigger?: React.ReactNode;
 }
 
-const ACCEPT_ATTACHMENTS = "image/jpeg,image/png,image/gif,image/webp,application/pdf";
-const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
-
-export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
+export function LogTimeDialog({ variant = "dialog", trigger }: LogTimeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
-  const [attachmentPreviews, setAttachmentPreviews] = useState<(string | null)[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: projectsData } = useProjects();
-  const projects = projectsData?.data ?? [];
-  const { data: projectDetails, isLoading: isLoadingTickets } = useProject(
-    selectedProjectId ?? 0
+  const { data: projects } = api.project.getProjects.useQuery();
+  const { data: projectDetails, isLoading: isLoadingTickets } = api.project.getProjectDetails.useQuery(
+    { id: selectedProjectId! },
+    { enabled: !!selectedProjectId }
   );
-
-  const mutation = useLogTime();
-
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    const allowed = ACCEPT_ATTACHMENTS.split(",").map((t) => t.trim());
-    const newFiles: File[] = [];
-    const newPreviews: (string | null)[] = [];
-
-    Array.from(files).forEach((file) => {
-      if (file.size > MAX_ATTACHMENT_SIZE) {
-        toast.error(`${file.name} is too large (max 10MB)`);
-        return;
+  
+  const utils = api.useUtils();
+  const mutation = api.project.addTimeEntry.useMutation({
+      onSuccess: () => {
+          toast.success("Time logged successfully");
+          setOpen(false);
+          form.reset();
+          setSelectedProjectId(null);
+          utils.project.getTimeEntries.invalidate();
+      },
+      onError: (err) => {
+          toast.error(err.message || "Failed to log time");
       }
-      if (!allowed.includes(file.type)) {
-        toast.error(`${file.name}: Only images (JPEG, PNG, GIF, WebP) or PDF allowed`);
-        return;
-      }
-      newFiles.push(file);
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setAttachmentPreviews((prev) => {
-            const updated = [...prev];
-            const idx = attachmentFiles.length + newFiles.indexOf(file);
-            updated[idx] = reader.result as string;
-            return updated;
-          });
-        };
-        reader.readAsDataURL(file);
-        newPreviews.push(null); // placeholder, will be set by reader
-      } else {
-        newPreviews.push(null);
-      }
-    });
-
-    if (newFiles.length > 0) {
-      setAttachmentFiles((prev) => [...prev, ...newFiles]);
-      setAttachmentPreviews((prev) => [...prev, ...newPreviews]);
-    }
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const removeAttachment = (index: number) => {
-    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
-    setAttachmentPreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const uploadAttachment = async (file: File): Promise<string | null> => {
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "time-entries");
-
-      const response = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const data = await response.json();
-      return data.url ?? data.key ?? null;
-    } catch {
-      toast.error("Failed to upload file");
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
+  });
 
   const form = useForm<z.infer<typeof addTimeEntryInputSchema>>({
     resolver: zodResolver(addTimeEntryInputSchema),
     defaultValues: {
-      ticketId: undefined as unknown as number,
       hours: 0,
       description: "",
       date: new Date(),
@@ -151,37 +85,12 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof addTimeEntryInputSchema>) {
-    let imageUrl: string | undefined;
-    if (attachmentFiles.length > 0) {
-      // Upload the first file as the primary imageUrl (schema supports single)
-      const url = await uploadAttachment(attachmentFiles[0]);
-      if (!url) return;
-      imageUrl = url;
-      // Upload remaining files in the background
-      for (let i = 1; i < attachmentFiles.length; i++) {
-        await uploadAttachment(attachmentFiles[i]);
-      }
-    }
+  function onSubmit(values: z.infer<typeof addTimeEntryInputSchema>) {
     const submitValues = {
       ...values,
-      projectId: selectedProjectId!,
       workLink: (values.workLink || "").trim() || undefined,
-      imageUrl: imageUrl ?? values.imageUrl ?? "",
     };
-    mutation.mutate(submitValues, {
-      onSuccess: () => {
-        toast.success("Time logged successfully");
-        setOpen(false);
-        form.reset();
-        setSelectedProjectId(null);
-        setAttachmentFiles([]);
-        setAttachmentPreviews([]);
-      },
-      onError: (err) => {
-        toast.error((err as Error).message || "Failed to log time");
-      },
-    });
+    mutation.mutate(submitValues);
   }
 
   const formContent = (
@@ -197,17 +106,17 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
               <Select
                 onValueChange={(val) => {
                     setSelectedProjectId(parseInt(val));
-                    form.setValue("ticketId", undefined as unknown as number);
+                    form.setValue("ticketId", -1);
                 }}
               >
                 <FormControl>
-                  <SelectTrigger className="w-full capitalize">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Project" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                    {projects?.map((p: ProjectListItem) => (
-                        <SelectItem key={p.id} value={p.id.toString()} className="truncate capitalize">
+                    {projects?.map((p: Project) => (
+                        <SelectItem key={p.id} value={p.id.toString()} className="truncate">
                             {p.name} ({p.key})
                         </SelectItem>
                     ))}
@@ -237,7 +146,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 <SelectContent className="max-w-[500px] w-[var(--radix-select-trigger-width)]">
                   {projectDetails?.tickets && projectDetails.tickets.length > 0 ? (
                     projectDetails.tickets.map((t: Ticket) => (
-                      <SelectItem key={t.id} value={t.id.toString()} className="truncate capitalize">
+                      <SelectItem key={t.id} value={t.id.toString()} className="truncate">
                         {`Ticket #${t.id}`}: {t.title || 'Untitled'}
                       </SelectItem>
                     ))
@@ -261,9 +170,10 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 <FormItem>
                 <FormLabel>Date</FormLabel>
                 <FormControl>
-                    <DatePicker
+                    <Input 
+                        type="date" 
                         value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                        onChange={(v) => field.onChange(v ? new Date(v) : new Date())}
+                        onChange={(e) => field.onChange(e.target.valueAsDate)}
                     />
                 </FormControl>
                 <FormMessage />
@@ -334,118 +244,70 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="imageUrl"
-          render={() => (
-            <FormItem>
-              <FormLabel>Attachments (images or PDF)</FormLabel>
-              <FormControl>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {uploading ? "Uploading..." : "Upload files"}
-                    </Button>
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      accept={ACCEPT_ATTACHMENTS}
-                      onChange={handleAttachmentChange}
-                      multiple
-                    />
-                  </div>
-                  {attachmentFiles.length > 0 && (
-                    <div className="space-y-2">
-                      {attachmentFiles.map((file, index) => (
-                        <div key={`${file.name}-${index}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                          {attachmentPreviews[index] ? (
-                            <Image
-                              src={attachmentPreviews[index]!}
-                              alt="Preview"
-                              width={48}
-                              height={48}
-                              unoptimized
-                              className="h-12 w-12 object-cover rounded"
-                            />
-                          ) : file.type === "application/pdf" ? (
-                            <div className="h-12 w-12 rounded bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
-                              <FileText className="h-6 w-6 text-red-500" />
-                            </div>
-                          ) : (
-                            <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
-                              <FileText className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm truncate block">
-                              {file.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeAttachment(index)}
-                            aria-label={`Remove ${file.name}`}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Images (JPEG, PNG, GIF, WebP) or PDF, max 10MB each. Multiple files allowed.
-                  </p>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <SheetFooter className="pt-2">
-          <Button type="submit" className="flex-1" disabled={mutation.isPending || uploading}>
-            {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Log Time
-          </Button>
-        </SheetFooter>
+        {variant === "sheet" ? (
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">
+              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Log Time
+            </Button>
+          </div>
+        ) : (
+          <DialogFooter className="pt-2">
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Log Time
+            </Button>
+          </DialogFooter>
+        )}
       </form>
     </Form>
   );
 
+  if (variant === "sheet") {
+    return (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          {trigger || (
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Log Time
+            </Button>
+          )}
+        </SheetTrigger>
+        <SheetContent side="right" className="w-full sm:max-w-[540px] overflow-y-auto">
+          <SheetHeader className="pb-6 pt-6 px-6">
+            <SheetTitle>Log Time</SheetTitle>
+            <SheetDescription className="mt-2">
+              Record your work hours on a ticket.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="px-6 pb-6">
+            {formContent}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         {trigger || (
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Log Time
           </Button>
         )}
-      </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-[540px] overflow-y-auto">
-        <SheetHeader className="pb-6 pt-6 px-6">
-          <SheetTitle>Log Time</SheetTitle>
-          <SheetDescription className="mt-2">
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader className="pb-4">
+          <DialogTitle>Log Time</DialogTitle>
+          <DialogDescription>
             Record your work hours on a ticket.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="px-6 pb-6">
-          {formContent}
-        </div>
-      </SheetContent>
-    </Sheet>
+          </DialogDescription>
+        </DialogHeader>
+        {formContent}
+      </DialogContent>
+    </Dialog>
   );
 }

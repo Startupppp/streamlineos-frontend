@@ -12,8 +12,6 @@ import {
   DollarSign,
   PieChart,
 } from "lucide-react";
-import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { formatCurrencyFull as formatCurrency } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -28,12 +26,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -119,6 +117,14 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const getUsagePercentage = (spent: number, limit: number) => {
     if (!limit) return 0;
     return Math.min((spent / limit) * 100, 100);
@@ -145,24 +151,24 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
 
   return (
     <div className="space-y-6">
-      
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Budget Management</h2>
           <p className="text-slate-600 mt-1">Manage expense categories and budget limits</p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="">
+        <Button onClick={() => setIsCreateOpen(true)} className="bg-violet-600 hover:bg-violet-700">
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
       </div>
 
-      
+      {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Total Budget</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <DollarSign className="h-4 w-4 text-violet-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalBudget)}</div>
@@ -195,11 +201,11 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </Card>
       </div>
 
-      
+      {/* Category Budget Table */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-primary" />
+            <PieChart className="h-5 w-5 text-violet-600" />
             Category Budgets
           </CardTitle>
           <CardDescription>Monitor spending against budget limits by category</CardDescription>
@@ -207,15 +213,13 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         <CardContent>
           {spending.length === 0 ? (
             <div className="text-center py-8">
-              <div className="flex flex-col items-center gap-3">
-                <EmptyExpensesIllustration />
-                <h3 className="text-lg font-medium text-slate-900">No categories yet</h3>
-                <p className="text-slate-500 mb-4">Create expense categories to track budgets</p>
-                <Button onClick={() => setIsCreateOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Button>
-              </div>
+              <Settings className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-900">No categories yet</h3>
+              <p className="text-slate-500 mb-4">Create expense categories to track budgets</p>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Category
+              </Button>
             </div>
           ) : (
             <Table>
@@ -288,12 +292,12 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </CardContent>
       </Card>
 
-      
-      <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <SheetContent className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>Create Expense Category</SheetTitle>
-          </SheetHeader>
+      {/* Create Category Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Expense Category</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Category Name *</Label>
@@ -320,11 +324,9 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
                 <Input
                   id="budgetLimit"
                   type="number"
-                  step="0.01"
-                  min="0"
                   value={newCategory.budgetLimit}
                   onChange={(e) => setNewCategory({ ...newCategory, budgetLimit: e.target.value })}
-                  placeholder="0.00"
+                  placeholder="0"
                 />
               </div>
               <div className="space-y-2">
@@ -345,16 +347,16 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
               </div>
             </div>
           </div>
-          <SheetFooter>
-            <Button variant="outline" className="flex-1" onClick={() => setIsCreateOpen(false)}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateCategory} className="flex-1">
+            <Button onClick={handleCreateCategory} className="bg-violet-600 hover:bg-violet-700">
               Create Category
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

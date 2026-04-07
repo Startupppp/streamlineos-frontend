@@ -1,18 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { format, isPast } from "date-fns";
-import {
-  DollarSign,
-  FileText,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  ChevronRight,
-  Plus,
-} from "lucide-react";
+import { useState } from "react";
+import { api } from "@/trpc/react";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { Loader2, DollarSign, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -21,205 +15,166 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
-import { useInvoiceStats, useInvoices } from "@/lib/api/hooks/invoice";
-import type { InvoiceStatus } from "@/types/invoice";
-
-const STATUS_BADGE: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  DRAFT: { label: "Draft", variant: "secondary" },
-  SENT: { label: "Sent", variant: "default" },
-  PAID: { label: "Paid", variant: "outline" },
-  OVERDUE: { label: "Overdue", variant: "destructive" },
-  CANCELLED: { label: "Cancelled", variant: "secondary" },
-};
-
-function fmt(amount: string | number) {
-  return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog";
 
 export default function BillingPage() {
-  const { data: stats, isLoading: statsLoading } = useInvoiceStats();
-  const { data: recentData } = useInvoices({ limit: 5 });
-  const { data: overdueData } = useInvoices({ status: "OVERDUE", limit: 5 });
+  const [startDate, setStartDate] = useState<Date>(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState<Date>(endOfMonth(new Date()));
+  const [hourlyRate, setHourlyRate] = useState<number>(50);
 
-  const recentInvoices = recentData?.items ?? [];
-  const overdueInvoices = overdueData?.items ?? [];
+  const { data: summary, isLoading } = api.project.getBillingSummary.useQuery({
+      startDate,
+      endDate
+  });
+
+  const totalRevenue = summary?.reduce((acc, curr) => acc + (curr.totalHours || 0) * hourlyRate, 0) || 0;
 
   return (
-    <PageWrapper
-      title="Billing & Finance"
-      subtitle="Track invoices, payments, and revenue"
-      actions={
-        <Link href="/billing/invoices/new">
-          <Button size="sm">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            New Invoice
-          </Button>
-        </Link>
-      }
-    >
-      <div className="space-y-6">
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Total Invoiced"
-            value={statsLoading ? "—" : fmt(stats ? (stats.totalOutstanding + stats.totalPaid) : 0)}
-            icon={FileText}
-            color="blue"
-          />
-          <StatCard
-            label="Received (Paid)"
-            value={statsLoading ? "—" : fmt(stats?.totalPaid ?? 0)}
-            icon={CheckCircle2}
-            color="green"
-          />
-          <StatCard
-            label="Outstanding"
-            value={statsLoading ? "—" : fmt(stats?.totalOutstanding ?? 0)}
-            icon={Clock}
-            color="gold"
-          />
-          <StatCard
-            label="Overdue"
-            value={statsLoading ? "—" : `${stats?.overdue ?? 0} invoices`}
-            icon={AlertCircle}
-            color="red"
-          />
-        </div>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Billing & Invoices</h2>
+      </div>
 
-        {/* Invoice status breakdown */}
-        <div className="grid gap-4 sm:grid-cols-5">
-          {(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
-            const badge = STATUS_BADGE[s];
-            const count = stats?.[s.toLowerCase() as keyof typeof stats] as number ?? 0;
-            return (
-              <Link key={s} href={`/billing/invoices?status=${s}`}>
-                <div className="rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer">
-                  <p className="text-xs text-muted-foreground mb-1">{badge.label}</p>
-                  <p className="text-2xl font-bold">{count}</p>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="grid gap-2">
+            <Label>Start Date</Label>
+            <Input 
+                type="date" 
+                value={format(startDate, "yyyy-MM-dd")} 
+                onChange={(e) => setStartDate(new Date(e.target.value))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>End Date</Label>
+            <Input 
+                type="date" 
+                value={format(endDate, "yyyy-MM-dd")} 
+                onChange={(e) => setEndDate(new Date(e.target.value))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Hourly Rate ($)</Label>
+            <Input 
+                type="number" 
+                value={hourlyRate} 
+                onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
+                className="w-[150px]"
+            />
+          </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Billable Hours</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">
+                    {summary?.reduce((acc, curr) => acc + (curr.totalHours || 0), 0).toFixed(1)}h
                 </div>
-              </Link>
-            );
-          })}
-        </div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Estimated Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">
+                    ${totalRevenue.toFixed(2)}
+                </div>
+            </CardContent>
+        </Card>
+      </div>
 
-        {/* Recent invoices */}
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="px-4 py-3 flex items-center justify-between border-b border-border">
-            <p className="text-sm font-semibold">Recent Invoices</p>
-            <Link href="/billing/invoices">
-              <Button variant="ghost" size="sm" className="text-xs gap-1">
-                View all <ChevronRight className="h-3 w-3" />
-              </Button>
-            </Link>
-          </div>
-          <InvoiceTable invoices={recentInvoices} />
-        </div>
-
-        {/* Overdue invoices */}
-        {overdueInvoices.length > 0 && (
-          <div className="rounded-lg border border-destructive/30 bg-card overflow-hidden">
-            <div className="px-4 py-3 flex items-center justify-between border-b border-destructive/30 bg-destructive/5">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive" />
-                <p className="text-sm font-semibold text-destructive">Overdue Invoices</p>
-              </div>
-              <Link href="/billing/invoices?status=OVERDUE">
-                <Button variant="ghost" size="sm" className="text-xs gap-1">
-                  View all <ChevronRight className="h-3 w-3" />
-                </Button>
-              </Link>
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-            <InvoiceTable invoices={overdueInvoices} />
-          </div>
-        )}
-
-        {/* Quick links */}
-        <div className="flex gap-3 flex-wrap">
-          <Link href="/billing/invoices">
-            <Button variant="outline" size="sm">All Invoices</Button>
-          </Link>
-          <Link href="/billing/invoices/new">
-            <Button variant="outline" size="sm">Create Invoice</Button>
-          </Link>
-        </div>
-      </div>
-    </PageWrapper>
-  );
-}
-
-function InvoiceTable({
-  invoices,
-}: {
-  invoices: Array<{
-    id: number;
-    invoiceNumber: string;
-    status: InvoiceStatus;
-    total: string;
-    dueDate: string | null;
-    client: { id: number; name: string } | null;
-    createdAt: Date;
-  }>;
-}) {
-  if (!invoices.length) {
-    return (
-      <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-        No invoices found.
-      </div>
-    );
-  }
-
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Invoice #</TableHead>
-          <TableHead>Client</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Due Date</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-          <TableHead />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invoices.map((inv) => {
-          const badge = STATUS_BADGE[inv.status];
-          const overdue =
-            inv.status !== "PAID" &&
-            inv.status !== "CANCELLED" &&
-            inv.dueDate &&
-            isPast(new Date(inv.dueDate));
-          return (
-            <TableRow key={inv.id}>
-              <TableCell className="font-mono text-xs font-medium">
-                {inv.invoiceNumber}
-              </TableCell>
-              <TableCell className="text-sm">
-                {inv.client?.name ?? <span className="text-muted-foreground">—</span>}
-              </TableCell>
-              <TableCell>
-                <Badge variant={badge.variant} className="text-[11px]">
-                  {badge.label}
-                </Badge>
-              </TableCell>
-              <TableCell className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                {inv.dueDate ? format(new Date(inv.dueDate), "dd MMM yyyy") : "—"}
-              </TableCell>
-              <TableCell className="text-right font-medium text-sm">
-                {fmt(inv.total)}
-              </TableCell>
-              <TableCell>
-                <Link href={`/billing/invoices/${inv.id}`}>
-                  <Button variant="ghost" size="sm" className="text-xs">
-                    View
-                  </Button>
-                </Link>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Hours</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {summary?.map((item) => (
+                  <TableRow key={item.projectId}>
+                    <TableCell className="font-medium">{item.projectName}</TableCell>
+                    <TableCell>{item.totalHours?.toFixed(1) || 0}h</TableCell>
+                    <TableCell>${hourlyRate}/h</TableCell>
+                    <TableCell>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</TableCell>
+                    <TableCell>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">Generate Invoice</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Invoice Preview</DialogTitle>
+                                    <DialogDescription>
+                                        Draft invoice for {item.projectName}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                     <div className="flex justify-between border-b pb-2">
+                                         <span className="font-bold">Period:</span>
+                                         <span>{format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}</span>
+                                     </div>
+                                     <div className="flex justify-between">
+                                         <span>Total Hours:</span>
+                                         <span>{item.totalHours?.toFixed(1) || 0}h</span>
+                                     </div>
+                                     <div className="flex justify-between">
+                                         <span>Rate:</span>
+                                         <span>${hourlyRate}/h</span>
+                                     </div>
+                                     <div className="flex justify-between border-t pt-2 font-bold text-lg">
+                                         <span>Total Due:</span>
+                                         <span>${((item.totalHours || 0) * hourlyRate).toFixed(2)}</span>
+                                     </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button onClick={() => toast.success("Invoice sent to client (Mock)")}>Send Invoice</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                 {!summary?.length && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      No billable activity in this period.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

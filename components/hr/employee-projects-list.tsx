@@ -46,13 +46,13 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                 </Badge>
             </div>
             
-            
+            {/* Responsive grid: 1 col on mobile, 2 on tablet, adjusts to container */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 {projects.map((item) => (
                     <Link key={item.id} href={`/projects/${item.id}`} className="block group">
                         <Card className="h-full border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
                             <CardContent className="p-4 flex flex-col h-full">
-                                
+                                {/* Header with icon, name, and role */}
                                 <div className="flex items-start gap-3 mb-3">
                                     <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
                                         <FolderKanban className="w-4 h-4" />
@@ -70,12 +70,12 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                     </div>
                                 </div>
                                 
-                                
+                                {/* Description */}
                                 <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">
                                     {item.description || "No description provided."}
                                 </p>
                                 
-                                
+                                {/* Stats Row */}
                                 <div className="grid grid-cols-3 gap-2 text-center border-t border-border pt-3">
                                     <div className="flex flex-col items-center gap-0.5">
                                         <span className="text-[10px] text-muted-foreground uppercase tracking-wide">

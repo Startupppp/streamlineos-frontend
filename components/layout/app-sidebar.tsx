@@ -1,278 +1,430 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
+
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Search, Bell } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { cn } from "@/lib/utils";
-import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
-import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
-import { SidebarSection } from "./sidebar/sidebar-section";
-import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
-import { NotificationBell } from "./notification-bell";
+import { cn } from "../../lib/utils";
+import {
+  LayoutDashboard,
+  Users,
+  Briefcase,
+  Settings,
+  Clock,
+  CalendarCheck,
+  CreditCard,
+  LogOut,
+  Timer,
+  UserPlus,
+  QrCode,
+  Receipt,
+  FileText,
+  Laptop,
+  Wallet,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { useGetOrganizations } from "../../lib/hooks/auth-hooks";
+import { useProjects } from "../../lib/hooks/trpc-hooks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Skeleton } from "../ui/skeleton";
+import { ScrollArea } from "../ui/scroll-area";
+
+interface NavGroup {
+  label: string;
+  routes: {
+    label: string;
+    icon: React.ElementType;
+    href: string;
+    badge?: "leaves" | "onboarding";
+    isProjectsList?: boolean;
+  }[];
+}
+
+const adminNavGroups: NavGroup[] = [
+  {
+    label: "Core",
+    routes: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+      { label: "QR Codes", icon: QrCode, href: "/ceo/qr-code" },
+    ],
+  },
+  {
+    label: "HR Management",
+    routes: [
+      { label: "Employees", icon: Users, href: "/hr", badge: "onboarding" },
+      { label: "Onboarding", icon: UserPlus, href: "/hr/onboarding" },
+      { label: "Attendance", icon: Clock, href: "/hr/attendance" },
+      { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
+      { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
+      { label: "Devices", icon: Laptop, href: "/hr/devices" },
+      { label: "Expenses", icon: Receipt, href: "/hr/expenses" },
+      { label: "Documents", icon: FileText, href: "/hr/documents" },
+    ],
+  },
+  {
+    label: "Projects",
+    routes: [
+      { label: "Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+      { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+      { label: "Team Timesheets", icon: Clock, href: "/timesheets/team" },
+    ],
+  },
+  {
+    label: "System",
+    routes: [
+      { label: "Settings", icon: Settings, href: "/settings" },
+    ],
+  },
+];
+
+const employeeNavGroups: NavGroup[] = [
+  {
+    label: "Core",
+    routes: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    ],
+  },
+  {
+    label: "My Work",
+    routes: [
+      { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
+      { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+    ],
+  },
+  {
+    label: "HR",
+    routes: [
+      { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
+      { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
+      { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+      { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
+      { label: "My Documents", icon: FileText, href: "/hr/documents" },
+    ],
+  },
+];
 
 interface AppSidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  onNavigate?: () => void;
 }
 
-export function AppSidebar({
-  isCollapsed = false,
-  onToggleCollapse,
-  onNavigate,
-}: AppSidebarProps) {
+export function AppSidebar({ isCollapsed = false, onToggleCollapse }: AppSidebarProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const { data: session, status } = useSession();
   const { data: organizations } = useGetOrganizations();
+  const { data: projects = [], isLoading: projectsLoading } = useProjects();
+  
   const role = session?.user?.role;
+  
+  // Extract project ID from pathname if we're in a project route
+  const currentProjectId = pathname?.match(/\/projects\/(\d+)/)?.[1];
 
-  const lastKnownRoleRef = useRef<string | undefined>(role);
-  const hasEverLoadedRef = useRef(false);
-  if (role) {
-    lastKnownRoleRef.current = role;
-    hasEverLoadedRef.current = true;
+  // Build nav groups based on role
+  // QR Codes is OWNER-only, so we need to filter it
+  let navGroups = role === "OWNER" || role === "ADMIN" ? adminNavGroups : employeeNavGroups;
+  
+  // If user is ADMIN (not OWNER), remove QR Codes from nav
+  if (role === "ADMIN") {
+    navGroups = adminNavGroups.map(group => ({
+      ...group,
+      routes: group.routes.filter(route => route.href !== "/ceo/qr-code")
+    }));
   }
-  const effectiveRole = role || lastKnownRoleRef.current;
 
-  const navGroups = useMemo(
-    () => getNavGroupsForRole(effectiveRole),
-    [effectiveRole]
-  );
-  const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
+  const handleOrgChange = (_id: string) => {
+    router.push("/dashboard");
+    router.refresh();
+  };
 
   const [pendingLeaves, setPendingLeaves] = useState(0);
+  const [unreadOnboarding, setUnreadOnboarding] = useState(0);
 
   useEffect(() => {
-    if (!isAdmin || !session?.user) return;
-    let cancelled = false;
     async function fetchCounts() {
-      try {
-        const { getPendingApprovalCount } = await import(
-          "@/server/actions/leave-actions"
-        );
-        const count = await getPendingApprovalCount();
-        if (!cancelled) setPendingLeaves(count);
-      } catch {
-        if (!cancelled) setPendingLeaves(0);
-      }
+        try {
+            const { getPendingApprovalCount } = await import("@/server/actions/leave-actions");
+            const { getUnreadOnboardingCount } = await import("@/server/actions/notification-actions");
+            
+            const leavesCount = await getPendingApprovalCount();
+            const onboardingCount = await getUnreadOnboardingCount();
+            
+            setPendingLeaves(leavesCount);
+            setUnreadOnboarding(onboardingCount);
+        } catch {
+        }
     }
-    fetchCounts();
-    const id = setInterval(fetchCounts, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [session, isAdmin]);
+    if (session?.user) {
+        fetchCounts();
+        const interval = setInterval(fetchCounts, 30000);
+        return () => clearInterval(interval);
+    }
+  }, [session]);
 
-  const { data: chatUnread } = useChatUnreadTotal();
-  const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
-
-  useEffect(() => {
-    const base = "Vaivamm CRM";
-    document.title = unreadChatCount > 0 ? `(${unreadChatCount}) ${base}` : base;
-  }, [unreadChatCount]);
-
-  const orgName = organizations?.[0]?.name;
-
-  const handleSearchClick = useCallback(() => {
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "k",
-        metaKey: navigator.platform?.toUpperCase().includes("MAC") ?? true,
-        ctrlKey: !(navigator.platform?.toUpperCase().includes("MAC") ?? true),
-        bubbles: true,
-      })
-    );
-  }, []);
-
-  if (
-    !hasEverLoadedRef.current &&
-    (status === "loading" || (status === "authenticated" && !role))
-  ) {
+  if (status === "loading") {
     return (
-      <div className="flex flex-col h-full bg-sidebar">
-        <div className="px-3 py-4 flex-1 space-y-6">
-          <div className="flex items-center gap-3 px-1">
-            <Skeleton className="h-8 w-8 rounded-xl bg-sidebar-border" />
-            <Skeleton className="h-4 w-20 rounded bg-sidebar-border" />
+      <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
+        <div className="px-4 py-4 flex-1">
+          <div className="flex items-center gap-3 mb-6">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-6 w-24 rounded" />
           </div>
-          <div className="space-y-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-2 py-1.5">
-                <Skeleton className="h-4 w-4 rounded bg-sidebar-border" />
-                <Skeleton className="h-3.5 w-24 rounded bg-sidebar-border" />
-              </div>
+          <div className="px-2 mb-6">
+             <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+               <div key={i} className="flex items-center gap-3 px-3 py-2">
+                 <Skeleton className="h-5 w-5 rounded" />
+                 <Skeleton className="h-4 w-20 rounded" />
+               </div>
             ))}
           </div>
         </div>
-        <div className="px-3 py-3 border-t border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-7 w-7 rounded-full bg-sidebar-border" />
-            <Skeleton className="h-3 w-20 rounded bg-sidebar-border" />
-          </div>
+        <div className="px-4 py-4 border-t border-sidebar-border">
+           <div className="flex items-center gap-3">
+               <Skeleton className="h-9 w-9 rounded-full" />
+               <div className="space-y-1.5">
+                   <Skeleton className="h-3 w-20" />
+                   <Skeleton className="h-2.5 w-28" />
+               </div>
+           </div>
         </div>
       </div>
     );
   }
 
   return (
-    <TooltipProvider>
-      <div
-        className={cn(
-          "relative flex flex-col h-full bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-in-out",
-          isCollapsed ? "w-[3.5rem]" : "w-[17rem]"
-        )}
-      >
-        <div
-          className={cn(
-            "flex items-center h-14 shrink-0 border-b border-sidebar-border",
-            isCollapsed ? "justify-center px-0" : "justify-between px-4"
-          )}
-        >
+    <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground transition-all duration-300", isCollapsed ? "w-20" : "w-72")}>
+      {/* Logo */}
+      <div className="px-4 py-4 relative">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="relative w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+            <Image
+              src="/logo.svg"
+              alt="Vaivamm Logo"
+              width={28}
+              height={28}
+              className="rounded"
+            />
+          </div>
           {!isCollapsed && (
-            <Link
-              href="/dashboard"
-              onClick={onNavigate}
-              className="flex items-center gap-3 min-w-0 group"
-            >
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 shrink-0">
-                <Image
-                  src="/logo.svg"
-                  alt="Vaivamm"
-                  fill
-                  className="object-contain p-1.5"
-                />
-              </div>
-              <div className="min-w-0">
-                <span className="gold-text text-[17px] font-bold tracking-tight leading-none block group-hover:opacity-90 transition-opacity">
-                  Vaivamm
-                </span>
-                {orgName ? (
-                  <span className="text-[11px] text-sidebar-foreground/40 truncate block mt-0.5 leading-none max-w-[120px]">
-                    {orgName}
-                  </span>
-                ) : (
-                  <span className="text-[11px] text-sidebar-foreground/30 block mt-0.5 leading-none">
-                    Capital CRM
-                  </span>
-                )}
-              </div>
-            </Link>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent" style={{ fontFamily: 'Times New Roman, serif' }}>
+              Vaivamm
+            </h1>
           )}
-
-          {isCollapsed && (
-            <Link
-              href="/dashboard"
-              onClick={onNavigate}
-              className="h-10 w-10 rounded-xl overflow-hidden bg-gold/20 ring-1 ring-gold/35 flex items-center justify-center"
-              aria-label="Go to dashboard"
-            >
-              <Image
-                src="/logo.svg"
-                alt="Vaivamm"
-                width={26}
-                height={26}
-                className="object-contain"
-              />
-            </Link>
-          )}
-
-          {onToggleCollapse && !isCollapsed && (
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              aria-label="Collapse sidebar"
-              className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-foreground/70 hover:bg-white/5 transition-colors shrink-0"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-
-        {onToggleCollapse && isCollapsed && (
-          <button
-            type="button"
+        </Link>
+        {onToggleCollapse && (
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onToggleCollapse}
-            aria-label="Expand sidebar"
-            className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-gold hover:border-gold/40 hover:bg-sidebar transition-colors"
+            className="absolute top-4 right-2 h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
         )}
-
-        <ScrollArea className="flex-1 min-h-0">
-          <nav
-            className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}
-          >
-            {navGroups.map((group, i) => (
-              <SidebarSection
-                key={group.label}
-                group={group}
-                groupIndex={i}
-                isCollapsed={isCollapsed}
-                pendingLeaves={pendingLeaves}
-                unreadChatCount={unreadChatCount}
-                onNavigate={onNavigate}
-              />
-            ))}
-          </nav>
-        </ScrollArea>
-
-        <div
-          className={cn(
-            "border-t border-sidebar-border shrink-0",
-            isCollapsed ? "px-1.5 py-2 flex flex-col items-center gap-1" : "px-3 py-2 flex items-center gap-1"
-          )}
-        >
-          {isCollapsed ? (
-            <>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleSearchClick}
-                    aria-label="Search"
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/5 transition-colors"
-                  >
-                    <Search className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs">
-                  Search (⌘K)
-                </TooltipContent>
-              </Tooltip>
-              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
-                <NotificationBell />
-              </div>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={handleSearchClick}
-                aria-label="Search"
-                className="flex-1 flex items-center gap-2 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] px-2.5 text-sidebar-foreground/40 text-xs hover:text-sidebar-foreground/70 hover:bg-white/[0.07] transition-colors"
-              >
-                <Search className="h-3.5 w-3.5 shrink-0" />
-                <span className="flex-1 text-left">Search…</span>
-                <kbd className="hidden sm:inline-flex h-4 items-center rounded border border-white/[0.08] bg-white/[0.04] px-1 font-mono text-[9px] text-sidebar-foreground/25">
-                  ⌘K
-                </kbd>
-              </button>
-              <div className="[&_button]:h-8 [&_button]:w-8 [&_button]:rounded-lg [&_button]:text-sidebar-foreground/50 [&_button:hover]:text-sidebar-foreground [&_button:hover]:bg-white/[0.05]">
-                <NotificationBell />
-              </div>
-            </>
-          )}
-        </div>
-
-        <SidebarUserMenu isCollapsed={isCollapsed} isAdmin={isAdmin} />
       </div>
-    </TooltipProvider>
+
+      {/* Organization Switcher */}
+      {organizations && organizations.length > 0 && !isCollapsed && (
+        <div className="px-4 mb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg border-sidebar-border bg-sidebar-accent/30 h-10"
+              >
+                <span className="truncate text-sm">
+                  {organizations[0]?.name || "Select Organization"}
+                </span>
+                <span className="text-xs opacity-60">▼</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {organizations.map((org) => (
+                <DropdownMenuItem
+                  key={org.id}
+                  onClick={() => handleOrgChange(org.id)}
+                >
+                  {org.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/org-selection")}>
+                Manage Organizations
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {/* Navigation Groups */}
+      <ScrollArea className="flex-1">
+        <nav className={cn("pb-4", isCollapsed ? "px-2" : "px-3")}>
+          {navGroups.map((group, groupIndex) => (
+            <div key={group.label} className={cn(groupIndex > 0 && "mt-6")}>
+              {!isCollapsed && (
+                <div className="px-3 mb-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                    {group.label}
+                  </span>
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {group.routes.map((route) => {
+                  const isExactMatch = pathname === route.href;
+                  const hasSiblingRoutes = group.routes.some(r => 
+                    r.href !== route.href && 
+                    (r.href.startsWith(route.href + "/") || route.href.startsWith(r.href + "/"))
+                  );
+                  const isChildRoute = !hasSiblingRoutes && 
+                    route.href !== "/dashboard" && 
+                    pathname.startsWith(route.href + "/");
+                  const isActive = isExactMatch || (route.isProjectsList && pathname.startsWith("/projects/"));
+                  const showBadge = 
+                    (route.badge === "leaves" && pendingLeaves > 0) || 
+                    (route.badge === "onboarding" && unreadOnboarding > 0);
+                  const isProjectsRoute = route.isProjectsList;
+                  const isProjectActive = pathname.startsWith("/projects/") && !pathname.match(/^\/projects\/?$/);
+                  
+                  if (isProjectsRoute) {
+                    // Simple link to projects page (no dropdown)
+                    return (
+                      <Link
+                        key={route.href}
+                        href={route.href}
+                        title={isCollapsed ? route.label : undefined}
+                        className={cn(
+                          "flex items-center rounded-lg transition-colors relative",
+                          isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                          "text-sm font-medium",
+                          isProjectActive || isExactMatch
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        )}
+                      >
+                        <route.icon className={cn(
+                          "h-4 w-4 shrink-0",
+                          (isProjectActive || isExactMatch) ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                        )} />
+                        {!isCollapsed && <span className="flex-1 text-left">{route.label}</span>}
+                      </Link>
+                    );
+                  }
+                  
+                  // Regular route item (not projects)
+                  return (
+                    <Link
+                      key={route.href}
+                      href={route.href}
+                      title={isCollapsed ? route.label : undefined}
+                      className={cn(
+                        "flex items-center rounded-lg transition-colors relative",
+                        isCollapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                        "text-sm font-medium",
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      )}
+                    >
+                      <route.icon className={cn(
+                        "h-4 w-4 shrink-0",
+                        isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                      )} />
+                      {!isCollapsed && (
+                        <>
+                          <span className="flex-1">{route.label}</span>
+                          {showBadge && (
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {isCollapsed && showBadge && (
+                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </ScrollArea>
+
+      {/* User Section */}
+      <div className={cn("py-4 border-t border-sidebar-border", isCollapsed ? "px-2" : "px-3")}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full h-auto hover:bg-sidebar-accent",
+                isCollapsed ? "justify-center px-2 py-2" : "justify-start gap-3 px-3 py-2"
+              )}
+            >
+              <Avatar className="h-9 w-9 border border-sidebar-border shrink-0">
+                <AvatarImage src={session?.user?.image || undefined} />
+                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-sm">
+                  {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <div className="flex flex-col items-start overflow-hidden">
+                  <span className="font-medium text-sm text-sidebar-foreground truncate max-w-[140px]">
+                    {session?.user?.name || "User"}
+                  </span>
+                  <span className="text-xs text-sidebar-foreground/60 truncate max-w-[140px]">
+                    {session?.user?.email}
+                  </span>
+                </div>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                signOut({ callbackUrl: "/signin" });
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
 }
+

@@ -1,236 +1,230 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
-import { resetPassword } from "@/server/actions/auth-actions";
-import { Loader2, Rocket, Shield, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { PASSWORD_REGEX } from "@/lib/password-utils";
-import { cn } from "@/lib/utils";
+import { vaivammTrpcClient } from "../../../lib/trpc";
+import { Shield, Loader2, KeyRound, ArrowLeft, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 
-const formSchema = z
-  .object({
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(128, "Password must be at most 128 characters")
-      .regex(
-        PASSWORD_REGEX,
-        "Must include uppercase, lowercase, number, and special character"
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type FormValues = z.infer<typeof formSchema>;
-
-function getPasswordStrength(password: string): {
-  score: number;
-  label: string;
-  color: string;
-} {
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (password.length >= 12) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[@$!%*?&]/.test(password)) score++;
-
-  if (score <= 2) return { score: 1, label: "Weak", color: "bg-red-500" };
-  if (score <= 4) return { score: 2, label: "Medium", color: "bg-yellow-500" };
-  if (score <= 5) return { score: 3, label: "Strong", color: "bg-green-500" };
-  return { score: 4, label: "Very Strong", color: "bg-emerald-500" };
-}
-
-export default function ResetPasswordPage() {
-  const { update } = useSession();
+function ResetPasswordForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { password: "", confirmPassword: "" },
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    password: "",
+    confirmPassword: "",
   });
 
-  const password = form.watch("password");
-  const strength = password ? getPasswordStrength(password) : null;
-
-  const handleTogglePassword = () => setShowPassword((v) => !v);
-  const handleToggleConfirmPassword = () => setShowConfirmPassword((v) => !v);
-
-  async function onSubmit(values: FormValues) {
-    setLoading(true);
-    try {
-      const result = await resetPassword(values.password);
-      if (result.success) {
-        toast.success("Password updated successfully!");
-        await update({ forceChangePassword: false });
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed to update password");
-      }
-    } catch {
-      toast.error("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (!token) {
+      toast.error("Invalid reset link");
+      router.push("/forgot-password");
     }
+  }, [token, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      toast.error(
+        "Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+      );
+      return;
+    }
+
+    if (!token) {
+      toast.error("Invalid reset token");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await vaivammTrpcClient.auth.resetPassword.mutate({
+        token,
+        password: formData.password,
+      });
+
+      setIsSuccess(true);
+      toast.success("Password reset successfully!");
+      setTimeout(() => {
+        router.push("/signin");
+      }, 2000);
+    } catch (error: unknown) {
+      setIsSuccess(false);
+      const message = error instanceof Error ? error.message : "An error occurred";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!token) {
+    return null;
+  }
+
+  if (isSuccess) {
+    return (
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-2">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          </div>
+          <CardTitle className="text-2xl text-primary">Password Reset!</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Your password has been successfully reset
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm text-green-700">
+              Redirecting you to sign in page...
+            </p>
+          </div>
+          <Link href="/signin" className="block">
+            <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+              Go to Sign In
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <div className="w-full max-w-sm animate-fade-up">
-      <div className="mb-8">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-          <Rocket className="h-5 w-5 text-primary" />
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+      <CardHeader className="space-y-1">
+        <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+          <KeyRound className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Set up your password
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Create a secure password to complete your account setup.
-        </p>
+        <CardTitle className="text-2xl text-center text-primary">Create New Password</CardTitle>
+        <CardDescription className="text-center text-muted-foreground">
+          Enter a strong password for your account
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-foreground">New Password</Label>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                disabled={isLoading}
+                className="pl-10 pr-10 focus-visible:ring-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Must be at least 8 characters with uppercase, lowercase, number, and special character
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                required
+                disabled={isLoading}
+                className="pl-10 pr-10 focus-visible:ring-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <Button 
+            type="submit" 
+            className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Resetting...
+              </>
+            ) : (
+              "Reset Password"
+            )}
+          </Button>
+        </form>
+        <div className="mt-6 text-center">
+          <Link href="/signin" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Sign In
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LoadingCard() {
+  return (
+    <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
+      <CardContent className="py-12">
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
+      <div className="flex flex-col items-center mb-8">
+        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
+          <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+        </div>
+        <h1 className="text-3xl font-bold text-white tracking-tight">Reset Password</h1>
+        <p className="text-blue-100 mt-2">Create a new secure password</p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-soft p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[13px] font-medium">New Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="8+ characters"
-                        className="pl-9 pr-9 h-9 text-sm"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleTogglePassword}
-                        tabIndex={-1}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  {strength && (
-                    <div className="space-y-1 mt-1">
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4].map((level) => (
-                          <div
-                            key={level}
-                            className={cn(
-                              "h-1 flex-1 rounded-full transition-colors",
-                              level <= strength.score ? strength.color : "bg-muted"
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <p
-                        className={cn(
-                          "text-[11px]",
-                          strength.score <= 1
-                            ? "text-red-500"
-                            : strength.score <= 2
-                              ? "text-yellow-500"
-                              : "text-green-500"
-                        )}
-                      >
-                        {strength.label}
-                      </p>
-                    </div>
-                  )}
-                  <FormMessage className="text-[12px]" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[13px] font-medium">Confirm Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
-                        className="pl-9 pr-9 h-9 text-sm"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleToggleConfirmPassword}
-                        tabIndex={-1}
-                        aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-[12px]" />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-9 text-sm font-medium gap-2 mt-1"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Setting up...
-                </>
-              ) : (
-                <>
-                  Complete Setup
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+      <Suspense fallback={<LoadingCard />}>
+        <ResetPasswordForm />
+      </Suspense>
+      
+      <div className="mt-8 text-white/40 text-sm">
+        &copy; 2025 Vaivamm Capital
       </div>
     </div>
   );

@@ -270,337 +270,33 @@ export const PERMISSIONS: Permission[] = [
     action: "manage",
     description: "Manage RBAC permissions",
   },
-  {
-    name: "crm:leads:view",
-    resource: "crm:leads",
-    action: "view",
-    description: "View CRM leads",
-  },
-  {
-    name: "crm:leads:create",
-    resource: "crm:leads",
-    action: "create",
-    description: "Create CRM leads",
-  },
-  {
-    name: "crm:leads:update",
-    resource: "crm:leads",
-    action: "update",
-    description: "Update CRM leads",
-  },
-  {
-    name: "crm:leads:assign",
-    resource: "crm:leads",
-    action: "assign",
-    description: "Assign CRM leads",
-  },
-  {
-    name: "crm:leads:delete",
-    resource: "crm:leads",
-    action: "delete",
-    description: "Delete CRM leads",
-  },
-  {
-    name: "crm:targets:view",
-    resource: "crm:targets",
-    action: "view",
-    description: "View targets",
-  },
-  {
-    name: "crm:targets:manage",
-    resource: "crm:targets",
-    action: "manage",
-    description: "Manage targets",
-  },
-  {
-    name: "crm:reports:view",
-    resource: "crm:reports",
-    action: "view",
-    description: "View CRM reports",
-  },
-  {
-    name: "crm:reports:export",
-    resource: "crm:reports",
-    action: "export",
-    description: "Export CRM reports",
-  },
-  // Dashboard-specific permissions
-  {
-    name: "dashboard:sales:view",
-    resource: "dashboard:sales",
-    action: "view",
-    description: "View Sales dashboard",
-  },
-  {
-    name: "dashboard:customer-executive:view",
-    resource: "dashboard:customer-executive",
-    action: "view",
-    description: "View Customer Executive dashboard",
-  },
-  {
-    name: "dashboard:support:view",
-    resource: "dashboard:support",
-    action: "view",
-    description: "View Support CRM dashboard",
-  },
-  // Self-service permissions (every employee has these)
-  {
-    name: "self:attendance",
-    resource: "self",
-    action: "attendance",
-    description: "Check in/out own attendance",
-  },
-  {
-    name: "self:leaves",
-    resource: "self",
-    action: "leaves",
-    description: "Submit and view own leave requests",
-  },
-  {
-    name: "self:expenses",
-    resource: "self",
-    action: "expenses",
-    description: "Submit and view own expense claims",
-  },
-  {
-    name: "self:payslips",
-    resource: "self",
-    action: "payslips",
-    description: "View own payslips",
-  },
-  // DM Dashboard permissions
-  { name: "dm:leads:create", resource: "dm:leads", action: "create", description: "Capture DM leads" },
-  { name: "dm:leads:read", resource: "dm:leads", action: "read", description: "View DM leads" },
-  { name: "dm:leads:update", resource: "dm:leads", action: "update", description: "Update DM leads" },
-  { name: "dm:leads:delete", resource: "dm:leads", action: "delete", description: "Delete DM leads" },
-  { name: "dm:leads:export", resource: "dm:leads", action: "export", description: "Export DM leads" },
-  { name: "dm:campaigns:create", resource: "dm:campaigns", action: "create", description: "Create campaigns" },
-  { name: "dm:campaigns:read", resource: "dm:campaigns", action: "read", description: "View campaigns" },
-  { name: "dm:campaigns:update", resource: "dm:campaigns", action: "update", description: "Update campaigns" },
-  { name: "dm:social:read", resource: "dm:social", action: "read", description: "View social stats" },
-  { name: "dm:social:create", resource: "dm:social", action: "create", description: "Enter social stats" },
-  // Client accounts
-  { name: "crm:clients:read", resource: "crm:clients", action: "read", description: "View client accounts" },
-  { name: "crm:clients:update", resource: "crm:clients", action: "update", description: "Update client accounts" },
-  // Incentives
-  { name: "crm:incentives:read", resource: "crm:incentives", action: "read", description: "View incentives" },
-  { name: "crm:incentives:approve", resource: "crm:incentives", action: "approve", description: "Approve incentives" },
-  { name: "crm:incentives:config", resource: "crm:incentives", action: "config", description: "Configure incentive rates" },
-  // Branches
-  { name: "branch:create", resource: "branch", action: "create", description: "Create branches" },
-  { name: "branch:read", resource: "branch", action: "read", description: "View branches" },
-  { name: "branch:update", resource: "branch", action: "update", description: "Update branches" },
-  { name: "branch:manage_targets", resource: "branch", action: "manage_targets", description: "Manage branch targets" },
-  // Reports
-  { name: "reports:generate", resource: "reports", action: "generate", description: "Generate reports" },
-  { name: "reports:schedule", resource: "reports", action: "schedule", description: "Schedule reports" },
-  // Chat
-  { name: "chat:submit_lead", resource: "chat", action: "submit_lead", description: "Submit leads via chat" },
 ];
-
-// Self-service permissions every employee gets (own data only)
-const EMPLOYEE_SELF_SERVICE = [
-  "self:attendance",
-  "self:leaves",
-  "self:expenses",
-  "self:payslips",
-  "hr:leaves:create",       // submit own leave
-  "hr:expenses:create",     // submit own expense
-];
-
-/**
- * System roles.
- * CEO, HR, SALES, CUSTOMER_SUPPORT, ENGINEERING, DESIGN, VIDEO_EDITOR, DIGITAL_MARKETING
- */
-export const SYSTEM_ROLES = [
-  "CEO",
-  "HR",
-  "SALES",
-  "CUSTOMER_SUPPORT",
-  "ENGINEERING",
-  "DESIGN",
-  "VIDEO_EDITOR",
-  "DIGITAL_MARKETING",
-  "BRANCH_MANAGER",
-  "BRANCH_HR",
-] as const;
-
-export type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  // CEO — full god-mode access to everything
-  CEO: PERMISSIONS.map((p) => p.name),
-
-  // HR — full HR module + employee management + settings + can view CRM/projects for admin
-  HR: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "hr:employees:view",
-    "hr:employees:create",
-    "hr:employees:update",
-    "hr:employees:delete",
+  OWNER: PERMISSIONS.map((p) => p.name),
+  ADMIN: PERMISSIONS.filter((p) => !p.name.startsWith("settings:rbac")).map((p) => p.name),
+  MEMBER: [
     "hr:attendance:view",
-    "hr:attendance:manage",
     "hr:leaves:view",
-    "hr:leaves:approve",
+    "hr:leaves:create",
     "hr:payroll:view",
-    "hr:payroll:generate",
-    "hr:payroll:approve",
     "hr:salary:view",
-    "hr:salary:manage",
     "hr:expenses:view",
-    "hr:expenses:approve",
+    "hr:expenses:create",
     "hr:documents:view",
-    "hr:documents:manage",
-    "hr:assets:view",
-    "hr:assets:manage",
     "hr:performance:view",
-    "hr:performance:manage",
     "hr:goals:view",
     "hr:goals:manage",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:targets:view",
-    "crm:reports:view",
     "projects:view",
-    "projects:create",
-    "projects:update",
-    "projects:tickets:view",
-    "reports:view",
-    "reports:create",
-    "reports:export",
-    "settings:view",
-    "settings:manage",
-    "dashboard:sales:view",
-    "dashboard:customer-executive:view",
-    "dashboard:support:view",
-  ],
-
-  // SALES — own leads + projects + tickets
-  SALES: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "crm:leads:view",
-    "crm:leads:update",
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-  ],
-
-  // CUSTOMER_SUPPORT — own tickets + projects
-  CUSTOMER_SUPPORT: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "dashboard:support:view",
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-  ],
-
-  // ENGINEERING — can ONLY see projects/tasks assigned to them
-  ENGINEERING: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",            // filtered to member projects
     "projects:tickets:view",
     "projects:tickets:create",
     "projects:tickets:update",
     "projects:sprints:view",
     "projects:timesheets:view",
     "projects:timesheets:create",
-  ],
-
-  // DESIGN — can ONLY see projects/tasks assigned to them
-  DESIGN: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-  ],
-
-  // VIDEO_EDITOR — can ONLY see projects/tasks assigned to them
-  VIDEO_EDITOR: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-  ],
-
-  // DIGITAL_MARKETING — projects, timesheets, and self-service
-  DIGITAL_MARKETING: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",
-    "projects:tickets:view",
-    "projects:tickets:create",
-    "projects:tickets:update",
-    "projects:timesheets:view",
-    "projects:timesheets:create",
-  ],
-
-  // BRANCH_MANAGER — same as HR but scoped to their branch
-  BRANCH_MANAGER: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "hr:employees:view",
-    "hr:employees:create",
-    "hr:employees:update",
-    "hr:attendance:view",
-    "hr:attendance:manage",
-    "hr:leaves:view",
-    "hr:leaves:approve",
-    "hr:payroll:view",
-    "hr:expenses:view",
-    "hr:expenses:approve",
-    "hr:documents:view",
-    "hr:documents:manage",
-    "hr:performance:view",
-    "hr:performance:manage",
-    "hr:goals:view",
-    "hr:goals:manage",
-    "crm:leads:view",
-    "crm:leads:create",
-    "crm:leads:update",
-    "crm:leads:assign",
-    "crm:targets:view",
-    "crm:reports:view",
-    "projects:view",
-    "projects:tickets:view",
     "reports:view",
-    "settings:view",
-    "dashboard:sales:view",
   ],
-
-  // BRANCH_HR — full HR within their branch
-  BRANCH_HR: [
-    ...EMPLOYEE_SELF_SERVICE,
-    "hr:employees:view",
-    "hr:employees:create",
-    "hr:employees:update",
-    "hr:attendance:view",
-    "hr:attendance:manage",
-    "hr:leaves:view",
-    "hr:leaves:approve",
-    "hr:payroll:view",
-    "hr:payroll:generate",
-    "hr:expenses:view",
-    "hr:expenses:approve",
-    "hr:documents:view",
-    "hr:documents:manage",
-    "hr:assets:view",
-    "hr:assets:manage",
-    "hr:performance:view",
-    "hr:performance:manage",
-    "hr:goals:view",
-    "hr:goals:manage",
+  CLIENT: [
     "projects:view",
     "projects:tickets:view",
     "reports:view",
@@ -615,3 +311,4 @@ export function parsePermission(permission: string): { resource: string; action:
   const [resource, action] = permission.split(":");
   return { resource: resource ?? "", action: action ?? "" };
 }
+

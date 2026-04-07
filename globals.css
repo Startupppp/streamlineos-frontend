@@ -1,15 +1,13 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: var(--font-playfair), 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, 'Cascadia Code', 'Consolas', monospace;
-  --color-gold: var(--gold);
-  --color-blue: var(--blue);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,95 +44,98 @@
 }
 
 :root {
-  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-jetbrains: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-playfair: "Playfair Display", Georgia, "Times New Roman", serif;
-
-  --radius: 0.5rem;
-
-  --background: #f8f8fc;
-  --foreground: #111827;
+  --radius: 0.625rem;
+  /* Light Mode */
+  --background: #ffffff;
+  --foreground: #0f2b7f; /* Brand Navy used as default text for strong branding, or maybe slate-950 for standard text? sticking to brand logic from request */
+  /* Actually standard text should probably be slate-950 for readability, using navy for headers/primary */
+  --foreground: #020617;
   --card: #ffffff;
-  --card-foreground: #111827;
+  --card-foreground: #020617;
   --popover: #ffffff;
-  --popover-foreground: #111827;
-
-  --primary: #bd882c;
+  --popover-foreground: #020617;
+  --primary: #0f2b7f; /* Brand Navy */
   --primary-foreground: #ffffff;
-  --secondary: #0f2b7f;
+  --secondary: #ba931e; /* Brand Gold */
   --secondary-foreground: #ffffff;
-  --muted: #f1f1f7;
-  --muted-foreground: #6b7280;
-  --accent: #bd882c;
-  --accent-foreground: #ffffff;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #bd882c;
-
-  --chart-1: #bd882c;
-  --chart-2: #0f2b7f;
-  --chart-3: #3b82f6;
-  --chart-4: #8b5cf6;
-  --chart-5: #ec4899;
-
-  --sidebar: #0f1120;
-  --sidebar-foreground: #c8cad8;
-  --sidebar-primary: #d4a23a;
-  --sidebar-primary-foreground: #0d0f1a;
-  --sidebar-accent: rgba(212, 162, 58, 0.12);
-  --sidebar-accent-foreground: #f0f0f5;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #d4a23a;
-
-  --gold: #bd882c;
-  --gold-rgb: 189 136 44;
-  --blue: #0f2b7f;
-  --blue-rgb: 15 43 127;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f2b7f;
+  --destructive: #ef4444;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0f2b7f;
+  --chart-1: #0f2b7f;
+  --chart-2: #ba931e;
+  --chart-3: #1e293b;
+  --chart-4: #475569;
+  --chart-5: #94a3b8;
+  --sidebar: #0f2b7f; /* Light mode sidebar is Brand Navy */
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ba931e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e3a8a; /* Slightly lighter navy for hover */
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1e3a8a;
+  --sidebar-ring: #ba931e;
 }
 
 .dark {
-  --background: #0d0f1a;
-  --foreground: #f0f0f5;
-  --card: #161825;
-  --card-foreground: #f0f0f5;
-  --popover: #1a1d2e;
-  --popover-foreground: #f0f0f5;
+  /* Dark Mode */
+  --background: #020617; /* Deep Navy/Black */
+  --foreground: #f8fafc;
+  --card: #0f172a; /* Slate 900 */
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --primary: #ba931e; /* Gold primary in dark mode for visibility */
+  --primary-foreground: #ffffff;
+  --secondary: #ba931e; /* Gold for Secondary in Dark Mode too, for buttons/highlights */
+  --secondary-foreground: #ffffff;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #ba931e;
+  --destructive: #7f1d1d;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #ba931e;
+  --chart-1: #ba931e;
+  --chart-2: #0f2b7f;
+  --chart-3: #334155;
+  --chart-4: #64748b;
+  --chart-5: #94a3b8;
+  --sidebar: #020617; /* Deepest Navy/Black */
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #ba931e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b; /* Sidebar accents like hover items */
+  --sidebar-accent-foreground: #ba931e;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #ba931e;
 
-  --primary: #d4a23a;
-  --primary-foreground: #0d0f1a;
-  --secondary: #1e3a8a;
-  --secondary-foreground: #f0f0f5;
-  --muted: #1e2135;
-  --muted-foreground: #8b8fa8;
-  --accent: #d4a23a;
-  --accent-foreground: #0d0f1a;
-  --destructive: #ef4444;
-  --destructive-foreground: #f0f0f5;
-  --border: rgba(240, 240, 245, 0.08);
-  --input: rgba(240, 240, 245, 0.1);
-  --ring: #d4a23a;
+  /* Dark Mode Semantic & Surface Tokens */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+  --surface-elevated: rgba(255, 255, 255, 0.04);
+  --surface-sunken: rgba(0, 0, 0, 0.08);
+  --interactive-hover: rgba(186, 147, 30, 0.12);
+  --interactive-active: rgba(186, 147, 30, 0.18);
+}
 
-  --chart-1: #d4a23a;
-  --chart-2: #bd882c;
-  --chart-3: #4f72d4;
-  --chart-4: #9b5de5;
-  --chart-5: #d45fa0;
-
-  --sidebar: #0a0c18;
-  --sidebar-foreground: #9ea3b8;
-  --sidebar-primary: #d4a23a;
-  --sidebar-primary-foreground: #0d0f1a;
-  --sidebar-accent: rgba(212, 162, 58, 0.1);
-  --sidebar-accent-foreground: #f0f0f5;
-  --sidebar-border: rgba(255, 255, 255, 0.05);
-  --sidebar-ring: #d4a23a;
-
-  --gold: #d4a23a;
-  --gold-rgb: 212 162 58;
-  --blue: #1e3a8a;
-  --blue-rgb: 30 58 138;
+/* Semantic & Surface Tokens - Light Mode Defaults */
+:root {
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+  --surface-elevated: rgba(255, 255, 255, 0.8);
+  --surface-sunken: rgba(0, 0, 0, 0.02);
+  --interactive-hover: rgba(15, 43, 127, 0.08);
+  --interactive-active: rgba(15, 43, 127, 0.12);
 }
 
 @layer base {
@@ -143,426 +144,81 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans);
-    letter-spacing: -0.02em;
-    font-weight: 600;
-    text-wrap: balance;
-  }
-  p {
-    text-wrap: pretty;
-  }
-  input, textarea, select {
-    font-family: var(--font-sans);
   }
 }
 
-/* ─── Glass ─────────────────────────────────────────────────────────────────── */
-.glass {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px) saturate(1.8);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-
-.dark .glass {
-  background: rgba(13, 15, 26, 0.92);
-  backdrop-filter: blur(16px) saturate(1.8);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-/* ─── Gold ───────────────────────────────────────────────────────────────────── */
-.gold-gradient {
-  background: linear-gradient(135deg, #bd882c 0%, #d4a23a 50%, #bd882c 100%);
-}
-
-.gold-text {
-  background: linear-gradient(135deg, #d4a23a 0%, #bd882c 60%, #d4a23a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gold-border {
-  border-image: linear-gradient(135deg, #bd882c, #d4a23a, #bd882c) 1;
-}
-
-/* ─── Shadows ────────────────────────────────────────────────────────────────── */
-.shadow-soft {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
-}
-
-.shadow-medium {
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 32px -4px rgba(0,0,0,0.06);
-}
-
-.shadow-noir {
-  box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 0 0 1px rgba(189,136,44,0.06);
-}
-
-.shadow-gold {
-  box-shadow: 0 0 0 1px rgba(189,136,44,0.2), 0 4px 24px rgba(189,136,44,0.08);
-}
-
-/* ─── Hover effects ──────────────────────────────────────────────────────────── */
-.glow-gold {
-  transition: box-shadow 0.25s ease;
-}
-.glow-gold:hover {
-  box-shadow: 0 0 0 1px rgba(189,136,44,0.25), 0 4px 20px rgba(189,136,44,0.12);
-}
-
-.press-scale {
-  transition: transform 0.1s ease;
-}
-.press-scale:active {
-  transform: scale(0.97);
-}
-
-/* ─── Backgrounds ────────────────────────────────────────────────────────────── */
-.noir-mesh {
-  background:
-    radial-gradient(ellipse at 10% 60%, rgba(189,136,44,0.06) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(15,43,127,0.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 90%, rgba(189,136,44,0.04) 0%, transparent 50%),
-    #f8f8fc;
-}
-
-.dark .noir-mesh {
-  background:
-    radial-gradient(ellipse at 10% 60%, rgba(212,162,58,0.07) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(30,58,138,0.06) 0%, transparent 55%),
-    #0d0f1a;
-}
-
-.auth-bg {
-  background:
-    radial-gradient(ellipse at 30% 40%, rgba(189,136,44,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 75% 70%, rgba(15,43,127,0.06) 0%, transparent 60%),
-    #f8f8fc;
-}
-
-.dark .auth-bg {
-  background:
-    radial-gradient(ellipse at 30% 40%, rgba(212,162,58,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse at 75% 70%, rgba(30,58,138,0.06) 0%, transparent 60%),
-    #0d0f1a;
-}
-
-/* ─── Decorative ─────────────────────────────────────────────────────────────── */
-.deco-line {
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(189,136,44,0.25), transparent);
-}
-
-.deco-line-subtle {
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(189,136,44,0.12), transparent);
-}
-
-.sidebar-deco {
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(212,162,58,0.18), transparent);
-}
-
-/* ─── Animations ─────────────────────────────────────────────────────────────── */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes gold-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0);    }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(16px); }
-  to   { opacity: 1; transform: translateX(0);    }
-}
-
-@keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-12px); }
-  to   { opacity: 1; transform: translateX(0);     }
-}
-
-@keyframes scan {
-  0%, 100% { top: 12%; opacity: 0.6; }
-  50%       { top: 80%; opacity: 1;   }
-}
-
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1);    }
-}
-
-@keyframes badge-pop {
-  0%   { transform: scale(0.6); opacity: 0; }
-  60%  { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.animate-fade-up    { animation: fade-up 0.35s ease forwards; }
-.animate-fade-in    { animation: fade-in 0.25s ease forwards; }
-.animate-scale-in   { animation: scale-in 0.25s ease forwards; }
-.animate-slide-in-right { animation: slide-in-right 0.3s ease forwards; }
-.animate-badge-pop  { animation: badge-pop 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards; }
-
-/* ─── Scrollbars ─────────────────────────────────────────────────────────────── */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(189,136,44,0.15) transparent;
-}
-
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(189,136,44,0.18); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(189,136,44,0.32); }
-
-/* Kanban horizontal scroll */
+/* Kanban Board Scrollbar Styles */
 .kanban-scroll-container {
   scrollbar-width: auto !important;
-  scrollbar-color: rgba(189,136,44,0.2) transparent !important;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
   -ms-overflow-style: scrollbar !important;
 }
-.kanban-scroll-container::-webkit-scrollbar { height: 8px !important; display: block !important; }
-.kanban-scroll-container::-webkit-scrollbar-track { background: rgba(189,136,44,0.03); border-radius: 4px; }
-.kanban-scroll-container::-webkit-scrollbar-thumb { background: rgba(189,136,44,0.2) !important; border-radius: 4px; }
-.kanban-scroll-container::-webkit-scrollbar-thumb:hover { background: rgba(189,136,44,0.35) !important; }
 
-/* Radix scroll area override */
-[data-radix-scroll-area-viewport] { overflow-x: auto !important; overflow-y: auto !important; }
-[data-radix-scroll-area-viewport] .sticky { position: sticky !important; z-index: 50 !important; }
-
-/* ─── Gradient utilities ──────────────────────────────────────────────────────── */
-.gradient-gold    { background: linear-gradient(135deg, var(--gold), #d4a04a); }
-.gradient-brand   { background: linear-gradient(135deg, var(--blue) 0%, #1a3a8f 40%, var(--gold) 100%); }
-.gradient-green   { background: linear-gradient(135deg, #16a34a, #22c55e); }
-.gradient-wizard  { background: linear-gradient(90deg, var(--gold), var(--blue)); }
-.gradient-dark    { background: linear-gradient(135deg, #0a0c18 0%, #0f1120 100%); }
-
-/* ─── Compact view mode ──────────────────────────────────────────────────────── */
-.compact table td,
-.compact table th { padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.8125rem; }
-.compact .space-y-4 > * + * { margin-top: 0.5rem; }
-.compact .space-y-6 > * + * { margin-top: 0.75rem; }
-.compact .p-4  { padding: 0.5rem; }
-.compact .p-6  { padding: 0.75rem; }
-.compact .gap-4 { gap: 0.5rem; }
-.compact .gap-6 { gap: 0.75rem; }
-
-/* ─── Sidebar nav item ────────────────────────────────────────────────────────── */
-.nav-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  transition: background 0.15s ease, color 0.15s ease;
-  color: rgba(158, 163, 184, 0.9);
-  cursor: pointer;
-  text-decoration: none;
+.kanban-scroll-container::-webkit-scrollbar {
+  height: 10px !important;
+  display: block !important;
 }
 
-.nav-item:hover {
-  background: rgba(255,255,255,0.05);
-  color: #e2e4ef;
+.kanban-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
 }
 
-.nav-item.active {
-  background: rgba(212,162,58,0.12);
-  color: #f0f0f5;
+.kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 5px;
+  border: 1px solid transparent;
 }
 
-.nav-item.active .nav-icon {
-  color: #d4a23a;
+.kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
 }
 
-.nav-item .nav-icon {
-  color: rgba(158,163,184,0.7);
-  transition: color 0.15s ease;
-  flex-shrink: 0;
+.dark .kanban-scroll-container {
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
 }
 
-.nav-item:hover .nav-icon {
-  color: rgba(212,162,58,0.8);
+.dark .kanban-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* ─── Page wrapper transitions ───────────────────────────────────────────────── */
-.page-enter {
-  animation: fade-up 0.3s ease forwards;
+.dark .kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* ─── Filter pill ────────────────────────────────────────────────────────────── */
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: var(--muted);
-  color: var(--muted-foreground);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
+.dark .kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5) !important;
 }
 
-.filter-chip:hover {
-  background: rgba(189,136,44,0.08);
-  border-color: rgba(189,136,44,0.25);
-  color: var(--foreground);
+/* Ensure Radix ScrollArea allows horizontal scrolling */
+[data-radix-scroll-area-viewport] {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
 }
 
-.filter-chip.active {
-  background: rgba(189,136,44,0.12);
-  border-color: rgba(189,136,44,0.3);
-  color: var(--foreground);
+/* Ensure sticky headers work inside ScrollArea */
+[data-radix-scroll-area-viewport] .sticky {
+  position: sticky !important;
+  z-index: 50 !important;
 }
 
-/* ─── React Big Calendar overrides ──────────────────────────────────────────── */
-.calendar-container .rbc-calendar {
-  height: 100%;
-  font-family: var(--font-sans);
-  background: transparent;
-  color: var(--foreground);
+/* Force horizontal scrollbar visibility for kanban */
+.kanban-scroll-container {
+  scrollbar-width: auto !important;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
 }
 
-.calendar-container .rbc-month-view,
-.calendar-container .rbc-time-view,
-.calendar-container .rbc-agenda-view {
-  border: none;
-  height: 100%;
-  background: transparent;
+.kanban-scroll-container::-webkit-scrollbar:horizontal {
+  height: 10px !important;
+  display: block !important;
 }
 
-.calendar-container .rbc-row-bg,
-.calendar-container .rbc-day-bg {
-  background: transparent;
+.kanban-scroll-container::-webkit-scrollbar-track:horizontal {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
 }
 
-.calendar-container .rbc-row-content {
-  background: transparent;
-}
-
-.calendar-container .rbc-time-header,
-.calendar-container .rbc-time-header-gutter {
-  background: transparent;
-  border-bottom: 1px solid var(--border);
-}
-
-.calendar-container .rbc-allday-cell {
-  background: transparent;
-}
-
-.calendar-container .rbc-header {
-  padding: 8px 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted-foreground);
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-}
-
-.calendar-container .rbc-month-row {
-  border-top: 1px solid var(--border);
-  min-height: 100px;
-  flex: 1 0 0;
-}
-
-.calendar-container .rbc-day-bg + .rbc-day-bg {
-  border-left: 1px solid var(--border);
-}
-
-.calendar-container .rbc-off-range-bg {
-  background: var(--muted);
-  opacity: 0.5;
-}
-
-.calendar-container .rbc-today {
-  background: rgba(189, 136, 44, 0.06);
-}
-
-.calendar-container .rbc-date-cell {
-  padding: 4px 6px;
-  font-size: 12px;
-  color: var(--foreground);
-}
-
-.calendar-container .rbc-date-cell.rbc-now {
-  font-weight: 700;
-  color: var(--foreground);
-}
-
-.calendar-container .rbc-date-cell a,
-.calendar-container .rbc-date-cell button {
-  color: var(--foreground);
-  background: transparent;
-  border: none;
-  padding: 0;
-  font-size: inherit;
-  cursor: pointer;
-}
-
-.calendar-container .rbc-event {
-  border-radius: 4px;
-  font-size: 12px;
-  padding: 1px 6px;
-  border: none;
-}
-
-.calendar-container .rbc-event:focus {
-  outline: 2px solid var(--ring);
-}
-
-.calendar-container .rbc-show-more {
-  font-size: 11px;
-  color: var(--gold);
-  font-weight: 500;
-  background: transparent;
-  padding: 0 4px;
-}
-
-.calendar-container .rbc-time-slot {
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.calendar-container .rbc-time-content {
-  border-top: 1px solid var(--border);
-}
-
-.calendar-container .rbc-time-gutter .rbc-timeslot-group {
-  border-bottom: 1px solid var(--border);
-}
-
-.calendar-container .rbc-timeslot-group {
-  border-bottom: 1px solid var(--border);
-}
-
-.calendar-container .rbc-time-header-content {
-  border-left: 1px solid var(--border);
-}
-
-.calendar-container .rbc-current-time-indicator {
-  background: rgba(189, 136, 44, 0.8);
+.kanban-scroll-container::-webkit-scrollbar-thumb:horizontal {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 5px;
 }

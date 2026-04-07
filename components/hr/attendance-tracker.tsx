@@ -10,8 +10,8 @@ import {
   useHrCheckIn,
   useHrCheckOut,
   useHrToggleBreak,
-} from "@/lib/api/hooks/hr";
-import { useAttendanceTimer } from "../../hooks/use-attendance-timer";
+} from "../../lib/hooks/trpc-hooks";
+import { useAttendanceTimer } from "../../hooks/useAttendanceTimer";
 import { type AttendanceStatus, type TodayLog } from "../../types/api";
 
 interface AttendanceTrackerProps {
@@ -54,7 +54,7 @@ export function AttendanceTracker({
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          checkInMutation.mutate({ location: { lat: latitude, lng: longitude } });
+          checkInMutation.mutate({ location: { latitude, longitude } });
         },
         (error) => {
           toast.error("Location required for Check-In");

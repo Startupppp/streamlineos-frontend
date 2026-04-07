@@ -1,61 +1,22 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
-import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { useOrgSettings, useUpdateOrgSettings } from "@/lib/api/hooks/organization";
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useGetOrganizations } from "../../../../lib/hooks/auth-hooks";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Input } from "../../../../components/ui/input";
+import { Label } from "../../../../components/ui/label";
+import { Button } from "../../../../components/ui/button";
+import { Skeleton } from "../../../../components/ui/skeleton";
+import { Building2, Plus } from "lucide-react";
 
 export default function OrganizationSettingsPage() {
-  const { data: session } = useSession();
-  const { data: org, isLoading } = useOrgSettings();
-
-  const [editName, setEditName] = useState("");
-  const [editSlug, setEditSlug] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-
-  const role = session?.user?.role;
-  const canEdit = role === "CEO" || role === "ADMIN";
-
-  const updateOrg = useUpdateOrgSettings();
-
-  const handleStartEdit = useCallback(() => {
-    if (!org) return;
-    setEditName(org.name);
-    setEditSlug(org.slug);
-    setIsEditing(true);
-  }, [org]);
-
-  const handleEditNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.target.value), []);
-  const handleEditSlugChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")), []);
-  const handleCancelEdit = useCallback(() => setIsEditing(false), []);
-
-  const handleSave = useCallback(() => {
-    if (!editName.trim()) return;
-    updateOrg.mutate(
-      { name: editName.trim(), slug: editSlug.trim() || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Organization updated successfully");
-          setIsEditing(false);
-        },
-        onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to update organization");
-        },
-      }
-    );
-  }, [editName, editSlug, updateOrg]);
+  const router = useRouter();
+  const { data: organizations, isLoading } = useGetOrganizations();
+  const org = organizations?.[0];
 
   if (isLoading) {
     return (
-      <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
+      <div className="p-6">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-48 mb-2" />
@@ -66,17 +27,19 @@ export default function OrganizationSettingsPage() {
             <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
-      </PageWrapper>
+      </div>
     );
   }
 
   if (!org) {
     return (
-      <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
+      <div className="p-6">
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <EmptyProjectsIllustration />
+              <div className="p-4 rounded-full bg-muted">
+                <Building2 className="h-8 w-8 text-muted-foreground" />
+              </div>
             </div>
             <CardTitle>No Organization Found</CardTitle>
             <CardDescription>
@@ -84,17 +47,18 @@ export default function OrganizationSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-6">
-            <p className="text-sm text-muted-foreground">
-              Please contact your administrator to set up an organization.
-            </p>
+            <Button onClick={() => router.push("/setup-organization")}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Organization
+            </Button>
           </CardContent>
         </Card>
-      </PageWrapper>
+      </div>
     );
   }
 
   return (
-    <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
+    <div className="p-6">
       <Card>
         <CardHeader>
           <CardTitle>Organization Settings</CardTitle>
@@ -103,59 +67,24 @@ export default function OrganizationSettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Organization Name</Label>
-            {isEditing ? (
-              <Input
-                id="name"
-                value={editName}
-                onChange={handleEditNameChange}
-                aria-label="Organization name"
-              />
-            ) : (
-              <Input id="name" value={org.name} disabled className="bg-muted" aria-label="Organization name" />
-            )}
+            <Input id="name" value={org.name} disabled className="bg-muted" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="slug">Slug</Label>
-            {isEditing ? (
-              <Input
-                id="slug"
-                value={editSlug}
-                onChange={handleEditSlugChange}
-                aria-label="Organization slug"
-              />
-            ) : (
-              <Input id="slug" value={org.slug} disabled className="bg-muted" aria-label="Organization slug" />
-            )}
+            <Input id="slug" value={org.slug} disabled className="bg-muted" />
           </div>
-          <div className="pt-4 flex gap-2">
-            {canEdit && !isEditing && (
-              <Button variant="outline" onClick={handleStartEdit}>
-                Edit Organization
-              </Button>
-            )}
-            {isEditing && (
-              <>
-                <Button onClick={handleSave} disabled={updateOrg.isPending || !editName.trim()}>
-                  {updateOrg.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </Button>
-                <Button variant="ghost" onClick={handleCancelEdit} disabled={updateOrg.isPending}>
-                  Cancel
-                </Button>
-              </>
-            )}
-            {!canEdit && (
-              <p className="text-sm text-muted-foreground">Only Owners and Admins can edit organization settings.</p>
-            )}
+          <div className="space-y-2">
+            <Label htmlFor="role">Your Role</Label>
+            <Input id="role" value={org.role} disabled className="bg-muted" />
+          </div>
+          <div className="pt-4">
+            <Button variant="outline" disabled>
+              Update Organization (Coming Soon)
+            </Button>
           </div>
         </CardContent>
       </Card>
-    </PageWrapper>
+    </div>
   );
 }
+

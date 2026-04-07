@@ -7,16 +7,16 @@ import {
   useCreateTicket,
   useAddAttachment,
   useProject,
-} from "@/lib/hooks/trpc-hooks";
-import { queryKeys } from "@/lib/query-keys";
-import { Button } from "@/components/ui/button";
+  vaivammKeys,
+} from "../../lib/hooks/trpc-hooks";
+import { Button } from "../ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "../ui/sheet";
 import {
   Form,
   FormControl,
@@ -24,27 +24,24 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "../ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "../ui/select";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { Plus, Upload, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
-import { createTicketInputSchema } from "@/lib/validations/project";
+import { createTicketInputSchema } from "../../lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { resolveImageUrl } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
-  assigneeIds: z.array(z.string()).optional(),
-});
+const formSchema = createTicketInputSchema.omit({ projectId: true });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -57,21 +54,25 @@ export function CreateTicketDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
+
+  // Get project details which includes members
   const { data: projectData } = useProject(projectId);
-  const projectMembersList = projectData?.members?.filter(m => !!m.user).map(m => ({
-    id: m.user!.id,
-    name: m.user!.name || `${m.user!.firstName || ''} ${m.user!.lastName || ''}`.trim(),
-    firstName: m.user!.firstName || undefined,
-    lastName: m.user!.lastName || undefined,
-    image: m.user!.image || null,
-    email: m.user!.email,
+  
+  // Extract only project members (not all org members)
+  // Include project manager as well
+  const projectMembersList = projectData?.members?.map(m => ({
+    id: m.user.id,
+    name: m.user.name || `${m.user.firstName || ''} ${m.user.lastName || ''}`.trim(),
+    firstName: m.user.firstName || undefined,
+    lastName: m.user.lastName || undefined,
+    image: m.user.image || null,
+    email: m.user.email,
   })) || [];
-  const manager = projectData && "manager" in projectData
-    ? (projectData as { manager?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; image?: string | null; email?: string | null } }).manager
-    : undefined;
+  
+  // Include project manager if not already in members list
+  const manager = (projectData as any)?.manager;
   const members = manager && !projectMembersList.some(m => m.id === manager.id)
     ? [
         {
@@ -90,6 +91,8 @@ export function CreateTicketDialog({
 
   const createTicketMutation = useCreateTicket({
     onSuccess: async (data) => {
+      
+      // Upload file if selected
       if (file) {
         try {
           setIsUploading(true);
@@ -135,9 +138,8 @@ export function CreateTicketDialog({
     setOpen(false);
     form.reset();
     setFile(null);
-    setSelectedAssignees([]);
     queryClient.invalidateQueries({
-      queryKey: queryKeys.projects.detail(projectId),
+      queryKey: vaivammKeys.project.project(projectId),
     });
   };
 
@@ -145,12 +147,11 @@ export function CreateTicketDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      type: "TASK",
+      type: "Task",
       description: "",
       priority: "MEDIUM",
       link: "",
-      assigneeId: undefined,
-      assigneeIds: [],
+      assigneeId: undefined, // "undefined" string or standard undefined? Schema expects string optional.
     },
   });
 
@@ -160,8 +161,7 @@ export function CreateTicketDialog({
       projectId,
       type: values.type,
       link: values.link || undefined,
-      assigneeId: selectedAssignees[0] || undefined,
-      assigneeIds: selectedAssignees.length > 0 ? selectedAssignees : undefined,
+      assigneeId: values.assigneeId === "unassigned" ? undefined : values.assigneeId, 
     });
   };
 
@@ -200,17 +200,23 @@ export function CreateTicketDialog({
                   <FormItem>
                     <FormLabel>Type</FormLabel>
                     <FormControl>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="TASK">Task</SelectItem>
-                          <SelectItem value="BUG">Bug</SelectItem>
-                          <SelectItem value="STORY">Story</SelectItem>
-                          <SelectItem value="EPIC">Epic</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <div className="relative">
+                            <Input 
+                                {...field} 
+                                list="ticket-types" 
+                                placeholder="Task, Bug, Call..." 
+                                className="w-full"
+                            />
+                            <datalist id="ticket-types">
+                                <option value="Task" />
+                                <option value="Bug" />
+                                <option value="Story" />
+                                <option value="Epic" />
+                                <option value="Call" />
+                                <option value="Followup" />
+                                <option value="Meeting" />
+                            </datalist>
+                        </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -224,7 +230,7 @@ export function CreateTicketDialog({
                     <FormLabel>Priority</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
@@ -277,52 +283,30 @@ export function CreateTicketDialog({
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-               <FormItem>
-                    <FormLabel>Assignees</FormLabel>
-                    {/* Selected assignees chips */}
-                    {selectedAssignees.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {selectedAssignees.map((id) => {
-                          const member = members?.find((m) => m.id === id);
-                          if (!member) return null;
-                          return (
-                            <div key={id} className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-0.5">
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={resolveImageUrl(member.image)} />
-                                <AvatarFallback className="text-[8px]">{member.name?.[0] || "U"}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs truncate max-w-[100px]">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
-                              <button
-                                type="button"
-                                className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                                onClick={() => setSelectedAssignees((prev) => prev.filter((a) => a !== id))}
-                                aria-label={`Remove ${member.name}`}
-                              >
-                                <span className="text-xs font-bold">&times;</span>
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {/* Add assignee dropdown */}
+               <FormField
+                control={form.control}
+                name="assigneeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assignee</FormLabel>
                     <Select
-                      value=""
-                      onValueChange={(value) => {
-                        if (!value || value === "unassigned") return;
-                        if (selectedAssignees.includes(value)) return;
-                        setSelectedAssignees((prev) => [...prev, value]);
-                      }}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={selectedAssignees.length > 0 ? "+ Add another assignee" : "Select assignees"} />
-                      </SelectTrigger>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select assignee" />
+                        </SelectTrigger>
+                      </FormControl>
                       <SelectContent>
-                        {members?.filter((m) => !selectedAssignees.includes(m.id)).map((member) => (
+                        <SelectItem value="unassigned">
+                            <span className="text-muted-foreground">Unassigned</span>
+                        </SelectItem>
+                        {members?.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-2">
-                               <Avatar className="h-7 w-7">
-                                  <AvatarImage src={resolveImageUrl(member.image)} />
+                               <Avatar className="h-5 w-5">
+                                  <AvatarImage src={member.image || undefined} />
                                   <AvatarFallback className="text-[10px]">{member.name?.[0] || "U"}</AvatarFallback>
                                </Avatar>
                                <span className="truncate">{member.name || `${member.firstName || ''} ${member.lastName || ''}`}</span>
@@ -333,6 +317,8 @@ export function CreateTicketDialog({
                     </Select>
                     <FormMessage />
                   </FormItem>
+                )}
+              />
                <FormField
                 control={form.control}
                 name="link"

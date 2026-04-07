@@ -4,7 +4,6 @@ import {
   suggestTaskAssignments,
   analyzeWorkload,
 } from "../../../../lib/ai/automation";
-import { logger } from "../../../../lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,18 +12,19 @@ export async function GET(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const orgId = "orgId" in session && typeof session.orgId === "string" ? session.orgId : session.user.id;
+
+    // Get orgId from session or context - for now using userId as fallback
+    const orgId = (session as { orgId?: string }).orgId || session.user.id;
 
     const searchParams = req.nextUrl.searchParams;
     const type = searchParams.get("type");
-    const projectIdParam = searchParams.get("projectId");
+    const projectId = searchParams.get("projectId");
 
-    if (type === "tasks" && projectIdParam) {
-      const projectId = parseInt(projectIdParam, 10);
-      if (isNaN(projectId) || projectId <= 0) {
-        return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
-      }
-      const suggestions = await suggestTaskAssignments(orgId, projectId);
+    if (type === "tasks" && projectId) {
+      const suggestions = await suggestTaskAssignments(
+        orgId,
+        parseInt(projectId)
+      );
       return NextResponse.json({ suggestions });
     }
 
@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
-    logger.error("AI suggestions error", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
