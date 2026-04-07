@@ -28,21 +28,20 @@ import { useState } from "react";
 import { Loader2, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar"; // Assuming shadcn calendar
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const formSchema = z.object({
   leaveTypeId: z.string().min(1, "Leave type is required"),
@@ -62,7 +61,6 @@ interface RequestLeaveDialogProps {
 export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialogProps) {
     const [open, setOpen] = useState(false);
     const router = useRouter();
-
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -100,17 +98,17 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
                 <Button>Request Leave</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-                <DialogHeader>
-                    <DialogTitle>Request Leave</DialogTitle>
-                    <DialogDescription>
+            </SheetTrigger>
+            <SheetContent className="sm:max-w-[525px] overflow-y-auto">
+                <SheetHeader>
+                    <SheetTitle>Request Leave</SheetTitle>
+                    <SheetDescription>
                         Select dates and an approver for your leave request.
-                    </DialogDescription>
-                </DialogHeader>
+                    </SheetDescription>
+                </SheetHeader>
                 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -235,7 +233,7 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
                         </div>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     );
 }

@@ -1,4 +1,6 @@
 import sgMail from "@sendgrid/mail";
+import { logger } from "./logger";
+import { appUrl } from "./app-url";
 import {
   getVerificationEmailTemplate,
   getPasswordResetEmailTemplate,
@@ -20,12 +22,22 @@ import {
   getExpenseRejectedEmailTemplate,
   getExpensePaidEmailTemplate,
   getDocumentExpiryReminderEmailTemplate,
+  getWeeklyAttendanceReportTemplate,
+  getMonthlyExpenseReportTemplate,
 } from "./email-templates";
+import type { MonthlyExpenseReportRow } from "./email-templates";
+import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx";
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+const baseUrl = appUrl;
 
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  type: string;
 }
 
 export interface EmailOptions {
@@ -33,34 +45,100 @@ export interface EmailOptions {
   subject: string;
   html: string;
   text?: string;
+  attachments?: EmailAttachment[];
+}
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+
+function isTransientError(error: unknown): boolean {
+  if (error && typeof error === "object") {
+    const code = (error as { code?: number | string }).code;
+    if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENOTFOUND" || code === "EAI_AGAIN") {
+      return true;
+    }
+    const statusCode = (error as { code?: number; statusCode?: number }).statusCode ?? (typeof code === "number" ? code : undefined);
+    if (typeof statusCode === "number") {
+      if (statusCode >= 500 && statusCode < 600) return true;
+      if (statusCode >= 400 && statusCode < 500) return false;
+    }
+  }
+  return true;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function sendEmail(options: EmailOptions) {
-  // Priority: EMAIL_FROM_ADDRESS > SENDGRID_FROM_EMAIL > default
   const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SENDGRID_FROM_EMAIL || "noreply@vaivammcapital.com";
-  
+
   if (!process.env.SENDGRID_API_KEY) {
     if (process.env.NODE_ENV === "development") {
-      console.log(`[EMAIL SKIPPED - No SendGrid API Key] To: ${options.to}, Subject: ${options.subject}`);
+      logger.info("Email skipped - No SendGrid API Key", { to: options.to, subject: options.subject });
     }
     return Promise.resolve();
   }
 
-  try {
-    await sgMail.send({
-      to: options.to,
-      from: fromEmail,
-      subject: options.subject,
-      html: options.html,
-      text: options.text || options.html.replace(/<[^>]*>/g, ""),
-    });
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[EMAIL SENT] To: ${options.to}, Subject: ${options.subject}`);
+  const attachments = options.attachments?.map((a) => ({
+    content: Buffer.isBuffer(a.content) ? a.content.toString("base64") : a.content,
+    filename: a.filename,
+    type: a.type,
+    disposition: "attachment" as const,
+  }));
+
+  const msg = {
+    to: options.to,
+    from: fromEmail,
+    subject: options.subject,
+    html: options.html,
+    text: options.text || options.html.replace(/<[^>]*>/g, ""),
+    ...(attachments?.length ? { attachments } : {}),
+  };
+
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await sgMail.send(msg);
+      if (process.env.NODE_ENV === "development") {
+        logger.info("Email sent", { to: options.to, subject: options.subject });
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+
+      if (!isTransientError(error)) {
+        logger.error("Email send failed with non-retryable error", {
+          to: options.to,
+          subject: options.subject,
+          attempt,
+          error,
+        });
+        throw error;
+      }
+
+      if (attempt < MAX_RETRIES) {
+        const backoff = BASE_DELAY_MS * Math.pow(2, attempt - 1);
+        logger.warn(`Email send failed, retrying (attempt ${attempt}/${MAX_RETRIES})`, {
+          to: options.to,
+          subject: options.subject,
+          attempt,
+          nextRetryMs: backoff,
+          error,
+        });
+        await delay(backoff);
+      }
     }
-  } catch (error) {
-    console.error(`[EMAIL ERROR] To: ${options.to}, Subject: ${options.subject}`, error);
-    throw error;
   }
+
+  logger.error("Email send failed after all retries exhausted", {
+    to: options.to,
+    subject: options.subject,
+    totalAttempts: MAX_RETRIES,
+    error: lastError,
+  });
+  throw lastError;
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
@@ -73,7 +151,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+  const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
     subject: "Reset Your Password - Vaivamm Capital",
@@ -496,6 +574,57 @@ export async function sendPayslipGeneratedEmail(
     subject: `Your Payslip for ${month} is Ready`,
     html,
   });
+}
+
+export async function sendWeeklyAttendanceReportEmail(
+  weekRange: string,
+  orgName: string,
+  rows: { name: string; totalHours: string; autoCheckoutDays: number; overtimeDays: number; daysPresent: number }[],
+  recipientEmails: string[]
+) {
+  if (recipientEmails.length === 0) return;
+
+  const subject = `Weekly Attendance Report - ${weekRange}`;
+  const html = getWeeklyAttendanceReportTemplate(weekRange, orgName, rows);
+
+  for (const email of recipientEmails) {
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+}
+
+export async function sendMonthlyExpenseReportEmail(
+  monthLabel: string,
+  orgName: string,
+  rows: MonthlyExpenseReportRow[],
+  summary: { totalAmount: string; totalCount: number; pendingCount: number; approvedCount: number; paidCount: number; rejectedCount: number },
+  recipientEmails: string[]
+) {
+  if (recipientEmails.length === 0) return;
+
+  const subject = `Monthly Expense Report - ${monthLabel}`;
+  const html = getMonthlyExpenseReportTemplate(monthLabel, orgName, rows, summary);
+  const xlsxBuffer = await generateMonthlyExpenseReportXlsx(monthLabel, orgName, rows, summary);
+  const safeMonthLabel = monthLabel.replace(/\s+/g, "-");
+  const xlsxFilename = `Monthly-Expense-Report-${safeMonthLabel}.xlsx`;
+
+  for (const email of recipientEmails) {
+    await sendEmail({
+      to: email,
+      subject,
+      html,
+      attachments: [
+        {
+          filename: xlsxFilename,
+          content: xlsxBuffer,
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
+      ],
+    });
+  }
 }
 
 export { sendEmail };

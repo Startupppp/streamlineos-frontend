@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../lib/auth";
 import { uploadFile, isStorageConfigured } from "../../../../lib/storage";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { logger } from "../../../../lib/logger";
 
-async function uploadFileLocally(file: File, folder: string) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-  const fileName = `${Date.now()}-${sanitizedName}`;
-  
-  const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
-  await mkdir(uploadDir, { recursive: true });
-  
-  const filePath = path.join(uploadDir, fileName);
-  await writeFile(filePath, buffer);
-  
-  const url = `/uploads/${folder}/${fileName}`;
-  
-  return {
-    url,
-    key: `${folder}/${fileName}`,
-    size: buffer.length,
-    mimeType: file.type,
-  };
+const FILE_SIGNATURES: Record<string, number[][]> = {
+  "image/jpeg": [[0xff, 0xd8, 0xff]],
+  "image/png": [[0x89, 0x50, 0x4e, 0x47]],
+  "image/gif": [
+    [0x47, 0x49, 0x46, 0x38, 0x37, 0x61],
+    [0x47, 0x49, 0x46, 0x38, 0x39, 0x61],
+  ],
+  "image/webp": [[0x52, 0x49, 0x46, 0x46]],
+  "application/pdf": [[0x25, 0x50, 0x44, 0x46]],
+  "application/msword": [[0xd0, 0xcf, 0x11, 0xe0]],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+    [0x50, 0x4b, 0x03, 0x04],
+  ],
+  "application/vnd.ms-excel": [[0xd0, 0xcf, 0x11, 0xe0]],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    [0x50, 0x4b, 0x03, 0x04],
+  ],
+};
+
+function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
+  const signatures = FILE_SIGNATURES[mimeType];
+  if (!signatures) return true;
+  if (buffer.length < 12) return false;
+  const matchesSignature = signatures.some((sig) =>
+    sig.every((byte, i) => buffer[i] === byte)
+  );
+  if (!matchesSignature) return false;
+  // Extra check for WEBP: RIFF header must contain 'WEBP' at offset 8
+  if (mimeType === "image/webp") {
+    return buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
+  }
+  return true;
 }
 
 export async function POST(req: NextRequest) {
@@ -33,9 +45,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (!isStorageConfigured()) {
+      return NextResponse.json(
+        { error: "File storage is not available" },
+        { status: 503 }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const folder = (formData.get("folder") as string) || "uploads";
+    const rawFolder = (formData.get("folder") as string) || "uploads";
+    const folder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, "-");
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -68,24 +88,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let result;
-    if (isStorageConfigured()) {
-      try {
-        result = await uploadFile(file, folder);
-      } catch (r2Error) {
-        result = await uploadFileLocally(file, folder);
-      }
-    } else {
-      result = await uploadFileLocally(file, folder);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!validateMagicBytes(buffer, file.type)) {
+      return NextResponse.json(
+        { error: "File content does not match declared type" },
+        { status: 400 }
+      );
     }
+
+    const result = await uploadFile(file, folder);
+
+    // Audit log file upload
+    const { createAuditLog } = await import("../../../../lib/audit-log");
+    createAuditLog({
+      action: "file.upload",
+      userId: session.user.id,
+      metadata: { fileKey: result.key, fileSize: result.size, mimeType: result.mimeType },
+    }).catch((err) => {
+      logger.error("Failed to create audit log for file upload", { error: err instanceof Error ? err.message : "Unknown" });
+    });
 
     return NextResponse.json(result);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to upload file";
-    
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    logger.error("File upload failed", error);
+    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
   }
 }

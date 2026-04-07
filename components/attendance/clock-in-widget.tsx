@@ -2,15 +2,14 @@
 
 import { Button } from "../ui/button";
 import { format } from "date-fns";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   useHrAttendanceStatus,
   useHrCheckIn,
   useHrCheckOut,
 } from "../../lib/hooks/trpc-hooks";
 import { toast } from "sonner";
-import { LoadingSpinner } from "../pre-ui/loading-spinner";
-import { Clock, Timer } from "lucide-react";
+import { Clock, Loader2, Timer } from "lucide-react";
 
 export function ClockInWidget() {
   const [now, setNow] = useState(new Date());
@@ -31,22 +30,17 @@ export function ClockInWidget() {
   const checkOutMutation = useHrCheckOut({
     onSuccess: () => {
       toast.success("Clocked out successfully!");
-      // Start local cooldown timer (120 seconds = 2 minutes)
       setLocalCooldown(120);
     },
     onError: (err) => {
       toast.error(err.message);
     },
   });
-
-  // Initialize cooldown from server data
   useEffect(() => {
     if (statusData?.cooldownRemaining && statusData.cooldownRemaining > 0) {
       setLocalCooldown(statusData.cooldownRemaining);
     }
   }, [statusData?.cooldownRemaining]);
-
-  // Countdown timer for cooldown
   useEffect(() => {
     if (localCooldown > 0) {
       const timer = setTimeout(() => {
@@ -67,13 +61,13 @@ export function ClockInWidget() {
   const isOnBreak = statusData?.status === "ON_BREAK";
   const isInCooldown = localCooldown > 0;
 
-  const handleClockAction = () => {
+  const handleClockAction = useCallback(() => {
     if (isCheckedIn || isOnBreak) {
       checkOutMutation.mutate();
     } else if (!isInCooldown) {
       checkInMutation.mutate({ location: undefined });
     }
-  };
+  }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
 
   const isPending =
     checkInMutation.isPending || checkOutMutation.isPending || isLoading;
@@ -137,7 +131,7 @@ export function ClockInWidget() {
         }`}
       >
         {isPending ? (
-          <LoadingSpinner size="sm" />
+          <Loader2 className="h-4 w-4 animate-spin" />
         ) : isCheckedIn || isOnBreak ? (
           "WEB CLOCK-OUT"
         ) : isInCooldown ? (

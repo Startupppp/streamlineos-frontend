@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
 interface User {
@@ -42,7 +42,7 @@ export function AvatarStack({ users, limit = 5, className, onSelect, selectedIds
                       "h-8 w-8 border-2 border-background",
                       isSelected && "ring-2 ring-primary border-primary"
                   )}>
-                    <AvatarImage src={user.image || undefined} />
+                    <AvatarImage src={resolveImageUrl(user.image)} />
                     <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                       {user.firstName?.[0]}
                       {user.lastName?.[0]}

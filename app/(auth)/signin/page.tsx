@@ -1,149 +1,216 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { signIn } from "next-auth/react";
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../../components/ui/card";
-import { Label } from "../../../components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+const signinSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type FormValues = z.infer<typeof signinSchema>;
+
 export default function SignInPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(signinSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
   const getCallbackUrl = () => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const url = params.get("callbackUrl");
-      if (url && url.startsWith("/")) {
-        return url;
-      }
+      if (url && url.startsWith("/")) return url;
     }
     return "/dashboard";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const signInMutation = useMutation({
+    mutationFn: async (data: FormValues) => {
+      if (!navigator.onLine) {
+        throw new Error("No internet connection. Check your network and try again.");
+      }
+      try {
+        const result = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          callbackUrl: getCallbackUrl(),
+          redirect: false,
+        });
+        if (result?.error) {
+          throw new Error("Invalid email or password.");
+        }
+        return result;
+      } catch (error) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          throw new Error("No internet connection. Check your network and try again.");
+        }
+        throw error;
+      }
+    },
+    onSuccess: (result) => {
+      toast.success("Welcome back!");
+      if (result?.ok) {
+        const target =
+          result.url && result.url.length > 0 ? result.url : getCallbackUrl();
+        window.location.href = target;
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
-    try {
-      const callbackUrl = getCallbackUrl();
-
-      await signIn("credentials", {
-        email,
-        password,
-        callbackUrl,
-      });
-    } catch (error) {
-      console.error("Sign in error:", error);
-      toast.error("An error occurred. Please try again.");
-      setIsLoading(false);
-    }
-  };
+  const isPending = signInMutation.isPending;
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
-      <div className="flex flex-col items-center mb-8">
-        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
-          <Image
-            src="/logo.svg"
-            alt="Vaivamm Logo"
-            width={64}
-            height={64}
-            className="rounded-lg"
-          />
-        </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
-          Welcome Back
+    <div className="w-full max-w-sm animate-fade-up">
+      {/* Heading */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Sign in to your account
         </h1>
-        <p className="text-blue-100 mt-2">
-          Sign in to your Vaivamm CRM account
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          Enter your credentials to continue
         </p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white h-fit">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center text-primary">
-            Sign In
-          </CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
+      {/* Card */}
+      <div className="rounded-xl border border-border bg-card shadow-soft p-6 space-y-5">
+        <form
+          onSubmit={form.handleSubmit((v) => signInMutation.mutate(v))}
+          aria-busy={isPending}
+          noValidate
+          className="space-y-4"
+        >
+          {/* Email */}
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-[13px] font-medium">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@vaivamm.com"
+              {...form.register("email")}
+              disabled={isPending}
+              className={cn(
+                "h-9 text-sm",
+                form.formState.errors.email && "border-destructive focus-visible:ring-destructive/30"
+              )}
+              aria-invalid={!!form.formState.errors.email}
+              aria-describedby={form.formState.errors.email ? "email-error" : undefined}
+            />
+            {form.formState.errors.email && (
+              <p id="email-error" role="alert" className="text-[12px] text-destructive">
+                {form.formState.errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-[13px] font-medium">
+                Password
               </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-                className="focus-visible:ring-primary"
-              />
+              <Link
+                href="/forgot-password"
+                className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Forgot password?
+              </Link>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-foreground">
-                  Password
-                </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm font-medium text-secondary hover:text-secondary/80 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+            <div className="relative">
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-                className="focus-visible:ring-primary"
+                {...form.register("password")}
+                disabled={isPending}
+                className={cn(
+                  "h-9 text-sm pr-9",
+                  form.formState.errors.password && "border-destructive focus-visible:ring-destructive/30"
+                )}
+                aria-invalid={!!form.formState.errors.password}
+                aria-describedby={form.formState.errors.password ? "pw-error" : undefined}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign up
-            </Link>
+            {form.formState.errors.password && (
+              <p id="pw-error" role="alert" className="text-[12px] text-destructive">
+                {form.formState.errors.password.message}
+              </p>
+            )}
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="mt-8 text-white/40 text-sm">
-        &copy; 2025 Vaivamm Capital
+          {/* Submit */}
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full h-9 text-sm font-medium gap-2 mt-1"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              <>
+                Sign in
+                <ArrowRight className="h-3.5 w-3.5" />
+              </>
+            )}
+          </Button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-card px-2 text-[11px] text-muted-foreground/60">
+              Secure sign-in
+            </span>
+          </div>
+        </div>
+
+        {/* Security note */}
+        <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
+          Your session is protected with end-to-end encryption.
+          <br />
+          Never share your credentials with anyone.
+        </p>
       </div>
     </div>
   );

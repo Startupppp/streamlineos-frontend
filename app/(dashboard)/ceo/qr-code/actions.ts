@@ -1,14 +1,16 @@
 "use server";
 
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { qrCodes, users } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { generateQRCodeWithLogo } from "@/lib/qr-code";
 import { uploadFile, deleteFile, getFileKeyFromUrl, getFileUrl, isStorageConfigured } from "@/lib/storage";
+import { appUrl } from "@/lib/app-url";
 import { join } from "path";
-import { existsSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync } from "fs";
 import { auth } from "@/lib/auth";
 
 const generateSchema = z.object({
@@ -30,13 +32,13 @@ export async function generateQRCode(formData: FormData) {
 
     const validatedData = generateSchema.parse(rawData);
 
-    if (session.user.role !== "OWNER") {
+    if (session.user.role !== "CEO" && session.user.role !== "HR") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
-      
-      if (!user || user.role !== "OWNER") {
-        return { success: false, error: "Access Denied: Only organization owners can generate QR codes." };
+
+      if (!user || (user.role !== "CEO" && user.role !== "HR")) {
+        return { success: false, error: "Access Denied: Only CEO and HR can generate QR codes." };
       }
     }
 
@@ -69,10 +71,7 @@ export async function generateQRCode(formData: FormData) {
       return { success: false, error: "Failed to generate unique slug" };
     }
 
-    const redirectBaseUrl =
-      process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL ||
-      process.env.NEXTAUTH_URL ||
-      (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
+    const redirectBaseUrl = process.env.NEXT_PUBLIC_QR_REDIRECT_BASE_URL || appUrl;
 
     if (!redirectBaseUrl) {
       return {
@@ -96,6 +95,10 @@ export async function generateQRCode(formData: FormData) {
 
     let imageUrl: string;
 
+    if (!isStorageConfigured()) {
+      return { success: false, error: "Cloud storage (R2) is not configured. Contact your administrator." };
+    }
+
     try {
       const uploadResult = await uploadFile(
         qrBuffer,
@@ -105,30 +108,8 @@ export async function generateQRCode(formData: FormData) {
       );
       imageUrl = uploadResult.url;
     } catch (error) {
-      if (process.env.NODE_ENV === "production") {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        return {
-          success: false,
-          error: `R2 storage unavailable. Please configure R2 for production. Error: ${errorMessage}`,
-        };
-      }
-      
-      if (!isStorageConfigured()) {
-        const publicQrDir = join(process.cwd(), "public", "qr-codes");
-        if (!existsSync(publicQrDir)) {
-          mkdirSync(publicQrDir, { recursive: true });
-        }
-        
-        const localPath = join(publicQrDir, `${slug}.png`);
-        writeFileSync(localPath, qrBuffer);
-        imageUrl = `/qr-codes/${slug}.png`;
-      } else {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        return {
-          success: false,
-          error: `Failed to upload to R2 storage: ${errorMessage}`,
-        };
-      }
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      return { success: false, error: `Failed to upload QR code: ${errorMessage}` };
     }
 
     await db.insert(qrCodes).values({
@@ -162,13 +143,13 @@ export async function deleteQRCode(id: number) {
       return { success: false, error: "QR code not found" };
     }
 
-    if (session.user.role !== "OWNER") {
+    if (session.user.role !== "CEO" && session.user.role !== "HR") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
-      
-      if (!user || user.role !== "OWNER") {
-        return { success: false, error: "Access Denied: Only organization owners can delete QR codes." };
+
+      if (!user || (user.role !== "CEO" && user.role !== "HR")) {
+        return { success: false, error: "Access Denied: Only CEO and HR can delete QR codes." };
       }
     }
 
@@ -188,7 +169,8 @@ export async function deleteQRCode(id: number) {
         try {
           const fileKey = getFileKeyFromUrl(qrCode.imageUrl);
           await deleteFile(fileKey);
-        } catch {
+        } catch (error) {
+          logger.warn("Failed to delete remote QR file", error);
         }
       } else if (process.env.NODE_ENV !== "production") {
         try {
@@ -197,7 +179,8 @@ export async function deleteQRCode(id: number) {
           if (existsSync(localPath)) {
             unlinkSync(localPath);
           }
-        } catch {
+        } catch (error) {
+          logger.warn("Failed to delete local QR file", error);
         }
       }
     }
@@ -219,12 +202,12 @@ export async function getQRCodes(orgId: string) {
       return [];
     }
 
-    if (session.user.role !== "OWNER") {
+    if (session.user.role !== "CEO") {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
       
-      if (!user || user.role !== "OWNER") {
+      if (!user || user.role !== "CEO") {
         return [];
       }
     }
@@ -297,7 +280,8 @@ export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
           if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
             return signedUrl;
           }
-        } catch {
+        } catch (error) {
+          logger.warn("Failed to get signed URL for R2 key", error);
         }
       }
     }
@@ -310,7 +294,8 @@ export async function getQRCodeImageUrl(imageUrl: string): Promise<string> {
       if (signedUrl && (signedUrl.startsWith("http://") || signedUrl.startsWith("https://"))) {
         return signedUrl;
       }
-    } catch {
+    } catch (error) {
+      logger.warn("Failed to get signed URL", error);
     }
 
     if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) {

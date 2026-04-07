@@ -1,138 +1,189 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Label } from "../../../components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { vaivammTrpcClient } from "../../../lib/trpc";
-import { Mail, ArrowLeft, CheckCircle2, KeyRound } from "lucide-react";
+import { useForgotPassword } from "@/lib/hooks/auth-hooks";
+import { ArrowLeft, CheckCircle2, KeyRound, Loader2, AlertCircle, RefreshCw, ArrowRight } from "lucide-react";
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
 
-    try {
-      await vaivammTrpcClient.auth.forgotPassword.mutate({ email });
-      setSent(true);
-      toast.success("Password reset email sent! Check your inbox.");
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "An error occurred";
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
-    }
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(60);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const forgotPassword = useForgotPassword();
+
+  const onSubmit = (values: ForgotPasswordFormValues) => {
+    forgotPassword.mutate({ email: values.email }, {
+      onSuccess: () => {
+        setSent(true);
+        startCooldown();
+        toast.success("Password reset email sent! Check your inbox.");
+      },
+      onError: (error) => {
+        toast.error(error.message || "An error occurred");
+      },
+    });
+  };
+
+  const handleResend = () => {
+    if (cooldown > 0) return;
+    const email = form.getValues("email");
+    forgotPassword.mutate({ email }, {
+      onSuccess: () => {
+        toast.success("Password reset email resent!");
+        startCooldown();
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to resend email");
+      },
+    });
   };
 
   if (sent) {
     return (
-      <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
-            <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+      <div className="w-full max-w-md animate-fade-up">
+        <div className="text-center mb-8">
+          <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Check Your Email</h1>
-          <p className="text-blue-100 mt-2">Password reset instructions sent</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Check Your Email</h1>
+          <p className="text-muted-foreground mt-2">Password reset instructions sent</p>
         </div>
 
-        <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto bg-green-100 p-4 rounded-full w-fit mb-2">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
-            </div>
-            <CardTitle className="text-2xl text-primary">Email Sent!</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              We have sent a password reset link to
-            </CardDescription>
-            <p className="font-medium text-foreground">{email}</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-700">
-                Click the link in the email to reset your password. The link will expire in 1 hour.
-              </p>
-            </div>
-            <Link href="/signin" className="block">
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Sign In
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-        
-        <div className="mt-8 text-white/40 text-sm">
-          &copy; 2025 Vaivamm Capital
+        <div className="rounded-xl border bg-card shadow-soft p-6 space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">We have sent a password reset link to</p>
+            <p className="font-medium text-foreground mt-1">{form.getValues("email")}</p>
+          </div>
+
+          <div role="status" className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <p className="text-sm text-blue-600">
+              Click the link in the email to reset your password. The link will expire in 1 hour.
+            </p>
+          </div>
+
+          <aside aria-label="Email delivery help" className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <p className="text-xs text-amber-600">
+              Can&apos;t find the email? Check your spam or junk folder. The email is sent from noreply@vaivamm.com.
+            </p>
+          </aside>
+
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={handleResend}
+            disabled={forgotPassword.isPending || cooldown > 0}
+            aria-label={cooldown > 0 ? `Resend available in ${cooldown} seconds` : "Resend reset email"}
+          >
+            {forgotPassword.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {cooldown > 0 ? `Resend available in ${cooldown}s` : "Resend Reset Email"}
+          </Button>
+
+          <Link href="/signin" className="block">
+            <Button variant="outline" className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Sign In
+            </Button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f2b7f] flex flex-col items-center justify-center p-4 relative">
-      <div className="flex flex-col items-center mb-8">
-        <div className="bg-white p-2 rounded-xl mb-4 shadow-lg">
-          <Image src="/logo.svg" alt="Vaivamm Logo" width={64} height={64} className="rounded-lg" />
+    <div className="w-full max-w-md animate-fade-up">
+      <div className="text-center mb-8">
+        <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
+          <KeyRound className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Forgot Password?</h1>
-        <p className="text-blue-100 mt-2">No worries, we will help you reset it</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Forgot Password</h1>
+        <p className="text-muted-foreground mt-2">
+          Enter your registered email address and we&apos;ll send you instructions to reset your password.
+        </p>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white">
-        <CardHeader className="space-y-1">
-          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
-            <KeyRound className="w-8 h-8 text-primary" />
+      <div className="rounded-xl border bg-card shadow-soft p-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-foreground">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              {...form.register("email")}
+              disabled={forgotPassword.isPending}
+              className="h-9 text-sm focus-visible:ring-primary"
+              aria-invalid={!!form.formState.errors.email}
+              aria-describedby={form.formState.errors.email ? "email-error" : undefined}
+            />
+            {form.formState.errors.email && (
+              <p id="email-error" role="alert" className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+            )}
           </div>
-          <CardTitle className="text-2xl text-center text-primary">Reset Password</CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
-            Enter your email address and we will send you a link to reset your password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="pl-10 focus-visible:ring-primary"
-                />
-              </div>
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
-              disabled={isLoading}
-            >
-              {isLoading ? "Sending..." : "Send Reset Link"}
-            </Button>
-          </form>
-          <div className="mt-6 text-center">
-            <Link href="/signin" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Sign In
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="mt-8 text-white/40 text-sm">
-        &copy; 2025 Vaivamm Capital
+
+          <Button type="submit" className="w-full" disabled={forgotPassword.isPending}>
+            {forgotPassword.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                Send Reset Link
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <Link href="/signin" className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Sign In
+          </Link>
+        </div>
       </div>
     </div>
   );

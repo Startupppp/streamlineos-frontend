@@ -1,259 +1,329 @@
 "use client";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
+import { useEffect, useState, useMemo, useCallback, useTransition } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { getEmployees, deleteEmployee } from "@/server/actions/hr-actions";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PageHeader } from "@/components/ui/page-header";
+import { Button } from "@/components/ui/button";
+import { Plus, Download } from "lucide-react";
+import { EmptySearchIllustration, EmptyTeamIllustration } from "@/components/illustrations";
+import { getEmployees, deleteEmployee, toggleDashboardAccess } from "@/server/actions/hr-actions";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "sonner";
+import { useDebouncedValue } from "@/hooks/use-debounce";
+
+import {
+  type Employee,
+  type StatusFilter,
+  type RoleFilter,
+  type PageSizeOption,
+  ROLE_LABELS,
+  PAGE_SIZE,
+} from "@/features/hr/employees/hr-types";
+import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
+import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
+import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
+import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 
 export default function HRDashboardPage() {
   const { data: session } = useSession();
   const currentUserRole = session?.user?.role;
   const currentUserId = session?.user?.id;
 
-  interface Employee {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-    role: "ADMIN" | "MEMBER" | "OWNER" | "CLIENT";
-    image: string | null;
-  }
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [togglingAccess, setTogglingAccess] = useState<Set<string>>(new Set());
 
-  // Helper function to determine if current user can delete target employee
-  const canDeleteEmployee = (targetEmployee: Employee) => {
-    // Cannot delete yourself
-    if (targetEmployee.id === currentUserId) return false;
-    
-    // Owners can delete ADMINs and MEMBERs (not other OWNERs)
-    if (currentUserRole === "OWNER") {
-      return targetEmployee.role !== "OWNER";
+  // Filter state from URL
+  const searchTerm = searchParams.get("q") || "";
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
+  const deptFilter = searchParams.get("dept") || "All";
+  const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
+  const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
+
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const setSearchTerm = useCallback((q: string) => updateParams({ q: q || null, page: null }), [updateParams]);
+  const setDeptFilter = useCallback((d: string) => updateParams({ dept: d === "All" ? null : d, page: null }), [updateParams]);
+  const setStatusFilter = useCallback((s: StatusFilter) => updateParams({ status: s === "Active" ? null : s, page: null }), [updateParams]);
+  const setRoleFilter = useCallback((r: RoleFilter) => updateParams({ role: r === "All" ? null : r, page: null }), [updateParams]);
+  const setPage = useCallback((p: number) => updateParams({ page: p === 1 ? null : String(p) }), [updateParams]);
+
+  const departments = useMemo(() => {
+    const deptSet = new Map<string, string>();
+    employees.forEach((e) => {
+      if (e.department) deptSet.set(e.department.name, e.department.name);
+    });
+    return Array.from(deptSet.values()).sort();
+  }, [employees]);
+
+  const filteredEmployees = useMemo(() => {
+    let result = employees;
+
+    if (debouncedSearchTerm) {
+      const term = debouncedSearchTerm.trim().toLowerCase();
+      if (term) {
+        result = result.filter((e) => {
+          const name = `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim().toLowerCase();
+          const email = e.email.toLowerCase();
+          const first = e.firstName?.toLowerCase() ?? "";
+          const last = e.lastName?.toLowerCase() ?? "";
+          const designation = e.designation?.toLowerCase() ?? "";
+          const roleRaw = e.role.toLowerCase();
+          const roleLabel = ROLE_LABELS[e.role]?.toLowerCase() ?? "";
+          return (
+            name.includes(term) ||
+            email.includes(term) ||
+            first.includes(term) ||
+            last.includes(term) ||
+            designation.includes(term) ||
+            roleRaw.includes(term) ||
+            roleLabel.includes(term)
+          );
+        });
+      }
     }
-    
-    // Admins can only delete MEMBERs
-    if (currentUserRole === "ADMIN") {
-      return targetEmployee.role === "MEMBER";
+
+    if (deptFilter !== "All") {
+      result = result.filter((e) => e.department?.name === deptFilter);
     }
-    
-    return false;
-  };
+
+    if (statusFilter === "Active") {
+      result = result.filter((e) => e.isActive !== false);
+    } else if (statusFilter === "Inactive") {
+      result = result.filter((e) => e.isActive === false);
+    }
+
+    if (roleFilter !== "All") {
+      result = result.filter((e) => e.role === roleFilter);
+    }
+
+    return result;
+  }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize));
+  const paginatedEmployees = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredEmployees.slice(start, start + pageSize);
+  }, [filteredEmployees, page, pageSize]);
+
+  const handlePageSizeChange = useCallback(
+    (size: PageSizeOption) => updateParams({ size: size === PAGE_SIZE ? null : String(size), page: null }),
+    [updateParams],
+  );
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       try {
         const data = await getEmployees();
-        setEmployees(data);
-        
-        try {
-          const { markOnboardingNotificationsAsRead } = await import("@/server/actions/notification-actions");
-          await markOnboardingNotificationsAsRead();
-        } catch { 
-          // ignore 
-        }
+        if (!cancelled) setEmployees(data as Employee[]);
       } catch {
+        if (!cancelled) toast.error("Failed to load employees");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!employeeToDelete) return;
-    await deleteEmployee(employeeToDelete.id);
-    setEmployees(prev => prev.filter(e => e.id !== employeeToDelete.id));
-    setDeleteDialogOpen(false);
-    setEmployeeToDelete(null);
-  };
+    try {
+      await deleteEmployee(employeeToDelete.id);
+      setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id));
+      toast.success("Employee terminated");
+    } catch {
+      toast.error("Failed to terminate employee");
+    } finally {
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete(null);
+    }
+  }, [employeeToDelete]);
+
+  const handleToggleDashboardAccess = useCallback(
+    async (userId: string, newValue: boolean) => {
+      setTogglingAccess((prev) => new Set(prev).add(userId));
+      try {
+        const result = await toggleDashboardAccess(userId, newValue);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          setEmployees((prev) =>
+            prev.map((e) =>
+              e.id === userId ? { ...e, hasDashboardAccess: newValue } : e,
+            ),
+          );
+          toast.success(`Dashboard access ${newValue ? "enabled" : "disabled"}`);
+        }
+      } catch {
+        toast.error("Failed to toggle dashboard access");
+      } finally {
+        setTogglingAccess((prev) => {
+          const next = new Set(prev);
+          next.delete(userId);
+          return next;
+        });
+      }
+    },
+    [],
+  );
+
+  const handleExport = useCallback(async () => {
+    const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
+    const rows = filteredEmployees.map((e) => ({
+      name: `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || e.email,
+      email: e.email,
+      role: e.designation ?? ROLE_LABELS[e.role] ?? e.role,
+      department: e.department?.name ?? "",
+      status: e.isActive !== false ? "Active" : "Inactive",
+    }));
+    await downloadXlsx(
+      `employees-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      [
+        {
+          name: "Employees",
+          columns: [
+            { header: "Name", key: "name", width: 25 },
+            { header: "Email", key: "email", width: 30 },
+            { header: "Role", key: "role", width: 20 },
+            { header: "Department", key: "department", width: 20 },
+            { header: "Status", key: "status", width: 12 },
+          ],
+          rows,
+        },
+      ],
+    );
+    toast.success("Employees exported");
+  }, [filteredEmployees]);
+
+  const handleClearFilters = useCallback(
+    () => updateParams({ q: null, dept: null, status: null, role: null, page: null }),
+    [updateParams],
+  );
+
+  const handleRequestDelete = useCallback((employee: Employee) => {
+    setEmployeeToDelete(employee);
+    setDeleteDialogOpen(true);
+  }, []);
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-5 w-64" />
-          </div>
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-40 w-full rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
+    return <EmployeesLoadingSkeleton />;
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Employees"
-        description="Directory of all members in this organization."
-        actions={
-          <Link href="/hr/onboarding">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Employee
-            </Button>
-          </Link>
-        }
-      />
+  const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
+  const showTo = Math.min(page * pageSize, filteredEmployees.length);
+  const hasActiveFilters =
+    !!searchTerm ||
+    deptFilter !== "All" ||
+    statusFilter !== "Active" ||
+    roleFilter !== "All";
 
-      {employees && employees.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {employees.map((user) => (
-            <Card 
-              key={user.id} 
-              className="bg-card border-border hover:shadow-md transition-all group relative"
-            >
-              <Link 
-                href={`/hr/employees/${user.id}`} 
-                className="absolute inset-0 z-0" 
-                aria-label={`View ${user.firstName}'s profile`} 
-              />
-              <CardHeader className="flex flex-row items-start justify-between gap-4 relative z-10 pointer-events-none">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-11 w-11 border border-border">
-                    <AvatarImage 
-                      src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || user.email}`} 
-                      alt={`${user.firstName || user.email}'s avatar`} 
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                      {(user.firstName || user.email)?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-base group-hover:text-primary transition-colors">
-                      {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Overflow Menu */}
-                <div className="pointer-events-auto">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/hr/employees/${user.id}?tab=profile`}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      {canDeleteEmployee(user) && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => {
-                              setEmployeeToDelete(user);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Deactivate
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="relative z-10 pointer-events-none pt-0">
-                <Badge 
-                  variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {user.role}
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
+  return (
+    <PageWrapper
+      title="Employees"
+      subtitle="Manage your company directory and employee access"
+      badge={String(filteredEmployees.length)}
+      noInternalScroll
+      contentClassName="flex flex-col"
+      actions={
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Export
+          </Button>
+          <Button size="sm" className="gap-2" asChild>
+            <Link href="/hr/onboarding">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add Employee
+            </Link>
+          </Button>
         </div>
+      }
+      filters={
+        <HrFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          deptFilter={deptFilter}
+          onDeptChange={setDeptFilter}
+          departments={departments}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          roleFilter={roleFilter}
+          onRoleChange={setRoleFilter}
+          onClearFilters={handleClearFilters}
+        />
+      }
+    >
+      {paginatedEmployees.length > 0 ? (
+        <HrEmployeeTable
+          employees={paginatedEmployees}
+          totalCount={filteredEmployees.length}
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          showFrom={showFrom}
+          showTo={showTo}
+          currentUserRole={currentUserRole}
+          currentUserId={currentUserId}
+          togglingAccess={togglingAccess}
+          onPageChange={setPage}
+          onPageSizeChange={handlePageSizeChange}
+          onToggleDashboardAccess={handleToggleDashboardAccess}
+          onRequestDelete={handleRequestDelete}
+        />
+      ) : hasActiveFilters ? (
+        <EmptyState
+          illustration={<EmptySearchIllustration className="mb-3" />}
+          title="No results found"
+          description="No employees match your current filters. Try adjusting your search."
+        />
       ) : (
         <EmptyState
-          icon={Users}
+          illustration={<EmptyTeamIllustration className="mb-3" />}
           title="No employees found"
           description="Get started by adding your first team member."
           action={{
             label: "Add Employee",
-            onClick: () => window.location.href = "/hr/onboarding"
+            href: "/hr/onboarding",
           }}
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Employee</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to deactivate {employeeToDelete?.firstName || "this employee"}? 
-              They will lose access to the system immediately. 
-              Their past records will be preserved.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Deactivate
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Terminate Employee"
+        description={employeeToDelete ? `Are you sure you want to terminate ${employeeToDelete.firstName ?? ""} ${employeeToDelete.lastName ?? ""}? This action cannot be undone.` : ""}
+        confirmLabel="Terminate"
+        variant="destructive"
+        onConfirm={handleDelete}
+      />
+    </PageWrapper>
   );
 }
-

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { processLeaveRequest } from "@/server/actions/leave-actions";
 import { Check, X, Loader2 } from "lucide-react";
+import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -56,6 +57,7 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
      if (requests.length === 0) {
          return (
              <div className="text-center py-8 text-muted-foreground">
+                 <EmptyApprovalIllustration className="mb-3 mx-auto" />
                  No pending approvals.
              </div>
          );
@@ -106,7 +108,7 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
                              Reject
                          </Button>
                          <Button 
-                            variant="default" // green-ish usually better but default is black/primary
+                            variant="default"
                             className="bg-green-600 hover:bg-green-700"
                             size="sm"
                             disabled={processingId === req.id}
