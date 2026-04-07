@@ -44,6 +44,9 @@ import {
   Megaphone,
   Mail,
   Package,
+  Share2,
+  Video,
+  Globe,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -52,6 +55,8 @@ export interface NavRoute {
   href: string;
   badge?: "leaves";
   isProjectsList?: boolean;
+  /** Indented row for a key child route (e.g. Add employee under Employees). */
+  isSubItem?: boolean;
 }
 
 export interface NavGroup {
@@ -82,6 +87,9 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "HR",
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
+            { label: "Add employee", icon: UserPlus, href: "/hr/employees/new", isSubItem: true },
+            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
+            { label: "Org chart", icon: Network, href: "/hr/org-chart", isSubItem: true },
             { label: "Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
             { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
@@ -91,6 +99,10 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Assets", icon: Package, href: "/hr/assets" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
+            { label: "Jobs", icon: Briefcase, href: "/hr/recruitment/jobs", isSubItem: true },
+            { label: "Candidates", icon: Users, href: "/hr/recruitment/candidates", isSubItem: true },
+            { label: "Pipeline", icon: TrendingUp, href: "/hr/recruitment/pipeline", isSubItem: true },
+            { label: "Interviews", icon: Video, href: "/hr/recruitment/interviews", isSubItem: true },
             { label: "Training", icon: BookOpen, href: "/hr/training" },
             { label: "Recognition", icon: Heart, href: "/hr/recognition" },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
@@ -103,6 +115,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "CRM Hub", icon: Contact2, href: "/crm" },
             { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
+            { label: "Distribute leads", icon: Share2, href: "/crm/leads/distribute", isSubItem: true },
             { label: "Deals", icon: Handshake, href: "/crm/deals" },
             { label: "Deal Approvals", icon: Briefcase, href: "/crm/deals/approvals" },
             { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
@@ -125,7 +138,11 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Marketing",
           routes: [
             { label: "Campaigns", icon: Megaphone, href: "/marketing/campaigns" },
-            { label: "Email Campaigns", icon: Mail, href: "/marketing/email-campaigns" },
+            { label: "Email campaigns", icon: Mail, href: "/marketing/email-campaigns" },
+            { label: "Digital marketing", icon: BarChart3, href: "/digital-marketing" },
+            { label: "Digital campaigns", icon: Megaphone, href: "/digital-marketing/campaigns", isSubItem: true },
+            { label: "Digital leads", icon: Contact2, href: "/digital-marketing/leads", isSubItem: true },
+            { label: "Social", icon: Globe, href: "/digital-marketing/social", isSubItem: true },
           ],
         },
         {
@@ -159,6 +176,9 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "HR",
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
+            { label: "Add employee", icon: UserPlus, href: "/hr/employees/new", isSubItem: true },
+            { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
+            { label: "Org chart", icon: Network, href: "/hr/org-chart", isSubItem: true },
             { label: "Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "Leaves", icon: CalendarCheck, href: "/hr/leaves", badge: "leaves" },
             { label: "Payroll", icon: CreditCard, href: "/hr/payroll" },
@@ -168,6 +188,10 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Assets", icon: Package, href: "/hr/assets" },
             { label: "Performance", icon: Star, href: "/hr/performance" },
             { label: "Recruitment", icon: UserSearch, href: "/hr/recruitment" },
+            { label: "Jobs", icon: Briefcase, href: "/hr/recruitment/jobs", isSubItem: true },
+            { label: "Candidates", icon: Users, href: "/hr/recruitment/candidates", isSubItem: true },
+            { label: "Pipeline", icon: TrendingUp, href: "/hr/recruitment/pipeline", isSubItem: true },
+            { label: "Interviews", icon: Video, href: "/hr/recruitment/interviews", isSubItem: true },
             { label: "Training", icon: BookOpen, href: "/hr/training" },
             { label: "Recognition", icon: Heart, href: "/hr/recognition" },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
@@ -180,6 +204,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "CRM Hub", icon: Contact2, href: "/crm" },
             { label: "Lead Pipeline", icon: Contact2, href: "/crm/leads" },
+            { label: "Distribute leads", icon: Share2, href: "/crm/leads/distribute", isSubItem: true },
             { label: "Deals", icon: Handshake, href: "/crm/deals" },
             { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
             { label: "Organizations", icon: Network, href: "/crm/organizations" },
@@ -223,11 +248,13 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Leads", icon: Contact2, href: "/crm/leads" },
+            { label: "Distribute leads", icon: Share2, href: "/crm/leads/distribute", isSubItem: true },
             { label: "My Deals", icon: Handshake, href: "/crm/deals" },
             { label: "My Targets", icon: Trophy, href: "/crm/targets" },
             { label: "My Commissions", icon: DollarSign, href: "/sales/commissions" },
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My onboarding", icon: ClipboardList, href: "/onboarding", isSubItem: true },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
@@ -252,6 +279,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My onboarding", icon: ClipboardList, href: "/onboarding", isSubItem: true },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
@@ -269,7 +297,11 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Calendar", icon: CalendarDays, href: "/calendar" },
             { label: "Marketing Hub", icon: BarChart3, href: "/marketing" },
             { label: "Campaigns", icon: Megaphone, href: "/marketing/campaigns" },
-            { label: "Email Campaigns", icon: Mail, href: "/marketing/email-campaigns" },
+            { label: "Email campaigns", icon: Mail, href: "/marketing/email-campaigns" },
+            { label: "Digital marketing", icon: BarChart3, href: "/digital-marketing" },
+            { label: "Digital campaigns", icon: Megaphone, href: "/digital-marketing/campaigns", isSubItem: true },
+            { label: "Digital leads", icon: Contact2, href: "/digital-marketing/leads", isSubItem: true },
+            { label: "Social", icon: Globe, href: "/digital-marketing/social", isSubItem: true },
             { label: "Chat", icon: MessageSquareText, href: "/chat" },
           ],
         },
@@ -278,6 +310,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My onboarding", icon: ClipboardList, href: "/onboarding", isSubItem: true },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
@@ -303,6 +336,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My onboarding", icon: ClipboardList, href: "/onboarding", isSubItem: true },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
@@ -327,6 +361,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             // { label: "Tickets", icon: Ticket, href: "/support" },
             // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "My onboarding", icon: ClipboardList, href: "/onboarding", isSubItem: true },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },

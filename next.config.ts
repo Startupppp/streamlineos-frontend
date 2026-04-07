@@ -1,5 +1,32 @@
 import type { NextConfig } from "next";
 
+function isLocalOrLoopbackAppUrl(): boolean {
+  for (const raw of [process.env.NEXT_PUBLIC_APP_URL, process.env.NEXTAUTH_URL]) {
+    if (!raw) continue;
+    try {
+      const host = new URL(raw).hostname.toLowerCase();
+      if (
+        host === "localhost" ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host.endsWith(".localhost")
+      ) {
+        return true;
+      }
+    } catch {
+      // ignore invalid URL
+    }
+  }
+  return false;
+}
+
+function shouldSendStrictTransportSecurity(): boolean {
+  if (process.env.NODE_ENV !== "production") return false;
+  if (process.env.DISABLE_HSTS === "1") return false;
+  if (isLocalOrLoopbackAppUrl()) return false;
+  return true;
+}
+
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   experimental: {
@@ -50,7 +77,14 @@ const nextConfig: NextConfig = {
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
-        { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+        ...(shouldSendStrictTransportSecurity()
+          ? [
+              {
+                key: "Strict-Transport-Security",
+                value: "max-age=63072000; includeSubDomains; preload",
+              },
+            ]
+          : []),
         { key: "X-XSS-Protection", value: "0" },
         { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },

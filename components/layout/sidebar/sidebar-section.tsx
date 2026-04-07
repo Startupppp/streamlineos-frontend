@@ -65,6 +65,7 @@ export function SidebarSection({
                 isCollapsed
                   ? "justify-center w-9 h-9 mx-auto flex"
                   : "px-2.5 py-1.5 gap-2.5 w-full flex",
+                !isCollapsed && route.isSubItem && "pl-6",
                 isActive && "active"
               )}
             >
@@ -76,7 +77,8 @@ export function SidebarSection({
               {/* Icon */}
               <route.icon
                 className={cn(
-                  "nav-icon h-4 w-4 transition-colors duration-150",
+                  "nav-icon transition-colors duration-150",
+                  route.isSubItem ? "h-3.5 w-3.5" : "h-4 w-4",
                   isActive && "text-gold"
                 )}
               />

@@ -7,6 +7,16 @@ import {
 } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
+function isLoopbackHostname(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h === "::1" ||
+    h.endsWith(".localhost")
+  );
+}
+
 const PROTECTED_ROUTES = [
   "/dashboard",
   "/projects",
@@ -180,10 +190,11 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // ── Enforce HTTPS in production ─────────────────────────────────────
+  // ── Enforce HTTPS in production (skip loopback: no TLS on `next start`) ─
   if (
     process.env.NODE_ENV === "production" &&
-    req.headers.get("x-forwarded-proto") === "http"
+    req.headers.get("x-forwarded-proto") === "http" &&
+    !isLoopbackHostname(req.nextUrl.hostname)
   ) {
     const httpsUrl = req.nextUrl.clone();
     httpsUrl.protocol = "https";
