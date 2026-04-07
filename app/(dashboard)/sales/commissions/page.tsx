@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { format } from "date-fns";
+import { useState, useCallback } from "react";
 import {
   DollarSign,
   Plus,
@@ -32,7 +31,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -44,6 +42,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { useCommissions, useCommissionRules, useCreateCommissionRule } from "@/lib/api/hooks/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 function fmt(amount: string | number) {
@@ -59,39 +58,30 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
 export default function CommissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
+  const [ruleName, setRuleName] = useState("");
+  const [ruleType, setRuleType] = useState("flat_percent");
+  const [ruleRate, setRuleRate] = useState("");
+
   const { data, isLoading } = useCommissions({ status: statusFilter });
   const { data: rules } = useCommissionRules();
   const createRule = useCreateCommissionRule();
 
   const items = (data?.items ?? []) as Array<{
-    id: number;
-    userName: string | null;
-    dealName: string | null;
-    dealValue: string;
-    commissionRate: string;
-    commissionAmount: string;
-    status: string;
-    createdAt: string | null;
+    id: number; userName: string | null; dealName: string | null;
+    dealValue: string; commissionRate: string; commissionAmount: string;
+    status: string; createdAt: string | null;
   }>;
 
-  function handleCreateRule(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+  const handleCreateRule = useCallback(() => {
+    if (!ruleName.trim()) { toast.error("Rule name is required"); return; }
     createRule.mutate(
+      { name: ruleName.trim(), type: ruleType, flatRate: ruleRate || undefined },
       {
-        name: fd.get("name") as string,
-        type: fd.get("type") as string,
-        flatRate: fd.get("flatRate") as string,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Commission rule created");
-          setRuleDialogOpen(false);
-        },
-        onError: () => toast.error("Failed to create rule"),
+        onSuccess: () => { toast.success("Commission rule created"); setRuleDialogOpen(false); setRuleName(""); setRuleRate(""); },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }
+  }, [ruleName, ruleType, ruleRate, createRule]);
 
   return (
     <PageWrapper
@@ -136,37 +126,28 @@ export default function CommissionsPage() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : items.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No commissions found.</TableCell>
-                    </TableRow>
-                  ) : (
-                    items.map((c) => {
-                      const badge = STATUS_BADGE[c.status] ?? { label: c.status, variant: "secondary" as const };
-                      return (
-                        <TableRow key={c.id}>
-                          <TableCell className="font-medium text-sm">{c.userName ?? "—"}</TableCell>
-                          <TableCell className="text-sm">{c.dealName ?? "—"}</TableCell>
-                          <TableCell className="text-right text-sm">{fmt(c.dealValue)}</TableCell>
-                          <TableCell className="text-right text-sm">{Number(c.commissionRate)}%</TableCell>
-                          <TableCell className="text-right font-medium text-sm">{fmt(c.commissionAmount)}</TableCell>
-                          <TableCell>
-                            <Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No commissions found.</TableCell></TableRow>
+                  ) : items.map((c) => {
+                    const badge = STATUS_BADGE[c.status] ?? { label: c.status, variant: "secondary" as const };
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium text-sm">{c.userName ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{c.dealName ?? "—"}</TableCell>
+                        <TableCell className="text-right text-sm">{fmt(c.dealValue)}</TableCell>
+                        <TableCell className="text-right text-sm">{Number(c.commissionRate)}%</TableCell>
+                        <TableCell className="text-right font-medium text-sm">{fmt(c.commissionAmount)}</TableCell>
+                        <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           </ScrollArea>
         </div>
 
-        {/* Commission Rules */}
         {Array.isArray(rules) && rules.length > 0 && (
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="px-4 py-3 border-b border-border">
@@ -176,9 +157,7 @@ export default function CommissionsPage() {
               {rules.map((r: Record<string, unknown>) => (
                 <div key={String(r.id)} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/40">
                   <span className="font-medium">{String(r.name)}</span>
-                  <span className="text-muted-foreground">
-                    {r.type === "flat_percent" ? `${r.flatRate}%` : "Tiered"}
-                  </span>
+                  <span className="text-muted-foreground">{r.type === "flat_percent" ? `${r.flatRate}%` : "Tiered"}</span>
                 </div>
               ))}
             </div>
@@ -192,14 +171,14 @@ export default function CommissionsPage() {
             <DialogTitle>Create Commission Rule</DialogTitle>
             <DialogDescription>Define how commissions are calculated for deals.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreateRule} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Rule Name</Label>
-              <Input name="name" placeholder="e.g. Standard 5%" required />
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Rule Name</label>
+              <Input value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="e.g. Standard 5%" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select name="type" defaultValue="flat_percent">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Type</label>
+              <Select value={ruleType} onValueChange={setRuleType}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="flat_percent">Flat Percentage</SelectItem>
@@ -207,17 +186,17 @@ export default function CommissionsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="flatRate">Rate (%)</Label>
-              <Input name="flatRate" type="number" step="0.1" placeholder="e.g. 5" />
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Rate (%)</label>
+              <Input value={ruleRate} onChange={(e) => setRuleRate(e.target.value)} type="number" step="0.1" placeholder="e.g. 5" />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setRuleDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={createRule.isPending}>
-                {createRule.isPending ? "Creating..." : "Create Rule"}
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRuleDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateRule} disabled={createRule.isPending}>
+              {createRule.isPending ? "Creating..." : "Create Rule"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </PageWrapper>

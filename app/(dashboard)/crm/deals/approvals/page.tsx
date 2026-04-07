@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import {
-  Briefcase,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
@@ -33,10 +32,10 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useDealApprovals, useResolveDealApproval } from "@/lib/api/hooks/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 function fmt(amount: string | number) {
@@ -50,16 +49,9 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
 };
 
 interface Approval {
-  id: number;
-  dealId: number;
-  dealName: string | null;
-  dealValue: string | null;
-  requesterName: string | null;
-  requestedStage: string;
-  status: string;
-  rejectionReason: string | null;
-  createdAt: string | null;
-  resolvedAt: string | null;
+  id: number; dealId: number; dealName: string | null; dealValue: string | null;
+  requesterName: string | null; requestedStage: string; status: string;
+  rejectionReason: string | null; createdAt: string | null; resolvedAt: string | null;
 }
 
 export default function DealApprovalsPage() {
@@ -74,21 +66,13 @@ export default function DealApprovalsPage() {
   const handleResolve = useCallback(() => {
     if (!confirmAction) return;
     resolve.mutate(
+      { approvalId: confirmAction.id, action: confirmAction.action, rejectionReason: confirmAction.action === "reject" ? rejectionReason : undefined },
       {
-        approvalId: confirmAction.id,
-        action: confirmAction.action,
-        rejectionReason: confirmAction.action === "reject" ? rejectionReason : undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success(confirmAction.action === "approve" ? "Deal approved" : "Deal rejected");
-          setConfirmAction(null);
-          setRejectionReason("");
-        },
-        onError: () => toast.error("Action failed"),
+        onSuccess: () => { toast.success(confirmAction.action === "approve" ? "Deal approved" : "Deal rejected"); setConfirmAction(null); setRejectionReason(""); },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [confirmAction, rejectionReason, resolve, toast]);
+  }, [confirmAction, rejectionReason, resolve]);
 
   return (
     <PageWrapper
@@ -122,63 +106,37 @@ export default function DealApprovalsPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
-                  </TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No approvals found.</TableCell>
-                  </TableRow>
-                ) : (
-                  items.map((a) => {
-                    const badge = STATUS_BADGE[a.status] ?? { label: a.status, variant: "secondary" as const };
-                    return (
-                      <TableRow key={a.id}>
-                        <TableCell className="font-medium text-sm">{a.dealName ?? `Deal #${a.dealId}`}</TableCell>
-                        <TableCell className="text-right text-sm">{a.dealValue ? fmt(a.dealValue) : "—"}</TableCell>
-                        <TableCell className="text-sm">{a.requesterName ?? "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-[11px]">{a.requestedStage}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {a.createdAt ? format(new Date(a.createdAt), "dd MMM yyyy") : "—"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {a.status === "pending" && (
-                            <div className="flex items-center justify-end gap-1.5">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-xs text-green-600 hover:text-green-700"
-                                onClick={() => setConfirmAction({ id: a.id, action: "approve" })}
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-7 text-xs text-destructive hover:text-destructive"
-                                onClick={() => setConfirmAction({ id: a.id, action: "reject" })}
-                              >
-                                <XCircle className="h-3.5 w-3.5 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
-                          {a.status === "rejected" && a.rejectionReason && (
-                            <span className="text-xs text-muted-foreground italic" title={a.rejectionReason}>
-                              {a.rejectionReason.slice(0, 30)}{a.rejectionReason.length > 30 ? "..." : ""}
-                            </span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No approvals found.</TableCell></TableRow>
+                ) : items.map((a) => {
+                  const badge = STATUS_BADGE[a.status] ?? { label: a.status, variant: "secondary" as const };
+                  return (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium text-sm">{a.dealName ?? `Deal #${a.dealId}`}</TableCell>
+                      <TableCell className="text-right text-sm">{a.dealValue ? fmt(a.dealValue) : "—"}</TableCell>
+                      <TableCell className="text-sm">{a.requesterName ?? "—"}</TableCell>
+                      <TableCell><Badge variant="outline" className="text-[11px]">{a.requestedStage}</Badge></TableCell>
+                      <TableCell><Badge variant={badge.variant} className="text-[11px]">{badge.label}</Badge></TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{a.createdAt ? format(new Date(a.createdAt), "dd MMM yyyy") : "—"}</TableCell>
+                      <TableCell className="text-right">
+                        {a.status === "pending" && (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button size="sm" variant="ghost" className="h-7 text-xs text-green-600 hover:text-green-700" onClick={() => setConfirmAction({ id: a.id, action: "approve" })}>
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />Approve
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => setConfirmAction({ id: a.id, action: "reject" })}>
+                              <XCircle className="h-3.5 w-3.5 mr-1" />Reject
+                            </Button>
+                          </div>
+                        )}
+                        {a.status === "rejected" && a.rejectionReason && (
+                          <span className="text-xs text-muted-foreground italic" title={a.rejectionReason}>{a.rejectionReason.slice(0, 30)}{a.rejectionReason.length > 30 ? "..." : ""}</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -188,25 +146,13 @@ export default function DealApprovalsPage() {
       <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmAction?.action === "approve" ? "Approve Deal?" : "Reject Deal?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction?.action === "approve"
-                ? "This will move the deal to the requested stage."
-                : "The requester will be notified of the rejection."}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{confirmAction?.action === "approve" ? "Approve Deal?" : "Reject Deal?"}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmAction?.action === "approve" ? "This will move the deal to the requested stage." : "The requester will be notified of the rejection."}</AlertDialogDescription>
           </AlertDialogHeader>
           {confirmAction?.action === "reject" && (
-            <div className="space-y-2 py-2">
-              <Label htmlFor="reason">Rejection Reason</Label>
-              <Textarea
-                id="reason"
-                placeholder="Why is this deal being rejected?"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={3}
-              />
+            <div className="space-y-1.5 py-2">
+              <label className="text-sm font-medium">Rejection Reason</label>
+              <Textarea placeholder="Why is this deal being rejected?" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} rows={3} />
             </div>
           )}
           <AlertDialogFooter>
