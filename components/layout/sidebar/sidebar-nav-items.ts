@@ -174,8 +174,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "Projects & Time",
           routes: [
             { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "Timesheets", icon: Timer, href: "/timesheets" },
-            { label: "Team Timesheets", icon: Users, href: "/timesheets/team", isSubItem: true },
+            { label: "Timesheets", icon: Timer, href: "/timesheets/team"},
           ],
         },
         {
@@ -187,8 +186,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Branches", icon: GitBranch, href: "/settings/branches", isSubItem: true },
             { label: "Roles & Permissions", icon: Shield, href: "/settings/roles" },
             { label: "Audit Log", icon: ShieldCheck, href: "/settings/audit-log" },
-            { label: "API Keys", icon: Zap, href: "/settings/api-keys" },
-            { label: "Reports", icon: BarChart2, href: "/reports" },
+             { label: "Reports", icon: BarChart2, href: "/reports" },
           ],
         },
       ];

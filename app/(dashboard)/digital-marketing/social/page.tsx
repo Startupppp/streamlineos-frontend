@@ -262,9 +262,9 @@ export default function SocialMediaPage() {
               ))}
             </div>
           </div>
-          <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-            <Button variant="outline" className="flex-1 sm:flex-initial" onClick={() => setShowEntry(false)}>Cancel</Button>
-            <Button className="flex-1 sm:flex-initial" onClick={() => upsertMutation.mutate(
+          <SheetFooter className="shrink-0 px-4 py-3 border-t w-full flex flex-row gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowEntry(false)}>Cancel</Button>
+            <Button className="flex-1" onClick={() => upsertMutation.mutate(
               formData,
               { onSuccess: () => { toast.success("Stats saved"); setShowEntry(false); }, onError: (err) => toast.error(err.message) }
             )}>Save Stats</Button>

@@ -317,7 +317,7 @@ export default function AuditLogPage() {
       filters={filtersBar}
     >
       <div className="flex flex-col gap-4 h-full min-h-0">
-        <Card className="flex-1 min-h-0">
+        <Card className="flex-1 min-h-0 overflow-hidden">
           <CardContent className="p-0 flex flex-col h-full min-h-0">
             {isLoading ? (
               <div className="p-4 space-y-2">
@@ -359,87 +359,91 @@ export default function AuditLogPage() {
                 </ScrollArea>
               </div>
             )}
+
+            {total > 0 && (
+              <div className="shrink-0 border-t border-border/60 bg-card">
+                <div className="p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[12px]">Rows per page</span>
+                    <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+                      <SelectTrigger className="h-7 w-[64px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZE_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-[12px] tabular-nums">
+                      {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total.toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="-mx-3 px-3 overflow-x-auto">
+                    <div className="flex items-center gap-1.5 min-w-max">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={handleFirstPage}
+                        disabled={page <= 1}
+                        aria-label="First page"
+                      >
+                        <ChevronsLeft className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={handlePrevPage}
+                        disabled={page <= 1}
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={handleNextPage}
+                        disabled={page >= totalPages}
+                        aria-label="Next page"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={handleLastPage}
+                        disabled={page >= totalPages}
+                        aria-label="Last page"
+                      >
+                        <ChevronsRight className="h-3.5 w-3.5" />
+                      </Button>
+                      <div className="flex items-center gap-1.5 ml-1">
+                        <span className="text-[12px]">Go to</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={totalPages}
+                          value={goToPage}
+                          onChange={handleGoToPageChange}
+                          onKeyDown={handleGoToPageKeyDown}
+                          placeholder="—"
+                          className="h-7 w-14 text-xs text-center"
+                          aria-label="Go to page"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {total > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span className="text-[12px]">Rows per page</span>
-              <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="h-7 w-[64px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZE_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <span className="text-[12px] tabular-nums">
-                {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total.toLocaleString()}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handleFirstPage}
-                disabled={page <= 1}
-                aria-label="First page"
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handlePrevPage}
-                disabled={page <= 1}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handleNextPage}
-                disabled={page >= totalPages}
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handleLastPage}
-                disabled={page >= totalPages}
-                aria-label="Last page"
-              >
-                <ChevronsRight className="h-3.5 w-3.5" />
-              </Button>
-              <div className="flex items-center gap-1.5 ml-1">
-                <span className="text-[12px]">Go to</span>
-                <Input
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  value={goToPage}
-                  onChange={handleGoToPageChange}
-                  onKeyDown={handleGoToPageKeyDown}
-                  placeholder="—"
-                  className="h-7 w-14 text-xs text-center"
-                  aria-label="Go to page"
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {selectedLog && <LogDetailSheet log={selectedLog} onClose={handleCloseSheet} />}

@@ -43,6 +43,7 @@ import {
 import { Plus, Loader2, Link as LinkIcon, Upload, X, FileText } from "lucide-react";
 import { addTimeEntryInputSchema } from "@/lib/validations/project";
 import type { ProjectListItem, Ticket } from "@/types/projects";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface LogTimeDialogProps {
   trigger?: React.ReactNode;
@@ -234,7 +235,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                     <SelectValue placeholder={isLoadingTickets ? "Loading tickets..." : "Select Ticket"} className="truncate" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="max-w-[500px] w-[var(--radix-select-trigger-width)]">
+                <SelectContent className="max-w-[500px] w-(--radix-select-trigger-width)">
                   {projectDetails?.tickets && projectDetails.tickets.length > 0 ? (
                     projectDetails.tickets.map((t: Ticket) => (
                       <SelectItem key={t.id} value={t.id.toString()} className="truncate capitalize">
@@ -414,13 +415,6 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
             </FormItem>
           )}
         />
-
-        <SheetFooter className="pt-2">
-          <Button type="submit" className="flex-1" disabled={mutation.isPending || uploading}>
-            {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Log Time
-          </Button>
-        </SheetFooter>
       </form>
     </Form>
   );
@@ -435,16 +429,255 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-[540px] overflow-y-auto">
-        <SheetHeader className="pb-6 pt-6 px-6">
-          <SheetTitle>Log Time</SheetTitle>
-          <SheetDescription className="mt-2">
+      <SheetContent side="right" className="w-full sm:max-w-[540px] p-0 gap-0">
+        <SheetHeader className="px-4 py-3 border-b">
+          <SheetTitle className="text-sm">Log Time</SheetTitle>
+          <SheetDescription className="text-xs">
             Record your work hours on a ticket.
           </SheetDescription>
         </SheetHeader>
-        <div className="px-6 pb-6">
-          {formContent}
-        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="px-4 py-4 space-y-6">
+                <FormField
+                  control={form.control}
+                  name="ticketId"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Project</FormLabel>
+                      <Select
+                        onValueChange={(val) => {
+                          setSelectedProjectId(parseInt(val));
+                          form.setValue("ticketId", undefined as unknown as number);
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full capitalize">
+                            <SelectValue placeholder="Select Project" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {projects?.map((p: ProjectListItem) => (
+                            <SelectItem key={p.id} value={p.id.toString()} className="truncate capitalize">
+                              {p.name} ({p.key})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ticketId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ticket</FormLabel>
+                      <Select
+                        disabled={!selectedProjectId || isLoadingTickets}
+                        onValueChange={(val) => field.onChange(parseInt(val))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={isLoadingTickets ? "Loading tickets..." : "Select Ticket"} className="truncate" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-w-[500px] w-(--radix-select-trigger-width)">
+                          {projectDetails?.tickets && projectDetails.tickets.length > 0 ? (
+                            projectDetails.tickets.map((t: Ticket) => (
+                              <SelectItem key={t.id} value={t.id.toString()} className="truncate capitalize">
+                                {`Ticket #${t.id}`}: {t.title || "Untitled"}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="p-2 text-sm text-muted-foreground">
+                              {isLoadingTickets ? "Loading..." : "No tickets found"}
+                            </div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                            onChange={(v) => field.onChange(v ? new Date(v) : new Date())}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="hours"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hours</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.5"
+                            placeholder="8"
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? 0 : parseFloat(value));
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="What did you work on?"
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="workLink"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Work Link</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="url"
+                            placeholder="https://example.com/work-done"
+                            className="pl-9"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Attachments (images or PDF)</FormLabel>
+                      <FormControl>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={uploading}
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploading ? "Uploading..." : "Upload files"}
+                            </Button>
+                            <Input
+                              ref={fileInputRef}
+                              type="file"
+                              className="hidden"
+                              accept={ACCEPT_ATTACHMENTS}
+                              onChange={handleAttachmentChange}
+                              multiple
+                            />
+                          </div>
+                          {attachmentFiles.length > 0 && (
+                            <div className="space-y-2">
+                              {attachmentFiles.map((file, index) => (
+                                <div key={`${file.name}-${index}`} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                                  {attachmentPreviews[index] ? (
+                                    <Image
+                                      src={attachmentPreviews[index]!}
+                                      alt="Preview"
+                                      width={48}
+                                      height={48}
+                                      unoptimized
+                                      className="h-12 w-12 object-cover rounded"
+                                    />
+                                  ) : file.type === "application/pdf" ? (
+                                    <div className="h-12 w-12 rounded bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                                      <FileText className="h-6 w-6 text-red-500" />
+                                    </div>
+                                  ) : (
+                                    <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                                      <FileText className="h-6 w-6 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm truncate block">
+                                      {file.name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {(file.size / 1024).toFixed(1)} KB
+                                    </span>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeAttachment(index)}
+                                    aria-label={`Remove ${file.name}`}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Images (JPEG, PNG, GIF, WebP) or PDF, max 10MB each. Multiple files allowed.
+                          </p>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </ScrollArea>
+
+            <SheetFooter className="px-4 py-3">
+              <Button type="submit" className="flex-1" disabled={mutation.isPending || uploading}>
+                {(mutation.isPending || uploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Log Time
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

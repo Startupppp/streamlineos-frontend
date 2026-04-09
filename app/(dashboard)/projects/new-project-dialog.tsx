@@ -113,14 +113,14 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
       <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col overflow-hidden">
         <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
           <SheetTitle className="text-xl font-semibold tracking-tight">Create Project</SheetTitle>
-          <SheetDescription className="text-muted-foreground mt-1.5">
+          <SheetDescription className="text-muted-foreground">
             Launch a new initiative and assemble your team.
           </SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-6 p-6 pt-4">
+            <div className="flex-1 overflow-y-auto space-y-6 px-6">
             <div className="space-y-4">
                 <FormField
                     control={form.control}
