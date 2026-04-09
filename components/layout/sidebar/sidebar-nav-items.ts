@@ -14,7 +14,7 @@ import {
   Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award, Scale,
   MailOpen, Smile, FileCheck, Coins, Map, Landmark, RefreshCcw, Zap,
   ListChecks, PartyPopper, History, BarChart2, LifeBuoy, Inbox,
-  GitBranch, Building2, UserCog, SlidersHorizontal, Ticket, RotateCcw,
+  GitBranch, Building2, UserCog, SlidersHorizontal,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -68,6 +68,9 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Work Logs", icon: History, href: "/hr/work-logs" },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
+            // Support is managed through HR – ticket system below helpdesk
+            { label: "Support Tickets", icon: LifeBuoy, href: "/support", isSubItem: true },
+            { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
             { label: "Email Templates", icon: MailOpen, href: "/hr/email-templates" },
             { label: "HR Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
@@ -177,13 +180,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          label: "Support",
-          routes: [
-            { label: "Support", icon: LifeBuoy, href: "/support" },
-            { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
-          ],
-        },
-        {
           label: "System",
           routes: [
             { label: "Settings", icon: Settings, href: "/settings" },
@@ -228,6 +224,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Work Logs", icon: History, href: "/hr/work-logs" },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
+            { label: "Support Tickets", icon: LifeBuoy, href: "/support", isSubItem: true },
+            { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
             { label: "Email Templates", icon: MailOpen, href: "/hr/email-templates" },
             { label: "HR Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
@@ -308,13 +306,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          label: "Support",
-          routes: [
-            { label: "Support", icon: LifeBuoy, href: "/support" },
-            { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
-          ],
-        },
-        {
           label: "System",
           routes: [
             { label: "Settings", icon: Settings, href: "/settings" },
@@ -338,19 +329,33 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          label: "My Work",
+          // Lead & deal pipeline — Sales' primary workspace
+          label: "My Pipeline",
           routes: [
             { label: "My Leads", icon: Contact2, href: "/crm/leads" },
             { label: "Distribute Leads", icon: Share2, href: "/crm/leads/distribute", isSubItem: true },
             { label: "My Deals", icon: Handshake, href: "/crm/deals" },
+            { label: "My Clients", icon: UserCheck, href: "/crm/clients" },
+          ],
+        },
+        {
+          // Revenue tracking — view-only for sales execs
+          label: "My Revenue",
+          routes: [
             { label: "My Targets", icon: Trophy, href: "/crm/targets" },
             { label: "My Commissions", icon: DollarSign, href: "/sales/commissions" },
+          ],
+        },
+        {
+          label: "My Work",
+          routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
           ],
         },
         {
           label: "My HR",
+          defaultCollapsed: true,
           routes: [
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -361,13 +366,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Onboarding", icon: ClipboardList, href: "/onboarding" },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
-          ],
-        },
-        {
-          label: "Support",
-          routes: [
-            { label: "Support", icon: LifeBuoy, href: "/support" },
-            { label: "Notifications", icon: Bell, href: "/notifications" },
           ],
         },
       ];
@@ -385,16 +383,32 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
+          // Primary workspace — helpdesk & ticket management
+          label: "Helpdesk",
+          routes: [
+            { label: "All Tickets", icon: LifeBuoy, href: "/support" },
+            { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
+            { label: "Ticket Analytics", icon: BarChart2, href: "/crm/analytics" },
+          ],
+        },
+        {
+          // Read-only access to customer info (linked to tickets)
+          label: "Customers",
+          routes: [
+            { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
+            { label: "Clients", icon: Users, href: "/crm/clients" },
+          ],
+        },
+        {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "My Timesheets", icon: Timer, href: "/timesheets" },
-            { label: "Support", icon: LifeBuoy, href: "/support" },
-            { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
           ],
         },
         {
           label: "My HR",
+          defaultCollapsed: true,
           routes: [
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -421,6 +435,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
+          // Campaign creation & tracking
           label: "Marketing",
           routes: [
             { label: "Marketing Hub", icon: Megaphone, href: "/marketing" },
@@ -433,6 +448,15 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
+          // Limited CRM access — upload/track leads, view pipeline & conversion analytics
+          label: "CRM (Leads)",
+          routes: [
+            { label: "CRM Hub", icon: Contact2, href: "/crm" },
+            { label: "Lead Pipeline", icon: TrendingUp, href: "/crm/leads" },
+            { label: "Lead Analytics", icon: BarChart2, href: "/crm/analytics" },
+          ],
+        },
+        {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
@@ -441,6 +465,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         },
         {
           label: "My HR",
+          defaultCollapsed: true,
           routes: [
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -478,6 +503,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         },
         {
           label: "My HR",
+          defaultCollapsed: true,
           routes: [
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
@@ -513,6 +539,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
         },
         {
           label: "My HR",
+          defaultCollapsed: true,
           routes: [
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },

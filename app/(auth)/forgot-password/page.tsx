@@ -79,15 +79,15 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="w-full max-w-md animate-fade-up">
-        <div className="text-center mb-8">
+        <div className="text-center mb-5 sm:mb-8">
           <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Check Your Email</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Check Your Email</h1>
           <p className="text-muted-foreground mt-2">Password reset instructions sent</p>
         </div>
 
-        <div className="rounded-xl border bg-card shadow-soft p-6 space-y-4">
+        <div className="rounded-xl border bg-card shadow-soft p-4 sm:p-6 space-y-4">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">We have sent a password reset link to</p>
             <p className="font-medium text-foreground mt-1">{form.getValues("email")}</p>
@@ -134,17 +134,17 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="w-full max-w-md animate-fade-up">
-      <div className="text-center mb-8">
+      <div className="text-center mb-5 sm:mb-8">
         <div className="mx-auto h-10 w-10 rounded-xl bg-muted flex items-center justify-center mb-3">
           <KeyRound className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Forgot Password</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Forgot Password</h1>
+        <p className="text-sm text-muted-foreground mt-2">
           Enter your registered email address and we&apos;ll send you instructions to reset your password.
         </p>
       </div>
 
-      <div className="rounded-xl border bg-card shadow-soft p-6">
+      <div className="rounded-xl border bg-card shadow-soft p-4 sm:p-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-foreground">Email Address</Label>

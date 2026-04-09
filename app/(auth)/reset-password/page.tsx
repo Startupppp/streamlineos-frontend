@@ -100,11 +100,11 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="w-full max-w-sm animate-fade-up">
-      <div className="mb-8">
+      <div className="mb-5 sm:mb-8">
         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
           <Rocket className="h-5 w-5 text-primary" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Set up your password
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-soft p-6">
+      <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
