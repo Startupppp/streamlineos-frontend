@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ClipboardCheck, Clock, Users, PlayCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface Assessment {
   id: number; title: string; description: string | null; category: string | null;
@@ -88,7 +89,14 @@ export default function AssessmentsPage() {
       {!items?.length ? (
         <Card><CardContent className="py-12 text-center">
           <ClipboardCheck className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No assessments available.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No assessments available.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

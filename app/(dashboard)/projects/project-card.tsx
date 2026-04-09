@@ -45,10 +45,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     <Link
       href={`/projects/${project.id}`}
       aria-label={`${project.name} — ${displayLabel}`}
-      className="block"
+      className="block h-full"
     >
       <div
-        className="rounded-lg border bg-card p-4 hover:shadow-md hover:border-border/80 transition-all cursor-pointer h-full flex flex-col group"
+        className="rounded-lg border bg-card p-4 hover:shadow-md hover:border-border/80 transition-all cursor-pointer h-full min-h-[230px] flex flex-col group"
         role="listitem"
       >
         {/* Top row: key badge + status */}
@@ -70,27 +70,23 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         </h3>
 
         {/* Description */}
-        {project.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-            {project.description}
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-3">
+          {project.description || "No description provided."}
+        </p>
 
         {/* Spacer */}
         <div className="flex-1" />
 
         {/* Progress */}
-        {project.progress.total > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-              <span>Progress</span>
-              <span className="tabular-nums">
-                {project.progress.done}/{project.progress.total}
-              </span>
-            </div>
-            <Progress value={project.progress.percentage} className="h-1" />
+        <div className="mb-3 min-h-[1.7rem]">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+            <span>Progress</span>
+            <span className="tabular-nums">
+              {project.progress.total > 0 ? `${project.progress.done}/${project.progress.total}` : "0/0"}
+            </span>
           </div>
-        )}
+          <Progress value={project.progress.total > 0 ? project.progress.percentage : 0} className="h-1" />
+        </div>
 
         {/* Footer: avatars + date */}
         <div className="flex items-center justify-between pt-2 border-t border-border/40">

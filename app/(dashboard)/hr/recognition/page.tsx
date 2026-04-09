@@ -20,6 +20,7 @@ import { formatDistanceToNow } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import { Heart, Plus, Award, Users, Lightbulb, Zap, Star } from "lucide-react";
 import type { Employee } from "@/types/hr";
+import Image from "next/image";
 
 const CATEGORIES = [
   { value: "KUDOS", label: "Kudos", icon: Heart, color: "text-pink-500" },
@@ -92,7 +93,14 @@ export default function RecognitionPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Heart className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No recognition yet. Be the first to celebrate a teammate!</p>
+              <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No recognition yet. Be the first to celebrate a teammate!</p>
             </CardContent>
           </Card>
         ) : (

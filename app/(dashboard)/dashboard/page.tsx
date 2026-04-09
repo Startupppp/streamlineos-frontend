@@ -198,11 +198,11 @@ export default function DashboardPage() {
         </div>
         <DashboardStatsSkeleton />
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-          <Card className="lg:col-span-4 bg-card border-border min-h-[200px]">
+          <Card className="lg:col-span-4 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
-          <Card className="lg:col-span-3 bg-card border-border min-h-[200px]">
+          <Card className="lg:col-span-3 bg-card border-border">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>

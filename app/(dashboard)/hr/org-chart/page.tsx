@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Users, Network, Building2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
+import Image from "next/image";
 
 interface TreeNode {
   employee: Employee;
@@ -71,22 +72,114 @@ function PersonCard({ emp, size = "md" }: { emp: Employee; size?: "sm" | "md" })
         <p className={cn("font-medium truncate", isSm ? "text-xs" : "text-sm")}>{emp.name ?? "Unknown"}</p>
         <p className="text-[10px] text-muted-foreground truncate">{emp.designation ?? emp.role}</p>
       </div>
-      <span className={cn("h-2 w-2 rounded-full shrink-0", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
+      <div className="flex items-center gap-2 shrink-0">
+        <Badge variant="outline" className="text-[10px] h-5 px-1.5">
+          {emp.role}
+        </Badge>
+        <span className={cn("h-2 w-2 rounded-full", ROLE_DOT[emp.role] ?? "bg-muted-foreground/40")} />
+      </div>
     </div>
   );
 }
 
-function TreeBranch({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
+function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth?: number; isLast?: boolean }) {
+  const hasChildren = node.children.length > 0;
+
   return (
-    <div className="flex flex-col">
-      <PersonCard emp={node.employee} size={depth > 1 ? "sm" : "md"} />
-      {node.children.length > 0 && (
-        <div className="ml-5 mt-1 border-l-2 border-border/60 pl-4 space-y-1">
-          {node.children.map((child) => (
-            <TreeBranch key={child.employee.id} node={child} depth={depth + 1} />
+    <div className="relative">
+      {depth > 0 && (
+        <>
+          <span
+            className={cn(
+              "absolute left-0 border-l border-border/60",
+              isLast ? "top-0 h-5" : "top-0 h-full"
+            )}
+          />
+          <span className="absolute left-0 top-5 w-4 border-t border-border/60" />
+        </>
+      )}
+
+      <div className={cn(depth > 0 ? "pl-4" : "")}>
+        <div className="flex items-center gap-2">
+          <PersonCard emp={node.employee} size={depth > 1 ? "sm" : "md"} />
+          {hasChildren && (
+            <Badge variant="secondary" className="h-5 text-[10px]">
+              {node.children.length} report{node.children.length > 1 ? "s" : ""}
+            </Badge>
+          )}
+        </div>
+
+        {hasChildren && (
+          <div className="mt-2 ml-4 space-y-2">
+            {node.children.map((child, idx) => (
+              <TreeBranch
+                key={child.employee.id}
+                node={child}
+                depth={depth + 1}
+                isLast={idx === node.children.length - 1}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNode[]; dotCls?: string }) {
+  // Separate roots with reports (need full-width tree) from standalone roots (can sit side by side)
+  const withChildren = roots.filter((r) => r.children.length > 0);
+  const standalone = roots.filter((r) => r.children.length === 0);
+
+  return (
+    <div className="rounded-xl border bg-muted/20 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        {dotCls && <span className={cn("h-2 w-2 rounded-full", dotCls)} />}
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </span>
+        <Badge variant="secondary" className="h-4 text-[9px] px-1.5">
+          {roots.length}
+        </Badge>
+      </div>
+
+      {/* Standalone roots (no reports) — render in a horizontal wrap row */}
+      {standalone.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {standalone.map((node) => (
+            <PersonCard key={node.employee.id} emp={node.employee} />
           ))}
         </div>
       )}
+
+      {/* Roots with reports — each needs its own tree */}
+      {withChildren.length > 0 && (
+        <div className="space-y-2">
+          {withChildren.map((node) => (
+            <TreeBranch key={node.employee.id} node={node} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TreeLegend() {
+  const items = [
+    { label: "CEO", cls: ROLE_DOT.CEO },
+    { label: "Admin", cls: ROLE_DOT.ADMIN },
+    { label: "HR", cls: ROLE_DOT.HR },
+    { label: "Other", cls: "bg-muted-foreground/40" },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {items.map((item) => (
+        <Badge key={item.label} variant="outline" className="text-[10px] h-6 gap-1.5">
+          <span className={cn("h-2 w-2 rounded-full", item.cls)} />
+          {item.label}
+        </Badge>
+      ))}
     </div>
   );
 }
@@ -101,6 +194,23 @@ export default function OrgChartPage() {
   );
 
   const tree = useMemo(() => buildTree(employees), [employees]);
+
+  // Group root nodes by role for compact display
+  const rootGroups = useMemo(() => {
+    const groups = new Map<string, TreeNode[]>();
+    for (const root of tree) {
+      const role = root.employee.role;
+      if (!groups.has(role)) groups.set(role, []);
+      groups.get(role)!.push(root);
+    }
+    // Sort groups: CEO first, then ADMIN, HR, then alphabetical
+    const priority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
+    return Array.from(groups.entries()).sort((a, b) => {
+      const pa = priority[a[0]] ?? 99;
+      const pb = priority[b[0]] ?? 99;
+      return pa !== pb ? pa - pb : a[0].localeCompare(b[0]);
+    });
+  }, [tree]);
 
   const deptMap = useMemo(() => {
     const map = new Map<number, string>();
@@ -149,14 +259,34 @@ export default function OrgChartPage() {
 
         <TabsContent value="tree">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Clear reporting tree with parent-child links and direct reports.
+                </p>
+                <TreeLegend />
+              </div>
               <ScrollArea className="w-full" type="auto">
-                <div className="space-y-1 min-w-max">
-                  {tree.map((root) => (
-                    <TreeBranch key={root.employee.id} node={root} />
+                <div className="space-y-3 min-w-[720px]">
+                  {rootGroups.map(([role, roots]) => (
+                    <TreeRootGroup
+                      key={role}
+                      label={role}
+                      roots={roots}
+                      dotCls={ROLE_DOT[role] ?? "bg-muted-foreground/40"}
+                    />
                   ))}
                   {tree.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-8">No reporting structure found.</p>
+                    <div className="py-8">
+                      <Image
+                        src="/illustrations/undraw-online-survey.svg"
+                        alt="Empty state illustration"
+                        width={200}
+                        height={160}
+                        className="mx-auto mb-4 opacity-90"
+                      />
+                      <p className="text-sm text-muted-foreground text-center">No reporting structure found.</p>
+                    </div>
                   )}
                 </div>
               </ScrollArea>

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Users, Calendar, UserCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import Image from "next/image";
 
 export default function RecruitmentDashboardPage() {
   const { data: stats, isLoading: statsLoading } = useRecruitmentStats();
@@ -120,7 +121,16 @@ export default function RecruitmentDashboardPage() {
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground text-center py-4">No source data</p>
+                  <div className="py-4">
+                    <Image
+                      src="/illustrations/undraw-online-survey.svg"
+                      alt="Empty state illustration"
+                      width={200}
+                      height={160}
+                      className="mx-auto mb-4 opacity-90"
+                    />
+                    <p className="text-xs text-muted-foreground text-center">No source data</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -143,7 +153,16 @@ export default function RecruitmentDashboardPage() {
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-2">
               {!recentJobs?.length ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No open positions yet.</p>
+                <div className="py-4">
+                  <Image
+                    src="/illustrations/undraw-online-survey.svg"
+                    alt="Empty state illustration"
+                    width={200}
+                    height={160}
+                    className="mx-auto mb-4 opacity-90"
+                  />
+                  <p className="text-sm text-muted-foreground text-center">No open positions yet.</p>
+                </div>
               ) : (
                 recentJobs.slice(0, 5).map((job) => (
                   <div key={job.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">

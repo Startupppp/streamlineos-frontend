@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import {
   Plus,
   Trash2,
@@ -97,7 +98,16 @@ export default function CampaignsPage() {
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Loading campaigns...</div>
       ) : items.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">No campaigns yet. Create your first campaign.</div>
+        <div className="text-center py-12 text-muted-foreground">
+          <Image
+            src="/illustrations/undraw-social-media-post.svg"
+            alt="No campaigns"
+            width={200}
+            height={160}
+            className="mx-auto mb-4 opacity-90"
+          />
+          No campaigns yet. Create your first campaign.
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((c) => (

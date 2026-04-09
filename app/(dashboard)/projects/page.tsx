@@ -92,27 +92,55 @@ export default function ProjectsPage() {
       }
     >
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-lg border p-4 space-y-3">
-              <div className="flex justify-between">
-                <Skeleton className="h-5 w-14 rounded" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-              </div>
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-1 w-full rounded-full" />
-              <div className="flex justify-between pt-2 border-t">
-                <div className="flex -space-x-1.5">
-                  {[1, 2, 3].map((j) => (
-                    <Skeleton key={j} className="h-6 w-6 rounded-full" />
-                  ))}
+        viewMode === "grid" ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-lg border p-4 space-y-3">
+                <div className="flex justify-between">
+                  <Skeleton className="h-5 w-14 rounded" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
                 </div>
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-1 w-full rounded-full" />
+                <div className="flex justify-between pt-2 border-t">
+                  <div className="flex -space-x-1.5">
+                    {[1, 2, 3].map((j) => (
+                      <Skeleton key={j} className="h-6 w-6 rounded-full" />
+                    ))}
+                  </div>
+                  <Skeleton className="h-3 w-16" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-lg border p-3">
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-14 rounded" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </div>
+                    <Skeleton className="h-4 w-56 max-w-[70%]" />
+                    <Skeleton className="h-3 w-80 max-w-[90%]" />
+                  </div>
+                  <div className="hidden md:flex md:items-center md:gap-3 md:min-w-[220px]">
+                    <Skeleton className="h-1.5 w-full rounded-full" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <div className="flex -space-x-1.5 shrink-0">
+                    {[1, 2, 3].map((j) => (
+                      <Skeleton key={j} className="h-6 w-6 rounded-full" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
         <ProjectsEmptyState />
       ) : projects.length === 0 ? (
@@ -137,7 +165,7 @@ export default function ProjectsPage() {
           animate="visible"
         >
           {projects.map((project) => (
-            <motion.div key={project.id} variants={fadeUp}>
+            <motion.div key={project.id} variants={fadeUp} className="h-full">
               <ProjectCard project={project} />
             </motion.div>
           ))}

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, Phone, Briefcase, MapPin, Calendar, Star, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import type { CandidateStatus, InterviewType } from "@/types/hr";
+import Image from "next/image";
 
 const STATUSES: CandidateStatus[] = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"];
 
@@ -196,7 +197,16 @@ export default function CandidateDetailPage() {
             </CardHeader>
             <CardContent className="p-4 pt-0">
               {!candidate.applications?.length ? (
-                <p className="text-xs text-muted-foreground py-4 text-center">No applications yet.</p>
+                <div className="py-4">
+                  <Image
+                    src="/illustrations/undraw-online-survey.svg"
+                    alt="Empty state illustration"
+                    width={200}
+                    height={160}
+                    className="mx-auto mb-4 opacity-90"
+                  />
+                  <p className="text-xs text-muted-foreground text-center">No applications yet.</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {candidate.applications.map((app) => (

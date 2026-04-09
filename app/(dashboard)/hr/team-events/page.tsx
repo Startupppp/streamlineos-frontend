@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, PartyPopper, Calendar, MapPin, Users, UserPlus } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface TeamEvent {
   id: number; title: string; description: string | null; location: string | null;
@@ -95,7 +96,14 @@ export default function TeamEventsPage() {
       {!events?.length ? (
         <Card><CardContent className="py-12 text-center">
           <PartyPopper className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No upcoming events.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No upcoming events.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

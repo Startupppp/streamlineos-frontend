@@ -19,6 +19,7 @@ import {
   type WorkLogFilters as WorkLogFiltersType,
 } from "@/features/hr/work-logs/work-log-filters";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
+import Image from "next/image";
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();
@@ -340,7 +341,14 @@ export default function WorkLogsPage() {
               <div className="flex flex-col items-center justify-center text-center">
                 <Search className="h-10 w-10 text-muted-foreground/50 mb-3" />
                 <h3 className="text-lg font-medium text-foreground">No results found</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground mt-1">
                   No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
                 </p>
                 <Button variant="outline" size="sm" className="mt-4" onClick={() => setSearchTerm("")}>

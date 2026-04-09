@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { useProject } from "@/lib/hooks/trpc-hooks";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
@@ -138,7 +139,16 @@ export default function BacklogPage({ params }: PageProps) {
             {filteredTickets.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                  No tickets found. Create one to get started.
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Image
+                      src="/illustrations/undraw-task-brief.svg"
+                      alt="No tickets"
+                      width={180}
+                      height={140}
+                      className="opacity-90"
+                    />
+                    <p>No tickets found. Create one to get started.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
