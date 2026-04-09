@@ -15,7 +15,7 @@ import {
 import { eq, and, gte, count, sql, desc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/** Analyze employee attrition risk. */
+
 export async function aiAnalyzeAttritionRisk(
   orgId: string,
   userId: string,
