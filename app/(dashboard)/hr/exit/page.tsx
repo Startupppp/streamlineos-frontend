@@ -20,6 +20,7 @@ import {
   Plus, CheckCircle2, Clock,
   UserMinus, Calendar, FileText, Download,
 } from "lucide-react";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 
 const NOTICE_PERIOD_DAYS = 60;
@@ -105,7 +106,13 @@ export default function ExitManagementPage() {
       {!resignations?.length ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <UserMinus className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+            <Image
+              src="/illustrations/undraw-quitting-time.svg"
+              alt="No resignations"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
             <p className="text-sm text-muted-foreground">No resignations on record.</p>
           </CardContent>
         </Card>

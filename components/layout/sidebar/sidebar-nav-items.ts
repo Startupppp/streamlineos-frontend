@@ -111,6 +111,11 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Candidates", icon: Users, href: "/hr/recruitment/candidates", isSubItem: true },
             { label: "Pipeline", icon: TrendingUp, href: "/hr/recruitment/pipeline", isSubItem: true },
             { label: "Interviews", icon: Video, href: "/hr/recruitment/interviews", isSubItem: true },
+            { label: "Training", icon: BookOpen, href: "/hr/training" },
+            { label: "Recognition", icon: Heart, href: "/hr/recognition" },
+            { label: "Resignation", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
+            { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
         },
         {
@@ -266,6 +271,11 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Candidates", icon: Users, href: "/hr/recruitment/candidates", isSubItem: true },
             { label: "Pipeline", icon: TrendingUp, href: "/hr/recruitment/pipeline", isSubItem: true },
             { label: "Interviews", icon: Video, href: "/hr/recruitment/interviews", isSubItem: true },
+            { label: "Training", icon: BookOpen, href: "/hr/training" },
+            { label: "Recognition", icon: Heart, href: "/hr/recognition" },
+            { label: "Resignation", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
+            { label: "Analytics", icon: BarChart3, href: "/hr/analytics" },
           ],
         },
         {
