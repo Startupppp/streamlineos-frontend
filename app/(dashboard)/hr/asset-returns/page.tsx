@@ -118,7 +118,14 @@ export default function AssetReturnsPage() {
             height={160}
             className="mx-auto mb-4 opacity-90"
           />
-          <p className="text-sm text-muted-foreground">No asset returns tracked.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No asset returns tracked.</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-2">

@@ -4,28 +4,50 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function DocumentsLoading() {
   return (
-    <PageWrapper title="Documents" subtitle="Manage HR documents and files.">
-      <div className="flex-1 space-y-6">
-        {/* Action buttons */}
-        <div className="flex items-center justify-end gap-3">
-          <Skeleton className="h-10 w-[120px] rounded-md" />
-          <Skeleton className="h-10 w-[160px] rounded-md" />
+    <PageWrapper
+      title="Document Library"
+      subtitle="Centralized repository for all company-wide HR documents, contracts, and policy files."
+      actions={
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-[96px] rounded-md" />
+          <Skeleton className="h-8 w-[80px] rounded-md" />
+          <Skeleton className="h-8 w-[128px] rounded-md" />
         </div>
-
-        {/* Search + Category Tabs */}
-        <Card className="shadow-sm border">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <Skeleton className="h-10 flex-1 min-w-[200px] max-w-md rounded-md" />
-              <Skeleton className="h-9 w-[76px] rounded-md" />
-              <div className="flex items-center gap-1">
-                {["All Files", "Contracts", "Policies", "Tax Forms", "Templates", "Payroll"].map((tab) => (
-                  <Skeleton key={tab} className="h-8 rounded-full" style={{ width: `${tab.length * 9 + 24}px` }} />
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      }
+      filters={
+        <div className="w-full space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-8 w-full max-w-[240px] rounded-md" />
+            {["All Files", "Contracts", "Policies", "Tax Forms", "Templates", "Payroll"].map((tab) => (
+              <Skeleton key={tab} className="h-7 rounded-full" style={{ width: `${tab.length * 8 + 24}px` }} />
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-6 w-12 rounded-md" />
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-16 rounded-md" />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <div className="flex-1 space-y-6">
+        {/* Stats cards */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-5 pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3.5 w-28" />
+                    <Skeleton className="h-7 w-16" />
+                  </div>
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
         {/* Main Table */}
         <Card className="shadow-sm border overflow-hidden">

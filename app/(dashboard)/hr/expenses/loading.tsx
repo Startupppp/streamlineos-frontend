@@ -4,7 +4,17 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function ExpensesLoading() {
   return (
-    <PageWrapper title="Expense Claims" subtitle="Submit and track your expense reimbursements.">
+    <PageWrapper
+      title="Expense Approvals"
+      subtitle="Review and manage pending employee expense claims."
+      actions={
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-[88px] rounded-md" />
+          <Skeleton className="h-9 w-[126px] rounded-md" />
+          <Skeleton className="h-9 w-[108px] rounded-md" />
+        </div>
+      }
+    >
       <div className="space-y-6">
         {/* Summary cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

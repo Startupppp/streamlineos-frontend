@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import { format } from "date-fns";
 import { Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -328,7 +329,13 @@ export default function AuditLogPage() {
               </div>
             ) : logs.length === 0 ? (
               <div className="py-14 flex flex-col items-center gap-2 text-muted-foreground">
-                <Shield className="h-9 w-9 opacity-20" />
+                <Image
+                  src="/illustrations/undraw-schedule-cleanup.svg"
+                  alt="No audit events"
+                  width={200}
+                  height={160}
+                  className="opacity-90"
+                />
                 <p className="text-sm">No audit events found.</p>
               </div>
             ) : (

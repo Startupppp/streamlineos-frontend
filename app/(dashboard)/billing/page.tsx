@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { format, isPast } from "date-fns";
 import {
   DollarSign,
@@ -165,6 +166,13 @@ function InvoiceTable({
   if (!invoices.length) {
     return (
       <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+        <Image
+          src="/illustrations/undraw-stripe-payments.svg"
+          alt="No invoices"
+          width={180}
+          height={140}
+          className="mx-auto mb-3 opacity-90"
+        />
         No invoices found.
       </div>
     );

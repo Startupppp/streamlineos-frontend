@@ -18,6 +18,7 @@ import {
 } from "@/server/actions/expense-query";
 import { CreateExpenseDialog } from "./create-expense-dialog";
 import { ImportExpenseSheet } from "./import-expense-sheet";
+import ExpensesLoading from "./loading";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { useExpenseFilters, useDebouncedValue } from "@/hooks/use-expense-filters";
 import { useSession } from "next-auth/react";
@@ -164,20 +165,7 @@ export default function ExpensesPage() {
 
   /* ─── Loading State ─── */
   if (loading && !pageData) {
-    return (
-      <div className="flex-1 space-y-6 px-4 sm:px-6 py-5">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <div className={`grid gap-6 ${isAdmin ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
-          {Array.from({ length: isAdmin ? 4 : 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-96 w-full rounded-xl" />
-      </div>
-    );
+    return <ExpensesLoading />;
   }
 
   const { expenses, pendingExpenses, stats, pagination, categories: expenseCategories } = pageData || {

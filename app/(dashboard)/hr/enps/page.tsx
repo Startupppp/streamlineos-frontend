@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ThumbsUp, BarChart3, Users, Calendar } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface EnpsSurvey {
   id: number; title: string; status: string | null; score: number | null;
@@ -113,7 +114,14 @@ export default function EnpsPage() {
       {!surveys?.length ? (
         <Card><CardContent className="py-12 text-center">
           <ThumbsUp className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No eNPS surveys yet.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No eNPS surveys yet.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

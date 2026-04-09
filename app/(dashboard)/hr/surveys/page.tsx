@@ -20,6 +20,7 @@ import {
   Plus, ClipboardList, Users, Calendar, Play, Archive, BarChart3,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" {
   if (s === "ACTIVE") return "default";
@@ -88,7 +89,14 @@ export default function SurveysPage() {
       {!surveys?.length ? (
         <Card><CardContent className="py-12 text-center">
           <ClipboardList className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No surveys created yet.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No surveys created yet.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

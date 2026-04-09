@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { Plus, MoreHorizontal, Pencil, Trash2, Play, Pause } from "lucide-react";
 import type { JobPostingStatus } from "@/types/hr";
+import Image from "next/image";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "ALL", label: "All Status" },
@@ -216,7 +217,16 @@ export default function JobPostingsPage() {
                 </TableHeader>
                 <TableBody>
                   {!jobs?.length ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No job postings yet.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                      <Image
+                        src="/illustrations/undraw-online-survey.svg"
+                        alt="Empty state illustration"
+                        width={180}
+                        height={140}
+                        className="opacity-90"
+                      />
+                      <p>No job postings yet.</p>
+                    </div></TableCell></TableRow>
                   ) : (
                     jobs.map((job) => (
                       <TableRow key={job.id}>

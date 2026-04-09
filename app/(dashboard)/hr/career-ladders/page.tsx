@@ -16,6 +16,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { Plus, TrendingUp, ArrowUpRight, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface CareerLadder {
   id: number; title: string; department: string | null; description: string | null;
@@ -80,7 +81,14 @@ export default function CareerLaddersPage() {
       {!ladders?.length ? (
         <Card><CardContent className="py-12 text-center">
           <TrendingUp className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No career ladders defined yet.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No career ladders defined yet.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

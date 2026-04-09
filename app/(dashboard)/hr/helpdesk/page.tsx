@@ -3,6 +3,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useHrHelpdeskTickets, useCreateHelpdeskTicket } from "@/lib/api/hooks/hr";
 import { AISuggestReplyButton } from "@/features/hr/helpdesk/ai-suggest-reply-button";
@@ -332,7 +333,16 @@ export default function HelpdeskPage() {
                     {filteredTickets.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          {searchQuery ? "No tickets match your search." : "No tickets yet. Create your first one!"}
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Image
+                              src="/illustrations/undraw-chat-bot.svg"
+                              alt="No tickets"
+                              width={180}
+                              height={140}
+                              className="opacity-90"
+                            />
+                            <p>{searchQuery ? "No tickets match your search." : "No tickets yet. Create your first one!"}</p>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ) : (

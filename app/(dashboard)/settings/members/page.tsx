@@ -28,6 +28,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Image from "next/image";
 
 const ALL_ROLES = [
   { value: "CEO", label: "CEO" },
@@ -268,7 +269,14 @@ export default function MembersSettingsPage() {
           ) : (
             <div className="flex flex-col items-center gap-3 py-6">
               <EmptyMailIllustration />
-              <p className="text-sm text-muted-foreground">No pending invitations</p>
+              <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No pending invitations</p>
             </div>
           )}
         </CardContent>

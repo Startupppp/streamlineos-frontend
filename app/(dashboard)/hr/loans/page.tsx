@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Landmark, CheckCircle2, XCircle, Banknote } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 function statusBadge(s: string | null): "default" | "secondary" | "outline" | "destructive" {
   if (s === "ACTIVE" || s === "REPAID") return "default";
@@ -88,7 +89,14 @@ export default function LoansPage() {
       {!loans?.length ? (
         <Card><CardContent className="py-12 text-center">
           <Landmark className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No salary loans on record.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No salary loans on record.</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-2">

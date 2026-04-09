@@ -21,6 +21,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Mail, Trash2, Copy } from "lucide-react";
+import Image from "next/image";
 
 interface EmailTemplate {
   id: number; name: string; subject: string; body: string;
@@ -105,7 +106,14 @@ function EmailTemplatesContent() {
       {!templates?.length ? (
         <Card><CardContent className="py-12 text-center">
           <Mail className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No email templates yet.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No email templates yet.</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

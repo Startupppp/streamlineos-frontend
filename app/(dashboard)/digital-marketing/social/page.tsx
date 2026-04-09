@@ -19,6 +19,7 @@ import {
 import { useSocialMediaLatest, useUpsertSocialMediaStats } from "@/lib/api/hooks/social-media";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const PLATFORMS = ["instagram", "twitter", "linkedin", "facebook", "youtube"] as const;
 const PLATFORM_COLORS: Record<string, string> = {
@@ -107,7 +108,16 @@ export default function SocialMediaPage() {
                       <p className="text-[10px] text-muted-foreground">Last updated: {latest.date}</p>
                     </>
                   ) : (
-                    <p className="text-xs text-muted-foreground py-4 text-center">No data yet. Add daily stats to get started.</p>
+                    <div className="py-4">
+                      <Image
+                        src="/illustrations/undraw-online-survey.svg"
+                        alt="Empty state illustration"
+                        width={200}
+                        height={160}
+                        className="mx-auto mb-4 opacity-90"
+                      />
+                      <p className="text-xs text-muted-foreground text-center">No data yet. Add daily stats to get started.</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>

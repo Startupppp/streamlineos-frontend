@@ -26,6 +26,7 @@ import { useDmCampaigns, useDmCampaignStats, useCreateDmCampaign } from "@/lib/a
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
@@ -94,7 +95,16 @@ export default function CampaignsPage() {
                     <TableRow key={i}><TableCell colSpan={7} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
                   ))
                 ) : campaigns.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No campaigns yet</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                      <Image
+                        src="/illustrations/undraw-online-survey.svg"
+                        alt="Empty state illustration"
+                        width={180}
+                        height={140}
+                        className="opacity-90"
+                      />
+                      <p>No campaigns yet</p>
+                    </div></TableCell></TableRow>
                 ) : (
                   campaigns.map((c) => (
                     <TableRow key={c.id}>
