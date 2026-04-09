@@ -1,9 +1,11 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { resignations, exitChecklists } from "@/lib/db/schema";
+import { resignations, exitChecklists, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { sendResignationApprovedEmail } from "@/lib/email";
+import { format } from "date-fns";
 import type { NextRequest } from "next/server";
 
 const updateSchema = z.object({
@@ -51,6 +53,26 @@ export async function PATCH(
           status: "PENDING" as const,
         }))
       );
+    }
+
+    if (body.status === "APPROVED") {
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, existing.userId),
+      });
+      if (employee?.email) {
+        const lwd = existing.lastWorkingDate ? new Date(existing.lastWorkingDate) : new Date();
+        const sub = existing.createdAt ?? new Date();
+        const lastWorkingDate = format(lwd, "dd MMM yyyy");
+        const submissionDate = format(sub, "dd MMM yyyy");
+        sendResignationApprovedEmail(
+          employee.email,
+          employee.name ?? "Employee",
+          session.user.name ?? "HR",
+          lastWorkingDate,
+          existing.noticePeriodDays ?? 30,
+          submissionDate
+        ).catch(() => undefined);
+      }
     }
 
     return ok({ success: true });

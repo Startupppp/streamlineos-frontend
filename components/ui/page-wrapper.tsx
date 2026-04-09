@@ -30,7 +30,7 @@ export function PageWrapper({
   return (
     <div className={cn("flex flex-col flex-1 min-h-0", className)}>
       <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-semibold tracking-tight text-foreground leading-tight">
@@ -50,7 +50,7 @@ export function PageWrapper({
           </div>
 
           {actions && (
-            <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+            <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
               {actions}
             </div>
           )}

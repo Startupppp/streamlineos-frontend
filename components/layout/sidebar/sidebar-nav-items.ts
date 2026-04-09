@@ -263,6 +263,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
       ];
@@ -288,6 +290,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
       ];
@@ -319,6 +323,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
       ];
@@ -345,6 +351,8 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
       ];
@@ -363,13 +371,13 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            // { label: "Tickets", icon: Ticket, href: "/support" },
-            // { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
             { label: "My onboarding", icon: ClipboardList, href: "/onboarding", isSubItem: true },
             { label: "My Leaves", icon: CalendarCheck, href: "/hr/leaves" },
             { label: "My Expenses", icon: Receipt, href: "/hr/expenses" },
             { label: "My Attendance", icon: Clock, href: "/hr/attendance" },
             { label: "My Payslips", icon: Wallet, href: "/hr/my-payslips" },
+            { label: "Exit", icon: UserMinus, href: "/hr/exit" },
+            { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
       ];

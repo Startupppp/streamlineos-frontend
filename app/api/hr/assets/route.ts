@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json() as {
       name: string;
       type: string;
+      status?: string;
       serialNumber?: string;
       assignedTo?: string;
       purchaseDate?: string;
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
         purchaseCost: body.purchaseCost?.toString(),
         location: body.location,
         notes: body.notes,
-        status: body.assignedTo ? "ASSIGNED" : "AVAILABLE",
+        status: (body.status as "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "RETIRED") ?? (body.assignedTo ? "ASSIGNED" : "AVAILABLE"),
       })
       .returning();
 

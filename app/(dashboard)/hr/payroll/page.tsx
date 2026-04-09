@@ -238,6 +238,10 @@ export default function PayrollPage() {
     );
   }, [markPaidMutation, selectedMonth, qc]);
 
+  const handleDownloadPayslip = useCallback((payrollId: number) => {
+    window.open(`/api/hr/payrolls/${payrollId}/download`, "_blank");
+  }, []);
+
   const totalGross =
     allPayrolls?.reduce((sum, p) => sum + parseFloat(p.grossSalary || "0"), 0) || 0;
   const totalNet =
@@ -306,9 +310,9 @@ export default function PayrollPage() {
       title="Payroll Management"
       subtitle="Generate and manage employee payrolls"
       actions={
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[160px] sm:w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -372,7 +376,7 @@ export default function PayrollPage() {
       }
     >
       <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
             label="Total Employees"
             value={allPayrolls?.length || 0}
@@ -407,6 +411,7 @@ export default function PayrollPage() {
             onMarkPaid={handleMarkPaid}
             isApprovePending={approvePayrollMutation.isPending}
             isMarkPaidPending={markPaidMutation.isPending}
+            onDownload={handleDownloadPayslip}
           />
         )}
       </div>

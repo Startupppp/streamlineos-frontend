@@ -198,11 +198,11 @@ export default function DashboardPage() {
         </div>
         <DashboardStatsSkeleton />
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-          <Card className="lg:col-span-4 bg-card border-border">
+          <Card className="lg:col-span-4 bg-card border-border min-h-[200px]">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
-          <Card className="lg:col-span-3 bg-card border-border">
+          <Card className="lg:col-span-3 bg-card border-border min-h-[200px]">
             <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
             <CardContent><Skeleton className="h-20 w-full" /></CardContent>
           </Card>
@@ -275,7 +275,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 auto-rows-[24rem]">
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
         <div className="lg:col-span-4 min-h-0">
           <MyIssuesCard
             tickets={sortedMyTickets}
@@ -288,7 +288,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} auto-rows-[24rem]`}>
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} md:auto-rows-[24rem]`}>
         <div className="sm:col-span-1 min-h-0">
           <RecentProjectsCard
             projects={recentProjects?.map((p) => ({ ...p, key: p.key ?? "" }))}

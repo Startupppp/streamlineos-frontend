@@ -1,9 +1,11 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
-import { resignations } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { resignations, organizationMembers, users } from "@/lib/db/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { sendResignationSubmittedEmail } from "@/lib/email";
+import { format } from "date-fns";
 import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
@@ -38,6 +40,37 @@ export async function POST(req: NextRequest) {
       noticePeriodDays: body.noticePeriodDays,
       status: "SUBMITTED",
     }).returning();
+
+    const adminMembers = await db.query.organizationMembers.findMany({
+      where: and(
+        eq(organizationMembers.orgId, session.orgId),
+        inArray(organizationMembers.role, ["CEO", "HR"])
+      ),
+      with: { user: true },
+    });
+
+    const submittingUser = await db.query.users.findFirst({
+      where: eq(users.id, session.user.id),
+    });
+
+    const submissionDate = format(new Date(), "dd MMM yyyy");
+    const lastWorkingDate = format(new Date(body.lastWorkingDate), "dd MMM yyyy");
+
+    for (const admin of adminMembers) {
+      if (admin.user?.email && admin.user.email !== submittingUser?.email) {
+        sendResignationSubmittedEmail(
+          admin.user.email,
+          admin.user.name ?? "HR",
+          submittingUser?.name ?? "Employee",
+          submittingUser?.designation ?? "N/A",
+          submissionDate,
+          lastWorkingDate,
+          body.noticePeriodDays,
+          body.reason
+        ).catch(() => undefined);
+      }
+    }
+
     return ok(resignation, 201);
   });
 }

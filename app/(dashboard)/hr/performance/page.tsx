@@ -8,6 +8,8 @@ import {
   useHrGoals,
   useReviewCycles,
   useCreateReviewCycle,
+  useUpdateReviewCycle,
+  useDeleteReviewCycle,
   useCreatePerformanceReview,
   useUpdatePerformanceReview,
   useCreateGoal,
@@ -41,7 +43,7 @@ import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   Plus, Star, Target, Users, Calendar, Clock, MoreHorizontal,
-  CheckCircle2, Trash2,
+  CheckCircle2, Trash2, Pencil,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -426,7 +428,8 @@ function OneOnOnesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [empId, setEmpId] = useState("");
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("10:00");
   const [duration, setDuration] = useState("30");
   const [agenda, setAgenda] = useState("");
 
@@ -435,22 +438,26 @@ function OneOnOnesTab() {
     [employeesRaw]
   );
 
+  const scheduledAt = scheduledDate && scheduledTime ? `${scheduledDate}T${scheduledTime}` : "";
+
   const handleCreate = useCallback(() => {
-    if (!empId || !scheduledAt) { toast.error("Employee and date are required"); return; }
+    if (!empId.trim()) { toast.error("Please select an employee"); return; }
+    if (!scheduledDate.trim()) { toast.error("Please select a date"); return; }
     createMeeting.mutate(
-      { employeeId: empId, scheduledAt, duration: Number(duration) || 30, agenda: agenda || undefined },
+      { employeeId: empId, scheduledAt: `${scheduledDate}T${scheduledTime}`, duration: Number(duration) || 30, agenda: agenda || undefined },
       {
         onSuccess: () => {
           toast.success("Meeting scheduled");
           setSheetOpen(false);
           setEmpId("");
-          setScheduledAt("");
+          setScheduledDate("");
+          setScheduledTime("10:00");
           setAgenda("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [empId, scheduledAt, duration, agenda, createMeeting]);
+  }, [empId, scheduledDate, scheduledTime, duration, agenda, createMeeting]);
 
   const handleStatusChange = useCallback((id: number, status: MeetingStatus) => {
     updateMeeting.mutate({ id, status }, {
@@ -536,13 +543,17 @@ function OneOnOnesTab() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Date & Time</label>
-            <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+            <label className="text-sm font-medium">Date</label>
+            <Input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Duration (min)</label>
-            <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
+            <label className="text-sm font-medium">Time</label>
+            <Input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
           </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Duration (min)</label>
+          <Input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Agenda</label>
@@ -567,30 +578,65 @@ function OneOnOnesTab() {
 function CyclesTab() {
   const { data: cycles, isLoading } = useReviewCycles();
   const createCycle = useCreateReviewCycle();
+  const updateCycle = useUpdateReviewCycle();
+  const deleteCycle = useDeleteReviewCycle();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editCycle, setEditCycle] = useState<ReviewCycle | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState("QUARTERLY");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [deadline, setDeadline] = useState("");
 
+  const openCreate = useCallback(() => {
+    setEditCycle(null);
+    setName(""); setType("QUARTERLY"); setPeriodStart(""); setPeriodEnd(""); setDeadline("");
+    setSheetOpen(true);
+  }, []);
+
+  const openEdit = useCallback((cycle: ReviewCycle) => {
+    setEditCycle(cycle);
+    setName(cycle.name ?? "");
+    setType(cycle.type ?? "QUARTERLY");
+    setPeriodStart(cycle.periodStart ?? "");
+    setPeriodEnd(cycle.periodEnd ?? "");
+    setDeadline(cycle.deadline ?? "");
+    setSheetOpen(true);
+  }, []);
+
   const handleCreate = useCallback(() => {
     if (!name || !periodStart || !periodEnd) { toast.error("Name and period are required"); return; }
-    createCycle.mutate(
-      { name, type, periodStart, periodEnd, deadline: deadline || undefined },
-      {
-        onSuccess: () => {
-          toast.success("Cycle created");
-          setSheetOpen(false);
-          setName("");
-          setPeriodStart("");
-          setPeriodEnd("");
-          setDeadline("");
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      }
-    );
-  }, [name, type, periodStart, periodEnd, deadline, createCycle]);
+    if (editCycle) {
+      updateCycle.mutate(
+        { id: editCycle.id, name, type, periodStart, periodEnd, deadline: deadline || undefined },
+        {
+          onSuccess: () => { toast.success("Cycle updated"); setSheetOpen(false); setEditCycle(null); },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    } else {
+      createCycle.mutate(
+        { name, type, periodStart, periodEnd, deadline: deadline || undefined },
+        {
+          onSuccess: () => {
+            toast.success("Cycle created");
+            setSheetOpen(false);
+            setName(""); setPeriodStart(""); setPeriodEnd(""); setDeadline("");
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    }
+  }, [name, type, periodStart, periodEnd, deadline, editCycle, createCycle, updateCycle]);
+
+  const handleDelete = useCallback(() => {
+    if (!deleteId) return;
+    deleteCycle.mutate(deleteId, {
+      onSuccess: () => { toast.success("Cycle deleted"); setDeleteId(null); },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [deleteId, deleteCycle]);
 
   if (isLoading) {
     return <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>;
@@ -600,7 +646,7 @@ function CyclesTab() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{cycles?.length ?? 0} cycles</p>
-        <Button size="sm" onClick={() => setSheetOpen(true)}>
+        <Button size="sm" onClick={openCreate}>
           <Plus className="h-3.5 w-3.5 mr-1" />New Cycle
         </Button>
       </div>
@@ -628,13 +674,26 @@ function CyclesTab() {
                     {cycle.type && <> &middot; {cycle.type}</>}
                   </p>
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEdit(cycle)}>
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(cycle.id)}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
 
-      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Create Review Cycle" onSubmit={handleCreate} submitLabel="Create" isPending={createCycle.isPending}>
+      <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editCycle ? "Edit Review Cycle" : "Create Review Cycle"} onSubmit={handleCreate} submitLabel={editCycle ? "Save Changes" : "Create"} isPending={createCycle.isPending || updateCycle.isPending}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Cycle Name</label>
           <Input placeholder="e.g., Q2 2026 Review" value={name} onChange={(e) => setName(e.target.value)} />
@@ -666,6 +725,17 @@ function CyclesTab() {
           <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
         </div>
       </HrSheet>
+
+      <ConfirmActionDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+        title="Delete Review Cycle"
+        description="Are you sure you want to delete this review cycle? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleDelete}
+        isPending={deleteCycle.isPending}
+      />
     </div>
   );
 }

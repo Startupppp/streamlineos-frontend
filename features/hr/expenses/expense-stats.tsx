@@ -64,7 +64,7 @@ interface MemberExpenseStatsProps {
 
 export function MemberExpenseStats({ stats }: MemberExpenseStatsProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
       <StatCard
         label="Total Reimbursed (YTD)"
         value={formatINRCompact((stats?.approvedAmount || 0) + (stats?.paidAmount || 0))}

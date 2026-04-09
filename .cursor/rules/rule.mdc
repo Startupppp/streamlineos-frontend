@@ -29,7 +29,7 @@ don't hardcode/ force the types, don't ignore the types and don't add any
 don't use the anonymous functions and make the proper handlers
 don't add the comments and remove the unwanted comments and dead code
 make sure well typed
-- **Dynamic Route Naming**: Always use descriptive param names in dynamic route folders — NEVER generic `[id]`. This applies to BOTH `app/(dashboard)/` page routes AND `app/api/v1/` API route handlers. Use the entity name that matches the domain:
+- **Dynamic Route Naming**: Always use descriptive param names in dynamic route folders — NEVER generic `[id]`. This applies to BOTH `app/(dashboard)/` page routes AND `app/api/` API route handlers. Use the entity name that matches the domain:
   - HR: `[employeeId]`, `[leaveId]`, `[expenseId]`, `[assetId]`, `[documentId]`, `[reviewId]`, `[goalId]`, `[ticketId]`
   - Projects: `[projectId]`, `[sprintId]`, `[ticketId]`, `[cycleId]`, `[moduleId]`, `[pageId]`, `[viewId]`
   - CRM: `[leadId]`, `[dealId]`, `[contactId]`, `[clientId]`, `[targetId]`

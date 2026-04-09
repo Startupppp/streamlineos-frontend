@@ -12,8 +12,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DealTableView } from "@/features/crm/deals/deal-table-view";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
@@ -177,19 +177,19 @@ export default function DealsPage() {
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />Export
           </Button>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gold hover:bg-gold/90 text-white">
-                <Plus className="h-4 w-4 mr-2" />New Deal
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Create New Deal</DialogTitle>
-              </DialogHeader>
-              <CreateDealForm employees={employees} onSuccess={handleCreateSuccess} />
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-gold hover:bg-gold/90 text-white" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />New Deal
+          </Button>
+          <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+            <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
+              <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+                <SheetTitle>Create New Deal</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <CreateDealForm employees={employees} onSuccess={handleCreateSuccess} />
+              </div>
+            </SheetContent>
+          </Sheet>
         </>
       }
     >

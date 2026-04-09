@@ -170,7 +170,7 @@ export default function ExpensesPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-40" />
         </div>
-        <div className={`grid gap-6 ${isAdmin ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+        <div className={`grid gap-6 grid-cols-2 ${isAdmin ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
           {Array.from({ length: isAdmin ? 4 : 3 }).map((_, i) => (
             <Skeleton key={i} className="h-32 w-full rounded-xl" />
           ))}
@@ -204,7 +204,7 @@ export default function ExpensesPage() {
         title="Expense Approvals"
         subtitle="Review and manage pending employee expense claims."
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               className="gap-2"
