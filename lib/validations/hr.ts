@@ -169,9 +169,16 @@ export const onboardEmployeeInputSchema = z.object({
   lastName: z.string().min(1, "Last name is required").regex(/^[A-Za-z\s]+$/, "Only alphabetic characters are allowed"),
   email: z.string().email("Invalid email address"),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]),
-  phone: z.string().regex(/^[\d+\s-]+$/, "Please enter a valid phone number").refine((val) => val.replace(/\D/g, "").length === 10, "Phone number must be exactly 10 digits"),
+  phone: z.string().min(1, "Phone number is required").refine((val) => {
+    const digits = val.replace(/\D/g, "");
+    return digits.length >= 7 && digits.length <= 15;
+  }, "Please enter a valid phone number"),
   whatsappSameAsPhone: z.boolean().default(true),
-  whatsappNumber: z.string().regex(/^[\d+\s-]*$/, "Please enter a valid number").refine((val) => !val || val.replace(/\D/g, "").length === 10, "WhatsApp number must be exactly 10 digits").optional(),
+  whatsappNumber: z.string().refine((val) => {
+    if (!val) return true;
+    const digits = val.replace(/\D/g, "");
+    return digits.length >= 7 && digits.length <= 15;
+  }, "Please enter a valid WhatsApp number").optional(),
   password: z.string().max(128, "Password must be at most 128 characters").refine((val) => !val || val.length >= 8, {
     message: "Password must be at least 8 characters",
   }).optional(),
