@@ -484,6 +484,7 @@ export interface UpdateExpenseStatusInput {
 export interface CreateAssetInput {
   name: string;
   type: string;
+  status?: string;
   serialNumber?: string;
   assignedTo?: string;
   purchaseDate?: Date | string;

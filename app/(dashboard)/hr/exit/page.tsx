@@ -7,25 +7,23 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, addDays } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import {
-  Plus, MoreHorizontal, CheckCircle2, XCircle, Clock,
-  UserMinus, Calendar, FileText,
+  Plus, CheckCircle2, Clock,
+  Calendar, FileText, Download,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+
+const NOTICE_PERIOD_DAYS = 60;
 
 function statusBadge(status: string | null): "default" | "secondary" | "outline" | "destructive" {
   if (status === "COMPLETED") return "default";
@@ -44,27 +42,26 @@ export default function ExitManagementPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [approveId, setApproveId] = useState<number | null>(null);
   const [reason, setReason] = useState("");
-  const [lastWorkingDate, setLastWorkingDate] = useState("");
-  const [noticePeriod, setNoticePeriod] = useState("30");
+
+  const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
 
   const handleSubmitResignation = useCallback(() => {
-    if (!reason.trim() || !lastWorkingDate) {
-      toast.error("Reason and last working date are required");
+    if (!reason.trim()) {
+      toast.error("Reason is required");
       return;
     }
     createResignation.mutate(
-      { reason: reason.trim(), lastWorkingDate, noticePeriodDays: Number(noticePeriod) || 30 },
+      { reason: reason.trim(), lastWorkingDate: autoLwd, noticePeriodDays: NOTICE_PERIOD_DAYS },
       {
         onSuccess: () => {
           toast.success("Resignation submitted");
           setSheetOpen(false);
           setReason("");
-          setLastWorkingDate("");
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [reason, lastWorkingDate, noticePeriod, createResignation]);
+  }, [reason, autoLwd, createResignation]);
 
   const handleApprove = useCallback(() => {
     if (!approveId) return;
@@ -109,10 +106,9 @@ export default function ExitManagementPage() {
       {!resignations?.length ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <UserMinus className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
             <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
+              src="/illustrations/undraw-quitting-time.svg"
+              alt="No resignations"
               width={200}
               height={160}
               className="mx-auto mb-4 opacity-90"
@@ -171,19 +167,23 @@ export default function ExitManagementPage() {
       )}
 
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Submit Resignation" onSubmit={handleSubmitResignation} submitLabel="Submit" isPending={createResignation.isPending}>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Reason</label>
-          <Textarea placeholder="Why are you leaving?" value={reason} onChange={(e) => setReason(e.target.value)} rows={4} />
+        <div className="rounded-md border border-border bg-muted/40 px-3 py-2.5 flex items-start gap-2.5 text-xs text-muted-foreground">
+          <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <span>
+            Notice period is <strong className="text-foreground">60 days</strong> as per company policy.
+            Your last working date will be <strong className="text-foreground">{format(addDays(new Date(), NOTICE_PERIOD_DAYS), "dd MMM yyyy")}</strong>.
+          </span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Last Working Date</label>
-            <Input type="date" value={lastWorkingDate} onChange={(e) => setLastWorkingDate(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Notice Period (days)</label>
-            <Input type="number" value={noticePeriod} onChange={(e) => setNoticePeriod(e.target.value)} />
-          </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Reason for Resignation</label>
+          <Textarea placeholder="Please describe your reason for leaving..." value={reason} onChange={(e) => setReason(e.target.value)} rows={4} />
+        </div>
+        <div className="pt-1">
+          <p className="text-xs text-muted-foreground mb-2">Need a template? Download and attach your formal resignation letter:</p>
+          <a href="/Resignation Letter Template.docx" download className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+            <Download className="h-3 w-3" />
+            Download Resignation Letter Template
+          </a>
         </div>
       </HrSheet>
 

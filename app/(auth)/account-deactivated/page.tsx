@@ -3,28 +3,26 @@ import { ShieldOff } from "lucide-react";
 
 export default function AccountDeactivatedPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue/10">
-          <ShieldOff className="h-10 w-10 text-blue" />
-        </div>
-
-        <h1 className="text-2xl font-bold text-blue">
-          Account Deactivated
-        </h1>
-
-        <p className="mt-3 text-gray-600">
-          Your account has been deactivated. Please contact your administrator
-          to restore access.
-        </p>
-
-        <Link
-          href="/signin"
-          className="mt-8 inline-block rounded-lg bg-gold px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gold/85"
-        >
-          Back to Sign In
-        </Link>
+    <div className="w-full max-w-md animate-fade-up text-center">
+      <div className="mx-auto mb-5 h-14 w-14 flex items-center justify-center rounded-2xl bg-destructive/10">
+        <ShieldOff className="h-7 w-7 text-destructive" />
       </div>
+
+      <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+        Account Deactivated
+      </h1>
+
+      <p className="mt-3 text-sm text-muted-foreground">
+        Your account has been deactivated. Please contact your administrator
+        to restore access.
+      </p>
+
+      <Link
+        href="/signin"
+        className="mt-8 inline-block rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/85"
+      >
+        Back to Sign In
+      </Link>
     </div>
   );
 }

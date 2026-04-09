@@ -5,6 +5,8 @@ import { users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { invalidateUserSession } from "@/lib/auth";
+import { sendTerminationEmail } from "@/lib/email";
+import { format } from "date-fns";
 import type { NextRequest } from "next/server";
 
 export async function GET(
@@ -57,6 +59,10 @@ export async function PATCH(
       if (isSelf) return err("You cannot terminate your own account.", 400);
     }
 
+    const targetUser = body.isActive === false
+      ? await db.query.users.findFirst({ where: eq(users.id, targetUserId) })
+      : null;
+
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.designation !== undefined) updateData.designation = body.designation;
@@ -71,6 +77,16 @@ export async function PATCH(
 
     if (body.isActive === false) {
       await invalidateUserSession(targetUserId);
+      if (targetUser?.email) {
+        sendTerminationEmail(
+          targetUser.email,
+          targetUser.name ?? "Employee",
+          targetUser.designation ?? "N/A",
+          format(new Date(), "dd MMM yyyy"),
+          session.user.name ?? "HR",
+          "Termination as per company policy."
+        ).catch(() => undefined);
+      }
     }
 
     return ok({ success: true });

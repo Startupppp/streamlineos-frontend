@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { NavGroup } from "./sidebar-nav-items";
@@ -10,6 +11,8 @@ interface SidebarSectionProps {
   group: NavGroup;
   groupIndex: number;
   isCollapsed: boolean;
+  isGroupCollapsed: boolean;
+  onToggleGroup: () => void;
   pendingLeaves: number;
   unreadChatCount: number;
   onNavigate?: () => void;
@@ -19,21 +22,36 @@ export function SidebarSection({
   group,
   groupIndex,
   isCollapsed,
+  isGroupCollapsed,
+  onToggleGroup,
   pendingLeaves,
   unreadChatCount,
   onNavigate,
 }: SidebarSectionProps) {
   const pathname = usePathname();
 
+  // In icon-only (collapsed sidebar) mode — no accordion, show all items
+  const showItems = isCollapsed || !isGroupCollapsed;
+
   return (
-    <div className={cn(groupIndex > 0 && "mt-3")}>
-      {/* Section label — expanded only */}
+    <div className={cn(groupIndex > 0 && "mt-2")}>
+      {/* Section header — expanded sidebar: clickable accordion toggle */}
       {!isCollapsed && (
-        <div className="px-2 mb-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/30 select-none">
+        <button
+          type="button"
+          onClick={onToggleGroup}
+          className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-white/[0.04] transition-colors"
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/30 group-hover/header:text-sidebar-foreground/50 select-none transition-colors">
             {group.label}
           </span>
-        </div>
+          <ChevronDown
+            className={cn(
+              "h-3 w-3 text-sidebar-foreground/20 group-hover/header:text-sidebar-foreground/40 transition-all duration-200 shrink-0",
+              isGroupCollapsed && "-rotate-90"
+            )}
+          />
+        </button>
       )}
 
       {/* Visual divider between groups in collapsed mode */}
@@ -41,94 +59,97 @@ export function SidebarSection({
         <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" />
       )}
 
-      <div className="space-y-0.5">
-        {group.routes.map((route) => {
-          const isExactMatch = pathname === route.href;
-          const isActive =
-            isExactMatch ||
-            (route.isProjectsList && pathname.startsWith("/projects/"));
+      {/* Route list — hidden when group is collapsed (accordion) */}
+      {showItems && (
+        <div className="space-y-0.5">
+          {group.routes.map((route) => {
+            const isExactMatch = pathname === route.href;
+            const isActive =
+              isExactMatch ||
+              (route.isProjectsList && pathname.startsWith("/projects/"));
 
-          const chatBadge =
-            route.href === "/chat" && unreadChatCount > 0 ? unreadChatCount : 0;
-          const leavesBadge =
-            route.badge === "leaves" && pendingLeaves > 0 ? pendingLeaves : 0;
-          const hasBadge = chatBadge > 0 || leavesBadge > 0;
-          const badgeCount = chatBadge || leavesBadge;
+            const chatBadge =
+              route.href === "/chat" && unreadChatCount > 0 ? unreadChatCount : 0;
+            const leavesBadge =
+              route.badge === "leaves" && pendingLeaves > 0 ? pendingLeaves : 0;
+            const hasBadge = chatBadge > 0 || leavesBadge > 0;
+            const badgeCount = chatBadge || leavesBadge;
 
-          const item = (
-            <Link
-              href={route.href}
-              onClick={onNavigate}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "nav-item group relative",
-                isCollapsed
-                  ? "justify-center w-9 h-9 mx-auto flex"
-                  : "px-2.5 py-1.5 gap-2.5 w-full flex",
-                !isCollapsed && route.isSubItem && "pl-6",
-                isActive && "active"
-              )}
-            >
-              {/* Active indicator strip */}
-              {isActive && !isCollapsed && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-gold" />
-              )}
-
-              {/* Icon */}
-              <route.icon
+            const item = (
+              <Link
+                href={route.href}
+                onClick={onNavigate}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "nav-icon transition-colors duration-150",
-                  route.isSubItem ? "h-3.5 w-3.5" : "h-4 w-4",
-                  isActive && "text-gold"
+                  "nav-item group relative",
+                  isCollapsed
+                    ? "justify-center w-9 h-9 mx-auto flex"
+                    : "px-2.5 py-1.5 gap-2.5 w-full flex",
+                  !isCollapsed && route.isSubItem && "pl-6",
+                  isActive && "active"
                 )}
-              />
+              >
+                {/* Active indicator strip */}
+                {isActive && !isCollapsed && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-gold" />
+                )}
 
-              {/* Label + badge — expanded only */}
-              {!isCollapsed && (
-                <>
-                  <span className="flex-1 truncate text-[0.8125rem]">
-                    {route.label}
-                  </span>
+                {/* Icon */}
+                <route.icon
+                  className={cn(
+                    "nav-icon transition-colors duration-150",
+                    route.isSubItem ? "h-3.5 w-3.5" : "h-4 w-4",
+                    isActive && "text-gold"
+                  )}
+                />
 
-                  {hasBadge && (
-                    <span
-                      className={cn(
-                        "inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none",
-                        chatBadge > 0
-                          ? "bg-red-500 text-white"
-                          : "bg-amber-500 text-white"
-                      )}
-                    >
-                      {badgeCount > 99 ? "99+" : badgeCount}
+                {/* Label + badge — expanded sidebar only */}
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1 truncate text-[0.8125rem]">
+                      {route.label}
                     </span>
-                  )}
-                </>
-              )}
 
-              {/* Collapsed badge dot */}
-              {isCollapsed && hasBadge && (
-                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-sidebar" />
-              )}
-            </Link>
-          );
+                    {hasBadge && (
+                      <span
+                        className={cn(
+                          "inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none",
+                          chatBadge > 0
+                            ? "bg-red-500 text-white"
+                            : "bg-amber-500 text-white"
+                        )}
+                      >
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </span>
+                    )}
+                  </>
+                )}
 
-          if (isCollapsed) {
-            return (
-              <Tooltip key={route.href} delayDuration={0}>
-                <TooltipTrigger asChild>{item}</TooltipTrigger>
-                <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-                  {route.label}
-                  {hasBadge && (
-                    <span className="ml-1.5 opacity-70">({badgeCount})</span>
-                  )}
-                </TooltipContent>
-              </Tooltip>
+                {/* Collapsed badge dot */}
+                {isCollapsed && hasBadge && (
+                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-sidebar" />
+                )}
+              </Link>
             );
-          }
 
-          return <div key={route.href}>{item}</div>;
-        })}
-      </div>
+            if (isCollapsed) {
+              return (
+                <Tooltip key={route.href} delayDuration={0}>
+                  <TooltipTrigger asChild>{item}</TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
+                    {route.label}
+                    {hasBadge && (
+                      <span className="ml-1.5 opacity-70">({badgeCount})</span>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={route.href}>{item}</div>;
+          })}
+        </div>
+      )}
     </div>
   );
 }

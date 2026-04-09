@@ -24,6 +24,9 @@ import {
   getDocumentExpiryReminderEmailTemplate,
   getWeeklyAttendanceReportTemplate,
   getMonthlyExpenseReportTemplate,
+  getResignationSubmittedEmailTemplate,
+  getResignationApprovedEmailTemplate,
+  getTerminationEmailTemplate,
 } from "./email-templates";
 import type { MonthlyExpenseReportRow } from "./email-templates";
 import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx";
@@ -625,6 +628,79 @@ export async function sendMonthlyExpenseReportEmail(
       ],
     });
   }
+}
+
+export async function sendResignationSubmittedEmail(
+  hrEmail: string,
+  hrName: string,
+  employeeName: string,
+  employeeDesignation: string,
+  submissionDate: string,
+  lastWorkingDate: string,
+  noticePeriodDays: number,
+  reason: string
+) {
+  const reviewUrl = `${baseUrl}/hr/exit`;
+  await sendEmail({
+    to: hrEmail,
+    subject: `Resignation Submitted: ${employeeName} - Vaivamm Capital`,
+    html: getResignationSubmittedEmailTemplate(
+      hrName,
+      employeeName,
+      employeeDesignation,
+      submissionDate,
+      lastWorkingDate,
+      noticePeriodDays,
+      reason,
+      reviewUrl
+    ),
+  });
+}
+
+export async function sendResignationApprovedEmail(
+  employeeEmail: string,
+  employeeName: string,
+  approverName: string,
+  lastWorkingDate: string,
+  noticePeriodDays: number,
+  submissionDate: string
+) {
+  const portalUrl = `${baseUrl}/hr/exit`;
+  await sendEmail({
+    to: employeeEmail,
+    subject: `Resignation Accepted - Vaivamm Capital`,
+    html: getResignationApprovedEmailTemplate(
+      employeeName,
+      approverName,
+      lastWorkingDate,
+      noticePeriodDays,
+      submissionDate,
+      portalUrl
+    ),
+  });
+}
+
+export async function sendTerminationEmail(
+  employeeEmail: string,
+  employeeName: string,
+  employeeDesignation: string,
+  terminationDate: string,
+  terminatedBy: string,
+  reason: string
+) {
+  const hrContactEmail = process.env.EMAIL_FROM_ADDRESS || "hr@vaivammcapital.com";
+  await sendEmail({
+    to: employeeEmail,
+    subject: `Employment Termination Notice - Vaivamm Capital`,
+    html: getTerminationEmailTemplate(
+      employeeName,
+      employeeDesignation,
+      terminationDate,
+      terminatedBy,
+      reason,
+      hrContactEmail
+    ),
+  });
 }
 
 export { sendEmail };

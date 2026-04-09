@@ -72,7 +72,7 @@ export const ViewSettingsCard = memo(function ViewSettingsCard({
           View Settings
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pb-5">
         <div className="flex p-1 bg-muted rounded-lg">
           {(["day", "week", "month"] as const).map((mode) => (
             <button

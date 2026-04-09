@@ -19,7 +19,14 @@ const upsertSchema = z.object({
   postsPublished: z.number().default(0),
   storiesReels: z.number().default(0),
   followersTotal: z.number().default(0),
-  engagementRate: z.string().optional(),
+  engagementRate: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => {
+      if (v === undefined || v === null || v === "") return null;
+      const n = typeof v === "number" ? v : Number(v);
+      return Number.isFinite(n) ? n.toFixed(2) : null;
+    }),
   impressions: z.number().default(0),
   reach: z.number().default(0),
   linkClicks: z.number().default(0),

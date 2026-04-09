@@ -81,8 +81,8 @@ export default function SignInPage() {
   return (
     <div className="w-full max-w-sm animate-fade-up">
       {/* Heading */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <div className="mb-5 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Sign in to your account
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
@@ -91,7 +91,7 @@ export default function SignInPage() {
       </div>
 
       {/* Card */}
-      <div className="rounded-xl border border-border bg-card shadow-soft p-6 space-y-5">
+      <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6 space-y-4 sm:space-y-5">
         <form
           onSubmit={form.handleSubmit((v) => signInMutation.mutate(v))}
           aria-busy={isPending}

@@ -109,7 +109,6 @@ export default function CandidateDetailPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/hr/recruitment/candidates"><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back</Link>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setApplyOpen(true)}>Apply to Job</Button>
           <Button size="sm" onClick={() => setInterviewOpen(true)}>Schedule Interview</Button>
         </div>
       }
@@ -190,7 +189,12 @@ export default function CandidateDetailPage() {
 
         <div className="lg:col-span-2 space-y-4">
           <Card>
-            <CardHeader className="p-4 pb-2"><CardTitle className="text-sm">Applications</CardTitle></CardHeader>
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Applications</CardTitle>
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setApplyOpen(true)}>
+                <Briefcase className="h-3 w-3 mr-1" />Apply to Job
+              </Button>
+            </CardHeader>
             <CardContent className="p-4 pt-0">
               {!candidate.applications?.length ? (
                 <div className="py-4">

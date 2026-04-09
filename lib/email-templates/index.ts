@@ -27,6 +27,9 @@ export {
   getLeaveStatusUpdateEmailTemplate,
   getLeaveCancellationEmailTemplate,
   getDocumentExpiryReminderEmailTemplate,
+  getResignationSubmittedEmailTemplate,
+  getResignationApprovedEmailTemplate,
+  getTerminationEmailTemplate,
 } from "./hr";
 
 export {

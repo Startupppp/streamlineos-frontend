@@ -1,7 +1,7 @@
 "use client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useInterviews, useCreateInterview, useUpdateInterview, useCandidates } from "@/lib/api/hooks/hr";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -23,10 +25,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Video, Phone, MapPin, Calendar } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Video, Phone, MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import type { InterviewType, InterviewResult } from "@/types/hr";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 function resultBadgeVariant(result: string | null): "default" | "secondary" | "outline" | "destructive" {
   switch (result) {
@@ -45,11 +48,17 @@ export default function InterviewsPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
+  const [candidatePickerOpen, setCandidatePickerOpen] = useState(false);
   const [candidateId, setCandidateId] = useState("");
   const [type, setType] = useState<InterviewType>("VIDEO");
   const [scheduledAt, setScheduledAt] = useState("");
   const [duration, setDuration] = useState("60");
   const [meetingLink, setMeetingLink] = useState("");
+
+  const selectedCandidate = useMemo(
+    () => allCandidates?.find((c) => String(c.id) === candidateId),
+    [allCandidates, candidateId]
+  );
 
   const handleCreate = useCallback(() => {
     if (!candidateId || !scheduledAt) {
@@ -115,16 +124,54 @@ export default function InterviewsPage() {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Candidate</label>
-                <Select value={candidateId} onValueChange={setCandidateId}>
-                  <SelectTrigger><SelectValue placeholder="Select candidate" /></SelectTrigger>
-                  <SelectContent>
-                    {allCandidates?.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.firstName} {c.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={candidatePickerOpen} onOpenChange={setCandidatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={candidatePickerOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      <span className="truncate">
+                        {selectedCandidate ? `${selectedCandidate.firstName} ${selectedCandidate.lastName}` : "Select candidate"}
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search candidates..." />
+                      <CommandList>
+                        <CommandEmpty>No candidate found.</CommandEmpty>
+                        <CommandGroup>
+                          {allCandidates?.map((c) => {
+                            const value = `${c.firstName} ${c.lastName}`.trim();
+                            const idAsString = String(c.id);
+                            return (
+                              <CommandItem
+                                key={c.id}
+                                value={`${value} ${c.email ?? ""}`}
+                                onSelect={() => {
+                                  setCandidateId(idAsString);
+                                  setCandidatePickerOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    candidateId === idAsString ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                <span className="truncate">{value}</span>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">

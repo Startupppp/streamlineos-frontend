@@ -4,13 +4,14 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -63,83 +64,84 @@ export function CreateOrgDialog({ open, onOpenChange }: CreateOrgDialogProps) {
   }, [createOrgMutation, form, onOpenChange]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="bg-gold hover:bg-gold/90 text-white">
-          <Plus className="h-4 w-4 mr-2" />New Organization
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Create Organization</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <FormField control={form.control} name="name" render={({ field }) => (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="flex flex-col p-0 gap-0 w-full sm:max-w-lg">
+        <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
+          <SheetTitle className="text-base">Create Organization</SheetTitle>
+        </SheetHeader>
+
+        <ScrollArea className="flex-1 min-h-0">
+          <Form {...form}>
+            <form id="create-org-form" onSubmit={form.handleSubmit(onSubmit)} className="px-4 py-4 space-y-4">
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name *</FormLabel>
+                  <FormControl><Input {...field} placeholder="Organization name" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="domain" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl><Input {...field} placeholder="Organization name" /></FormControl>
+                    <FormLabel>Domain</FormLabel>
+                    <FormControl><Input {...field} placeholder="example.com" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="industry" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Industry</FormLabel>
+                    <FormControl><Input {...field} placeholder="e.g. Real Estate" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="size" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company Size</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full h-9"><SelectValue placeholder="Select size" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1-10">1-10</SelectItem>
+                        <SelectItem value="11-50">11-50</SelectItem>
+                        <SelectItem value="51-200">51-200</SelectItem>
+                        <SelectItem value="201-1000">201-1000</SelectItem>
+                        <SelectItem value="1000+">1000+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="website" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website</FormLabel>
+                    <FormControl><Input {...field} placeholder="https://..." /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
-              <FormField control={form.control} name="domain" render={({ field }) => (
+              <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Domain</FormLabel>
-                  <FormControl><Input {...field} placeholder="example.com" /></FormControl>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl><Textarea {...field} rows={3} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="industry" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Industry</FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g. Real Estate" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="size" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company Size</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="w-full h-9"><SelectValue placeholder="Select size" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="1-10">1-10</SelectItem>
-                      <SelectItem value="11-50">11-50</SelectItem>
-                      <SelectItem value="51-200">51-200</SelectItem>
-                      <SelectItem value="201-1000">201-1000</SelectItem>
-                      <SelectItem value="1000+">1000+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="website" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Website</FormLabel>
-                  <FormControl><Input {...field} placeholder="https://..." /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <div className="col-span-2">
-                <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl><Textarea {...field} rows={2} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-            </div>
-            <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-white" disabled={createOrgMutation.isPending}>
-              {createOrgMutation.isPending ? "Creating..." : "Create Organization"}
-            </Button>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+            </form>
+          </Form>
+        </ScrollArea>
+
+        <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={createOrgMutation.isPending}>
+            Cancel
+          </Button>
+          <Button type="submit" form="create-org-form" className="flex-1 bg-gold hover:bg-gold/90 text-white" disabled={createOrgMutation.isPending}>
+            {createOrgMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create Organization
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -31,6 +31,7 @@ interface PayrollTableProps {
   onMarkPaid: (payrollId: number) => void;
   isApprovePending: boolean;
   isMarkPaidPending: boolean;
+  onDownload?: (payrollId: number) => void;
 }
 
 export function PayrollTable({
@@ -40,6 +41,7 @@ export function PayrollTable({
   onMarkPaid,
   isApprovePending,
   isMarkPaidPending,
+  onDownload,
 }: PayrollTableProps) {
   return (
     <Card>
@@ -121,7 +123,11 @@ export function PayrollTable({
                             </Button>
                           )}
                           {payroll.status === "PAID" && (
-                            <Button size="sm" variant="ghost">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => onDownload?.(payroll.id)}
+                            >
                               <Download className="h-3 w-3 mr-1" />
                               Download
                             </Button>

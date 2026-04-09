@@ -92,7 +92,7 @@ export default function BranchManagementPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 pb-4">
                 {(branch.city || branch.state) && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <MapPin className="h-3 w-3" />
@@ -147,12 +147,13 @@ export default function BranchManagementPage() {
 
       {/* Create Branch Sheet */}
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
-        <SheetContent className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Create Branch</SheetTitle>
+        <SheetContent className="sm:max-w-md p-0 gap-0">
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle className="text-sm">Create Branch</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="h-[calc(100vh-8rem)] pr-4">
-            <div className="space-y-4 py-6">
+
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-4 py-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Branch Name *</Label>
@@ -201,19 +202,21 @@ export default function BranchManagementPage() {
                   <Input value={formData.email} onChange={set("email")} placeholder="branch@company.com" />
                 </div>
               </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button variant="outline" className="flex-1" onClick={handleCloseCreate}>Cancel</Button>
-                <Button
-                  className="flex-1"
-                  disabled={!formData.name || !formData.code || createMutation.isPending}
-                  onClick={handleCreate}
-                >
-                  Create Branch
-                </Button>
-              </div>
             </div>
           </ScrollArea>
+
+          <div className="shrink-0 border-t px-4 py-3 bg-background">
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={handleCloseCreate}>Cancel</Button>
+              <Button
+                className="flex-1"
+                disabled={!formData.name || !formData.code || createMutation.isPending}
+                onClick={handleCreate}
+              >
+                Create Branch
+              </Button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </PageWrapper>

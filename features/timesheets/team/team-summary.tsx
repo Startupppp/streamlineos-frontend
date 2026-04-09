@@ -49,14 +49,18 @@ export const TeamSummary = memo(function TeamSummary({
   return (
     <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <Card key={card.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-            <card.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{card.value}</div>
-            <p className="text-xs text-muted-foreground">{card.sub}</p>
+        <Card key={card.title} className="transition-colors hover:border-gold/30">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
+                <div className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{card.value}</div>
+              </div>
+              <div className="shrink-0 rounded-lg bg-muted/60 p-2">
+                <card.icon className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{card.sub}</p>
           </CardContent>
         </Card>
       ))}

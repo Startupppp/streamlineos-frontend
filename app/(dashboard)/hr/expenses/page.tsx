@@ -192,7 +192,7 @@ export default function ExpensesPage() {
         title="Expense Approvals"
         subtitle="Review and manage pending employee expense claims."
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               className="gap-2"

@@ -28,7 +28,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ALL_ROLES = [
   { value: "CEO", label: "CEO" },
@@ -144,144 +144,166 @@ export default function MembersSettingsPage() {
         </Button>
       }
     >
-      <div className="space-y-6">
-      {showInviteForm && (
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base">Invite New Member</CardTitle>
-            <CardDescription>Send an invitation to join your organization</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleInvite} className="flex items-end gap-3">
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="email" className="text-xs">Email</Label>
-                <Input id="email" type="email" placeholder="user@example.com"
-                  value={inviteEmail} onChange={handleEmailChange} required />
-              </div>
-              <div className="w-[180px] space-y-1.5">
-                <Label className="text-xs">Role</Label>
-                <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ALL_ROLES.filter(r => r.value !== "CEO").map(r => (
-                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" disabled={inviteUser.isPending}>
-                {inviteUser.isPending ? "Sending..." : "Send"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+        <Tabs defaultValue="members">
+          <TabsList className="w-full sm:w-fit">
+            <TabsTrigger value="members">
+              Members
+              {membersData && (
+                <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                  {membersData.pagination.total}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="invitations">
+              Invitations
+              {invitations && invitations.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 text-[10px]">
+                  {invitations.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-gold" />
-                Organization Members
-                {membersData && <Badge variant="secondary" className="ml-2 text-xs">{membersData.pagination.total}</Badge>}
-              </CardTitle>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search members..."
-                value={memberSearch}
-                onChange={handleSearchChange}
-                className="pl-8 h-8 text-xs"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="w-full max-h-[60vh]" type="auto">
-            <div className="min-w-max">
-            <Table>
-              <TableHeader className="bg-muted/40">
-                <TableRow>
-                  <TableHead className="text-xs font-semibold px-4">Member</TableHead>
-                  <TableHead className="text-xs font-semibold px-4">Email</TableHead>
-                  <TableHead className="text-xs font-semibold px-4">Role</TableHead>
-                  <TableHead className="text-xs font-semibold px-4">Joined</TableHead>
-                  <TableHead className="text-xs font-semibold px-4 text-right">Change Role</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {membersLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell colSpan={5} className="px-4 py-3">
-                        <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : !membersData?.data.length ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-sm text-muted-foreground">
-                      No members found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  membersData.data.map((member) => (
-                    <MemberTableRow
-                      key={member.userId}
-                      member={member}
-                      onUpdateRole={handleUpdateRole}
+          <TabsContent value="members">
+            {showInviteForm && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Invite New Member</CardTitle>
+                  <CardDescription>Send an invitation to join your organization</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div className="flex-1 space-y-1.5">
+                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="user@example.com"
+                        value={inviteEmail}
+                        onChange={handleEmailChange}
+                        required
+                      />
+                    </div>
+                    <div className="w-full sm:w-[180px] space-y-1.5">
+                      <Label className="text-xs">Role</Label>
+                      <Select value={inviteRole} onValueChange={setInviteRole}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ALL_ROLES.filter(r => r.value !== "CEO").map(r => (
+                            <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="submit" disabled={inviteUser.isPending} className="w-full sm:w-auto">
+                      {inviteUser.isPending ? "Sending..." : "Send"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-gold" />
+                      Organization Members
+                      {membersData && <Badge variant="secondary" className="ml-2 text-xs">{membersData.pagination.total}</Badge>}
+                    </CardTitle>
+                  </div>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search members..."
+                      value={memberSearch}
+                      onChange={handleSearchChange}
+                      className="pl-8 h-8 text-xs"
                     />
-                  ))
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="w-full max-h-[65vh]" type="auto">
+                  <div className="min-w-max">
+                    <Table>
+                      <TableHeader className="bg-muted/40">
+                        <TableRow>
+                          <TableHead className="text-xs font-semibold px-4">Member</TableHead>
+                          <TableHead className="text-xs font-semibold px-4">Email</TableHead>
+                          <TableHead className="text-xs font-semibold px-4">Role</TableHead>
+                          <TableHead className="text-xs font-semibold px-4">Joined</TableHead>
+                          <TableHead className="text-xs font-semibold px-4 text-right">Change Role</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {membersLoading ? (
+                          Array.from({ length: 5 }).map((_, i) => (
+                            <TableRow key={i}>
+                              <TableCell colSpan={5} className="px-4 py-3">
+                                <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : !membersData?.data.length ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-sm text-muted-foreground">
+                              No members found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          membersData.data.map((member) => (
+                            <MemberTableRow
+                              key={member.userId}
+                              member={member}
+                              onUpdateRole={handleUpdateRole}
+                            />
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </ScrollArea>
+                {membersData && membersData.pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-2 border-t">
+                    <span className="text-xs text-muted-foreground">
+                      Page {membersData.pagination.page} of {membersData.pagination.totalPages}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button variant="outline" size="sm" className="h-7 text-xs"
+                        disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
+                      <Button variant="outline" size="sm" className="h-7 text-xs"
+                        disabled={page >= membersData.pagination.totalPages} onClick={handleNextPage}>Next</Button>
+                    </div>
+                  </div>
                 )}
-              </TableBody>
-            </Table>
-            </div>
-          </ScrollArea>
-          {membersData && membersData.pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-2 border-t">
-              <span className="text-xs text-muted-foreground">
-                Page {membersData.pagination.page} of {membersData.pagination.totalPages}
-              </span>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs"
-                  disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs"
-                  disabled={page >= membersData.pagination.totalPages} onClick={handleNextPage}>Next</Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Pending Invitations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invitations && invitations.length > 0 ? (
-            <div className="space-y-2">
-              {invitations.map((inv) => (
-                <InvitationRow key={inv.id} inv={inv} onCancel={handleCancelInvitation} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-3 py-6">
-              <EmptyMailIllustration />
-              <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
-            <p className="text-sm text-muted-foreground">No pending invitations</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      </div>
+          <TabsContent value="invitations">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Pending Invitations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {invitations && invitations.length > 0 ? (
+                  <div className="space-y-2">
+                    {invitations.map((inv) => (
+                      <InvitationRow key={inv.id} inv={inv} onCancel={handleCancelInvitation} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 py-6">
+                    <EmptyMailIllustration />
+                    <p className="text-sm text-muted-foreground">No pending invitations</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
     </PageWrapper>
   );
 }

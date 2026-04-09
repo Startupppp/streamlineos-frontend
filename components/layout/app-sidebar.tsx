@@ -45,6 +45,18 @@ export function AppSidebar({
   );
   const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
 
+  // Accordion state: which groups are collapsed (keyed by group label)
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+
+  const toggleGroup = useCallback((label: string) => {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
   const [pendingLeaves, setPendingLeaves] = useState(0);
 
   useEffect(() => {
@@ -88,6 +100,13 @@ export function AppSidebar({
         bubbles: true,
       })
     );
+  }, []);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("sidebar-groups");
+      if (stored) setCollapsedGroups(JSON.parse(stored));
+    } catch { /* ignore */ }
   }, []);
 
   if (
@@ -209,17 +228,25 @@ export function AppSidebar({
           <nav
             className={cn("py-2", isCollapsed ? "px-1.5" : "px-3")}
           >
-            {navGroups.map((group, i) => (
-              <SidebarSection
-                key={group.label}
-                group={group}
-                groupIndex={i}
-                isCollapsed={isCollapsed}
-                pendingLeaves={pendingLeaves}
-                unreadChatCount={unreadChatCount}
-                onNavigate={onNavigate}
-              />
-            ))}
+            {navGroups.map((group, i) => {
+              const groupLabel = group.label;
+              const isGroupCollapsed = groupLabel in collapsedGroups
+                ? collapsedGroups[groupLabel]
+                : (group.defaultCollapsed ?? false);
+              return (
+                <SidebarSection
+                  key={groupLabel}
+                  group={group}
+                  groupIndex={i}
+                  isCollapsed={isCollapsed}
+                  isGroupCollapsed={isGroupCollapsed}
+                  onToggleGroup={() => toggleGroup(groupLabel)}
+                  pendingLeaves={pendingLeaves}
+                  unreadChatCount={unreadChatCount}
+                  onNavigate={onNavigate}
+                />
+              );
+            })}
           </nav>
         </ScrollArea>
 

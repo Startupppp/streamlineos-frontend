@@ -75,6 +75,7 @@ export default function HrAssetsPage() {
   // Form state
   const [name, setName] = useState("");
   const [type, setType] = useState("Laptop");
+  const [status, setStatus] = useState("AVAILABLE");
   const [serialNumber, setSerialNumber] = useState("");
   const [assignedTo, setAssignedTo] = useState<string>("");
   const [purchaseDate, setPurchaseDate] = useState("");
@@ -104,7 +105,7 @@ export default function HrAssetsPage() {
   );
 
   const resetForm = useCallback(() => {
-    setName(""); setType("Laptop"); setSerialNumber(""); setAssignedTo("");
+    setName(""); setType("Laptop"); setStatus("AVAILABLE"); setSerialNumber(""); setAssignedTo("");
     setPurchaseDate(""); setPurchaseCost(""); setLocation(""); setNotes("");
   }, []);
 
@@ -114,6 +115,7 @@ export default function HrAssetsPage() {
       {
         name: name.trim(),
         type,
+        status,
         serialNumber: serialNumber || undefined,
         assignedTo: assignedTo || undefined,
         purchaseDate: purchaseDate || undefined,
@@ -126,7 +128,7 @@ export default function HrAssetsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [name, type, serialNumber, assignedTo, purchaseDate, purchaseCost, location, notes, createAsset, resetForm]);
+  }, [name, type, status, serialNumber, assignedTo, purchaseDate, purchaseCost, location, notes, createAsset, resetForm]);
 
   return (
     <PageWrapper
@@ -229,9 +231,21 @@ export default function HrAssetsPage() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Serial Number</label>
-            <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="Optional" />
+            <label className="text-sm font-medium">Status</label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AVAILABLE">Available</SelectItem>
+                <SelectItem value="ASSIGNED">Assigned</SelectItem>
+                <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                <SelectItem value="RETIRED">Retired</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Serial Number</label>
+          <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="Optional" />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Assign To</label>

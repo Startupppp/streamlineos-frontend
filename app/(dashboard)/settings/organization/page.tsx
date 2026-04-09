@@ -24,7 +24,7 @@ export default function OrganizationSettingsPage() {
   const role = session?.user?.role;
   const canEdit = role === "CEO" || role === "ADMIN";
 
-  const updateOrg = useUpdateOrgSettings();
+  const {mutate: updateOrg, isPending: isUpdatingOrg} = useUpdateOrgSettings();
 
   const handleStartEdit = useCallback(() => {
     if (!org) return;
@@ -39,7 +39,7 @@ export default function OrganizationSettingsPage() {
 
   const handleSave = useCallback(() => {
     if (!editName.trim()) return;
-    updateOrg.mutate(
+    updateOrg(
       { name: editName.trim(), slug: editSlug.trim() || undefined },
       {
         onSuccess: () => {
@@ -96,11 +96,7 @@ export default function OrganizationSettingsPage() {
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
       <Card>
-        <CardHeader>
-          <CardTitle>Organization Settings</CardTitle>
-          <CardDescription>Manage your organization details</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="py-5 space-y-2">
           <div className="space-y-2">
             <Label htmlFor="name">Organization Name</Label>
             {isEditing ? (
@@ -127,16 +123,18 @@ export default function OrganizationSettingsPage() {
               <Input id="slug" value={org.slug} disabled className="bg-muted" aria-label="Organization slug" />
             )}
           </div>
-          <div className="pt-4 flex gap-2">
+          <div className="flex gap-2">
             {canEdit && !isEditing && (
-              <Button variant="outline" onClick={handleStartEdit}>
-                Edit Organization
+              <Button variant="outline" 
+              disabled={isUpdatingOrg || !editName.trim() || !editSlug.trim()}
+               onClick={handleStartEdit}>
+         Edit Organization 
               </Button>
             )}
             {isEditing && (
               <>
-                <Button onClick={handleSave} disabled={updateOrg.isPending || !editName.trim()}>
-                  {updateOrg.isPending ? (
+                <Button onClick={handleSave} disabled={isUpdatingOrg || !editName.trim()}>
+                  {isUpdatingOrg ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Saving...
@@ -145,7 +143,7 @@ export default function OrganizationSettingsPage() {
                     "Save Changes"
                   )}
                 </Button>
-                <Button variant="ghost" onClick={handleCancelEdit} disabled={updateOrg.isPending}>
+                <Button variant="ghost" onClick={handleCancelEdit} disabled={isUpdatingOrg}>
                   Cancel
                 </Button>
               </>
