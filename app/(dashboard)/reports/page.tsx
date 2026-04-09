@@ -113,7 +113,7 @@ export default function ReportsPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-4">
               <div className="flex gap-2">
                 {report.formats.map(format => (
                   <Button

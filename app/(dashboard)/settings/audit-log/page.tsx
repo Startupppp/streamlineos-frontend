@@ -52,7 +52,7 @@ const ACTION_COLORS: Record<string, string> = {
   "file.upload": "bg-sky-500/10 text-sky-600 border-sky-200",
 };
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 function actionBadgeClass(action: string) {
@@ -127,50 +127,48 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
             Event Details
           </SheetTitle>
         </SheetHeader>
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="px-4 py-3 space-y-4">
-            <DetailField label="Action">
-              <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
-                {log.action}
-              </Badge>
-            </DetailField>
-            <DetailField label="User">
-              <div className="flex items-center gap-2.5">
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={resolveImageUrl(log.userImage)} />
-                  <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium leading-tight">{log.userName ?? "Unknown"}</p>
-                  <p className="text-xs text-muted-foreground">{log.userEmail}</p>
-                </div>
+        <div className="flex-1 min-h-0 px-4 py-3 space-y-4 overflow-hidden">
+          <DetailField label="Action">
+            <Badge variant="outline" className={`text-xs ${actionBadgeClass(log.action)}`}>
+              {log.action}
+            </Badge>
+          </DetailField>
+          <DetailField label="User">
+            <div className="flex items-center gap-2.5">
+              <Avatar className="h-7 w-7">
+                <AvatarImage src={resolveImageUrl(log.userImage)} />
+                <AvatarFallback className="text-[10px]">{getInitials(log.userName)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="text-sm font-medium leading-tight truncate">{log.userName ?? "Unknown"}</p>
+                <p className="text-xs text-muted-foreground truncate">{log.userEmail}</p>
               </div>
+            </div>
+          </DetailField>
+          {log.targetType && (
+            <DetailField label="Target">
+              <p className="text-sm">
+                <span className="font-medium capitalize">{log.targetType}</span>
+                {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
+              </p>
             </DetailField>
-            {log.targetType && (
-              <DetailField label="Target">
-                <p className="text-sm">
-                  <span className="font-medium capitalize">{log.targetType}</span>
-                  {log.targetId && <span className="text-muted-foreground"> #{log.targetId}</span>}
-                </p>
-              </DetailField>
-            )}
-            <DetailField label="Timestamp">
-              <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
+          )}
+          <DetailField label="Timestamp">
+            <p className="text-sm">{format(new Date(log.createdAt), "PPpp")}</p>
+          </DetailField>
+          {log.ipAddress && (
+            <DetailField label="IP Address">
+              <p className="text-sm font-mono">{log.ipAddress}</p>
             </DetailField>
-            {log.ipAddress && (
-              <DetailField label="IP Address">
-                <p className="text-sm font-mono">{log.ipAddress}</p>
-              </DetailField>
-            )}
-            {log.metadata && Object.keys(log.metadata).length > 0 && (
-              <DetailField label="Metadata">
-                <pre className="text-[11px] bg-muted/60 rounded-md p-3 overflow-auto max-h-52 border text-foreground">
-                  {JSON.stringify(log.metadata, null, 2)}
-                </pre>
-              </DetailField>
-            )}
-          </div>
-        </ScrollArea>
+          )}
+          {log.metadata && Object.keys(log.metadata).length > 0 && (
+            <DetailField label="Metadata">
+              <pre className="text-[11px] bg-muted/60 rounded-md p-3 border text-foreground overflow-y-auto overflow-x-hidden whitespace-pre-wrap wrap-break-word max-h-none h-[calc(100vh-360px)] min-h-[120px]">
+                {JSON.stringify(log.metadata, null, 2)}
+              </pre>
+            </DetailField>
+          )}
+        </div>
       </SheetContent>
     </Sheet>
   );
@@ -307,6 +305,7 @@ export default function AuditLogPage() {
     <PageWrapper
       title="Audit Log"
       subtitle="Track all system actions, logins, and changes across your organization."
+      noInternalScroll
       actions={
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-muted-foreground" />
@@ -317,9 +316,9 @@ export default function AuditLogPage() {
       }
       filters={filtersBar}
     >
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="p-0">
+      <div className="flex flex-col gap-4 h-full min-h-0">
+        <Card className="flex-1 min-h-0">
+          <CardContent className="p-0 flex flex-col h-full min-h-0">
             {isLoading ? (
               <div className="p-4 space-y-2">
                 {Array.from({ length: pageSize }).map((_, i) => (
@@ -332,27 +331,33 @@ export default function AuditLogPage() {
                 <p className="text-sm">No audit events found.</p>
               </div>
             ) : (
-              <ScrollArea className="w-full max-h-[60vh]" type="auto">
-                <div className="min-w-[700px]">
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="min-w-[700px] border-b border-border/60 bg-card">
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[170px]">Timestamp</TableHead>
-                        <TableHead className="w-[190px]">User</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead className="w-[110px]">Entity</TableHead>
-                        <TableHead className="w-[110px]">IP Address</TableHead>
-                        <TableHead className="w-[50px]" />
+                        <TableHead className="w-[170px] bg-card">Timestamp</TableHead>
+                        <TableHead className="w-[190px] bg-card">User</TableHead>
+                        <TableHead className="bg-card">Action</TableHead>
+                        <TableHead className="w-[110px] bg-card">Entity</TableHead>
+                        <TableHead className="w-[110px] bg-card">IP Address</TableHead>
+                        <TableHead className="w-[50px] bg-card" />
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {logs.map((log) => (
-                        <LogTableRow key={log.id} log={log} onSelect={setSelectedLog} />
-                      ))}
-                    </TableBody>
                   </Table>
                 </div>
-              </ScrollArea>
+                <ScrollArea className="w-full flex-1 min-h-0" type="auto">
+                  <div className="min-w-[700px]">
+                    <Table>
+                      <TableBody>
+                        {logs.map((log) => (
+                          <LogTableRow key={log.id} log={log} onSelect={setSelectedLog} />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </ScrollArea>
+              </div>
             )}
           </CardContent>
         </Card>

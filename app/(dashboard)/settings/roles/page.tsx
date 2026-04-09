@@ -113,36 +113,39 @@ function RolesContent() {
     <PageWrapper
       title="Roles & Permissions"
       subtitle="Configure access controls for each role"
+      noInternalScroll
       actions={
         <Button onClick={handleOpenCreate} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="h-4 w-4" /> New Role
         </Button>
       }
     >
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <Card className="h-fit">
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr] h-full min-h-0">
+        <Card className="flex flex-col min-h-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Shield className="h-4 w-4" /> Roles ({roles?.length ?? 0})
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 flex-1 min-h-0">
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="divide-y divide-border/30">
-                {(roles ?? []).map((role) => (
-                  <RoleListItem
-                    key={role.id}
-                    role={role}
-                    isSelected={selectedRole?.id === role.id}
-                    onSelect={setSelectedRole}
-                    onDelete={setDeleteTarget}
-                  />
-                ))}
-              </div>
+              <ScrollArea className="h-full" type="auto">
+                <div className="divide-y divide-border/30">
+                  {(roles ?? []).map((role) => (
+                    <RoleListItem
+                      key={role.id}
+                      role={role}
+                      isSelected={selectedRole?.id === role.id}
+                      onSelect={setSelectedRole}
+                      onDelete={setDeleteTarget}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
             )}
           </CardContent>
         </Card>
@@ -154,7 +157,7 @@ function RolesContent() {
             onUpdate={handleUpdateRole}
           />
         ) : (
-          <Card className="flex items-center justify-center min-h-[400px]">
+          <Card className="flex items-center justify-center min-h-0 h-full">
             <div className="text-center px-6">
               <EmptyApprovalIllustration className="mx-auto mb-3 w-40 h-40" />
               <p className="text-sm font-medium text-foreground">Select a role</p>

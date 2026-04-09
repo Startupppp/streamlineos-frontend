@@ -53,7 +53,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "HR – People",
           routes: [
             { label: "Employees", icon: Users, href: "/hr" },
-            { label: "Add Employee", icon: UserPlus, href: "/hr/employees/new", isSubItem: true },
             { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
             { label: "Org Chart", icon: Network, href: "/hr/org-chart", isSubItem: true },
             { label: "Attendance", icon: Clock, href: "/hr/attendance" },
