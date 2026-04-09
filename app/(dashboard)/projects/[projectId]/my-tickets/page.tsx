@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/lib/hooks/trpc-hooks";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { User } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -140,9 +140,13 @@ export default function MyTicketsPage({ params }: PageProps) {
     >
       {myTickets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-            <User className="h-6 w-6 text-muted-foreground" />
-          </div>
+          <Image
+            src="/illustrations/undraw-task-brief.svg"
+            alt="No tickets assigned"
+            width={200}
+            height={160}
+            className="mb-4 opacity-90"
+          />
           <p className="font-medium text-foreground mb-1">No tickets assigned to you</p>
           <p className="text-sm text-muted-foreground">
             Tickets you create or get assigned to will appear here.
@@ -166,7 +170,16 @@ export default function MyTicketsPage({ params }: PageProps) {
               {filteredTickets.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
-                    No tickets match your filters.
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Image
+                        src="/illustrations/undraw-task-brief.svg"
+                        alt="No filtered tickets"
+                        width={160}
+                        height={120}
+                        className="opacity-90"
+                      />
+                      <p>No tickets match your filters.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

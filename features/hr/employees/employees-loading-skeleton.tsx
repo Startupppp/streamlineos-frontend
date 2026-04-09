@@ -4,27 +4,60 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function EmployeesLoadingSkeleton() {
   return (
-    <PageWrapper title="Employees" subtitle="Manage your company directory and employee access">
-      <Card>
+    <PageWrapper
+      title="Employees"
+      subtitle="Manage your company directory and employee access"
+      actions={
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-8 w-32 rounded-md" />
+        </div>
+      }
+      filters={
+        <div className="flex items-center gap-2 w-full">
+          <Skeleton className="h-8 w-48 rounded-md" />
+          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+      }
+      noInternalScroll
+      contentClassName="flex flex-col"
+    >
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
-          <div className="border-b px-4 py-2.5 flex gap-8">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-16" />
-            ))}
+          <div className="border-b px-4 py-3 flex items-center gap-8 bg-muted/30">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-40 hidden md:block" />
+            <Skeleton className="h-4 w-20 hidden lg:block" />
+            <Skeleton className="h-4 w-24 hidden lg:block" />
+            <Skeleton className="h-4 w-16 hidden lg:block" />
+            <Skeleton className="h-4 w-20 hidden xl:block" />
+            <Skeleton className="h-4 w-16 hidden xl:block" />
+            <Skeleton className="h-4 w-16 ml-auto" />
           </div>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-2.5 border-b last:border-0">
-              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-4 w-36 hidden sm:block" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <Skeleton className="h-4 w-24 hidden md:block" />
-              <Skeleton className="h-5 w-16 rounded-full" />
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-8 px-4 py-3 border-b last:border-0">
+              <div className="flex items-center gap-3 min-w-[220px]">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <Skeleton className="h-4 w-44 hidden md:block" />
+              <Skeleton className="h-4 w-28 hidden lg:block" />
+              <Skeleton className="h-4 w-24 hidden lg:block" />
+              <Skeleton className="h-5 w-16 rounded-full hidden lg:block" />
+              <Skeleton className="h-5 w-10 rounded-full hidden xl:block" />
+              <Skeleton className="h-4 w-12 hidden xl:block" />
+              <Skeleton className="h-7 w-10 rounded-md ml-auto" />
             </div>
           ))}
-          <div className="flex items-center justify-between px-4 py-2.5 border-t">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-7 w-24" />
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+            <Skeleton className="h-8 w-36 rounded-md" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-8 w-28 rounded-md" />
+            </div>
+            <Skeleton className="h-8 w-20 rounded-md" />
           </div>
         </CardContent>
       </Card>

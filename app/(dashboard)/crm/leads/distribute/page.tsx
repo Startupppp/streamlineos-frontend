@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import Image from "next/image";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -205,7 +206,16 @@ export default function LeadDistributionPage() {
               ) : filteredLeads.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                    No leads found. Upload leads or adjust filters.
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Image
+                        src="/illustrations/undraw-task-brief.svg"
+                        alt="No leads"
+                        width={180}
+                        height={140}
+                        className="opacity-90"
+                      />
+                      <p>No leads found. Upload leads or adjust filters.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (

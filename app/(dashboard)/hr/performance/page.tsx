@@ -49,6 +49,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Employee, PerformanceReview, Goal, ReviewCycle, OneOnOneMeeting, MeetingStatus } from "@/types/hr";
+import Image from "next/image";
 
 export default function PerformancePage() {
   return (
@@ -163,6 +164,13 @@ function ReviewsTab() {
         <Card>
           <CardContent className="py-12 text-center">
             <Star className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+            <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
             <p className="text-sm text-muted-foreground">No reviews yet. Create your first one.</p>
           </CardContent>
         </Card>

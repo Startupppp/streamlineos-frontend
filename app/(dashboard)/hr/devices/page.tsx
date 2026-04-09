@@ -20,9 +20,10 @@ import {
   Table, TableBody, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import DevicesLoading from "./loading";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Plus, Laptop, Smartphone, Monitor, Keyboard, Loader2, Download } from "lucide-react";
+import { Plus, Laptop, Smartphone, Monitor, Keyboard, Download } from "lucide-react";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { isDeviceStatus } from "@/lib/theme-constants";
@@ -167,13 +168,7 @@ export default function DevicesPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <PageWrapper title="Device Management" subtitle="Track devices assigned to employees">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </PageWrapper>
-    );
+    return <DevicesLoading />;
   }
 
   const viewedDevice = devices?.find(d => d.id === viewDeviceId);

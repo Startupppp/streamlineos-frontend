@@ -18,7 +18,7 @@ import { format, differenceInDays, addDays } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   Plus, CheckCircle2, Clock,
-  UserMinus, Calendar, FileText, Download,
+  Calendar, FileText, Download,
 } from "lucide-react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";

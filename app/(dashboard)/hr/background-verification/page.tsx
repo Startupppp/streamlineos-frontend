@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ShieldCheck, Clock, CheckCircle2, XCircle } from "lucide-react";
 import type { Employee } from "@/types/hr";
+import Image from "next/image";
 
 const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"];
 
@@ -90,7 +91,14 @@ function BGVContent() {
       {!items?.length ? (
         <Card><CardContent className="py-12 text-center">
           <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No background verifications initiated.</p>
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No background verifications initiated.</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-2">

@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImportValidationPreview } from "@/features/hr/expenses/import-validation-preview";
@@ -43,10 +44,12 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
   const [file, setFile] = useState<File | null>(null);
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [categoryMapping, setCategoryMapping] = useState<Record<string, string>>({});
+  const [autoApprove, setAutoApprove] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [importResult, setImportResult] = useState<{
     success: boolean; count: number; skipped: number;
+    skippedReasons?: Array<{ row: number; reason: string }>;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +57,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     setFile(null);
     setParsedRows([]);
     setCategoryMapping({});
+    setAutoApprove(true);
     setImportResult(null);
     setIsImporting(false);
     setIsParsing(false);
@@ -199,13 +203,19 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("autoApprove", String(autoApprove));
       if (Object.keys(categoryMapping).length > 0) {
         formData.append("categoryMapping", JSON.stringify(categoryMapping));
       }
       const response = await fetch("/api/expenses/import", { method: "POST", body: formData });
       const result = await response.json();
       if (response.ok && result.success) {
-        setImportResult({ success: true, count: result.count ?? 0, skipped: result.skipped ?? 0 });
+        setImportResult({
+          success: true,
+          count: result.count ?? 0,
+          skipped: result.skipped ?? 0,
+          skippedReasons: Array.isArray(result.skippedReasons) ? result.skippedReasons : [],
+        });
         toast.success(`Imported ${result.count ?? 0} expense(s) successfully`);
         onSuccess();
       } else {
@@ -217,7 +227,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
     } finally {
       setIsImporting(false);
     }
-  }, [file, categoryMapping, onSuccess]);
+  }, [file, categoryMapping, autoApprove, onSuccess]);
 
   const validCount = parsedRows.filter((r) => r.valid).length;
 
@@ -268,14 +278,14 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             </div>
           </div>
 
-          <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
+          <div className="rounded-lg border border-dashed border-border p-4 space-y-3 sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-full bg-gold/10 flex items-center justify-center text-xs font-bold text-gold">2</div>
               <Label className="text-sm font-semibold">Upload File</Label>
             </div>
 
             {!file ? (
-              <div className="pl-8 cursor-pointer" onClick={handleClickUploadArea}>
+              <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
                 <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-gold/50 hover:bg-gold/5">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground">Click to upload</p>
@@ -283,7 +293,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                 </div>
               </div>
             ) : (
-              <div className="pl-8">
+              <div className="pl-8 min-h-[92px]">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                   <FileText className="h-8 w-8 text-gold shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -305,6 +315,27 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
               onChange={handleFileChange}
               aria-label="Upload expense file"
             />
+          </div>
+
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold">Approval Setting</p>
+                <p className="text-xs text-muted-foreground">
+                  Choose whether imported expenses should be approved immediately.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="auto-approve-expenses"
+                  checked={autoApprove}
+                  onCheckedChange={(checked) => setAutoApprove(checked === true)}
+                />
+                <Label htmlFor="auto-approve-expenses" className="text-sm">
+                  Auto-approve imported expenses
+                </Label>
+              </div>
+            </div>
           </div>
 
           {file && parsedRows.length > 0 && (
@@ -332,6 +363,20 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                   )}
                 </div>
               </div>
+              {importResult.skipped > 0 && (importResult.skippedReasons?.length ?? 0) > 0 && (
+                <details className="mt-3 border-t border-emerald-200/60 pt-3 text-xs">
+                  <summary className="cursor-pointer font-medium text-foreground">
+                    View skipped row reasons
+                  </summary>
+                  <div className="mt-2 max-h-40 overflow-auto space-y-1 rounded-md bg-background/60 p-2">
+                    {importResult.skippedReasons?.map((item, idx) => (
+                      <p key={`${item.row}-${idx}`} className="text-muted-foreground">
+                        Row {item.row}: {item.reason}
+                      </p>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           )}
 

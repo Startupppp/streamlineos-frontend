@@ -23,6 +23,7 @@ import { DealEditForm, type EditFormValues } from "@/features/crm/deals/detail/d
 import { ActivityTimeline } from "@/features/crm/deals/detail/activity-timeline";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 import { AIPredictDealButton } from "@/features/crm/deals/ai-predict-deal-button";
+import Image from "next/image";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
@@ -271,7 +272,14 @@ export default function DealDetailPage({
 
                   {deal.notes && (
                     <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
-                      <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                      <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+                  <p className="text-xs text-muted-foreground mb-1">Notes</p>
                       <p className="text-sm whitespace-pre-wrap">{deal.notes}</p>
                     </div>
                   )}

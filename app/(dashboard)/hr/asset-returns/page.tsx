@@ -19,8 +19,9 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, Package, CheckCircle2, Clock, Laptop } from "lucide-react";
+import { Plus, CheckCircle2, Clock, Laptop } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface AssetReturn {
   id: number; userId: string; employeeName: string | null; assetName: string;
@@ -110,8 +111,21 @@ export default function AssetReturnsPage() {
     >
       {!items?.length ? (
         <Card><CardContent className="py-12 text-center">
-          <Package className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No asset returns tracked.</p>
+          <Image
+            src="/illustrations/undraw-online-survey.svg"
+            alt="No asset returns"
+            width={200}
+            height={160}
+            className="mx-auto mb-4 opacity-90"
+          />
+          <Image
+              src="/illustrations/undraw-online-survey.svg"
+              alt="Empty state illustration"
+              width={200}
+              height={160}
+              className="mx-auto mb-4 opacity-90"
+            />
+            <p className="text-sm text-muted-foreground">No asset returns tracked.</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-2">

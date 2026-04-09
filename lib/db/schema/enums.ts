@@ -32,7 +32,7 @@ export const reviewCycleStatusEnum = pgEnum("review_cycle_status", ["DRAFT", "AC
 export const meetingStatusEnum = pgEnum("meeting_status", ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"]);
 export const trainingStatusEnum = pgEnum("training_status", ["DRAFT", "PUBLISHED", "ARCHIVED"]);
 export const enrollmentStatusEnum = pgEnum("enrollment_status", ["ENROLLED", "IN_PROGRESS", "COMPLETED", "DROPPED"]);
-export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "APPROVED", "WITHDRAWN", "COMPLETED"]);
+export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "PENDING_HR", "HR_APPROVED", "CEO_APPROVED", "IN_PROGRESS", "APPROVED", "WITHDRAWN", "COMPLETED"]);
 export const exitChecklistStatusEnum = pgEnum("exit_checklist_status", ["PENDING", "DONE"]);
 export const ackStatusEnum = pgEnum("ack_status", ["PENDING", "ACKNOWLEDGED", "DECLINED"]);
 export const reimbursementStatusEnum = pgEnum("reimbursement_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
@@ -42,6 +42,10 @@ export const surveyStatusEnum = pgEnum("survey_status", ["DRAFT", "ACTIVE", "CLO
 export const feedbackTypeEnum = pgEnum("feedback_type", ["SELF", "PEER", "MANAGER", "SKIP_LEVEL"]);
 export const bonusTypeEnum = pgEnum("bonus_type", ["PERFORMANCE", "FESTIVAL", "REFERRAL", "SPOT", "ANNUAL"]);
 export const fnfStatusEnum = pgEnum("fnf_status", ["DRAFT", "PENDING_APPROVAL", "APPROVED", "PAID"]);
+export const terminationStatusEnum = pgEnum("termination_status", ["DRAFT", "PENDING_CEO", "APPROVED", "REJECTED", "SENT", "COMPLETED"]);
+export const onboardingDocStatusEnum = pgEnum("onboarding_doc_status", ["PENDING", "IN_PROGRESS", "SUBMITTED", "APPROVED"]);
+export const onboardingDocumentStatusEnum = pgEnum("onboarding_document_status", ["PENDING", "SUBMITTED", "APPROVED", "REJECTED", "RE_UPLOAD_REQUESTED"]);
+export const docAuditActionEnum = pgEnum("doc_audit_action", ["UPLOADED", "APPROVED", "REJECTED", "RE_UPLOAD_REQUESTED", "RE_UPLOADED"]);
 
 // ─── CRM / Leads / Deals ───
 export const leadPipelineStatusEnum = pgEnum("lead_pipeline_status", ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]);

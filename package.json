@@ -17,6 +17,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:loading": "playwright test --project=loading-screenshots",
+    "test:loading:headed": "playwright test --project=loading-screenshots --headed",
     "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts"
   },
   "dependencies": {

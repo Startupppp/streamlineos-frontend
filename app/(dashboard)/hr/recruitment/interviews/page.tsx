@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { Check, ChevronsUpDown, Plus, Video, Phone, MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import type { InterviewType, InterviewResult } from "@/types/hr";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 function resultBadgeVariant(result: string | null): "default" | "secondary" | "outline" | "destructive" {
@@ -226,7 +227,16 @@ export default function InterviewsPage() {
                 </TableHeader>
                 <TableBody>
                   {!interviews?.length ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No interviews scheduled.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
+                      <Image
+                        src="/illustrations/undraw-online-survey.svg"
+                        alt="Empty state illustration"
+                        width={180}
+                        height={140}
+                        className="opacity-90"
+                      />
+                      <p>No interviews scheduled.</p>
+                    </div></TableCell></TableRow>
                   ) : (
                     interviews.map((interview) => (
                       <TableRow key={interview.id}>

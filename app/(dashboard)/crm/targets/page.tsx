@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
+import Image from "next/image";
 
 const METRIC_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },
@@ -73,7 +74,16 @@ function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metri
             </div>
           )}
           {history && history.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">No changes recorded yet.</p>
+            <div className="py-6">
+              <Image
+                src="/illustrations/undraw-online-survey.svg"
+                alt="Empty state illustration"
+                width={200}
+                height={160}
+                className="mx-auto mb-4 opacity-90"
+              />
+              <p className="text-sm text-muted-foreground text-center">No changes recorded yet.</p>
+            </div>
           )}
           {history?.map((h) => (
             <div key={h.id} className="flex items-start gap-3 text-sm border-b pb-2 last:border-0">
