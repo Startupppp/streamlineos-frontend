@@ -77,7 +77,7 @@ async function readRowsFromFile(file: File): Promise<ParsedImportRow[]> {
     file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
   if (isXlsx) {
-    const buf = Buffer.from(await file.arrayBuffer());
+    const buf = Buffer.from(await file.arrayBuffer()) as Buffer;
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buf);
     const ws = workbook.worksheets[0];
