@@ -257,7 +257,7 @@ function PermissionMatrix({
   const isCEO = role.slug === "CEO";
 
   return (
-    <Card>
+    <Card className="flex flex-col min-h-0 h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
@@ -273,7 +273,7 @@ function PermissionMatrix({
         </div>
       </CardHeader>
       <Separator />
-      <ScrollArea className="max-h-[600px]">
+      <ScrollArea className="flex-1 min-h-0" type="auto">
         <div className="divide-y divide-border/30">
           {permissionGroups.map(([groupName, perms]) => (
             <PermissionGroupRow
