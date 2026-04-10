@@ -276,7 +276,7 @@ export function WorkLogFilterActions({
                 <Label className="text-sm font-medium">Department</Label>
                 <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="All departments" /></SelectTrigger>
-                  <SelectContent className="max-h-[200px] overflow-y-auto">
+                  <SelectContent className="max-h-[200px] overflow-y-auto scrollbar-thin">
                     <SelectItem value="all">All Departments</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
