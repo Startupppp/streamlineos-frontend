@@ -22,10 +22,16 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 const createCycleSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required").regex(/^[A-Za-z]/, "Name must start with a letter").max(100),
   description: z.string().optional(),
-  startDate: z.string().min(1, "Start date required"),
-  endDate: z.string().min(1, "End date required"),
+  startDate: z.string().min(1, "Start date required").refine(
+    (v) => { const y = new Date(v).getFullYear(); return y >= 2000 && y <= 2099; },
+    "Year must be between 2000 and 2099"
+  ),
+  endDate: z.string().min(1, "End date required").refine(
+    (v) => { const y = new Date(v).getFullYear(); return y >= 2000 && y <= 2099; },
+    "Year must be between 2000 and 2099"
+  ),
 });
 type CreateCycleForm = z.infer<typeof createCycleSchema>;
 
@@ -120,26 +126,32 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
             <SheetHeader>
               <SheetTitle>Create Cycle</SheetTitle>
             </SheetHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
-              <div>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 p-4">
+              <div className="space-y-1.5">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" {...form.register("name")} />
+                <Input id="name" placeholder="Enter cycle name..." {...form.register("name")} className="capitalize" />
                 {form.formState.errors.name && (
                   <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
                 )}
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" {...form.register("description")} />
+                <Textarea id="description" placeholder="Optional description..." {...form.register("description")} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="startDate">Start Date</Label>
                   <DatePicker id="startDate" value={form.watch("startDate") || ""} onChange={(v) => form.setValue("startDate", v)} placeholder="Start date" />
+                  {form.formState.errors.startDate && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.startDate.message}</p>
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="endDate">End Date</Label>
                   <DatePicker id="endDate" value={form.watch("endDate") || ""} onChange={(v) => form.setValue("endDate", v)} placeholder="End date" />
+                  {form.formState.errors.endDate && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.endDate.message}</p>
+                  )}
                 </div>
               </div>
               <Button type="submit" disabled={createMutation.isPending} className="w-full">
