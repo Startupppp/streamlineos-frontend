@@ -260,7 +260,8 @@ export default function WorkLogsPage() {
       headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
       headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
 
-      for (const date of days) {
+      const filteredDays = days.filter(filterDay);
+      for (const date of filteredDays) {
         const dateStr = format(date, "yyyy-MM-dd");
         const log = logs?.find((l) => l.date === dateStr);
         sheet.addRow({
@@ -283,7 +284,7 @@ export default function WorkLogsPage() {
     } catch {
       toast.error("Failed to export work logs");
     }
-  }, [days, logs, selectedUserId, employees, quarter, year]);
+  }, [days, logs, selectedUserId, employees, quarter, year, filterDay]);
 
   /* ─── Shared filter props passed to both filter components ─── */
   const sharedFilterProps = {
