@@ -251,7 +251,7 @@ export function CreateTicketDialog({
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="E.g. Implement login page" {...field} className="text-base font-medium" />
+                    <Input placeholder="E.g. Implement login page" {...field} className="text-base font-medium capitalize" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

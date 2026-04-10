@@ -53,26 +53,26 @@ export function PayrollTable({
           Manage payroll status and generate payslips
         </CardDescription>
       </CardHeader>
-      <CardContent aria-live="polite" className="p-0">
+      <CardContent aria-live="polite" className="px-0 pb-0 pt-0">
         {payrolls.length > 0 ? (
           <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-[640px]">
-              <Table>
+              <Table className="[&_th]:py-3 [&_td]:py-3">
                 <caption className="sr-only">Payroll records for selected month</caption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Employee</TableHead>
+                    <TableHead className="pl-4">Employee</TableHead>
                     <TableHead>Gross Salary</TableHead>
                     <TableHead>Deductions</TableHead>
                     <TableHead>Net Salary</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right pr-4">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {payrolls.map((payroll) => (
                     <TableRow key={payroll.id}>
-                      <TableCell>
+                      <TableCell className="pl-4">
                         <div>
                           <p className="font-medium whitespace-nowrap">
                             {payroll.user?.firstName} {payroll.user?.lastName}
@@ -99,7 +99,7 @@ export function PayrollTable({
                           {payroll.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right pr-4">
                         <div className="flex justify-end gap-2">
                           {payroll.status === "DRAFT" && (
                             <Button
@@ -141,7 +141,7 @@ export function PayrollTable({
             </div>
           </ScrollArea>
         ) : (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center px-4 py-12 text-muted-foreground">
             <EmptyExpensesIllustration className="mx-auto mb-4 w-40 h-40" />
             <p>No payroll records for this month</p>
             <p className="text-sm">
