@@ -180,7 +180,7 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
 
   return (
     <div className="space-y-6">
-      
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Expense Reports</h2>
@@ -207,7 +207,6 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </div>
       </div>
 
-      
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
@@ -254,9 +253,8 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </Card>
       </div>
 
-      
       <div className="grid gap-6 md:grid-cols-2">
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -294,7 +292,6 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
           </CardContent>
         </Card>
 
-        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -337,7 +334,6 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </Card>
       </div>
 
-      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -389,7 +385,6 @@ export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
         </CardContent>
       </Card>
 
-      
       {isAdmin && byEmployee.length > 0 && (
         <Card>
           <CardHeader>

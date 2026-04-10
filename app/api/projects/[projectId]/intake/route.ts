@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/intake  — list intake requests
- * POST /api/projects/[id]/intake  — create intake request
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, toNumber } from "@/lib/api/helpers";

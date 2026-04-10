@@ -1,8 +1,4 @@
-/**
- * CRM domain: leads, deals, clients, targets, campaigns, contacts, organizations,
- * branches, client accounts, incentives, DM leads, social media stats, SLA, views,
- * email templates, scoring rules, assignment rules.
- */
+
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
@@ -20,7 +16,6 @@ import { organizations, users } from "./auth";
 import { projects } from "./projects";
 import { payrolls } from "./hr";
 
-// ─── CRM Campaigns (shared dependency for leads) ───
 export const crmCampaigns = pgTable("crm_campaigns", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -41,7 +36,6 @@ export const crmCampaigns = pgTable("crm_campaigns", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Leads ───
 export const leads = pgTable("leads", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -144,7 +138,6 @@ export const leadEmails = pgTable("lead_emails", {
   index("idx_lead_emails_lead").on(table.leadId),
 ]);
 
-// ─── Clients ───
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -160,7 +153,7 @@ export const clients = pgTable("clients", {
   accountManagerId: text("account_manager_id").references(() => users.id),
   notes: text("notes"),
   healthScore: integer("health_score").default(50),
-  healthStatus: text("health_status").default("healthy"), // healthy | at_risk | critical
+  healthStatus: text("health_status").default("healthy"),
   lastHealthCheck: timestamp("last_health_check"),
   churnRiskScore: integer("churn_risk_score"),
   churnRiskReasoning: text("churn_risk_reasoning"),
@@ -171,7 +164,6 @@ export const clients = pgTable("clients", {
   index("idx_clients_org").on(table.orgId),
 ]);
 
-// ─── Targets ───
 export const targets = pgTable("targets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -207,7 +199,6 @@ export const targetHistory = pgTable("target_history", {
   index("idx_target_history_target").on(table.targetId),
 ]);
 
-// ─── Deals ───
 export const deals = pgTable("deals", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -255,7 +246,6 @@ export const dealActivities = pgTable("deal_activities", {
   index("idx_deal_activities_org").on(table.orgId),
 ]);
 
-// ─── Sales Quotas ───
 export const salesQuotas = pgTable("sales_quotas", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -273,14 +263,13 @@ export const salesQuotas = pgTable("sales_quotas", {
   index("idx_sales_quotas_org_user").on(table.orgId, table.userId),
 ]);
 
-// ─── Commission Rules & Earned Commissions ───
 export const commissionRules = pgTable("commission_rules", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   name: text("name").notNull(),
-  type: text("type").default("flat_percent").notNull(), // flat_percent | tiered
+  type: text("type").default("flat_percent").notNull(),
   flatRate: decimal("flat_rate"),
-  tiers: jsonb("tiers"), // Array<{ minValue, maxValue?, rate }>
+  tiers: jsonb("tiers"),
   appliesTo: text("applies_to").default("all").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -296,7 +285,7 @@ export const commissions = pgTable("commissions", {
   dealValue: decimal("deal_value").default("0").notNull(),
   commissionRate: decimal("commission_rate").default("0").notNull(),
   commissionAmount: decimal("commission_amount").default("0").notNull(),
-  status: text("status").default("pending").notNull(), // pending | approved | paid
+  status: text("status").default("pending").notNull(),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -304,7 +293,6 @@ export const commissions = pgTable("commissions", {
   index("idx_commissions_deal").on(table.dealId),
 ]);
 
-// ─── Deal Approval Workflow ───
 export const dealApprovalRules = pgTable("deal_approval_rules", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -320,7 +308,7 @@ export const dealApprovals = pgTable("deal_approvals", {
   dealId: integer("deal_id").references(() => deals.id).notNull(),
   requestedBy: text("requested_by").references(() => users.id).notNull(),
   requestedStage: text("requested_stage").notNull(),
-  status: text("status").default("pending").notNull(), // pending | approved | rejected
+  status: text("status").default("pending").notNull(),
   approvedBy: text("approved_by").references(() => users.id),
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -330,7 +318,6 @@ export const dealApprovals = pgTable("deal_approvals", {
   index("idx_deal_approvals_deal").on(table.dealId),
 ]);
 
-// ─── Email Campaigns ───
 export const emailCampaigns = pgTable("email_campaigns", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -369,7 +356,6 @@ export const emailCampaignRecipients = pgTable("email_campaign_recipients", {
   index("idx_ecr_campaign").on(table.campaignId, table.status),
 ]);
 
-// ─── CRM Legacy Tables ───
 export const crmPeople = pgTable("crm_people", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -616,7 +602,6 @@ export const crmOrganizations = pgTable("crm_organizations", {
   index("idx_crm_organizations_org").on(table.orgId),
 ]);
 
-// ─── Branches ───
 export const branches = pgTable("branches", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -639,7 +624,6 @@ export const branches = pgTable("branches", {
   uniqueIndex("uniq_branch_code_org").on(table.orgId, table.code),
 ]);
 
-// ─── Client Accounts ───
 export const clientAccounts = pgTable("client_accounts", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -682,7 +666,6 @@ export const clientAccountActivities = pgTable("client_account_activities", {
   index("idx_client_account_activities_user").on(table.userId),
 ]);
 
-// ─── Incentives ───
 export const incentiveConfig = pgTable("incentive_config", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -718,7 +701,6 @@ export const incentives = pgTable("incentives", {
   index("idx_incentives_status").on(table.status),
 ]);
 
-// ─── DM Leads ───
 export const dmLeads = pgTable("dm_leads", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -745,7 +727,6 @@ export const dmLeads = pgTable("dm_leads", {
   index("idx_dm_leads_platform").on(table.sourcePlatform),
 ]);
 
-// ─── Social Media Stats ───
 export const socialMediaStats = pgTable("social_media_stats", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull().references(() => organizations.id),
@@ -766,7 +747,6 @@ export const socialMediaStats = pgTable("social_media_stats", {
   unique("uniq_social_stats_org_platform_date").on(table.orgId, table.platform, table.date),
 ]);
 
-// ─── Invoices ───
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -800,7 +780,6 @@ export const invoices = pgTable("invoices", {
   index("idx_invoices_due_date").on(table.dueDate),
 ]);
 
-// ─── Payments ───
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -840,7 +819,6 @@ export const invoiceAiExtractions = pgTable("invoice_ai_extractions", {
   index("idx_invoice_ai_extractions_org").on(table.orgId),
 ]);
 
-// ─── Support Tickets ───
 export const supportTickets = pgTable("support_tickets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -877,7 +855,6 @@ export const supportTicketMessages = pgTable("support_ticket_messages", {
   index("idx_support_ticket_messages_author").on(table.authorId),
 ]);
 
-// ─── CRM Relations ───
 export const leadsRelations = relations(leads, ({ one, many }) => ({
   organization: one(organizations, { fields: [leads.orgId], references: [organizations.id] }),
   assignedTo: one(users, { fields: [leads.assignedToId], references: [users.id], relationName: "leadAssignee" }),

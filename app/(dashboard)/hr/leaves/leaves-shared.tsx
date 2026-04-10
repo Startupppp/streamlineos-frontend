@@ -37,8 +37,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getColorSafe, wfhStatusColors } from "@/lib/theme-constants";
 
-/* ─── Types ─── */
-
 export interface LeaveBalance {
   id: number;
   leaveTypeId: number | null;
@@ -107,8 +105,6 @@ export interface WfhRequest {
   } | null;
 }
 
-/* ─── Leave balance card config ─── */
-
 export const balanceCardConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   "Casual Leave": { label: "CASUAL", color: "bg-gold", icon: CalendarDays },
   "Sick Leave": { label: "SICK", color: "bg-red-400", icon: Heart },
@@ -117,23 +113,17 @@ export const balanceCardConfig: Record<string, { label: string; color: string; i
 
 export const DEFAULT_CARD_CONFIG = { label: "LEAVE", color: "bg-slate-400", icon: CalendarDays };
 
-/* ─── Status icon map ─── */
-
 export const statusIconMap: Record<string, React.ElementType> = {
   PENDING: Clock,
   APPROVED: CheckCircle2,
   REJECTED: XCircle,
 };
 
-/* ─── Priority config ─── */
-
 export const priorityConfig: Record<string, { label: string; dotColor: string; textColor: string }> = {
   HIGH: { label: "High", dotColor: "bg-red-500", textColor: "text-red-600 dark:text-red-400" },
   MEDIUM: { label: "Medium", dotColor: "bg-amber-500", textColor: "text-amber-600 dark:text-amber-400" },
   LOW: { label: "Low", dotColor: "bg-emerald-500", textColor: "text-emerald-600 dark:text-emerald-400" },
 };
-
-/* ─── Balance Card ─── */
 
 export const BalanceCard = React.memo(function BalanceCard({
   typeName,
@@ -191,8 +181,6 @@ export const BalanceCard = React.memo(function BalanceCard({
     </Card>
   );
 });
-
-/* ─── WFH Request Item ─── */
 
 export const WfhRequestItem = React.memo(function WfhRequestItem({
   request,
@@ -254,8 +242,6 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
   );
 });
 
-/* ─── Stats Card ─── */
-
 export const StatsCard = React.memo(function StatsCard({
   title,
   value,
@@ -288,8 +274,6 @@ export const StatsCard = React.memo(function StatsCard({
     </Card>
   );
 });
-
-/* ─── Request History Row ─── */
 
 export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   request,

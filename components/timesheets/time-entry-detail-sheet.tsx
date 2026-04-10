@@ -180,13 +180,13 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
                     <div className="relative border rounded-lg overflow-hidden bg-muted/50">
                       {(() => {
                         const imageUrl = entry.imageUrl;
-                        const normalizedUrl = imageUrl.startsWith("http") 
-                          ? imageUrl 
-                          : imageUrl.startsWith("/") 
-                          ? imageUrl 
+                        const normalizedUrl = imageUrl.startsWith("http")
+                          ? imageUrl
+                          : imageUrl.startsWith("/")
+                          ? imageUrl
                           : `/uploads/${imageUrl}`;
                         const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(imageUrl);
-                        
+
                         return isImage && !imageError ? (
                           <div className="relative w-full max-h-[500px] flex items-center justify-center">
                             <Image

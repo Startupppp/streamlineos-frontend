@@ -13,7 +13,6 @@ export async function generateWeeklySalesPerformanceReport(
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  // Query leads from last 7 days with assignedTo info
   const weekLeads = await db.query.leads.findMany({
     where: and(
       eq(leads.orgId, orgId),
@@ -24,7 +23,6 @@ export async function generateWeeklySalesPerformanceReport(
     },
   });
 
-  // Group by salesperson — count assigned and closed/won
   const salesMap = new Map<
     string,
     { name: string; assigned: number; closedOrWon: number }
@@ -44,7 +42,6 @@ export async function generateWeeklySalesPerformanceReport(
     salesMap.set(uid, entry);
   }
 
-  // Query deals closed/won this week (stages WON or LOST in deals table)
   const weekDeals = await db.query.deals.findMany({
     where: and(
       eq(deals.orgId, orgId),
@@ -63,7 +60,6 @@ export async function generateWeeklySalesPerformanceReport(
     0
   );
 
-  // Find CEO + HR recipients
   const memberRows = await db
     .select({
       email: users.email,

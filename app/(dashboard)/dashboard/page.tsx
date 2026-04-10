@@ -354,12 +354,10 @@ export default function DashboardPage() {
         <QuickActions />
       </motion.div>
 
-      {/* Public Documents — visible to all roles */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <PublicDocumentsCard />
       </motion.div>
 
-      {/* HR Widgets — Leave, Holidays, Birthdays, Attendance */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <LeaveBalanceWidget />
         <UpcomingHolidaysWidget />
@@ -373,7 +371,6 @@ export default function DashboardPage() {
         {isAdmin && <PendingApprovalsWidget />}
       </motion.div>
 
-      {/* My Issues + Sprint — shown to all roles */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
         <div className="lg:col-span-4 min-h-0">
           <MyIssuesCard

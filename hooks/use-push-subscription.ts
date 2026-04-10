@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 
-/** Pass the signed-in user id from a server-verified session (e.g. dashboard layout); avoids next-auth SessionProvider context. */
 export function usePushSubscription(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return;
@@ -12,7 +11,7 @@ export function usePushSubscription(userId: string | undefined) {
       .register("/sw.js")
       .then(async (registration) => {
         const existing = await registration.pushManager.getSubscription();
-        if (existing) return; // Already subscribed
+        if (existing) return;
 
         const data = await apiClient.get<{ key: string }>("/push/vapid-public-key");
         if (!data.key) return;
@@ -32,7 +31,7 @@ export function usePushSubscription(userId: string | undefined) {
         });
       })
       .catch(() => {
-        /* Service worker registration failed silently */
+
       });
   }, [userId]);
 }

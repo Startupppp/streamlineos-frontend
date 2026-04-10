@@ -48,7 +48,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Storage not available" }, { status: 503 });
     }
 
-    // Verify user belongs to an organization
     const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id),
     });

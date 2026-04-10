@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       ),
     });
     if (!endpoint) return err("Webhook endpoint not found", 404);
-    // Omit the secret from the response
+
     const { secret: _secret, ...safe } = endpoint;
     return ok(safe);
   });

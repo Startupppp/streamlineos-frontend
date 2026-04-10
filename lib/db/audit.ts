@@ -23,6 +23,6 @@ export async function writeAuditLog(params: AuditParams): Promise<void> {
       ipAddress: params.ipAddress ?? null,
     });
   } catch {
-    // Audit log failure must never break the main operation
+
   }
 }

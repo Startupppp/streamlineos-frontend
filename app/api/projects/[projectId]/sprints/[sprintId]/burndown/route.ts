@@ -1,6 +1,4 @@
-/**
- * GET /api/projects/[id]/sprints/[sprintId]/burndown  — sprint burndown chart data
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";

@@ -1,9 +1,4 @@
-/**
- * Chat domain — TanStack Query hooks (Axios-backed, zero tRPC).
- *
- * Hook names are identical to the old lib/hooks/chat-hooks.ts so that
- * consumers can swap the import path without any further changes.
- */
+
 
 "use client";
 
@@ -32,9 +27,6 @@ import type {
   MessageWithChannel,
 } from "@/types/chat";
 
-// ─── Channel queries ──────────────────────────────────────────────────────────
-
-/** Returns the authenticated user's channel list, refreshed every 30 s. */
 export function useChatChannels(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.myChannels(),
@@ -44,7 +36,6 @@ export function useChatChannels(enabled = true) {
   });
 }
 
-/** Returns a single channel by id (user must be a member). */
 export function useChatChannel(channelId: number) {
   return useQuery({
     queryKey: queryKeys.chat.channel(channelId),
@@ -53,10 +44,6 @@ export function useChatChannel(channelId: number) {
   });
 }
 
-/**
- * Cursor-based infinite list of messages (oldest-first).
- * Pages are fetched backwards: pass `cursor` = previous page's nextCursor.
- */
 export function useChatMessages(channelId: number) {
   return useInfiniteQuery({
     queryKey: queryKeys.chat.messages(channelId),
@@ -71,11 +58,6 @@ export function useChatMessages(channelId: number) {
   });
 }
 
-/**
- * Fallback polling hook: fetches new messages since a given ISO timestamp.
- * Refetches every 30 s — used only when the Ably WebSocket connection is
- * unavailable (e.g. ABLY_API_KEY not set, network issues, etc.).
- */
 export function useChatPoll(channelId: number, since: string, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.chat.poll(channelId, since),
@@ -89,9 +71,6 @@ export function useChatPoll(channelId: number, since: string, enabled: boolean) 
   });
 }
 
-// ─── Presence queries ─────────────────────────────────────────────────────────
-
-/** Returns total unread count across all channels, refreshed every 30 s. */
 export function useChatUnreadTotal(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.unreadTotal(),
@@ -101,7 +80,6 @@ export function useChatUnreadTotal(enabled = true) {
   });
 }
 
-/** Returns online users in the org, refreshed every 30 s. */
 export function useChatOnlineUsers(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.onlineUsers(),
@@ -112,7 +90,6 @@ export function useChatOnlineUsers(enabled = true) {
   });
 }
 
-/** Returns active org members available to DM (excludes self). */
 export function useChatOrgUsers(enabled = true) {
   return useQuery({
     queryKey: queryKeys.chat.orgUsers(),
@@ -121,9 +98,6 @@ export function useChatOrgUsers(enabled = true) {
   });
 }
 
-// ─── Search query ─────────────────────────────────────────────────────────────
-
-/** Full-text message search; only fires when query length >= 2. */
 export function useChatSearchMessages(query: string, channelId?: number) {
   return useQuery({
     queryKey: queryKeys.chat.search(query),
@@ -136,9 +110,6 @@ export function useChatSearchMessages(query: string, channelId?: number) {
   });
 }
 
-// ─── Typing query ─────────────────────────────────────────────────────────────
-
-/** Returns who is currently typing in a channel, polled every 4 s. */
 export function useChatTyping(channelId: number, enabled: boolean) {
   return useQuery({
     queryKey: queryKeys.chat.typing(channelId),
@@ -149,9 +120,6 @@ export function useChatTyping(channelId: number, enabled: boolean) {
   });
 }
 
-// ─── Message mutations ────────────────────────────────────────────────────────
-
-/** Sends a new message with optimistic update for instant UI feedback. */
 export function useSendMessage() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -162,17 +130,15 @@ export function useSendMessage() {
         input
       ),
     onMutate: async (variables) => {
-      // Cancel in-flight refetches to avoid race conditions
+
       await queryClient.cancelQueries({
         queryKey: queryKeys.chat.messages(variables.channelId),
       });
 
-      // Snapshot current data for rollback on error
       const previousData = queryClient.getQueryData<InfiniteData<MessagesPage>>(
         queryKeys.chat.messages(variables.channelId)
       );
 
-      // Build an optimistic message shown immediately
       const optimisticMsg: Message = {
         id: -Date.now(),
         channelId: variables.channelId,
@@ -212,7 +178,7 @@ export function useSendMessage() {
       return { previousData };
     },
     onError: (_err, variables, context) => {
-      // Roll back optimistic update on failure
+
       if (context?.previousData) {
         queryClient.setQueryData(
           queryKeys.chat.messages(variables.channelId),
@@ -229,7 +195,6 @@ export function useSendMessage() {
   });
 }
 
-/** Edits an existing message's content. Invalidates all chat queries on success. */
 export function useEditMessage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -244,7 +209,6 @@ export function useEditMessage() {
   });
 }
 
-/** Soft-deletes a message. Invalidates all chat queries on success. */
 export function useDeleteMessage() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -258,9 +222,6 @@ export function useDeleteMessage() {
   });
 }
 
-// ─── Read / mark-read mutation ────────────────────────────────────────────────
-
-/** Marks a channel as read. Invalidates channel list and unread total. */
 export function useMarkChannelRead() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -273,9 +234,6 @@ export function useMarkChannelRead() {
   });
 }
 
-// ─── Channel mutations ────────────────────────────────────────────────────────
-
-/** Creates a DM channel with another user (returns existing channel if one exists). */
 export function useCreateDMChannel() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -287,7 +245,6 @@ export function useCreateDMChannel() {
   });
 }
 
-/** Creates a new group channel. */
 export function useCreateGroupChannel() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -299,7 +256,6 @@ export function useCreateGroupChannel() {
   });
 }
 
-/** Updates channel metadata (name / description / avatar). Caller must be ADMIN. */
 export function useUpdateChannel() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -317,9 +273,6 @@ export function useUpdateChannel() {
   });
 }
 
-// ─── Presence mutations ───────────────────────────────────────────────────────
-
-/** Sends a heartbeat to keep the user's presence as ONLINE. */
 export function useChatHeartbeat() {
   return useMutation({
     mutationFn: () =>
@@ -327,7 +280,6 @@ export function useChatHeartbeat() {
   });
 }
 
-/** Sets the current user as typing in a channel. */
 export function useSetTyping() {
   return useMutation({
     mutationFn: ({ channelId }: { channelId: number }) =>
@@ -335,12 +287,6 @@ export function useSetTyping() {
   });
 }
 
-// ─── Poll / voting mutations (stubs — Poll feature not yet shipped) ────────────
-
-/**
- * Creates a poll message in a channel.
- * Route handler not yet implemented — placeholder for future use.
- */
 export function useCreatePoll() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -354,10 +300,6 @@ export function useCreatePoll() {
   });
 }
 
-/**
- * Submits a vote on a poll option.
- * Route handler not yet implemented — placeholder for future use.
- */
 export function useVotePoll() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -373,13 +315,8 @@ export function useVotePoll() {
   });
 }
 
-// ─── Backward-compatibility aliases ───────────────────────────────────────────
-
-/** Alias for useMarkChannelRead — kept for backward compatibility. */
 export const useMarkRead = useMarkChannelRead;
 
-/** Alias for useCreateDMChannel — kept for backward compatibility. */
 export const useCreateDM = useCreateDMChannel;
 
-/** Alias for useChatSearchMessages — kept for backward compatibility. */
 export const useChatSearch = useChatSearchMessages;

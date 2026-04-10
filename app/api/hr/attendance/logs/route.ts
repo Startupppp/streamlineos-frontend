@@ -9,7 +9,6 @@ export async function GET(req: NextRequest) {
     const year = searchParams.get("year");
     const month = searchParams.get("month");
 
-    // Non-admin users can only view their own logs
     const role = session.user.role;
     const isAdmin = role === "CEO" || role === "HR" || role === "ADMIN";
     if (userId !== session.user.id && !isAdmin) {

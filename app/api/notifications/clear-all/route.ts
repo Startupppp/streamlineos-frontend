@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
-/** DELETE /api/notifications/clear-all — Delete all notifications for the user */
 export async function DELETE() {
   return withAuth(async (session) => {
     await db

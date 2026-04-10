@@ -11,8 +11,6 @@ import {
   Package,
 } from "lucide-react";
 
-/* ─── Category icon + color mapping ─── */
-
 export const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; label: string; bg: string; text: string }> = {
   Travel:            { icon: Plane,           label: "Travel",    bg: "bg-blue-50 dark:bg-blue-900/20",     text: "text-blue-600 dark:text-blue-400" },
   Meals:             { icon: UtensilsCrossed, label: "Meals",     bg: "bg-orange-50 dark:bg-orange-900/20", text: "text-orange-600 dark:text-orange-400" },
@@ -25,7 +23,6 @@ export const CATEGORY_CONFIG: Record<string, { icon: React.ElementType; label: s
   Utilities:         { icon: Zap,             label: "Utilities", bg: "bg-amber-50 dark:bg-amber-900/20",   text: "text-amber-600 dark:text-amber-400" },
 };
 
-/* Admin card view uses longer labels */
 export const ADMIN_CATEGORY_LABELS: Record<string, string> = {
   Travel: "Travel & Transport",
   Meals: "Meals & Entertainment",
@@ -45,8 +42,6 @@ export function getCategoryConfig(category: string) {
   return CATEGORY_CONFIG[category] || DEFAULT_CATEGORY;
 }
 
-/* ─── Status styles ─── */
-
 export const STATUS_STYLES: Record<string, { dot: string; bg: string; text: string; border: string }> = {
   PENDING:  { dot: "bg-amber-500",   bg: "bg-amber-50 dark:bg-amber-900/20",    text: "text-amber-700 dark:text-amber-400",   border: "border-amber-200 dark:border-amber-800" },
   APPROVED: { dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-400", border: "border-emerald-200 dark:border-emerald-800" },
@@ -60,8 +55,6 @@ export const STATUS_LABELS: Record<string, string> = {
   REJECTED: "Rejected",
   PAID: "Paid",
 };
-
-/* ─── Constants ─── */
 
 export const EXPENSE_CATEGORIES = [
   "Travel", "Meals", "Office Supplies", "Software",

@@ -1,4 +1,4 @@
-// ── Date serialisation ───────────────────────────────────────
+
 
 export function formatDateOnly(date: Date | string | null | undefined): string {
   if (!date) return "";
@@ -32,7 +32,6 @@ export function formatDateOnlyUTC(date: Date | string | null | undefined): strin
   return `${year}-${month}-${day}`;
 }
 
-/** Alias for formatDateOnly — returns "YYYY-MM-DD". */
 export const toISODateString = formatDateOnly;
 
 export function fromISODateString(str: string): Date {
@@ -45,7 +44,6 @@ export function parseDateString(dateString: string): Date {
   return new Date(year, month - 1, day);
 }
 
-/** Safe parser — returns null instead of Invalid Date. */
 export function parseDate(value: unknown): Date | null {
   if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
   if (typeof value === "string" || typeof value === "number") {
@@ -68,12 +66,6 @@ export function compareDates(date1: Date | string, date2: Date | string): number
   return 0;
 }
 
-// ── Display formatting ───────────────────────────────────────
-
-/**
- * Human-readable date for UI display. Replaces scattered toLocaleDateString calls.
- * Returns "12 Mar 2026" by default.
- */
 export function formatDisplayDate(
   date: Date | string | null | undefined,
   options?: Intl.DateTimeFormatOptions,
@@ -85,9 +77,6 @@ export function formatDisplayDate(
   return d.toLocaleDateString(locale, options ?? { day: "numeric", month: "short", year: "numeric" });
 }
 
-/**
- * Returns "12 Mar 2026, 2:30 PM".
- */
 export function formatDisplayDateTime(
   date: Date | string | null | undefined,
   locale: string = "en-IN",
@@ -104,8 +93,6 @@ export function formatDisplayDateTime(
     hour12: true,
   });
 }
-
-// ── Comparisons ──────────────────────────────────────────────
 
 function toDate(value: Date | string): Date {
   return typeof value === "string" ? new Date(value) : value;
@@ -128,8 +115,6 @@ export function isFuture(date: Date | string): boolean {
 export function isPast(date: Date | string): boolean {
   return toDate(date).getTime() < Date.now();
 }
-
-// ── Arithmetic ───────────────────────────────────────────────
 
 export function daysBetween(date1: Date | string, date2: Date | string): number {
   const d1 = toDate(date1);

@@ -31,11 +31,9 @@ export async function PATCH(req: NextRequest) {
 
     if (!user?.password) return err("User not found", 404);
 
-    // Verify current password
     const isCurrentValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentValid) return err("Current password is incorrect", 400);
 
-    // Check password history — prevent reuse of last 5 passwords
     const history = await db.query.passwordHistory.findMany({
       where: eq(passwordHistory.userId, session.user.id),
       orderBy: [desc(passwordHistory.createdAt)],
@@ -52,18 +50,16 @@ export async function PATCH(req: NextRequest) {
     const newHash = await bcrypt.hash(newPassword, 12);
 
     await db.transaction(async (tx) => {
-      // Update user password
+
       await tx.update(users)
         .set({ password: newHash, isPasswordChangeRequired: false })
         .where(eq(users.id, session.user.id));
 
-      // Add to password history
       await tx.insert(passwordHistory).values({
         userId: session.user.id,
         passwordHash: newHash,
       });
 
-      // Prune history to keep only last N entries
       const allHistory = await tx.query.passwordHistory.findMany({
         where: eq(passwordHistory.userId, session.user.id),
         orderBy: [desc(passwordHistory.createdAt)],

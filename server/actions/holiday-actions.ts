@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { holidays, organizationMembers, users, /* notifications */ } from "@/lib/db/schema";
+import { holidays, organizationMembers, users,  } from "@/lib/db/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -99,7 +99,7 @@ export async function sendHolidayNotifications() {
         eq(holidays.notificationSent, false)
       ),
     });
-    // Cache org members to avoid duplicate fetches for holidays in the same org
+
     const orgMembersCache = new Map<string, { userId: string; email: string | null; name: string | null }[]>();
 
     for (const holiday of upcomingHolidays) {
@@ -147,12 +147,6 @@ export async function sendHolidayNotifications() {
         year: "numeric",
       });
       const message = `${holiday.name} is tomorrow (${dateLabel}).${holiday.message ? ` ${holiday.message}` : ""}`;
-      // In-app notifications disabled
-      // for (const row of members) {
-      //   if (row.userId) {
-      //     await db.insert(notifications).values({...});
-      //   }
-      // }
 
       await db
         .update(holidays)

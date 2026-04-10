@@ -132,8 +132,6 @@ export const useRecentActivity = (
   });
 };
 
-// ─── HR Dashboard Widgets ─────────────────────────────────────────────────
-
 export interface LeaveToday {
   id: number;
   userId: string;

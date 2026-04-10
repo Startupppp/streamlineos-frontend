@@ -15,7 +15,6 @@ interface TimelineEvent {
   user?: string;
 }
 
-/** GET /api/clients/[clientId]/timeline — Unified activity timeline for a client */
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { clientId: id } = await ctx.params;
   const clientId = Number(id);
@@ -28,7 +27,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
     const events: TimelineEvent[] = [];
 
-    // Client conversion event
     if (client.convertedAt) {
       events.push({
         id: `conversion-${clientId}`,
@@ -39,7 +37,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       });
     }
 
-    // Deal activities linked to this client
     const clientDeals = await db.select({ id: deals.id, name: deals.name, createdAt: deals.createdAt })
       .from(deals)
       .where(and(eq(deals.orgId, session.orgId), eq(deals.clientId, clientId)));
@@ -80,7 +77,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       }
     }
 
-    // Lead activities if client was converted from a lead
     if (client.leadId) {
       const leadActs = await db
         .select({
@@ -109,7 +105,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
       }
     }
 
-    // Sort by date descending
     events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return ok({ events, total: events.length });

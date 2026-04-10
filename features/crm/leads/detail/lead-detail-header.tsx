@@ -98,7 +98,7 @@ export function LeadDetailHeader({
 
   return (
     <>
-      {/* ── Name / badges / action row ─────────────────────────────────── */}
+
       <motion.div
         variants={fadeUp}
         className="flex items-center gap-4 flex-wrap"
@@ -208,7 +208,6 @@ export function LeadDetailHeader({
         </div>
       </motion.div>
 
-      {/* ── Pipeline stepper ───────────────────────────────────────────── */}
       <motion.div
         variants={fadeUp}
         className="flex items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50 overflow-x-auto"

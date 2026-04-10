@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
 
     const body = createSchema.parse(await req.json());
 
-    // Verify the employee exists in the org
     const employee = await db.query.users.findFirst({
       where: eq(users.id, body.userId),
     });

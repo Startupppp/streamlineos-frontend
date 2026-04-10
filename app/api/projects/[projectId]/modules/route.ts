@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/modules  — list modules for project
- * POST /api/projects/[id]/modules  — create module
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

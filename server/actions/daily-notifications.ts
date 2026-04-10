@@ -17,7 +17,7 @@ export async function sendDailyNotifications() {
   const anniversaryCount = 0;
 
   try {
-    // Find all active users whose dateOfBirth matches today's month and day
+
     const birthdayUsers = await db
       .select({
         id: users.id,
@@ -41,7 +41,6 @@ export async function sendDailyNotifications() {
       return { birthdayCount: 0, leaveCount: 0, anniversaryCount: 0 };
     }
 
-    // Cache org members to avoid duplicate fetches when multiple birthdays in same org
     const orgMembersCache = new Map<string, { email: string; name: string | null }[]>();
 
     async function getOrgMembers(orgId: string) {
@@ -61,7 +60,6 @@ export async function sendDailyNotifications() {
           ? `${birthdayUser.firstName} ${birthdayUser.lastName}`
           : birthdayUser.name || birthdayUser.email;
 
-      // Find which org(s) this user belongs to
       const memberships = await db
         .select({
           orgId: organizationMembers.orgId,
@@ -78,7 +76,6 @@ export async function sendDailyNotifications() {
         const subject = `Happy Birthday, ${displayName}!`;
         const message = `Today is ${displayName}'s birthday! Wish them a wonderful day!`;
 
-        // Create in-app notifications for all org members
         try {
           await notifyAllMembers(membership.orgId, {
             type: "INFO",
@@ -97,7 +94,6 @@ export async function sendDailyNotifications() {
           });
         }
 
-        // Send birthday announcement emails to all active org members
         try {
           const orgMembers = await getOrgMembers(membership.orgId);
 

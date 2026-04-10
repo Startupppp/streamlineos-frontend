@@ -9,7 +9,7 @@ export default function PerformanceLoading() {
       subtitle="Reviews, goals, and team development"
     >
       <div className="space-y-3">
-        {/* Tab bar */}
+
         <div className="h-9 inline-flex items-center gap-2 rounded-md border border-border/60 px-2 py-1 bg-muted/20">
           <Skeleton className="h-7 w-20 rounded-md" />
           <Skeleton className="h-7 w-16 rounded-md" />
@@ -17,13 +17,11 @@ export default function PerformanceLoading() {
           <Skeleton className="h-7 w-16 rounded-md" />
         </div>
 
-        {/* Header row inside active tab */}
         <div className="flex items-center justify-between">
           <Skeleton className="h-4 w-20" />
           <Skeleton className="h-8 w-28 rounded-md" />
         </div>
 
-        {/* Card grid matching Reviews/Goals look */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
@@ -43,7 +41,6 @@ export default function PerformanceLoading() {
           ))}
         </div>
 
-        {/* Secondary list blocks (for 1-on-1s / cycles style) */}
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>

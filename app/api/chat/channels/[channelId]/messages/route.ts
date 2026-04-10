@@ -1,7 +1,4 @@
-/**
- * GET  /api/chat/channels/[id]/messages  — paginated messages (cursor-based)
- * POST /api/chat/channels/[id]/messages  — send a new message (publishes via Ably)
- */
+
 
 import { type NextRequest } from "next/server";
 import Ably from "ably";
@@ -116,13 +113,11 @@ export async function POST(
       .set({ lastMessageAt: new Date(), updatedAt: new Date() })
       .where(eq(chatChannels.id, channelId));
 
-    // Publish the new message to Ably so all subscribers receive it in real time.
-    // Non-fatal: if Ably publish fails, the message is still persisted in the DB.
     if (process.env.ABLY_API_KEY) {
       try {
         const rest = new Ably.Rest(process.env.ABLY_API_KEY);
         const channelName = `chat:${session.orgId}:${channelId}`;
-        // Fire-and-forget: don't await so the HTTP response is returned immediately.
+
         rest.channels.get(channelName).publish("message", {
           id: message.id,
           channelId: message.channelId,
@@ -133,11 +128,10 @@ export async function POST(
           replyToId: message.replyToId,
         }).catch(() => {});
       } catch {
-        // Swallow: delivery falls back to the polling mechanism in the client.
+
       }
     }
 
-    // Fire-and-forget Web Push to channel members (works even when browser tab is closed)
     sendPushToChannelMembers(channelId, session.user.id, {
       title: session.user.name ?? "New message",
       body: message.content?.slice(0, 80) ?? "Sent an attachment",

@@ -69,10 +69,10 @@ export async function updateBankDetails(formData: FormData) {
 export async function uploadOnboardingDocument(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
-  
+
   const file = formData.get("file") as File;
   const docType = formData.get("type") as "CONTRACT" | "CERTIFICATE" | "ID_PROOF" | "PAYSLIP" | "POLICY" | "OFFER_LETTER" | "RESUME" | "OTHER";
-  
+
   if (!file) return { error: "No file provided" };
 
   try {
@@ -137,7 +137,7 @@ async function updateOnboardingStep(userId: string, stepName: string, status: "P
         });
         targetOrgId = userOrg?.orgId;
     }
-    
+
     if (!targetOrgId) return;
     const existing = await db.query.onboardingSteps.findFirst({
         where: and(
@@ -156,7 +156,7 @@ async function updateOnboardingStep(userId: string, stepName: string, status: "P
             orgId: targetOrgId,
             stepName,
             status,
-            completedAt: status === 'COMPLETED' ? new Date() : null 
+            completedAt: status === 'COMPLETED' ? new Date() : null
         });
     }
 }

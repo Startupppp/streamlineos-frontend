@@ -17,7 +17,6 @@ export interface NotificationPayload {
   recipientEmail?: string;
 }
 
-// Events that should trigger email notifications
 const EMAIL_EVENTS = [
   "Lead Assigned",
   "Lead Converted",
@@ -27,17 +26,13 @@ const EMAIL_EVENTS = [
   "SLA Breach",
 ];
 
-/**
- * Unified notification sender.
- * Creates in-app notification and optionally sends email for critical events.
- */
 export async function sendNotification(payload: NotificationPayload): Promise<void> {
   const channel = payload.channel || "in_app";
   const isEmailEvent = EMAIL_EVENTS.some(e => payload.title.includes(e));
   const shouldEmail = channel === "email" || channel === "both" || isEmailEvent;
 
   try {
-    // Always create in-app notification
+
     await db.insert(notifications).values({
       orgId: payload.orgId,
       userId: payload.userId,
@@ -50,7 +45,6 @@ export async function sendNotification(payload: NotificationPayload): Promise<vo
       metadata: payload.metadata,
     });
 
-    // Send email for critical events
     if (shouldEmail && payload.recipientEmail) {
       const baseUrl = appUrl;
       try {

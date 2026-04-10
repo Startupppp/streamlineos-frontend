@@ -167,7 +167,7 @@ export function SettingsProfile() {
 
   return (
     <>
-      {/* Avatar row */}
+
       <div className="flex items-center gap-4 mb-6">
         <div className="relative group shrink-0">
           <Avatar className="h-16 w-16 ring-2 ring-border">
@@ -231,9 +231,8 @@ export function SettingsProfile() {
         </div>
       </div>
 
-      {/* Fields */}
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* Name */}
+
         <div className="space-y-1.5">
           <Label htmlFor="display-name" className="text-[13px] font-medium">Display name</Label>
           {isEditingName ? (
@@ -284,7 +283,6 @@ export function SettingsProfile() {
           )}
         </div>
 
-        {/* Email (read-only) */}
         <div className="space-y-1.5">
           <Label htmlFor="email-display" className="text-[13px] font-medium">Email address</Label>
           <Input

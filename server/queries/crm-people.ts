@@ -10,8 +10,6 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 
-// ─── CRM People (slug-based profiles) ────────────────────────────────────────
-
 function computeTrend(current: number, previous: number) {
   if (previous === 0) return { value: 0, isPositive: true };
   const change = ((current - previous) / previous) * 100;

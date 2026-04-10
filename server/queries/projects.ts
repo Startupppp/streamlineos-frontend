@@ -1,10 +1,5 @@
 "server-only";
 
-/**
- * Server-side DB query functions for the Projects domain.
- * All functions are org-scoped and return raw DB rows.
- */
-
 import { db } from "@/lib/db";
 import {
   projects,
@@ -29,8 +24,6 @@ import type {
   TicketFilters,
   TimeEntryFilters,
 } from "@/types/projects";
-
-// ─── Projects ─────────────────────────────────────────────────────────────────
 
 export async function getProjects(orgId: string, filters?: ProjectFilters) {
   const conditions = [eq(projects.orgId, orgId)];
@@ -77,8 +70,6 @@ export async function getProject(orgId: string, id: number) {
     },
   });
 }
-
-// ─── Tickets ──────────────────────────────────────────────────────────────────
 
 export async function getTickets(
   orgId: string,
@@ -145,8 +136,6 @@ export async function getTicket(orgId: string, id: number) {
   });
 }
 
-// ─── Sprints ──────────────────────────────────────────────────────────────────
-
 export async function getSprints(orgId: string, projectId?: number) {
   const conditions = [eq(sprints.orgId, orgId)];
   if (projectId) {
@@ -193,8 +182,6 @@ export async function getSprintBurndown(sprintId: number, orgId: string) {
 
   return { sprint, totalPoints, allTimeEntries };
 }
-
-// ─── Time Entries ─────────────────────────────────────────────────────────────
 
 export async function getTimeEntries(orgId: string, filters?: TimeEntryFilters) {
   const conditions = [eq(timesheets.orgId, orgId)];
@@ -246,8 +233,6 @@ export async function getMyTimeEntries(
   return getTimeEntries(orgId, { ...filters, userId });
 }
 
-// ─── Project Members ──────────────────────────────────────────────────────────
-
 export async function getProjectMembers(projectId: number) {
   return db
     .select({
@@ -285,16 +270,12 @@ export async function getOrgMembersForProject(orgId: string) {
     );
 }
 
-// ─── Labels ───────────────────────────────────────────────────────────────────
-
 export async function getProjectLabels(orgId: string) {
   return db.query.ticketLabels.findMany({
     where: eq(ticketLabels.orgId, orgId),
     orderBy: [desc(ticketLabels.createdAt)],
   });
 }
-
-// ─── Analytics ────────────────────────────────────────────────────────────────
 
 export async function getProjectAnalytics(orgId: string, projectId: number) {
   const orgFilter = and(
@@ -372,8 +353,6 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
   };
 }
 
-// ─── Epics ────────────────────────────────────────────────────────────────────
-
 export async function getEpics(orgId: string, projectId: number) {
   return db.query.tickets.findMany({
     where: and(
@@ -385,8 +364,6 @@ export async function getEpics(orgId: string, projectId: number) {
     orderBy: [desc(tickets.createdAt)],
   });
 }
-
-// ─── Cycles ───────────────────────────────────────────────────────────────────
 
 export async function getCycles(orgId: string, projectId: number, status?: string) {
   const conditions = [
@@ -403,8 +380,6 @@ export async function getCycles(orgId: string, projectId: number, status?: strin
     .orderBy(cycles.startDate);
 }
 
-// ─── Modules ──────────────────────────────────────────────────────────────────
-
 export async function getModules(orgId: string, projectId: number) {
   return db
     .select()
@@ -413,8 +388,6 @@ export async function getModules(orgId: string, projectId: number) {
     .orderBy(modules.name);
 }
 
-// ─── Pages ────────────────────────────────────────────────────────────────────
-
 export async function getPages(orgId: string, projectId: number) {
   return db
     .select()
@@ -422,8 +395,6 @@ export async function getPages(orgId: string, projectId: number) {
     .where(and(eq(pages.projectId, projectId), eq(pages.orgId, orgId)))
     .orderBy(asc(pages.title));
 }
-
-// ─── Views ────────────────────────────────────────────────────────────────────
 
 export async function getViews(orgId: string, projectId: number) {
   return db
@@ -434,8 +405,6 @@ export async function getViews(orgId: string, projectId: number) {
     )
     .orderBy(desc(projectViews.isPinned), projectViews.name);
 }
-
-// ─── Intake ───────────────────────────────────────────────────────────────────
 
 export async function getIntakeRequests(
   orgId: string,
@@ -457,8 +426,6 @@ export async function getIntakeRequests(
     .where(and(...conditions))
     .orderBy(desc(intakeItems.createdAt));
 }
-
-// ─── Custom States ────────────────────────────────────────────────────────────
 
 export async function getCustomStates(orgId: string, projectId: number) {
   return db

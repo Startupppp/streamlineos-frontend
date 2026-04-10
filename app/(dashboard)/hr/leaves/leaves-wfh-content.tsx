@@ -62,7 +62,6 @@ export function LeavesWfhContent({
   const handleOpenLeaveSheet = useCallback(() => setLeaveSheetOpen(true), []);
   const handleOpenWfhSheet = useCallback(() => setWfhSheetOpen(true), []);
 
-  // Stats
   const totalAvailable = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
   const pendingCount = myLeaveRequests.filter((r) => r.status === "PENDING").length;
   const approvedCount = myLeaveRequests.filter((r) => r.status === "APPROVED").length;
@@ -95,7 +94,7 @@ export function LeavesWfhContent({
         }
       >
         <div className="space-y-5">
-          {/* Stat Cards */}
+
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard
               label="Available Days"
@@ -117,7 +116,6 @@ export function LeavesWfhContent({
             />
           </div>
 
-          {/* Who's Out Banner */}
           {approvedLeavesThisWeek.length > 0 && (
             <Card className="border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10">
               <CardHeader className="pb-3">
@@ -164,7 +162,6 @@ export function LeavesWfhContent({
             </Card>
           )}
 
-          {/* Tabs */}
           <Tabs defaultValue="my-leaves">
             <TabsList className="bg-muted/50 border border-border p-1 rounded-lg h-auto gap-1">
               <TabsTrigger

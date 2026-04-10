@@ -1,9 +1,4 @@
-/**
- * Chat domain — shared TypeScript types.
- * Used by server/queries/chat.ts, route handlers, and client hooks.
- */
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
 
 export type ChannelType = "DIRECT" | "GROUP";
 
@@ -12,8 +7,6 @@ export type ChannelMemberRole = "ADMIN" | "MEMBER";
 export type MessageType = "text" | "lead_submission" | "system";
 
 export type PresenceStatus = "ONLINE" | "AWAY" | "OFFLINE";
-
-// ─── Core entities ────────────────────────────────────────────────────────────
 
 export interface ChannelMember {
   id: number;
@@ -90,7 +83,6 @@ export interface Message {
   replyTo: MessageReplyTo | null;
 }
 
-/** Message with channel info attached (used by search results). */
 export interface MessageWithChannel extends Message {
   channel: { id: number; name: string; type: ChannelType } | null;
 }
@@ -116,14 +108,10 @@ export interface OrgUser {
   role: string | null;
 }
 
-// ─── Paginated message response ───────────────────────────────────────────────
-
 export interface MessagesPage {
   messages: Message[];
   nextCursor?: number;
 }
-
-// ─── Input types ──────────────────────────────────────────────────────────────
 
 export interface CreateDMInput {
   targetUserId: string;
@@ -180,7 +168,7 @@ export interface GetMessagesParams {
 }
 
 export interface PollMessagesParams {
-  since: string; // ISO timestamp
+  since: string;
 }
 
 export interface SearchMessagesParams {
@@ -188,8 +176,6 @@ export interface SearchMessagesParams {
   channelId?: number;
   limit?: number;
 }
-
-// ─── Poll / voting types (placeholder for future extension) ──────────────────
 
 export interface PollOption {
   id: number;
@@ -223,8 +209,6 @@ export interface VotePollInput {
   pollId: number;
   optionId: number;
 }
-
-// ─── API response shapes ──────────────────────────────────────────────────────
 
 export interface UnreadTotalResponse {
   total: number;

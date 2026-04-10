@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects  — list projects (role-scoped)
- * POST /api/projects  — create project (admin only)
- */
+
 
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, withAdmin, ok, err, parseBody, toNumber } from "@/lib/api/helpers";

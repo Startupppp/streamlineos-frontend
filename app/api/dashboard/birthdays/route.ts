@@ -19,7 +19,7 @@ function occursInNextSevenDays(dateValue: Date | string | null | undefined, toda
 
 export async function GET() {
   return withAuth(async (session) => {
-    // Get birthdays and work anniversaries coming up this week
+
     const data = await db
       .select({
         id: users.id,

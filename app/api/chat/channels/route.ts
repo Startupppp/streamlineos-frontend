@@ -1,7 +1,4 @@
-/**
- * GET  /api/chat/channels  — list the authenticated user's channels
- * POST /api/chat/channels  — create a DM or group channel
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -51,7 +48,6 @@ export async function POST(req: NextRequest) {
     if (body.type === "DIRECT") {
       const { targetUserId } = body;
 
-      // Check if DM already exists between the two users
       const myMemberships = await db
         .select({ channelId: chatChannelMembers.channelId })
         .from(chatChannelMembers)
@@ -77,7 +73,6 @@ export async function POST(req: NextRequest) {
         if (dmChannel) return ok(dmChannel);
       }
 
-      // Create new DM channel
       const [targetUser, currentUser] = await Promise.all([
         db.query.users.findFirst({
           where: eq(users.id, targetUserId),
@@ -107,7 +102,6 @@ export async function POST(req: NextRequest) {
       return ok(channel, 201);
     }
 
-    // GROUP channel
     const { name, description, avatarUrl, memberIds } = body;
 
     const [channel] = await db

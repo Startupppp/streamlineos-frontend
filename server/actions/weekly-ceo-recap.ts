@@ -41,7 +41,6 @@ export async function generateAndSendWeeklyCeoRecap() {
         continue;
       }
 
-      // Run all independent count queries in parallel
       const [
         [employeeCount],
         [newLeadCount],

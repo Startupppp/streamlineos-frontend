@@ -50,7 +50,6 @@ export function useChatRealtime(channelId: number | null): { isConnected: boolea
     () => ably.connection.state === "connected"
   );
 
-  // Track Ably connection state changes
   useEffect(() => {
     const handleConnected = () => setIsConnected(true);
     const handleDisconnected = () => setIsConnected(false);
@@ -60,7 +59,6 @@ export function useChatRealtime(channelId: number | null): { isConnected: boolea
     ably.connection.on("failed", handleDisconnected);
     ably.connection.on("suspended", handleDisconnected);
 
-    // Sync initial state
     setIsConnected(ably.connection.state === "connected");
 
     return () => {
@@ -101,7 +99,6 @@ export function useChatRealtime(channelId: number | null): { isConnected: boolea
 
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
 
-      // Always show a Chrome desktop notification for messages from other users
       if (
         payload.senderId !== currentUserId &&
         typeof window !== "undefined" &&

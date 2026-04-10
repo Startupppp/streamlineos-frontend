@@ -1,9 +1,4 @@
-/**
- * TypeScript types for the Projects domain.
- * Derived from Drizzle schema + tRPC router shapes.
- */
 
-// ─── Enums ──────────────────────────────────────────────────────────────────
 
 export type ProjectStatusValue = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 
@@ -45,8 +40,6 @@ export type WorkItemRelationType =
   | "relates_to";
 
 export type TimesheetStatus = "PENDING" | "APPROVED" | "REJECTED";
-
-// ─── Core Entities ──────────────────────────────────────────────────────────
 
 export interface ProjectSettings {
   modules: {
@@ -127,8 +120,6 @@ export interface ProjectListItem {
   }[];
 }
 
-// ─── Sprint ──────────────────────────────────────────────────────────────────
-
 export interface Sprint {
   id: number;
   orgId: string;
@@ -152,8 +143,6 @@ export interface SprintBurndown {
   idealBurndown: SprintBurndownPoint[];
   actualBurndown: SprintBurndownPoint[];
 }
-
-// ─── Ticket ──────────────────────────────────────────────────────────────────
 
 export interface TicketUser {
   id: string;
@@ -263,8 +252,6 @@ export interface Ticket {
   sprint?: { id: number; name: string } | null;
 }
 
-// ─── Time Entry ──────────────────────────────────────────────────────────────
-
 export interface TimeEntry {
   id: number;
   orgId: string;
@@ -301,8 +288,6 @@ export interface TimeEntryWithUser extends TimeEntry {
   } | null;
 }
 
-// ─── Cycle ───────────────────────────────────────────────────────────────────
-
 export interface Cycle {
   id: number;
   projectId: number;
@@ -331,8 +316,6 @@ export interface CycleWithStats extends Cycle {
   workItems?: Ticket[];
 }
 
-// ─── Module ──────────────────────────────────────────────────────────────────
-
 export interface Module {
   id: number;
   projectId: number;
@@ -351,12 +334,7 @@ export interface Module {
   progress?: number;
 }
 
-// ─── Epic ────────────────────────────────────────────────────────────────────
-
-/** Epics are tickets with type === "EPIC" */
 export type Epic = Ticket;
-
-// ─── Project Page ────────────────────────────────────────────────────────────
 
 export interface ProjectPage {
   id: number;
@@ -375,8 +353,6 @@ export interface ProjectPage {
   children?: ProjectPage[];
 }
 
-// ─── Project View ─────────────────────────────────────────────────────────────
-
 export interface ProjectView {
   id: number;
   projectId: number;
@@ -391,8 +367,6 @@ export interface ProjectView {
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
 }
-
-// ─── Intake ──────────────────────────────────────────────────────────────────
 
 export interface IntakeRequest {
   id: number;
@@ -409,8 +383,6 @@ export interface IntakeRequest {
   updatedAt: string | Date | null;
 }
 
-// ─── Custom State ─────────────────────────────────────────────────────────────
-
 export interface CustomState {
   id: number;
   projectId: number;
@@ -422,8 +394,6 @@ export interface CustomState {
   isDefault: boolean;
   createdAt: string | Date | null;
 }
-
-// ─── Analytics ───────────────────────────────────────────────────────────────
 
 export interface ProjectAnalytics {
   stateDistribution: { status: string; count: number }[];
@@ -447,8 +417,6 @@ export interface ProjectAnalytics {
   }[];
 }
 
-// ─── Paginated Response ──────────────────────────────────────────────────────
-
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -456,8 +424,6 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
-
-// ─── Input Types ─────────────────────────────────────────────────────────────
 
 export interface CreateProjectInput {
   name: string;

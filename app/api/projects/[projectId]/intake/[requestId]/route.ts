@@ -1,13 +1,4 @@
-/**
- * PATCH /api/projects/[id]/intake/[requestId]  — update intake request status
- *
- * Supports status transitions:
- *   - "accepted"  → creates a linked work item (ticket) in a transaction
- *   - "declined"  → requires declineReason
- *   - "duplicate" → requires linkedWorkItemId
- *
- * Only PENDING requests can be transitioned.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -45,7 +36,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
 
     if (body.status === "accepted") {
-      // Create a linked work item in a transaction
+
       return db.transaction(async (tx) => {
         const [maxTicket] = await tx
           .select({ max: sql<number>`COALESCE(MAX(${tickets.ticketNumber}), 0)` })

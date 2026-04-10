@@ -35,12 +35,10 @@ export async function GET(
     });
     if (!data) return err("Resignation not found.", 404);
 
-    // Employees can only see their own
     if (!isAdminOrOwner(session.user.role) && data.userId !== session.user.id) {
       return err("Forbidden", 403);
     }
 
-    // Build progress timeline
     const progress = buildProgressTimeline(data);
 
     return ok({ ...data, progress });
@@ -64,7 +62,6 @@ export async function PATCH(
     const body = updateSchema.parse(await req.json());
     const role = session.user.role;
 
-    // ─── HR Review ───
     if (body.status === "HR_APPROVED") {
       if (role !== "HR" && role !== "CEO") return err("Only HR can perform HR review.", 403);
       if (existing.status !== "PENDING_HR" && existing.status !== "SUBMITTED") {
@@ -81,7 +78,6 @@ export async function PATCH(
       return ok({ success: true });
     }
 
-    // ─── CEO Review ───
     if (body.status === "CEO_APPROVED") {
       if (role !== "CEO") return err("Only CEO can approve at this stage.", 403);
       if (existing.status !== "HR_APPROVED") {
@@ -97,7 +93,6 @@ export async function PATCH(
         updatedAt: new Date(),
       }).where(eq(resignations.id, resignationId));
 
-      // Auto-create FnF settlement draft
       await db.insert(fnfSettlements).values({
         orgId: session.orgId,
         userId: existing.userId,
@@ -105,7 +100,6 @@ export async function PATCH(
         status: "DRAFT",
       }).onConflictDoNothing();
 
-      // Send approval email to employee
       const employee = await db.query.users.findFirst({
         where: eq(users.id, existing.userId),
       });
@@ -125,7 +119,6 @@ export async function PATCH(
       return ok({ success: true });
     }
 
-    // ─── Rejection ───
     if (body.status === "REJECTED") {
       if (!isAdminOrOwner(role)) return err("Only admins can reject.", 403);
       if (!body.remarks) return err("Remarks are required when rejecting.", 400);
@@ -148,7 +141,6 @@ export async function PATCH(
       return ok({ success: true });
     }
 
-    // ─── Withdraw (Employee only, before CEO approval) ───
     if (body.status === "WITHDRAWN") {
       if (existing.userId !== session.user.id) return err("Only the employee can withdraw.", 403);
       if (existing.status === "CEO_APPROVED" || existing.status === "COMPLETED" || existing.status === "IN_PROGRESS") {
@@ -161,7 +153,6 @@ export async function PATCH(
       return ok({ success: true });
     }
 
-    // ─── Complete ───
     if (body.status === "COMPLETED") {
       if (!isAdminOrOwner(role)) return err("Only admins can complete.", 403);
       await db.update(resignations).set({
@@ -171,7 +162,6 @@ export async function PATCH(
       return ok({ success: true });
     }
 
-    // ─── Generic updates (interview notes, feedback, checklist) ───
     await db.update(resignations).set({
       ...(body.exitInterviewNotes && { exitInterviewNotes: body.exitInterviewNotes }),
       ...(body.exitInterviewDate && { exitInterviewDate: new Date(body.exitInterviewDate), exitInterviewConductedBy: session.user.id }),
@@ -193,7 +183,6 @@ export async function PATCH(
   });
 }
 
-// Build progress timeline for the stepper UI
 function buildProgressTimeline(resignation: Record<string, unknown>) {
   const steps = [
     {

@@ -125,10 +125,10 @@ export default function OrganizationSettingsPage() {
           </div>
           <div className="flex gap-2">
             {canEdit && !isEditing && (
-              <Button variant="outline" 
+              <Button variant="outline"
               disabled={isUpdatingOrg || !editName.trim() || !editSlug.trim()}
                onClick={handleStartEdit}>
-         Edit Organization 
+         Edit Organization
               </Button>
             )}
             {isEditing && (

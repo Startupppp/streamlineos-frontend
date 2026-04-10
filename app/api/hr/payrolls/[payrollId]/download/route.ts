@@ -21,7 +21,6 @@ export async function GET(
     if (!payroll) return err("Payroll not found.", 404);
     if (payroll.status !== "PAID") return err("Payslip only available for PAID payrolls.", 400);
 
-    // Only admins or the employee themselves can download
     const isAdmin = session.user.role === "CEO" || session.user.role === "HR";
     if (!isAdmin && payroll.userId !== session.user.id) {
       return err("Access denied.", 403);
@@ -67,7 +66,6 @@ export async function GET(
       ? format(new Date(employee.joiningDate), "dd MMM yyyy")
       : "—";
 
-    // Number to words helper (Indian system)
     function toWords(n: number): string {
       const a = ["", "One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
         "Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen",

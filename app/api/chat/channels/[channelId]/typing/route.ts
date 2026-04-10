@@ -1,7 +1,4 @@
-/**
- * POST /api/chat/channels/[id]/typing  — set typing indicator for current user
- * GET  /api/chat/channels/[id]/typing  — get who is typing in channel
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";

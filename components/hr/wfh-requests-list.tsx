@@ -253,7 +253,6 @@ export function PendingWfhApprovals() {
         </SheetContent>
       </Sheet>
 
-      {/* Empty state for when all are processed (shown only when page reloads) */}
       <EmptyCalendarIllustration className="hidden" />
     </>
   );

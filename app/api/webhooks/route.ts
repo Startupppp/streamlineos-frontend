@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest) {
       where: eq(webhookEndpoints.orgId, session.orgId),
       orderBy: [desc(webhookEndpoints.createdAt)],
     });
-    // Mask the secret before returning
+
     const safe = endpoints.map((ep) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { secret: _s, ...rest } = ep;
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         createdBy: session.user.id,
       })
       .returning();
-    // Return the secret once on creation so the admin can copy it
+
     return ok(endpoint, 201);
   });
 }

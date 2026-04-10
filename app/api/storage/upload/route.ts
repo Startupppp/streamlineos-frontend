@@ -30,7 +30,7 @@ function validateMagicBytes(buffer: Buffer, mimeType: string): boolean {
     sig.every((byte, i) => buffer[i] === byte)
   );
   if (!matchesSignature) return false;
-  // Extra check for WEBP: RIFF header must contain 'WEBP' at offset 8
+
   if (mimeType === "image/webp") {
     return buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
   }
@@ -98,7 +98,6 @@ export async function POST(req: NextRequest) {
 
     const result = await uploadFile(file, folder);
 
-    // Audit log file upload
     const { createAuditLog } = await import("../../../../lib/audit-log");
     createAuditLog({
       action: "file.upload",

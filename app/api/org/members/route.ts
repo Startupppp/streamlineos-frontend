@@ -18,7 +18,6 @@ export async function GET() {
         eq(users.isActive, true),
       ];
 
-      // Branch-scoped roles (BRANCH_MANAGER, BRANCH_HR) only see members in their branch
       if (isBranchScoped(ctx)) {
         const branchUserIds = await getBranchUserIds(ctx);
         if (branchUserIds !== null) {

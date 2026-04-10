@@ -8,7 +8,6 @@ const schema = z.object({
   ticketId: z.number().int().positive(),
 });
 
-/** POST /api/ai/helpdesk-reply — Generate a suggested reply for a helpdesk ticket */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

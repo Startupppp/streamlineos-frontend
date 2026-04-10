@@ -119,7 +119,7 @@ export function LeadQuickActions({
         <CardTitle className="text-base">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* ── Action toggle buttons ─────────────────────────────────────── */}
+
         <div className="flex flex-wrap gap-2">
           {ACTION_BUTTONS.map((action) => (
             <ActionToggleButton
@@ -131,7 +131,6 @@ export function LeadQuickActions({
           ))}
         </div>
 
-        {/* ── Note form ─────────────────────────────────────────────────── */}
         {activeAction === "note" && (
           <Form {...noteForm}>
             <form
@@ -177,7 +176,6 @@ export function LeadQuickActions({
           </Form>
         )}
 
-        {/* ── Task form ─────────────────────────────────────────────────── */}
         {activeAction === "task" && (
           <Form {...taskForm}>
             <form
@@ -232,7 +230,6 @@ export function LeadQuickActions({
           </Form>
         )}
 
-        {/* ── Email form ────────────────────────────────────────────────── */}
         {activeAction === "email" && (
           <Form {...emailForm}>
             <form
@@ -304,7 +301,6 @@ export function LeadQuickActions({
           </Form>
         )}
 
-        {/* ── Call form ─────────────────────────────────────────────────── */}
         {activeAction === "call" && (
           <Form {...callForm}>
             <form

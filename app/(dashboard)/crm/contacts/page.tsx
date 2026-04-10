@@ -116,7 +116,7 @@ export default function ContactsPage() {
       }
     >
       <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-        {/* Table View (default) */}
+
         {view === "table" && (
           <motion.div variants={fadeUp}>
             <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
@@ -215,7 +215,6 @@ export default function ContactsPage() {
           </motion.div>
         )}
 
-        {/* Card View */}
         {view === "card" && (
           <>
             <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

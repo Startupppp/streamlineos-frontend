@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
       status: "PENDING_HR",
     }).returning();
 
-    // Notify HR admins
     const adminMembers = await db.query.organizationMembers.findMany({
       where: and(
         eq(organizationMembers.orgId, session.orgId),

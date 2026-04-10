@@ -36,7 +36,7 @@ export function MiniDonutChart({
     <div className="flex flex-col items-center gap-4">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          
+
           <circle
             cx={center}
             cy={center}
@@ -75,7 +75,6 @@ export function MiniDonutChart({
           })}
         </svg>
 
-        
         {(centerLabel || centerValue) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {centerValue !== undefined && (
@@ -88,7 +87,6 @@ export function MiniDonutChart({
         )}
       </div>
 
-      
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         {data.map((segment, i) => (
           <div key={i} className="flex items-center gap-1.5">

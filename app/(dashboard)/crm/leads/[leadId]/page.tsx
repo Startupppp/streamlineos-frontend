@@ -41,20 +41,16 @@ export default function LeadDetailPage({
   const leadId = Number(leadIdStr);
   const router = useRouter();
 
-  // ─── Data fetching ───────────────────────────────────────────────────────
   const { data: lead, isLoading } = useLeadDetail(leadId);
   const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(leadId, 50);
 
-  // ─── Local UI state ──────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
   const [activeAction, setActiveAction] = useState<QuickAction>(null);
 
-  // ─── Mutations ───────────────────────────────────────────────────────────
   const updateLeadMutation = useUpdateLead();
   const updateStatusMutation = useUpdateLeadStatus();
   const logActivityMutation = useLogLeadActivity();
 
-  // ─── Forms ───────────────────────────────────────────────────────────────
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema),
     values: lead
@@ -80,7 +76,6 @@ export default function LeadDetailPage({
   });
   const callForm = useForm<CallForm>({ resolver: zodResolver(callSchema) });
 
-  // ─── Handlers ────────────────────────────────────────────────────────────
   const handleStatusChange = useCallback(
     (status: PipelineStatus) => {
       updateStatusMutation.mutate(
@@ -171,7 +166,6 @@ export default function LeadDetailPage({
     [leadId, logActivityMutation, callForm]
   );
 
-  // ─── Loading / not-found guards ──────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="space-y-4 p-4">
@@ -196,7 +190,6 @@ export default function LeadDetailPage({
     );
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <PageWrapper
       title={lead.name}
@@ -221,7 +214,7 @@ export default function LeadDetailPage({
         />
 
         <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
-          {/* ── Main column ──────────────────────────────────────────────── */}
+
           <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
               lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
@@ -250,7 +243,6 @@ export default function LeadDetailPage({
             />
           </div>
 
-          {/* ── Sidebar column ───────────────────────────────────────────── */}
           <div className="lg:col-span-2">
             <LeadSidebar
               lead={lead as unknown as Parameters<typeof LeadSidebar>[0]["lead"]}

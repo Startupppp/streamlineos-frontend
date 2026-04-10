@@ -129,19 +129,18 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                         <FormItem>
                             <FormLabel className="text-sm font-medium">Project Name</FormLabel>
                             <FormControl>
-                                <Input 
-                                    placeholder="e.g. Website Redesign" 
-                                    className="h-10" 
-                                    {...field} 
-                                    onChange={handleNameChange} 
+                                <Input
+                                    placeholder="e.g. Website Redesign"
+                                    className="h-10"
+                                    {...field}
+                                    onChange={handleNameChange}
                                 />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-                
-                
+
                 <FormField
                     control={form.control}
                     name="key"
@@ -162,10 +161,10 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                         <FormItem>
                             <FormLabel className="text-sm font-medium">Description <span className="text-muted-foreground font-normal ml-1">(Optional)</span></FormLabel>
                             <FormControl>
-                                <Textarea 
-                                    placeholder="Briefly describe the project goals..." 
-                                    className="resize-none min-h-[100px]" 
-                                    {...field} 
+                                <Textarea
+                                    placeholder="Briefly describe the project goals..."
+                                    className="resize-none min-h-[100px]"
+                                    {...field}
                                 />
                             </FormControl>
                             <FormMessage />
@@ -183,7 +182,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                 <Popover onOpenChange={(open) => { if (!open) setMemberSearch(""); }}>
                                     <PopoverTrigger asChild>
                                         <Button variant="outline" className="w-full justify-between h-10 px-3 font-normal text-muted-foreground hover:text-foreground">
-                                            {field.value?.length && field.value.length > 0 
+                                            {field.value?.length && field.value.length > 0
                                                 ? <span className="text-foreground font-medium">{field.value.length} members added</span>
                                                 : <span>Assign team members...</span>}
                                             <User className="h-4 w-4 opacity-50" />
@@ -216,7 +215,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                                 .map((emp) => {
                                                 const isSelected = field.value?.includes(emp.id);
                                                 return (
-                                                    <div key={emp.id} 
+                                                    <div key={emp.id}
                                                          onClick={() => {
                                                              const current = field.value || [];
                                                              const newData = isSelected
@@ -229,7 +228,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
                                                              isSelected ? "bg-primary/10" : "hover:bg-muted"
                                                          )}
                                                     >
-                                                        <Checkbox 
+                                                        <Checkbox
                                                             checked={isSelected}
                                                             onCheckedChange={(checked) => {
                                                                 const current = field.value || [];

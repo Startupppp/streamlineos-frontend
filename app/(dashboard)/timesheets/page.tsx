@@ -65,7 +65,6 @@ export default function TimesheetsPage() {
   const [, startTransition] = useTransition();
   const isCEO = session?.user?.role === "CEO";
 
-  // URL-derived filter state
   const selectedProject = searchParams.get("project") ?? "all";
   const dateRange = searchParams.get("range") ?? "this-quarter";
   const startDate = searchParams.get("from") ?? "";
@@ -73,7 +72,6 @@ export default function TimesheetsPage() {
   const page = parseInt(searchParams.get("page") ?? "1") || 1;
   const viewMode = (searchParams.get("view") ?? "current") as ViewMode;
 
-  // Local UI state only
   const [editingEntry, setEditingEntry] = useState<EditEntry | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<number | null>(null);
@@ -234,7 +232,6 @@ export default function TimesheetsPage() {
       },
     );
   }, [entryToDelete, deleteMutation]);
-
 
   const currentYear = new Date().getFullYear();
   const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;

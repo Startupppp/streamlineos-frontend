@@ -57,7 +57,6 @@ export function MiniAreaChart({
         </linearGradient>
       </defs>
 
-      
       {yTicks.map((tick, i) => (
         <g key={i}>
           <line
@@ -83,7 +82,6 @@ export function MiniAreaChart({
         </g>
       ))}
 
-      
       <motion.path
         d={areaPath}
         fill={`url(#${gradientId})`}
@@ -92,7 +90,6 @@ export function MiniAreaChart({
         transition={{ duration: 0.8 }}
       />
 
-      
       <motion.path
         d={linePath}
         fill="none"
@@ -106,7 +103,6 @@ export function MiniAreaChart({
         transition={{ duration: 1, ease: "easeInOut" }}
       />
 
-      
       {points.map((p, i) => (
         <motion.circle
           key={i}
@@ -122,7 +118,6 @@ export function MiniAreaChart({
         />
       ))}
 
-      
       {points.map((p, i) => (
         <text
           key={`label-${i}`}

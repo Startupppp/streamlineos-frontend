@@ -44,7 +44,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     });
     if (!existing) return err("Target not found", 404);
 
-    // Branch isolation check
     if (isBranchScoped(branchCtx)) {
       const branchUserIds = await getBranchUserIds(branchCtx);
       if (branchUserIds !== null && !branchUserIds.includes(existing.userId)) {
@@ -122,7 +121,6 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
     });
     if (!existing) return err("Target not found", 404);
 
-    // Branch isolation check
     if (isBranchScoped(branchCtx)) {
       const branchUserIds = await getBranchUserIds(branchCtx);
       if (branchUserIds !== null && !branchUserIds.includes(existing.userId)) {

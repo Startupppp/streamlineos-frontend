@@ -1,6 +1,4 @@
-/**
- * GET /api/projects/time-entries/team — all team time entries (admin/CEO only)
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";

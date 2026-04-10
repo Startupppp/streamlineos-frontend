@@ -1,6 +1,4 @@
-/**
- * GET /api/projects/[id]/analytics  — project analytics
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";

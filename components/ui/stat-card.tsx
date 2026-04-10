@@ -17,7 +17,7 @@ interface StatCardProps {
   href?: string;
   className?: string;
   index?: number;
-  /** Accent color for the icon bg. Defaults to gold. */
+
   color?: "gold" | "blue" | "green" | "red" | "purple";
 }
 
@@ -50,7 +50,7 @@ export function StatCard({
       )}
       style={{ animation: `fade-up 0.3s ease-out ${index * 0.07}s both` }}
     >
-      {/* Top accent bar */}
+
       <div className={cn("absolute top-0 left-0 right-0 h-[2px]", c.bar, "opacity-60")} />
 
       <div className="flex items-start justify-between gap-3">

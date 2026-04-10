@@ -17,15 +17,13 @@ import {
   resolveInitialBalance,
 } from "@/lib/leave-policy";
 
-// ─── Private helpers ──────────────────────────────────────────────────────────
-
 export async function ensureLeaveTypes(orgId: string) {
   let types = await db.query.leaveTypes.findMany({
     where: eq(leaveTypes.orgId, orgId),
   });
 
   if (types.length === 0) {
-    // First-time seed: insert all default types
+
     for (const t of DEFAULT_LEAVE_TYPES) {
       await db.insert(leaveTypes).values({
         orgId,
@@ -35,7 +33,7 @@ export async function ensureLeaveTypes(orgId: string) {
       });
     }
   } else {
-    // Backfill any missing default types (e.g. Unpaid Leave)
+
     const existingNames = new Set(types.map((t) => t.name));
     for (const t of DEFAULT_LEAVE_TYPES) {
       if (!existingNames.has(t.name)) {
@@ -93,8 +91,6 @@ export async function ensureUserBalances(
   }
 }
 
-// ─── Exported actions ─────────────────────────────────────────────────────────
-
 export async function initializeLeaveBalances(
   orgId: string,
   userId: string,
@@ -105,7 +101,6 @@ export async function initializeLeaveBalances(
   const currentYear = new Date().getFullYear();
   const targetYear = Math.max(joinDate.getFullYear(), currentYear);
 
-  // Batch: fetch all existing balances for this user+year in one query
   const existingBalances = await db.query.leaveBalances.findMany({
     where: and(
       eq(leaveBalances.userId, userId),
@@ -129,12 +124,12 @@ export async function initializeLeaveBalances(
     try {
       await db.insert(leaveBalances).values(toInsert);
     } catch (err) {
-      // If bulk insert fails (e.g., race condition), insert one-by-one
+
       for (const row of toInsert) {
         try {
           await db.insert(leaveBalances).values(row);
         } catch {
-          // Skip duplicates silently
+
         }
       }
     }
@@ -158,7 +153,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
 
   let expiredCount = 0;
 
-  // Batch: fetch all casual leave types across orgs in one query
   const casualTypes = await db.query.leaveTypes.findMany({
     where: eq(leaveTypes.name, LEAVE_POLICY.CASUAL.name),
   });
@@ -168,7 +162,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
   const orgCasualMap = new Map(casualTypes.map((ct) => [ct.orgId, ct]));
   const casualTypeIds = casualTypes.map((ct) => ct.id);
 
-  // Batch: fetch all balances for casual leave types at once
   const allBalances = await db.query.leaveBalances.findMany({
     where: and(
       inArray(leaveBalances.leaveTypeId, casualTypeIds),
@@ -179,7 +172,6 @@ export async function expireUnusedMonthlyCasualLeaves() {
   const positiveBalances = allBalances.filter((b) => Number(b.balance) > 0);
   if (positiveBalances.length === 0) return { expiredCount: 0 };
 
-  // Batch: find all users who used casual leave in prev month
   const usedLeaveResults = await db
     .select({
       userId: leaveRequests.userId,
@@ -235,7 +227,6 @@ export async function resetYearlyLeaveBalances() {
     const activeMembers = members.filter((m) => m.user?.isActive);
     if (activeMembers.length === 0 || types.length === 0) continue;
 
-    // Batch: fetch ALL existing balances for this org+year in one query
     const existingBalances = await db.query.leaveBalances.findMany({
       where: and(
         eq(leaveBalances.orgId, orgId),
@@ -246,7 +237,6 @@ export async function resetYearlyLeaveBalances() {
       existingBalances.map((b) => `${b.userId}:${b.leaveTypeId}`)
     );
 
-    // Build batch insert
     const toInsert: typeof leaveBalances.$inferInsert[] = [];
     for (const member of activeMembers) {
       const joiningDate = member.user?.joiningDate
@@ -294,7 +284,6 @@ export async function getLeaveContext() {
   });
   await ensureUserBalances(member.orgId, session.user.id, filteredTypes);
 
-  // Fetch user's joining date for date picker restrictions
   const user = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
     columns: { joiningDate: true },

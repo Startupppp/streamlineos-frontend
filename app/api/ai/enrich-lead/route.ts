@@ -13,7 +13,6 @@ const schema = z.object({
   city: z.string().optional(),
 });
 
-/** POST /api/ai/enrich-lead — Generate a research brief for a lead */
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) return err("AI not configured", 503);
@@ -22,7 +21,7 @@ export async function POST(req: NextRequest) {
     const prompt = leadEnrichmentPrompt(input);
 
     const result = await aiInvoke({
-      model: "standard", // Use GPT-4o for better research quality
+      model: "standard",
       schema: LeadEnrichmentSchema,
       schemaName: "lead_enrichment",
       system: prompt.system,

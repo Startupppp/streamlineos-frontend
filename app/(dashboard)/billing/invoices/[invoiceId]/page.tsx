@@ -242,7 +242,7 @@ export default function InvoiceDetailPage({
       }
     >
       <div className="space-y-6 max-w-3xl">
-        {/* Invoice metadata */}
+
         <div className="rounded-lg border border-border bg-card p-5 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Invoice #</p>
@@ -274,7 +274,6 @@ export default function InvoiceDetailPage({
           )}
         </div>
 
-        {/* Line items */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold">Line Items</p>
@@ -336,7 +335,6 @@ export default function InvoiceDetailPage({
           </div>
         )}
 
-        {/* Payment history */}
         {(invoice.payments ?? []).length > 0 && (
           <div className="rounded-lg border border-border bg-card overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
@@ -379,7 +377,6 @@ export default function InvoiceDetailPage({
         )}
       </div>
 
-      {/* Record Payment Dialog */}
       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

@@ -33,7 +33,7 @@ export function ProjectFilterBar({
 }: ProjectFilterBarProps) {
   return (
     <div className="flex items-center gap-2 w-full flex-wrap">
-      {/* Search */}
+
       <div className="relative w-full sm:w-48">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
@@ -54,7 +54,6 @@ export function ProjectFilterBar({
         )}
       </div>
 
-      {/* Status filter */}
       <Select
         value={status}
         onValueChange={(v) => onStatusChange(v as StatusFilter)}
@@ -70,7 +69,6 @@ export function ProjectFilterBar({
         </SelectContent>
       </Select>
 
-      {/* View toggle — pushed right */}
       <div className="flex items-center rounded-md border bg-muted/50 p-0.5 ml-auto shrink-0">
         <button
           onClick={() => onViewModeChange("grid")}

@@ -1,4 +1,4 @@
-/* ─── Shared types and constants for the lead table ─── */
+
 
 export interface Lead {
   id: number;
@@ -103,10 +103,6 @@ export const SOURCE_COLORS: Record<string, string> = {
   other: "bg-gray-500/10 text-gray-400",
 };
 
-/**
- * Column config matching reference "CRM Leads Zoom Sheet"
- * Default visible columns match the dense spreadsheet layout
- */
 export const ALL_COLUMNS = [
   { key: "createdAt",          label: "Date",              defaultVisible: true,  sortable: true  },
   { key: "name",               label: "Name",              defaultVisible: true,  sortable: true  },
@@ -132,7 +128,6 @@ export const DEFAULT_VISIBLE = new Set(
   ALL_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.key),
 );
 
-/* ─── Pure helpers ─── */
 export function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
   const num = typeof val === "string" ? parseFloat(val) : val;

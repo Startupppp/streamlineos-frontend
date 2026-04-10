@@ -1,11 +1,5 @@
 "use client";
 
-/**
- * TanStack Query hooks for the CRM domain.
- * Covers Deals, Contacts, Client Accounts, Targets, and CRM dashboards.
- * Uses apiClient (Axios) — zero tRPC imports.
- */
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -47,8 +41,6 @@ import type {
   PaginatedCrmOrganizations,
   CreateCrmOrganizationInput,
 } from "@/types/crm";
-
-// ─── Deals ───────────────────────────────────────────────────────────────────
 
 export function useDeals(filters?: DealFilters) {
   return useQuery({
@@ -114,8 +106,6 @@ export function useUpdateDealStage() {
   });
 }
 
-// ─── Contacts ─────────────────────────────────────────────────────────────────
-
 export function useContacts(filters?: ContactFilters) {
   return useQuery({
     queryKey: queryKeys.contacts.list(filters as Record<string, unknown>),
@@ -165,8 +155,6 @@ export function useDeleteContact() {
     },
   });
 }
-
-// ─── Client Accounts ─────────────────────────────────────────────────────────
 
 export function useClientAccounts(filters?: ClientAccountFilters) {
   return useQuery({
@@ -233,8 +221,6 @@ export function useLogClientActivity() {
     },
   });
 }
-
-// ─── Targets ─────────────────────────────────────────────────────────────────
 
 export function useTargets(filters?: TargetFilters) {
   return useQuery({
@@ -303,10 +289,6 @@ export function useLogTargetProgress() {
   });
 }
 
-// ─── CRM Dashboards ──────────────────────────────────────────────────────────
-
-/* ─── Sales Quotas ─────────────────────────────────────────────────────────── */
-
 export interface SalesQuota {
   id: number;
   userId: string;
@@ -339,8 +321,6 @@ export function useCreateSalesQuota() {
   });
 }
 
-/* ─── Commissions ──────────────────────────────────────────────────────────── */
-
 export function useCommissions(params?: { userId?: string; status?: string }) {
   return useQuery({
     queryKey: [...queryKeys.deals.all, "commissions", params] as const,
@@ -363,8 +343,6 @@ export function useCreateCommissionRule() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [...queryKeys.deals.all, "commissionRules"] }),
   });
 }
-
-/* ─── Deal Approvals ───────────────────────────────────────────────────────── */
 
 export function useDealApprovals(params?: { status?: string }) {
   return useQuery({
@@ -410,8 +388,6 @@ export function useResolveDealApproval() {
   });
 }
 
-/* ─── Client Health ────────────────────────────────────────────────────────── */
-
 export interface ClientHealth {
   id: number;
   name: string;
@@ -432,8 +408,6 @@ export function useClientHealth(params?: { status?: string }) {
   });
 }
 
-/* ─── Churn Alerts ──────────────────────────────────────────────────��──────── */
-
 export function useChurnAlerts() {
   return useQuery({
     queryKey: [...queryKeys.clients.all, "churnAlerts"] as const,
@@ -443,8 +417,6 @@ export function useChurnAlerts() {
     }>("/clients/churn-alerts"),
   });
 }
-
-/* ─── Client Timeline ──────────────────────────────────────────────────────── */
 
 export interface ClientTimelineEvent {
   id: string;
@@ -476,8 +448,6 @@ export function useMarketingDashboard() {
     queryFn: () => apiClient.get<MarketingDashboard>("/crm/marketing-dashboard"),
   });
 }
-
-/* ─── Marketing Campaigns CRUD ─────────────────────────────────────────────── */
 
 export interface MarketingCampaign {
   id: number;
@@ -550,8 +520,6 @@ export function useDeleteMarketingCampaign() {
   });
 }
 
-/* ─── Email Campaigns ──────────────────────────────────────────────────────── */
-
 export interface EmailCampaign {
   id: number;
   name: string;
@@ -611,8 +579,6 @@ export function useDeleteEmailCampaign() {
   });
 }
 
-/* ─── UTM Link Generator + Attribution ──────────────────────────────────────── */
-
 export function useGenerateUtmLink() {
   return useMutation({
     mutationFn: (input: { baseUrl: string; source: string; medium: string; campaign: string; term?: string; content?: string }) =>
@@ -633,8 +599,6 @@ export function useSupportDashboard() {
     queryFn: () => apiClient.get<SupportDashboard>("/crm/support-dashboard"),
   });
 }
-
-// ─── Deal Activities ──────────────────────────────────────────────────────────
 
 export function useDealActivities(dealId: number, limit?: number) {
   return useQuery({
@@ -671,16 +635,12 @@ export function useDeleteDeal() {
   });
 }
 
-// ─── Client Account Stats ─────────────────────────────────────────────────────
-
 export function useClientAccountStats() {
   return useQuery({
     queryKey: queryKeys.clientStats.stats(),
     queryFn: () => apiClient.get<ClientAccountStats>("/clients/stats"),
   });
 }
-
-// ─── CRM Organizations ────────────────────────────────────────────────────────
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
   return useQuery({
@@ -711,8 +671,6 @@ export function useCreateCrmOrganization() {
     },
   });
 }
-
-// ─── CRM People (slug-based profiles) ────────────────────────────────────────
 
 export function useCrmPeopleSlugs() {
   return useQuery({

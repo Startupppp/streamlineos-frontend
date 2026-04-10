@@ -8,7 +8,6 @@ import { helpdeskTickets, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/** Generate a suggested reply for a helpdesk ticket. */
 export async function aiSuggestHelpdeskReply(
   orgId: string,
   ticketId: number,

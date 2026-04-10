@@ -41,10 +41,6 @@ import type { ExpenseFilters } from "@/server/actions/expense-query";
 import { usePdfRenderer } from "./pdf-renderer";
 import { downloadCSV, downloadXLSX } from "./xlsx-renderer";
 
-// ---------------------------------------------------------------------------
-// Types & constants
-// ---------------------------------------------------------------------------
-
 export interface ExpenseExportDialogProps {
   filters: ExpenseFilters;
   trigger?: React.ReactNode;
@@ -84,33 +80,25 @@ const DEFAULT_PAYMENT_METHODS = [
   "Other",
 ];
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export function ExpenseExportDialog({
   filters,
   trigger,
   categories = [],
   paymentMethods = DEFAULT_PAYMENT_METHODS,
 }: ExpenseExportDialogProps) {
-  // Sheet open state
+
   const [open, setOpen] = useState(false);
 
-  // Export options
   const [format, setFormat] = useState<ExportFormat>("xlsx");
   const [includeHeader, setIncludeHeader] = useState(true);
   const [includeTotals, setIncludeTotals] = useState(true);
 
-  // Loading / completion states
   const [isExporting, setIsExporting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
 
-  // Email target
   const [emailTarget, setEmailTarget] = useState<"CEO" | "HR" | "BOTH">("BOTH");
 
-  // Filter overrides for this export
   const [dateFrom, setDateFrom] = useState(filters.startDate || "");
   const [dateTo, setDateTo] = useState(filters.endDate || "");
   const [exportCategory, setExportCategory] = useState("all");
@@ -119,10 +107,8 @@ export function ExpenseExportDialog({
     filters.status && filters.status !== "all" ? String(filters.status) : "all"
   );
 
-  // PDF renderer hook (provides download fn + hidden portal)
   const { downloadPDF, pdfPortal } = usePdfRenderer();
 
-  // Merged filter object sent to the server action
   const exportFilters: ExportFilters = {
     startDate: dateFrom || filters.startDate,
     endDate: dateTo || filters.endDate,
@@ -136,10 +122,6 @@ export function ExpenseExportDialog({
     maxAmount: filters.maxAmount,
     search: filters.search,
   };
-
-  // ---------------------------------------------------------------------------
-  // Handlers
-  // ---------------------------------------------------------------------------
 
   const handleSendEmail = async () => {
     setIsSendingEmail(true);
@@ -201,10 +183,6 @@ export function ExpenseExportDialog({
     }
   };
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>
@@ -229,7 +207,7 @@ export function ExpenseExportDialog({
           </SheetHeader>
 
           <div className="space-y-5">
-            {/* Date Range Filter */}
+
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
@@ -258,7 +236,6 @@ export function ExpenseExportDialog({
               )}
             </div>
 
-            {/* Category / Status / Payment Method Filters */}
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Status</Label>
@@ -309,7 +286,6 @@ export function ExpenseExportDialog({
               </div>
             </div>
 
-            {/* Export Format */}
             <div className="space-y-3">
               <Label className="text-sm font-medium">Export Format</Label>
               <RadioGroup
@@ -337,7 +313,6 @@ export function ExpenseExportDialog({
               </RadioGroup>
             </div>
 
-            {/* Options */}
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/30">
                 <div className="space-y-0.5">
@@ -357,7 +332,6 @@ export function ExpenseExportDialog({
               </div>
             </div>
 
-            {/* Applied Filters summary */}
             {Object.values(exportFilters).some((v) => v !== undefined && v !== "") && (
               <div className="p-4 bg-muted/30 rounded-lg border text-sm">
                 <p className="font-medium text-sm mb-2">Applied Filters:</p>
@@ -383,7 +357,6 @@ export function ExpenseExportDialog({
             )}
           </div>
 
-          {/* Footer actions */}
           <div className="flex flex-col gap-3 pt-6 mt-2 border-t">
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setOpen(false)}>
@@ -452,7 +425,6 @@ export function ExpenseExportDialog({
         </SheetContent>
       </Sheet>
 
-      {/* Off-screen PDF rendering portal */}
       {pdfPortal}
     </>
   );

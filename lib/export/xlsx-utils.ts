@@ -6,10 +6,6 @@ export interface SheetDefinition {
   rows: Array<Record<string, unknown>>;
 }
 
-/**
- * Build an Excel workbook from sheet definitions and return as a Buffer.
- * Works on both server (Node Buffer) and client (ArrayBuffer).
- */
 export async function buildXlsxBuffer(sheets: SheetDefinition[]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
 
@@ -27,9 +23,6 @@ export async function buildXlsxBuffer(sheets: SheetDefinition[]): Promise<Buffer
   return Buffer.from(arrayBuffer);
 }
 
-/**
- * Client-side helper: trigger a browser download from sheet definitions.
- */
 export async function downloadXlsx(filename: string, sheets: SheetDefinition[]): Promise<void> {
   const ExcelJSModule = (await import("exceljs")).default;
   const workbook = new ExcelJSModule.Workbook();

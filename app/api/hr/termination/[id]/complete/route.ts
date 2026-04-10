@@ -23,25 +23,21 @@ export async function PATCH(
     if (!existing) return err("Termination not found.", 404);
     if (existing.status !== "SENT") return err("Termination letter must be sent first.", 400);
 
-    // 1. Mark termination as completed
     await db.update(terminations).set({
       status: "COMPLETED",
       updatedAt: new Date(),
     }).where(eq(terminations.id, terminationId));
 
-    // 2. Deactivate employee account
     await db.update(users).set({
       isActive: false,
     }).where(eq(users.id, existing.userId));
 
-    // 3. Create FnF settlement draft
     await db.insert(fnfSettlements).values({
       orgId: session.orgId,
       userId: existing.userId,
       status: "DRAFT",
     }).onConflictDoNothing();
 
-    // 4. Auto-generate asset return checklist
     const assignedAssets = await db.query.assets.findMany({
       where: and(
         eq(assets.orgId, session.orgId),

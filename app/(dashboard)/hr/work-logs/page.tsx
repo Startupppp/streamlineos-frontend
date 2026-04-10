@@ -70,7 +70,6 @@ export default function WorkLogsPage() {
     [filters, searchParams, pathname, router, currentYear, currentQuarter],
   );
 
-  // Draft state for the filter sheet (applied on "Apply")
   const [draftFilters, setDraftFilters] = useState<WorkLogFiltersType>(() => {
     const monthParam = searchParams.get("month");
     return {
@@ -89,7 +88,6 @@ export default function WorkLogsPage() {
   const [employeeSearchOpen, setEmployeeSearchOpen] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
 
-  // Keep backward-compatible aliases
   const year = filters.year;
   const quarter = filters.quarter;
   const selectedUserId = filters.selectedUserId;
@@ -104,7 +102,6 @@ export default function WorkLogsPage() {
     [employeesRaw]
   );
 
-  /* ─── Count active filters (beyond defaults) ─── */
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.selectedUserId) count++;
@@ -198,34 +195,28 @@ export default function WorkLogsPage() {
     return counts;
   }, [logs, monthGroups]);
 
-  // Filtering: month, date range, and search keyword
   const filterDay = useCallback(
     (date: Date) => {
-      // Month filter
+
       if (filters.month !== undefined && date.getMonth() !== filters.month) return false;
 
-      // Date range filter
       const dateStr = format(date, "yyyy-MM-dd");
       if (filters.dateFrom && dateStr < filters.dateFrom) return false;
       if (filters.dateTo && dateStr > filters.dateTo) return false;
 
-      // Search term filter
       if (!searchTerm.trim()) return true;
       const term = searchTerm.trim().toLowerCase();
       const log = logs?.find((l) => l.date === dateStr);
 
-      // Check if search term matches the date display
       const dateDisplay = format(date, "dd MMM yyyy EEEE").toLowerCase();
       if (dateDisplay.includes(term)) return true;
 
-      // Try parsing as a date (e.g., "15 Jan 2026", "2026-01-15", "15/01/2026")
       const dateFormats = ["d MMM yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "d MMMM yyyy"];
       for (const fmt of dateFormats) {
         const parsed = parse(term, fmt, new Date());
         if (isValid(parsed) && format(parsed, "yyyy-MM-dd") === dateStr) return true;
       }
 
-      // Check keyword in description
       if (log?.description?.toLowerCase().includes(term)) return true;
 
       return false;
@@ -286,7 +277,6 @@ export default function WorkLogsPage() {
     }
   }, [days, logs, selectedUserId, employees, quarter, year, filterDay]);
 
-  /* ─── Shared filter props passed to both filter components ─── */
   const sharedFilterProps = {
     filters,
     setFilters,

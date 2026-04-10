@@ -14,7 +14,7 @@ export default function SettingsPage() {
       subtitle="Manage your profile, preferences, and security."
     >
       <div className="max-w-2xl space-y-8">
-        {/* ── Profile & Avatar ── */}
+
         <section>
           <div className="mb-4">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">Profile</h2>
@@ -27,7 +27,6 @@ export default function SettingsPage() {
 
         <Separator />
 
-        {/* ── Preferences (compact view, etc.) ── */}
         <section>
           <div className="mb-4">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">Preferences</h2>
@@ -40,7 +39,6 @@ export default function SettingsPage() {
 
         <Separator />
 
-        {/* ── Password & Security ── */}
         <section>
           <div className="mb-4">
             <h2 className="text-[0.9375rem] font-semibold text-foreground">Security</h2>

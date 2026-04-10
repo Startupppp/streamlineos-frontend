@@ -32,7 +32,7 @@ export default function DocumentsLoading() {
       }
     >
       <div className="flex-1 space-y-6">
-        {/* Stats cards */}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -49,10 +49,9 @@ export default function DocumentsLoading() {
           ))}
         </div>
 
-        {/* Main Table */}
         <Card className="shadow-sm border overflow-hidden">
           <CardContent className="p-0">
-            {/* Table Header */}
+
             <div className="flex items-center bg-muted/30 px-6 py-3 border-b">
               <Skeleton className="h-3 w-12" />
               <Skeleton className="h-3 w-16 ml-auto mr-32" />
@@ -60,12 +59,10 @@ export default function DocumentsLoading() {
               <Skeleton className="h-3 w-8 ml-auto" />
             </div>
 
-            {/* Folders Label */}
             <div className="px-6 py-3">
               <Skeleton className="h-3 w-14" />
             </div>
 
-            {/* Folder Cards Grid */}
             <div className="px-6 pb-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -80,7 +77,6 @@ export default function DocumentsLoading() {
               </div>
             </div>
 
-            {/* Document Rows */}
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center px-6 py-4 border-t">
                 <div className="flex items-center gap-3 flex-1">
@@ -99,7 +95,6 @@ export default function DocumentsLoading() {
               </div>
             ))}
 
-            {/* Pagination */}
             <div className="flex items-center justify-between px-6 py-4 border-t">
               <Skeleton className="h-4 w-52" />
               <div className="flex items-center gap-2">
@@ -110,7 +105,6 @@ export default function DocumentsLoading() {
           </CardContent>
         </Card>
 
-        {/* Storage Usage */}
         <div className="flex items-center gap-3">
           <Skeleton className="h-4 w-8" />
           <Skeleton className="w-32 h-2 rounded-full" />

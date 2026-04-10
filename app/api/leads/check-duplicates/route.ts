@@ -10,12 +10,10 @@ const querySchema = z.object({
   phone: z.string().optional(),
 });
 
-/** GET /api/leads/check-duplicates?email=...&phone=...&name=... */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { email, phone } = parseQuery(req, querySchema);
 
-    // Need at least one search param
     if (!email && !phone) {
       return ok({ duplicates: [] });
     }
@@ -26,7 +24,7 @@ export async function GET(req: NextRequest) {
       conditions.push(ilike(leads.email, email.trim()));
     }
     if (phone) {
-      // Normalize phone: strip spaces, dashes, and match last 10 digits
+
       const normalized = phone.replace(/[\s\-+()]/g, "");
       const last10 = normalized.slice(-10);
       if (last10.length >= 10) {

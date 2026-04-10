@@ -8,7 +8,6 @@ const schema = z.object({
   dealId: z.number().int().positive(),
 });
 
-/** POST /api/ai/predict-deal — Predict win/loss probability for a deal */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

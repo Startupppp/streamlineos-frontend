@@ -1,15 +1,5 @@
 "use client";
 
-/**
- * Cross-page chat notification component.
- * Uses the periodic channel list poll (every 30 s) to detect new unread counts
- * and fires in-app toasts + desktop notifications — even when not on /chat.
- *
- * When the user IS on /chat, this component yields to the Ably-based
- * `useChatGlobalNotifications` hook (chat/page.tsx) which provides real-time
- * notifications, so polling-based notifications are disabled there.
- */
-
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -18,7 +8,7 @@ import type { Channel } from "@/types/chat";
 
 export function ChatUnreadNotifications({ currentUserId }: { currentUserId: string }) {
   const pathname = usePathname();
-  // Chat page handles its own Ably real-time notifications; skip polling there.
+
   const isChatPage = pathname === "/chat";
 
   const { data: rawChannels } = useChatChannels(!isChatPage);
@@ -27,7 +17,6 @@ export function ChatUnreadNotifications({ currentUserId }: { currentUserId: stri
   const prevUnreadMapRef = useRef<Map<number, number>>(new Map());
   const isFirstLoadRef = useRef(true);
 
-  // Request desktop notification permission on mount
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission === "default") {
@@ -39,7 +28,7 @@ export function ChatUnreadNotifications({ currentUserId }: { currentUserId: stri
     if (!channels || channels.length === 0) return;
 
     if (isFirstLoadRef.current) {
-      // Store baseline counts without emitting notifications for pre-existing unreads
+
       const initial = new Map<number, number>();
       for (const ch of channels) {
         initial.set(ch.id, ch.unreadCount);
@@ -74,7 +63,6 @@ export function ChatUnreadNotifications({ currentUserId }: { currentUserId: stri
 
         toast(title, { description: body, duration: 5_000 });
 
-        // Always show Chrome desktop notification (fires on other apps/desktops too)
         if (
           typeof window !== "undefined" &&
           "Notification" in window &&

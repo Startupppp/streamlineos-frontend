@@ -25,8 +25,6 @@ import type {
   UpdateIntakeRequestInput,
 } from "@/types/projects";
 
-// ─── Epics ────────────────────────────────────────────────────────────────────
-
 export function useEpics(
   projectId: number,
   options?: Omit<UseQueryOptions<Epic[]>, "queryKey" | "queryFn" | "enabled">
@@ -84,8 +82,6 @@ export function useUpdateEpic(
   });
 }
 
-// ─── Cycles ───────────────────────────────────────────────────────────────────
-
 export function useCycles(
   projectId: number,
   options?: Omit<UseQueryOptions<Cycle[]>, "queryKey" | "queryFn" | "enabled">
@@ -128,8 +124,6 @@ export function useUpdateCycle(options?: Parameters<typeof useMutation>[0]) {
     ...options,
   });
 }
-
-// ─── Modules ──────────────────────────────────────────────────────────────────
 
 export function useModules(
   projectId: number,
@@ -174,8 +168,6 @@ export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-// ─── Pages ────────────────────────────────────────────────────────────────────
-
 export function usePages(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectPage[]>, "queryKey" | "queryFn" | "enabled">
@@ -215,8 +207,6 @@ export function useUpdatePage(options?: Parameters<typeof useMutation>[0]) {
     ...options,
   });
 }
-
-// ─── Views ────────────────────────────────────────────────────────────────────
 
 export function useViews(
   projectId: number,
@@ -272,8 +262,6 @@ export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-// ─── Intake ───────────────────────────────────────────────────────────────────
-
 export function useIntakeRequests(
   projectId: number,
   status?: string,
@@ -327,8 +315,6 @@ export function useUpdateIntakeRequest(options?: Parameters<typeof useMutation>[
     ...options,
   });
 }
-
-// ─── Analytics ────────────────────────────────────────────────────────────────
 
 export function useProjectAnalytics(
   projectId: number,

@@ -1,7 +1,4 @@
-/**
- * GET /api/chat/search?query=<text>&channelId=<n>&limit=<n>
- * Full-text search across messages the user has access to.
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";

@@ -15,13 +15,13 @@ interface WorkLog {
 interface WorkLogMonthGroupProps {
   monthKey: string;
   label: string;
-  /** All days in this month (used to calculate weekday count for the header) */
+
   allDays: Date[];
-  /** Days to actually render (may be pre-filtered by search/month filter) */
+
   displayDays: Date[];
   isCollapsed: boolean;
   onToggle: (monthKey: string) => void;
-  /** Number of days that have a saved description */
+
   filled: number;
   searchTerm: string;
   logs: WorkLog[] | undefined;

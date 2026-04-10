@@ -8,7 +8,6 @@ const schema = z.object({
   leadId: z.number().int().positive(),
 });
 
-/** POST /api/ai/next-action — Get AI-suggested next action for a lead */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

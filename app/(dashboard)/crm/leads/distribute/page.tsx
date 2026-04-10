@@ -145,7 +145,7 @@ export default function LeadDistributionPage() {
         </>
       }
     >
-      {/* Stats */}
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
@@ -176,7 +176,6 @@ export default function LeadDistributionPage() {
         </Card>
       </div>
 
-      {/* Leads Table */}
       <Card>
         <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-max">
@@ -234,7 +233,6 @@ export default function LeadDistributionPage() {
         </ScrollArea>
       </Card>
 
-      {/* Distribution Dialog */}
       <LeadDistributionDialog
         open={showDistribute}
         onOpenChange={setShowDistribute}

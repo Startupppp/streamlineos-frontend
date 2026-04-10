@@ -4,7 +4,6 @@ import {
 } from "lucide-react";
 import type React from "react";
 
-/* ───── Pipeline Stages ───── */
 export const PIPELINE_STAGES = [
   { key: "NEW", label: "New", dot: "bg-blue-500", bg: "bg-blue-500/10", color: "#3B82F6", icon: Zap },
   { key: "CONTACTED", label: "Contacted", dot: "bg-sky-500", bg: "bg-sky-500/10", color: "#0EA5E9", icon: Phone },
@@ -14,7 +13,6 @@ export const PIPELINE_STAGES = [
   { key: "LOST", label: "Lost", dot: "bg-red-500", bg: "bg-red-500/10", color: "#EF4444", icon: X },
 ] as const;
 
-/* ───── Deal Stages ───── */
 export const DEAL_STAGES = [
   { key: "LEAD", label: "Lead", dot: "bg-blue-500", bg: "bg-blue-500/10" },
   { key: "CONTACTED", label: "Contacted", dot: "bg-sky-500", bg: "bg-sky-500/10" },
@@ -26,7 +24,6 @@ export const DEAL_STAGES = [
 
 export type DealStage = (typeof DEAL_STAGES)[number]["key"];
 
-/* ───── Lead Sources ───── */
 export const LEAD_SOURCES = [
   { value: "referral", label: "Referral", icon: Share2 },
   { value: "campaign", label: "Campaign", icon: Megaphone },
@@ -37,14 +34,12 @@ export const LEAD_SOURCES = [
   { value: "other", label: "Other", icon: Target },
 ] as const;
 
-/* ───── Lead Priorities ───── */
 export const LEAD_PRIORITIES = [
   { value: "HOT", label: "Hot", color: "text-red-400", bg: "bg-red-500/15", border: "border-red-500/30", icon: Flame },
   { value: "WARM", label: "Warm", color: "text-amber-400", bg: "bg-amber-500/15", border: "border-amber-500/30", icon: Sun },
   { value: "COLD", label: "Cold", color: "text-blue-400", bg: "bg-blue-400/15", border: "border-blue-400/30", icon: Snowflake },
 ] as const;
 
-/* ───── Activity Types ───── */
 export const ACTIVITY_TYPES = [
   { value: "call", label: "Call", icon: Phone },
   { value: "email", label: "Email", icon: Target },
@@ -53,7 +48,6 @@ export const ACTIVITY_TYPES = [
   { value: "site_visit", label: "Site Visit", icon: Eye },
 ] as const;
 
-/* ───── Chart Colors ───── */
 export const CHART_COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444", "#0EA5E9", "#EC4899", "#6366F1"];
 
 export const CHART_TOOLTIP_STYLE = {

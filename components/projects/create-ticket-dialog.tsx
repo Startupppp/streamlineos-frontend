@@ -48,10 +48,10 @@ const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateTicketDialog({ 
+export function CreateTicketDialog({
   projectId,
   variant = "default"
-}: { 
+}: {
   projectId: number;
   variant?: "default" | "fab";
 }) {
@@ -103,9 +103,9 @@ export function CreateTicketDialog({
           });
 
           if (!response.ok) throw new Error("Failed to upload file");
-          
+
           const result = await response.json();
-          
+
           await addAttachmentMutation.mutateAsync({
             ticketId: data.id,
             fileUrl: result.url,
@@ -113,7 +113,7 @@ export function CreateTicketDialog({
             fileSize: file.size,
             mimeType: file.type,
           });
-          
+
           toast.success("Ticket created with attachment");
         } catch (error) {
           toast.error("Ticket created but failed to upload attachment");
@@ -182,8 +182,8 @@ export function CreateTicketDialog({
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent 
-        side="right" 
+      <SheetContent
+        side="right"
         className="w-full sm:w-1/2 sm:max-w-[50vw] overflow-y-auto p-0"
       >
         <SheetHeader className="p-6 pb-4 border-b">
@@ -265,10 +265,10 @@ export function CreateTicketDialog({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Describe the issue or task in detail..." 
+                    <Textarea
+                      placeholder="Describe the issue or task in detail..."
                       className="min-h-[120px] resize-y"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -279,7 +279,7 @@ export function CreateTicketDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                <FormItem>
                     <FormLabel>Assignees</FormLabel>
-                    {/* Selected assignees chips */}
+
                     {selectedAssignees.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {selectedAssignees.map((id) => {
@@ -305,7 +305,7 @@ export function CreateTicketDialog({
                         })}
                       </div>
                     )}
-                    {/* Add assignee dropdown */}
+
                     <Select
                       value=""
                       onValueChange={(value) => {
@@ -350,7 +350,7 @@ export function CreateTicketDialog({
                 )}
               />
             </div>
-            
+
             <FormItem className="pt-2">
                 <FormLabel>Attachment</FormLabel>
                 <FormControl>
@@ -418,10 +418,10 @@ export function CreateTicketDialog({
                                     }}
                                 />
                             </label>
-                            <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="icon" 
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setFile(null)}
                                 className="text-destructive h-8 w-8 shrink-0"
                             >

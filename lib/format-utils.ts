@@ -1,19 +1,11 @@
 import { format } from "date-fns";
 
-/**
- * Compact currency formatter for dashboard/CRM use (e.g. "$1.2M", "$50K").
- * For full INR formatting, use {@link formatINR}.
- */
 export function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
   return `$${value.toLocaleString()}`;
 }
 
-/**
- * Full Intl-based currency formatter. Defaults to INR / en-IN.
- * Use this for invoices, payroll, expenses — anywhere exact amounts matter.
- */
 export function formatCurrencyFull(
   amount: number | string,
   currency: string = "INR",
@@ -131,7 +123,7 @@ export const calcPercent = (value: number, total: number, decimals = 1): string 
 export function formatINR(amount: string | number): string {
   const num = Number(amount);
   if (Number.isNaN(num)) return "₹0";
-  // Show paisa (2 decimal places) when present, otherwise whole number
+
   const hasPaisa = num % 1 !== 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -141,10 +133,6 @@ export function formatINR(amount: string | number): string {
   }).format(num);
 }
 
-/**
- * Compact INR formatter for cards/dashboards.
- * ₹999 → ₹999, ₹1,500 → ₹1.5K, ₹1,50,000 → ₹1.5L, ₹1,50,00,000 → ₹1.5Cr
- */
 export function formatINRCompact(amount: string | number): string {
   const num = Number(amount);
   if (Number.isNaN(num)) return "₹0";

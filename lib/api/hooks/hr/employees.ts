@@ -15,8 +15,6 @@ import type {
   OnboardEmployeeInput,
 } from "@/types/hr";
 
-// ─── Departments ──────────────────────────────────────────────────────────────
-
 export function useHrDepartments() {
   return useQuery({
     queryKey: queryKeys.hr.departments(),
@@ -33,8 +31,6 @@ export function useCreateDepartment() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.departments() }),
   });
 }
-
-// ─── Employees ────────────────────────────────────────────────────────────────
 
 export function useHrEmployees(params?: {
   page?: number;
@@ -68,16 +64,12 @@ export function useTerminateEmployee() {
   });
 }
 
-// ─── Org Chart ────────────────────────────────────────────────────────────────
-
 export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
     queryFn: () => apiClient.get<OrgChartNode[]>("/hr/org-chart"),
   });
 }
-
-// ─── Employee Stats ───────────────────────────────────────────────────────────
 
 export function useHrEmployeeStats(userId: string) {
   return useQuery({
@@ -105,8 +97,6 @@ export function useHrEmployeeTickets(userId: string) {
     enabled: !!userId,
   });
 }
-
-// ─── Onboarding ───────────────────────────────────────────────────────────────
 
 export function useOnboardEmployee() {
   const qc = useQueryClient();

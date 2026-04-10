@@ -50,7 +50,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     ? `${projectKey}-${ticket.ticketNumber}`
     : `#${ticket.ticketNumber ?? ticket.id}`;
 
-  // Primary assignee (from assignees array or assignee field)
   const primaryAssignee =
     ticket.assignees?.[0]?.user ?? ticket.assignee ?? null;
 
@@ -66,7 +65,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
       onMouseDown={handleMouseDown}
       onClick={handleClick}
     >
-      {/* Title row: type icon + title */}
+
       <div className="flex items-start gap-1.5">
         <TicketTypeIcon type={ticket.type} className="mt-0.5 shrink-0" />
         <p className="text-sm font-medium leading-snug line-clamp-2 flex-1">
@@ -74,7 +73,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         </p>
       </div>
 
-      {/* Bottom row: key | priority | labels | avatar */}
       <div className="mt-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono text-muted-foreground">
@@ -82,7 +80,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           </span>
           <PriorityBadge priority={ticket.priority} />
 
-          {/* Label dots */}
           {ticket.labels && ticket.labels.length > 0 && (
             <div className="flex items-center gap-0.5">
               {ticket.labels.slice(0, 3).map(({ label }) =>
@@ -103,7 +100,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             </div>
           )}
 
-          {/* Story points */}
           {(ticket.points ?? ticket.storyPoints) != null &&
             (ticket.points ?? ticket.storyPoints)! > 0 && (
               <Badge
@@ -115,7 +111,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             )}
         </div>
 
-        {/* Assignee avatar */}
         {primaryAssignee ? (
           <Avatar className="h-6 w-6 border border-background shrink-0">
             <AvatarImage src={resolveImageUrl(primaryAssignee.image)} />
@@ -134,5 +129,4 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   );
 });
 
-// Re-export types for backward compat
 export type { KanbanTicket, KanbanColumn } from "./shared/types";

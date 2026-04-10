@@ -130,7 +130,7 @@ export function TicketSidebar({
 
   return (
     <div className="px-4 py-3 space-y-1 bg-muted/10">
-      {/* Row: Status + Priority side by side */}
+
       <div className="grid grid-cols-2 gap-3">
         <div>
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
@@ -196,7 +196,6 @@ export function TicketSidebar({
         </div>
       </div>
 
-      {/* Row: Type + Points side by side */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
@@ -236,7 +235,6 @@ export function TicketSidebar({
         </div>
       </div>
 
-      {/* Row: Sprint + Epic side by side */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
@@ -284,7 +282,6 @@ export function TicketSidebar({
         </div>
       </div>
 
-      {/* Assignees — full width */}
       <div className="pt-1">
         <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
           Assignees
@@ -360,7 +357,6 @@ export function TicketSidebar({
         </Select>
       </div>
 
-      {/* Labels — full width */}
       <div className="pt-1">
         <LabelPicker
           ticketId={ticketId}
@@ -373,7 +369,6 @@ export function TicketSidebar({
         />
       </div>
 
-      {/* Time tracking — compact */}
       {(timeSpent > 0 || originalEstimate > 0) && (
         <div className="pt-1">
           <PropertyRow label="Time">
@@ -389,7 +384,6 @@ export function TicketSidebar({
         </div>
       )}
 
-      {/* Created / Updated — compact row */}
       <div className="grid grid-cols-2 gap-3 pt-1">
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Calendar className="h-3 w-3 shrink-0" />
@@ -401,7 +395,6 @@ export function TicketSidebar({
         </div>
       </div>
 
-      {/* Reporter — compact */}
       {ticket.reporter && (
         <div className="flex items-center gap-2 pt-1">
           <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide shrink-0">

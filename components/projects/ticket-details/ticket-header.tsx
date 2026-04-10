@@ -42,7 +42,7 @@ export function TicketHeader({
     <div className="shrink-0 border-b px-4 py-3">
       <SheetHeader className="space-y-0">
         <div className="flex items-center justify-between gap-2">
-          {/* Left: key + badges */}
+
           <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <Badge variant="outline" className="font-mono text-[11px] shrink-0 h-5 px-1.5">
               #{ticketNumber ?? ticketId}
@@ -61,7 +61,6 @@ export function TicketHeader({
             )}
           </div>
 
-          {/* Right: delete */}
           {!isLoading && ticketId && (
             <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
               <PopoverTrigger asChild>

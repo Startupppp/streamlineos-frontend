@@ -28,7 +28,6 @@ export default function DocumentEditorPage() {
   const [isDirty, setIsDirty] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Initialize from fetched doc
   useEffect(() => {
     if (doc) {
       setTitle(doc.title);
@@ -50,7 +49,6 @@ export default function DocumentEditorPage() {
     );
   }, [documentId, title, contentJson, isDirty, updateDoc]);
 
-  // Auto-save debounced 30s
   useEffect(() => {
     if (!isDirty) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);

@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/pages  — list pages for project
- * POST /api/projects/[id]/pages  — create page
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

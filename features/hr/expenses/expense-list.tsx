@@ -18,8 +18,6 @@ import type { ExpenseWithRelations } from "@/server/actions/expense-query";
 import type { ExpenseToEdit } from "@/app/(dashboard)/hr/expenses/create-expense-dialog";
 import type { StatusFilter } from "./expense-constants";
 
-/* ─── Shared Pagination ─── */
-
 interface PaginationProps {
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
   startItem: number;
@@ -123,8 +121,6 @@ function ExpensePagination({
   );
 }
 
-/* ─── Admin Expense List ─── */
-
 interface AdminExpenseListProps {
   expenses: ExpenseWithRelations[];
   pagination: { page: number; pageSize: number; total: number; totalPages: number };
@@ -217,8 +213,6 @@ export function AdminExpenseList({
     </Card>
   );
 }
-
-/* ─── Member Expense List ─── */
 
 interface MemberExpenseListProps {
   expenses: ExpenseWithRelations[];

@@ -41,12 +41,10 @@ export async function checkPermission(
 ): Promise<boolean> {
   if (!permissionName) return true;
 
-  // CEO always has full access
   if (role === "CEO") {
     return true;
   }
 
-  // 1. Check user-level overrides first
   const userPerms = await db.query.userPermissions.findMany({
     where: and(
       eq(userPermissions.userId, userId),
@@ -65,7 +63,6 @@ export async function checkPermission(
     return matchingUserPerm.granted;
   }
 
-  // 2. Check role_permissions table (legacy per-permission grants)
   if (role) {
     const rolePerms = await db.query.rolePermissions.findMany({
       where: and(
@@ -86,7 +83,6 @@ export async function checkPermission(
     }
   }
 
-  // 3. Check the roles table (primary source — permissions stored as jsonb)
   if (role) {
     const dbRole = await db.query.roles.findFirst({
       where: and(eq(roles.slug, role), eq(roles.orgId, orgId)),
@@ -99,7 +95,6 @@ export async function checkPermission(
     }
   }
 
-  // 4. Fallback to hardcoded defaults (for backward compat)
   const { ROLE_DEFAULT_PERMISSIONS } = await import("./permissions");
   const defaults = role ? ROLE_DEFAULT_PERMISSIONS[role] ?? [] : [];
   if (defaults.includes(permissionName)) {

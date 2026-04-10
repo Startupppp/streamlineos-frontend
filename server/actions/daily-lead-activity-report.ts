@@ -13,7 +13,6 @@ export async function generateDailyLeadActivityReport(
   const now = new Date();
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  // Query leads created or updated in the last 24 hours
   const recentLeads = await db.query.leads.findMany({
     where: and(
       eq(leads.orgId, orgId),
@@ -28,18 +27,15 @@ export async function generateDailyLeadActivityReport(
     orderBy: [desc(leads.updatedAt)],
   });
 
-  // Count by status
   const byStatus: Record<string, number> = {};
   for (const lead of recentLeads) {
     byStatus[lead.status] = (byStatus[lead.status] ?? 0) + 1;
   }
 
-  // Count new leads (createdAt within last 24h)
   const newLeadsCount = recentLeads.filter(
     (l) => l.createdAt && new Date(l.createdAt) >= since
   ).length;
 
-  // Top 5 recently updated leads
   const top5 = recentLeads.slice(0, 5).map((l) => ({
     id: l.id,
     name: l.name,
@@ -47,7 +43,6 @@ export async function generateDailyLeadActivityReport(
     assignedTo: l.assignedTo?.name ?? "Unassigned",
   }));
 
-  // Find org CEO/HR/ADMIN member emails
   const adminRows = await db
     .select({
       email: users.email,

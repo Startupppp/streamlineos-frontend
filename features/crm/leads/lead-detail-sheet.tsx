@@ -91,7 +91,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
           </div>
         ) : (
           <>
-            {/* Header */}
+
             <div className="px-6 pt-6 pb-5 border-b border-border/50">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -123,7 +123,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
             </div>
 
             <div className="px-6 py-5 space-y-6">
-              {/* AI Actions */}
+
               <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">AI Tools</p>
                 <div className="flex gap-2 flex-wrap items-center">
@@ -145,7 +145,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 </div>
               </div>
 
-              {/* Status Actions */}
               <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Move to</p>
                 <div className="flex gap-2 flex-wrap">
@@ -155,7 +154,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 </div>
               </div>
 
-              {/* Contact Info */}
               <div className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contact</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -196,7 +194,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 </div>
               </div>
 
-              {/* Financial */}
               {(lead.potentialValue || lead.investmentInterest) && (
                 <div className="space-y-3">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Financials</p>
@@ -221,7 +218,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 </div>
               )}
 
-              {/* Assigned To */}
               {lead.assignedTo && (
                 <div className="space-y-3">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Assigned To</p>
@@ -240,7 +236,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 </div>
               )}
 
-              {/* Notes */}
               {lead.notes && (
                 <div className="space-y-3">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notes</p>
@@ -250,7 +245,6 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                 </div>
               )}
 
-              {/* Tabs Section */}
               <div className="pt-2">
                 <Tabs value={activityTab} onValueChange={setActivityTab}>
                   <TabsList className="w-full h-10">

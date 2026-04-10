@@ -293,7 +293,7 @@ export default function HelpdeskPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats cards */}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "Total", value: stats.total, icon: Ticket, color: "" },
@@ -313,7 +313,6 @@ export default function HelpdeskPage() {
           ))}
         </div>
 
-        {/* Tickets table */}
         <Card>
           <CardContent className="p-0">
             <ScrollArea className="w-full" type="auto">

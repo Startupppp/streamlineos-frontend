@@ -51,7 +51,7 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
       ipAddress: entry.ipAddress ?? null,
     });
   } catch (error) {
-    // Log at error level so monitoring can alert on audit failures
+
     logger.error("AUDIT_FAILURE: Failed to create audit log — investigate immediately", {
       action: entry.action,
       userId: entry.userId,

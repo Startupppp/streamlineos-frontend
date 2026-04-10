@@ -20,7 +20,6 @@ interface SearchResult {
   status?: string;
 }
 
-/** GET /api/search?q=... — Global search across all entities */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { q, limit } = parseQuery(req, querySchema);
@@ -39,27 +38,27 @@ async function executeSearch(orgId: string, q: string, limit?: number) {
     const pattern = `%${q}%`;
 
     const [leadResults, dealResults, contactResults, clientResults, ticketResults] = await Promise.all([
-      // Leads
+
       db.select({ id: leads.id, name: leads.name, email: leads.email, company: leads.company, status: leads.status })
         .from(leads)
         .where(and(eq(leads.orgId, orgId), or(ilike(leads.name, pattern), ilike(leads.email, pattern), ilike(leads.company, pattern), ilike(leads.phone, pattern))))
         .limit(maxPer),
-      // Deals
+
       db.select({ id: deals.id, name: deals.name, value: deals.value, stage: deals.stage, contactPerson: deals.contactPerson })
         .from(deals)
         .where(and(eq(deals.orgId, orgId), or(ilike(deals.name, pattern), ilike(deals.contactPerson, pattern))))
         .limit(maxPer),
-      // Contacts
+
       db.select({ id: contacts.id, name: contacts.name, email: contacts.email, company: contacts.company })
         .from(contacts)
         .where(and(eq(contacts.orgId, orgId), or(ilike(contacts.name, pattern), ilike(contacts.email, pattern), ilike(contacts.company, pattern))))
         .limit(maxPer),
-      // Clients
+
       db.select({ id: clients.id, name: clients.name, company: clients.company, status: clients.status })
         .from(clients)
         .where(and(eq(clients.orgId, orgId), or(ilike(clients.name, pattern), ilike(clients.company, pattern))))
         .limit(maxPer),
-      // Tickets
+
       db.select({ id: tickets.id, title: tickets.title, status: tickets.status, projectId: tickets.projectId })
         .from(tickets)
         .where(and(eq(tickets.orgId, orgId), ilike(tickets.title, pattern)))

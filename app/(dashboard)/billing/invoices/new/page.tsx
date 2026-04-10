@@ -84,7 +84,7 @@ export default function NewInvoicePage() {
       }
     >
       <div className="max-w-3xl space-y-6">
-        {/* Line items */}
+
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <p className="text-sm font-semibold">Line Items</p>
@@ -173,7 +173,6 @@ export default function NewInvoicePage() {
           </div>
         </div>
 
-        {/* Invoice settings */}
         <div className="rounded-lg border border-border bg-card p-4 space-y-4">
           <p className="text-sm font-semibold">Invoice Settings</p>
           <div className="grid grid-cols-2 gap-4">

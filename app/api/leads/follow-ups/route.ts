@@ -10,7 +10,6 @@ const querySchema = z.object({
   limit: z.coerce.number().min(1).max(50).optional(),
 });
 
-/** GET /api/leads/follow-ups — List leads with follow-up reminders (optionally only overdue) */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { overdue, limit } = parseQuery(req, querySchema);

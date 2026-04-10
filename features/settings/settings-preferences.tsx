@@ -32,7 +32,6 @@ const NOTIFICATION_CATEGORIES = [
   { key: "target_achieved", label: "Target achieved", description: "When you hit a sales or performance target." },
 ];
 
-
 function PrefRow({ id, icon: Icon, label, description, checked, onCheckedChange, disabled }: PrefRowProps) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
@@ -118,7 +117,6 @@ export function SettingsPreferences() {
 
   return (
     <div className="space-y-6">
-      
 
       <div className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden">
         <div className="px-4 py-3 bg-muted/30">

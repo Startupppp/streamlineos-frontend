@@ -8,7 +8,6 @@ import { users, goals, attendance } from "@/lib/db/schema";
 import { eq, and, gte, lte, count, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/** Generate a draft performance review. */
 export async function aiGenerateReview(
   orgId: string,
   userId: string,
@@ -30,7 +29,6 @@ export async function aiGenerateReview(
 
   if (!employee) return null;
 
-  // Fetch goals for the review period
   const employeeGoals = await db
     .select({ goal: goals.title, achieved: goals.status, progress: goals.progress })
     .from(goals)
@@ -44,7 +42,6 @@ export async function aiGenerateReview(
     )
     .limit(20);
 
-  // Calculate attendance rate
   const [attendanceData] = await db
     .select({
       total: count(),
@@ -90,7 +87,6 @@ export async function aiGenerateReview(
     user: prompt.user,
   });
 
-  // Clamp ratings to 1-5
   result.overallRating = Math.max(1, Math.min(5, result.overallRating));
   result.ratings = result.ratings.map((r) => ({
     ...r,

@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/cycles  — list cycles for project
- * POST /api/projects/[id]/cycles  — create cycle
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/sprints  — list sprints for project
- * POST /api/projects/[id]/sprints  — create sprint (admin only)
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";

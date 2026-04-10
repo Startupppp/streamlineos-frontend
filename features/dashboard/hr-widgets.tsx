@@ -40,7 +40,6 @@ function EmptyWidget({ message }: { message: string }) {
   );
 }
 
-// ─── Who's On Leave Today ───
 export function LeavesTodayWidget() {
   const { data, isLoading } = useLeavesToday();
   return (
@@ -74,7 +73,6 @@ export function LeavesTodayWidget() {
   );
 }
 
-// ─── Upcoming Leaves This Week ───
 export function UpcomingLeavesWidget() {
   const { data, isLoading } = useUpcomingLeaves();
   return (
@@ -107,7 +105,6 @@ export function UpcomingLeavesWidget() {
   );
 }
 
-// ─── Upcoming Holidays ───
 export function UpcomingHolidaysWidget() {
   const { data, isLoading } = useUpcomingHolidays();
   return (
@@ -139,7 +136,6 @@ export function UpcomingHolidaysWidget() {
   );
 }
 
-// ─── My Leave Balance ───
 export function LeaveBalanceWidget() {
   const { data, isLoading } = useMyLeaveBalance();
   return (
@@ -176,7 +172,6 @@ export function LeaveBalanceWidget() {
   );
 }
 
-// ─── My Pending Requests ───
 export function PendingRequestsWidget() {
   const { data, isLoading } = usePendingRequests();
   return (
@@ -207,7 +202,6 @@ export function PendingRequestsWidget() {
   );
 }
 
-// ─── Birthdays & Anniversaries ───
 export function BirthdaysWidget() {
   const { data, isLoading } = useBirthdays();
   return (
@@ -251,7 +245,6 @@ export function BirthdaysWidget() {
   );
 }
 
-// ─── Pending Approvals (HR/CEO only) ───
 export function PendingApprovalsWidget() {
   const { data, isLoading } = usePendingApprovals();
   return (
@@ -281,7 +274,6 @@ export function PendingApprovalsWidget() {
   );
 }
 
-// ─── Team Attendance ───
 export function TeamAttendanceWidget() {
   const { data, isLoading } = useTeamAttendance();
   return (

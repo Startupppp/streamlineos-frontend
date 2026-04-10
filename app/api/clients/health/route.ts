@@ -11,7 +11,6 @@ const querySchema = z.object({
   limit: z.coerce.number().min(1).max(50).optional(),
 });
 
-/** GET /api/clients/health — Get clients with health status, sorted by risk */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit } = parseQuery(req, querySchema);

@@ -35,8 +35,6 @@ import { AdminExpenseFilters, MemberExpenseFilters } from "@/features/hr/expense
 import { AdminExpenseList, MemberExpenseList } from "@/features/hr/expenses/expense-list";
 import type { ExpenseToEdit } from "./create-expense-dialog";
 
-/* ─── Page Component ─── */
-
 export default function ExpensesPage() {
   const { data: session } = useSession();
   const [pageData, setPageData] = useState<ExpensePageData | null>(null);
@@ -163,7 +161,6 @@ export default function ExpensesPage() {
     );
   };
 
-  /* ─── Loading State ─── */
   if (loading && !pageData) {
     return <ExpensesLoading />;
   }
@@ -183,9 +180,6 @@ export default function ExpensesPage() {
   const startItem = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1;
   const endItem = Math.min(pagination.page * pagination.pageSize, pagination.total);
 
-  /* ═══════════════════════════════════════════════════════════
-     ADMIN VIEW — Expense Approvals (card-based)
-     ═══════════════════════════════════════════════════════════ */
   if (isAdmin) {
     return (
       <PageWrapper
@@ -222,12 +216,11 @@ export default function ExpensesPage() {
         }
       >
         <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
-          {/* 4 Stats Cards */}
+
           <motion.div variants={fadeUp}>
             <AdminExpenseStats stats={stats} pendingCount={pendingCount} />
           </motion.div>
 
-          {/* Filter Pills */}
           <motion.div variants={fadeUp}>
             <AdminExpenseFilters
               statusFilter={statusFilter}
@@ -236,7 +229,6 @@ export default function ExpensesPage() {
             />
           </motion.div>
 
-          {/* Claims Card List */}
           <motion.div variants={fadeUp}>
             <AdminExpenseList
               expenses={filteredExpenses}
@@ -274,9 +266,6 @@ export default function ExpensesPage() {
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     MEMBER VIEW — My Expenses (table-based)
-     ═══════════════════════════════════════════════════════════ */
   return (
     <PageWrapper
       title="My Expenses"
@@ -292,12 +281,11 @@ export default function ExpensesPage() {
       }
     >
       <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
-        {/* 3 Stats Cards */}
+
         <motion.div variants={fadeUp}>
           <MemberExpenseStats stats={stats} />
         </motion.div>
 
-        {/* Filter Tabs + Date Filter */}
         <motion.div variants={fadeUp}>
           <MemberExpenseFilters
             statusFilter={statusFilter}
@@ -309,7 +297,6 @@ export default function ExpensesPage() {
           />
         </motion.div>
 
-        {/* Table */}
         <motion.div variants={fadeUp}>
           <MemberExpenseList
             expenses={filteredExpenses}

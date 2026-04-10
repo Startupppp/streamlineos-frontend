@@ -1,6 +1,4 @@
-/**
- * POST /api/chat/channels/[id]/read  — mark channel as read for the current user
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";

@@ -11,8 +11,6 @@ import type {
   UpdateSprintInput,
 } from "@/types/projects";
 
-// ─── Sprints ──────────────────────────────────────────────────────────────────
-
 export function useSprints(
   projectId?: number,
   options?: Omit<UseQueryOptions<Sprint[]>, "queryKey" | "queryFn" | "enabled">

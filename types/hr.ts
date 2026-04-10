@@ -1,9 +1,4 @@
-/**
- * HR domain TypeScript types.
- * Derived from the DB schema and tRPC router return shapes.
- */
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
 
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 export type PayrollStatus = "DRAFT" | "APPROVED" | "PAID";
@@ -26,8 +21,6 @@ export type DeviceStatus = "ACTIVE" | "INACTIVE" | "RETURNED";
 export type AttendanceStatus = "OFFLINE" | "PRESENT" | "ON_BREAK" | "CHECKED_OUT";
 export type WorkLogStatus = "PENDING" | "APPROVED" | "REJECTED";
 
-// ─── Department ───────────────────────────────────────────────────────────────
-
 export interface Department {
   id: number;
   orgId: string;
@@ -35,8 +28,6 @@ export interface Department {
   managerId: string | null;
   createdAt: Date | string | null;
 }
-
-// ─── Employee ─────────────────────────────────────────────────────────────────
 
 export interface Employee {
   id: string;
@@ -60,8 +51,6 @@ export interface PaginatedEmployees {
   data: Employee[];
   pagination: Pagination;
 }
-
-// ─── Attendance ───────────────────────────────────────────────────────────────
 
 export interface BreakEntry {
   start: string;
@@ -98,8 +87,6 @@ export interface AttendanceStatusResult {
   dailyStats: DailyStats;
   cooldownRemaining: number;
 }
-
-// ─── Leave ────────────────────────────────────────────────────────────────────
 
 export interface LeaveType {
   id: number;
@@ -140,8 +127,6 @@ export interface LeavesResult {
   requests: LeaveRequest[];
 }
 
-// ─── Payroll ──────────────────────────────────────────────────────────────────
-
 export interface Payroll {
   id: number;
   orgId: string;
@@ -179,8 +164,6 @@ export interface SalaryStructure {
   updatedAt: Date | string | null;
 }
 
-// ─── Expense ──────────────────────────────────────────────────────────────────
-
 export interface Expense {
   id: number;
   orgId: string;
@@ -214,8 +197,6 @@ export interface PaginatedExpenses {
   totalPages: number;
 }
 
-// ─── Asset ────────────────────────────────────────────────────────────────────
-
 export interface Asset {
   id: number;
   orgId: string;
@@ -231,8 +212,6 @@ export interface Asset {
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
-
-// ─── Document ─────────────────────────────────────────────────────────────────
 
 export interface Document {
   id: number;
@@ -259,8 +238,6 @@ export interface Document {
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
-
-// ─── Performance ──────────────────────────────────────────────────────────────
 
 export interface RatingEntry {
   category: string;
@@ -351,8 +328,6 @@ export interface Goal {
   updatedAt: Date | string | null;
 }
 
-// ─── Helpdesk ─────────────────────────────────────────────────────────────────
-
 export interface HelpdeskTicket {
   id: number;
   orgId: string;
@@ -368,8 +343,6 @@ export interface HelpdeskTicket {
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
-
-// ─── Work Log (Timesheet) ─────────────────────────────────────────────────────
 
 export interface WorkLog {
   id: number;
@@ -390,8 +363,6 @@ export interface WorkLog {
   updatedAt: Date | string | null;
 }
 
-// ─── Org Chart ────────────────────────────────────────────────────────────────
-
 export interface OrgChartNode {
   id: string;
   name: string | null;
@@ -402,8 +373,6 @@ export interface OrgChartNode {
   departmentId: number | null;
   reportingTo: string | null;
 }
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
 
 export interface Pagination {
   page: number;
@@ -416,8 +385,6 @@ export interface PaginatedResult<T> {
   data: T[];
   pagination: Pagination;
 }
-
-// ─── Input types for mutations ────────────────────────────────────────────────
 
 export interface CreateDepartmentInput {
   name: string;
@@ -622,8 +589,6 @@ export interface GetWorkLogsInput {
   userId?: string;
 }
 
-// ─── WFH Requests ─────────────────────────────────────────────────────────────
-
 export interface WfhRequest {
   id: number;
   orgId: string;
@@ -662,8 +627,6 @@ export interface ProcessWfhRequestInput {
   rejectionReason?: string;
 }
 
-// ─── Holidays ─────────────────────────────────────────────────────────────────
-
 export interface Holiday {
   id: number;
   orgId: string;
@@ -683,8 +646,6 @@ export interface AddHolidayInput {
 export interface DeleteHolidayInput {
   holidayId: number;
 }
-
-// ─── Devices ──────────────────────────────────────────────────────────────────
 
 export type DeviceStatusExtended = "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
 
@@ -737,8 +698,6 @@ export interface DeleteDeviceInput {
   deviceId: number;
 }
 
-// ─── Payslip (Employee View) ───────────────────────────────────────────────────
-
 export interface EmployeePayslip {
   id: number;
   userId: string;
@@ -768,8 +727,6 @@ export interface EmployeePayslip {
 export interface GetEmployeePayslipsInput {
   userId?: string;
 }
-
-// ─── Payroll Admin ────────────────────────────────────────────────────────────
 
 export interface PayrollWithUser extends Payroll {
   user?: {
@@ -805,8 +762,6 @@ export interface MarkPayrollPaidInput {
   payrollId: number;
 }
 
-// ─── Employee Stats ───────────────────────────────────────────────────────────
-
 export interface EmployeeAttendanceSummaryData {
   daysPresent: number;
   daysAbsent: number;
@@ -825,8 +780,6 @@ export interface EmployeeStats {
   };
   attendance: EmployeeAttendanceSummaryData | null;
 }
-
-// ─── Onboarding ───────────────────────────────────────────────────────────────
 
 export interface OnboardEmployeeInput {
   firstName: string;
@@ -856,8 +809,6 @@ export interface OnboardEmployeeInput {
     pfUanNumber?: string;
   };
 }
-
-// ─── Incentives ───────────────────────────────────────────────────────────────
 
 export interface IncentiveConfig {
   id: number;
@@ -924,15 +875,11 @@ export interface SetIncentiveConfigInput {
   incentiveRate: string;
 }
 
-// ─── Monthly Attendance ───────────────────────────────────────────────────────
-
 export interface GetMonthlyAttendanceInput {
   userId: string;
   year: number;
   month: number;
 }
-
-// ─── Recruitment ─────────────────────────────────────────────────────────────
 
 export type JobPostingStatus = "DRAFT" | "OPEN" | "PAUSED" | "CLOSED" | "FILLED";
 export type CandidateStatus = "NEW" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED" | "REJECTED";

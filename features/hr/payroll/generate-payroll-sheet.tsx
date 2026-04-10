@@ -77,7 +77,7 @@ export function GeneratePayrollSheet({
   onConfirmGenerate,
   isGenerating,
 }: GeneratePayrollSheetProps) {
-  // Preview mode renders its own dedicated sheet (PayslipDetailSheet) — open it conditionally
+
   if (showPreview) {
     return (
       <PayslipDetailSheet

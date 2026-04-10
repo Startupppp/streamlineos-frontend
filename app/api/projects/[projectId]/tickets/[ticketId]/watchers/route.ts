@@ -1,8 +1,4 @@
-/**
- * GET    /api/projects/[projectId]/tickets/[ticketId]/watchers — list watchers
- * POST   /api/projects/[projectId]/tickets/[ticketId]/watchers — add watcher (self or userId)
- * DELETE /api/projects/[projectId]/tickets/[ticketId]/watchers — remove self as watcher
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -25,7 +21,6 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const ticketId = await resolveTicketId(params);
     if (!ticketId) return err("Invalid ticket id", 400);
 
-    // Verify ticket belongs to org
     const ticket = await db.query.tickets.findFirst({
       where: and(eq(tickets.id, ticketId), eq(tickets.orgId, session.orgId!)),
       columns: { id: true },
@@ -59,7 +54,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const body = await parseBody(req, addWatcherSchema);
     const userId = body.userId ?? session.user.id;
 
-    // Upsert — ignore conflict
     await db
       .insert(ticketWatchers)
       .values({ ticketId, userId })

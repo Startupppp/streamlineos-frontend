@@ -11,7 +11,6 @@ const schema = z.object({
   periodEnd: z.string().min(1, "Period end required"),
 });
 
-/** POST /api/ai/generate-review — Draft a performance review for an employee */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

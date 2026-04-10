@@ -69,7 +69,6 @@ export default function DmLeadsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "", phone: "", email: "", whatsappNumber: "",
     sourcePlatform: "linkedin", leadQuality: "warm", notes: "",
@@ -160,7 +159,7 @@ export default function DmLeadsPage() {
       }
     >
       <div className="space-y-6">
-        {/* Table */}
+
         <Card>
           <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-[700px]">

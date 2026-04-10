@@ -51,7 +51,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         className="rounded-lg border bg-card p-4 hover:shadow-md hover:border-border/80 transition-all cursor-pointer h-full min-h-[230px] flex flex-col group"
         role="listitem"
       >
-        {/* Top row: key badge + status */}
+
         <div className="flex items-center justify-between mb-3">
           <span className="text-[11px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
             {project.key}
@@ -64,20 +64,16 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           </Badge>
         </div>
 
-        {/* Project name */}
         <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1">
           {project.name}
         </h3>
 
-        {/* Description */}
         <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-3">
           {project.description || "No description provided."}
         </p>
 
-        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Progress */}
         <div className="mb-3 min-h-[1.7rem]">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
             <span>Progress</span>
@@ -88,7 +84,6 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           <Progress value={project.progress.total > 0 ? project.progress.percentage : 0} className="h-1" />
         </div>
 
-        {/* Footer: avatars + date */}
         <div className="flex items-center justify-between pt-2 border-t border-border/40">
           <AvatarStack
             users={project.members}

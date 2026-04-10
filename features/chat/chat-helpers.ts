@@ -10,12 +10,10 @@ export function getInitials(name: string | null | undefined) {
     .slice(0, 2);
 }
 
-/** Ensure a date string without timezone info is treated correctly */
 function toDate(date: Date | string | null): Date | null {
   if (!date) return null;
   if (date instanceof Date) return date;
-  // If the string has no timezone indicator (Z, +, -), append Z to treat as UTC
-  // which drizzle timestamp without timezone stores as
+
   if (typeof date === "string" && !date.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(date) && !date.includes("T")) {
     return new Date(date.replace(" ", "T") + "Z");
   }

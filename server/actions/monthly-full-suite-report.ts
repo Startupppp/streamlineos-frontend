@@ -11,7 +11,7 @@ export async function generateMonthlyFullSuiteReport(
   orgName: string
 ): Promise<{ sent: boolean; recipientCount: number }> {
   const now = new Date();
-  // First day of the previous month
+
   const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastOfLastMonth = new Date(firstOfThisMonth.getTime() - 1);
@@ -21,7 +21,6 @@ export async function generateMonthlyFullSuiteReport(
     year: "numeric",
   });
 
-  // Lead stats for the previous month
   const monthLeads = await db.query.leads.findMany({
     where: and(
       eq(leads.orgId, orgId),
@@ -39,7 +38,6 @@ export async function generateMonthlyFullSuiteReport(
   const closedLeads = (byStatus["CONVERTED"] ?? 0) + (byStatus["LOST"] ?? 0);
   const convertedLeads = byStatus["CONVERTED"] ?? 0;
 
-  // HR stats: headcount = active members in org
   const [headcountResult] = await db
     .select({ count: count() })
     .from(organizationMembers)
@@ -52,7 +50,6 @@ export async function generateMonthlyFullSuiteReport(
     );
   const headcount = headcountResult?.count ?? 0;
 
-  // Find CEO + HR recipients
   const memberRows = await db
     .select({
       email: users.email,

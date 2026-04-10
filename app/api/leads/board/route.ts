@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         userId: session.user.id,
       },
     });
-    // Limit per column to prevent loading thousands
+
     const limited: Record<string, unknown[]> = {};
     for (const [status, leads] of Object.entries(board)) {
       limited[status] = (leads as unknown[]).slice(0, limit);

@@ -61,7 +61,7 @@ export default function BillingPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats */}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Total Invoiced"
@@ -89,7 +89,6 @@ export default function BillingPage() {
           />
         </div>
 
-        {/* Invoice status breakdown */}
         <div className="grid gap-4 sm:grid-cols-5">
           {(["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as InvoiceStatus[]).map((s) => {
             const badge = STATUS_BADGE[s];
@@ -105,7 +104,6 @@ export default function BillingPage() {
           })}
         </div>
 
-        {/* Recent invoices */}
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 flex items-center justify-between border-b border-border">
             <p className="text-sm font-semibold">Recent Invoices</p>
@@ -118,7 +116,6 @@ export default function BillingPage() {
           <InvoiceTable invoices={recentInvoices} />
         </div>
 
-        {/* Overdue invoices */}
         {overdueInvoices.length > 0 && (
           <div className="rounded-lg border border-destructive/30 bg-card overflow-hidden">
             <div className="px-4 py-3 flex items-center justify-between border-b border-destructive/30 bg-destructive/5">
@@ -136,7 +133,6 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* Quick links */}
         <div className="flex gap-3 flex-wrap">
           <Link href="/billing/invoices">
             <Button variant="outline" size="sm">All Invoices</Button>

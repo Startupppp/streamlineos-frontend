@@ -17,8 +17,6 @@ import type {
   MarkPayrollPaidInput,
 } from "@/types/hr";
 
-// ─── Payrolls ─────────────────────────────────────────────────────────────────
-
 export function useHrPayrolls() {
   return useQuery({
     queryKey: queryKeys.hr.payrolls(),
@@ -35,8 +33,6 @@ export function useGeneratePayroll() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.payrolls() }),
   });
 }
-
-// ─── Salary Structures ────────────────────────────────────────────────────────
 
 export function useHrSalaryStructures(userId?: string) {
   return useQuery({
@@ -59,8 +55,6 @@ export function useCreateSalaryStructure() {
   });
 }
 
-// ─── Payslips (Employee View) ─────────────────────────────────────────────────
-
 export function useHrEmployeePayslips(params?: GetEmployeePayslipsInput) {
   return useQuery({
     queryKey: queryKeys.hr.employeePayslips(params?.userId),
@@ -71,8 +65,6 @@ export function useHrEmployeePayslips(params?: GetEmployeePayslipsInput) {
       ),
   });
 }
-
-// ─── Payroll Admin ────────────────────────────────────────────────────────────
 
 export function useHrAllPayrolls(params: GetAllPayrollsInput) {
   return useQuery({

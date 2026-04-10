@@ -1,6 +1,4 @@
-/**
- * Chat / Messaging domain tables.
- */
+
 import { pgTable, text, serial, timestamp, boolean, jsonb, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { chatMessageTypeEnum } from "./enums";
@@ -81,7 +79,6 @@ export const chatUserPresence = pgTable("chat_user_presence", {
   index("idx_chat_presence_lastseen").on(table.orgId, table.lastSeenAt),
 ]);
 
-// ─── Chat Relations ───
 export const chatChannelsRelations = relations(chatChannels, ({ many, one }) => ({
   members: many(chatChannelMembers),
   messages: many(chatMessages),

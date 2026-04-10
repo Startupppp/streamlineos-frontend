@@ -8,9 +8,6 @@ import { deals, dealActivities } from "@/lib/db/schema";
 import { eq, and, count, max } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/**
- * Predict win probability for a deal using AI.
- */
 export async function predictDealOutcome(
   orgId: string,
   dealId: number,
@@ -27,7 +24,6 @@ export async function predictDealOutcome(
 
   if (!deal) return null;
 
-  // Count activities and find last activity date
   const [activityStats] = await db
     .select({ count: count(), lastDate: max(dealActivities.createdAt) })
     .from(dealActivities)
@@ -76,7 +72,6 @@ export async function predictDealOutcome(
 
   result.winProbability = Math.max(0, Math.min(100, Math.round(result.winProbability)));
 
-  // Update the deal's probability with AI prediction
   await db
     .update(deals)
     .set({ probability: result.winProbability, updatedAt: new Date() })

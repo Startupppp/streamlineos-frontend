@@ -1,7 +1,5 @@
 import type { TicketPriority, TicketType } from "@/types/projects";
 
-// ─── Kanban Types ──────────────────────────────────────────────────────────
-
 export interface KanbanTicket {
   id: number;
   title: string;
@@ -48,8 +46,6 @@ export interface KanbanColumn {
   order: number;
   wipLimit?: number;
 }
-
-// ─── Config Maps ───────────────────────────────────────────────────────────
 
 export const priorityConfig: Record<
   string,

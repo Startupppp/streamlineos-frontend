@@ -1,7 +1,4 @@
-/**
- * PATCH  /api/projects/[id]/views/[viewId]  — update saved view
- * DELETE /api/projects/[id]/views/[viewId]  — delete saved view
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

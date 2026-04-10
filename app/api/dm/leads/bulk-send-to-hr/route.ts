@@ -10,7 +10,6 @@ const schema = z.object({
   assignedToId: z.string().optional(),
 });
 
-/** POST /api/dm/leads/bulk-send-to-hr — Bulk transfer DM leads to HR/Sales */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const { leadIds, assignedToId } = await parseBody(req, schema);

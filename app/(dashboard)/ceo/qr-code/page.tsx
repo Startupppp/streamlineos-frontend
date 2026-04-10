@@ -110,12 +110,11 @@ function QRCard({
   return (
     <div className="group relative rounded-2xl overflow-hidden border border-border/40 bg-card flex flex-col transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_8px_40px_rgba(189,136,44,0.18)]">
 
-      {/* ── QR preview ──────────────────────────────────────────────── */}
       <div
         className="relative flex items-center justify-center p-6 h-48 overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0a0c18 0%, #0f1420 50%, #0d0f1c 100%)" }}
       >
-        {/* Grid texture overlay */}
+
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -124,21 +123,17 @@ function QRCard({
           }}
         />
 
-        {/* Ambient gold glow — brightens on hover */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(189,136,44,0.12) 0%, transparent 70%)" }}
         />
 
-        {/* Corner scanner brackets */}
         <span className="absolute top-3 left-3 h-5 w-5 border-t-2 border-l-2 border-gold/50 rounded-tl-sm" />
         <span className="absolute top-3 right-3 h-5 w-5 border-t-2 border-r-2 border-gold/50 rounded-tr-sm" />
         <span className="absolute bottom-3 left-3 h-5 w-5 border-b-2 border-l-2 border-gold/50 rounded-bl-sm" />
         <span className="absolute bottom-3 right-3 h-5 w-5 border-b-2 border-r-2 border-gold/50 rounded-br-sm" />
 
-        {/* Scan-line sweep animation */}
         <span className="absolute left-3 right-3 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent opacity-0 group-hover:opacity-100 animate-[scan_2s_ease-in-out_infinite] pointer-events-none" />
 
-        {/* Scan count badge — top-left */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/60 border border-emerald-500/30 backdrop-blur-sm rounded-full px-2.5 py-1">
           {qr.scanCount > 0 && (
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
@@ -148,15 +143,13 @@ function QRCard({
           <span className="text-[9px] text-emerald-400/70">scans</span>
         </div>
 
-        {/* QR code in white card */}
         <div className="relative h-28 w-28 bg-white rounded-2xl p-2 shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_0_1px_rgba(189,136,44,0.3),0_8px_40px_rgba(0,0,0,0.8)] transition-shadow duration-300">
           <QRCodeImage imageUrl={qr.imageUrl} size={120} />
         </div>
       </div>
 
-      {/* ── Info ────────────────────────────────────────────────────── */}
       <div className="p-4 flex flex-col gap-3 flex-1 border-t border-border/30">
-        {/* Domain + URL */}
+
         <div>
           <Link
             href={qr.targetUrl}
@@ -172,7 +165,6 @@ function QRCard({
           <p className="text-[10px] text-muted-foreground/50 truncate mt-0.5">{qr.targetUrl}</p>
         </div>
 
-        {/* Chips row */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="flex items-center gap-1 bg-muted/60 border border-border/40 rounded-lg px-2 py-1 text-[10px] text-muted-foreground font-mono">
             <Link2 className="h-2.5 w-2.5 shrink-0" />
@@ -187,7 +179,6 @@ function QRCard({
         </div>
       </div>
 
-      {/* ── Hover 3-dot menu ────────────────────────────────────────── */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -368,7 +359,7 @@ export default function CEOQRCodePage() {
       }
     >
       <div className="space-y-6">
-        {/* Generator */}
+
         <div className="rounded-xl border bg-card p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-9 w-9 rounded-xl bg-gold/10 ring-1 ring-gold/20 flex items-center justify-center shrink-0">
@@ -403,7 +394,6 @@ export default function CEOQRCodePage() {
           </form>
         </div>
 
-        {/* Cards grid */}
         <div>
           {isLoadingData ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

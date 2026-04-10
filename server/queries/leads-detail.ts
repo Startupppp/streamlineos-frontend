@@ -1,10 +1,5 @@
 "server-only";
 
-/**
- * Server-side DB query functions for the Leads domain — single-lead detail queries.
- * Import only in Server Components, Route Handlers, or Server Actions.
- */
-
 import { db } from "@/lib/db";
 import {
   leads,
@@ -18,8 +13,6 @@ import {
   and,
   desc,
 } from "drizzle-orm";
-
-// ─── getLead ─────────────────────────────────────────────────────────────────
 
 export async function getLead(orgId: string, id: number) {
   return db.query.leads.findFirst({
@@ -36,8 +29,6 @@ export async function getLead(orgId: string, id: number) {
   });
 }
 
-// ─── getLeadActivities ────────────────────────────────────────────────────────
-
 export async function getLeadActivities(
   orgId: string,
   leadId: number,
@@ -53,8 +44,6 @@ export async function getLeadActivities(
     limit,
   });
 }
-
-// ─── getLeadTimeline ──────────────────────────────────────────────────────────
 
 export async function getLeadTimeline(
   orgId: string,

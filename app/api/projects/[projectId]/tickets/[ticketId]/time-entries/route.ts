@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/tickets/[ticketId]/time-entries  — list time entries for ticket
- * POST /api/projects/[id]/tickets/[ticketId]/time-entries  — log time
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

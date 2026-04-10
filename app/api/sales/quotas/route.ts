@@ -22,7 +22,6 @@ const createSchema = z.object({
   notes: z.string().optional(),
 });
 
-/** GET /api/sales/quotas — List quotas with optional filters */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { userId, period, limit } = parseQuery(req, listSchema);
@@ -53,7 +52,6 @@ export async function GET(req: NextRequest) {
       .orderBy(desc(salesQuotas.startDate))
       .limit(limit ?? 20);
 
-        // Calculate attainment in JS (since GENERATED ALWAYS isn't in Drizzle)
         return results.map((q) => ({
           ...q,
           attainmentPct: Number(q.targetRevenue) > 0
@@ -68,7 +66,6 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/sales/quotas — Create a new quota */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";

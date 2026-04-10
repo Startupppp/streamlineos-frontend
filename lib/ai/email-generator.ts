@@ -9,10 +9,6 @@ import {
 } from "./prompts";
 import { GeneratedEmailSchema } from "./schemas";
 
-/**
- * Generate a follow-up email for a lead/deal.
- * Returns null if OpenAI is not configured.
- */
 export async function generateFollowUpEmail(
   input: EmailGeneratorInput,
 ): Promise<GeneratedEmail | null> {
@@ -29,10 +25,6 @@ export async function generateFollowUpEmail(
   });
 }
 
-/**
- * Generate multiple email variations with different tones.
- * Useful for A/B testing or giving the sales rep options.
- */
 export async function generateEmailVariations(
   input: Omit<EmailGeneratorInput, "tone">,
   tones: EmailTone[] = ["formal", "friendly", "urgent"],

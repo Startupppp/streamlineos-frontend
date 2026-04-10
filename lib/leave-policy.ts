@@ -1,4 +1,4 @@
-/** Maximum WFH days allowed per month */
+
 export const WFH_MONTHLY_QUOTA = 4;
 
 export const LEAVE_POLICY = {
@@ -29,14 +29,12 @@ export const DEFAULT_LEAVE_TYPES = [
   { name: LEAVE_POLICY.UNPAID.name, daysPerYear: LEAVE_POLICY.UNPAID.daysPerYear, carryForward: LEAVE_POLICY.UNPAID.carryForward },
 ] as const;
 
-/** The only leave types shown in the UI balance overview: 12 casual, 6 sick, unpaid */
 export const ALLOWED_LEAVE_TYPE_NAMES: ReadonlySet<string> = new Set([
   LEAVE_POLICY.CASUAL.name,
   LEAVE_POLICY.SICK.name,
   LEAVE_POLICY.UNPAID.name,
 ]);
 
-/** Maximum number of days allowed per single leave request, by leave type name */
 export const LEAVE_MAX_DAYS: Record<string, number> = {
   [LEAVE_POLICY.SICK.name]: LEAVE_POLICY.SICK.daysPerYear,
   [LEAVE_POLICY.CASUAL.name]: LEAVE_POLICY.CASUAL.daysPerYear,

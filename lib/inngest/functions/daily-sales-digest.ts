@@ -6,19 +6,11 @@ import { subDays } from "date-fns";
 import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";
 
-/**
- * Daily Sales Digest — runs at 8:30 AM IST every weekday.
- * Sends a summary notification to CEO and sales managers with:
- * - New leads today
- * - Deals won today
- * - Pipeline value
- * - Overdue follow-ups
- */
 export const dailySalesDigest = inngest.createFunction(
   {
     id: "daily-sales-digest",
     name: "Daily Sales Digest",
-    triggers: { cron: "30 3 * * 1-5" }, // 8:30 AM IST (UTC+5:30) Mon-Fri
+    triggers: { cron: "30 3 * * 1-5" },
   },
   async ({ step }) => {
     const orgs = await step.run("fetch-orgs", () =>
@@ -31,7 +23,6 @@ export const dailySalesDigest = inngest.createFunction(
       await step.run(`digest-${org.id}`, async () => {
         const yesterday = subDays(new Date(), 1);
 
-        // Aggregate daily metrics
         const [leadStats] = await db
           .select({ count: count() })
           .from(leads)
@@ -58,7 +49,6 @@ export const dailySalesDigest = inngest.createFunction(
         const pipeline = Number(dealStats?.pipelineValue ?? 0);
         const overdue = overdueFollowUps[0]?.count ?? 0;
 
-        // Find CEO and managers to notify
         const managers = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)

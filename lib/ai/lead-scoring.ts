@@ -8,10 +8,6 @@ import { leads, leadActivities } from "@/lib/db/schema";
 import { eq, and, count } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/**
- * Score a single lead using AI.
- * Falls back gracefully if OpenAI is not configured.
- */
 export async function aiScoreLead(
   orgId: string,
   leadId: number,
@@ -21,7 +17,6 @@ export async function aiScoreLead(
     return null;
   }
 
-  // Fetch lead data
   const [lead] = await db
     .select()
     .from(leads)
@@ -29,7 +24,6 @@ export async function aiScoreLead(
 
   if (!lead) return null;
 
-  // Count activities
   const [activityResult] = await db
     .select({ count: count() })
     .from(leadActivities)
@@ -67,10 +61,8 @@ export async function aiScoreLead(
     user: prompt.user,
   });
 
-  // Clamp score to 0-100
   result.score = Math.max(0, Math.min(100, Math.round(result.score)));
 
-  // Persist the AI score to the lead record
   await db
     .update(leads)
     .set({ score: result.score, updatedAt: new Date() })
@@ -79,10 +71,6 @@ export async function aiScoreLead(
   return result;
 }
 
-/**
- * Batch score multiple leads. Returns a map of leadId → score result.
- * Processes sequentially to avoid rate limits on free/low tiers.
- */
 export async function aiBatchScoreLeads(
   orgId: string,
   leadIds: number[],

@@ -41,10 +41,6 @@ import { getDocuments } from "@/server/actions/document-actions";
 
 export type Document = Awaited<ReturnType<typeof getDocuments>>[number];
 
-/* ------------------------------------------------------------------ */
-/* Constants                                                            */
-/* ------------------------------------------------------------------ */
-
 const DOCUMENT_TYPES = [
   { value: "CONTRACT", label: "Contract" },
   { value: "CERTIFICATE", label: "Certificate" },
@@ -85,10 +81,6 @@ const FOLDER_COLORS = [
   "bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400",
 ];
 
-/* ------------------------------------------------------------------ */
-/* Helpers                                                              */
-/* ------------------------------------------------------------------ */
-
 function getFileIconConfig(fileName: string) {
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
   return FILE_ICON_CONFIG[ext] || DEFAULT_FILE_ICON;
@@ -100,10 +92,6 @@ export function formatFileSize(bytes: number | null): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
-
-/* ------------------------------------------------------------------ */
-/* Props                                                                */
-/* ------------------------------------------------------------------ */
 
 export interface FolderItem {
   name: string;
@@ -124,10 +112,6 @@ export interface DocumentTableProps {
   onDelete: (documentId: number) => Promise<void>;
   onOpenUpload: () => void;
 }
-
-/* ------------------------------------------------------------------ */
-/* Component                                                            */
-/* ------------------------------------------------------------------ */
 
 export function DocumentTable({
   paginatedDocuments,
@@ -181,7 +165,7 @@ export function DocumentTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* Folders section — only on page 1, no filter, no search */}
+
             {page === 1 && selectedCategory === "All Files" && searchTerm === "" && (
               <>
                 <TableRow>
@@ -214,7 +198,6 @@ export function DocumentTable({
               </>
             )}
 
-            {/* Document rows */}
             {paginatedDocuments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4}>
@@ -355,7 +338,6 @@ export function DocumentTable({
         </div>
         </ScrollArea>
 
-        {/* Pagination */}
         {totalFiltered > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <span className="text-sm text-muted-foreground">

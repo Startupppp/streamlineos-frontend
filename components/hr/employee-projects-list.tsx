@@ -45,14 +45,13 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                     {projects.length}
                 </Badge>
             </div>
-            
-            
+
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 {projects.map((item) => (
                     <Link key={item.id} href={`/projects/${item.id}`} className="block group">
                         <Card className="h-full border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
                             <CardContent className="p-4 flex flex-col h-full">
-                                
+
                                 <div className="flex items-start gap-3 mb-3">
                                     <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
                                         <FolderKanban className="w-4 h-4" />
@@ -61,21 +60,19 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                         <h4 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                                             {item.name}
                                         </h4>
-                                        <Badge 
-                                            variant="secondary" 
+                                        <Badge
+                                            variant="secondary"
                                             className="text-[10px] mt-1 bg-muted text-muted-foreground font-medium"
                                         >
                                             {item.role || 'MEMBER'}
                                         </Badge>
                                     </div>
                                 </div>
-                                
-                                
+
                                 <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">
                                     {item.description || "No description provided."}
                                 </p>
-                                
-                                
+
                                 <div className="grid grid-cols-3 gap-2 text-center border-t border-border pt-3">
                                     <div className="flex flex-col items-center gap-0.5">
                                         <span className="text-[10px] text-muted-foreground uppercase tracking-wide">

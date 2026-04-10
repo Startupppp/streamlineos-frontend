@@ -53,7 +53,6 @@ function statusLabel(status: string | null): string {
   }
 }
 
-// ─── Progress Stepper ───
 function ProgressStepper({ steps }: { steps: ResignationProgress[] }) {
   return (
     <div className="flex items-center gap-1 overflow-x-auto py-2">
@@ -92,7 +91,6 @@ function ProgressStepper({ steps }: { steps: ResignationProgress[] }) {
   );
 }
 
-// ─── Resignation Detail Sheet ───
 function ResignationDetailPanel({
   id, onClose, isAdmin, role,
 }: {
@@ -131,7 +129,7 @@ function ResignationDetailPanel({
 
   return (
     <div className="space-y-4 p-1">
-      {/* Employee Profile Card */}
+
       <Card>
         <CardContent className="p-4 flex items-center gap-3">
           <Avatar className="h-12 w-12">
@@ -149,10 +147,8 @@ function ResignationDetailPanel({
         </CardContent>
       </Card>
 
-      {/* Progress Tracker */}
       {data.progress && <ProgressStepper steps={data.progress} />}
 
-      {/* Resignation Details */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Resignation Details</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-xs">
@@ -175,7 +171,6 @@ function ResignationDetailPanel({
         </CardContent>
       </Card>
 
-      {/* Resignation Letter */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
@@ -192,7 +187,6 @@ function ResignationDetailPanel({
         )}
       </Card>
 
-      {/* Action Buttons */}
       {(canHrReview || canCeoReview) && (
         <Card>
           <CardContent className="p-4 space-y-3">
@@ -226,7 +220,6 @@ function ResignationDetailPanel({
   );
 }
 
-// ─── Resignation Analytics (HR/CEO) ───
 function ResignationAnalyticsPanel() {
   const { data, isLoading } = useResignationAnalytics();
   if (isLoading || !data) return null;
@@ -264,7 +257,6 @@ function ResignationAnalyticsPanel() {
         </Card>
       </div>
 
-      {/* Reason Breakdown */}
       {data.reasonBreakdown.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -297,7 +289,6 @@ function ResignationAnalyticsPanel() {
         </Card>
       )}
 
-      {/* Monthly Trend */}
       {data.monthlyTrend.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -329,7 +320,6 @@ function ResignationAnalyticsPanel() {
   );
 }
 
-// ─── Main Page ───
 export default function ExitManagementPage() {
   const { data: session } = useSession();
   const { data: resignations, isLoading } = useResignations();
@@ -454,7 +444,6 @@ export default function ExitManagementPage() {
         </div>
       )}
 
-      {/* Submit Resignation Sheet */}
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Submit Resignation" onSubmit={handleSubmitResignation} submitLabel="Submit" isPending={createResignation.isPending}>
         <div className="rounded-md border border-border bg-muted/40 px-3 py-2.5 flex items-start gap-2.5 text-xs text-muted-foreground">
           <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
@@ -511,7 +500,6 @@ export default function ExitManagementPage() {
         </div>
       </HrSheet>
 
-      {/* Resignation Detail Sheet */}
       <HrSheet
         open={detailId !== null}
         onOpenChange={(open) => { if (!open) setDetailId(null); }}

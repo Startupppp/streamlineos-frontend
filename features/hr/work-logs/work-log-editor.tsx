@@ -17,10 +17,6 @@ interface WorkLogRejectDialogProps {
   onReject: (reason?: string) => void;
 }
 
-/**
- * Rejection reason dialog shown when an admin clicks "Reject" on a work log entry.
- * Manages its own local `rejectReason` input state so the parent stays clean.
- */
 export function WorkLogRejectDialog({ open, onClose, onReject }: WorkLogRejectDialogProps) {
   const [rejectReason, setRejectReason] = useState("");
 

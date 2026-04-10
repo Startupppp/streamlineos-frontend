@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/tickets  — list tickets (paginated)
- * POST /api/projects/[id]/tickets  — create ticket
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody, toNumber } from "@/lib/api/helpers";
@@ -171,7 +168,6 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         );
       }
 
-      // Auto-watch: creator + all assignees
       const watcherIds = new Set<string>([session.user.id]);
       allAssigneeIds.forEach((id) => watcherIds.add(id));
       await tx.insert(ticketWatchers).values(

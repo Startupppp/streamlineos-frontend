@@ -1,7 +1,4 @@
-/**
- * Role-based navigation configuration.
- * Pure data/logic module — no React, no JSX.
- */
+
 
 import {
   LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays,
@@ -10,7 +7,7 @@ import {
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
   TrendingUp, BookOpen, Heart, UserMinus, Target, Megaphone, Mail, Package,
   Share2, Video, Globe,
-  // New icons for missing routes
+
   Bell, GraduationCap, ClipboardCheck, PackageMinus, Gift, Award, Scale,
   MailOpen, Smile, FileCheck, Coins, Map, Landmark, RefreshCcw, Zap,
   ListChecks, PartyPopper, History, BarChart2, LifeBuoy, Inbox,
@@ -29,7 +26,7 @@ export interface NavRoute {
 export interface NavGroup {
   label: string;
   routes: NavRoute[];
-  /** Start collapsed by default */
+
   defaultCollapsed?: boolean;
 }
 
@@ -68,7 +65,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
             { label: "Termination", icon: UserX, href: "/hr/termination", isSubItem: true },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
-            // Support is managed through HR – ticket system below helpdesk
+
             { label: "Support Tickets", icon: LifeBuoy, href: "/support", isSubItem: true },
             { label: "Support Inbox", icon: Inbox, href: "/support/inbox", isSubItem: true },
             { label: "Email Templates", icon: MailOpen, href: "/hr/email-templates" },
@@ -330,7 +327,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          // Lead & deal pipeline — Sales' primary workspace
+
           label: "My Pipeline",
           routes: [
             { label: "My Leads", icon: Contact2, href: "/crm/leads" },
@@ -340,7 +337,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          // Revenue tracking — view-only for sales execs
+
           label: "My Revenue",
           routes: [
             { label: "My Targets", icon: Trophy, href: "/crm/targets" },
@@ -385,7 +382,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          // Primary workspace — helpdesk & ticket management
+
           label: "Helpdesk",
           routes: [
             { label: "All Tickets", icon: LifeBuoy, href: "/support" },
@@ -394,7 +391,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          // Read-only access to customer info (linked to tickets)
+
           label: "Customers",
           routes: [
             { label: "Contacts", icon: UserCheck, href: "/crm/contacts" },
@@ -438,7 +435,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          // Campaign creation & tracking
+
           label: "Marketing",
           routes: [
             { label: "Marketing Hub", icon: Megaphone, href: "/marketing" },
@@ -451,7 +448,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           ],
         },
         {
-          // Limited CRM access — upload/track leads, view pipeline & conversion analytics
+
           label: "CRM (Leads)",
           routes: [
             { label: "CRM Hub", icon: Contact2, href: "/crm" },

@@ -8,7 +8,6 @@ export async function GET() {
   return withAuth(async (session) => {
     const today = format(new Date(), "yyyy-MM-dd");
 
-    // Get all active org members
     const totalMembers = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(organizationMembers)
@@ -20,7 +19,6 @@ export async function GET() {
         )
       );
 
-    // Get today's attendance records
     const todayAttendance = await db
       .select({
         userId: attendance.userId,

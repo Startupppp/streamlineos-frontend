@@ -57,15 +57,11 @@ import type {
   PaginatedEmployees,
 } from "@/types/hr";
 
-// ─── Departments ──────────────────────────────────────────────────────────────
-
 export async function getDepartments(orgId: string): Promise<Department[]> {
   return db.query.departments.findMany({
     where: eq(departments.orgId, orgId),
   }) as Promise<Department[]>;
 }
-
-// ─── Employees ────────────────────────────────────────────────────────────────
 
 export async function getEmployees(
   orgId: string,
@@ -82,7 +78,7 @@ export async function getEmployees(
     .map((m) => m.user)
     .filter((u) => {
       if (u.isActive === false) return false;
-      // Branch isolation: BRANCH_MANAGER/BRANCH_HR see only their branch's users
+
       if (branch?.branchId !== null && branch?.branchId !== undefined &&
           ["BRANCH_MANAGER", "BRANCH_HR"].includes(branch.role)) {
         return u.branchId === branch.branchId;
@@ -122,7 +118,6 @@ export async function getEmployeesPaginated(
     eq(users.isActive, true),
   ];
 
-  // Branch isolation: filter to only users in the same branch
   const branchCond = branchIdFilter(users.branchId, branch ?? { role: "", branchId: null, userId: "" });
   if (branchCond) baseConditions.push(branchCond);
 
@@ -211,8 +206,6 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
     monthlySalary: u.monthlySalary,
   };
 }
-
-// ─── Attendance ───────────────────────────────────────────────────────────────
 
 export async function getAttendanceStatus(
   orgId: string,
@@ -323,8 +316,6 @@ export async function getAttendanceLogs(
   }) as unknown as Promise<AttendanceLog[]>;
 }
 
-// ─── Leaves ───────────────────────────────────────────────────────────────────
-
 export async function getLeaves(orgId: string, userId: string): Promise<LeavesResult> {
   const [balances, types, requests] = await Promise.all([
     db.query.leaveBalances.findMany({
@@ -362,8 +353,6 @@ export async function getLeaveBalance(orgId: string, userId: string): Promise<Le
   }) as unknown as Promise<LeaveBalance[]>;
 }
 
-// ─── Payrolls ─────────────────────────────────────────────────────────────────
-
 export async function getPayrolls(orgId: string, userId: string): Promise<Payroll[]> {
   return db.query.payrolls.findMany({
     where: and(
@@ -393,8 +382,6 @@ export async function getSalaryStructures(
     orderBy: [desc(salaryStructures.effectiveFrom)],
   }) as unknown as Promise<SalaryStructure[]>;
 }
-
-// ─── Expenses ─────────────────────────────────────────────────────────────────
 
 export async function getExpenses(
   orgId: string,
@@ -446,16 +433,12 @@ export async function getExpenses(
   };
 }
 
-// ─── Assets ───────────────────────────────────────────────────────────────────
-
 export async function getAssets(orgId: string): Promise<Asset[]> {
   return db.query.assets.findMany({
     where: eq(assets.orgId, orgId),
     orderBy: [desc(assets.createdAt)],
   }) as unknown as Promise<Asset[]>;
 }
-
-// ─── Documents ────────────────────────────────────────────────────────────────
 
 export async function getDocuments(
   orgId: string,
@@ -487,8 +470,6 @@ export async function getDocuments(
   }) as unknown as Promise<Document[]>;
 }
 
-// ─── Performance Reviews ──────────────────────────────────────────────────────
-
 export async function getPerformanceReviews(
   orgId: string,
   userId: string,
@@ -509,8 +490,6 @@ export async function getPerformanceReviews(
   }) as unknown as Promise<PerformanceReview[]>;
 }
 
-// ─── Goals ────────────────────────────────────────────────────────────────────
-
 export async function getGoals(
   orgId: string,
   userId: string,
@@ -530,8 +509,6 @@ export async function getGoals(
     orderBy: [desc(goals.createdAt)],
   }) as unknown as Promise<Goal[]>;
 }
-
-// ─── Work Logs ────────────────────────────────────────────────────────────────
 
 export async function getWorkLogs(
   orgId: string,
@@ -557,8 +534,6 @@ export async function getWorkLogs(
 
   return logs.filter((l) => l.date >= startStr && l.date <= endStr) as unknown as WorkLog[];
 }
-
-// ─── Helpdesk Tickets ─────────────────────────────────────────────────────────
 
 export async function getHelpdeskTickets(
   orgId: string,
@@ -587,8 +562,6 @@ export async function getHelpdeskTickets(
   }) as unknown as Promise<HelpdeskTicket[]>;
 }
 
-// ─── Org Chart ────────────────────────────────────────────────────────────────
-
 export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
   const members = await db.query.organizationMembers.findMany({
     where: eq(organizationMembers.orgId, orgId),
@@ -609,8 +582,6 @@ export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
       reportingTo: u.reportingTo,
     }));
 }
-
-// ─── Employee Stats ──────────────────────────────────────────────────────────
 
 export async function getEmployeeStats(orgId: string, userId: string): Promise<EmployeeStats> {
   const year = new Date().getFullYear();
@@ -678,8 +649,6 @@ export async function getEmployeeStats(orgId: string, userId: string): Promise<E
   };
 }
 
-// ─── Employee Projects ───────────────────────────────────────────────────────
-
 export async function getEmployeeProjects(orgId: string, userId: string) {
   const memberships = await db
     .select({
@@ -695,8 +664,6 @@ export async function getEmployeeProjects(orgId: string, userId: string) {
 
   return memberships;
 }
-
-// ─── Employee Tickets ────────────────────────────────────────────────────────
 
 export async function getEmployeeTickets(orgId: string, userId: string) {
   const data = await db
@@ -715,8 +682,6 @@ export async function getEmployeeTickets(orgId: string, userId: string) {
 
   return { data };
 }
-
-// ─── WFH Requests ────────────────────────────────────────────────────────────
 
 export async function getWfhRequests(orgId: string, userId: string): Promise<WfhRequest[]> {
   return db.query.wfhRequests.findMany({
@@ -761,8 +726,6 @@ export async function getPendingWfhRequests(orgId: string): Promise<WfhRequest[]
   })) as WfhRequest[];
 }
 
-// ─── Holidays ────────────────────────────────────────────────────────────────
-
 export async function getHolidays(orgId: string, year: number): Promise<Holiday[]> {
   const startDate = `${year}-01-01`;
   const endDate = `${year}-12-31`;
@@ -795,8 +758,6 @@ export async function getHolidaysForCalendar(
     orderBy: [asc(holidays.date)],
   }) as unknown as Promise<Holiday[]>;
 }
-
-// ─── Devices ─────────────────────────────────────────────────────────────────
 
 export async function getDevices(orgId: string): Promise<Device[]> {
   const rows = await db
@@ -840,8 +801,6 @@ export async function getDevices(orgId: string): Promise<Device[]> {
     user: { id: r.userId, firstName: r.userFirstName, lastName: r.userLastName, email: r.userEmail },
   })) as Device[];
 }
-
-// ─── Incentives ──────────────────────────────────────────────────────────────
 
 export async function getIncentives(
   orgId: string,
@@ -954,8 +913,6 @@ export async function getIncentiveConfigs(orgId: string): Promise<IncentiveConfi
   }) as unknown as Promise<IncentiveConfig[]>;
 }
 
-// ─── Payroll Admin ───────────────────────────────────────────────────────────
-
 export async function getAllPayrolls(orgId: string, month: string): Promise<PayrollWithUser[]> {
   const rows = await db
     .select({
@@ -1017,8 +974,6 @@ export async function getAllPayrolls(orgId: string, month: string): Promise<Payr
   })) as PayrollWithUser[];
 }
 
-// ─── Employee Payslips ───────────────────────────────────────────────────────
-
 export async function getEmployeePayslips(orgId: string, userId: string): Promise<EmployeePayslip[]> {
   const rows = await db
     .select({
@@ -1043,8 +998,6 @@ export async function getEmployeePayslips(orgId: string, userId: string): Promis
 
   return rows as unknown as EmployeePayslip[];
 }
-
-// ─── Monthly Attendance ──────────────────────────────────────────────────────
 
 export async function getMonthlyAttendance(
   orgId: string,

@@ -98,7 +98,7 @@ export function AIEmailDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Config */}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Tone</Label>
@@ -149,7 +149,6 @@ export function AIEmailDialog({
             )}
           </Button>
 
-          {/* Result */}
           {email && (
             <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
               <div>

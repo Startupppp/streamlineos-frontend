@@ -1,7 +1,4 @@
-/**
- * PATCH  /api/chat/channels/[id]/messages/[messageId]  — edit a message
- * DELETE /api/chat/channels/[id]/messages/[messageId]  — delete (soft) a message
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

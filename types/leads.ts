@@ -1,9 +1,4 @@
-/**
- * Lead domain TypeScript types.
- * These are standalone types — zero tRPC / RouterOutputs references.
- */
 
-// ─── Enums ───────────────────────────────────────────────────────────────────
 
 export type PipelineStatus =
   | "NEW"
@@ -32,8 +27,6 @@ export type ActivityType =
   | "site_visit"
   | "note"
   | "task";
-
-// ─── Core Types ──────────────────────────────────────────────────────────────
 
 export interface LeadUser {
   id: string;
@@ -151,8 +144,6 @@ export interface TimelineItem {
   data: Record<string, unknown>;
 }
 
-// ─── Stats & Analytics ───────────────────────────────────────────────────────
-
 export interface LeadStats {
   total: number;
   byStatus: {
@@ -251,16 +242,12 @@ export interface SalesTeamCapacityEntry {
   activeLeads: number;
 }
 
-// ─── Paginated Response ───────────────────────────────────────────────────────
-
 export interface PaginatedLeads {
   leads: Lead[];
   totalCount: number;
   page: number;
   totalPages: number;
 }
-
-// ─── Input Types ─────────────────────────────────────────────────────────────
 
 export interface LeadFilters {
   status?: PipelineStatus;
@@ -410,8 +397,6 @@ export interface DistributeResult {
   absentNames: string[];
   summary: { userId: string; name: string; count: number }[];
 }
-
-// ─── Client Type (leads domain client) ───────────────────────────────────────
 
 export interface LeadClient {
   id: number;

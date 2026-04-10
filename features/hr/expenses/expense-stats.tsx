@@ -12,8 +12,6 @@ import { StatCard } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
 import type { ExpensePageData } from "@/server/actions/expense-query";
 
-/* ─── Admin Stats (4-card grid) ─── */
-
 interface AdminExpenseStatsProps {
   stats: ExpensePageData["stats"] | null | undefined;
   pendingCount: number;
@@ -55,8 +53,6 @@ export function AdminExpenseStats({ stats, pendingCount }: AdminExpenseStatsProp
     </div>
   );
 }
-
-/* ─── Member Stats (3-card grid) ─── */
 
 interface MemberExpenseStatsProps {
   stats: ExpensePageData["stats"] | null | undefined;

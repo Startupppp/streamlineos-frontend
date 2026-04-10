@@ -3,9 +3,6 @@ import type { ExportResult } from "@/server/actions/expense-export";
 
 type XlsxData = NonNullable<Extract<ExportResult, { format: "xlsx" }>["data"]>;
 
-/**
- * Triggers a browser download of the given CSV string.
- */
 export function downloadCSV(content: string, filename: string): void {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
   const url = window.URL.createObjectURL(blob);
@@ -18,10 +15,6 @@ export function downloadCSV(content: string, filename: string): void {
   window.URL.revokeObjectURL(url);
 }
 
-/**
- * Builds an ExcelJS workbook from `data.sheets` and triggers a browser
- * download of the resulting `.xlsx` file.
- */
 export async function downloadXLSX(data: XlsxData, filename: string): Promise<void> {
   const workbook = new ExcelJS.Workbook();
 

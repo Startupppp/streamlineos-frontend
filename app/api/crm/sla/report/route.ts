@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and, isNotNull, sql, count } from "drizzle-orm";
 
-/** GET /api/crm/sla/report — SLA compliance summary */
 export async function GET() {
   return withAuth(async (session) => {
     const now = new Date();

@@ -21,7 +21,6 @@ export function DataTablePagination({
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
 
-  // Generate page numbers with ellipsis
   const getPageNumbers = () => {
     const pages: (number | "...")[] = [];
     const maxVisible = 5;

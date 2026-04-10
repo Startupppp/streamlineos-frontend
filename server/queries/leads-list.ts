@@ -1,10 +1,5 @@
 "server-only";
 
-/**
- * Server-side DB query functions for the Leads domain — list/board/stats queries.
- * Import only in Server Components, Route Handlers, or Server Actions.
- */
-
 import { db } from "@/lib/db";
 import {
   leads,
@@ -27,15 +22,12 @@ import type {
 } from "@/types/leads";
 import { pushBranchAssigneeFilter, type BranchContext } from "@/lib/db/branch-filter";
 
-// ─── getLeads ────────────────────────────────────────────────────────────────
-
 export async function getLeads(
   orgId: string,
   filters?: LeadFilters & { role?: string; userId?: string; branch?: BranchContext }
 ) {
   const where = [eq(leads.orgId, orgId)];
 
-  // Branch isolation: BRANCH_MANAGER/BRANCH_HR see only leads assigned to users in their branch
   if (filters?.branch) {
     await pushBranchAssigneeFilter(where, leads.assignedToId, filters.branch);
   }
@@ -106,8 +98,6 @@ export async function getLeads(
   };
 }
 
-// ─── getLeadBoard ─────────────────────────────────────────────────────────────
-
 export async function getLeadBoard(
   orgId: string,
   opts?: { role?: string; userId?: string; branch?: BranchContext }
@@ -116,7 +106,6 @@ export async function getLeadBoard(
   const role = opts?.role;
   const userId = opts?.userId;
 
-  // Branch isolation for BRANCH_MANAGER/BRANCH_HR
   if (opts?.branch) {
     await pushBranchAssigneeFilter(filters, leads.assignedToId, opts.branch);
   }
@@ -172,8 +161,6 @@ export async function getLeadBoard(
     LOST: typeof allLeads;
   };
 }
-
-// ─── getLeadStats ─────────────────────────────────────────────────────────────
 
 export async function getLeadStats(
   orgId: string,

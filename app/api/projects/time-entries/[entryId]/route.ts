@@ -1,11 +1,4 @@
-/**
- * PATCH  /api/projects/time-entries/[entryId]  — update a time entry
- * DELETE /api/projects/time-entries/[entryId]  — delete a time entry
- *
- * Only the entry owner can edit/delete, unless the user is an admin/owner.
- * Entries that are not PENDING (already approved/rejected) cannot be modified.
- * After any hours change, the parent ticket's timeSpent is recalculated.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -58,7 +51,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .where(eq(timesheets.id, id))
       .returning();
 
-    // Recalculate parent ticket's timeSpent when hours changed
     if (body.hours !== undefined && entry.ticketId) {
       const totalHours = await db
         .select({
@@ -102,7 +94,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
 
     await db.delete(timesheets).where(eq(timesheets.id, id));
 
-    // Recalculate parent ticket's timeSpent after deletion
     if (ticketId) {
       const totalHours = await db
         .select({

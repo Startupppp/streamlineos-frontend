@@ -1,16 +1,7 @@
-/**
- * Tiered, per-bucket rate limiter with progressive penalties.
- *
- * Uses Upstash Ratelimit when Redis is available (distributed, survives restarts).
- * Falls back to in-memory sliding window when Redis is unavailable (dev/local).
- */
+
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { redis } from "./redis";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export interface RateLimitTier {
   maxRequests: number;
@@ -24,10 +15,6 @@ interface BucketEntry {
   blockedUntil: number;
   currentBlockMs: number;
 }
-
-// ---------------------------------------------------------------------------
-// Tier definitions
-// ---------------------------------------------------------------------------
 
 export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
   login: {
@@ -70,10 +57,6 @@ export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Upstash limiters (lazily initialized per tier)
-// ---------------------------------------------------------------------------
-
 const upstashLimiters = new Map<string, Ratelimit>();
 
 function getUpstashLimiter(tierName: string): Ratelimit | null {
@@ -95,10 +78,6 @@ function getUpstashLimiter(tierName: string): Ratelimit | null {
   upstashLimiters.set(tierName, limiter);
   return limiter;
 }
-
-// ---------------------------------------------------------------------------
-// In-memory fallback storage
-// ---------------------------------------------------------------------------
 
 const globalStore = globalThis as unknown as {
   __rateLimitStore?: Map<string, BucketEntry>;
@@ -196,10 +175,6 @@ function checkRateLimitInMemory(tierName: string, ip: string): RateLimitResult {
   return { allowed: true, retryAfterSecs: 0 };
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
 export interface RateLimitResult {
   allowed: boolean;
   retryAfterSecs: number;
@@ -216,15 +191,11 @@ export async function checkRateLimit(
       const retryAfterSecs = success ? 0 : Math.max(1, Math.ceil((reset - Date.now()) / 1000));
       return { allowed: success, retryAfterSecs };
     } catch {
-      // Redis unavailable — fall through to in-memory
+
     }
   }
   return checkRateLimitInMemory(tierName, ip);
 }
-
-// ---------------------------------------------------------------------------
-// Route → Tier resolver
-// ---------------------------------------------------------------------------
 
 interface RouteRule {
   prefix: string;
@@ -249,9 +220,6 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/api/auth/", tier: "auth-write" },
 ];
 
-// NextAuth internal endpoints that must never be rate-limited.
-// These are called automatically on every page load (CSRF token, session, providers).
-// Rate-limiting them causes /api/auth/error redirects and broken sign-in flows.
 const NEXTAUTH_INTERNAL = new Set([
   "/api/auth/session",
   "/api/auth/csrf",
@@ -261,7 +229,7 @@ const NEXTAUTH_INTERNAL = new Set([
 
 export function resolveTier(pathname: string): string | null {
   if (NEXTAUTH_INTERNAL.has(pathname)) return null;
-  // Exclude all NextAuth OAuth callbacks (Google, GitHub, etc.) — not user-facing writes
+
   if (pathname.startsWith("/api/auth/callback/") && pathname !== "/api/auth/callback/credentials") return null;
   if (!pathname.startsWith("/api/")) return null;
   for (const rule of ROUTE_RULES) {
@@ -270,16 +238,12 @@ export function resolveTier(pathname: string): string | null {
   return "api-default";
 }
 
-// ---------------------------------------------------------------------------
-// Bot detection
-// ---------------------------------------------------------------------------
-
 const BOT_UA_PATTERNS = [
   /scrapy/i,
   /python-requests/i,
   /python-urllib/i,
   /go-http-client/i,
-  /java\//i,
+  /java/i,
   /libwww-perl/i,
   /wget/i,
   /curl/i,

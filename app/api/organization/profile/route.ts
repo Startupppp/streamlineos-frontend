@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { users, organizations, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
-/** GET /api/organization/profile — Current user profile + org context */
 export async function GET() {
   return withAuth(async (session) => {
     const [user] = await db

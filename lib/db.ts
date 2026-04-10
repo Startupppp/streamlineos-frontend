@@ -9,7 +9,6 @@ if (!rawDatabaseUrl) {
   throw new Error("DATABASE_URL environment variable is required.");
 }
 
-/** Neon pooler + postgres.js often fail TLS when `channel_binding=require` is set. */
 function normalizeDatabaseUrl(url: string): string {
   if (!/\.neon\.tech/i.test(url)) return url;
   try {

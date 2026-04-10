@@ -45,7 +45,7 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
          setProcessingId(requestId);
          const res = await processLeaveRequest({ requestId, status });
          setProcessingId(null);
-         
+
          if (res.success) {
              toast.success(`Request ${status.toLowerCase()} successfully`);
              router.refresh();
@@ -71,8 +71,8 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
                         <div className="flex justify-between items-start">
                             <div>
                                 <CardTitle className="text-base font-semibold">
-                                    {req.user?.firstName && req.user?.lastName 
-                                      ? `${req.user.firstName} ${req.user.lastName}` 
+                                    {req.user?.firstName && req.user?.lastName
+                                      ? `${req.user.firstName} ${req.user.lastName}`
                                       : req.user?.email}
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">{req.leaveType?.name}</p>
@@ -98,8 +98,8 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
                          )}
                      </CardContent>
                      <CardFooter className="justify-end gap-2 pt-2">
-                         <Button 
-                            variant="destructive" 
+                         <Button
+                            variant="destructive"
                             size="sm"
                             disabled={processingId === req.id}
                             onClick={() => handleProcess(req.id, "REJECTED")}
@@ -107,7 +107,7 @@ export function PendingRequestsList({ requests }: PendingRequestsListProps) {
                              {processingId === req.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <X className="h-4 w-4 mr-2" />}
                              Reject
                          </Button>
-                         <Button 
+                         <Button
                             variant="default"
                             className="bg-green-600 hover:bg-green-700"
                             size="sm"

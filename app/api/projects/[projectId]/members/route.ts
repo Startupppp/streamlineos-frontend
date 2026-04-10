@@ -1,8 +1,4 @@
-/**
- * GET    /api/projects/[id]/members  — list project members
- * POST   /api/projects/[id]/members  — add member
- * DELETE /api/projects/[id]/members  — remove member
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

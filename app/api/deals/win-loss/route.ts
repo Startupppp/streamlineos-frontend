@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
-/** GET /api/deals/win-loss — Win/loss analysis with lost reason breakdown */
 export async function GET() {
   return withAuth(async (session) => {
     const data = await cached(

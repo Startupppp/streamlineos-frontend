@@ -110,7 +110,7 @@ export default function CrmHubPage() {
   return (
     <PageWrapper title="CRM" subtitle="Command center">
       <motion.div className="space-y-4 pb-4" variants={staggerContainer} initial="hidden" animate="visible">
-        {/* Row 1: Stats — compact */}
+
         <motion.div variants={fadeUp} className="grid gap-3 grid-cols-2 md:grid-cols-4">
           {[
             { label: "Total Leads", value: leadStats?.total ?? 0, color: "text-blue-400" },
@@ -127,7 +127,6 @@ export default function CrmHubPage() {
           ))}
         </motion.div>
 
-        {/* Row 2: Quick metrics strip */}
         {leadStats && (
           <motion.div variants={fadeUp}>
             <div className="flex items-center gap-4 flex-wrap text-[11px] px-1">
@@ -145,7 +144,6 @@ export default function CrmHubPage() {
           </motion.div>
         )}
 
-        {/* Row 3: Pipeline + Activity */}
         {leadStats && (
           <motion.div variants={fadeUp} className="grid gap-3 md:grid-cols-2">
             <CrmPipelineMini byStatus={leadStats.byStatus} total={leadStats.total} />
@@ -153,7 +151,6 @@ export default function CrmHubPage() {
           </motion.div>
         )}
 
-        {/* Row 4: Nav grid */}
         <motion.div variants={fadeUp} className="grid gap-2 grid-cols-2 md:grid-cols-4">
           {NAV_CARDS.map(card => (
             <Link key={card.href} href={card.href}>

@@ -177,7 +177,7 @@ export default function IncentivesPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats */}
+
         <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
           {[
             { label: "This Month", value: formatINR(stats?.thisMonth), icon: IndianRupee, color: "text-emerald-400" },
@@ -198,7 +198,6 @@ export default function IncentivesPage() {
           ))}
         </div>
 
-        {/* Current Rate */}
         {currentConfig && (
           <Card className="bg-gold/5 border-gold/20">
             <CardContent className="p-4 flex items-center gap-3">
@@ -211,7 +210,6 @@ export default function IncentivesPage() {
           </Card>
         )}
 
-        {/* Incentives Table */}
         <Card>
           <ScrollArea className="w-full max-h-[60vh]" type="auto">
             <div className="min-w-max">
@@ -302,7 +300,6 @@ export default function IncentivesPage() {
         </Card>
       </div>
 
-      {/* Approve Modal */}
       <Dialog open={!!approveModal} onOpenChange={(open) => !open && handleApproveClose()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -334,7 +331,6 @@ export default function IncentivesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Config Dialog */}
       <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

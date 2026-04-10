@@ -48,7 +48,6 @@ function statusBadge(status: string | null): "default" | "secondary" | "outline"
   return "outline";
 }
 
-// ─── Termination Detail Panel ───
 function TerminationDetailPanel({
   id, role,
 }: {
@@ -74,7 +73,7 @@ function TerminationDetailPanel({
 
   return (
     <div className="space-y-4 p-1">
-      {/* Employee Card */}
+
       <Card>
         <CardContent className="p-4 flex items-center gap-3">
           <Avatar className="h-12 w-12">
@@ -89,7 +88,6 @@ function TerminationDetailPanel({
         </CardContent>
       </Card>
 
-      {/* Status Timeline */}
       <div className="flex items-center gap-2 overflow-x-auto py-2">
         {["DRAFT", "PENDING_CEO", "APPROVED", "SENT", "COMPLETED"].map((step, i, arr) => {
           const statusOrder = ["DRAFT", "PENDING_CEO", "APPROVED", "SENT", "COMPLETED"];
@@ -120,7 +118,6 @@ function TerminationDetailPanel({
         })}
       </div>
 
-      {/* Details */}
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Termination Details</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-xs">
@@ -154,7 +151,6 @@ function TerminationDetailPanel({
         </CardContent>
       </Card>
 
-      {/* Letter Preview */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
@@ -171,7 +167,6 @@ function TerminationDetailPanel({
         )}
       </Card>
 
-      {/* Actions */}
       <div className="space-y-2">
         {canSubmitForCeo && (
           <Button
@@ -249,7 +244,6 @@ function TerminationDetailPanel({
   );
 }
 
-// ─── Main Page ───
 export default function TerminationPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
@@ -262,7 +256,6 @@ export default function TerminationPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
 
-  // Form state
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [explanation, setExplanation] = useState("");
@@ -382,7 +375,6 @@ export default function TerminationPage() {
         </div>
       )}
 
-      {/* Create Termination Sheet */}
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Initiate Termination" onSubmit={handleCreate} submitLabel="Create Draft" isPending={createTermination.isPending}>
         <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5 flex items-start gap-2.5 text-xs text-destructive">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
@@ -471,7 +463,6 @@ export default function TerminationPage() {
         </div>
       </HrSheet>
 
-      {/* Detail Sheet */}
       <HrSheet
         open={detailId !== null}
         onOpenChange={(open) => { if (!open) setDetailId(null); }}

@@ -69,7 +69,7 @@ export async function getAllFeatureFlags(): Promise<Record<FeatureFlag, boolean>
       }
     }
   } catch {
-    // Return defaults on error
+
   }
 
   return flags;

@@ -11,14 +11,12 @@ export async function GET() {
 
     const orgId = session.orgId;
 
-    // 1. Total employees for attrition rate
     const [totalEmp] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))
       .where(and(eq(organizationMembers.orgId, orgId), eq(users.isActive, true)));
 
-    // 2. Resignations by reason category (pie chart)
     const reasonBreakdown = await db
       .select({
         category: resignations.reasonCategory,
@@ -28,7 +26,6 @@ export async function GET() {
       .where(eq(resignations.orgId, orgId))
       .groupBy(resignations.reasonCategory);
 
-    // 3. Monthly resignation trend (last 12 months)
     const twelveMonthsAgo = subMonths(new Date(), 12);
     const monthlyTrend = await db
       .select({
@@ -45,7 +42,6 @@ export async function GET() {
       .groupBy(sql`to_char(${resignations.createdAt}, 'YYYY-MM')`)
       .orderBy(sql`to_char(${resignations.createdAt}, 'YYYY-MM')`);
 
-    // 4. Average tenure at resignation
     const avgTenure = await db
       .select({
         avgMonths: sql<number>`
@@ -63,7 +59,6 @@ export async function GET() {
         )
       );
 
-    // 5. Pending vs completed counts
     const statusCounts = await db
       .select({
         status: resignations.status,

@@ -1,6 +1,4 @@
-/**
- * GET /api/chat/channels/[id]/members  — list channel members
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
@@ -17,7 +15,6 @@ export async function GET(
     const channelId = Number(id);
     if (!Number.isFinite(channelId)) return err("Invalid channel id", 400);
 
-    // Verify the requesting user is a member
     const requesterMembership = await db.query.chatChannelMembers.findFirst({
       where: and(
         eq(chatChannelMembers.channelId, channelId),

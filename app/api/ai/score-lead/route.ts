@@ -12,7 +12,6 @@ const batchSchema = z.object({
   leadIds: z.array(z.number().int().positive()).min(1).max(50),
 });
 
-/** POST /api/ai/score-lead — Score a single lead or batch of leads */
 export async function POST(req: NextRequest) {
   return withAuth<unknown>(async (session) => {
     if (!isOpenAIConfigured()) {
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // Batch mode
     if (Array.isArray(body.leadIds)) {
       const { leadIds } = batchSchema.parse(body);
       const results = await aiBatchScoreLeads(session.orgId, leadIds);
@@ -29,7 +27,6 @@ export async function POST(req: NextRequest) {
       return ok({ results: mapped, scored: results.size });
     }
 
-    // Single mode
     const { leadId } = singleSchema.parse(body);
     const result = await aiScoreLead(session.orgId, leadId);
 

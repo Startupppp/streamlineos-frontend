@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/labels  — list labels (org-scoped)
- * POST /api/projects/[id]/labels  — create label
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -19,7 +16,7 @@ type RouteParams = { params: Promise<{ projectId: string }> };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
-    // Labels are org-scoped; projectId is available for context but unused in query
+
     const labels = await db.query.ticketLabels.findMany({
       where: eq(ticketLabels.orgId, session.orgId!),
       orderBy: [desc(ticketLabels.createdAt)],

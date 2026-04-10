@@ -70,7 +70,6 @@ export function WorkLogEntryRow({
       ? "Logged — entry saved"
       : "Empty — no entry yet";
 
-  // Highlight matching text in description
   const highlightMatch = (text: string) => {
     if (!searchTerm.trim() || !text) return null;
     const term = searchTerm.trim();
@@ -154,7 +153,7 @@ export function WorkLogEntryRow({
               readOnly && "cursor-default opacity-75",
             )}
           />
-          {/* Attachment link */}
+
           {!readOnly && (
             <div className="flex items-center gap-2">
               <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -165,13 +164,13 @@ export function WorkLogEntryRow({
               />
             </div>
           )}
-          {/* Highlighted search match preview */}
+
           {highlighted && !hasUnsavedChanges && (
             <p className="text-xs text-muted-foreground px-1 truncate">
               {highlighted}
             </p>
           )}
-          {/* Approve / Reject buttons for admin viewing other's logs */}
+
           {showApprovalActions && (
             <div className="flex items-center gap-2">
               <Button
@@ -203,7 +202,7 @@ export function WorkLogEntryRow({
               </Button>
             </div>
           )}
-          {/* Save / Discard buttons */}
+
           {hasUnsavedChanges && !readOnly && (
             <div className="flex items-center gap-2">
               <Button

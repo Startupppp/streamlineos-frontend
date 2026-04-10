@@ -68,7 +68,6 @@ export async function PATCH(
       const body = await req.json();
       const input = updateSchema.parse(body);
 
-      // Status-only update
       if (input.status) {
         const updateData: Record<string, unknown> = {
           status: input.status,
@@ -89,7 +88,6 @@ export async function PATCH(
         return ok({ success: true });
       }
 
-      // Content update (draft only)
       if (existing.status !== "DRAFT") {
         return err("Only draft invoices can be edited", 400);
       }

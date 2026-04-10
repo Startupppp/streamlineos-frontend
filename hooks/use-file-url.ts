@@ -10,11 +10,6 @@ function isLocalUrl(url: string): boolean {
   return false;
 }
 
-/**
- * Gets a viewable/downloadable URL for a file.
- * For local files, returns the URL directly.
- * For R2 files, fetches a signed URL from the API.
- */
 export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   if (!fileUrl) {
     throw new Error("No file URL provided");
@@ -37,9 +32,6 @@ export async function getSignedFileUrl(fileUrl: string): Promise<string> {
   }
 }
 
-/**
- * Opens a file in a new tab, handling both local and R2 files
- */
 export async function viewFile(fileUrl: string): Promise<void> {
   try {
     const url = await getSignedFileUrl(fileUrl);
@@ -49,10 +41,6 @@ export async function viewFile(fileUrl: string): Promise<void> {
   }
 }
 
-/**
- * Downloads a file, handling both local and R2 files.
- * R2 files are proxied through our API to avoid CORS issues with signed URLs.
- */
 export async function downloadFile(fileUrl: string, fileName?: string): Promise<void> {
   try {
     const downloadFileName = fileName || extractFileName(fileUrl);
@@ -97,9 +85,6 @@ export async function downloadFile(fileUrl: string, fileName?: string): Promise<
   }
 }
 
-/**
- * Extracts filename from a URL or key
- */
 function extractFileName(url: string): string {
   const parts = url.split("/");
   const lastPart = parts[parts.length - 1];
@@ -107,9 +92,6 @@ function extractFileName(url: string): string {
   return match ? match[1] : lastPart;
 }
 
-/**
- * Hook for managing file URL state
- */
 export function useFileUrl() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

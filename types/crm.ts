@@ -1,9 +1,4 @@
-/**
- * CRM domain TypeScript types — Deals, Contacts, Client Accounts, Targets,
- * and CRM dashboards. Zero tRPC / RouterOutputs references.
- */
 
-// ─── Deals ───────────────────────────────────────────────────────────────────
 
 export type DealStage =
   | "LEAD"
@@ -110,8 +105,6 @@ export interface DealFilters {
   offset?: number;
 }
 
-// ─── Contacts ────────────────────────────────────────────────────────────────
-
 export interface Contact {
   id: number;
   orgId: string;
@@ -177,8 +170,6 @@ export interface UpdateContactInput {
   tags?: string[];
 }
 
-// ─── Deal Activities ──────────────────────────────────────────────────────────
-
 export interface LogDealActivityInput {
   dealId: number;
   type: DealActivityType;
@@ -186,8 +177,6 @@ export interface LogDealActivityInput {
   notes?: string;
   duration?: number;
 }
-
-// ─── CRM Organizations ────────────────────────────────────────────────────────
 
 export type OrgSize = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
 
@@ -230,8 +219,6 @@ export interface CreateCrmOrganizationInput {
   linkedinUrl?: string;
   description?: string;
 }
-
-// ─── Client Accounts ─────────────────────────────────────────────────────────
 
 export type ClientAccountStatus =
   | "ACCOUNT_OPENING"
@@ -328,8 +315,6 @@ export interface LogClientActivityInput {
   metadata?: Record<string, unknown>;
 }
 
-// ─── Targets ─────────────────────────────────────────────────────────────────
-
 export interface Target {
   id: number;
   orgId: string;
@@ -402,8 +387,6 @@ export interface LogTargetProgressInput {
   currentValue: string;
   notes?: string;
 }
-
-// ─── CRM Dashboards ──────────────────────────────────────────────────────────
 
 export interface TrendValue {
   value: number;
@@ -609,8 +592,6 @@ export interface SupportDashboard {
   supportTeamMembers: SupportTeamMember[];
   ticketsByPriority: TicketBreakdownItem[];
 }
-
-// ─── CRM Person Profile (slug-based) ─────────────────────────────────────────
 
 export interface PersonStat {
   label: string;

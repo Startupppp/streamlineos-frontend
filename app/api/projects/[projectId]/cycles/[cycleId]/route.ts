@@ -1,10 +1,4 @@
-/**
- * PATCH  /api/projects/[id]/cycles/[cycleId]  — update cycle (name, dates, status)
- * DELETE /api/projects/[id]/cycles/[cycleId]  — delete cycle (unlinking work items)
- *
- * When status transitions to "active", enforces that only one active cycle exists per project.
- * On delete, sets cycleId = null on all associated tickets.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -32,7 +26,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     const body = await parseBody(req, updateCycleSchema);
 
-    // Enforce single active cycle per project
     if (body.status === "active") {
       const [existing] = await db
         .select({ id: cycles.id })
@@ -70,7 +63,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const cId = Number(cycleId);
     if (!projectId || !cId) return err("Invalid id", 400);
 
-    // Unlink all tickets from this cycle before deletion
     await db
       .update(tickets)
       .set({ cycleId: null })

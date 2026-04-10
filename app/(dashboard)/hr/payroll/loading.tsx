@@ -9,7 +9,7 @@ export default function PayrollLoading() {
   return (
     <PageWrapper title="Payroll" subtitle="Manage monthly payroll runs and employee payslips.">
       <div className="space-y-6">
-        {/* Stat cards */}
+
         <div className="grid gap-4 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
@@ -25,7 +25,6 @@ export default function PayrollLoading() {
           ))}
         </div>
 
-        {/* Payroll table */}
         <Card>
           <CardHeader>
             <Skeleton className="h-5 w-48" />

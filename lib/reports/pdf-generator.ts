@@ -1,7 +1,4 @@
-/**
- * PDF report generation utilities.
- * Uses jsPDF for server-side/client-side PDF generation.
- */
+
 export async function generateSalesPerformancePDF(data: {
   period: string;
   salesReps: Array<{
@@ -15,9 +12,8 @@ export async function generateSalesPerformancePDF(data: {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
 
-  // Header
   doc.setFontSize(18);
-  doc.setTextColor(15, 43, 127); // Dark blue
+  doc.setTextColor(15, 43, 127);
   doc.text("Vaivamm Capital", 14, 20);
   doc.setFontSize(14);
   doc.text("Sales Performance Report", 14, 30);
@@ -25,13 +21,11 @@ export async function generateSalesPerformancePDF(data: {
   doc.setTextColor(100);
   doc.text(`Period: ${data.period}`, 14, 38);
 
-  // Table
   let y = 50;
   const headers = ["Sales Rep", "Assigned", "Converted", "Rate %", "Revenue"];
   const colWidths = [50, 25, 25, 25, 40];
 
-  // Header row
-  doc.setFillColor(189, 136, 44); // Gold
+  doc.setFillColor(189, 136, 44);
   doc.rect(14, y - 5, 180, 8, "F");
   doc.setTextColor(255);
   doc.setFontSize(9);
@@ -41,7 +35,6 @@ export async function generateSalesPerformancePDF(data: {
     x += colWidths[i];
   });
 
-  // Data rows
   y += 10;
   doc.setTextColor(0);
   for (const rep of data.salesReps) {
@@ -93,7 +86,6 @@ export async function generateTargetAchievementPDF(data: {
     doc.text(`${t.name} — ${t.metric}`, 14, y);
     y += 6;
 
-    // Progress bar
     const barWidth = 150;
     const progress = Math.min(t.percentage, 100);
     doc.setFillColor(230, 230, 230);

@@ -1,7 +1,4 @@
-/**
- * Project management tables: projects, tickets, sprints, cycles, modules, pages, views,
- * statuses, comments, attachments, labels, intake, work item relations, timesheets.
- */
+
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
@@ -11,7 +8,6 @@ import {
 } from "./enums";
 import { organizations, users } from "./auth";
 
-// ─── Projects ───
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -103,7 +99,6 @@ export const moduleLinks = pgTable("module_links", {
   uniqueIndex("uniq_module_links").on(table.moduleId, table.linkedModuleId),
 ]);
 
-// ─── Tickets ───
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -325,7 +320,6 @@ export const reports = pgTable("reports", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Project Relations ───
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   tickets: many(tickets),
   manager: one(users, { fields: [projects.managerId], references: [users.id], relationName: "projectManager" }),

@@ -35,7 +35,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  // URL filters
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
   const filterPriority = searchParams.get("priority") ?? "";
@@ -109,7 +108,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
     }));
   }, [data]);
 
-  // Apply filters
   const filteredTickets = useMemo(() => {
     let tickets = hideCompleted
       ? allTickets.filter((t) => t.status !== "DONE")
@@ -127,7 +125,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
     return tickets;
   }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
 
-  // Members for filter bar
   const members = useMemo(() => {
     if (!data?.members) return [];
     return data.members
@@ -194,7 +191,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </>
       }
     >
-      {/* Board view — fills available height, scrolls independently */}
+
       {view === "board" && (
         <div className="h-full w-full px-3 pt-2 pb-1">
           <KanbanBoard
@@ -207,7 +204,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Other views — vertical scroll only */}
       {view === "list" && (
         <div className="h-full overflow-y-auto px-4 py-2">
           <ListView
@@ -245,7 +241,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Ticket detail sheet driven by URL param */}
       <TicketDetailsDialog
         ticketId={selectedTicketId}
         open={!!selectedTicketId}

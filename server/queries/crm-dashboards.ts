@@ -20,8 +20,6 @@ import {
 import { eq, and, desc, gte, count, sum, sql, ne, isNotNull } from "drizzle-orm";
 import { subDays } from "date-fns";
 
-// ─── CRM Dashboards ───────────────────────────────────────────────────────────
-
 function computeTrend(current: number, previous: number) {
   if (previous === 0) return { value: 0, isPositive: true };
   const change = ((current - previous) / previous) * 100;
@@ -42,7 +40,7 @@ export async function getSalesDashboard(orgId: string) {
 }
 
 async function _getSalesDashboard(orgId: string) {
-  // SQL aggregation: count and sum per stage
+
   const [stageAggs, topDealsRaw, leaderboardRaw, metrics, recentActivities, leadMetrics] =
     await Promise.all([
       db
@@ -96,7 +94,6 @@ async function _getSalesDashboard(orgId: string) {
         .groupBy(leads.status),
     ]);
 
-  // Compute totals from SQL aggregations
   const stageMap = new Map(stageAggs.map((r) => [r.stage, r]));
   const pipelineValue = stageAggs.reduce((s, r) => s + r.totalValue, 0);
   const closedWonAgg = stageMap.get("Closed Won");
@@ -146,7 +143,6 @@ async function _getSalesDashboard(orgId: string) {
     probability: d.probability ?? 0,
   }));
 
-  // Fetch people names for leaderboard
   const repIds = leaderboardRaw.map((r) => r.salesRepId).filter(Boolean) as number[];
   const people = repIds.length
     ? await db.query.crmPeople.findMany({
@@ -186,7 +182,7 @@ async function _getSalesDashboard(orgId: string) {
     totalMeetings: activityMap["meeting"] ?? 0,
     totalEmails: activityMap["email"] ?? 0,
     totalSiteVisits: activityMap["site_visit"] ?? 0,
-    followUpNeeded: 0, // computed on frontend from lead list
+    followUpNeeded: 0,
   };
 
   const salesActivities = await db.query.crmActivities.findMany({
@@ -227,14 +223,12 @@ async function _getMarketingDashboard(orgId: string) {
         orderBy: [desc(crmMonthlyMetrics.id)],
       }),
 
-      // SQL GROUP BY status instead of fetching all leads
       db
         .select({ status: crmLeads.status, cnt: count() })
         .from(crmLeads)
         .where(eq(crmLeads.orgId, orgId))
         .groupBy(crmLeads.status),
 
-      // SQL GROUP BY channel
       db
         .select({
           channel: sql<string>`COALESCE(${crmLeads.channel}, 'Other')`,
@@ -334,14 +328,13 @@ export async function getSupportDashboard(orgId: string) {
 async function _getSupportDashboard(orgId: string) {
   const [statusAggs, priorityAggs, metrics, supportActivities, teamMembers, resolvedTickets] =
     await Promise.all([
-      // SQL GROUP BY status
+
       db
         .select({ status: crmSupportTickets.status, cnt: count() })
         .from(crmSupportTickets)
         .where(eq(crmSupportTickets.orgId, orgId))
         .groupBy(crmSupportTickets.status),
 
-      // SQL GROUP BY priority
       db
         .select({ priority: crmSupportTickets.priority, cnt: count() })
         .from(crmSupportTickets)
@@ -363,7 +356,6 @@ async function _getSupportDashboard(orgId: string) {
         where: eq(crmSupportTeamMembers.orgId, orgId),
       }),
 
-      // Fetch only resolved tickets for avg resolution time calculation
       db.query.crmSupportTickets.findMany({
         where: and(
           eq(crmSupportTickets.orgId, orgId),
@@ -441,7 +433,7 @@ export async function getCustomerExecutiveDashboard(orgId: string) {
 async function _getCustomerExecutiveDashboard(orgId: string) {
   const [healthAggs, companies, ceMetrics, ceActivities, supportTicketStats, resolvedCeTickets] =
     await Promise.all([
-      // SQL GROUP BY health
+
       db
         .select({ health: crmCompanies.health, cnt: count() })
         .from(crmCompanies)
@@ -465,7 +457,6 @@ async function _getCustomerExecutiveDashboard(orgId: string) {
         limit: 6,
       }),
 
-      // SQL aggregation for support ticket counts
       db
         .select({ status: crmSupportTickets.status, cnt: count() })
         .from(crmSupportTickets)

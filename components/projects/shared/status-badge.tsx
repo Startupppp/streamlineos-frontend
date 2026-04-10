@@ -21,7 +21,7 @@ export function StatusBadge({
   customStates,
   className,
 }: StatusBadgeProps) {
-  // Try custom states first
+
   const custom = customStates?.find(
     (s) => s.name === status || s.name.toUpperCase().replace(/\s+/g, "_") === status
   );

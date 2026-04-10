@@ -6,7 +6,7 @@ export default function OnboardingLoading() {
   return (
     <PageWrapper title="Onboarding" subtitle="Manage new employee onboarding.">
       <div className="space-y-6">
-        {/* Step indicator */}
+
         <div className="flex items-center justify-center gap-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">
@@ -16,7 +16,6 @@ export default function OnboardingLoading() {
           ))}
         </div>
 
-        {/* Form card */}
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <Skeleton className="h-6 w-40" />

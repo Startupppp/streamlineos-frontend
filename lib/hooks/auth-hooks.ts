@@ -6,10 +6,6 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-/* ------------------------------------------------------------------ */
-/*  Auth                                                               */
-/* ------------------------------------------------------------------ */
-
 export function useVerifyEmail() {
   return useMutation({
     mutationFn: (variables: { token: string }) =>
@@ -78,10 +74,6 @@ export function useSignOut() {
     },
   });
 }
-
-/* ------------------------------------------------------------------ */
-/*  Organization                                                       */
-/* ------------------------------------------------------------------ */
 
 type OrgSummary = {
   id: string;

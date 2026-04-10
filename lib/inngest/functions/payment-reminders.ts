@@ -11,7 +11,6 @@ export const paymentReminders = inngest.createFunction(
       const today = startOfDay(new Date());
       const in3DaysStr = addDays(today, 3).toISOString().split("T")[0];
 
-      // Find invoices that are SENT or OVERDUE and due within 3 days or already overdue
       const pendingInvoices = await db.query.invoices.findMany({
         where: and(
           or(eq(invoices.status, "SENT"), eq(invoices.status, "OVERDUE")),
@@ -58,7 +57,6 @@ export const paymentReminders = inngest.createFunction(
           metadata: { invoiceId: inv.id, invoiceNumber: inv.invoiceNumber },
         });
 
-        // Mark SENT invoices as OVERDUE if past due date
         if (daysUntilDue < 0 && inv.status === "SENT") {
           await db
             .update(invoices)

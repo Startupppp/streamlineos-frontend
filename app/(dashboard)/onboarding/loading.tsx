@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function OnboardingLoading() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
+
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 lg:px-8 pt-4 pb-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-1.5">
@@ -14,10 +14,8 @@ export default function OnboardingLoading() {
           <Skeleton className="h-4 w-10" />
         </div>
 
-        {/* Progress bar */}
         <Skeleton className="h-2 w-full rounded-full" />
 
-        {/* Step indicators */}
         <div className="flex items-center gap-0">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center flex-1 last:flex-initial">
@@ -31,7 +29,6 @@ export default function OnboardingLoading() {
         </div>
       </div>
 
-      {/* Form card */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
           <Card className="shadow-sm">

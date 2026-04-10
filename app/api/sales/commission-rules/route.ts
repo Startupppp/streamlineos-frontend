@@ -18,7 +18,6 @@ const createSchema = z.object({
   appliesTo: z.string().default("all"),
 });
 
-/** GET /api/sales/commission-rules */
 export async function GET() {
   return withAuth(async (session) => {
     const rules = await db
@@ -30,7 +29,6 @@ export async function GET() {
   });
 }
 
-/** POST /api/sales/commission-rules */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";

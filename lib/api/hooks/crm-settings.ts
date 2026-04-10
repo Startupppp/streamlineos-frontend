@@ -1,16 +1,8 @@
 "use client";
 
-/**
- * TanStack Query hooks for CRM Settings domain.
- * Covers Assignment Rules, Email Templates, Scoring Rules, SLA Policies.
- * Uses apiClient (Axios) — zero tRPC imports.
- */
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-
-// ─── Assignment Rules ─────────────────────────────────────────────────────────
 
 export interface AssignmentRuleCondition {
   field: string;
@@ -107,8 +99,6 @@ export function useReorderAssignmentRules() {
   });
 }
 
-// ─── Email Templates ──────────────────────────────────────────────────────────
-
 export interface EmailTemplate {
   id: number;
   orgId: string;
@@ -172,8 +162,6 @@ export function useDeleteEmailTemplate() {
     },
   });
 }
-
-// ─── Scoring Rules ────────────────────────────────────────────────────────────
 
 export interface ScoringRule {
   id: number;
@@ -239,8 +227,6 @@ export function useDeleteScoringRule() {
     },
   });
 }
-
-// ─── SLA Policies ─────────────────────────────────────────────────────────────
 
 export interface SlaPolicy {
   id: number;

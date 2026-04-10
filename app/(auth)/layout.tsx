@@ -5,7 +5,7 @@ import { AuthRightPanel } from "@/features/auth/auth-right-panel";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    // h-[100dvh] + overflow-hidden on root = reliable flex height for all browsers incl. iOS Safari
+
     <div className="flex h-[100dvh] overflow-hidden">
       <a
         href="#main-content"
@@ -14,9 +14,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      {/* Form column — full width on mobile, half on lg+ */}
       <div className="flex flex-1 flex-col overflow-y-auto bg-background">
-        {/* Logo */}
+
         <header className="shrink-0 flex items-center justify-center px-4 sm:px-8 py-4 sm:py-5 border-b border-border/30">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="h-8 w-8 rounded-xl bg-gold/10 ring-1 ring-gold/25 flex items-center justify-center overflow-hidden shrink-0">
@@ -31,7 +30,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           </Link>
         </header>
 
-        {/* Centered form area — flex-1 fills space, items/justify center the child */}
         <main
           id="main-content"
           aria-label="Authentication"
@@ -40,7 +38,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
 
-        {/* Footer */}
         <footer className="shrink-0 px-4 sm:px-8 py-4 border-t border-border/20">
           <p className="text-[11px] text-muted-foreground/40">
             &copy; {new Date().getFullYear()} Vaivamm Capital. All rights reserved.
@@ -48,7 +45,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </footer>
       </div>
 
-      {/* Decorative right panel — hidden on mobile */}
       <div className="hidden lg:flex flex-1 shrink-0">
         <AuthRightPanel />
       </div>

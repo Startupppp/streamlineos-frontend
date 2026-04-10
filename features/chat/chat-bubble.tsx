@@ -75,7 +75,7 @@ export function ChatBubble({
         showSender ? "mt-3 mb-0.5" : "mb-[2px]"
       )}
     >
-      {/* Avatar for receiver */}
+
       {!isOwn && (
         <div className="w-7 shrink-0 self-end">
           {showSender ? (

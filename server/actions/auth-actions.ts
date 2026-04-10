@@ -26,14 +26,14 @@ export async function resetPassword(password: string) {
 
   try {
      const hashedPassword = await bcrypt.hash(password, 12);
-     
+
      await db.update(users)
         .set({
            password: hashedPassword,
            isPasswordChangeRequired: false,
         })
         .where(eq(users.id, session.user.id));
-        
+
      return { success: true };
   } catch (error) {
       logger.error("Failed to reset password", error);
@@ -70,11 +70,11 @@ export async function createEmployee(data: {
         const creatorOrg = await db.query.organizationMembers.findFirst({
             where: eq(organizationMembers.userId, session.user.id)
         });
-        
+
         if (!creatorOrg) return { error: "Organization context not found" };
 
         const newUserId = crypto.randomUUID();
-        
+
         await db.transaction(async (tx) => {
             await tx.insert(users).values({
                 id: newUserId,

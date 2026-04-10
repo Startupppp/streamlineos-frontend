@@ -32,7 +32,7 @@ export async function cached<T>(
   try {
     await redis.set(key, data, { ex: ttlSeconds });
   } catch {
-    // Cache write failed, but we have the data
+
   }
 
   return data;
@@ -44,7 +44,7 @@ export async function invalidateCache(key: string): Promise<void> {
   try {
     await redis.del(key);
   } catch {
-    // Silently fail on cache invalidation
+
   }
 }
 
@@ -57,58 +57,48 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
       await redis.del(...keys);
     }
   } catch {
-    // Silently fail on cache invalidation
+
   }
 }
 
 export const CACHE_KEYS = {
-  // Auth & sessions
+
   dashboardStats: (orgId: string) => `dashboard:stats:${orgId}`,
   userProfile: (userId: string) => `user:profile:${userId}`,
   userSession: (userId: string) => `user:session:${userId}`,
   userPermissions: (userId: string) => `user:permissions:${userId}`,
   unreadNotifications: (userId: string) => `notifications:unread:${userId}`,
 
-  // Org settings
   orgSettings: (orgId: string) => `org:settings:${orgId}`,
   rolePermissions: (orgId: string, role: string) => `org:roles:${orgId}:${role}`,
 
-  // Leads
   leadsCount: (orgId: string) => `leads:count:${orgId}`,
   leadsList: (orgId: string, hash: string) => `leads:list:${orgId}:${hash}`,
   leadDetail: (orgId: string, id: number) => `leads:detail:${orgId}:${id}`,
 
-  // Projects
   projectsList: (orgId: string) => `projects:list:${orgId}`,
   ticketsList: (orgId: string, projectId: number, hash: string) =>
     `tickets:list:${orgId}:${projectId}:${hash}`,
 
-  // CRM dashboards
   salesDashboard: (orgId: string) => `sales:dashboard:${orgId}`,
   marketingDashboard: (orgId: string) => `marketing:dashboard:${orgId}`,
   ceDashboard: (orgId: string) => `ce:dashboard:${orgId}`,
   supportDashboard: (orgId: string) => `support:dashboard:${orgId}`,
 
-  // Deals
   dealsForecast: (orgId: string) => `deals:forecast:${orgId}`,
   approvalsList: (orgId: string) => `deals:approvals:${orgId}`,
 
-  // Clients
   clientsHealth: (orgId: string) => `clients:health:${orgId}`,
   churnAlerts: (orgId: string) => `clients:churn:${orgId}`,
 
-  // Sales
   quotasList: (orgId: string) => `sales:quotas:${orgId}`,
   commissionsList: (orgId: string) => `sales:commissions:${orgId}`,
 
-  // Marketing
   campaignsList: (orgId: string) => `marketing:campaigns:${orgId}`,
   emailCampaignsList: (orgId: string) => `marketing:emailCampaigns:${orgId}`,
 
-  // Search
   searchResults: (orgId: string, hash: string) => `search:${orgId}:${hash}`,
 
-  // Lead board & stats
   leadBoard: (orgId: string, hash: string) => `leads:board:${orgId}:${hash}`,
   leadStats: (orgId: string, hash: string) => `leads:stats:${orgId}:${hash}`,
 } as const;

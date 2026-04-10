@@ -81,7 +81,6 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
         </div>
       )}
 
-      {/* Add watcher */}
       <Select
         value=""
         onValueChange={(userId) => {

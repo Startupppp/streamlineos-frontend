@@ -1,6 +1,4 @@
-/**
- * GET /api/projects/time-entries  — all time entries for current user (or org if admin)
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, toNumber } from "@/lib/api/helpers";
@@ -32,7 +30,7 @@ export async function GET(req: NextRequest) {
     if (userId) {
       conditions.push(eq(timesheets.userId, userId));
     } else if (!isOwnerOrAdmin) {
-      // Non-admins see only their own entries
+
       conditions.push(eq(timesheets.userId, session.user.id));
     }
 
@@ -56,7 +54,6 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Filter by projectId post-fetch if needed
     const result = projectId
       ? entries.filter((e) => e.ticket?.projectId === projectId)
       : entries;

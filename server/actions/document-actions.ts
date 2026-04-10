@@ -425,7 +425,7 @@ export async function getDocumentStats() {
   futureDate.setDate(futureDate.getDate() + 30);
   const thirtyDaysLater = futureDate.toISOString().split('T')[0];
 
-  const expiringCount = allDocs.filter(d => 
+  const expiringCount = allDocs.filter(d =>
     d.expiryDate && d.expiryDate <= thirtyDaysLater && d.expiryDate >= today
   ).length;
 

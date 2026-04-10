@@ -38,7 +38,6 @@ export default function BacklogPage({ params }: PageProps) {
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  // URL filters
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
   const filterPriority = searchParams.get("priority") ?? "";

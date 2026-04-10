@@ -1,6 +1,4 @@
-/**
- * POST /api/chat/presence/heartbeat  — update the user's online presence
- */
+
 
 import { withAuth, ok } from "@/lib/api/helpers";
 import { upsertPresence } from "@/server/queries/chat";

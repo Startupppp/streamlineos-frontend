@@ -31,7 +31,7 @@ export function AvatarStack({ users, limit = 5, className, onSelect, selectedIds
            return (
             <Tooltip key={user.id}>
               <TooltipTrigger asChild>
-                <div 
+                <div
                     className={cn(
                         "relative transition-transform hover:z-10 hover:scale-110 cursor-pointer",
                         isSelected && "z-20 scale-110"
