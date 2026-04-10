@@ -3,7 +3,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useInterviews, useCreateInterview, useUpdateInterview, useCandidates } from "@/lib/api/hooks/hr";
+import { useInterviews, useCreateInterview, useUpdateInterview, useCandidates, useJobPostings } from "@/lib/api/hooks/hr";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
 import type { Interview } from "@/types/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -43,6 +43,7 @@ function resultBadgeVariant(result: string | null): "default" | "secondary" | "o
 export default function InterviewsPage() {
   const { data: interviews, isLoading } = useInterviews();
   const { data: allCandidates } = useCandidates();
+  const { data: jobPostings } = useJobPostings({ status: "OPEN" });
   const createInterview = useCreateInterview();
   const updateInterview = useUpdateInterview();
 
@@ -50,6 +51,7 @@ export default function InterviewsPage() {
   const [feedbackInterview, setFeedbackInterview] = useState<Interview | null>(null);
   const [candidatePickerOpen, setCandidatePickerOpen] = useState(false);
   const [candidateId, setCandidateId] = useState("");
+  const [jobPostingId, setJobPostingId] = useState("");
   const [type, setType] = useState<InterviewType>("VIDEO");
   const [scheduledAt, setScheduledAt] = useState("");
   const [duration, setDuration] = useState("60");
@@ -78,6 +80,7 @@ export default function InterviewsPage() {
           toast.success("Interview scheduled");
           setSheetOpen(false);
           setCandidateId("");
+          setJobPostingId("");
           setScheduledAt("");
           setMeetingLink("");
         },
@@ -172,6 +175,17 @@ export default function InterviewsPage() {
                     </Command>
                   </PopoverContent>
                 </Popover>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Job Position</label>
+                <Select value={jobPostingId} onValueChange={setJobPostingId}>
+                  <SelectTrigger><SelectValue placeholder="Select position..." /></SelectTrigger>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
+                    {jobPostings?.map((jp: { id: number; title: string }) => (
+                      <SelectItem key={jp.id} value={String(jp.id)}>{jp.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
