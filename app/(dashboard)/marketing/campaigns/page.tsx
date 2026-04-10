@@ -96,7 +96,16 @@ export default function CampaignsPage() {
       }
     >
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading campaigns...</div>
+        <div className="text-center py-12 text-muted-foreground">
+          <Image
+            src="/illustrations/undraw-social-media-post.svg"
+            alt="Loading campaigns"
+            width={200}
+            height={160}
+            className="mx-auto mb-4 opacity-90 animate-pulse"
+          />
+          Loading campaigns...
+        </div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Image

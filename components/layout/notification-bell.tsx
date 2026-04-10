@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -79,8 +80,10 @@ export function NotificationBell() {
 
         <ScrollArea className="flex-1 overflow-hidden max-h-[60vh]">
           {!notifications?.length ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              No notifications yet
+            <div className="py-6 px-4 text-center">
+              <EmptyInboxIllustration className="mx-auto mb-2 h-20 w-20 opacity-90" />
+              <p className="text-sm font-medium text-foreground">No notifications yet</p>
+              <p className="text-xs text-muted-foreground mt-1">When something important happens, it will show up here.</p>
             </div>
           ) : (
             <div className="divide-y">
