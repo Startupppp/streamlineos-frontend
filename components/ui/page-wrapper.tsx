@@ -73,7 +73,7 @@ export function PageWrapper({
         </div>
       ) : (
         <ScrollArea className="flex-1 min-h-0">
-          <div className={cn("px-4 sm:px-6 pt-3 pb-6", contentClassName)}>
+          <div className={cn("px-4 sm:px-6 pt-3 pb-6 overflow-x-hidden", contentClassName)}>
             {children}
           </div>
         </ScrollArea>
