@@ -25,7 +25,7 @@ interface QuickAction {
   href: string;
 }
 
-function getQuickActionsForRole(role: string | undefined): QuickAction[] {
+export function getQuickActionsForRole(role: string | undefined): QuickAction[] {
   switch (role) {
     case "CEO":
       return [
