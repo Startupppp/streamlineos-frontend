@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { format, isWeekend } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Check, XCircle } from "lucide-react";
+import { Loader2, Save, Check, XCircle, Link2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkLogRejectDialog } from "./work-log-editor";
 
@@ -153,6 +154,17 @@ export function WorkLogEntryRow({
               readOnly && "cursor-default opacity-75",
             )}
           />
+          {/* Attachment link */}
+          {!readOnly && (
+            <div className="flex items-center gap-2">
+              <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <Input
+                placeholder="Attachment link (optional) — paste URL to doc, sheet, or file"
+                className="h-7 text-xs"
+                type="url"
+              />
+            </div>
+          )}
           {/* Highlighted search match preview */}
           {highlighted && !hasUnsavedChanges && (
             <p className="text-xs text-muted-foreground px-1 truncate">
