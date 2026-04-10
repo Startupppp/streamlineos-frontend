@@ -5,7 +5,7 @@ import { useState, useCallback } from "react";
 import {
   useTerminations, useCreateTermination, useSubmitTermination,
   useCeoReviewTermination, useSendTerminationEmail, useCompleteTermination,
-  useTerminationLetter, type Termination,
+  useTerminationDetail, useTerminationLetter, type Termination,
 } from "@/lib/api/hooks/hr";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -54,8 +54,7 @@ function TerminationDetailPanel({
 }: {
   id: number; role: string | undefined;
 }) {
-  const { data, isLoading } = useTerminations();
-  const termination = data?.find((t) => t.id === id);
+  const { data: termination, isLoading } = useTerminationDetail(id);
   const { data: letterData } = useTerminationLetter(id);
   const submitForCeo = useSubmitTermination();
   const ceoReview = useCeoReviewTermination();
