@@ -14,6 +14,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { formatINRCompact } from "@/lib/format-utils";
@@ -54,6 +62,9 @@ export default function DealsPage() {
   const employees = Array.isArray(rawEmployees) ? rawEmployees : rawEmployees?.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
   const [dealToDelete, setDealToDelete] = useState<number | null>(null);
+  const [winLossDialog, setWinLossDialog] = useState<{ id: number; stage: "WON" | "LOST" } | null>(null);
+  const [winLossCategory, setWinLossCategory] = useState("");
+  const [winLossNotes, setWinLossNotes] = useState("");
 
   const handleDealSort = useCallback((col: string) => {
     if (dealSortCol === col) {
@@ -115,11 +126,37 @@ export default function DealsPage() {
   }, []);
 
   const handleStageChange = useCallback((id: number, stage: string) => {
+    if (stage === "WON" || stage === "LOST") {
+      setWinLossDialog({ id, stage });
+      setWinLossCategory("");
+      setWinLossNotes("");
+      return;
+    }
     updateStageMutation.mutate(
       { id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST" },
       { onSuccess: () => toast.success("Deal stage updated") },
     );
   }, [updateStageMutation]);
+
+  const handleWinLossConfirm = useCallback(() => {
+    if (!winLossDialog) return;
+    const reason = winLossNotes
+      ? `${winLossCategory || "Other"}: ${winLossNotes}`
+      : winLossCategory || undefined;
+    updateStageMutation.mutate(
+      { id: winLossDialog.id, stage: winLossDialog.stage, lostReason: reason },
+      {
+        onSuccess: () => {
+          toast.success(`Deal marked as ${winLossDialog.stage}`);
+          setWinLossDialog(null);
+        },
+      },
+    );
+  }, [winLossDialog, winLossCategory, winLossNotes, updateStageMutation]);
+
+  const handleWinLossDialogChange = useCallback((open: boolean) => {
+    if (!open) setWinLossDialog(null);
+  }, []);
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, typeof allDeals> = {};
@@ -258,6 +295,91 @@ export default function DealsPage() {
           destructive
           onConfirm={handleDeleteConfirm}
         />
+
+        <Dialog open={winLossDialog !== null} onOpenChange={handleWinLossDialogChange}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {winLossDialog?.stage === "WON" ? "Mark Deal as Won" : "Mark Deal as Lost"}
+              </DialogTitle>
+              <DialogDescription>
+                {winLossDialog?.stage === "WON"
+                  ? "Optionally record why this deal was won."
+                  : "Optionally record why this deal was lost."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="winloss-category">
+                  {winLossDialog?.stage === "WON" ? "Win reason" : "Loss reason"}
+                </Label>
+                <Select value={winLossCategory} onValueChange={setWinLossCategory}>
+                  <SelectTrigger id="winloss-category">
+                    <SelectValue placeholder="Select a reason (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {winLossDialog?.stage === "WON" ? (
+                      <>
+                        <SelectItem value="Best Product">Best Product</SelectItem>
+                        <SelectItem value="Best Price">Best Price</SelectItem>
+                        <SelectItem value="Best Support">Best Support</SelectItem>
+                        <SelectItem value="Existing Relationship">Existing Relationship</SelectItem>
+                        <SelectItem value="Referral">Referral</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="Price Too High">Price Too High</SelectItem>
+                        <SelectItem value="Chose Competitor">Chose Competitor</SelectItem>
+                        <SelectItem value="No Budget">No Budget</SelectItem>
+                        <SelectItem value="Poor Timing">Poor Timing</SelectItem>
+                        <SelectItem value="Product Mismatch">Product Mismatch</SelectItem>
+                        <SelectItem value="No Response">No Response</SelectItem>
+                        <SelectItem value="Internal Decision">Internal Decision</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="winloss-notes">
+                  {winLossDialog?.stage === "WON"
+                    ? "What was the deciding factor?"
+                    : "Why was the deal lost?"}
+                  <span className="ml-1 text-muted-foreground text-xs">(optional)</span>
+                </Label>
+                <Textarea
+                  id="winloss-notes"
+                  placeholder="Add any additional notes..."
+                  rows={3}
+                  value={winLossNotes}
+                  onChange={e => setWinLossNotes(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex-row gap-2 border-t pt-4">
+              <Button variant="outline" className="flex-1" onClick={() => setWinLossDialog(null)}>
+                Cancel
+              </Button>
+              <Button
+                className={cn(
+                  "flex-1",
+                  winLossDialog?.stage === "WON"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "bg-destructive hover:bg-destructive/90 text-white",
+                )}
+                onClick={handleWinLossConfirm}
+                disabled={updateStageMutation.isPending}
+              >
+                Confirm
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     </PageWrapper>
   );

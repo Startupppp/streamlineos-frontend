@@ -18,6 +18,8 @@ const updateSchema = z.object({
   twitterUrl: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
+  leadId: z.number().nullable().optional(),
+  dealId: z.number().nullable().optional(),
 });
 
 type Ctx = { params: Promise<{ contactId: string }> };

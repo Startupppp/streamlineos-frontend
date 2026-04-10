@@ -1,31 +1,32 @@
 import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, leaveTypes } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
-    const data = await db
+    const rows = await db
       .select({
         id: leaveRequests.id,
         startDate: leaveRequests.startDate,
         endDate: leaveRequests.endDate,
-        reason: leaveRequests.reason,
         status: leaveRequests.status,
-        leaveType: leaveTypes.name,
+        reason: leaveRequests.reason,
         createdAt: leaveRequests.createdAt,
+        leaveTypeName: leaveTypes.name,
       })
       .from(leaveRequests)
-      .leftJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id))
+      .innerJoin(leaveTypes, eq(leaveRequests.leaveTypeId, leaveTypes.id))
       .where(
         and(
-          eq(leaveRequests.orgId, session.orgId),
           eq(leaveRequests.userId, session.user.id),
           eq(leaveRequests.status, "PENDING")
         )
       )
-      .orderBy(desc(leaveRequests.createdAt));
+      .orderBy(desc(leaveRequests.createdAt))
+      .limit(10);
 
-    return ok(data);
+    return ok(rows);
   });
 }

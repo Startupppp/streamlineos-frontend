@@ -1,7 +1,7 @@
 
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { genderEnum, onboardingStatusEnum } from "./enums";
+import { genderEnum, onboardingStatusEnum, onboardingDocStatusEnum } from "./enums";
 
 import { departments } from "./hr";
 import { tickets } from "./projects";
@@ -84,6 +84,8 @@ export const users = pgTable("users", {
   totpEnabled: boolean("totp_enabled").default(false).notNull(),
   googleRefreshToken: text("google_refresh_token"),
   googleEmail: text("google_email"),
+  isProfilePictureRequired: boolean("is_profile_picture_required").default(false),
+  onboardingDocStatus: onboardingDocStatusEnum("onboarding_doc_status").default("PENDING"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

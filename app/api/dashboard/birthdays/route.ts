@@ -1,101 +1,90 @@
 import { withAuth, ok } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers } from "@/lib/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 
-function occursInNextSevenDays(dateValue: Date | string | null | undefined, today: Date): boolean {
-  if (!dateValue) return false;
-  const source = new Date(dateValue);
-  if (Number.isNaN(source.getTime())) return false;
-
-  const eventThisYear = new Date(today.getFullYear(), source.getMonth(), source.getDate());
-  const eventNextYear = new Date(today.getFullYear() + 1, source.getMonth(), source.getDate());
-
-  const candidate = eventThisYear >= today ? eventThisYear : eventNextYear;
-  const diffMs = candidate.getTime() - today.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return diffDays >= 0 && diffDays <= 7;
-}
-
-export async function GET() {
+export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
-
-    const data = await db
+    const members = await db
       .select({
         id: users.id,
         name: users.name,
-        image: users.image,
         designation: users.designation,
+        image: users.image,
         dateOfBirth: users.dateOfBirth,
         joiningDate: users.joiningDate,
       })
       .from(users)
-      .innerJoin(
-        organizationMembers,
-        and(
-          eq(organizationMembers.userId, users.id),
-          eq(organizationMembers.orgId, session.orgId)
-        )
-      )
+      .innerJoin(organizationMembers, eq(organizationMembers.userId, users.id))
       .where(
         and(
-          eq(users.isActive, true),
-          sql`(
-            (
-              ${users.dateOfBirth} IS NOT NULL
-              AND (
-                (
-                  to_char(CURRENT_DATE, 'MM-DD') <= to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                  AND to_char(${users.dateOfBirth}::date, 'MM-DD') BETWEEN to_char(CURRENT_DATE, 'MM-DD') AND to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                )
-                OR
-                (
-                  to_char(CURRENT_DATE, 'MM-DD') > to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                  AND (
-                    to_char(${users.dateOfBirth}::date, 'MM-DD') >= to_char(CURRENT_DATE, 'MM-DD')
-                    OR to_char(${users.dateOfBirth}::date, 'MM-DD') <= to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                  )
-                )
-              )
-            )
-            OR
-            (
-              ${users.joiningDate} IS NOT NULL
-              AND (
-                (
-                  to_char(CURRENT_DATE, 'MM-DD') <= to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                  AND to_char(${users.joiningDate}::date, 'MM-DD') BETWEEN to_char(CURRENT_DATE, 'MM-DD') AND to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                )
-                OR
-                (
-                  to_char(CURRENT_DATE, 'MM-DD') > to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                  AND (
-                    to_char(${users.joiningDate}::date, 'MM-DD') >= to_char(CURRENT_DATE, 'MM-DD')
-                    OR to_char(${users.joiningDate}::date, 'MM-DD') <= to_char(CURRENT_DATE + INTERVAL '7 days', 'MM-DD')
-                  )
-                )
-              )
-            )
-          )`
+          eq(organizationMembers.orgId, session.orgId),
+          eq(users.isActive, true)
         )
       );
 
-    const results = data.map((u) => {
-      const today = new Date();
-      const isBirthday = occursInNextSevenDays(u.dateOfBirth, today);
-      const isAnniversary = occursInNextSevenDays(u.joiningDate, today);
-      const yearsOfService = u.joiningDate
-        ? today.getFullYear() - new Date(u.joiningDate).getFullYear()
-        : 0;
+    const today = new Date();
 
-      return {
-        ...u,
-        isBirthday: !!isBirthday,
-        isAnniversary: !!isAnniversary,
-        yearsOfService,
-      };
+    const upcoming: {
+      id: string;
+      name: string | null;
+      designation: string | null;
+      image: string | null;
+      type: "birthday" | "anniversary";
+      date: string;
+      yearsCompleted?: number;
+    }[] = [];
+
+    for (const member of members) {
+      for (let offset = 0; offset <= 7; offset++) {
+        const check = new Date(today);
+        check.setDate(today.getDate() + offset);
+        const cm = check.getMonth() + 1;
+        const cd = check.getDate();
+
+        if (member.dateOfBirth) {
+          const dob = new Date(member.dateOfBirth);
+          if (dob.getMonth() + 1 === cm && dob.getDate() === cd) {
+            upcoming.push({
+              id: member.id,
+              name: member.name,
+              designation: member.designation,
+              image: member.image,
+              type: "birthday",
+              date: check.toISOString().split("T")[0],
+            });
+          }
+        }
+
+        if (member.joiningDate) {
+          const jd = new Date(member.joiningDate);
+          if (jd.getMonth() + 1 === cm && jd.getDate() === cd) {
+            const years = check.getFullYear() - jd.getFullYear();
+            if (years > 0) {
+              upcoming.push({
+                id: member.id,
+                name: member.name,
+                designation: member.designation,
+                image: member.image,
+                type: "anniversary",
+                date: check.toISOString().split("T")[0],
+                yearsCompleted: years,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    const seen = new Set<string>();
+    const deduped = upcoming.filter((u) => {
+      const key = `${u.id}-${u.type}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
 
-    return ok(results);
+    return ok(deduped.slice(0, 20));
   });
 }

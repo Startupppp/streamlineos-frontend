@@ -134,15 +134,12 @@ export const useRecentActivity = (
 
 export interface LeaveToday {
   id: number;
-  userId: string;
   startDate: string;
   endDate: string;
-  reason: string | null;
-  leaveType: string | null;
-  userName: string | null;
-  userImage: string | null;
-  userDesignation: string | null;
-  userDepartment: string | null;
+  leaveTypeId: number | null;
+  employeeName: string | null;
+  employeeDesignation: string | null;
+  employeeImage: string | null;
 }
 
 export interface UpcomingLeave {
@@ -171,32 +168,30 @@ export interface LeaveBalance {
   daysPerYear: number | null;
 }
 
+export interface BirthdayEntry {
+  id: string;
+  name: string | null;
+  designation: string | null;
+  image: string | null;
+  type: "birthday" | "anniversary";
+  date: string;
+  yearsCompleted?: number;
+}
+
+export interface PendingApprovalsCount {
+  pendingLeaves: number;
+  pendingResignations: number;
+  total: number;
+}
+
 export interface PendingRequest {
   id: number;
   startDate: string;
   endDate: string;
+  status: string;
   reason: string | null;
-  status: string | null;
-  leaveType: string | null;
   createdAt: string | null;
-}
-
-export interface BirthdayEntry {
-  id: string;
-  name: string | null;
-  image: string | null;
-  designation: string | null;
-  dateOfBirth: string | null;
-  joiningDate: string | null;
-  isBirthday: boolean;
-  isAnniversary: boolean;
-  yearsOfService: number;
-}
-
-export interface PendingApprovals {
-  pendingLeaves: number;
-  pendingResignations: number;
-  total: number;
+  leaveTypeName: string;
 }
 
 export interface TeamAttendance {
@@ -226,19 +221,26 @@ const hrWidgetKeys = {
   teamAttendance: [...queryKeys.dashboard.all, "teamAttendance"] as const,
 };
 
-export const useLeavesToday = () =>
-  useQuery<LeaveToday[]>({
+export const useLeavesToday = (
+  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<LeaveToday[], Error>({
     queryKey: hrWidgetKeys.leavesToday,
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    ...options,
   });
 
-export const useUpcomingLeaves = () =>
-  useQuery<UpcomingLeave[]>({
+export const useUpcomingLeaves = (
+  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<LeaveToday[], Error>({
     queryKey: hrWidgetKeys.upcomingLeaves,
-    queryFn: () => apiClient.get<UpcomingLeave[]>("/dashboard/upcoming-leaves"),
+    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/upcoming-leaves"),
     staleTime: 60_000,
+    refetchInterval: 60_000,
+    ...options,
   });
 
 export const useUpcomingHolidays = () =>
@@ -255,26 +257,37 @@ export const useMyLeaveBalance = () =>
     staleTime: 5 * 60_000,
   });
 
-export const usePendingRequests = () =>
-  useQuery<PendingRequest[]>({
-    queryKey: hrWidgetKeys.pendingRequests,
-    queryFn: () => apiClient.get<PendingRequest[]>("/dashboard/pending-requests"),
-    staleTime: 60_000,
-  });
-
-export const useBirthdays = () =>
-  useQuery<BirthdayEntry[]>({
+export const useBirthdays = (
+  options?: Omit<UseQueryOptions<BirthdayEntry[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<BirthdayEntry[], Error>({
     queryKey: hrWidgetKeys.birthdays,
     queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
     staleTime: 5 * 60_000,
+    refetchInterval: 60_000,
+    ...options,
   });
 
-export const usePendingApprovals = () =>
-  useQuery<PendingApprovals>({
-    queryKey: hrWidgetKeys.pendingApprovals,
-    queryFn: () => apiClient.get<PendingApprovals>("/dashboard/pending-approvals"),
+export const usePendingRequests = (
+  options?: Omit<UseQueryOptions<PendingRequest[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<PendingRequest[], Error>({
+    queryKey: hrWidgetKeys.pendingRequests,
+    queryFn: () => apiClient.get<PendingRequest[]>("/dashboard/pending-requests"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    ...options,
+  });
+
+export const usePendingApprovals = (
+  options?: Omit<UseQueryOptions<PendingApprovalsCount, Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<PendingApprovalsCount, Error>({
+    queryKey: hrWidgetKeys.pendingApprovals,
+    queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    ...options,
   });
 
 export const useTeamAttendance = () =>

@@ -2,7 +2,8 @@ import { Inngest } from "inngest";
 
 export const inngest = new Inngest({
   id: "vaivamm-crm",
-  eventKey: process.env.INNGEST_EVENT_KEY,
+  // In local dev (INNGEST_DEV=1) the event key is not required
+  ...(process.env.INNGEST_EVENT_KEY ? { eventKey: process.env.INNGEST_EVENT_KEY } : {}),
 });
 
 export type InngestEvents = {
@@ -95,5 +96,20 @@ export type InngestEvents = {
       userId: string;
       params: Record<string, unknown>;
     };
+  };
+  "hr/resignation.submitted": {
+    data: { resignationId: number; orgId: string; employeeName: string; employeeId: string };
+  };
+  "hr/resignation.hr_approved": {
+    data: { resignationId: number; orgId: string; employeeName: string; employeeId: string };
+  };
+  "hr/resignation.ceo_approved": {
+    data: { resignationId: number; orgId: string; employeeId: string; approved: boolean };
+  };
+  "hr/termination.submitted": {
+    data: { terminationId: number; orgId: string; employeeName: string };
+  };
+  "hr/termination.ceo_decision": {
+    data: { terminationId: number; orgId: string; employeeName: string; approved: boolean };
   };
 };

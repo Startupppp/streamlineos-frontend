@@ -10,6 +10,13 @@ import { monthlyLeaveReset } from "./monthly-leave-reset";
 import { holidayNotifications } from "./holiday-notifications";
 import { paymentReminders } from "./payment-reminders";
 import { dailySalesDigest } from "./daily-sales-digest";
+import {
+  onResignationSubmitted,
+  onResignationHrApproved,
+  onResignationCeoApproved,
+  onTerminationSubmitted,
+  onTerminationCeoApproved,
+} from "./hr-exit-notifications";
 
 export const inngestFunctions = [
   dailyNotifications,
@@ -24,4 +31,9 @@ export const inngestFunctions = [
   holidayNotifications,
   paymentReminders,
   dailySalesDigest,
+  onResignationSubmitted,
+  onResignationHrApproved,
+  onResignationCeoApproved,
+  onTerminationSubmitted,
+  onTerminationCeoApproved,
 ];

@@ -3,8 +3,9 @@ import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, resignations } from "@/lib/db/schema";
 import { eq, and, sql, inArray } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
     if (!isAdminOrOwner(session.user.role)) {
       return err("Forbidden", 403);
@@ -35,10 +36,13 @@ export async function GET() {
         )
       );
 
+    const pendingLeaves = leaveCount?.count ?? 0;
+    const pendingResignations = resignationCount?.count ?? 0;
+
     return ok({
-      pendingLeaves: leaveCount?.count ?? 0,
-      pendingResignations: resignationCount?.count ?? 0,
-      total: (leaveCount?.count ?? 0) + (resignationCount?.count ?? 0),
+      pendingLeaves,
+      pendingResignations,
+      total: pendingLeaves + pendingResignations,
     });
   });
 }

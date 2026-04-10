@@ -13,6 +13,7 @@ import {
   ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
   pipStatusEnum, surveyStatusEnum,
   feedbackTypeEnum, bonusTypeEnum, fnfStatusEnum,
+  terminationStatusEnum, onboardingDocStatusEnum, onboardingDocumentStatusEnum, docAuditActionEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -340,6 +341,16 @@ export const resignations = pgTable("resignations", {
   exitInterviewDate: timestamp("exit_interview_date"),
   exitInterviewConductedBy: text("exit_interview_conducted_by").references(() => users.id),
   feedback: jsonb("feedback").$type<{ question: string; answer: string }[]>(),
+  reasonCategory: text("reason_category"),
+  resignationLetterUrl: text("resignation_letter_url"),
+  hrReviewedBy: text("hr_reviewed_by").references(() => users.id),
+  hrReviewedAt: timestamp("hr_reviewed_at"),
+  hrRemarks: text("hr_remarks"),
+  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
+  ceoReviewedAt: timestamp("ceo_reviewed_at"),
+  ceoRemarks: text("ceo_remarks"),
+  willingForExitInterview: boolean("willing_for_exit_interview").default(true),
+  companyFeedback: text("company_feedback"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -382,6 +393,82 @@ export const exitChecklists = pgTable("exit_checklists", {
   completedAt: timestamp("completed_at"),
   notes: text("notes"),
 });
+
+export const terminations = pgTable("terminations", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  reasons: text("reasons").array().notNull().default([]),
+  detailedExplanation: text("detailed_explanation").notNull(),
+  effectiveDate: date("effective_date").notNull(),
+  severanceAmount: decimal("severance_amount"),
+  noticePeriodWaived: boolean("notice_period_waived").default(false),
+  terminationLetterUrl: text("termination_letter_url"),
+  supportingDocUrls: text("supporting_doc_urls").array().default([]),
+  internalNotes: text("internal_notes"),
+  status: terminationStatusEnum("status").default("DRAFT"),
+  initiatedBy: text("initiated_by").references(() => users.id),
+  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
+  ceoReviewedAt: timestamp("ceo_reviewed_at"),
+  ceoRemarks: text("ceo_remarks"),
+  emailSentAt: timestamp("email_sent_at"),
+  emailStatus: text("email_status"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_terminations_org").on(table.orgId),
+  index("idx_terminations_user").on(table.userId),
+  index("idx_terminations_status").on(table.status),
+]);
+
+export const documentTypes = pgTable("document_types", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description"),
+  isMandatory: boolean("is_mandatory").default(true),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  applicableRoles: text("applicable_roles").array().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_doc_types_org").on(table.orgId),
+]);
+
+export const onboardingDocuments = pgTable("onboarding_documents", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  documentTypeId: integer("document_type_id").references(() => documentTypes.id).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  version: integer("version").default(1),
+  status: onboardingDocumentStatusEnum("status").default("SUBMITTED"),
+  reviewedBy: text("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_onboarding_docs_user").on(table.userId),
+  index("idx_onboarding_docs_org").on(table.orgId),
+]);
+
+export const documentAuditLogs = pgTable("document_audit_logs", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  onboardingDocumentId: integer("onboarding_document_id").references(() => onboardingDocuments.id).notNull(),
+  action: docAuditActionEnum("action").notNull(),
+  performedBy: text("performed_by").references(() => users.id).notNull(),
+  remarks: text("remarks"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 
 export const recognitions = pgTable("recognitions", {
   id: serial("id").primaryKey(),
