@@ -225,7 +225,7 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
                             )}
                         />
 
-                        <div className="flex justify-end pt-4">
+                        <div className="flex justify-end pt-4 pb-4">
                              <Button type="submit" disabled={loading}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Submit Request
