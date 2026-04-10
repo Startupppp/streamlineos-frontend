@@ -101,6 +101,7 @@ export interface UpdateDealInput {
 export interface UpdateDealStageInput {
   id: number;
   stage: DealStage;
+  lostReason?: string;
 }
 
 export interface DealFilters {
@@ -266,6 +267,9 @@ export interface ClientAccount {
   estimatedInvestment: string | null;
   convertedAt: string;
   investedAt: string | null;
+  renewalStage: string;
+  renewalDate: string | null;
+  renewalNotes: string | null;
   createdAt: string;
   updatedAt: string;
   salesRep?: ClientUserRef | null;

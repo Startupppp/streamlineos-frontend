@@ -52,6 +52,8 @@ export const queryKeys = {
     reviewCycles: () => [...base, "hr", "reviewCycles"] as const,
     reviewCycle: (id: number) => [...base, "hr", "reviewCycle", id] as const,
     oneOnOnes: (params?: Record<string, unknown>) => [...base, "hr", "oneOnOnes", params] as const,
+    terminations: () => [...base, "hr", "terminations"] as const,
+    termination: (id: number) => [...base, "hr", "termination", id] as const,
   },
 
   // ─── Leads / CRM ───────────────────────────────────────────────────────────

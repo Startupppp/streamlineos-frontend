@@ -660,6 +660,9 @@ export const clientAccounts = pgTable("client_accounts", {
   estimatedInvestment: decimal("estimated_investment", { precision: 15, scale: 2 }),
   convertedAt: timestamp("converted_at").defaultNow().notNull(),
   investedAt: timestamp("invested_at"),
+  renewalStage: text("renewal_stage").default("upcoming").notNull(),
+  renewalDate: date("renewal_date"),
+  renewalNotes: text("renewal_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -921,12 +924,110 @@ export const targetHistoryRelations = relations(targetHistory, ({ one }) => ({
   changedBy: one(users, { fields: [targetHistory.changedById], references: [users.id] }),
 }));
 
+// ─── Deal Meetings ───
+export const dealMeetings = pgTable("deal_meetings", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  dealId: integer("deal_id").references(() => deals.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  durationMinutes: integer("duration_minutes").default(30),
+  attendees: text("attendees").array(),
+  agenda: text("agenda"),
+  notes: text("notes"),
+  actionItems: text("action_items"),
+  recordingLink: text("recording_link"),
+  status: text("status").default("scheduled").notNull(), // scheduled | completed | cancelled
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_deal_meetings_deal").on(table.dealId),
+  index("idx_deal_meetings_org").on(table.orgId),
+]);
+
+// ─── Client Opportunities (Upsell / Cross-sell) ───
+export const clientOpportunities = pgTable("client_opportunities", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }).notNull(),
+  title: text("title").notNull(),
+  type: text("type").default("upsell").notNull(), // upsell | cross_sell
+  stage: text("stage").default("identified").notNull(), // identified | proposed | negotiating | won | lost
+  value: decimal("value", { precision: 15, scale: 2 }),
+  notes: text("notes"),
+  expectedCloseDate: date("expected_close_date"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_client_opps_org").on(table.orgId),
+  index("idx_client_opps_client").on(table.clientId),
+]);
+
+export const clientOpportunitiesRelations = relations(clientOpportunities, ({ one }) => ({
+  client: one(clients, { fields: [clientOpportunities.clientId], references: [clients.id] }),
+  creator: one(users, { fields: [clientOpportunities.createdBy], references: [users.id] }),
+}));
+
+// ─── Client Onboarding Checklists ───
+export const clientOnboardingTemplates = pgTable("client_onboarding_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false).notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_onboarding_templates_org").on(table.orgId),
+]);
+
+export const clientOnboardingItems = pgTable("client_onboarding_items", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }).notNull(),
+  templateId: integer("template_id").references(() => clientOnboardingTemplates.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTo: text("assigned_to").references(() => users.id),
+  dueDate: date("due_date"),
+  completedAt: timestamp("completed_at"),
+  completedBy: text("completed_by").references(() => users.id),
+  sortOrder: integer("sort_order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_onboarding_items_client").on(table.clientId),
+  index("idx_onboarding_items_org").on(table.orgId),
+]);
+
+export const clientOnboardingTemplatesRelations = relations(clientOnboardingTemplates, ({ one, many }) => ({
+  organization: one(organizations, { fields: [clientOnboardingTemplates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [clientOnboardingTemplates.createdBy], references: [users.id] }),
+  items: many(clientOnboardingItems),
+}));
+
+export const clientOnboardingItemsRelations = relations(clientOnboardingItems, ({ one }) => ({
+  client: one(clients, { fields: [clientOnboardingItems.clientId], references: [clients.id] }),
+  template: one(clientOnboardingTemplates, { fields: [clientOnboardingItems.templateId], references: [clientOnboardingTemplates.id] }),
+  assignee: one(users, { fields: [clientOnboardingItems.assignedTo], references: [users.id] }),
+  completedByUser: one(users, { fields: [clientOnboardingItems.completedBy], references: [users.id] }),
+}));
+
 export const dealsRelations = relations(deals, ({ one, many }) => ({
   organization: one(organizations, { fields: [deals.orgId], references: [organizations.id] }),
   lead: one(leads, { fields: [deals.leadId], references: [leads.id] }),
   client: one(clients, { fields: [deals.clientId], references: [clients.id] }),
   assignedTo: one(users, { fields: [deals.assignedToId], references: [users.id] }),
   activities: many(dealActivities),
+  meetings: many(dealMeetings),
+}));
+
+export const dealMeetingsRelations = relations(dealMeetings, ({ one }) => ({
+  deal: one(deals, { fields: [dealMeetings.dealId], references: [deals.id] }),
+  creator: one(users, { fields: [dealMeetings.createdBy], references: [users.id] }),
 }));
 
 export const dealActivitiesRelations = relations(dealActivities, ({ one }) => ({

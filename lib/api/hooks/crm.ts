@@ -105,8 +105,8 @@ export function useUpdateDeal() {
 export function useUpdateDealStage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, stage }: UpdateDealStageInput) =>
-      apiClient.patch<Deal>(`/deals/${id}`, { stage }),
+    mutationFn: ({ id, stage, lostReason }: UpdateDealStageInput) =>
+      apiClient.patch<Deal>(`/deals/${id}`, { stage, lostReason }),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
@@ -230,6 +230,33 @@ export function useLogClientActivity() {
       qc.invalidateQueries({
         queryKey: queryKeys.clients.detail(vars.clientAccountId),
       });
+    },
+  });
+}
+
+// ─── Renewal Pipeline ─────────────────────────────────────────────────────────
+
+export function useRenewalAccounts() {
+  return useQuery({
+    queryKey: [...queryKeys.clients.all, "renewals"] as const,
+    queryFn: () => apiClient.get<ClientAccount[]>("/clients/renewals"),
+  });
+}
+
+export interface UpdateRenewalInput {
+  accountId: number;
+  renewalStage?: "upcoming" | "in_discussion" | "renewed" | "churned";
+  renewalDate?: string | null;
+  renewalNotes?: string | null;
+}
+
+export function useUpdateRenewal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ accountId, ...data }: UpdateRenewalInput) =>
+      apiClient.patch<ClientAccount>(`/clients/renewals/${accountId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.clients.all, "renewals"] });
     },
   });
 }
@@ -733,6 +760,286 @@ export function useCustomerExecutiveDashboard() {
   return useQuery({
     queryKey: queryKeys.crm.customerExecutiveDashboard(),
     queryFn: () => apiClient.get<CustomerExecutiveDashboard>("/crm/customer-executive"),
+  });
+}
+
+// ─── Deal Meetings ────────────────────────────────────────────────────────────
+
+export interface DealMeeting {
+  id: number;
+  orgId: string;
+  dealId: number;
+  title: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  attendees: string[] | null;
+  agenda: string | null;
+  notes: string | null;
+  actionItems: string | null;
+  recordingLink: string | null;
+  status: "scheduled" | "completed" | "cancelled";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  creator?: { id: string; name: string | null } | null;
+}
+
+export interface CreateDealMeetingInput {
+  title: string;
+  scheduledAt: string;
+  durationMinutes?: number;
+  attendees?: string[];
+  agenda?: string;
+  notes?: string;
+  actionItems?: string;
+  recordingLink?: string;
+  status?: "scheduled" | "completed" | "cancelled";
+}
+
+export function useDealMeetings(dealId: number) {
+  return useQuery({
+    queryKey: ["deals", dealId, "meetings"],
+    queryFn: () => apiClient.get<DealMeeting[]>(`/deals/${dealId}/meetings`),
+    enabled: dealId > 0,
+  });
+}
+
+export function useCreateDealMeeting(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateDealMeetingInput) =>
+      apiClient.post<DealMeeting>(`/deals/${dealId}/meetings`, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["deals", dealId, "meetings"] });
+    },
+  });
+}
+
+export function useUpdateDealMeeting(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ meetingId, ...data }: Partial<CreateDealMeetingInput> & { meetingId: number }) =>
+      apiClient.patch<DealMeeting>(`/deals/${dealId}/meetings/${meetingId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["deals", dealId, "meetings"] });
+    },
+  });
+}
+
+export function useDeleteDealMeeting(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (meetingId: number) =>
+      apiClient.delete<{ success: boolean }>(`/deals/${dealId}/meetings/${meetingId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["deals", dealId, "meetings"] });
+    },
+  });
+}
+
+// ─── Win/Loss Analysis ────────────────────────────────────────────────────────
+
+export interface WinLossAnalysis {
+  summary: {
+    won: number;
+    wonValue: number;
+    lost: number;
+    lostValue: number;
+    total: number;
+    winRate: number;
+  };
+  lostByReason: Array<{ reason: string; count: number; totalValue: number }>;
+}
+
+export function useWinLossAnalysis() {
+  return useQuery({
+    queryKey: ["deals", "win-loss"],
+    queryFn: () => apiClient.get<WinLossAnalysis>("/deals/win-loss"),
+  });
+}
+
+// ─── Lead Source Attribution ─────────────────────────────────────────────────
+
+export interface LeadSourceStat {
+  source: string;
+  count: number;
+  converted: number;
+  conversionRate: number;
+  totalValue: number;
+}
+
+export interface LeadSourceReport {
+  sources: LeadSourceStat[];
+  total: number;
+}
+
+export function useLeadSourceReport() {
+  return useQuery({
+    queryKey: ["leads", "source-report"],
+    queryFn: () => apiClient.get<LeadSourceReport>("/leads/source-report"),
+  });
+}
+
+// ─── Simple Clients List (dropdown) ──────────────────────────────────────────
+
+export interface SimpleClient {
+  id: number;
+  name: string;
+}
+
+export function useSimpleClientsList() {
+  return useQuery({
+    queryKey: ["clients", "simple-list"],
+    queryFn: () => apiClient.get<SimpleClient[]>("/clients/list"),
+  });
+}
+
+// ─── Client Opportunities ─────────────────────────────────────────────────────
+
+export interface ClientOpportunity {
+  id: number;
+  orgId: string;
+  clientId: number;
+  title: string;
+  type: "upsell" | "cross_sell";
+  stage: "identified" | "proposed" | "negotiating" | "won" | "lost";
+  value: string | null;
+  notes: string | null;
+  expectedCloseDate: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  client?: { id: number; name: string } | null;
+}
+
+export interface CreateClientOpportunityInput {
+  clientId: number;
+  title: string;
+  type?: "upsell" | "cross_sell";
+  stage?: "identified" | "proposed" | "negotiating" | "won" | "lost";
+  value?: string;
+  notes?: string;
+  expectedCloseDate?: string;
+}
+
+export function useClientOpportunities(clientId?: number) {
+  return useQuery({
+    queryKey: ["client-opportunities", clientId],
+    queryFn: () =>
+      apiClient.get<ClientOpportunity[]>(
+        "/clients/opportunities",
+        clientId ? { clientId } : undefined
+      ),
+  });
+}
+
+export function useCreateClientOpportunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateClientOpportunityInput) =>
+      apiClient.post<ClientOpportunity>("/clients/opportunities", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["client-opportunities"] }),
+  });
+}
+
+export function useUpdateClientOpportunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: Partial<CreateClientOpportunityInput> & { id: number }) =>
+      apiClient.patch<ClientOpportunity>(`/clients/opportunities/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["client-opportunities"] }),
+  });
+}
+
+export function useDeleteClientOpportunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete(`/clients/opportunities/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["client-opportunities"] }),
+  });
+}
+
+// ─── Client Onboarding ───────────────────────────────────────────────────────
+
+export interface OnboardingTemplate {
+  id: number;
+  orgId: string;
+  name: string;
+  description: string | null;
+  isDefault: boolean;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface OnboardingItem {
+  id: number;
+  orgId: string;
+  clientId: number;
+  templateId: number | null;
+  title: string;
+  description: string | null;
+  assignedTo: string | null;
+  dueDate: string | null;
+  completedAt: string | null;
+  completedBy: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  assignee?: { id: string; name: string | null } | null;
+}
+
+export function useOnboardingTemplates() {
+  return useQuery({
+    queryKey: ["onboarding-templates"],
+    queryFn: () => apiClient.get<OnboardingTemplate[]>("/clients/onboarding/templates"),
+  });
+}
+
+export function useClientOnboardingItems(clientId: number) {
+  return useQuery({
+    queryKey: ["onboarding-items", clientId],
+    queryFn: () => apiClient.get<OnboardingItem[]>("/clients/onboarding/items", { clientId }),
+    enabled: clientId > 0,
+  });
+}
+
+export function useCreateOnboardingItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      clientId: number; title: string; description?: string;
+      assignedTo?: string; dueDate?: string; templateId?: number;
+    }) => apiClient.post<OnboardingItem>("/clients/onboarding/items", input),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["onboarding-items", vars.clientId] }),
+  });
+}
+
+export function useToggleOnboardingItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, completed, clientId: _clientId }: { id: number; completed: boolean; clientId: number }) =>
+      apiClient.patch<OnboardingItem>(`/clients/onboarding/items/${id}`, {
+        completedAt: completed ? new Date().toISOString() : null,
+      }),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["onboarding-items", vars.clientId] }),
+  });
+}
+
+export function useDeleteOnboardingItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, clientId: _clientId }: { id: number; clientId: number }) =>
+      apiClient.delete(`/clients/onboarding/items/${id}`),
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ["onboarding-items", vars.clientId] }),
+  });
+}
+
+export function useCreateOnboardingTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; description?: string; isDefault?: boolean }) =>
+      apiClient.post<OnboardingTemplate>("/clients/onboarding/templates", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding-templates"] }),
   });
 }
 

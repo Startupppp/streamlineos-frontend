@@ -11,13 +11,20 @@ import {
   useRecentActivity,
   useRoleStats,
   useTodayActivities,
+  useLeavesToday,
+  useUpcomingLeaves,
+  useBirthdays,
+  usePendingApprovals,
+  type LeaveToday,
+  type BirthdayEntry,
+  type PendingApprovalsCount,
 } from "@/lib/api/hooks/dashboard";
 import { useMyIssues } from "@/lib/api/hooks/dashboard";
 import {
   useNotifications,
   useUnreadNotificationCount,
 } from "@/lib/api/hooks/notifications";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
   Briefcase,
@@ -31,9 +38,15 @@ import {
   CheckCircle2,
   ListChecks,
   Zap,
+  UserCheck,
+  PartyPopper,
+  Bell,
+  AlertTriangle,
+  Cake,
 } from "lucide-react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,7 +54,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
@@ -52,6 +65,245 @@ import { MyIssuesCard, type DashboardTicket } from "@/features/dashboard/my-issu
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
+import Link from "next/link";
+import { resolveImageUrl } from "@/lib/utils";
+
+// ─── HR Widget: Who's On Leave Today ─────────────────────────────────────────
+function LeavesTodayCard({ isAdmin }: { isAdmin: boolean }) {
+  const { data, isLoading } = useLeavesToday({ enabled: isAdmin });
+  const leaves = data ?? [];
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex flex-row items-center gap-2 space-y-0">
+        <UserCheck className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        <CardTitle className="text-sm font-semibold">Who's On Leave Today</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : leaves.length === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+            Everyone is in today
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {leaves.map((leave: LeaveToday) => (
+              <li key={leave.id} className="flex items-center gap-3">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarImage
+                    src={resolveImageUrl(leave.employeeImage)}
+                    alt={leave.employeeName ?? "Employee"}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {(leave.employeeName ?? "?")[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{leave.employeeName ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{leave.employeeDesignation ?? "—"}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── HR Widget: Upcoming Leaves (7 days) ─────────────────────────────────────
+function UpcomingLeavesCard({ isAdmin }: { isAdmin: boolean }) {
+  const { data, isLoading } = useUpcomingLeaves({ enabled: isAdmin });
+  const leaves = data ?? [];
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex flex-row items-center gap-2 space-y-0">
+        <CalendarCheck className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        <CardTitle className="text-sm font-semibold">Upcoming Leaves (7 days)</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : leaves.length === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="inline-block h-2 w-2 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+            No upcoming leaves this week
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {leaves.map((leave: LeaveToday) => (
+              <li key={leave.id} className="flex items-center gap-3">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarImage
+                    src={resolveImageUrl(leave.employeeImage)}
+                    alt={leave.employeeName ?? "Employee"}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {(leave.employeeName ?? "?")[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{leave.employeeName ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {format(parseISO(leave.startDate), "MMM d")}
+                    {" – "}
+                    {format(parseISO(leave.endDate), "MMM d")}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── HR Widget: Birthdays & Anniversaries ────────────────────────────────────
+function BirthdaysCard() {
+  const { data, isLoading } = useBirthdays();
+  const entries = data ?? [];
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex flex-row items-center gap-2 space-y-0">
+        <Cake className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        <CardTitle className="text-sm font-semibold">Birthdays &amp; Anniversaries</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-hidden">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No upcoming celebrations</p>
+        ) : (
+          <ul className="space-y-3">
+            {entries.map((entry: BirthdayEntry) => (
+              <li key={`${entry.type}-${entry.id}`} className="flex items-center gap-3">
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarImage
+                    src={resolveImageUrl(entry.image)}
+                    alt={entry.name ?? "Employee"}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {(entry.name ?? "?")[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium truncate">{entry.name ?? "—"}</p>
+                    <span aria-label={entry.type === "birthday" ? "Birthday" : "Work Anniversary"}>
+                      {entry.type === "birthday" ? "🎂" : "⭐"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {entry.designation ?? "—"}
+                    {entry.type === "anniversary" && entry.yearsCompleted != null
+                      ? ` · ${entry.yearsCompleted}y`
+                      : ""}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── HR Widget: Pending Approvals ─────────────────────────────────────────────
+function PendingApprovalsCard() {
+  const { data, isLoading } = usePendingApprovals();
+  const counts = data as PendingApprovalsCount | undefined;
+
+  return (
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex flex-row items-center gap-2 space-y-0">
+        <Bell className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+        <CardTitle className="text-sm font-semibold">Pending Approvals</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1">
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        ) : !counts || counts.total === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" aria-hidden="true" />
+            All caught up!
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Link
+              href="/hr/leaves"
+              className="flex items-center justify-between rounded-lg border px-3 py-2 hover:bg-muted/50 transition-colors"
+              aria-label={`${counts.pendingLeaves} pending leave requests`}
+            >
+              <div className="flex items-center gap-2">
+                <CalendarCheck className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <span className="text-sm">Leave Requests</span>
+              </div>
+              {counts.pendingLeaves > 0 && (
+                <span className="inline-flex items-center justify-center rounded-full bg-destructive/10 text-destructive text-xs font-semibold min-w-[1.5rem] px-1.5 py-0.5">
+                  {counts.pendingLeaves}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/hr/exit"
+              className="flex items-center justify-between rounded-lg border px-3 py-2 hover:bg-muted/50 transition-colors"
+              aria-label={`${counts.pendingResignations} pending resignations`}
+            >
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <span className="text-sm">Resignations</span>
+              </div>
+              {counts.pendingResignations > 0 && (
+                <span className="inline-flex items-center justify-center rounded-full bg-destructive/10 text-destructive text-xs font-semibold min-w-[1.5rem] px-1.5 py-0.5">
+                  {counts.pendingResignations}
+                </span>
+              )}
+            </Link>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -268,6 +520,21 @@ export default function DashboardPage() {
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <QuickActions />
       </motion.div>
+
+      {/* HR Widgets — admin only */}
+      {isAdmin && (
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          <LeavesTodayCard isAdmin={isAdmin} />
+          <UpcomingLeavesCard isAdmin={isAdmin} />
+          <BirthdaysCard />
+          <PendingApprovalsCard />
+        </motion.div>
+      )}
 
       {/* Public Documents — visible to all roles */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible">

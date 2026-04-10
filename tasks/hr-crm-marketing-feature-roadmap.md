@@ -77,7 +77,7 @@
 | S2 | Quota vs Actual Tracking | ✅ Done | sales_quotas table + API at /api/sales/quotas (GET+POST). Zod validation. Hooks: useSalesQuotas(), useCreateSalesQuota(). Migration: 0031 |
 | S3 | Commission Calculator | ✅ Done | commission_rules + commissions tables. Flat % or tiered rules. Engine at server/lib/commission-engine.ts. API: /api/sales/commission-rules + /api/sales/commissions. Migration: 0033 |
 | S4 | Call Logging | ✅ Done | API at /api/deals/[dealId]/activities (GET+POST). Types: call, email, meeting, note, document. Zod validated. Hook: useLogDealActivity() already existed |
-| S5 | Meeting Notes | Medium | Log meetings linked to deals. Agenda, attendees, action items, recording link |
+| S5 | Meeting Notes | ✅ Done | Log meetings linked to deals. Agenda, attendees, action items, recording link |
 | S6 | Win/Loss Analysis | Medium | On deal WON/LOST, capture structured reason (competitor, price, timing, fit). Aggregate for trends |
 | S7 | Sales Activity Dashboard | Medium | Daily/weekly activity metrics per rep: calls made, emails sent, meetings held, proposals sent |
 | S8 | Deal Aging Report | Medium | Track how long deals stay in each stage. Flag stale deals (>X days in same stage) |
@@ -111,7 +111,7 @@
 | M4 | UTM Link Generator | ✅ Done | API at /api/marketing/utm (POST=generate, GET=attribution). UTM params: source, medium, campaign, term, content |
 | M5 | Landing Page Analytics | Medium | Track page views, form submissions, conversion rate per landing page URL |
 | M6 | A/B Testing | Medium | Email subject line A/B tests. Split audience, track winner by open rate |
-| M7 | Marketing Calendar | Medium | Visual calendar showing all campaigns, events, content deadlines. Drag-to-reschedule |
+| M7 | Marketing Calendar | ✅ Done | Visual calendar showing all campaigns, events, content deadlines. Drag-to-reschedule |
 | M8 | Lead Source Report | Medium | Which channels/campaigns generate the most leads and highest-value deals |
 | M9 | Content Calendar | Low | Plan blog posts, social content, email sends. Assign to team members with deadlines |
 | M10 | Social Media Analytics | Low | Pull engagement metrics from LinkedIn/Twitter via API. Show trends |
@@ -275,10 +275,10 @@ app/(dashboard)/settings/integrations/
 |---|---------|----------|-------------|
 | X1 | Global Search | ✅ Done | API at /api/search?q=... searches leads, deals, contacts, clients, tickets. Cmd+K command palette enhanced with entity search + page navigation. ILIKE queries |
 | X2 | Scheduled Reports | ✅ Done | Daily sales digest via Inngest (8:30 AM IST weekdays). Notifies CEO/managers with: new leads, deals won, pipeline value, overdue follow-ups |
-| X3 | Webhook System | Medium | Admin can create webhooks: on lead.created, deal.won, etc. POST to external URL with JSON payload |
-| X4 | Notification Preferences | Medium | Per-user: choose which events trigger push/email/in-app notifications |
+| X3 | Webhook System | ✅ Done | Admin can create webhooks: on lead.created, deal.won, etc. POST to external URL with JSON payload |
+| X4 | Notification Preferences | ✅ Done | Per-user: choose which events trigger push/email/in-app notifications |
 | X5 | API Documentation (OpenAPI) | Low | Auto-generated from route handlers. Swagger UI at `/api/docs` |
-| X6 | Data Import/Export Hub | Low | Centralized page for importing/exporting any entity (leads, contacts, deals, employees) |
+| X6 | Data Import/Export Hub | ✅ Done | Centralized page for importing/exporting any entity (leads, contacts, deals, employees) |
 
 ---
 

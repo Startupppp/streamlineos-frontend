@@ -131,3 +131,98 @@ export const useRecentActivity = (
     ...options,
   });
 };
+
+// ─── Dashboard Widget Hooks ───────────────────────────────────────────────────
+
+export interface LeaveToday {
+  id: number;
+  startDate: string;
+  endDate: string;
+  leaveTypeId: number | null;
+  employeeName: string | null;
+  employeeDesignation: string | null;
+  employeeImage: string | null;
+}
+
+export const useLeavesToday = (
+  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<LeaveToday[], Error>({
+    queryKey: [...queryKeys.dashboard.all, "leaves-today"] as const,
+    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
+    refetchInterval: 60_000,
+    ...options,
+  });
+};
+
+export const useUpcomingLeaves = (
+  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<LeaveToday[], Error>({
+    queryKey: [...queryKeys.dashboard.all, "upcoming-leaves"] as const,
+    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/upcoming-leaves"),
+    refetchInterval: 60_000,
+    ...options,
+  });
+};
+
+export interface BirthdayEntry {
+  id: string;
+  name: string | null;
+  designation: string | null;
+  image: string | null;
+  type: "birthday" | "anniversary";
+  date: string;
+  yearsCompleted?: number;
+}
+
+export const useBirthdays = (
+  options?: Omit<UseQueryOptions<BirthdayEntry[], Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<BirthdayEntry[], Error>({
+    queryKey: [...queryKeys.dashboard.all, "birthdays"] as const,
+    queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
+    refetchInterval: 60_000,
+    ...options,
+  });
+};
+
+export interface PendingApprovalsCount {
+  pendingLeaves: number;
+  pendingResignations: number;
+  total: number;
+}
+
+export const usePendingApprovals = (
+  options?: Omit<UseQueryOptions<PendingApprovalsCount, Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<PendingApprovalsCount, Error>({
+    queryKey: [...queryKeys.dashboard.all, "pending-approvals"] as const,
+    queryFn: () =>
+      apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
+    refetchInterval: 60_000,
+    ...options,
+  });
+};
+
+export interface PendingRequest {
+  id: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  reason: string | null;
+  createdAt: string | null;
+  leaveTypeName: string;
+}
+
+export const usePendingRequests = (
+  options?: Omit<UseQueryOptions<PendingRequest[], Error>, "queryKey" | "queryFn">
+) => {
+  return useQuery<PendingRequest[], Error>({
+    queryKey: [...queryKeys.dashboard.all, "pending-requests"] as const,
+    queryFn: () =>
+      apiClient.get<PendingRequest[]>("/dashboard/pending-requests"),
+    refetchInterval: 60_000,
+    ...options,
+  });
+};

@@ -97,4 +97,19 @@ export type InngestEvents = {
       params: Record<string, unknown>;
     };
   };
+  "hr/resignation.submitted": {
+    data: { resignationId: number; orgId: string; employeeName: string; employeeId: string };
+  };
+  "hr/resignation.hr_approved": {
+    data: { resignationId: number; orgId: string; employeeName: string; employeeId: string };
+  };
+  "hr/resignation.ceo_approved": {
+    data: { resignationId: number; orgId: string; employeeId: string; approved: boolean };
+  };
+  "hr/termination.submitted": {
+    data: { terminationId: number; orgId: string; employeeName: string };
+  };
+  "hr/termination.ceo_decision": {
+    data: { terminationId: number; orgId: string; employeeName: string; approved: boolean };
+  };
 };
