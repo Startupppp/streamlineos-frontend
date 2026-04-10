@@ -52,6 +52,11 @@ import { MyIssuesCard, type DashboardTicket } from "@/features/dashboard/my-issu
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
+import {
+  LeavesTodayWidget, UpcomingHolidaysWidget, LeaveBalanceWidget,
+  PendingRequestsWidget, BirthdaysWidget, PendingApprovalsWidget,
+  TeamAttendanceWidget,
+} from "@/features/dashboard/hr-widgets";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -352,6 +357,20 @@ export default function DashboardPage() {
       {/* Public Documents — visible to all roles */}
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <PublicDocumentsCard />
+      </motion.div>
+
+      {/* HR Widgets — Leave, Holidays, Birthdays, Attendance */}
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <LeaveBalanceWidget />
+        <UpcomingHolidaysWidget />
+        <LeavesTodayWidget />
+        <BirthdaysWidget />
+      </motion.div>
+
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
+        <PendingRequestsWidget />
+        <TeamAttendanceWidget />
+        {isAdmin && <PendingApprovalsWidget />}
       </motion.div>
 
       {/* My Issues + Sprint — shown to all roles */}

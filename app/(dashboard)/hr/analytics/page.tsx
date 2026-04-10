@@ -202,19 +202,58 @@ function AnalyticsContent() {
                 <CardTitle className="text-sm">Leave Requests by Month</CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-2">
-                <div className="flex items-end gap-1 h-32">
-                  {data.leaves.byMonth.map((m) => {
-                    const max = Math.max(...data.leaves.byMonth.map((x) => x.count), 1);
-                    const height = Math.max(4, (m.count / max) * 100);
-                    return (
-                      <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[9px] font-medium tabular-nums">{m.count}</span>
-                        <div className="w-full bg-primary/80 rounded-t" style={{ height: `${height}%` }} />
-                        <span className="text-[8px] text-muted-foreground">{m.month.slice(5)}</span>
+                {(() => {
+                  const monthData = data.leaves.byMonth;
+                  const max = Math.max(...monthData.map((x) => x.count), 1);
+                  const points = monthData
+                    .map((m, i) => {
+                      const x = monthData.length > 1 ? (i / (monthData.length - 1)) * 100 : 50;
+                      const y = 100 - (m.count / max) * 100;
+                      return `${x},${y}`;
+                    })
+                    .join(" ");
+
+                  return (
+                    <div className="relative rounded-lg border border-border/60 bg-muted/10 p-3">
+                      <div className="pointer-events-none absolute inset-x-3 top-3 h-32">
+                        <div className="h-full w-full bg-[linear-gradient(to_top,transparent_24%,hsl(var(--border)/0.35)_25%,transparent_26%,transparent_49%,hsl(var(--border)/0.35)_50%,transparent_51%,transparent_74%,hsl(var(--border)/0.35)_75%,transparent_76%)]" />
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <div className="relative flex items-end gap-1 h-32">
+                        {monthData.map((m) => {
+                          const height = Math.max(6, (m.count / max) * 100);
+                          return (
+                            <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                              <span className="text-[9px] font-medium tabular-nums">{m.count}</span>
+                              <div
+                                className="w-full rounded-t-md bg-gradient-to-t from-primary/90 to-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)_inset]"
+                                style={{ height: `${height}%` }}
+                                aria-hidden="true"
+                              />
+                              <span className="text-[8px] text-muted-foreground">{m.month.slice(5)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <svg
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                        className="pointer-events-none absolute inset-x-3 top-3 h-32 w-[calc(100%-1.5rem)]"
+                        aria-hidden="true"
+                      >
+                        <polyline
+                          points={points}
+                          fill="none"
+                          stroke="hsl(var(--gold))"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           )}

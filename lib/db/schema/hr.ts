@@ -12,7 +12,7 @@ import {
   interviewResultEnum, applicationStatusEnum,
   reviewCycleStatusEnum, meetingStatusEnum,
   trainingStatusEnum, enrollmentStatusEnum,
-  resignationStatusEnum, exitChecklistStatusEnum,
+  resignationStatusEnum, terminationStatusEnum, exitChecklistStatusEnum,
   ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
   pipStatusEnum, surveyStatusEnum,
   feedbackTypeEnum, bonusTypeEnum, fnfStatusEnum,
@@ -336,11 +336,21 @@ export const resignations = pgTable("resignations", {
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   reason: text("reason"),
+  reasonCategory: text("reason_category"),
   lastWorkingDate: date("last_working_date"),
   noticePeriodDays: integer("notice_period_days").default(30),
   status: resignationStatusEnum("status").default("SUBMITTED"),
+  resignationLetterUrl: text("resignation_letter_url"),
   approvedBy: text("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
+  hrReviewedBy: text("hr_reviewed_by").references(() => users.id),
+  hrReviewedAt: timestamp("hr_reviewed_at"),
+  hrRemarks: text("hr_remarks"),
+  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
+  ceoReviewedAt: timestamp("ceo_reviewed_at"),
+  ceoRemarks: text("ceo_remarks"),
+  willingForExitInterview: boolean("willing_for_exit_interview").default(true),
+  companyFeedback: text("company_feedback"),
   exitInterviewNotes: text("exit_interview_notes"),
   exitInterviewDate: timestamp("exit_interview_date"),
   exitInterviewConductedBy: text("exit_interview_conducted_by").references(() => users.id),
@@ -350,6 +360,33 @@ export const resignations = pgTable("resignations", {
 }, (table) => [
   index("idx_resignations_org").on(table.orgId),
   index("idx_resignations_user").on(table.userId),
+]);
+
+// ─── Terminations ───
+export const terminations = pgTable("terminations", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  userId: text("user_id").references(() => users.id).notNull(),
+  reasons: text("reasons").array(),
+  detailedExplanation: text("detailed_explanation"),
+  effectiveDate: date("effective_date"),
+  severanceAmount: decimal("severance_amount"),
+  noticePeriodWaived: boolean("notice_period_waived").default(false),
+  terminationLetterUrl: text("termination_letter_url"),
+  supportingDocUrls: text("supporting_doc_urls").array(),
+  internalNotes: text("internal_notes"),
+  status: terminationStatusEnum("status").default("DRAFT"),
+  initiatedBy: text("initiated_by").references(() => users.id),
+  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
+  ceoReviewedAt: timestamp("ceo_reviewed_at"),
+  ceoRemarks: text("ceo_remarks"),
+  emailSentAt: timestamp("email_sent_at"),
+  emailStatus: text("email_status"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_terminations_org").on(table.orgId),
+  index("idx_terminations_user").on(table.userId),
 ]);
 
 export const exitChecklists = pgTable("exit_checklists", {
@@ -1083,8 +1120,16 @@ export const trainingEnrollmentsRelations = relations(trainingEnrollments, ({ on
 export const resignationsRelations = relations(resignations, ({ one, many }) => ({
   user: one(users, { fields: [resignations.userId], references: [users.id] }),
   approver: one(users, { fields: [resignations.approvedBy], references: [users.id], relationName: "resignationApprover" }),
+  hrReviewer: one(users, { fields: [resignations.hrReviewedBy], references: [users.id], relationName: "resignationHrReviewer" }),
+  ceoReviewer: one(users, { fields: [resignations.ceoReviewedBy], references: [users.id], relationName: "resignationCeoReviewer" }),
   interviewer: one(users, { fields: [resignations.exitInterviewConductedBy], references: [users.id], relationName: "exitInterviewer" }),
   checklists: many(exitChecklists),
+}));
+
+export const terminationsRelations = relations(terminations, ({ one }) => ({
+  user: one(users, { fields: [terminations.userId], references: [users.id] }),
+  initiator: one(users, { fields: [terminations.initiatedBy], references: [users.id], relationName: "terminationInitiator" }),
+  ceoReviewer: one(users, { fields: [terminations.ceoReviewedBy], references: [users.id], relationName: "terminationCeoReviewer" }),
 }));
 
 export const exitChecklistsRelations = relations(exitChecklists, ({ one }) => ({

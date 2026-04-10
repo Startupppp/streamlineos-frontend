@@ -18,11 +18,12 @@ interface HrSheetProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  onSubmit: () => void;
+  onSubmit?: () => void;
   submitLabel?: React.ReactNode;
   cancelLabel?: React.ReactNode;
   isPending?: boolean;
   side?: "right" | "left";
+  showSubmit?: boolean;
 }
 
 export function HrSheet({
@@ -36,7 +37,12 @@ export function HrSheet({
   cancelLabel = "Cancel",
   isPending = false,
   side = "right",
+  showSubmit = true,
 }: HrSheetProps) {
+  const handleSubmit = () => {
+    if (onSubmit) onSubmit();
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side={side} className="flex flex-col p-0 gap-0">
@@ -51,20 +57,22 @@ export function HrSheet({
           </div>
         </ScrollArea>
 
-        <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
-            {cancelLabel}
-          </Button>
-          <Button className="flex-1" onClick={onSubmit} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {submitLabel}
-          </Button>
-        </SheetFooter>
+        {showSubmit && (
+          <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
+              {cancelLabel}
+            </Button>
+            <Button className="flex-1" onClick={handleSubmit} disabled={isPending || !onSubmit}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {submitLabel}
+            </Button>
+          </SheetFooter>
+        )}
       </SheetContent>
     </Sheet>
   );
