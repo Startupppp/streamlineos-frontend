@@ -69,8 +69,8 @@ export function WorkLogFiltersPanel({
   }, [currentYear, currentQuarter, setFilters, setDraftFilters]);
 
   return (
-    <>
-      <div className="relative max-w-md">
+    <div className="flex flex-wrap items-center gap-3 w-full">
+      <div className="relative w-full sm:w-auto sm:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <Input
           placeholder="Search by date or keyword..."
@@ -150,6 +150,6 @@ export function WorkLogFiltersPanel({
           Empty
         </span>
       </div>
-    </>
+    </div>
   );
 }
