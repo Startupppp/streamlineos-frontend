@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import { rolePermissions, userPermissions, roles } from "../db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
 import type { db as database } from "../db";
@@ -22,10 +21,7 @@ export function requirePermission(permissionName: string) {
     );
 
     if (!hasPermission) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: `Permission denied: ${permissionName}`,
-      });
+      throw Object.assign(new Error(`Permission denied: ${permissionName}`), { code: "FORBIDDEN" });
     }
 
     return next();
@@ -124,12 +120,7 @@ export function hasAnyPermission(permissionNames: string[]) {
     );
 
     if (!checks.some((has) => has)) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: `Permission denied: requires one of ${permissionNames.join(
-          ", "
-        )}`,
-      });
+      throw Object.assign(new Error(`Permission denied: requires one of ${permissionNames.join(", ")}`), { code: "FORBIDDEN" });
     }
 
     return next();
