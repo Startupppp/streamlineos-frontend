@@ -59,7 +59,7 @@ export function PageWrapper({
 
       {filters && (
         <div className="shrink-0 border-b border-border/60 bg-background">
-          <div className="px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto scrollbar-thin">
+          <div className="px-3 sm:px-4 py-2 flex items-center gap-3 overflow-x-auto scrollbar-thin">
             {filters}
           </div>
         </div>
