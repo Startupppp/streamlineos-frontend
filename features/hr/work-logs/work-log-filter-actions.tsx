@@ -238,7 +238,7 @@ export function WorkLogFilterActions({
                   <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue placeholder="All months" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">All Months</SelectItem>
                   {monthOptions.map((m) => (
                     <SelectItem key={m.idx} value={m.idx.toString()}>{m.name}</SelectItem>
@@ -276,7 +276,7 @@ export function WorkLogFilterActions({
                 <Label className="text-sm font-medium">Department</Label>
                 <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="All departments" /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
                     <SelectItem value="all">All Departments</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
