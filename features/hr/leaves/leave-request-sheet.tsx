@@ -291,9 +291,9 @@ export function LeaveRequestSheet({
             )}
           />
 
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
-              Attach Document <span className="text-muted-foreground/60">(Optional)</span>
+          <div className="space-y-2">
+            <label className="text-xs font-medium mb-1 block">
+              Attach Document <span className="text-muted-foreground">(Optional)</span>
             </label>
             <FileUpload
               folder="leave-attachments"
