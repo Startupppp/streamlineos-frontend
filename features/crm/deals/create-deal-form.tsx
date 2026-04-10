@@ -53,17 +53,17 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
   }, [createMutation, expectedCloseDate, onSuccess]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
+        <div className="col-span-2 space-y-1.5">
           <Label htmlFor="name">Deal Name *</Label>
-          <Input id="name" name="name" required placeholder="e.g. Enterprise License" />
+          <Input id="name" name="name" required placeholder="e.g. Enterprise License" pattern="^[A-Za-z].*" title="Name must start with a letter" className="capitalize" />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="value">Value (INR)</Label>
           <Input id="value" name="value" type="number" min="0" placeholder="0" />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="stage">Stage</Label>
           <Select name="stage" defaultValue="LEAD">
             <SelectTrigger className="w-full h-9">
@@ -81,23 +81,23 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
             </SelectContent>
           </Select>
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="probability">Probability (%)</Label>
           <Input id="probability" name="probability" type="number" min="0" max="100" defaultValue="0" />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="expectedCloseDate">Expected Close</Label>
           <DatePicker id="expectedCloseDate" value={expectedCloseDate} onChange={setExpectedCloseDate} placeholder="Select date" />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="contactPerson">Contact Person</Label>
-          <Input id="contactPerson" name="contactPerson" placeholder="Name" />
+          <Input id="contactPerson" name="contactPerson" placeholder="Name" pattern="^[A-Za-z\s]*$" title="Only letters allowed" className="capitalize" />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="contactEmail">Contact Email</Label>
           <Input id="contactEmail" name="contactEmail" type="email" placeholder="email@example.com" />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="contactPhone">Contact Phone</Label>
           <PhoneInput
             id="contactPhone"
@@ -107,13 +107,13 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
             onChange={setContactPhone}
           />
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="assignedToId">Assigned To</Label>
           <Select name="assignedToId">
             <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="Select..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] overflow-y-auto">
               {employees.map(e => (
                 <SelectItem key={e.id} value={e.id}>{e.name || e.id}</SelectItem>
               ))}
@@ -121,7 +121,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
           </Select>
         </div>
       </div>
-      <div>
+      <div className="space-y-1.5">
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" placeholder="Additional notes..." className="min-h-[80px]" />
       </div>
