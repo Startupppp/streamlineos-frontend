@@ -260,6 +260,12 @@ export const queryKeys = {
     detail: (id: number) => [...base, "marketingCampaigns", "detail", id] as const,
   },
 
+  abTests: {
+    all: [...base, "abTests"] as const,
+    list: () => [...base, "abTests", "list"] as const,
+    detail: (id: number) => [...base, "abTests", "detail", id] as const,
+  },
+
   dmLeads: {
     all: [...base, "dmLeads"] as const,
     list: (params?: Record<string, unknown>) => [...base, "dmLeads", "list", params] as const,
@@ -277,6 +283,11 @@ export const queryKeys = {
     latest: () => [...base, "socialMedia", "latest"] as const,
   },
 
+  socialMetrics: {
+    all: [...base, "socialMetrics"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "socialMetrics", "list", params] as const,
+  },
+
   auditLog: {
     all: [...base, "auditLog"] as const,
     list: (params?: Record<string, unknown>) => [...base, "auditLog", "list", params] as const,
@@ -292,6 +303,23 @@ export const queryKeys = {
   globalSearch: {
     all: [...base, "globalSearch"] as const,
     results: (query: string) => [...base, "globalSearch", query] as const,
+  },
+
+  landingPages: {
+    all: [...base, "landingPages"] as const,
+    list: () => [...base, "landingPages", "list"] as const,
+    detail: (id: number) => [...base, "landingPages", "detail", id] as const,
+  },
+
+  webLeadForms: {
+    all: [...base, "webLeadForms"] as const,
+    list: () => [...base, "webLeadForms", "list"] as const,
+    detail: (id: number) => [...base, "webLeadForms", "detail", id] as const,
+  },
+
+  contentCalendar: {
+    all: [...base, "contentCalendar"] as const,
+    list: (month?: string) => [...base, "contentCalendar", "list", month] as const,
   },
 
 } as const;

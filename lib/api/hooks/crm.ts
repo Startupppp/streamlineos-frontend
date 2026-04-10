@@ -638,6 +638,42 @@ export function useDeleteEmailCampaign() {
   });
 }
 
+export interface CampaignLead {
+  id: number;
+  name: string;
+  email: string | null;
+  company: string | null;
+  status: string;
+  source: string | null;
+}
+
+export interface CampaignLeadsResponse {
+  leads: CampaignLead[];
+  total: number;
+}
+
+export interface CampaignLeadFilters {
+  status?: string;
+  source?: string;
+  q?: string;
+}
+
+export function useCampaignLeads(filters: CampaignLeadFilters) {
+  return useQuery({
+    queryKey: [...queryKeys.marketingCampaigns.all, "campaignLeads", filters] as const,
+    queryFn: () => apiClient.get<CampaignLeadsResponse>("/marketing/campaigns/leads", filters as Record<string, unknown>),
+  });
+}
+
+export function useBulkSendCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ campaignId, leadIds }: { campaignId: number; leadIds: number[] }) =>
+      apiClient.post<{ sent: number; campaignId: number }>(`/marketing/email-campaigns/${campaignId}/bulk-send`, { leadIds }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.marketingCampaigns.all }),
+  });
+}
+
 /* ─── UTM Link Generator + Attribution ──────────────────────────────────────── */
 
 export function useGenerateUtmLink() {
@@ -1043,3 +1079,390 @@ export function useCreateOnboardingTemplate() {
   });
 }
 
+// ─── CSAT Surveys ─────────────────────────────────────────────────────────────
+
+export interface CsatSurvey {
+  id: number;
+  orgId: string;
+  clientId: number | null;
+  title: string;
+  question: string;
+  scaleMax: number;
+  status: "draft" | "sent" | "closed";
+  publicToken: string;
+  sentAt: string | null;
+  closedAt: string | null;
+  createdBy: string;
+  createdAt: string;
+  responseCount?: number;
+  avgRating?: number | null;
+  client?: { id: number; name: string } | null;
+}
+
+export interface CsatResponse {
+  id: number;
+  surveyId: number;
+  rating: number;
+  comment: string | null;
+  respondentName: string | null;
+  respondentEmail: string | null;
+  submittedAt: string;
+}
+
+export function useCsatSurveys() {
+  return useQuery({
+    queryKey: ["csat-surveys"],
+    queryFn: () => apiClient.get<CsatSurvey[]>("/csat"),
+  });
+}
+
+export function useCsatSurveyResponses(surveyId: number) {
+  return useQuery({
+    queryKey: ["csat-responses", surveyId],
+    queryFn: () => apiClient.get<CsatResponse[]>(`/csat/${surveyId}/responses`),
+    enabled: surveyId > 0,
+  });
+}
+
+export function useCreateCsatSurvey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { title: string; question?: string; clientId?: number; scaleMax?: number }) =>
+      apiClient.post<CsatSurvey>("/csat", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+  });
+}
+
+export function useUpdateCsatSurvey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: number; status?: string; title?: string; question?: string }) =>
+      apiClient.patch<CsatSurvey>(`/csat/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+  });
+}
+
+export function useDeleteCsatSurvey() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => apiClient.delete(`/csat/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["csat-surveys"] }),
+  });
+}
+
+// ─── Duplicate Lead Detection ─────────────────────────────────────────────────
+
+export interface DuplicateLead {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  company: string | null;
+  status: string;
+  source: string | null;
+  createdAt: string;
+}
+
+export interface DuplicateGroup {
+  leads: DuplicateLead[];
+  matchReason: string[];
+  score: number;
+}
+
+export function useDuplicateLeads() {
+  return useQuery({
+    queryKey: ["leads", "duplicates"],
+    queryFn: () => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useMergeLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { keepLeadId: number; mergeLeadId: number }) =>
+      apiClient.post<{ success: boolean }>(`/leads/${data.keepLeadId}/merge`, { mergeLeadId: data.mergeLeadId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+}
+
+// ─── SLA Compliance ──────────────────────────────────────────────────────────
+
+export interface SlaByPriority {
+  priority: string;
+  total: number;
+  withinSla: number;
+  breached: number;
+  avgResolutionHours: number;
+  slaTarget: number;
+}
+
+export interface SlaRecentBreach {
+  id: number;
+  title: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+  hoursOpen: number;
+  slaTarget: number;
+}
+
+export interface SlaStats {
+  stats: {
+    totalTickets: number;
+    withinSla: number;
+    slaBreached: number;
+    complianceRate: number;
+    avgResolutionHours: number;
+  };
+  byPriority: SlaByPriority[];
+  recentBreaches: SlaRecentBreach[];
+}
+
+export function useSlaCompliance() {
+  return useQuery({
+    queryKey: ["sla", "compliance"],
+    queryFn: () => apiClient.get<SlaStats>("/customer-executive/sla"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Territories ─────────────────────────────────────────────────────────────
+
+export interface Territory {
+  id: number;
+  orgId: string;
+  name: string;
+  states: string[];
+  cities: string[];
+  assignedReps: number[];
+  description: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTerritoryInput {
+  name: string;
+  states?: string[];
+  cities?: string[];
+  assignedReps?: number[];
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateTerritoryInput extends Partial<CreateTerritoryInput> {
+  id: number;
+}
+
+export function useTerritories() {
+  return useQuery({
+    queryKey: ["territories"],
+    queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
+  });
+}
+
+export function useCreateTerritory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateTerritoryInput) =>
+      apiClient.post<Territory>("/crm/territories", input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["territories"] }),
+  });
+}
+
+export function useUpdateTerritory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: UpdateTerritoryInput) =>
+      apiClient.patch<Territory>(`/crm/territories/${id}`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["territories"] }),
+  });
+}
+
+export function useDeleteTerritory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/crm/territories/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["territories"] }),
+  });
+}
+
+// ─── Custom Fields ────────────────────────────────────────────────────────────
+
+export interface CustomFieldDefinition {
+  id: number;
+  orgId: string;
+  entityType: "lead" | "deal" | "contact";
+  name: string;
+  label: string;
+  fieldType: "text" | "number" | "date" | "boolean" | "select";
+  options: Array<{ value: string; label: string }> | null;
+  isRequired: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export function useCustomFields(entityType: "lead" | "deal" | "contact") {
+  return useQuery({
+    queryKey: ["custom-fields", entityType] as const,
+    queryFn: () =>
+      apiClient.get<{ fields: CustomFieldDefinition[] }>(
+        `/settings/custom-fields?entityType=${entityType}`
+      ),
+  });
+}
+
+export interface CreateCustomFieldInput {
+  entityType: "lead" | "deal" | "contact";
+  name: string;
+  label: string;
+  fieldType: "text" | "number" | "date" | "boolean" | "select";
+  options?: Array<{ value: string; label: string }>;
+  isRequired?: boolean;
+  sortOrder?: number;
+}
+
+export function useCreateCustomField() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateCustomFieldInput) =>
+      apiClient.post<{ field: CustomFieldDefinition }>("/settings/custom-fields", input),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["custom-fields", vars.entityType] });
+    },
+  });
+}
+
+export interface UpdateCustomFieldInput {
+  id: number;
+  entityType: "lead" | "deal" | "contact";
+  label?: string;
+  options?: Array<{ value: string; label: string }> | null;
+  isRequired?: boolean;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export function useUpdateCustomField() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, entityType: _et, ...data }: UpdateCustomFieldInput) =>
+      apiClient.patch<{ field: CustomFieldDefinition }>(`/settings/custom-fields/${id}`, data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["custom-fields", vars.entityType] });
+    },
+  });
+}
+
+export function useDeleteCustomField() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, entityType: _et }: { id: number; entityType: "lead" | "deal" | "contact" }) =>
+      apiClient.delete<{ success: boolean }>(`/settings/custom-fields/${id}`),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ["custom-fields", vars.entityType] });
+    },
+  });
+}
+
+export function useUpdateLeadCustomData() {
+  return useMutation({
+    mutationFn: ({ id, customData }: { id: number; customData: Record<string, unknown> }) =>
+      apiClient.patch<{ customData: Record<string, unknown> }>(`/leads/${id}/custom-data`, {
+        customData,
+      }),
+  });
+}
+
+export function useUpdateDealCustomData() {
+  return useMutation({
+    mutationFn: ({ id, customData }: { id: number; customData: Record<string, unknown> }) =>
+      apiClient.patch<{ customData: Record<string, unknown> }>(`/deals/${id}/custom-data`, {
+        customData,
+      }),
+  });
+}
+
+// ─── Web-to-Lead Forms ────────────────────────────────────────────────────────
+
+export interface WebLeadFormField {
+  name: string;
+  label: string;
+  type: "text" | "email" | "phone" | "textarea" | "select";
+  required: boolean;
+  options?: string[];
+}
+
+export interface WebLeadForm {
+  id: number;
+  orgId: string;
+  name: string;
+  description: string | null;
+  fields: WebLeadFormField[];
+  publicToken: string;
+  isActive: boolean;
+  submitMessage: string;
+  redirectUrl: string | null;
+  totalSubmissions: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWebLeadFormInput {
+  name: string;
+  description?: string;
+  fields?: WebLeadFormField[];
+  submitMessage?: string;
+  redirectUrl?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateWebLeadFormInput extends Partial<CreateWebLeadFormInput> {
+  id: number;
+}
+
+export function useWebLeadForms() {
+  return useQuery({
+    queryKey: queryKeys.webLeadForms.list(),
+    queryFn: () => apiClient.get<WebLeadForm[]>("/crm/web-forms"),
+  });
+}
+
+export function useCreateWebLeadForm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateWebLeadFormInput) =>
+      apiClient.post<WebLeadForm>("/crm/web-forms", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.webLeadForms.all });
+    },
+  });
+}
+
+export function useUpdateWebLeadForm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: UpdateWebLeadFormInput) =>
+      apiClient.patch<WebLeadForm>(`/crm/web-forms/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.webLeadForms.all });
+    },
+  });
+}
+
+export function useDeleteWebLeadForm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/crm/web-forms/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.webLeadForms.all });
+    },
+  });
+}

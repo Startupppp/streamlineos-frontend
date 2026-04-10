@@ -19,3 +19,4 @@ export * from "./audit-log";
 export * from "./mfa";
 export * from "./calendar";
 export * from "./ai";
+export * from "./marketing";

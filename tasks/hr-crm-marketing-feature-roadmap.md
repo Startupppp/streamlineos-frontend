@@ -45,7 +45,7 @@
 | C6 | Bulk Email Campaigns | Medium | Select leads by filter → pick template → send bulk. Track open/click/bounce per campaign |
 | C7 | Custom Fields (JSONB) | Medium | Admin UI to define custom fields on leads/deals/contacts. Render dynamically in forms/tables |
 | C8 | Contact-to-Lead Linking | Medium | Link contacts to leads/deals/orgs. Show relationship graph |
-| C9 | Lead Source Attribution | Medium | Track which campaign/channel/UTM generated each lead. Attribution reporting |
+| C9 | Lead Source Attribution | ✅ Done | Track which campaign/channel/UTM generated each lead. Attribution reporting |
 | C10 | Follow-up Reminders | ✅ Done | Schema: followUpDate + followUpNotes on leads & deals. API: /api/leads/follow-ups?overdue=true. Hook: useOverdueFollowUps(). Migration: 0030 |
 | C11 | Territory Management | Low | Define geographic territories (state/city). Assign reps to territories. Filter leads/deals by territory |
 | C12 | Web-to-Lead Form | Low | Embeddable form (iframe/JS widget) that creates leads via API. For website integration |
@@ -78,11 +78,11 @@
 | S3 | Commission Calculator | ✅ Done | commission_rules + commissions tables. Flat % or tiered rules. Engine at server/lib/commission-engine.ts. API: /api/sales/commission-rules + /api/sales/commissions. Migration: 0033 |
 | S4 | Call Logging | ✅ Done | API at /api/deals/[dealId]/activities (GET+POST). Types: call, email, meeting, note, document. Zod validated. Hook: useLogDealActivity() already existed |
 | S5 | Meeting Notes | ✅ Done | Log meetings linked to deals. Agenda, attendees, action items, recording link |
-| S6 | Win/Loss Analysis | Medium | On deal WON/LOST, capture structured reason (competitor, price, timing, fit). Aggregate for trends |
-| S7 | Sales Activity Dashboard | Medium | Daily/weekly activity metrics per rep: calls made, emails sent, meetings held, proposals sent |
-| S8 | Deal Aging Report | Medium | Track how long deals stay in each stage. Flag stale deals (>X days in same stage) |
+| S6 | Win/Loss Analysis | ✅ Done | On deal WON/LOST, capture structured reason (competitor, price, timing, fit). Aggregate for trends |
+| S7 | Sales Activity Dashboard | ✅ Done | Daily/weekly activity metrics per rep: calls made, emails sent, meetings held, proposals sent |
+| S8 | Deal Aging Report | ✅ Done | Track how long deals stay in each stage. Flag stale deals (>X days in same stage) |
 | S9 | Sales Playbook | Low | Knowledge base of best practices: scripts, objection handling, pricing guidelines |
-| S10 | Revenue Forecasting Report | Low | Exportable monthly/quarterly forecast with weighted pipeline and closed-won projections |
+| S10 | Revenue Forecasting Report | ✅ Done | Exportable monthly/quarterly forecast with weighted pipeline and closed-won projections |
 
 ---
 
@@ -112,7 +112,7 @@
 | M5 | Landing Page Analytics | Medium | Track page views, form submissions, conversion rate per landing page URL |
 | M6 | A/B Testing | Medium | Email subject line A/B tests. Split audience, track winner by open rate |
 | M7 | Marketing Calendar | ✅ Done | Visual calendar showing all campaigns, events, content deadlines. Drag-to-reschedule |
-| M8 | Lead Source Report | Medium | Which channels/campaigns generate the most leads and highest-value deals |
+| M8 | Lead Source Report | ✅ Done | Which channels/campaigns generate the most leads and highest-value deals |
 | M9 | Content Calendar | Low | Plan blog posts, social content, email sends. Assign to team members with deadlines |
 | M10 | Social Media Analytics | Low | Pull engagement metrics from LinkedIn/Twitter via API. Show trends |
 
@@ -142,9 +142,9 @@
 | CE3 | Churn Risk Alerts | ✅ Done | API at /api/clients/churn-alerts. Lists at-risk + critical clients. Summary counts. Hook: useChurnAlerts() |
 | CE4 | Client Activity Timeline | ✅ Done | API at /api/clients/[clientId]/timeline. Aggregates deal activities, lead activities, conversion events. Sorted by date. Hook: useClientTimeline() |
 | CE5 | CSAT Survey Builder | Medium | Create simple 1-5 star surveys. Send via email. Aggregate results per client |
-| CE6 | Upsell/Cross-sell Tracker | Medium | Log expansion opportunities per client. Track from identified → proposed → won/lost |
-| CE7 | Client Onboarding Checklist | Medium | Template-based checklist for new clients. Track completion %, assign tasks to team |
-| CE8 | Renewal Pipeline | Low | Kanban board for renewals: Upcoming → In Discussion → Renewed / Churned |
+| CE6 | Upsell/Cross-sell Tracker | ✅ Done | Log expansion opportunities per client. Track from identified → proposed → won/lost |
+| CE7 | Client Onboarding Checklist | ✅ Done | Template-based checklist for new clients. Track completion %, assign tasks to team |
+| CE8 | Renewal Pipeline | ✅ Done | Kanban board for renewals: Upcoming → In Discussion → Renewed / Churned |
 | CE9 | SLA Compliance Dashboard | Low | Track first-response and resolution times vs SLA targets. Show breach % |
 
 ---

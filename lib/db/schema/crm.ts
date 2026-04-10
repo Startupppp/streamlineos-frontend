@@ -74,6 +74,7 @@ export const leads = pgTable("leads", {
   dmLeadId: integer("dm_lead_id"),
   followUpDate: timestamp("follow_up_date"),
   followUpNotes: text("follow_up_notes"),
+  customData: jsonb("custom_data").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -231,6 +232,7 @@ export const deals = pgTable("deals", {
   slaDeadline: timestamp("sla_deadline"),
   followUpDate: timestamp("follow_up_date"),
   followUpNotes: text("follow_up_notes"),
+  customData: jsonb("custom_data").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -1112,6 +1114,50 @@ export const contactsRelations = relations(contacts, ({ one }) => ({
   deal: one(deals, { fields: [contacts.dealId], references: [deals.id] }),
 }));
 
+// ─── CSAT Surveys ───
+export const csatSurveys = pgTable("csat_surveys", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  question: text("question").notNull().default("How satisfied are you with our service?"),
+  scaleMax: integer("scale_max").default(5).notNull(),
+  status: text("status").default("draft").notNull(), // draft | sent | closed
+  publicToken: text("public_token").notNull(), // UUID for public response URL
+  sentAt: timestamp("sent_at"),
+  closedAt: timestamp("closed_at"),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_csat_surveys_org").on(table.orgId),
+  uniqueIndex("idx_csat_surveys_token").on(table.publicToken),
+]);
+
+export const csatResponses = pgTable("csat_responses", {
+  id: serial("id").primaryKey(),
+  surveyId: integer("survey_id").references(() => csatSurveys.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  respondentName: text("respondent_name"),
+  respondentEmail: text("respondent_email"),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_csat_responses_survey").on(table.surveyId),
+]);
+
+export const csatSurveysRelations = relations(csatSurveys, ({ one, many }) => ({
+  organization: one(organizations, { fields: [csatSurveys.orgId], references: [organizations.id] }),
+  client: one(clients, { fields: [csatSurveys.clientId], references: [clients.id] }),
+  creator: one(users, { fields: [csatSurveys.createdBy], references: [users.id] }),
+  responses: many(csatResponses),
+}));
+
+export const csatResponsesRelations = relations(csatResponses, ({ one }) => ({
+  survey: one(csatSurveys, { fields: [csatResponses.surveyId], references: [csatSurveys.id] }),
+}));
+
 export const crmOrganizationsRelations = relations(crmOrganizations, ({ one, many }) => ({
   org: one(organizations, { fields: [crmOrganizations.orgId], references: [organizations.id] }),
   contacts: many(contacts),
@@ -1184,4 +1230,76 @@ export const supportTicketsRelations = relations(supportTickets, ({ one, many })
 export const supportTicketMessagesRelations = relations(supportTicketMessages, ({ one }) => ({
   ticket: one(supportTickets, { fields: [supportTicketMessages.ticketId], references: [supportTickets.id] }),
   author: one(users, { fields: [supportTicketMessages.authorId], references: [users.id] }),
+}));
+
+// ─── Custom Field Definitions ───
+export const customFieldDefinitions = pgTable("custom_field_definitions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  entityType: text("entity_type").notNull(), // 'lead' | 'deal' | 'contact'
+  name: text("name").notNull(),             // machine name (snake_case)
+  label: text("label").notNull(),           // display label
+  fieldType: text("field_type").notNull().default("text"), // 'text' | 'number' | 'date' | 'boolean' | 'select'
+  options: jsonb("options").$type<Array<{ value: string; label: string }>>(),
+  isRequired: boolean("is_required").default(false),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("cfd_org_entity_name_idx").on(table.orgId, table.entityType, table.name),
+  index("idx_cfd_org_entity").on(table.orgId, table.entityType),
+]);
+
+export const customFieldDefinitionsRelations = relations(customFieldDefinitions, ({ one }) => ({
+  organization: one(organizations, { fields: [customFieldDefinitions.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [customFieldDefinitions.createdBy], references: [users.id] }),
+}));
+
+// ─── Territories ─────────────────────────────────────────────────────────────
+export const territories = pgTable("territories", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  name: text("name").notNull(),
+  states: text("states").array().default([]),
+  cities: text("cities").array().default([]),
+  assignedReps: integer("assigned_reps").array().default([]),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("territories_org_id_idx").on(table.orgId),
+]);
+
+export const territoriesRelations = relations(territories, ({ one }) => ({
+  organization: one(organizations, { fields: [territories.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [territories.createdBy], references: [users.id] }),
+}));
+
+// ─── Web-to-Lead Forms ────────────────────────────────────────────────────────
+export const webLeadForms = pgTable("web_lead_forms", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  fields: jsonb("fields").$type<Array<{ name: string; label: string; type: string; required: boolean; options?: string[] }>>().notNull().default([]),
+  publicToken: text("public_token").notNull().unique(),
+  isActive: boolean("is_active").default(true),
+  submitMessage: text("submit_message").default("Thank you! We'll be in touch soon."),
+  redirectUrl: text("redirect_url"),
+  totalSubmissions: integer("total_submissions").default(0),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("web_lead_forms_org_id_idx").on(table.orgId),
+  uniqueIndex("web_lead_forms_token_idx").on(table.publicToken),
+]);
+
+export const webLeadFormsRelations = relations(webLeadForms, ({ one }) => ({
+  organization: one(organizations, { fields: [webLeadForms.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [webLeadForms.createdBy], references: [users.id] }),
 }));

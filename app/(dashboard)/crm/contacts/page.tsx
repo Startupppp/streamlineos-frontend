@@ -3,10 +3,11 @@
 import { useState, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Search, Mail, Phone, Building2,
   ChevronLeft, ChevronRight, Linkedin, MoreHorizontal, Pencil, Trash2,
-  TableIcon, LayoutGrid,
+  TableIcon, LayoutGrid, Link2,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -128,13 +129,14 @@ export default function ContactsPage() {
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Company</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Title</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Tags</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Linked To</TableHead>
                         <TableHead className="text-[10px] w-8 px-2"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(data?.items ?? []).length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                          <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                             <EmptyTeamIllustration className="mx-auto mb-3 w-24 h-24" />
                             <p className="text-sm font-medium text-foreground">No contacts found</p>
                             <p className="text-xs mt-1">Create your first contact to get started</p>
@@ -162,6 +164,21 @@ export default function ContactsPage() {
                                 ))}
                               </div>
                             )}
+                          </TableCell>
+                          <TableCell className="px-2 py-1">
+                            <div className="flex flex-col gap-0.5">
+                              {contact.lead && (
+                                <Link href={`/crm/leads/${contact.lead.id}`} className="inline-flex items-center gap-1 text-[9px] font-medium text-blue-600 hover:text-blue-700 hover:underline truncate max-w-[90px]">
+                                  <Link2 className="h-2.5 w-2.5 shrink-0" />Lead: {contact.lead.name}
+                                </Link>
+                              )}
+                              {contact.deal && (
+                                <Link href={`/crm/deals/${contact.deal.id}`} className="inline-flex items-center gap-1 text-[9px] font-medium text-gold hover:text-gold/80 hover:underline truncate max-w-[90px]">
+                                  <Link2 className="h-2.5 w-2.5 shrink-0" />Deal: {contact.deal.name}
+                                </Link>
+                              )}
+                              {!contact.lead && !contact.deal && <span className="text-[10px] text-muted-foreground">—</span>}
+                            </div>
                           </TableCell>
                           <TableCell className="px-2 py-1">
                             <DropdownMenu>
@@ -243,6 +260,24 @@ export default function ContactsPage() {
                         <a href={contact.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-blue-400">
                           <Linkedin className="h-3.5 w-3.5" />
                         </a>
+                      </div>
+                    )}
+                    {(contact.lead || contact.deal) && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {contact.lead && (
+                          <Link href={`/crm/leads/${contact.lead.id}`}>
+                            <Badge variant="secondary" className="text-[10px] text-blue-600 border-blue-200 hover:border-blue-400 gap-1 cursor-pointer">
+                              <Link2 className="h-2.5 w-2.5" />Lead: {contact.lead.name}
+                            </Badge>
+                          </Link>
+                        )}
+                        {contact.deal && (
+                          <Link href={`/crm/deals/${contact.deal.id}`}>
+                            <Badge variant="secondary" className="text-[10px] text-amber-700 border-amber-200 hover:border-amber-400 gap-1 cursor-pointer">
+                              <Link2 className="h-2.5 w-2.5" />Deal: {contact.deal.name}
+                            </Badge>
+                          </Link>
+                        )}
                       </div>
                     )}
                   </CardContent>

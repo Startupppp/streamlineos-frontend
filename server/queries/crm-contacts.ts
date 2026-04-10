@@ -27,13 +27,16 @@ export async function getContacts(orgId: string, filters?: ContactFilters) {
     .from(contacts)
     .where(and(...conditions));
 
-  const items = await db
-    .select()
-    .from(contacts)
-    .where(and(...conditions))
-    .orderBy(contacts.name)
-    .limit(filters?.limit ?? 50)
-    .offset(filters?.offset ?? 0);
+  const items = await db.query.contacts.findMany({
+    where: and(...conditions),
+    with: {
+      lead: { columns: { id: true, name: true } },
+      deal: { columns: { id: true, name: true } },
+    },
+    orderBy: contacts.name,
+    limit: filters?.limit ?? 50,
+    offset: filters?.offset ?? 0,
+  });
 
   return { items, total: totalResult?.count ?? 0 };
 }

@@ -27,6 +27,8 @@ const createContactSchema = z.object({
   company: z.string().optional(),
   linkedinUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
   twitterUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
+  leadId: z.string().optional(),
+  dealId: z.string().optional(),
 });
 type CreateContactForm = z.infer<typeof createContactSchema>;
 
@@ -44,7 +46,7 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
 
   const form = useForm<CreateContactForm>({
     resolver: zodResolver(createContactSchema),
-    defaultValues: { name: "", email: "", phone: "", title: "", department: "", company: "", linkedinUrl: "", twitterUrl: "" },
+    defaultValues: { name: "", email: "", phone: "", title: "", department: "", company: "", linkedinUrl: "", twitterUrl: "", leadId: undefined, dealId: undefined },
   });
 
   const onSubmit = useCallback((data: CreateContactForm) => {
@@ -58,6 +60,8 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
         company: data.company || undefined,
         linkedinUrl: data.linkedinUrl || undefined,
         twitterUrl: data.twitterUrl || undefined,
+        leadId: data.leadId ? Number(data.leadId) : undefined,
+        dealId: data.dealId ? Number(data.dealId) : undefined,
       },
       {
         onSuccess: () => { toast.success("Contact created"); onOpenChange(false); form.reset(); },
@@ -130,6 +134,20 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
                 <FormItem>
                   <FormLabel>LinkedIn</FormLabel>
                   <FormControl><Input {...field} placeholder="https://linkedin.com/in/..." /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="leadId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Linked Lead ID (optional)</FormLabel>
+                  <FormControl><Input {...field} type="number" min={1} placeholder="e.g. 42" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="dealId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Linked Deal ID (optional)</FormLabel>
+                  <FormControl><Input {...field} type="number" min={1} placeholder="e.g. 7" /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

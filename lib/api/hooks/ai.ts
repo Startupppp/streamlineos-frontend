@@ -163,3 +163,178 @@ export function useAIAttritionRisk() {
       apiClient.post<AttritionRiskResult>("/ai/attrition-risk", { userId }),
   });
 }
+
+/* ─── AI8: Objection Handler ────────────────────────────────────────────────── */
+
+export interface ObjectionHandlerInput {
+  objection: string;
+  dealStage: string;
+  productName?: string;
+  dealValue?: string;
+}
+
+export interface ObjectionHandlerResult {
+  counterArguments: string[];
+  talkingPoints: string[];
+  suggestedResponse: string;
+}
+
+export function useObjectionHandler() {
+  return useMutation({
+    mutationFn: (data: ObjectionHandlerInput) =>
+      apiClient.post<ObjectionHandlerResult>("/ai/objection-handler", data),
+  });
+}
+
+/* ─── AI9: Email Subject Line Generator ─────────────────────────────────────── */
+
+export interface SubjectLinesInput {
+  campaignContext: string;
+  targetAudience?: string;
+  tone?: "professional" | "friendly" | "urgent" | "curiosity";
+  count?: number;
+}
+
+export interface SubjectLinesResult {
+  subjects: string[];
+}
+
+export function useGenerateSubjectLines() {
+  return useMutation({
+    mutationFn: (data: SubjectLinesInput) =>
+      apiClient.post<SubjectLinesResult>("/ai/subject-lines", data),
+  });
+}
+
+/* ─── AI10: Content Brief Generator ─────────────────────────────────────────── */
+
+export interface ContentBrief {
+  title: string;
+  outline: string[];
+  keyPoints: string[];
+  seoKeywords: string[];
+  callToAction: string;
+  estimatedWordCount: number;
+  targetAudienceInsights: string;
+}
+
+export function useGenerateContentBrief() {
+  return useMutation({
+    mutationFn: (data: {
+      topic: string;
+      targetAudience?: string;
+      contentType?: string;
+      keywords?: string;
+    }) => apiClient.post<ContentBrief>("/ai/content-brief", data),
+  });
+}
+
+/* ─── AI13: Client Sentiment Analysis ───────────────────────────────────────── */
+
+export interface SentimentResult {
+  sentiment: "positive" | "neutral" | "negative" | "critical";
+  score: number;
+  summary: string;
+  riskFactors: string[];
+  recommendations: string[];
+  churnRisk: "low" | "medium" | "high";
+}
+
+export function useSentimentAnalysis() {
+  return useMutation({
+    mutationFn: (data: { text: string; clientName?: string }) =>
+      apiClient.post<SentimentResult>("/ai/sentiment-analysis", data),
+  });
+}
+
+/* ─── AI15: Natural Language Lead Search ────────────────────────────────────── */
+
+export interface NLSearchLead {
+  id: number;
+  name: string;
+  email: string | null;
+  company: string | null;
+  status: string;
+  priority: string | null;
+  source: string | null;
+  value: number | null;
+  city: string | null;
+  assignedTo: string | null;
+}
+
+export interface NLSearchResult {
+  query: string;
+  parsedFilters: Record<string, unknown>;
+  leads: NLSearchLead[];
+  total: number;
+}
+
+export function useNLSearch() {
+  return useMutation({
+    mutationFn: (query: string) =>
+      apiClient.post<NLSearchResult>("/ai/nl-search", { query }),
+  });
+}
+
+/* ─── AI11: Campaign Performance Insights ────────────────────────────────── */
+
+export interface CampaignInsightsResult {
+  insights: string;
+  generatedAt: string;
+}
+
+export function useCampaignInsights() {
+  return useMutation({
+    mutationFn: (period: string) =>
+      apiClient.post<CampaignInsightsResult>("/ai/campaign-insights", { period }),
+  });
+}
+
+/* ─── AI14: Account Summary Generator ───────────────────────────────────────── */
+
+export interface AccountSummaryResult {
+  summary: string;
+  clientName: string;
+  generatedAt: string;
+}
+
+export function useAccountSummary() {
+  return useMutation({
+    mutationFn: (clientId: number) =>
+      apiClient.post<AccountSummaryResult>("/ai/account-summary", { clientId }),
+  });
+}
+
+/* ─── AI16: Report Narrator ──────────────────────────────────────────────────── */
+
+export interface ReportNarratorResult {
+  narrative: string;
+  generatedAt: string;
+}
+
+export function useReportNarrator() {
+  return useMutation({
+    mutationFn: (data: { data: string; context?: string }) =>
+      apiClient.post<ReportNarratorResult>("/ai/report-narrator", data),
+  });
+}
+
+/* ─── AI17: Meeting Prep Brief ───────────────────────────────────────────────── */
+
+export interface MeetingPrepResult {
+  brief: string;
+  attendeeName: string;
+  generatedAt: string;
+}
+
+export function useMeetingPrep() {
+  return useMutation({
+    mutationFn: (data: {
+      meetingTitle: string;
+      attendeeType: "lead" | "client";
+      attendeeId: number;
+      scheduledAt: string;
+      notes?: string;
+    }) => apiClient.post<MeetingPrepResult>("/ai/meeting-prep", data),
+  });
+}
