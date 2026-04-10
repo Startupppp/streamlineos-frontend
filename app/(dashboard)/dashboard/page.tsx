@@ -45,7 +45,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
-import { QuickActions } from "@/features/dashboard/quick-actions";
+import { QuickActions, getQuickActionsForRole } from "@/features/dashboard/quick-actions";
 import { SprintCard } from "@/features/dashboard/sprint-card";
 import { TeamCard } from "@/features/dashboard/team-card";
 import { MyIssuesCard, type DashboardTicket } from "@/features/dashboard/my-issues-card";
@@ -187,27 +187,107 @@ export default function DashboardPage() {
   }, [myIssuesData]);
 
   if (isLoading) {
+    const quickActionsList = getQuickActionsForRole(role);
+    const quickActionsGridClass =
+      `grid grid-cols-2 gap-3 sm:grid-cols-3 ${quickActionsList.length >= 5 ? "md:grid-cols-5" : quickActionsList.length >= 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`;
+
     return (
-      <div className="space-y-5" role="status" aria-live="polite" aria-label="Loading dashboard">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-5 w-64" />
+      <PageWrapper
+        title="Dashboard"
+        subtitle="Loading your workspace..."
+        actions={<Skeleton className="h-10 w-32 rounded-md" />}
+        contentClassName="min-h-[calc(100vh-170px)]"
+      >
+        <div className="space-y-5" role="status" aria-live="polite" aria-label="Loading dashboard">
+          <DashboardStatsSkeleton />
+          {quickActionsList.length > 0 ? (
+            <div className={quickActionsGridClass}>
+              {quickActionsList.map((a) => (
+                <div key={a.label} className="rounded-xl border border-border bg-card p-4 shadow-noir">
+                  <div className="flex flex-col items-center gap-2">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <Card className="bg-card border-border shadow-noir">
+            <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-8 w-16 rounded-md" />
+            </CardHeader>
+            <CardContent className="px-4 pt-0 pb-4">
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-9 rounded-lg" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
+            <Card className="lg:col-span-4 min-h-0">
+              <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+              <CardContent className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </CardContent>
+            </Card>
+            <Card className="lg:col-span-3 min-h-0">
+              <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-2 w-full rounded-full" />
+                <Skeleton className="h-20 w-full rounded" />
+                <Skeleton className="h-12 w-full rounded" />
+              </CardContent>
+            </Card>
           </div>
-          <Skeleton className="h-14 w-32 rounded-lg" />
+          <div
+            className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} md:auto-rows-[24rem]`}
+          >
+            <div className="sm:col-span-1 min-h-0">
+              <Card className="min-h-0">
+                <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+                <CardContent className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <Skeleton key={j} className="h-12 w-full" />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+            <div className="sm:col-span-1 min-h-0">
+              <Card className="min-h-0">
+                <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+                <CardContent className="space-y-3">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <Skeleton key={`b-${j}`} className="h-12 w-full" />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+            {isAdmin ? (
+              <div className="sm:col-span-2 lg:col-span-1 min-h-0">
+                <Card className="min-h-0">
+                  <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+                  <CardContent className="space-y-3">
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <Skeleton key={`c-${j}`} className="h-12 w-full" />
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            ) : null}
+          </div>
         </div>
-        <DashboardStatsSkeleton />
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-          <Card className="lg:col-span-4 bg-card border-border">
-            <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
-            <CardContent><Skeleton className="h-20 w-full" /></CardContent>
-          </Card>
-          <Card className="lg:col-span-3 bg-card border-border">
-            <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
-            <CardContent><Skeleton className="h-20 w-full" /></CardContent>
-          </Card>
-        </div>
-      </div>
+      </PageWrapper>
     );
   }
 
