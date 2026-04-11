@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 
-/** GET /api/dm/leads/stats — DM lead aggregations */
 export async function GET() {
   return withAuth(async (session) => {
     const byStatus = await db

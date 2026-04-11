@@ -52,7 +52,6 @@ export async function generateAndSendWeeklyReport() {
       daysPresent: number;
     }[] = [];
 
-    // Batch: fetch ALL attendance records for this org + date range in ONE query
     const allRecords = await db.query.attendance.findMany({
       where: and(
         eq(attendance.orgId, org.id),
@@ -61,7 +60,6 @@ export async function generateAndSendWeeklyReport() {
       ),
     });
 
-    // Group records by userId in memory
     const recordsByUser = new Map<string, typeof allRecords>();
     for (const record of allRecords) {
       const existing = recordsByUser.get(record.userId) || [];

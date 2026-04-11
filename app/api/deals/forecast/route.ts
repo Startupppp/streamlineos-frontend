@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
 import { eq, and, notInArray } from "drizzle-orm";
 
-/** Default stage probabilities when deal.probability is 0 or null */
 const STAGE_PROBABILITIES: Record<string, number> = {
   LEAD: 10,
   PROSPECT: 20,
@@ -17,10 +16,10 @@ const STAGE_PROBABILITIES: Record<string, number> = {
 };
 
 interface ForecastMonth {
-  month: string; // "2026-04"
-  label: string; // "Apr 2026"
-  weighted: number; // probability-weighted value
-  bestCase: number; // total deal value (100%)
+  month: string;
+  label: string;
+  weighted: number;
+  bestCase: number;
   dealCount: number;
 }
 
@@ -38,7 +37,6 @@ interface ForecastSummary {
   }>;
 }
 
-/** GET /api/deals/forecast — Pipeline forecast with probability weighting */
 export async function GET() {
   return withAuth(async (session) => {
     const summary = await cached(
@@ -61,7 +59,6 @@ async function buildForecast(orgId: string): Promise<ForecastSummary> {
         ),
       );
 
-    // Group by month (using expectedCloseDate, fallback to createdAt)
     const monthMap = new Map<string, ForecastMonth>();
     const stageMap = new Map<string, { count: number; totalValue: number; weightedValue: number; probSum: number }>();
 
@@ -70,11 +67,10 @@ async function buildForecast(orgId: string): Promise<ForecastSummary> {
       const probability = deal.probability || STAGE_PROBABILITIES[deal.stage] || 20;
       const weighted = Math.round(value * probability / 100);
 
-      // Month grouping
       const closeDate = deal.expectedCloseDate
         ? new Date(deal.expectedCloseDate)
         : deal.createdAt
-          ? new Date(new Date(deal.createdAt).getTime() + 90 * 24 * 60 * 60 * 1000) // default: +90 days
+          ? new Date(new Date(deal.createdAt).getTime() + 90 * 24 * 60 * 60 * 1000)
           : new Date();
 
       const monthKey = `${closeDate.getFullYear()}-${String(closeDate.getMonth() + 1).padStart(2, "0")}`;
@@ -86,7 +82,6 @@ async function buildForecast(orgId: string): Promise<ForecastSummary> {
       existing.dealCount += 1;
       monthMap.set(monthKey, existing);
 
-      // Stage grouping
       const stageData = stageMap.get(deal.stage) ?? { count: 0, totalValue: 0, weightedValue: 0, probSum: 0 };
       stageData.count += 1;
       stageData.totalValue += value;

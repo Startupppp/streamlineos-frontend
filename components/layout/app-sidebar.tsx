@@ -45,14 +45,12 @@ export function AppSidebar({
   );
   const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
 
-  // Accordion state: which groups are collapsed (keyed by group label)
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
-
 
   const toggleGroup = useCallback((label: string) => {
     setCollapsedGroups((prev) => {
       const next = { ...prev, [label]: !prev[label] };
-      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { /* ignore */ }
+      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch {  }
       return next;
     });
   }, []);
@@ -106,7 +104,7 @@ export function AppSidebar({
     try {
       const stored = localStorage.getItem("sidebar-groups");
       if (stored) setCollapsedGroups(JSON.parse(stored));
-    } catch { /* ignore */ }
+    } catch {  }
   }, []);
 
   if (

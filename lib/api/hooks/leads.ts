@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * TanStack Query hooks for the Leads domain.
- * Uses apiClient (Axios) — zero tRPC imports.
- */
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -37,8 +32,6 @@ import type {
   DistributeLeadsInput,
   DistributeResult,
 } from "@/types/leads";
-
-// ─── Query Hooks ─────────────────────────────────────────────────────────────
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
   return useQuery({
@@ -121,8 +114,6 @@ export function useUnverifiedLeads() {
     queryFn: () => apiClient.get<Lead[]>("/leads/unverified"),
   });
 }
-
-// ─── Mutation Hooks ───────────────────────────────────────────────────────────
 
 export function useCreateLead() {
   const qc = useQueryClient();
@@ -300,8 +291,6 @@ export function useSalesTeamCapacity() {
   });
 }
 
-// ─── Follow-up Reminders ──────────────────────────────────────────────────────
-
 interface FollowUpLead {
   id: number;
   name: string;
@@ -327,8 +316,6 @@ export function useOverdueFollowUps(limit?: number) {
   });
 }
 
-// ─── Duplicate Detection ──────────────────────────────────────────────────────
-
 interface DuplicateCheckResult {
   duplicates: Array<{
     id: number;
@@ -351,7 +338,4 @@ export function useCheckLeadDuplicates(params: { email?: string; phone?: string 
   });
 }
 
-// ─── Backward-compatibility alias ─────────────────────────────────────────────
-
-/** Alias for useLeadSlaAlerts — kept for backward compatibility. */
 export const useSlaAlerts = useLeadSlaAlerts;

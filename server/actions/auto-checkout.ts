@@ -38,7 +38,7 @@ export async function processAutoCheckout() {
         })
         .where(and(eq(attendance.id, record.id), isNull(attendance.checkOut)))
         .returning({ id: attendance.id });
-      
+
       if (result.length > 0) processed++;
       continue;
     }

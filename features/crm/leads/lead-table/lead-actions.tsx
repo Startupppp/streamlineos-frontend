@@ -69,7 +69,6 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
     onClose();
   }, [onClose]);
 
-  // Auto-populate deal name from lead name when opening
   const handleOpenChange = useCallback((isOpen: boolean) => {
     if (isOpen && leadName && !dealName) {
       setDealName(`Deal - ${leadName}`);
@@ -114,7 +113,6 @@ export function ConversionModal({ leadName, open, onClose, onSubmit }: Conversio
             />
           </div>
 
-          {/* Auto-create deal toggle */}
           <label className="flex items-center gap-2.5 rounded-lg border bg-muted/30 px-3 py-2.5 cursor-pointer">
             <input
               type="checkbox"

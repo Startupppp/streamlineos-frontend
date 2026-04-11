@@ -19,7 +19,6 @@ const generateSchema = z.object({
   allVariations: z.boolean().optional(),
 });
 
-/** POST /api/ai/generate-email — Generate a follow-up email for a lead/deal */
 export async function POST(req: NextRequest) {
   return withAuth<unknown>(async (session) => {
     if (!isOpenAIConfigured()) {
@@ -30,7 +29,6 @@ export async function POST(req: NextRequest) {
     const senderName = session.user.name || "Sales Team";
     const senderRole = session.user.role || undefined;
 
-    // If allVariations is true, generate all 3 tones
     if (input.allVariations) {
       const results = await generateEmailVariations({
         leadName: input.leadName,
@@ -49,7 +47,6 @@ export async function POST(req: NextRequest) {
       return ok({ variations: results });
     }
 
-    // Single tone generation
     const email = await generateFollowUpEmail({
       leadName: input.leadName,
       company: input.company,

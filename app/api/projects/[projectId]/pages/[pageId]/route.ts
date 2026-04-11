@@ -1,9 +1,4 @@
-/**
- * PATCH  /api/projects/[id]/pages/[pageId]  — update wiki page
- * DELETE /api/projects/[id]/pages/[pageId]  — delete page (re-parents child pages)
- *
- * On delete, child pages have their parentPageId set to null.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -52,7 +47,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const pId = Number(pageId);
     if (!projectId || !pId) return err("Invalid id", 400);
 
-    // Re-parent child pages before deletion
     await db
       .update(pages)
       .set({ parentPageId: null })

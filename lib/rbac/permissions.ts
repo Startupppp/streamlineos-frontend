@@ -324,7 +324,7 @@ export const PERMISSIONS: Permission[] = [
     action: "export",
     description: "Export CRM reports",
   },
-  // Dashboard-specific permissions
+
   {
     name: "dashboard:sales:view",
     resource: "dashboard:sales",
@@ -343,7 +343,7 @@ export const PERMISSIONS: Permission[] = [
     action: "view",
     description: "View Support CRM dashboard",
   },
-  // Self-service permissions (every employee has these)
+
   {
     name: "self:attendance",
     resource: "self",
@@ -368,7 +368,7 @@ export const PERMISSIONS: Permission[] = [
     action: "payslips",
     description: "View own payslips",
   },
-  // DM Dashboard permissions
+
   { name: "dm:leads:create", resource: "dm:leads", action: "create", description: "Capture DM leads" },
   { name: "dm:leads:read", resource: "dm:leads", action: "read", description: "View DM leads" },
   { name: "dm:leads:update", resource: "dm:leads", action: "update", description: "Update DM leads" },
@@ -379,39 +379,34 @@ export const PERMISSIONS: Permission[] = [
   { name: "dm:campaigns:update", resource: "dm:campaigns", action: "update", description: "Update campaigns" },
   { name: "dm:social:read", resource: "dm:social", action: "read", description: "View social stats" },
   { name: "dm:social:create", resource: "dm:social", action: "create", description: "Enter social stats" },
-  // Client accounts
+
   { name: "crm:clients:read", resource: "crm:clients", action: "read", description: "View client accounts" },
   { name: "crm:clients:update", resource: "crm:clients", action: "update", description: "Update client accounts" },
-  // Incentives
+
   { name: "crm:incentives:read", resource: "crm:incentives", action: "read", description: "View incentives" },
   { name: "crm:incentives:approve", resource: "crm:incentives", action: "approve", description: "Approve incentives" },
   { name: "crm:incentives:config", resource: "crm:incentives", action: "config", description: "Configure incentive rates" },
-  // Branches
+
   { name: "branch:create", resource: "branch", action: "create", description: "Create branches" },
   { name: "branch:read", resource: "branch", action: "read", description: "View branches" },
   { name: "branch:update", resource: "branch", action: "update", description: "Update branches" },
   { name: "branch:manage_targets", resource: "branch", action: "manage_targets", description: "Manage branch targets" },
-  // Reports
+
   { name: "reports:generate", resource: "reports", action: "generate", description: "Generate reports" },
   { name: "reports:schedule", resource: "reports", action: "schedule", description: "Schedule reports" },
-  // Chat
+
   { name: "chat:submit_lead", resource: "chat", action: "submit_lead", description: "Submit leads via chat" },
 ];
 
-// Self-service permissions every employee gets (own data only)
 const EMPLOYEE_SELF_SERVICE = [
   "self:attendance",
   "self:leaves",
   "self:expenses",
   "self:payslips",
-  "hr:leaves:create",       // submit own leave
-  "hr:expenses:create",     // submit own expense
+  "hr:leaves:create",
+  "hr:expenses:create",
 ];
 
-/**
- * System roles.
- * CEO, HR, SALES, CUSTOMER_SUPPORT, ENGINEERING, DESIGN, VIDEO_EDITOR, DIGITAL_MARKETING
- */
 export const SYSTEM_ROLES = [
   "CEO",
   "HR",
@@ -428,10 +423,9 @@ export const SYSTEM_ROLES = [
 export type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  // CEO — full god-mode access to everything
+
   CEO: PERMISSIONS.map((p) => p.name),
 
-  // HR — full HR module + employee management + settings + can view CRM/projects for admin
   HR: [
     ...EMPLOYEE_SELF_SERVICE,
     "hr:employees:view",
@@ -477,7 +471,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "dashboard:support:view",
   ],
 
-  // SALES — own leads + projects + tickets
   SALES: [
     ...EMPLOYEE_SELF_SERVICE,
     "crm:leads:view",
@@ -490,7 +483,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
   ],
 
-  // CUSTOMER_SUPPORT — own tickets + projects
   CUSTOMER_SUPPORT: [
     ...EMPLOYEE_SELF_SERVICE,
     "dashboard:support:view",
@@ -502,10 +494,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
   ],
 
-  // ENGINEERING — can ONLY see projects/tasks assigned to them
   ENGINEERING: [
     ...EMPLOYEE_SELF_SERVICE,
-    "projects:view",            // filtered to member projects
+    "projects:view",
     "projects:tickets:view",
     "projects:tickets:create",
     "projects:tickets:update",
@@ -514,7 +505,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
   ],
 
-  // DESIGN — can ONLY see projects/tasks assigned to them
   DESIGN: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
@@ -525,7 +515,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
   ],
 
-  // VIDEO_EDITOR — can ONLY see projects/tasks assigned to them
   VIDEO_EDITOR: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
@@ -536,7 +525,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
   ],
 
-  // DIGITAL_MARKETING — projects, timesheets, and self-service
   DIGITAL_MARKETING: [
     ...EMPLOYEE_SELF_SERVICE,
     "projects:view",
@@ -547,7 +535,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "projects:timesheets:create",
   ],
 
-  // BRANCH_MANAGER — same as HR but scoped to their branch
   BRANCH_MANAGER: [
     ...EMPLOYEE_SELF_SERVICE,
     "hr:employees:view",
@@ -579,7 +566,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "dashboard:sales:view",
   ],
 
-  // BRANCH_HR — full HR within their branch
   BRANCH_HR: [
     ...EMPLOYEE_SELF_SERVICE,
     "hr:employees:view",

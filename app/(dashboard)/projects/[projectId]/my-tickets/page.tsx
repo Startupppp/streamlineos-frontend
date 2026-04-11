@@ -40,21 +40,19 @@ export default function MyTicketsPage({ params }: PageProps) {
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
 
-  // URL filters
   const q = searchParams.get("q") ?? "";
   const filterStatus = searchParams.get("status") ?? "";
   const filterPriority = searchParams.get("priority") ?? "";
   const filterType = searchParams.get("type") ?? "";
 
-  // Only show tickets assigned to the current user
   const myTickets = useMemo(() => {
     if (!data?.tickets || !userId) return [];
     return data.tickets.filter((t) => {
-      // Check primary assignee
+
       if (t.assigneeId === userId) return true;
-      // Check multi-assignees
+
       if (t.assignees?.some((a) => a.userId === userId)) return true;
-      // Check reporter
+
       if (t.reporterId === userId) return true;
       return false;
     });
@@ -101,7 +99,6 @@ export default function MyTicketsPage({ params }: PageProps) {
       ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
       : undefined;
 
-  // Group counts
   const todoCount = myTickets.filter((t) => t.status === "TODO").length;
   const inProgressCount = myTickets.filter((t) => t.status === "IN_PROGRESS").length;
   const doneCount = myTickets.filter((t) => t.status === "DONE").length;

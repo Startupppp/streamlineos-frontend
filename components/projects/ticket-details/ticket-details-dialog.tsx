@@ -25,8 +25,6 @@ import { WatcherList } from "./watcher-list";
 import { ActivityFeed } from "./activity-feed";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
 
-// ─── Attachment image with signed-URL resolution ──────────────────────────────
-
 function AttachmentImage({
   fileUrl,
   fileName,
@@ -73,8 +71,6 @@ function AttachmentImage({
     />
   );
 }
-
-// ─── Main Dialog ──────────────────────────────────────────────────────────────
 
 export function TicketDetailsDialog({
   ticketId,
@@ -212,7 +208,7 @@ export function TicketDetailsDialog({
         side="right"
         className="w-full sm:max-w-[50vw] overflow-hidden p-0 flex flex-col"
       >
-        {/* Sticky header */}
+
         <TicketHeader
           ticketId={ticketId}
           ticketNumber={ticket?.ticketNumber}
@@ -227,7 +223,6 @@ export function TicketDetailsDialog({
           }
         />
 
-        {/* Scrollable body — fills remaining height */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {isLoading ? (
             <div className="py-16 text-center">
@@ -247,7 +242,7 @@ export function TicketDetailsDialog({
             </div>
           ) : ticket ? (
             <>
-              {/* ── Properties panel (top half — compact two-column grid) ── */}
+
               <div className="border-b">
                 <TicketSidebar
                   ticket={ticket}
@@ -260,9 +255,8 @@ export function TicketDetailsDialog({
                 />
               </div>
 
-              {/* ── Main content ── */}
               <div className="p-4 space-y-5">
-                {/* Title */}
+
                 <Input
                   value={localTitle}
                   onChange={(e) => {
@@ -273,7 +267,6 @@ export function TicketDetailsDialog({
                   placeholder="Ticket title"
                 />
 
-                {/* Description */}
                 <Textarea
                   value={localDescription}
                   onChange={(e) => {
@@ -284,14 +277,12 @@ export function TicketDetailsDialog({
                   placeholder="Add a description..."
                 />
 
-                {/* Subtasks */}
                 <TicketSubtasks
                   ticketId={ticketId!}
                   projectId={projectId}
                   subtasks={subtasks || []}
                 />
 
-                {/* Attachments */}
                 {ticket.attachments && ticket.attachments.length > 0 && (
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-2">
@@ -321,14 +312,12 @@ export function TicketDetailsDialog({
                   </div>
                 )}
 
-                {/* Watchers */}
                 <WatcherList
                   projectId={projectId}
                   ticketId={ticketId!}
                   members={members}
                 />
 
-                {/* Activity Feed */}
                 <ActivityFeed
                   ticketId={ticketId!}
                   projectId={projectId}

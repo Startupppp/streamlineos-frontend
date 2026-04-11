@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyInboxIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
 type NotificationType = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
@@ -180,9 +181,7 @@ export default function NotificationsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gold/10 mb-6">
-            <BellOff className="h-10 w-10 text-gold/60" />
-          </div>
+          <EmptyInboxIllustration className="mb-5 opacity-95" />
           <h3 className="text-lg font-semibold text-foreground mb-1">
             {activeTab === "UNREAD"
               ? "You're all caught up"

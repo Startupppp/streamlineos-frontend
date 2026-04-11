@@ -96,7 +96,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
           });
         };
         reader.readAsDataURL(file);
-        newPreviews.push(null); // placeholder, will be set by reader
+        newPreviews.push(null);
       } else {
         newPreviews.push(null);
       }
@@ -155,11 +155,11 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   async function onSubmit(values: z.infer<typeof addTimeEntryInputSchema>) {
     let imageUrl: string | undefined;
     if (attachmentFiles.length > 0) {
-      // Upload the first file as the primary imageUrl (schema supports single)
+
       const url = await uploadAttachment(attachmentFiles[0]);
       if (!url) return;
       imageUrl = url;
-      // Upload remaining files in the background
+
       for (let i = 1; i < attachmentFiles.length; i++) {
         await uploadAttachment(attachmentFiles[i]);
       }
@@ -188,7 +188,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
   const formContent = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        
+
         <FormField
           control={form.control}
           name="ticketId"
@@ -278,10 +278,10 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
                 <FormItem>
                 <FormLabel>Hours</FormLabel>
                 <FormControl>
-                    <Input 
-                        type="number" 
-                        step="0.5" 
-                        placeholder="8" 
+                    <Input
+                        type="number"
+                        step="0.5"
+                        placeholder="8"
                         value={field.value || ""}
                         onChange={(e) => {
                             const value = e.target.value;
@@ -302,10 +302,10 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="What did you work on?" 
+                <Textarea
+                  placeholder="What did you work on?"
                   className="min-h-[100px]"
-                  {...field} 
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -322,7 +322,7 @@ export function LogTimeDialog({ trigger }: LogTimeDialogProps) {
               <FormControl>
                 <div className="relative">
                   <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
+                  <Input
                     type="url"
                     placeholder="https://example.com/work-done"
                     className="pl-9"

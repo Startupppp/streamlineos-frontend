@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { User, Calendar, MoreHorizontal, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,10 +37,12 @@ function StageMenuItem({
 }
 
 export function DealKanbanCard({ deal, onStageChange, onDelete }: DealKanbanCardProps) {
+  const router = useRouter();
   const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
+  const handleNavigate = useCallback(() => router.push(`/crm/deals/${deal.id}`), [deal.id, router]);
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={handleNavigate}>
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
           <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>

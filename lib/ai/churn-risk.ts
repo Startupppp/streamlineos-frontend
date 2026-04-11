@@ -8,10 +8,6 @@ import { clients } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/**
- * Analyze churn risk for a client using AI.
- * Updates the client record with the risk score and reasoning.
- */
 export async function analyzeChurnRisk(
   orgId: string,
   clientId: number,
@@ -41,7 +37,7 @@ export async function analyzeChurnRisk(
     daysSinceLastActivity: context?.daysSinceLastActivity ?? null,
     openTickets: context?.openTickets ?? 0,
     totalTicketsLast90Days: context?.ticketsLast90Days ?? 0,
-    accountManagerName: null, // Would need a join to get this
+    accountManagerName: null,
     status: client.status,
     daysSinceConversion,
   };
@@ -57,14 +53,12 @@ export async function analyzeChurnRisk(
 
   result.churnRiskScore = Math.max(0, Math.min(100, Math.round(result.churnRiskScore)));
 
-  // Derive health status from churn risk
   const healthStatus = result.churnRiskScore >= 70 ? "critical"
     : result.churnRiskScore >= 40 ? "at_risk"
     : "healthy";
 
   const healthScore = Math.max(0, 100 - result.churnRiskScore);
 
-  // Persist to client record
   await db
     .update(clients)
     .set({

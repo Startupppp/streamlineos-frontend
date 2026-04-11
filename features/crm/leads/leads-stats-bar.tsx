@@ -18,7 +18,7 @@ interface LeadsStatsBarProps {
 export function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
   return (
     <div className="space-y-2">
-      {/* Summary strip — dense single row */}
+
       <div className="flex items-center gap-3 flex-wrap text-[11px] px-1">
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Total</span>
@@ -41,7 +41,7 @@ export function LeadsStatsBar({ stats }: LeadsStatsBarProps) {
           <span className={cn("font-bold tabular-nums", stats.unassigned > 0 ? "text-red-400" : "text-muted-foreground")}>{stats.unassigned}</span>
         </div>
         <div className="border-l border-border/50 h-3" />
-        {/* Status breakdown inline */}
+
         {Object.entries(stats.byStatus).map(([status, count]) => {
           const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
           if (!config) return null;

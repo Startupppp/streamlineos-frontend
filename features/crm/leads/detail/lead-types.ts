@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { StickyNote, ListTodo, Mail, Phone } from "lucide-react";
 
-// ─── Pipeline ────────────────────────────────────────────────────────────────
-
 export const STATUS_PIPELINE = [
   "NEW",
   "CONTACTED",
@@ -42,11 +40,7 @@ export const TIMELINE_ICONS: Record<
   activity: { icon: Phone, color: "bg-green-500/15 text-green-400" },
 };
 
-// ─── Quick action discriminated union ────────────────────────────────────────
-
 export type QuickAction = "call" | "email" | "note" | "task" | null;
-
-// ─── Zod schemas ─────────────────────────────────────────────────────────────
 
 export const noteSchema = z.object({
   body: z.string().min(1, "Note cannot be empty"),
@@ -86,8 +80,6 @@ export const editSchema = z.object({
   notes: z.string().optional(),
 });
 export type EditForm = z.infer<typeof editSchema>;
-
-// ─── Helper utilities ─────────────────────────────────────────────────────────
 
 export function getScoreBadge(score: number | null | undefined) {
   const s = score ?? 0;

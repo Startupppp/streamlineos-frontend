@@ -12,7 +12,6 @@ const listSchema = z.object({
   limit: z.coerce.number().min(1).max(50).optional(),
 });
 
-/** GET /api/sales/commissions — List commissions with optional filters */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { userId, status, limit } = parseQuery(req, listSchema);

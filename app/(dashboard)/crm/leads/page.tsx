@@ -180,7 +180,6 @@ export default function LeadsPipelinePage() {
       updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
       updateStatus.mutate({ leadId: id, status: "CONVERTED" });
 
-      // Auto-create deal from converted lead
       if (extra.createDeal && extra.dealName) {
         createDealMutation.mutate(
           {

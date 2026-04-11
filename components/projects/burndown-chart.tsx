@@ -69,7 +69,6 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
               </linearGradient>
             </defs>
 
-            
             {yTicks.map((tick) => {
               const y = paddingTop + ((maxPoints - tick) / maxPoints) * plotHeight;
               return (
@@ -96,7 +95,6 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
               );
             })}
 
-            
             {idealBurndown.map((point, index) => {
               const len = idealBurndown.length - 1;
               if (index >= len) return null;
@@ -120,7 +118,6 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
               );
             })}
 
-            
             {actualBurndown.length > 0 && actualBurndown.map((point, index) => {
               const dateIndex = idealBurndown.findIndex(
                 (d) => format(d.date, "yyyy-MM-dd") === format(new Date(point.date), "yyyy-MM-dd")
@@ -180,7 +177,6 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
             })}
           </svg>
 
-          
           {hoveredPoint && (
             <div
               className="fixed z-50 bg-popover border shadow-md rounded-md px-3 py-2 text-xs pointer-events-none"
@@ -191,7 +187,6 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
             </div>
           )}
 
-          
           <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-muted-foreground" style={{ paddingLeft: `${paddingLeft}px`, paddingRight: `${paddingRight}px` }}>
             {idealBurndown.map((point, index) => {
               if (index % Math.ceil(idealBurndown.length / 6) !== 0 && index !== idealBurndown.length - 1) return null;

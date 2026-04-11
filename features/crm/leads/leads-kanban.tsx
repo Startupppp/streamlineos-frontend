@@ -27,7 +27,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
             return (
               <div key={status} className="flex-1 min-w-[160px] sm:min-w-[180px] md:min-w-[200px]">
                 <div className={cn("rounded-xl border h-full flex flex-col", config.border, "bg-muted/20")}>
-                  {/* Column Header */}
+
                   <div className={cn(
                     "flex items-center justify-between px-3 py-2.5 rounded-t-xl border-b",
                     config.border,
@@ -45,7 +45,6 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                     </Badge>
                   </div>
 
-                  {/* Droppable Area */}
                   <Droppable droppableId={status}>
                     {(provided, snapshot) => (
                       <div

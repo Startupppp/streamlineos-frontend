@@ -96,7 +96,7 @@ export function ClockInWidget() {
         <div className="text-muted-foreground font-bold text-sm tracking-wide">
           {format(now, "hh:mm a - EEE dd, MMM yyyy").toUpperCase()}
         </div>
-        
+
         <div className="flex items-center gap-4 mt-1">
           {(isCheckedIn || isOnBreak) && sessionTime && (
             <div className="flex items-center gap-1.5 text-sm">
@@ -108,7 +108,7 @@ export function ClockInWidget() {
               </span>
             </div>
           )}
-          
+
           {dailyStats && parseFloat(dailyStats.workHours) > 0 && (
             <div className="text-xs text-muted-foreground">
               {parseFloat(dailyStats.workHours).toFixed(1)}h worked
@@ -117,7 +117,7 @@ export function ClockInWidget() {
           )}
         </div>
       </div>
-      
+
       <Button
         variant={isCheckedIn || isOnBreak ? "outline" : isInCooldown ? "secondary" : "destructive"}
         disabled={isPending || isInCooldown}

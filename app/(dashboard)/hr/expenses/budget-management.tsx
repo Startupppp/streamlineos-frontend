@@ -145,7 +145,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
 
   return (
     <div className="space-y-6">
-      
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Budget Management</h2>
@@ -157,7 +157,6 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </Button>
       </div>
 
-      
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -195,7 +194,6 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </Card>
       </div>
 
-      
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -253,8 +251,8 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
                       <TableCell className="w-[150px]">
                         {item.budgetLimit ? (
                           <div className="space-y-1">
-                            <Progress 
-                              value={percentage} 
+                            <Progress
+                              value={percentage}
                               className={`h-2 ${getUsageColor(percentage)}`}
                             />
                             <span className="text-xs text-slate-500">{percentage.toFixed(0)}%</span>
@@ -288,7 +286,6 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
         </CardContent>
       </Card>
 
-      
       <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <SheetContent className="sm:max-w-md overflow-y-auto">
           <SheetHeader>

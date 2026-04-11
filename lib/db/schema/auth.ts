@@ -1,14 +1,11 @@
-/**
- * Auth & Organization tables: users, accounts, sessions, orgs, roles, permissions, invitations, tokens.
- */
+
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, foreignKey, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { genderEnum, onboardingStatusEnum, onboardingDocStatusEnum } from "./enums";
-// Cross-domain imports for user relations (circular import is safe for Drizzle relations)
+
 import { departments } from "./hr";
 import { tickets } from "./projects";
 
-// ─── Organizations ───
 export const organizations = pgTable("organizations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -37,7 +34,6 @@ export const organizationMembers = pgTable("organization_members", {
   index("idx_org_members_org_role").on(table.orgId, table.role),
 ]);
 
-// ─── Users ───
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name"),
@@ -97,7 +93,6 @@ export const users = pgTable("users", {
   foreignKey({ columns: [table.reportingTo], foreignColumns: [table.id] }),
 ]);
 
-// ─── Auth (NextAuth) ───
 export const accounts = pgTable("accounts", {
   userId: text("user_id").references(() => users.id).notNull(),
   type: text("type").notNull(),
@@ -190,7 +185,6 @@ export const passwordHistory = pgTable("password_history", {
   index("idx_password_history_user").on(table.userId, table.createdAt),
 ]);
 
-// ─── Roles & Permissions ───
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -230,7 +224,6 @@ export const userPermissions = pgTable("user_permissions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// ─── Onboarding Steps ───
 export const onboardingSteps = pgTable("onboarding_steps", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -242,7 +235,6 @@ export const onboardingSteps = pgTable("onboarding_steps", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// ─── Relations ───
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   departments: many(departments),

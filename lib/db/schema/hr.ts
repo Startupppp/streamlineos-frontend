@@ -1,7 +1,4 @@
-/**
- * HR domain tables: attendance, leaves, payroll, salary, expenses, assets, documents,
- * performance reviews, goals, holidays, WFH, devices, departments, helpdesk.
- */
+
 import { pgTable, text, serial, timestamp, boolean, jsonb, decimal, date, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import {
@@ -12,16 +9,15 @@ import {
   interviewResultEnum, applicationStatusEnum,
   reviewCycleStatusEnum, meetingStatusEnum,
   trainingStatusEnum, enrollmentStatusEnum,
-  resignationStatusEnum, exitChecklistStatusEnum,
+  resignationStatusEnum, terminationStatusEnum, exitChecklistStatusEnum,
   ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
   pipStatusEnum, surveyStatusEnum,
   feedbackTypeEnum, bonusTypeEnum, fnfStatusEnum,
-  terminationStatusEnum, onboardingDocStatusEnum, onboardingDocumentStatusEnum, docAuditActionEnum,
+  onboardingDocStatusEnum, onboardingDocumentStatusEnum, docAuditActionEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
 
-// ─── Departments ───
 export const departments = pgTable("departments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -40,7 +36,6 @@ export const departmentMembers = pgTable("department_members", {
   uniqueIndex("uniq_dept_members_dept_user").on(table.departmentId, table.userId),
 ]);
 
-// ─── Attendance ───
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -63,7 +58,6 @@ export const attendance = pgTable("attendance", {
   index("idx_attendance_user_date").on(table.userId, table.date),
 ]);
 
-// ─── Leave Types & Balances & Requests ───
 export const leaveTypes = pgTable("leave_types", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -104,7 +98,6 @@ export const leaveRequests = pgTable("leave_requests", {
   index("idx_leave_requests_org_status").on(table.orgId, table.status),
 ]);
 
-// ─── Payroll ───
 export const payrolls = pgTable("payrolls", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -144,7 +137,6 @@ export const salaryStructures = pgTable("salary_structures", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Expenses ───
 export const expenseCategories = pgTable("expense_categories", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -186,7 +178,6 @@ export const expenses = pgTable("expenses", {
   index("idx_expenses_category").on(table.categoryId),
 ]);
 
-// ─── Assets ───
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -203,7 +194,6 @@ export const assets = pgTable("assets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Documents ───
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -230,7 +220,6 @@ export const documents = pgTable("documents", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Review Cycles ───
 export const reviewCycles = pgTable("review_cycles", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -248,7 +237,6 @@ export const reviewCycles = pgTable("review_cycles", {
   index("idx_review_cycles_org").on(table.orgId),
 ]);
 
-// ─── Performance ───
 export const performanceReviews = pgTable("performance_reviews", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -271,7 +259,6 @@ export const performanceReviews = pgTable("performance_reviews", {
   index("idx_perf_reviews_user").on(table.userId),
 ]);
 
-// ─── 1-on-1 Meetings ───
 export const oneOnOneMeetings = pgTable("one_on_one_meetings", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -292,7 +279,6 @@ export const oneOnOneMeetings = pgTable("one_on_one_meetings", {
   index("idx_one_on_ones_scheduled").on(table.scheduledAt),
 ]);
 
-// ─── Training & Development ───
 export const trainingPrograms = pgTable("training_programs", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -331,17 +317,26 @@ export const trainingEnrollments = pgTable("training_enrollments", {
   index("idx_enrollments_user").on(table.userId),
 ]);
 
-// ─── Exit Management ───
 export const resignations = pgTable("resignations", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   reason: text("reason"),
+  reasonCategory: text("reason_category"),
   lastWorkingDate: date("last_working_date"),
   noticePeriodDays: integer("notice_period_days").default(30),
   status: resignationStatusEnum("status").default("SUBMITTED"),
+  resignationLetterUrl: text("resignation_letter_url"),
   approvedBy: text("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
+  hrReviewedBy: text("hr_reviewed_by").references(() => users.id),
+  hrReviewedAt: timestamp("hr_reviewed_at"),
+  hrRemarks: text("hr_remarks"),
+  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
+  ceoReviewedAt: timestamp("ceo_reviewed_at"),
+  ceoRemarks: text("ceo_remarks"),
+  willingForExitInterview: boolean("willing_for_exit_interview").default(true),
+  companyFeedback: text("company_feedback"),
   exitInterviewNotes: text("exit_interview_notes"),
   exitInterviewDate: timestamp("exit_interview_date"),
   exitInterviewConductedBy: text("exit_interview_conducted_by").references(() => users.id),
@@ -373,7 +368,6 @@ export const exitChecklists = pgTable("exit_checklists", {
   notes: text("notes"),
 });
 
-// ─── Terminations ───
 export const terminations = pgTable("terminations", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -401,7 +395,6 @@ export const terminations = pgTable("terminations", {
   index("idx_terminations_status").on(table.status),
 ]);
 
-// ─── Onboarding Documents ───
 export const documentTypes = pgTable("document_types", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -450,7 +443,7 @@ export const documentAuditLogs = pgTable("document_audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// ─── Recognition / Kudos ───
+
 export const recognitions = pgTable("recognitions", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -465,7 +458,6 @@ export const recognitions = pgTable("recognitions", {
   index("idx_recognitions_to_user").on(table.toUserId),
 ]);
 
-// ─── Compliance: Policy Acknowledgments ───
 export const policyAcknowledgments = pgTable("policy_acknowledgments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -480,7 +472,6 @@ export const policyAcknowledgments = pgTable("policy_acknowledgments", {
   index("idx_policy_ack_user").on(table.userId),
 ]);
 
-// ─── Payroll: Reimbursements ───
 export const reimbursements = pgTable("reimbursements", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -501,7 +492,6 @@ export const reimbursements = pgTable("reimbursements", {
   index("idx_reimbursements_user").on(table.userId),
 ]);
 
-// ─── Payroll: Salary Advance / Loans ───
 export const salaryLoans = pgTable("salary_loans", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -522,7 +512,6 @@ export const salaryLoans = pgTable("salary_loans", {
   index("idx_loans_user").on(table.userId),
 ]);
 
-// ─── Certifications ───
 export const certifications = pgTable("certifications", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -541,7 +530,6 @@ export const certifications = pgTable("certifications", {
   index("idx_certifications_expiry").on(table.expiryDate),
 ]);
 
-// ─── Background Verification ───
 export const backgroundVerifications = pgTable("background_verifications", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -559,7 +547,6 @@ export const backgroundVerifications = pgTable("background_verifications", {
   index("idx_bgv_user").on(table.userId),
 ]);
 
-// ─── Performance Improvement Plans ───
 export const performanceImprovementPlans = pgTable("performance_improvement_plans", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -578,7 +565,6 @@ export const performanceImprovementPlans = pgTable("performance_improvement_plan
   index("idx_pip_user").on(table.userId),
 ]);
 
-// ─── OKR Key Results ───
 export const keyResults = pgTable("key_results", {
   id: serial("id").primaryKey(),
   goalId: integer("goal_id").references(() => goals.id, { onDelete: "cascade" }).notNull(),
@@ -593,7 +579,6 @@ export const keyResults = pgTable("key_results", {
   index("idx_key_results_goal").on(table.goalId),
 ]);
 
-// ─── Skills Matrix ───
 export const employeeSkills = pgTable("employee_skills", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -608,7 +593,6 @@ export const employeeSkills = pgTable("employee_skills", {
   index("idx_employee_skills_name").on(table.skillName),
 ]);
 
-// ─── Skills Assessments ───
 export const skillAssessments = pgTable("skill_assessments", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -635,7 +619,6 @@ export const assessmentAttempts = pgTable("assessment_attempts", {
   index("idx_assessment_attempts_user").on(table.userId),
 ]);
 
-// ─── Learning Paths ───
 export const learningPaths = pgTable("learning_paths", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -649,7 +632,6 @@ export const learningPaths = pgTable("learning_paths", {
   index("idx_learning_paths_org").on(table.orgId),
 ]);
 
-// ─── Team Events ───
 export const teamEvents = pgTable("team_events", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -674,7 +656,6 @@ export const teamEventParticipants = pgTable("team_event_participants", {
   joinedAt: timestamp("joined_at").defaultNow(),
 });
 
-// ─── Pulse Surveys ───
 export const pulseSurveys = pgTable("pulse_surveys", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -699,7 +680,6 @@ export const surveyResponses = pgTable("survey_responses", {
   index("idx_survey_responses_survey").on(table.surveyId),
 ]);
 
-// ─── 360 Feedback ───
 export const feedbackRequests = pgTable("feedback_requests", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -719,7 +699,6 @@ export const feedbackRequests = pgTable("feedback_requests", {
   index("idx_feedback_reviewer").on(table.reviewerUserId),
 ]);
 
-// ─── Email Templates ───
 export const emailTemplates = pgTable("hr_email_templates", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -735,7 +714,6 @@ export const emailTemplates = pgTable("hr_email_templates", {
   index("idx_email_templates_org").on(table.orgId),
 ]);
 
-// ─── Career Ladder / Growth Paths ───
 export const careerLadders = pgTable("career_ladders", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -747,7 +725,6 @@ export const careerLadders = pgTable("career_ladders", {
   index("idx_career_ladders_org").on(table.orgId),
 ]);
 
-// ─── Bonus Processing ───
 export const bonuses = pgTable("bonuses", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -764,7 +741,6 @@ export const bonuses = pgTable("bonuses", {
   index("idx_bonuses_user").on(table.userId),
 ]);
 
-// ─── Full & Final Settlement ───
 export const fnfSettlements = pgTable("fnf_settlements", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -785,7 +761,6 @@ export const fnfSettlements = pgTable("fnf_settlements", {
   index("idx_fnf_user").on(table.userId),
 ]);
 
-// ─── Asset Return Tracking ───
 export const assetReturns = pgTable("asset_returns", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -801,7 +776,6 @@ export const assetReturns = pgTable("asset_returns", {
   index("idx_asset_returns_user").on(table.userId),
 ]);
 
-// ─── Alumni Network ───
 export const alumniProfiles = pgTable("alumni_profiles", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -817,7 +791,6 @@ export const alumniProfiles = pgTable("alumni_profiles", {
   index("idx_alumni_org").on(table.orgId),
 ]);
 
-// ─── Employee NPS ───
 export const enpsScores = pgTable("enps_scores", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -831,7 +804,6 @@ export const enpsScores = pgTable("enps_scores", {
   index("idx_enps_org_period").on(table.orgId, table.period),
 ]);
 
-// ─── Handbook Versions ───
 export const handbookVersions = pgTable("handbook_versions", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -864,7 +836,6 @@ export const goals = pgTable("goals", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Holidays, WFH, Devices ───
 export const holidays = pgTable("holidays", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -906,7 +877,6 @@ export const employeeDevices = pgTable("employee_devices", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Helpdesk ───
 export const helpdeskTickets = pgTable("helpdesk_tickets", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -923,7 +893,6 @@ export const helpdeskTickets = pgTable("helpdesk_tickets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Rich Documents ───
 export const richDocuments = pgTable("rich_documents", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -940,7 +909,6 @@ export const richDocuments = pgTable("rich_documents", {
   index("idx_rich_documents_org").on(table.orgId),
 ]);
 
-// ─── Recruitment ───
 export const jobPostings = pgTable("job_postings", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -1031,7 +999,6 @@ export const interviews = pgTable("interviews", {
   index("idx_interviews_scheduled").on(table.scheduledAt),
 ]);
 
-// ─── HR Relations ───
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
   organization: one(organizations, {
     fields: [departments.orgId],
@@ -1128,7 +1095,6 @@ export const employeeDevicesRelations = relations(employeeDevices, ({ one }) => 
   user: one(users, { fields: [employeeDevices.userId], references: [users.id] }),
 }));
 
-// ─── Recruitment Relations ───
 export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
   organization: one(organizations, { fields: [jobPostings.orgId], references: [organizations.id] }),
   department: one(departments, { fields: [jobPostings.departmentId], references: [departments.id] }),
@@ -1171,8 +1137,16 @@ export const trainingEnrollmentsRelations = relations(trainingEnrollments, ({ on
 export const resignationsRelations = relations(resignations, ({ one, many }) => ({
   user: one(users, { fields: [resignations.userId], references: [users.id] }),
   approver: one(users, { fields: [resignations.approvedBy], references: [users.id], relationName: "resignationApprover" }),
+  hrReviewer: one(users, { fields: [resignations.hrReviewedBy], references: [users.id], relationName: "resignationHrReviewer" }),
+  ceoReviewer: one(users, { fields: [resignations.ceoReviewedBy], references: [users.id], relationName: "resignationCeoReviewer" }),
   interviewer: one(users, { fields: [resignations.exitInterviewConductedBy], references: [users.id], relationName: "exitInterviewer" }),
   checklists: many(exitChecklists),
+}));
+
+export const terminationsRelations = relations(terminations, ({ one }) => ({
+  user: one(users, { fields: [terminations.userId], references: [users.id] }),
+  initiator: one(users, { fields: [terminations.initiatedBy], references: [users.id], relationName: "terminationInitiator" }),
+  ceoReviewer: one(users, { fields: [terminations.ceoReviewedBy], references: [users.id], relationName: "terminationCeoReviewer" }),
 }));
 
 export const exitChecklistsRelations = relations(exitChecklists, ({ one }) => ({

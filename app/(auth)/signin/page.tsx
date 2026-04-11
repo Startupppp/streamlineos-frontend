@@ -80,7 +80,7 @@ export default function SignInPage() {
 
   return (
     <div className="w-full max-w-sm animate-fade-up">
-      {/* Heading */}
+
       <div className="mb-5 sm:mb-8">
         <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
           Sign in to your account
@@ -90,7 +90,6 @@ export default function SignInPage() {
         </p>
       </div>
 
-      {/* Card */}
       <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6 space-y-4 sm:space-y-5">
         <form
           onSubmit={form.handleSubmit((v) => signInMutation.mutate(v))}
@@ -98,7 +97,7 @@ export default function SignInPage() {
           noValidate
           className="space-y-4"
         >
-          {/* Email */}
+
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-[13px] font-medium">
               Email
@@ -124,7 +123,6 @@ export default function SignInPage() {
             )}
           </div>
 
-          {/* Password */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-[13px] font-medium">
@@ -173,7 +171,6 @@ export default function SignInPage() {
             )}
           </div>
 
-          {/* Submit */}
           <Button
             type="submit"
             disabled={isPending}
@@ -193,7 +190,6 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border" />
@@ -205,7 +201,6 @@ export default function SignInPage() {
           </div>
         </div>
 
-        {/* Security note */}
         <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
           Your session is protected with end-to-end encryption.
           <br />

@@ -16,7 +16,6 @@ const logSchema = z.object({
 
 type Ctx = { params: Promise<{ dealId: string }> };
 
-/** GET /api/deals/[dealId]/activities */
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { dealId: id } = await ctx.params;
   const dealId = Number(id);
@@ -34,14 +33,13 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   });
 }
 
-/** POST /api/deals/[dealId]/activities — Log a call, email, meeting, note, or document */
 export async function POST(req: NextRequest, ctx: Ctx) {
   const { dealId: id } = await ctx.params;
   const dealId = Number(id);
   if (!Number.isFinite(dealId)) return err("Invalid deal id", 400);
 
   return withAuth(async (session) => {
-    // Verify deal belongs to org
+
     const [deal] = await db
       .select({ id: deals.id })
       .from(deals)
@@ -63,7 +61,6 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       userId: session.user.id,
     }).returning();
 
-    // Update deal last contact date
     await db
       .update(deals)
       .set({ lastContactDate: new Date(), updatedAt: new Date() })

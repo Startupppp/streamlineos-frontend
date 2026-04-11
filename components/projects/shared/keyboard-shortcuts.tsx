@@ -20,7 +20,7 @@ export function KeyboardShortcuts({
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      // Ignore when typing in inputs
+
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if ((e.target as HTMLElement).isContentEditable) return;
@@ -39,7 +39,7 @@ export function KeyboardShortcuts({
           }
           break;
         case "Escape":
-          // Close ticket sheet by removing ?ticket param
+
           if (pathname) {
             const url = new URL(window.location.href);
             if (url.searchParams.has("ticket")) {

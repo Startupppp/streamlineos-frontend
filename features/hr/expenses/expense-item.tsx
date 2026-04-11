@@ -21,8 +21,6 @@ import {
   STATUS_LABELS,
 } from "./expense-constants";
 
-/* ─── Admin Expense Item (card row layout) ─── */
-
 interface AdminExpenseItemProps {
   expense: ExpenseWithRelations;
   rejectingId: number | null;
@@ -98,7 +96,6 @@ export function AdminExpenseItem({
         )}
       </div>
 
-      {/* Claim Details */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <Badge
@@ -141,7 +138,6 @@ export function AdminExpenseItem({
         </div>
       </div>
 
-      {/* Category */}
       <div className="text-right min-w-[130px] flex-shrink-0 hidden lg:block">
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Category</p>
         <div className="flex items-center gap-1.5 justify-end">
@@ -153,7 +149,6 @@ export function AdminExpenseItem({
         )}
       </div>
 
-      {/* Amount + Actions */}
       <div className="text-right min-w-[150px] flex-shrink-0">
         <p className="text-2xl font-bold text-foreground">{formatINR(expense.amount)}</p>
         <p className="text-xs text-muted-foreground mb-3">INR</p>
@@ -205,8 +200,6 @@ export function AdminExpenseItem({
     </div>
   );
 }
-
-/* ─── Member Expense Item (table row) ─── */
 
 interface MemberExpenseItemProps {
   expense: ExpenseWithRelations;

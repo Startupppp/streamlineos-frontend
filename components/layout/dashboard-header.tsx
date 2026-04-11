@@ -97,9 +97,9 @@ export function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur-sm px-3 transition-colors">
-      {/* Left: mobile menu + page title */}
+
       <div className="flex items-center gap-2">
-        {/* Mobile hamburger */}
+
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
           <button
             type="button"
@@ -118,15 +118,13 @@ export function DashboardHeader() {
           </SheetContent>
         </Sheet>
 
-        {/* Page title — mobile only (desktop has PageWrapper h1) */}
         <span className="text-sm flex-1 bg-black font-semibold text-foreground md:hidden">
           {pageTitle}
         </span>
       </div>
 
-      {/* Right: search + actions */}
       <div className="flex items-center gap-1">
-        {/* Search trigger */}
+
         <button
           type="button"
           onClick={triggerSearch}

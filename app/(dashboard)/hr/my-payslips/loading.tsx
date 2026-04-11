@@ -6,23 +6,21 @@ export default function MyPayslipsLoading() {
   return (
     <PageWrapper title="My Payslips" subtitle="View your payslip history.">
       <div className="space-y-6">
-        {/* Action buttons */}
+
         <div className="flex items-center justify-end gap-2">
           <Skeleton className="h-10 w-8" />
           <Skeleton className="h-10 w-48" />
         </div>
 
-        {/* Month selector */}
         <Skeleton className="h-10 w-56" />
 
-        {/* Payslip card */}
         <Card>
           <CardHeader className="text-center space-y-2">
             <Skeleton className="h-7 w-48 mx-auto" />
             <Skeleton className="h-4 w-32 mx-auto" />
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Employee info */}
+
             <div className="grid grid-cols-2 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="space-y-1">
@@ -34,7 +32,6 @@ export default function MyPayslipsLoading() {
 
             <Skeleton className="h-px w-full" />
 
-            {/* Earnings/Deductions */}
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-3">
                 <Skeleton className="h-5 w-20" />
@@ -58,7 +55,6 @@ export default function MyPayslipsLoading() {
 
             <Skeleton className="h-px w-full" />
 
-            {/* Net pay */}
             <div className="flex justify-between items-center">
               <Skeleton className="h-6 w-20" />
               <Skeleton className="h-8 w-28" />

@@ -9,7 +9,6 @@ const schema = z.object({
   jobId: z.number().int().positive().optional(),
 });
 
-/** POST /api/ai/score-candidate — Score a candidate, optionally against a specific job */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

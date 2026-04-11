@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { clients, users } from "@/lib/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
 
-/** GET /api/clients/churn-alerts — List at-risk and critical clients */
 export async function GET() {
   return withAuth(async (session) => {
     const data = await cached(

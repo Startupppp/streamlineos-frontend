@@ -20,7 +20,6 @@ const attributionSchema = z.object({
   campaign: z.string().optional(),
 });
 
-/** POST /api/marketing/utm — Generate a UTM-tagged URL */
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     const input = await parseBody(req, generateSchema);
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
   });
 }
 
-/** GET /api/marketing/utm — Get lead attribution by UTM source */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, attributionSchema);

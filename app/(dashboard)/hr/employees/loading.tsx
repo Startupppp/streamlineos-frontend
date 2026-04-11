@@ -10,7 +10,7 @@ export default function EmployeesLoading() {
           <Skeleton className="h-5 w-32" />
         </CardHeader>
         <CardContent className="p-0">
-          {/* Table header */}
+
           <div className="flex items-center gap-4 px-6 py-3 border-b bg-muted/30">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-4 w-24 ml-auto" />
@@ -19,7 +19,6 @@ export default function EmployeesLoading() {
             <Skeleton className="h-4 w-16" />
           </div>
 
-          {/* Table rows */}
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-6 py-4 border-b last:border-b-0">
               <div className="flex items-center gap-3">
@@ -36,7 +35,6 @@ export default function EmployeesLoading() {
             </div>
           ))}
 
-          {/* Pagination */}
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <Skeleton className="h-9 w-[90px] rounded-md" />
             <div className="flex gap-1">

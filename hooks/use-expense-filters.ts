@@ -190,7 +190,7 @@ export function useExpenseFilters(
         if (key !== "page") {
           newFilters.page = 1;
         }
-        // Defer URL sync to avoid interfering with React state update
+
         queueMicrotask(() => {
           syncFiltersToUrl(newFilters);
           onFiltersChange?.(newFilters);
@@ -271,5 +271,5 @@ export function useExpenseFilters(
     isPending,
   };
 }
-// Re-export from standalone hook for backward compatibility
+
 export { useDebouncedValue } from "./use-debounce";

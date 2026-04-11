@@ -15,7 +15,6 @@ const updateSchema = z.object({
 
 type Ctx = { params: Promise<{ campaignId: string }> };
 
-/** GET /api/marketing/email-campaigns/[campaignId] — Detail with recipient stats */
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { campaignId: id } = await ctx.params;
   const campaignId = Number(id);
@@ -36,7 +35,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   });
 }
 
-/** PATCH /api/marketing/email-campaigns/[campaignId] */
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { campaignId: id } = await ctx.params;
   const campaignId = Number(id);
@@ -62,7 +60,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   });
 }
 
-/** DELETE /api/marketing/email-campaigns/[campaignId] */
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const { campaignId: id } = await ctx.params;
   const campaignId = Number(id);

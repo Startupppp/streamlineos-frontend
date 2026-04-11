@@ -9,10 +9,19 @@ import { inngest } from "@/lib/inngest/client";
 import { format } from "date-fns";
 import type { NextRequest } from "next/server";
 
+const REASON_CATEGORIES = [
+  "Better Opportunity", "Personal Reasons", "Higher Education",
+  "Work Environment", "Compensation", "Role Mismatch",
+  "Relocation", "Health Issues", "Starting Own Venture", "Other",
+] as const;
+
 const createSchema = z.object({
-  reason: z.string().min(1, "Reason is required").max(2000),
+  reason: z.string().min(50, "Detailed reason must be at least 50 characters").max(2000),
+  reasonCategory: z.enum(REASON_CATEGORIES),
   lastWorkingDate: z.string().min(1, "Last working date is required"),
   noticePeriodDays: z.number().int().min(0).max(180).optional().default(30),
+  willingForExitInterview: z.boolean().optional().default(true),
+  companyFeedback: z.string().max(2000).optional(),
 });
 
 export async function GET() {
@@ -23,7 +32,7 @@ export async function GET() {
 
     const data = await db.query.resignations.findMany({
       where: and(...conditions),
-      with: { user: true, checklists: true },
+      with: { user: true, checklists: true, hrReviewer: true, ceoReviewer: true },
       orderBy: [desc(resignations.createdAt)],
     });
     return ok(data);
@@ -37,9 +46,12 @@ export async function POST(req: NextRequest) {
       orgId: session.orgId,
       userId: session.user.id,
       reason: body.reason,
+      reasonCategory: body.reasonCategory,
       lastWorkingDate: body.lastWorkingDate,
       noticePeriodDays: body.noticePeriodDays,
-      status: "SUBMITTED",
+      willingForExitInterview: body.willingForExitInterview,
+      companyFeedback: body.companyFeedback || null,
+      status: "PENDING_HR",
     }).returning();
 
     const adminMembers = await db.query.organizationMembers.findMany({

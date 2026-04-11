@@ -14,7 +14,6 @@ interface CreateNotificationInput {
   metadata?: Record<string, unknown>;
 }
 
-/** Create a single in-app notification */
 export async function createNotification(input: CreateNotificationInput) {
   const [notification] = await db
     .insert(notifications)
@@ -32,7 +31,6 @@ export async function createNotification(input: CreateNotificationInput) {
   return notification;
 }
 
-/** Notify every member in an org */
 export async function notifyAllMembers(
   orgId: string,
   opts: {
@@ -68,7 +66,6 @@ export async function notifyAllMembers(
   );
 }
 
-/** Notify members with specific roles */
 export async function notifyByRoles(
   orgId: string,
   roles: string[],

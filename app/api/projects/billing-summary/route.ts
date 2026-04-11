@@ -1,6 +1,4 @@
-/**
- * GET /api/projects/billing-summary — billable hours grouped by project
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok } from "@/lib/api/helpers";

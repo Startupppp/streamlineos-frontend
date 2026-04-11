@@ -44,7 +44,7 @@ export default function ReportsPage() {
   const handleDownload = async (reportId: string, format: string) => {
     setDownloading(`${reportId}-${format}`);
     try {
-      // For now, generate sample data client-side
+
       if (format === "xlsx") {
         const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
         if (reportId === "sales-performance") {

@@ -17,8 +17,6 @@ import type {
 } from "@/types/projects";
 import { useProjectLabels } from "./projects";
 
-// ─── Tickets ──────────────────────────────────────────────────────────────────
-
 export function useTickets(
   projectId: number,
   filters?: TicketFilters,
@@ -125,8 +123,6 @@ export function useMoveTicket(options?: Parameters<typeof useMutation>[0]) {
   });
 }
 
-// ─── Custom States ────────────────────────────────────────────────────────────
-
 export function useCustomStates(
   projectId: number,
   options?: Omit<UseQueryOptions<CustomState[]>, "queryKey" | "queryFn" | "enabled">
@@ -140,14 +136,10 @@ export function useCustomStates(
   });
 }
 
-// ─── Backward-compatibility aliases ──────────────────────────────────────────
-
-/** Alias for useProjectLabels() — fetches all labels across the org. */
 export function useLabels(options?: Omit<UseQueryOptions<TicketLabel[]>, "queryKey" | "queryFn">) {
   return useProjectLabels(undefined, options);
 }
 
-/** Add a comment to a ticket. */
 export function useAddComment(
   options?: Omit<UseMutationOptions<{ id: number; content: string; createdAt: string }, Error, { ticketId: number; projectId?: number; content: string }>, "mutationFn">
 ) {
@@ -167,7 +159,6 @@ export function useAddComment(
   });
 }
 
-/** Add a label to a ticket. */
 export function useAddLabelToTicket(
   options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
 ) {
@@ -184,7 +175,6 @@ export function useAddLabelToTicket(
   });
 }
 
-/** Remove a label from a ticket. */
 export function useRemoveLabelFromTicket(
   options?: Omit<UseMutationOptions<{ success: boolean }, Error, { ticketId: number; projectId?: number; labelId: number }>, "mutationFn">
 ) {
@@ -203,7 +193,6 @@ export function useRemoveLabelFromTicket(
   });
 }
 
-/** Fetch subtasks of a ticket. */
 export function useSubtasks(
   ticketId: number,
   projectId?: number,
@@ -217,15 +206,10 @@ export function useSubtasks(
   });
 }
 
-/** Reorder tickets within a project (drag-and-drop). Alias for useMoveTicket. */
 export function useUpdateTicketOrder(options?: Parameters<typeof useMutation>[0]) {
   return useMoveTicket(options);
 }
 
-/**
- * Backward-compat useCreateLabel that creates an org-level label (no projectId).
- * The label can then be attached to any ticket in the org.
- */
 export function useCreateOrgLabel(
   options?: Omit<UseMutationOptions<TicketLabel, Error, CreateLabelInput>, "mutationFn">
 ) {
@@ -250,7 +234,6 @@ type AddAttachmentInput = {
   mimeType: string;
 };
 
-/** Add a file attachment to a ticket. */
 export function useAddAttachment(
   options?: Omit<UseMutationOptions<{ id: number }, Error, AddAttachmentInput>, "mutationFn">
 ) {

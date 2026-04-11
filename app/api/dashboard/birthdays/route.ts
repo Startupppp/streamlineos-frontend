@@ -77,7 +77,6 @@ export async function GET(_req: NextRequest) {
       }
     }
 
-    // Deduplicate by id+type (keep earliest occurrence)
     const seen = new Set<string>();
     const deduped = upcoming.filter((u) => {
       const key = `${u.id}-${u.type}`;

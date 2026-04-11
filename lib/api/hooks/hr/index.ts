@@ -9,6 +9,7 @@ export * from "./performance";
 export * from "./analytics";
 export * from "./training";
 export * from "./exit";
+export * from "./termination";
 export * from "./recognition";
 export * from "./compliance";
 export * from "./reimbursements";

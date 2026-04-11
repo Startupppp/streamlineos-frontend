@@ -86,7 +86,6 @@ const SLIDES = [
   },
 ] as const;
 
-
 const accentStyles = {
   amber: {
     icon: "bg-amber-500/15 border-amber-500/20",
@@ -177,7 +176,7 @@ export function AuthRightPanel() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Background */}
+
       <div className="absolute inset-0 pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
@@ -199,7 +198,6 @@ export function AuthRightPanel() {
         />
       </div>
 
-      {/* Header */}
       <motion.div
         variants={floatUp}
         initial="hidden"
@@ -225,7 +223,6 @@ export function AuthRightPanel() {
         </h2>
       </motion.div>
 
-      {/* Carousel slide */}
       <div className="relative z-10 flex-1 overflow-hidden px-8 py-5 min-h-0">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -237,13 +234,12 @@ export function AuthRightPanel() {
             exit="exit"
             className="h-full flex flex-col gap-5"
           >
-            {/* Slide badge */}
+
             <div className={cn("inline-flex items-center gap-2 self-start rounded-full border px-3 py-1", accent.badge)}>
               <span className={cn("h-1.5 w-1.5 rounded-full", accent.dot)} />
               <span className="text-[11px] font-medium tracking-wide uppercase">{slide.badge}</span>
             </div>
 
-            {/* Icon + Title */}
             <div className="flex items-start gap-4">
               <div className={cn("h-12 w-12 rounded-2xl border flex items-center justify-center shrink-0", accent.icon)}>
                 <Icon className={cn("h-6 w-6", accent.iconColor)} />
@@ -254,10 +250,8 @@ export function AuthRightPanel() {
               </div>
             </div>
 
-            {/* Description */}
             <p className="text-[13px] text-white/40 leading-relaxed">{slide.description}</p>
 
-            {/* Stats */}
             <div className="grid grid-cols-2 gap-2.5">
               {slide.stats.map((stat) => (
                 <div
@@ -270,7 +264,6 @@ export function AuthRightPanel() {
               ))}
             </div>
 
-            {/* Feature tags */}
             <div className="flex flex-wrap gap-1.5">
               {slide.features.map((f) => (
                 <span
@@ -285,7 +278,6 @@ export function AuthRightPanel() {
               ))}
             </div>
 
-            {/* Highlight callout */}
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 flex items-center gap-3">
               <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", accent.dot)} />
               <p className="text-[12px] text-white/50 italic">{slide.highlight}</p>
@@ -294,7 +286,6 @@ export function AuthRightPanel() {
         </AnimatePresence>
       </div>
 
-      {/* Controls + Dots */}
       <div className="relative z-10 px-8 pb-5 shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {SLIDES.map((_, i) => (

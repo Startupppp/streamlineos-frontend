@@ -44,7 +44,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     const input = await parseBody(req, updateSchema);
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
-    // Handle stage change side effects
     if (input.stage !== undefined) {
       const existing = await db.query.deals.findFirst({
         where: and(eq(deals.id, dealId), eq(deals.orgId, session.orgId!)),
@@ -59,7 +58,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         updateData.probability = 0;
       }
 
-      // Log stage change if changed
       if (existing && existing.stage !== input.stage) {
         await db.insert(dealActivities).values({
           orgId: session.orgId!,
@@ -75,7 +73,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     for (const [key, val] of Object.entries(input)) {
       if (val !== undefined) {
-        // DB stores value as string
+
         updateData[key] = key === "value" ? String(val) : val;
       }
     }

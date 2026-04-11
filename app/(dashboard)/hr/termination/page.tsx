@@ -53,7 +53,6 @@ import type { Employee } from "@/types/hr";
 
 import { getErrorMessage } from "@/lib/get-error-message";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TERMINATION_REASONS = [
   "Poor Performance",
@@ -70,7 +69,6 @@ const TERMINATION_REASONS = [
   "Other",
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function statusVariant(
   status: TerminationStatus | null
@@ -173,7 +171,6 @@ Regards,
 Human Resources Department`;
 }
 
-// ─── Termination Card ─────────────────────────────────────────────────────────
 
 interface TerminationCardProps {
   record: Termination;
@@ -334,7 +331,6 @@ function TerminationCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TerminationPage() {
   const { data: session } = useSession();
@@ -350,7 +346,6 @@ export default function TerminationPage() {
   const ceoReview = useCeoReviewTermination();
   const sendEmail = useSendTerminationEmail();
 
-  // ── Create sheet state ────────────────────────────────────────────────────
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -360,23 +355,18 @@ export default function TerminationPage() {
   const [severanceAmount, setSeveranceAmount] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
 
-  // ── Submit confirm ────────────────────────────────────────────────────────
   const [submitId, setSubmitId] = useState<number | null>(null);
 
-  // ── CEO review sheet ──────────────────────────────────────────────────────
   const [reviewRecord, setReviewRecord] = useState<Termination | null>(null);
   const [reviewDecision, setReviewDecision] = useState<"approve" | "reject" | null>(null);
   const [ceoRemarks, setCeoRemarks] = useState("");
   const [ceoSheetOpen, setCeoSheetOpen] = useState(false);
 
-  // ── Send email confirm ────────────────────────────────────────────────────
   const [emailRecord, setEmailRecord] = useState<Termination | null>(null);
 
-  // ── Employees list ────────────────────────────────────────────────────────
   const employees = useMemo<Employee[]>(() => {
     if (!employeesData) return [];
     if (Array.isArray(employeesData)) return employeesData as Employee[];
-    // PaginatedEmployees
     const paged = employeesData as { items?: Employee[]; data?: Employee[] };
     return paged.items ?? paged.data ?? [];
   }, [employeesData]);
@@ -386,7 +376,6 @@ export default function TerminationPage() {
     [employees, selectedUserId]
   );
 
-  // ── Letter preview ────────────────────────────────────────────────────────
   const letterPreview = useMemo(
     () =>
       buildLetterPreview({
@@ -401,7 +390,6 @@ export default function TerminationPage() {
     [selectedEmployee, effectiveDate, selectedReasons, explanation, noticePeriodWaived, severanceAmount]
   );
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const resetCreateForm = useCallback(() => {
     setSelectedUserId("");
@@ -529,7 +517,6 @@ export default function TerminationPage() {
     });
   }, [emailRecord, sendEmail]);
 
-  // ── Loading state ─────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (

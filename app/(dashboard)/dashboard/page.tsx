@@ -65,10 +65,14 @@ import { MyIssuesCard, type DashboardTicket } from "@/features/dashboard/my-issu
 import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { PublicDocumentsCard } from "@/features/dashboard/public-documents-card";
+import {
+  LeavesTodayWidget, UpcomingHolidaysWidget, LeaveBalanceWidget,
+  PendingRequestsWidget, BirthdaysWidget, PendingApprovalsWidget,
+  TeamAttendanceWidget,
+} from "@/features/dashboard/hr-widgets";
 import Link from "next/link";
 import { resolveImageUrl } from "@/lib/utils";
 
-// ─── HR Widget: Who's On Leave Today ─────────────────────────────────────────
 function LeavesTodayCard({ isAdmin }: { isAdmin: boolean }) {
   const { data, isLoading } = useLeavesToday({ enabled: isAdmin });
   const leaves = data ?? [];
@@ -123,7 +127,6 @@ function LeavesTodayCard({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-// ─── HR Widget: Upcoming Leaves (7 days) ─────────────────────────────────────
 function UpcomingLeavesCard({ isAdmin }: { isAdmin: boolean }) {
   const { data, isLoading } = useUpcomingLeaves({ enabled: isAdmin });
   const leaves = data ?? [];
@@ -182,7 +185,6 @@ function UpcomingLeavesCard({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-// ─── HR Widget: Birthdays & Anniversaries ────────────────────────────────────
 function BirthdaysCard() {
   const { data, isLoading } = useBirthdays();
   const entries = data ?? [];
@@ -244,7 +246,6 @@ function BirthdaysCard() {
   );
 }
 
-// ─── HR Widget: Pending Approvals ─────────────────────────────────────────────
 function PendingApprovalsCard() {
   const { data, isLoading } = usePendingApprovals();
   const counts = data as PendingApprovalsCount | undefined;
@@ -601,7 +602,6 @@ export default function DashboardPage() {
         <QuickActions />
       </motion.div>
 
-      {/* HR Widgets — admin only */}
       {isAdmin && (
         <motion.div
           variants={fadeUp}
@@ -616,12 +616,24 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Public Documents — visible to all roles */}
+
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
         <PublicDocumentsCard />
       </motion.div>
 
-      {/* My Issues + Sprint — shown to all roles */}
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <LeaveBalanceWidget />
+        <UpcomingHolidaysWidget />
+        <LeavesTodayWidget />
+        <BirthdaysWidget />
+      </motion.div>
+
+      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
+        <PendingRequestsWidget />
+        <TeamAttendanceWidget />
+        {isAdmin && <PendingApprovalsWidget />}
+      </motion.div>
+
       <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
         <div className="lg:col-span-4 min-h-0">
           <MyIssuesCard

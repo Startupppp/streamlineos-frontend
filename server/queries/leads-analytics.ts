@@ -1,10 +1,5 @@
 "server-only";
 
-/**
- * Server-side DB query functions for the Leads domain — analytics and dashboard queries.
- * Import only in Server Components, Route Handlers, or Server Actions.
- */
-
 import { db } from "@/lib/db";
 import {
   leads,
@@ -22,8 +17,6 @@ import {
   gte,
   lte,
 } from "drizzle-orm";
-
-// ─── getLeadSlaAlerts ─────────────────────────────────────────────────────────
 
 export async function getLeadSlaAlerts(
   orgId: string,
@@ -79,8 +72,6 @@ export async function getLeadSlaAlerts(
   slaBreached.sort((a, b) => b.hoursSinceUpdate - a.hoursSinceUpdate);
   return { total: slaBreached.length, leads: slaBreached };
 }
-
-// ─── getLeadAnalytics ────────────────────────────────────────────────────────
 
 export async function getLeadAnalytics(
   orgId: string,
@@ -198,8 +189,6 @@ export async function getLeadAnalytics(
   };
 }
 
-// ─── getDashboardMetrics ──────────────────────────────────────────────────────
-
 export async function getDashboardMetrics(orgId: string) {
   const [allLeads, allActivities] = await Promise.all([
     db.query.leads.findMany({ where: eq(leads.orgId, orgId) }),
@@ -239,8 +228,6 @@ export async function getDashboardMetrics(orgId: string) {
   };
 }
 
-// ─── getUnverifiedLeads ───────────────────────────────────────────────────────
-
 export async function getUnverifiedLeads(orgId: string) {
   return db.query.leads.findMany({
     where: and(
@@ -252,8 +239,6 @@ export async function getUnverifiedLeads(orgId: string) {
     orderBy: [desc(leads.createdAt)],
   });
 }
-
-// ─── getLeadClients ───────────────────────────────────────────────────────────
 
 export async function getLeadClients(
   orgId: string,
@@ -286,8 +271,6 @@ export async function getLeadClients(
 
   return allClients;
 }
-
-// ─── getSalesLeaderboard ──────────────────────────────────────────────────────
 
 export async function getSalesLeaderboard(orgId: string) {
   const [allLeads, allActivities] = await Promise.all([
@@ -387,8 +370,6 @@ export async function getSalesLeaderboard(orgId: string) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 20);
 }
-
-// ─── getSalesTeamCapacity ─────────────────────────────────────────────────────
 
 export async function getSalesTeamCapacity(orgId: string) {
   const salesMembers = await db.query.organizationMembers.findMany({

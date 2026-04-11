@@ -45,8 +45,6 @@ import type {
   SetIncentiveConfigInput,
 } from "@/types/hr";
 
-// ─── Leaves ───────────────────────────────────────────────────────────────────
-
 export function useHrLeaves() {
   return useQuery({
     queryKey: queryKeys.hr.leaves(),
@@ -80,8 +78,6 @@ export function useApproveLeave() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
   });
 }
-
-// ─── Expenses ─────────────────────────────────────────────────────────────────
 
 export function useHrExpenses(
   userId?: string,
@@ -121,8 +117,6 @@ export function useUpdateExpenseStatus() {
   });
 }
 
-// ─── Assets ───────────────────────────────────────────────────────────────────
-
 export function useHrAssets() {
   return useQuery({
     queryKey: queryKeys.hr.assets(),
@@ -149,8 +143,6 @@ export function useUpdateAsset() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.assets() }),
   });
 }
-
-// ─── Documents ────────────────────────────────────────────────────────────────
 
 export function useHrDocuments(
   userId?: string,
@@ -180,8 +172,6 @@ export function useCreateDocument() {
   });
 }
 
-// ─── Performance Reviews ──────────────────────────────────────────────────────
-
 export function useHrPerformanceReviews(userId?: string) {
   return useQuery({
     queryKey: queryKeys.hr.performanceReviews(userId),
@@ -192,8 +182,6 @@ export function useHrPerformanceReviews(userId?: string) {
       ),
   });
 }
-
-// ─── Goals ────────────────────────────────────────────────────────────────────
 
 export function useHrGoals(userId?: string) {
   return useQuery({
@@ -217,8 +205,6 @@ export function useCreateGoal() {
       }),
   });
 }
-
-// ─── Helpdesk Tickets ─────────────────────────────────────────────────────────
 
 export function useHrHelpdeskTickets(
   userId?: string,
@@ -247,8 +233,6 @@ export function useCreateHelpdeskTicket() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.helpdeskTickets() }),
   });
 }
-
-// ─── WFH Requests ─────────────────────────────────────────────────────────────
 
 export function useHrWfhRequests() {
   return useQuery({
@@ -288,8 +272,6 @@ export function useProcessWfhRequest() {
   });
 }
 
-// ─── Holidays ─────────────────────────────────────────────────────────────────
-
 export function useHrHolidaysForYear(year: number) {
   return useQuery({
     queryKey: queryKeys.hr.holidaysYear(year),
@@ -325,8 +307,6 @@ export function useDeleteHoliday() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }
-
-// ─── Devices ──────────────────────────────────────────────────────────────────
 
 export function useHrDevices(params?: Record<string, unknown>) {
   return useQuery({
@@ -364,8 +344,6 @@ export function useDeleteDevice() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.devices() }),
   });
 }
-
-// ─── Incentives ───────────────────────────────────────────────────────────────
 
 export function useHrIncentives(params?: GetIncentivesInput) {
   return useQuery({
@@ -418,8 +396,6 @@ export function useSetIncentiveConfig() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.incentiveConfigs() }),
   });
 }
-
-// ─── Profile / Password / Notification Preferences ────────────────────────────
 
 export interface NotificationPreferences {
   emailEnabled: boolean;

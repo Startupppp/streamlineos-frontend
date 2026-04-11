@@ -16,7 +16,7 @@ export default function ExpensesLoading() {
       }
     >
       <div className="space-y-6">
-        {/* Summary cards */}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -33,7 +33,6 @@ export default function ExpensesLoading() {
           ))}
         </div>
 
-        {/* Claims list */}
         <Card>
           <CardContent className="p-0">
             <div className="flex items-center justify-between px-6 py-4 border-b">

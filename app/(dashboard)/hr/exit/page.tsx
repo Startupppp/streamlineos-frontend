@@ -167,28 +167,22 @@ export default function ExitManagementPage() {
   const isHR = role === "HR";
   const isCEO = role === "CEO";
 
-  // Submission form state
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [reasonCategory, setReasonCategory] = useState("");
   const [willingForExitInterview, setWillingForExitInterview] = useState(false);
   const [companyFeedback, setCompanyFeedback] = useState("");
 
-  // HR approve dialog
   const [hrApproveId, setHrApproveId] = useState<number | null>(null);
 
-  // CEO approve dialog
   const [ceoApproveId, setCeoApproveId] = useState<number | null>(null);
 
-  // Reject dialog with remarks
   const [rejectDialog, setRejectDialog] = useState<RejectDialogState | null>(null);
   const [rejectRemarks, setRejectRemarks] = useState("");
   const [rejectRemarksOpen, setRejectRemarksOpen] = useState(false);
 
-  // Withdraw confirm
   const [withdrawId, setWithdrawId] = useState<number | null>(null);
 
-  // Expanded cards for progress timeline
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");

@@ -111,34 +111,29 @@ function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProp
 }
 
 export interface MessageInputProps {
-  // Channel context
+
   channelId: number;
   displayName: string;
   channelType: string | undefined;
 
-  // Textarea / message value
   messageInput: string;
   setMessageInput: (v: string) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 
-  // Reply
   replyTo: Message | null;
   setReplyTo: (msg: Message | null) => void;
 
-  // Attachments
   pendingAttachments: PendingAttachment[];
   setPendingAttachments: React.Dispatch<React.SetStateAction<PendingAttachment[]>>;
   uploading: boolean;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
 
-  // Emoji picker
   showEmojiPicker: boolean;
   setShowEmojiPicker: React.Dispatch<React.SetStateAction<boolean>>;
   emojiRef: React.RefObject<HTMLDivElement | null>;
   insertEmoji: (emoji: string) => void;
 
-  // Mentions
   showMentions: boolean;
   setShowMentions: React.Dispatch<React.SetStateAction<boolean>>;
   mentionQuery: string;
@@ -147,10 +142,8 @@ export interface MessageInputProps {
   filteredMentions: OrgUser[];
   insertMention: (name: string) => void;
 
-  // Typing indicator text
   typingText: string | null;
 
-  // Send
   sendMessage: { isPending: boolean };
   onSend: () => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
@@ -211,7 +204,7 @@ export function MessageInput({
 
   return (
     <>
-      {/* Reply Preview */}
+
       <AnimatePresence>
         {replyTo && (
           <motion.div
@@ -243,10 +236,9 @@ export function MessageInput({
         )}
       </AnimatePresence>
 
-      {/* Composer */}
       <div className="px-3 sm:px-5 py-2 border-t border-border/40 shrink-0 bg-card/50 relative">
         <div className="max-w-[900px] mx-auto">
-          {/* Mention dropdown */}
+
           <AnimatePresence>
             {showMentions && filteredMentions.length > 0 && (
               <motion.div
@@ -275,7 +267,6 @@ export function MessageInput({
             )}
           </AnimatePresence>
 
-          {/* Emoji picker */}
           <AnimatePresence>
             {showEmojiPicker && (
               <motion.div
@@ -290,7 +281,6 @@ export function MessageInput({
             )}
           </AnimatePresence>
 
-          {/* Pending attachments preview */}
           {pendingAttachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
               {pendingAttachments.map((att, idx) => (
@@ -310,7 +300,6 @@ export function MessageInput({
             </div>
           )}
 
-          {/* Typing indicator */}
           {typingText && (
             <div className="px-4 pb-1">
               <span className="text-xs text-muted-foreground/70 italic animate-pulse">
@@ -319,7 +308,6 @@ export function MessageInput({
             </div>
           )}
 
-          {/* Input box */}
           <div className="rounded-2xl border border-border bg-background shadow-md focus-within:border-gold/50 focus-within:shadow-lg transition-all">
             <input
               ref={fileInputRef}

@@ -54,7 +54,6 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
         )}
       </h4>
 
-      {/* Comment input */}
       <div className="space-y-2">
         <Textarea
           value={newComment}
@@ -79,7 +78,6 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
         </div>
       </div>
 
-      {/* Timeline */}
       {comments.length > 0 && (
         <div className="space-y-3">
           {comments

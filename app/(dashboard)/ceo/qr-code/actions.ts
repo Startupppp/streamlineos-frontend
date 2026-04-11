@@ -196,7 +196,7 @@ export async function deleteQRCode(id: number) {
 
 export async function getQRCodes(orgId: string) {
     if (!orgId) return [];
-    
+
     const session = await auth();
     if (!session || !session.user) {
       return [];
@@ -206,7 +206,7 @@ export async function getQRCodes(orgId: string) {
       const user = await db.query.users.findFirst({
         where: eq(users.id, session.user.id),
       });
-      
+
       if (!user || user.role !== "CEO") {
         return [];
       }

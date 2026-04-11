@@ -87,8 +87,6 @@ export function MessagePanel({
     return `${names[0]} and ${names.length - 1} others are typing...`;
   }, [typingUsers]);
 
-  // Ably WebSocket subscription — delivers new messages instantly without polling.
-  // Falls back to useChatPoll (30 s interval) when Ably is unavailable.
   const { isConnected: ablyConnected } = useChatRealtime(channelId);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -141,7 +139,6 @@ export function MessagePanel({
     });
   }, [messagesData]);
 
-  // Only poll when Ably WebSocket is not connected (fallback mode)
   const { data: polledMessages } = useChatPoll(channelId, lastPollTime, !ablyConnected && messages.length > 0);
 
   useEffect(() => {
@@ -311,7 +308,7 @@ export function MessagePanel({
 
   return (
     <>
-      {/* Header */}
+
       <div className="h-[56px] px-4 border-b border-border/40 flex items-center gap-3 shrink-0 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         {sidebarCollapsed && onExpandSidebar && (
           <button
@@ -392,7 +389,6 @@ export function MessagePanel({
         </div>
       </div>
 
-      {/* Scrollable message list */}
       <MessageList
         groupedMessages={groupedMessages}
         messages={messages}
@@ -419,7 +415,6 @@ export function MessagePanel({
         onScroll={handleScroll}
       />
 
-      {/* Message input + reply preview */}
       <MessageInput
         channelId={channelId}
         displayName={displayName}

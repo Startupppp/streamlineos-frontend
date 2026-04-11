@@ -6,7 +6,6 @@ import { eq, and, isNotNull, sql } from "drizzle-orm";
 
 type Ctx = { params: Promise<{ campaignId: string }> };
 
-/** POST /api/marketing/email-campaigns/[campaignId]/send — Populate recipients from lead filter and mark as sending */
 export async function POST(_req: NextRequest, ctx: Ctx) {
   const { campaignId: id } = await ctx.params;
   const campaignId = Number(id);
@@ -21,7 +20,6 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
     if (!campaign) return err("Campaign not found", 404);
     if (campaign.status !== "draft") return err(`Campaign is already ${campaign.status}`, 400);
 
-    // Build lead query from recipient filter
     const filter = campaign.recipientFilter as Record<string, string | string[]> | null;
     const conditions = [eq(leads.orgId, session.orgId), isNotNull(leads.email)];
 
@@ -33,13 +31,12 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
       .select({ id: leads.id, name: leads.name, email: leads.email })
       .from(leads)
       .where(and(...conditions))
-      .limit(500); // Cap at 500 per campaign to stay within SMTP limits
+      .limit(500);
 
     if (matchedLeads.length === 0) {
       return err("No leads match the recipient filter", 400);
     }
 
-    // Insert recipients
     await db.insert(emailCampaignRecipients).values(
       matchedLeads.map((lead) => ({
         campaignId,
@@ -50,8 +47,6 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
       })),
     );
 
-    // Mark campaign and recipients as sent in one go
-    // (actual email delivery would be delegated to Inngest background job when SMTP is configured)
     const now = new Date();
     await Promise.all([
       db.update(emailCampaigns).set({

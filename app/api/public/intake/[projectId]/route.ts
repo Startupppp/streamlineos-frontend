@@ -14,7 +14,7 @@ const intakeSchema = z.object({
 });
 
 function sanitizeText(text: string): string {
-  // Strip leading formula injection characters
+
   return text.replace(/^[=+\-@\t\r]+/, "");
 }
 
@@ -48,7 +48,7 @@ export async function POST(
     .where(eq(projects.id, pid));
 
   if (!project) {
-    // Return generic error to avoid leaking valid project IDs
+
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 

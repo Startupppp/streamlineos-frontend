@@ -53,7 +53,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
         </Button>
       </SheetTrigger>
       <SheetContent className="flex flex-col p-0 sm:max-w-[480px]">
-        {/* Header — pinned */}
+
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center">
@@ -66,7 +66,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
           </div>
         </SheetHeader>
 
-        {/* Body — scrollable */}
         <ScrollArea className="flex-1 min-h-0">
           <form
             id="create-lead-form"
@@ -78,7 +77,7 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
             }}
             className="px-6 py-4 space-y-4"
           >
-            {/* Contact Information */}
+
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <User className="h-4 w-4" />
@@ -134,7 +133,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
               </div>
             </div>
 
-            {/* Duplicate Warning */}
             {hasDuplicates && (
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
                 <div className="flex items-center gap-2 mb-2">
@@ -158,7 +156,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
               </div>
             )}
 
-            {/* Lead Classification */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Target className="h-4 w-4" />
@@ -222,7 +219,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
                   </Select>
                 </div>
 
-                {/* Referred By — shown only when source is "referral" */}
                 {source === "referral" && (
                   <div className="col-span-2">
                     <Label htmlFor="referredBy" className="text-xs font-medium mb-1.5 block">
@@ -243,7 +239,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
               </div>
             </div>
 
-            {/* Financial Details */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <IndianRupee className="h-4 w-4" />
@@ -285,7 +280,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
               </div>
             </div>
 
-            {/* Notes */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <StickyNote className="h-4 w-4" />
@@ -302,7 +296,6 @@ export function CreateLeadSheet({ open, onOpenChange, onSubmit, isPending }: Cre
           </form>
         </ScrollArea>
 
-        {/* Footer — pinned */}
         <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => onOpenChange(false)}>
             Cancel

@@ -118,7 +118,7 @@ export default function SocialMediaPage() {
       }
     >
       <div className="space-y-4 sm:space-y-6">
-        {/* Platform Cards */}
+
         <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
           {PLATFORMS.map((platform, idx) => {
             const meta = PLATFORM_META[platform];
@@ -145,12 +145,12 @@ export default function SocialMediaPage() {
                 <Card className={cn(
                   "relative overflow-hidden border-border/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
                 )}>
-                  {/* Gradient backdrop */}
+
                   <div className={cn("absolute inset-0 bg-gradient-to-br opacity-70 pointer-events-none", meta.gradient)} />
                   <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-gradient-to-br from-white/40 to-transparent blur-2xl pointer-events-none dark:from-white/5" />
 
                   <CardContent className="relative p-4 sm:p-5">
-                    {/* Header */}
+
                     <div className="flex items-start justify-between gap-2 mb-3 sm:mb-4">
                       <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                         <div className={cn("h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shadow-sm ring-1 shrink-0", meta.iconBg, meta.ring)}>
@@ -173,7 +173,7 @@ export default function SocialMediaPage() {
 
                     {latest ? (
                       <>
-                        {/* Primary stats */}
+
                         <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                           <div className="min-w-0">
                             <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Followers</p>
@@ -188,7 +188,6 @@ export default function SocialMediaPage() {
                           </div>
                         </div>
 
-                        {/* Secondary stats */}
                         <div className="rounded-lg border border-border/60 bg-background/60 backdrop-blur-sm divide-y divide-border/60">
                           <MetricRow icon={Eye} label="Impressions" value={compactNumber(latest.impressions || 0)} />
                           <MetricRow icon={Users} label="Reach" value={compactNumber(latest.reach || 0)} />
@@ -213,7 +212,6 @@ export default function SocialMediaPage() {
         </div>
       </div>
 
-      {/* Entry Sheet */}
       <Sheet open={showEntry} onOpenChange={setShowEntry}>
         <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-lg w-full max-w-full">
           <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">

@@ -101,7 +101,6 @@ export function StepBanking({ form }: StepBankingProps) {
         />
       </div>
 
-      {/* Statutory Details */}
       <div className="pt-2">
         <p className="text-sm font-medium text-muted-foreground mb-3">Statutory Details (Optional)</p>
         <FormField

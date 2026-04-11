@@ -1,17 +1,18 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, resignations } from "@/lib/db/schema";
-import { and, eq, count } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 
 export async function GET(_req: NextRequest) {
   return withAuth(async (session) => {
-    const isAdmin =
-      session.user.role === "CEO" || session.user.role === "HR";
-    if (!isAdmin) return err("Admin only.", 403);
+    if (!isAdminOrOwner(session.user.role)) {
+      return err("Forbidden", 403);
+    }
 
     const [leaveCount] = await db
-      .select({ count: count() })
+      .select({ count: sql<number>`count(*)::int` })
       .from(leaveRequests)
       .where(
         and(
@@ -20,18 +21,23 @@ export async function GET(_req: NextRequest) {
         )
       );
 
+    const resignationStatuses =
+      session.user.role === "HR"
+        ? ["SUBMITTED", "PENDING_HR"]
+        : ["HR_APPROVED"];
+
     const [resignationCount] = await db
-      .select({ count: count() })
+      .select({ count: sql<number>`count(*)::int` })
       .from(resignations)
       .where(
         and(
           eq(resignations.orgId, session.orgId),
-          eq(resignations.status, "SUBMITTED")
+          inArray(resignations.status, resignationStatuses as ("SUBMITTED" | "PENDING_HR" | "HR_APPROVED")[])
         )
       );
 
-    const pendingLeaves = Number(leaveCount?.count ?? 0);
-    const pendingResignations = Number(resignationCount?.count ?? 0);
+    const pendingLeaves = leaveCount?.count ?? 0;
+    const pendingResignations = resignationCount?.count ?? 0;
 
     return ok({
       pendingLeaves,

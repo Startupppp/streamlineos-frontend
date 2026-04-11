@@ -39,7 +39,7 @@ export function LeadsToolbar({
 
   return (
     <div className="flex items-center gap-2 flex-nowrap min-w-max">
-      {/* Search */}
+
       <div className="relative w-[140px] sm:w-[180px] sm:max-w-xs">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
@@ -50,7 +50,6 @@ export function LeadsToolbar({
         />
       </div>
 
-      {/* View Toggle */}
       <div className="flex items-center border border-border rounded-md">
         <Button variant={view === "table" ? "default" : "ghost"} size="sm"
           className={cn("rounded-r-none h-8 px-2.5", view === "table" && "bg-gold hover:bg-gold/80 text-white")}
@@ -64,7 +63,6 @@ export function LeadsToolbar({
         </Button>
       </div>
 
-      {/* Filters */}
       <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
         <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>

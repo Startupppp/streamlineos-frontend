@@ -6,8 +6,6 @@ import { eq, and, desc, sql, count, or } from "drizzle-orm";
 import type { ClientAccountFilters } from "@/types/crm";
 import { ROLES } from "@/lib/constants/roles";
 
-// ─── Client Accounts ─────────────────────────────────────────────────────────
-
 export async function getClientAccounts(
   orgId: string,
   filters?: ClientAccountFilters & { role?: string; userId?: string }

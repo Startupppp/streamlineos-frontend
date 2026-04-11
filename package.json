@@ -13,12 +13,6 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:fix-orphaned": "tsx scripts/fix-orphaned-data.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:loading": "playwright test --project=loading-screenshots",
-    "test:loading:headed": "playwright test --project=loading-screenshots --headed",
     "seed:demo": "npx tsx --env-file=.env scripts/seed-demo-accounts.ts"
   },
   "dependencies": {
@@ -114,10 +108,7 @@
     }
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.11",
@@ -125,16 +116,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
-    "@vitejs/plugin-react": "^6.0.1",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9",
     "eslint-config-next": "16.1.7",
-    "jsdom": "^28.1.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5",
-    "vitest": "^4.0.18",
-    "vitest-mock-extended": "^3.1.1"
+    "typescript": "^5"
   }
 }

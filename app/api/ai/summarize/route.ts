@@ -13,7 +13,6 @@ const schema = z.object({
   dealName: z.string().optional(),
 });
 
-/** POST /api/ai/summarize — Summarize a call/meeting/activity log */
 export async function POST(req: NextRequest) {
   return withAuth(async () => {
     if (!isOpenAIConfigured()) return err("AI not configured", 503);

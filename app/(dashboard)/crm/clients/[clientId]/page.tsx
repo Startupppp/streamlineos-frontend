@@ -151,7 +151,7 @@ export default function ClientAccountDetailPage() {
         </>
       }
     >
-      {/* Status Pipeline Tracker */}
+
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -188,7 +188,7 @@ export default function ClientAccountDetailPage() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Client Info */}
+
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Client Information</CardTitle>
@@ -220,7 +220,6 @@ export default function ClientAccountDetailPage() {
               </div>
             )}
 
-            {/* Investment Details */}
             {account.status === "INVESTED" && (
               <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg space-y-2">
                 <h4 className="text-sm font-medium text-emerald-400 flex items-center gap-1.5">
@@ -237,7 +236,6 @@ export default function ClientAccountDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Team */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Team</CardTitle>
@@ -292,7 +290,6 @@ export default function ClientAccountDetailPage() {
         </Card>
       </div>
 
-      {/* Activity Timeline */}
       <Card className="mt-6">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -334,7 +331,6 @@ export default function ClientAccountDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Activity Form Dialog */}
       <Dialog open={showActivityForm} onOpenChange={setShowActivityForm}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -383,7 +379,6 @@ export default function ClientAccountDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Investment Modal */}
       <Dialog open={showInvestmentModal} onOpenChange={setShowInvestmentModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

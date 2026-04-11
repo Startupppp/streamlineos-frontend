@@ -132,8 +132,6 @@ export const useRecentActivity = (
   });
 };
 
-// ─── Dashboard Widget Hooks ───────────────────────────────────────────────────
-
 export interface LeaveToday {
   id: number;
   startDate: string;
@@ -144,27 +142,31 @@ export interface LeaveToday {
   employeeImage: string | null;
 }
 
-export const useLeavesToday = (
-  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<LeaveToday[], Error>({
-    queryKey: [...queryKeys.dashboard.all, "leaves-today"] as const,
-    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
-    refetchInterval: 60_000,
-    ...options,
-  });
-};
+export interface UpcomingLeave {
+  id: number;
+  userId: string;
+  startDate: string;
+  endDate: string;
+  leaveType: string | null;
+  userName: string | null;
+  userImage: string | null;
+  userDesignation: string | null;
+}
 
-export const useUpcomingLeaves = (
-  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<LeaveToday[], Error>({
-    queryKey: [...queryKeys.dashboard.all, "upcoming-leaves"] as const,
-    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/upcoming-leaves"),
-    refetchInterval: 60_000,
-    ...options,
-  });
-};
+export interface UpcomingHoliday {
+  id: number;
+  name: string;
+  date: string;
+  message: string | null;
+}
+
+export interface LeaveBalance {
+  id: number;
+  balance: string;
+  year: number;
+  leaveTypeName: string | null;
+  daysPerYear: number | null;
+}
 
 export interface BirthdayEntry {
   id: string;
@@ -176,34 +178,11 @@ export interface BirthdayEntry {
   yearsCompleted?: number;
 }
 
-export const useBirthdays = (
-  options?: Omit<UseQueryOptions<BirthdayEntry[], Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<BirthdayEntry[], Error>({
-    queryKey: [...queryKeys.dashboard.all, "birthdays"] as const,
-    queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
-    refetchInterval: 60_000,
-    ...options,
-  });
-};
-
 export interface PendingApprovalsCount {
   pendingLeaves: number;
   pendingResignations: number;
   total: number;
 }
-
-export const usePendingApprovals = (
-  options?: Omit<UseQueryOptions<PendingApprovalsCount, Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<PendingApprovalsCount, Error>({
-    queryKey: [...queryKeys.dashboard.all, "pending-approvals"] as const,
-    queryFn: () =>
-      apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
-    refetchInterval: 60_000,
-    ...options,
-  });
-};
 
 export interface PendingRequest {
   id: number;
@@ -215,14 +194,106 @@ export interface PendingRequest {
   leaveTypeName: string;
 }
 
-export const usePendingRequests = (
-  options?: Omit<UseQueryOptions<PendingRequest[], Error>, "queryKey" | "queryFn">
-) => {
-  return useQuery<PendingRequest[], Error>({
-    queryKey: [...queryKeys.dashboard.all, "pending-requests"] as const,
-    queryFn: () =>
-      apiClient.get<PendingRequest[]>("/dashboard/pending-requests"),
+export interface TeamAttendance {
+  total: number;
+  present: number;
+  clockedIn: number;
+  absent: number;
+  records: {
+    userId: string;
+    userName: string | null;
+    userImage: string | null;
+    userDesignation: string | null;
+    checkIn: string | null;
+    checkOut: string | null;
+    status: string | null;
+  }[];
+}
+
+const hrWidgetKeys = {
+  leavesToday: [...queryKeys.dashboard.all, "leavesToday"] as const,
+  upcomingLeaves: [...queryKeys.dashboard.all, "upcomingLeaves"] as const,
+  upcomingHolidays: [...queryKeys.dashboard.all, "upcomingHolidays"] as const,
+  myLeaveBalance: [...queryKeys.dashboard.all, "myLeaveBalance"] as const,
+  pendingRequests: [...queryKeys.dashboard.all, "pendingRequests"] as const,
+  birthdays: [...queryKeys.dashboard.all, "birthdays"] as const,
+  pendingApprovals: [...queryKeys.dashboard.all, "pendingApprovals"] as const,
+  teamAttendance: [...queryKeys.dashboard.all, "teamAttendance"] as const,
+};
+
+export const useLeavesToday = (
+  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<LeaveToday[], Error>({
+    queryKey: hrWidgetKeys.leavesToday,
+    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
+    staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
   });
-};
+
+export const useUpcomingLeaves = (
+  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<LeaveToday[], Error>({
+    queryKey: hrWidgetKeys.upcomingLeaves,
+    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/upcoming-leaves"),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    ...options,
+  });
+
+export const useUpcomingHolidays = () =>
+  useQuery<UpcomingHoliday[]>({
+    queryKey: hrWidgetKeys.upcomingHolidays,
+    queryFn: () => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays"),
+    staleTime: 5 * 60_000,
+  });
+
+export const useMyLeaveBalance = () =>
+  useQuery<LeaveBalance[]>({
+    queryKey: hrWidgetKeys.myLeaveBalance,
+    queryFn: () => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance"),
+    staleTime: 5 * 60_000,
+  });
+
+export const useBirthdays = (
+  options?: Omit<UseQueryOptions<BirthdayEntry[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<BirthdayEntry[], Error>({
+    queryKey: hrWidgetKeys.birthdays,
+    queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
+    staleTime: 5 * 60_000,
+    refetchInterval: 60_000,
+    ...options,
+  });
+
+export const usePendingRequests = (
+  options?: Omit<UseQueryOptions<PendingRequest[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<PendingRequest[], Error>({
+    queryKey: hrWidgetKeys.pendingRequests,
+    queryFn: () => apiClient.get<PendingRequest[]>("/dashboard/pending-requests"),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    ...options,
+  });
+
+export const usePendingApprovals = (
+  options?: Omit<UseQueryOptions<PendingApprovalsCount, Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<PendingApprovalsCount, Error>({
+    queryKey: hrWidgetKeys.pendingApprovals,
+    queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    ...options,
+  });
+
+export const useTeamAttendance = () =>
+  useQuery<TeamAttendance>({
+    queryKey: hrWidgetKeys.teamAttendance,
+    queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  });

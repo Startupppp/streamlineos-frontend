@@ -1,4 +1,4 @@
-// Pure utility - no "use server" directive needed since this is imported by tRPC routers
+
 import { db } from "@/lib/db";
 import { organizationMembers, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -18,16 +18,11 @@ export function isExpenseAdmin(role: string | undefined | null): boolean {
   return !!role && EXPENSE_ADMIN_ROLES.includes(role);
 }
 
-/**
- * Single-org auto-membership: ensures the user belongs to the one organization.
- * If they don't have a membership row, creates one automatically.
- * Returns the orgId + role, or null if no organization exists at all.
- */
 export async function ensureOrgMembership(
   userId: string,
   role?: string
 ): Promise<{ orgId: string; role: string } | null> {
-  // Check if membership already exists
+
   const existing = await db.query.organizationMembers.findFirst({
     where: eq(organizationMembers.userId, userId),
   });
@@ -36,7 +31,6 @@ export async function ensureOrgMembership(
     return { orgId: existing.orgId, role: existing.role };
   }
 
-  // No membership — find the single org and auto-add
   const org = await db.query.organizations.findFirst();
   if (!org) return null;
 
@@ -52,7 +46,7 @@ export async function ensureOrgMembership(
       })
       .onConflictDoNothing();
   } catch {
-    // FK or other constraint error — user may not exist yet
+
     return null;
   }
 
@@ -65,7 +59,6 @@ export async function getAuthenticatedMember(): Promise<AuthResult> {
     return { error: "Unauthorized" };
   }
 
-  // Auto-add to org if not a member
   const membership = await ensureOrgMembership(
     session.user.id,
     session.user.role
@@ -75,7 +68,6 @@ export async function getAuthenticatedMember(): Promise<AuthResult> {
     return { error: "Unauthorized" };
   }
 
-  // Fetch the full member row for backward compatibility
   const member = await db.query.organizationMembers.findFirst({
     where: eq(organizationMembers.userId, session.user.id),
   });

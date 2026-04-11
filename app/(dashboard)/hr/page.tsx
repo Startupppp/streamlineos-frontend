@@ -42,7 +42,6 @@ export default function HRDashboardPage() {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [togglingAccess, setTogglingAccess] = useState<Set<string>>(new Set());
 
-  // Filter state from URL
   const searchTerm = searchParams.get("q") || "";
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
   const deptFilter = searchParams.get("dept") || "All";

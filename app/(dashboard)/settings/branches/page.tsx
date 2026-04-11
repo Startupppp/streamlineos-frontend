@@ -145,7 +145,6 @@ export default function BranchManagementPage() {
       )}
       </div>
 
-      {/* Create Branch Sheet */}
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="sm:max-w-md p-0 gap-0">
           <SheetHeader className="px-4 py-3 border-b">

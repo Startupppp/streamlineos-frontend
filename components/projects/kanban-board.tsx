@@ -185,11 +185,7 @@ export function KanbanBoard({
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      {/*
-        Outer container: fills parent height, allows horizontal scroll.
-        The horizontal scrollbar sits at the bottom of this container.
-        Each column is flex-col with its own vertical scroll on the droppable area.
-      */}
+
       <div className="flex gap-3 h-full overflow-x-auto overflow-y-hidden pb-1 px-1">
         {columns.map((col) => {
           const columnTickets = optimisticTickets
@@ -207,7 +203,7 @@ export function KanbanBoard({
                 overWip && "border-red-400/60"
               )}
             >
-              {/* Column header */}
+
               <div className="flex items-center justify-between px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span
@@ -224,7 +220,6 @@ export function KanbanBoard({
                 </div>
               </div>
 
-              {/* Droppable area */}
               <Droppable droppableId={col.id}>
                 {(provided, snapshot) => (
                   <div
@@ -285,7 +280,6 @@ export function KanbanBoard({
                 )}
               </Droppable>
 
-              {/* Quick add */}
               <div className="border-t">
                 <QuickAddInput columnId={col.id} projectId={projectId} />
               </div>

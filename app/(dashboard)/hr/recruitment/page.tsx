@@ -55,7 +55,7 @@ export default function RecruitmentDashboardPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats */}
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
             { label: "Total Jobs", value: stats?.totalJobs ?? 0, icon: Briefcase },
@@ -177,7 +177,6 @@ export default function RecruitmentDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Upcoming Interviews */}
           <Card>
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Upcoming Interviews</CardTitle>

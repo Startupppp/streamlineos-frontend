@@ -16,8 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 
-/* ─── Static page links ──────────────────────────────────────────────────── */
-
 const PAGES = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard, group: "Navigation" },
   { name: "Employees", href: "/hr/employees", icon: Users, group: "HR" },
@@ -49,8 +47,6 @@ const PAGES = [
   { name: "Settings", href: "/settings", icon: Settings, group: "System" },
 ];
 
-/* ─── Entity search types ────────────────────────────────────────────────── */
-
 interface SearchResult {
   id: number;
   type: "lead" | "deal" | "contact" | "client" | "ticket";
@@ -76,8 +72,6 @@ const ENTITY_LABELS = {
   ticket: "Tickets",
 } as const;
 
-/* ─── Component ──────────────────────────────────────────────────────────── */
-
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -87,7 +81,6 @@ export function CommandPalette() {
 
   const debouncedQuery = useDebouncedValue(query, 300);
 
-  // Cmd+K shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -99,7 +92,6 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Search entities when query is >=2 chars
   useEffect(() => {
     if (!debouncedQuery || debouncedQuery.length < 2) {
       setEntityResults([]);
@@ -125,7 +117,6 @@ export function CommandPalette() {
     router.push(href);
   }, [router]);
 
-  // Filter pages by query
   const filteredPages = query.length > 0
     ? PAGES.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
     : PAGES;
@@ -135,7 +126,6 @@ export function CommandPalette() {
     return acc;
   }, {});
 
-  // Group entity results by type
   const entityGroups = entityResults.reduce<Record<string, SearchResult[]>>((acc, r) => {
     (acc[r.type] ??= []).push(r);
     return acc;
@@ -149,7 +139,7 @@ export function CommandPalette() {
         onValueChange={setQuery}
       />
       <CommandList>
-        {/* Entity results (from API) */}
+
         {isSearching && (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
@@ -184,7 +174,6 @@ export function CommandPalette() {
           <CommandSeparator />
         )}
 
-        {/* Static page links */}
         {Object.entries(pageGroups).map(([group, pages]) => (
           <CommandGroup key={group} heading={group}>
             {pages.map((page) => (

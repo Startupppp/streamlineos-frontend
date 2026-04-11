@@ -127,7 +127,7 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
 }
 
 function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNode[]; dotCls?: string }) {
-  // Separate roots with reports (need full-width tree) from standalone roots (can sit side by side)
+
   const withChildren = roots.filter((r) => r.children.length > 0);
   const standalone = roots.filter((r) => r.children.length === 0);
 
@@ -143,7 +143,6 @@ function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNod
         </Badge>
       </div>
 
-      {/* Standalone roots (no reports) — render in a horizontal wrap row */}
       {standalone.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {standalone.map((node) => (
@@ -152,7 +151,6 @@ function TreeRootGroup({ label, roots, dotCls }: { label: string; roots: TreeNod
         </div>
       )}
 
-      {/* Roots with reports — each needs its own tree */}
       {withChildren.length > 0 && (
         <div className="space-y-2">
           {withChildren.map((node) => (
@@ -195,7 +193,6 @@ export default function OrgChartPage() {
 
   const tree = useMemo(() => buildTree(employees), [employees]);
 
-  // Group root nodes by role for compact display
   const rootGroups = useMemo(() => {
     const groups = new Map<string, TreeNode[]>();
     for (const root of tree) {
@@ -203,7 +200,7 @@ export default function OrgChartPage() {
       if (!groups.has(role)) groups.set(role, []);
       groups.get(role)!.push(root);
     }
-    // Sort groups: CEO first, then ADMIN, HR, then alphabetical
+
     const priority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
     return Array.from(groups.entries()).sort((a, b) => {
       const pa = priority[a[0]] ?? 99;

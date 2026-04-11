@@ -15,7 +15,6 @@ import {
 import { eq, and, gte, count, sql, desc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-
 export async function aiAnalyzeAttritionRisk(
   orgId: string,
   userId: string,
@@ -42,7 +41,6 @@ export async function aiAnalyzeAttritionRisk(
 
   const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
-  // Attendance rate in last 90 days
   const [attRate] = await db
     .select({
       total: count(),
@@ -61,7 +59,6 @@ export async function aiAnalyzeAttritionRisk(
     ? Math.round((Number(attRate.present) / attRate.total) * 100)
     : null;
 
-  // Recent leaves — count days from start/end date diff
   const [leaveCount] = await db
     .select({
       total: sql<number>`COALESCE(SUM(GREATEST(${leaveRequests.endDate}::date - ${leaveRequests.startDate}::date + 1, 0)), 0)::int`,
@@ -75,7 +72,6 @@ export async function aiAnalyzeAttritionRisk(
       ),
     );
 
-  // Open tickets
   const [openTickets] = await db
     .select({ count: count() })
     .from(helpdeskTickets)
@@ -87,7 +83,6 @@ export async function aiAnalyzeAttritionRisk(
       ),
     );
 
-  // Last review rating
   const [lastReview] = await db
     .select({ rating: performanceReviews.overallRating })
     .from(performanceReviews)
@@ -100,7 +95,6 @@ export async function aiAnalyzeAttritionRisk(
     .orderBy(desc(performanceReviews.createdAt))
     .limit(1);
 
-  // Active goals
   const [activeGoals] = await db
     .select({ count: count() })
     .from(goals)

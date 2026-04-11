@@ -22,7 +22,7 @@ export default function DigitalMarketingPage() {
       subtitle="Manage leads, campaigns, and social media tracking"
     >
       <div className="space-y-6">
-        {/* Quick Stats */}
+
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {[
             { label: "Total DM Leads", value: stats?.total ?? 0, color: "text-blue-400" },
@@ -39,7 +39,6 @@ export default function DigitalMarketingPage() {
           ))}
         </div>
 
-        {/* Module Cards */}
         <div className="grid gap-4 md:grid-cols-3">
           {modules.map(m => (
             <Link key={m.title} href={m.href}>
@@ -63,7 +62,6 @@ export default function DigitalMarketingPage() {
           ))}
         </div>
 
-        {/* Platform Breakdown */}
         {stats?.byPlatform && stats.byPlatform.length > 0 && (
           <Card>
             <CardContent className="p-6">

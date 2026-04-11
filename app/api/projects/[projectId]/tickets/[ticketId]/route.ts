@@ -1,8 +1,4 @@
-/**
- * GET    /api/projects/[id]/tickets/[ticketId]  — ticket details
- * PATCH  /api/projects/[id]/tickets/[ticketId]  — update ticket
- * DELETE /api/projects/[id]/tickets/[ticketId]  — delete ticket
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -180,20 +176,17 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const id = Number(ticketId);
     if (!id) return err("Invalid ticket id", 400);
 
-    // Verify the ticket belongs to this org
     const ticket = await db.query.tickets.findFirst({
       where: and(eq(tickets.id, id), eq(tickets.orgId, session.orgId!)),
       columns: { id: true },
     });
     if (!ticket) return err("Ticket not found", 404);
 
-    // Cascade delete related rows in a transaction
     await db.transaction(async (tx) => {
-      // Clear self-referencing FKs: subtasks (parentTicketId) and epic children (epicId)
+
       await tx.update(tickets).set({ parentTicketId: null }).where(eq(tickets.parentTicketId, id));
       await tx.update(tickets).set({ epicId: null }).where(eq(tickets.epicId, id));
 
-      // Delete junction / child rows
       await tx.delete(ticketAssignees).where(eq(ticketAssignees.ticketId, id));
       await tx.delete(ticketComments).where(eq(ticketComments.ticketId, id));
       await tx.delete(ticketAttachments).where(eq(ticketAttachments.ticketId, id));
@@ -204,7 +197,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
         or(eq(workItemRelations.workItemId, id), eq(workItemRelations.relatedWorkItemId, id))
       );
 
-      // Finally delete the ticket itself
       await tx.delete(tickets).where(eq(tickets.id, id));
     });
 

@@ -37,14 +37,12 @@ export default function TeamTimesheetsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
 
-  // URL-derived filter state
   const viewMode = (searchParams.get("view") ?? "week") as ViewMode;
   const selectedEmployee = searchParams.get("emp") ?? "all";
   const selectedProject = searchParams.get("project") ?? "all";
   const selectedStatus = searchParams.get("status") ?? "all";
   const page = parseInt(searchParams.get("page") ?? "1") || 1;
 
-  // Local UI state only
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedEntry, setSelectedEntry] = useState<TimesheetEntry | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);

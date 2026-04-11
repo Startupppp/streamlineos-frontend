@@ -71,7 +71,6 @@ export const useDeleteRole = () => {
   });
 };
 
-// Alias for backward compatibility with old lib/hooks/roles-hooks.ts
 export function useRolesList(
   options?: Omit<UseQueryOptions<Role[], Error>, "queryKey" | "queryFn">
 ) {

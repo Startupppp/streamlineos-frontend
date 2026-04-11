@@ -11,7 +11,7 @@ export default function DashboardLoading() {
       contentClassName="min-h-[calc(100vh-170px)]"
     >
       <div className="space-y-5">
-        {/* Stat cards */}
+
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -29,7 +29,6 @@ export default function DashboardLoading() {
           ))}
         </div>
 
-        {/* Quick actions */}
         <Card>
           <CardContent className="p-3">
             <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
@@ -40,7 +39,6 @@ export default function DashboardLoading() {
           </CardContent>
         </Card>
 
-        {/* Public documents */}
         <Card>
           <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
           <CardContent className="space-y-2">
@@ -50,7 +48,6 @@ export default function DashboardLoading() {
           </CardContent>
         </Card>
 
-        {/* My Issues + Sprint */}
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-7 auto-rows-[24rem]">
           <Card className="lg:col-span-4 min-h-0">
             <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>
@@ -71,7 +68,6 @@ export default function DashboardLoading() {
           </Card>
         </div>
 
-        {/* Projects + Activity (+ Team) */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[24rem]">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i} className="min-h-0">
@@ -85,7 +81,6 @@ export default function DashboardLoading() {
           ))}
         </div>
 
-        {/* Bottom filler to avoid blank background flash */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
           <Card>
             <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>

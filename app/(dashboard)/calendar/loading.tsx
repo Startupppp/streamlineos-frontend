@@ -5,7 +5,7 @@ export default function CalendarLoading() {
   return (
     <PageWrapper title="Calendar" noInternalScroll>
       <div className="flex flex-col h-full gap-3">
-        {/* Toolbar: prev/title/next + view switcher + new event */}
+
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <Skeleton className="h-8 w-8 rounded-md" />
@@ -19,7 +19,6 @@ export default function CalendarLoading() {
           </div>
         </div>
 
-        {/* Calendar grid */}
         <div className="flex-1 min-h-0">
           <Skeleton className="h-full w-full rounded-lg min-h-[420px]" />
         </div>

@@ -1,7 +1,4 @@
-/**
- * GET /api/chat/channels/[id]/messages/poll?since=<ISO>
- * Returns messages created after `since` — used by the 3-second polling hook.
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
@@ -19,7 +16,6 @@ export async function GET(
     const since = req.nextUrl.searchParams.get("since");
     if (!since) return err("Missing required query param: since", 400);
 
-    // Validate ISO string
     if (isNaN(new Date(since).getTime())) {
       return err("Invalid 'since' timestamp", 400);
     }

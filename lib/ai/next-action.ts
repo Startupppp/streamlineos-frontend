@@ -8,9 +8,6 @@ import { leads, leadActivities } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/**
- * Get the AI-suggested next-best-action for a lead.
- */
 export async function getNextBestAction(
   orgId: string,
   leadId: number,
@@ -27,7 +24,6 @@ export async function getNextBestAction(
 
   if (!lead) return null;
 
-  // Get last activity
   const [lastActivity] = await db
     .select()
     .from(leadActivities)

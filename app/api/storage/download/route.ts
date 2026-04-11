@@ -27,7 +27,6 @@ function getMimeType(filePath: string): string {
   return MIME_MAP[ext] || "application/octet-stream";
 }
 
-/** Block path traversal and validate the key is not suspicious */
 function isValidFileKey(fileKey: string): boolean {
   if (fileKey.includes("..") || fileKey.includes("\\") || fileKey.startsWith("/")) return false;
   if (fileKey.includes("\0")) return false;
@@ -61,7 +60,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid file reference" }, { status: 400 });
     }
 
-    // Verify user belongs to an organization
     const member = await db.query.organizationMembers.findFirst({
       where: eq(organizationMembers.userId, session.user.id),
     });
@@ -69,7 +67,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Verify file ownership (BUG-002 fix)
     const fileRecord = await db.query.documents.findFirst({
       where: ilike(documents.fileUrl, `%${fileKey}%`),
     });
@@ -77,7 +74,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Audit log file download
     createAuditLog({
       action: "file.download",
       userId: session.user.id,

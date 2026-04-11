@@ -102,22 +102,22 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
             <SheetTrigger asChild>
                 <Button>Request Leave</Button>
             </SheetTrigger>
-            <SheetContent className="sm:max-w-[525px] overflow-y-auto">
-                <SheetHeader>
-                    <SheetTitle>Request Leave</SheetTitle>
-                    <SheetDescription>
+            <SheetContent className="sm:max-w-[525px] overflow-y-auto p-0 gap-0">
+                <SheetHeader className="px-4 pt-4 pb-3 border-b">
+                    <SheetTitle className="text-base">Request Leave</SheetTitle>
+                    <SheetDescription className="text-xs">
                         Select dates and an approver for your leave request.
                     </SheetDescription>
                 </SheetHeader>
-                
+
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="px-4 py-4 space-y-4">
                         <FormField
                             control={form.control}
                             name="leaveTypeId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Leave Type</FormLabel>
+                                    <FormLabel className="text-xs font-medium">Leave Type</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
@@ -142,7 +142,7 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
                             name="dateRange"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Dates</FormLabel>
+                                    <FormLabel className="text-xs font-medium">Dates</FormLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -182,13 +182,13 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
                                 </FormItem>
                             )}
                         />
-                        
-                         <FormField
+
+                        <FormField
                             control={form.control}
                             name="approverId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Approver</FormLabel>
+                                    <FormLabel className="text-xs font-medium">Approver</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
@@ -216,7 +216,7 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
                             name="reason"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Reason</FormLabel>
+                                    <FormLabel className="text-xs font-medium">Reason</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Personal reasons..." {...field} />
                                     </FormControl>
@@ -226,7 +226,7 @@ export function RequestLeaveDialog({ leaveTypes, approvers }: RequestLeaveDialog
                         />
 
                         <div className="flex justify-end pt-4">
-                             <Button type="submit" disabled={loading}>
+                            <Button type="submit" disabled={loading}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Submit Request
                             </Button>

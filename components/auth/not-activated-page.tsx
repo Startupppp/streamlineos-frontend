@@ -14,7 +14,7 @@ export function NotActivatedPage() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="flex flex-col items-center text-center max-w-md px-6"
       >
-        {/* Icon */}
+
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -38,7 +38,6 @@ export function NotActivatedPage() {
           </div>
         </motion.div>
 
-        {/* Text */}
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,7 +66,6 @@ export function NotActivatedPage() {
           If you believe this is an error, please reach out to your team lead.
         </motion.p>
 
-        {/* Sign out button */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

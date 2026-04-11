@@ -15,7 +15,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const labelId = Number(lid);
     if (!ticketId || !labelId) return err("Invalid ids", 400);
 
-    // Verify ticket belongs to this org
     const ticket = await db.query.tickets.findFirst({
       where: and(eq(tickets.id, ticketId), eq(tickets.orgId, session.orgId!)),
       columns: { id: true },

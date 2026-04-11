@@ -73,12 +73,12 @@ export function EmployeeTicketsList({ tickets }: EmployeeTicketsListProps) {
                 <Badge variant="outline">{ticket.status}</Badge>
               </TableCell>
                <TableCell>
-                <Badge 
+                <Badge
                     variant={
-                        ticket.priority === "URGENT" || ticket.priority === "HIGH" 
-                        ? "destructive" 
-                        : ticket.priority === "MEDIUM" 
-                        ? "default" 
+                        ticket.priority === "URGENT" || ticket.priority === "HIGH"
+                        ? "destructive"
+                        : ticket.priority === "MEDIUM"
+                        ? "default"
                         : "secondary"
                     }
                 >

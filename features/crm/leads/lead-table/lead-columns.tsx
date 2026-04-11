@@ -20,7 +20,6 @@ import {
 } from "./types";
 import { AIScoreButton } from "../ai-score-button";
 
-/* ─── SortIcon ─── */
 interface SortIconProps {
   column: string;
   sortColumn: string;
@@ -34,7 +33,6 @@ export function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
     : <ArrowDown className="h-3 w-3 ml-1 text-gold" />;
 }
 
-/* ─── Cell renderer ─── */
 export interface RenderCellOptions {
   lead: Lead;
   colKey: string;

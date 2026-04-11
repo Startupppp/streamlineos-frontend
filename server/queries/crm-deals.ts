@@ -5,8 +5,6 @@ import { deals, dealActivities } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type { DealFilters } from "@/types/crm";
 
-// ─── Deals ───────────────────────────────────────────────────────────────────
-
 export async function getDeals(
   orgId: string,
   filters?: DealFilters & { role?: string; userId?: string }

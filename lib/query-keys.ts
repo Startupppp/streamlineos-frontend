@@ -1,16 +1,9 @@
-/**
- * Typed query key factory for all TanStack Query hooks.
- * Centralised here so invalidation is always consistent.
- *
- * Usage:
- *   queryClient.invalidateQueries({ queryKey: queryKeys.leads.all })
- *   queryKey: queryKeys.leads.list(filters)
- */
+
 
 const base = ["vaivamm"] as const;
 
 export const queryKeys = {
-  // ─── HR ────────────────────────────────────────────────────────────────────
+
   hr: {
     all: [...base, "hr"] as const,
     departments: () => [...base, "hr", "departments"] as const,
@@ -41,7 +34,7 @@ export const queryKeys = {
     monthlyAttendance: (params: { userId: string; year: number; month: number }) => [...base, "hr", "monthlyAttendance", params] as const,
     employeeStats: (userId: string) => [...base, "hr", "employeeStats", userId] as const,
     employeePayslips: (userId?: string) => [...base, "hr", "employeePayslips", userId] as const,
-    // Recruitment
+
     recruitmentStats: () => [...base, "hr", "recruitmentStats"] as const,
     jobPostings: (params?: Record<string, unknown>) => [...base, "hr", "jobPostings", params] as const,
     jobPosting: (id: number) => [...base, "hr", "jobPosting", id] as const,
@@ -56,7 +49,6 @@ export const queryKeys = {
     termination: (id: number) => [...base, "hr", "termination", id] as const,
   },
 
-  // ─── Leads / CRM ───────────────────────────────────────────────────────────
   leads: {
     all: [...base, "leads"] as const,
     list: (params?: Record<string, unknown>) => [...base, "leads", "list", params] as const,
@@ -99,7 +91,6 @@ export const queryKeys = {
     history: (targetId: number) => [...base, "targets", "history", targetId] as const,
   },
 
-  // ─── Projects ──────────────────────────────────────────────────────────────
   projects: {
     all: [...base, "projects"] as const,
     list: () => [...base, "projects", "list"] as const,
@@ -122,7 +113,6 @@ export const queryKeys = {
     watchers: (ticketId: number) => [...base, "projects", "watchers", ticketId] as const,
   },
 
-  // ─── Chat ──────────────────────────────────────────────────────────────────
   chat: {
     all: [...base, "chat"] as const,
     myChannels: () => [...base, "chat", "myChannels"] as const,
@@ -136,7 +126,6 @@ export const queryKeys = {
     typing: (channelId: number) => [...base, "chat", "typing", channelId] as const,
   },
 
-  // ─── Dashboard ─────────────────────────────────────────────────────────────
   dashboard: {
     all: [...base, "dashboard"] as const,
     stats: () => [...base, "dashboard", "stats"] as const,
@@ -147,7 +136,6 @@ export const queryKeys = {
     recentActivity: () => [...base, "dashboard", "recentActivity"] as const,
   },
 
-  // ─── Reports ───────────────────────────────────────────────────────────────
   reports: {
     all: [...base, "reports"] as const,
     attendance: (params?: Record<string, unknown>) => [...base, "reports", "attendance", params] as const,
@@ -157,7 +145,6 @@ export const queryKeys = {
     dashboardStats: () => [...base, "reports", "dashboardStats"] as const,
   },
 
-  // ─── Other domains ─────────────────────────────────────────────────────────
   notifications: {
     all: [...base, "notifications"] as const,
     list: (unreadOnly?: boolean) => [...base, "notifications", "list", unreadOnly] as const,

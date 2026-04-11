@@ -35,11 +35,9 @@ export default function GlobalNotFound() {
           </Link>
         </motion.div>
 
-
         <motion.div variants={fadeUp} className="mb-6">
           <NotFoundIllustration />
         </motion.div>
-
 
         <motion.div variants={fadeUp} className="max-w-md space-y-3">
           <h2 className="text-4xl font-bold text-foreground tracking-tight">
@@ -50,7 +48,6 @@ export default function GlobalNotFound() {
             changed, or is temporarily unavailable.
           </p>
         </motion.div>
-
 
         <motion.div
           variants={fadeUp}
@@ -78,7 +75,6 @@ export default function GlobalNotFound() {
             </Link>
           </Button>
         </motion.div>
-
 
         <motion.div
           variants={fadeUp}

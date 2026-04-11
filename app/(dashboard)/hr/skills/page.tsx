@@ -69,7 +69,6 @@ export default function SkillsPage() {
     );
   }
 
-  // Group skills by skillName for a matrix view
   const grouped = (skills ?? []).reduce<Record<string, EmployeeSkill[]>>((acc, s) => {
     (acc[s.skillName] ??= []).push(s);
     return acc;

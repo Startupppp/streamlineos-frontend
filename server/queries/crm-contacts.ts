@@ -5,8 +5,6 @@ import { contacts } from "@/lib/db/schema";
 import { eq, and, sql, count, or } from "drizzle-orm";
 import type { ContactFilters } from "@/types/crm";
 
-// ─── Contacts ─────────────────────────────────────────────────────────────────
-
 export async function getContacts(orgId: string, filters?: ContactFilters) {
   const conditions = [eq(contacts.orgId, orgId)];
   if (filters?.organizationId)

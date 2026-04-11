@@ -108,11 +108,11 @@ export default function InvitationPage() {
     >
       <motion.div variants={fadeUp}>
         <Card className="shadow-2xl border-border overflow-hidden">
-          {/* Illustration Header */}
+
           <div
             className="relative h-40 flex items-center justify-center overflow-hidden gradient-brand"
           >
-            {/* Abstract team illustration with circles */}
+
             <div className="relative flex items-end gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
               <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
@@ -122,7 +122,7 @@ export default function InvitationPage() {
               <div className="w-12 h-12 rounded-full bg-white/30 border-2 border-white/50 -mb-1" />
               <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white/40" />
             </div>
-            {/* Decorative dots */}
+
             <div className="absolute top-4 left-6 w-2 h-2 rounded-full bg-white/20" />
             <div className="absolute top-8 right-10 w-3 h-3 rounded-full bg-white/15" />
             <div className="absolute bottom-6 left-12 w-2.5 h-2.5 rounded-full bg-white/15" />
@@ -131,7 +131,7 @@ export default function InvitationPage() {
           </div>
 
           <CardContent className="px-6 md:px-8 pt-6 pb-8">
-            {/* Heading */}
+
             <div className="text-center mb-6">
               <div className="mx-auto w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center mb-3">
                 <Mail className="w-6 h-6 text-gold" />
@@ -142,7 +142,6 @@ export default function InvitationPage() {
               </p>
             </div>
 
-            {/* Info Blocks */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Invited By</p>
@@ -157,7 +156,6 @@ export default function InvitationPage() {
               </div>
             </div>
 
-            {/* Form */}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-busy={acceptInvitation.isPending}>
               <div className="space-y-2">
                 <Label className="text-foreground text-xs font-medium">Email</Label>

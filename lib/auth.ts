@@ -99,14 +99,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        // Successful login
         logger.info("Auth: successful login", { userId: user.id, email: normalizedEmail });
 
         if (user.loginAttempts && user.loginAttempts > 0) {
           await db.update(users).set({ loginAttempts: 0, lockedUntil: null }).where(eq(users.id, user.id));
         }
 
-        // Single-org auto-membership: ensure user belongs to the organization
         const existingMembership = await db.query.organizationMembers.findFirst({
           where: eq(organizationMembers.userId, user.id),
         });
@@ -169,7 +167,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         db.insert(userSessions).values({ id: token.sessionId, userId: user.id as string }).catch(() => {});
       }
 
-      // Refresh critical fields from cache/DB (with error handling to prevent auth crashes)
       if (token.id) {
         try {
           const userId = token.id as string;
@@ -224,7 +221,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           }
         } catch {
-          // DB/cache query failed — keep existing token values
+
         }
       }
 

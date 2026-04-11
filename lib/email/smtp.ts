@@ -18,10 +18,6 @@ export interface SmtpEmailOptions {
   replyTo?: string;
 }
 
-/**
- * Send email via SMTP (nodemailer).
- * Falls back to env vars if no config provided.
- */
 export async function sendSmtpEmail(options: SmtpEmailOptions, config?: SmtpConfig): Promise<boolean> {
   const smtpHost = config?.host || process.env.SMTP_HOST;
   const smtpPort = config?.port || Number(process.env.SMTP_PORT || "587");
@@ -60,9 +56,6 @@ export async function sendSmtpEmail(options: SmtpEmailOptions, config?: SmtpConf
   }
 }
 
-/**
- * Interpolate template variables like {client_name}, {sales_rep_name}
- */
 export function interpolateTemplate(template: string, vars: Record<string, string>): string {
   let result = template;
   for (const [key, value] of Object.entries(vars)) {

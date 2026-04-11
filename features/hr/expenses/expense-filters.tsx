@@ -14,8 +14,6 @@ import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
 import type { ExpenseFilters, ExpenseCategory } from "@/server/actions/expense-query";
 import type { DatePreset } from "@/hooks/use-expense-filters";
 
-/* ─── Admin Filter Pills ─── */
-
 interface AdminExpenseFiltersProps {
   statusFilter: StatusFilter;
   pendingCount: number;
@@ -57,8 +55,6 @@ export function AdminExpenseFilters({
     </div>
   );
 }
-
-/* ─── Member Filter Tabs + Date Filter + Export ─── */
 
 interface MemberExpenseFiltersProps {
   statusFilter: StatusFilter;

@@ -6,18 +6,17 @@ export default function DevicesLoading() {
   return (
     <PageWrapper title="Devices" subtitle="Manage company devices.">
       <div className="space-y-6">
-        {/* Action button */}
+
         <div className="flex items-center justify-end">
           <Skeleton className="h-10 w-36" />
         </div>
 
-        {/* Devices table */}
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-32" />
           </CardHeader>
           <CardContent>
-            {/* Table header */}
+
             <div className="flex items-center gap-4 pb-4 border-b">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-20" />
@@ -26,7 +25,7 @@ export default function DevicesLoading() {
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-16" />
             </div>
-            {/* Table rows */}
+
             <div className="space-y-3 pt-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4">

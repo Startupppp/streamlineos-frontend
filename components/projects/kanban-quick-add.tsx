@@ -74,7 +74,7 @@ export function QuickAddInput({ columnId, projectId }: { columnId: string; proje
         value={value}
         onChange={handleChange}
         placeholder="Ticket title..."
-        className="h-8 text-sm"
+        className="h-8 text-sm capitalize"
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         disabled={createTicket.isPending}

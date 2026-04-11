@@ -9,8 +9,6 @@ import type {
   CandidateScoreResult, ReviewDraftResult, HelpdeskReplyResult, AttritionRiskResult,
 } from "@/lib/ai/prompts";
 
-/* ─── AI Lead Scoring ─────────────────────────────────────────────────────── */
-
 export function useAIScoreLead() {
   const qc = useQueryClient();
   return useMutation({
@@ -36,8 +34,6 @@ export function useAIBatchScoreLeads() {
     },
   });
 }
-
-/* ─── AI Email Generator ──────────────────────────────────────────────────── */
 
 interface GenerateEmailInput {
   leadName: string;
@@ -70,8 +66,6 @@ export function useGenerateEmailVariations() {
   });
 }
 
-/* ─── AI Deal Prediction ──────────────────────────────────────────────────── */
-
 export function usePredictDeal() {
   const qc = useQueryClient();
   return useMutation({
@@ -84,16 +78,12 @@ export function usePredictDeal() {
   });
 }
 
-/* ─── AI Next-Best-Action ─────────────────────────────────────────────────── */
-
 export function useNextBestAction() {
   return useMutation({
     mutationFn: (leadId: number) =>
       apiClient.post<NextActionResult>("/ai/next-action", { leadId }),
   });
 }
-
-/* ─── AI Churn Risk Analysis ──────────────────────────────────────────────── */
 
 export function useAnalyzeChurnRisk() {
   const qc = useQueryClient();
@@ -106,8 +96,6 @@ export function useAnalyzeChurnRisk() {
   });
 }
 
-/* ─── AI Conversation Summary ─────────────────────────────────────────────── */
-
 export function useSummarizeConversation() {
   return useMutation({
     mutationFn: (input: { activityType: string; subject?: string; notes: string; leadName?: string; dealName?: string }) =>
@@ -115,16 +103,12 @@ export function useSummarizeConversation() {
   });
 }
 
-/* ─── AI Lead Enrichment ──────────────────────────────────────────────────── */
-
 export function useEnrichLead() {
   return useMutation({
     mutationFn: (input: { name: string; company?: string; email?: string; designation?: string; city?: string }) =>
       apiClient.post<LeadEnrichmentResult>("/ai/enrich-lead", input),
   });
 }
-
-/* ─── HR AI: Score Candidate ──────────────────────────────────────────────── */
 
 export function useAIScoreCandidate() {
   const qc = useQueryClient();
@@ -137,8 +121,6 @@ export function useAIScoreCandidate() {
   });
 }
 
-/* ─── HR AI: Generate Performance Review Draft ─────────────────────────────── */
-
 export function useAIGenerateReview() {
   return useMutation({
     mutationFn: (input: { userId: string; periodStart: string; periodEnd: string }) =>
@@ -146,16 +128,12 @@ export function useAIGenerateReview() {
   });
 }
 
-/* ─── HR AI: Helpdesk Reply Suggestion ─────────────────────────────────────── */
-
 export function useAISuggestHelpdeskReply() {
   return useMutation({
     mutationFn: (ticketId: number) =>
       apiClient.post<HelpdeskReplyResult>("/ai/helpdesk-reply", { ticketId }),
   });
 }
-
-/* ─── HR AI: Employee Attrition Risk ───────────────────────────────────────── */
 
 export function useAIAttritionRisk() {
   return useMutation({

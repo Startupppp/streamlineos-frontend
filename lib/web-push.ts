@@ -4,9 +4,6 @@ import { db } from "@/lib/db";
 import { pushSubscriptions, chatChannelMembers } from "@/lib/db/schema";
 import { eq, and, ne, inArray } from "drizzle-orm";
 
-/**
- * web-push requires the VAPID subject to be https: or mailto: only — not http:// (e.g. local dev).
- */
 function getVapidSubject(): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (appUrl?.startsWith("https://")) return appUrl;
@@ -56,7 +53,7 @@ export async function sendPushToUser(
         );
       } catch (err: unknown) {
         const status = (err as { statusCode?: number }).statusCode;
-        // 404 / 410 means the subscription is no longer valid
+
         if (status === 404 || status === 410) {
           expiredEndpoints.push(sub.endpoint);
         }
@@ -64,7 +61,6 @@ export async function sendPushToUser(
     })
   );
 
-  // Clean up expired subscriptions in one query
   if (expiredEndpoints.length > 0) {
     await db
       .delete(pushSubscriptions)
@@ -72,10 +68,6 @@ export async function sendPushToUser(
   }
 }
 
-/**
- * Sends a Web Push notification to every channel member except the sender.
- * Fire-and-forget: call with `.catch(() => {})` so errors don't block the response.
- */
 export async function sendPushToChannelMembers(
   channelId: number,
   senderUserId: string,

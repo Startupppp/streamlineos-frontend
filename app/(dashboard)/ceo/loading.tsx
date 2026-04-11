@@ -6,7 +6,7 @@ export default function CeoLoading() {
   return (
     <PageWrapper title="CEO Dashboard" subtitle="Organisation-wide overview and key metrics.">
       <div className="space-y-6">
-        {/* Stats row */}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -23,7 +23,6 @@ export default function CeoLoading() {
           ))}
         </div>
 
-        {/* Content area */}
         <div className="grid gap-6 lg:grid-cols-2">
           {Array.from({ length: 2 }).map((_, i) => (
             <Card key={i}>

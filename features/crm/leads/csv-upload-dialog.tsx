@@ -35,7 +35,6 @@ const VALID_SOURCES = ["referral", "campaign", "cold_call", "website", "social_m
 const VALID_PRIORITIES = ["HOT", "WARM", "COLD"];
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
-/* ─── Header alias map for auto-detection ─── */
 const HEADER_ALIASES: Record<string, string[]> = {
   name: ["name", "lead name", "full name", "contact name", "lead"],
   email: ["email", "e-mail", "email address", "mail"],

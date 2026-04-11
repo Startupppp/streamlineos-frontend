@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { format, isWeekend } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Check, XCircle } from "lucide-react";
+import { Loader2, Save, Check, XCircle, Link2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkLogRejectDialog } from "./work-log-editor";
 
@@ -69,7 +70,6 @@ export function WorkLogEntryRow({
       ? "Logged — entry saved"
       : "Empty — no entry yet";
 
-  // Highlight matching text in description
   const highlightMatch = (text: string) => {
     if (!searchTerm.trim() || !text) return null;
     const term = searchTerm.trim();
@@ -153,13 +153,24 @@ export function WorkLogEntryRow({
               readOnly && "cursor-default opacity-75",
             )}
           />
-          {/* Highlighted search match preview */}
+
+          {!readOnly && (
+            <div className="flex items-center gap-2">
+              <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <Input
+                placeholder="Attachment link (optional) — paste URL to doc, sheet, or file"
+                className="h-7 text-xs"
+                type="url"
+              />
+            </div>
+          )}
+
           {highlighted && !hasUnsavedChanges && (
             <p className="text-xs text-muted-foreground px-1 truncate">
               {highlighted}
             </p>
           )}
-          {/* Approve / Reject buttons for admin viewing other's logs */}
+
           {showApprovalActions && (
             <div className="flex items-center gap-2">
               <Button
@@ -191,7 +202,7 @@ export function WorkLogEntryRow({
               </Button>
             </div>
           )}
-          {/* Save / Discard buttons */}
+
           {hasUnsavedChanges && !readOnly && (
             <div className="flex items-center gap-2">
               <Button

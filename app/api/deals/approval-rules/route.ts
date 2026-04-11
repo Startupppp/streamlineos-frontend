@@ -11,7 +11,6 @@ const createSchema = z.object({
   approverRole: z.string().default("CEO"),
 });
 
-/** GET /api/deals/approval-rules */
 export async function GET() {
   return withAuth(async (session) => {
     const rules = await db
@@ -23,7 +22,6 @@ export async function GET() {
   });
 }
 
-/** POST /api/deals/approval-rules */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!ADMIN_ROLES.includes(session.user.role ?? "")) return err("Only admins can create approval rules", 403);

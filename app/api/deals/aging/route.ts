@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { deals, users } from "@/lib/db/schema";
 import { eq, and, notInArray, sql } from "drizzle-orm";
 
-/** GET /api/deals/aging — Deals stuck in stages too long */
 export async function GET() {
   return withAuth(async (session) => {
     const data = await cached(

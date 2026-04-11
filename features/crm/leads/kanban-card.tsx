@@ -69,7 +69,7 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
           >
             <CardContent className="p-3">
               <div className="flex items-start gap-2">
-                {/* Drag Handle */}
+
                 <div
                   {...dragProvided.dragHandleProps}
                   className="mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"

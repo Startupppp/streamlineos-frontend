@@ -1,10 +1,5 @@
 "server-only";
 
-/**
- * Chat domain — pure DB query functions.
- * Imported only by /api/chat/* route handlers (server-side).
- */
-
 import { db } from "@/lib/db";
 import {
   chatChannels,
@@ -17,9 +12,6 @@ import {
 import { eq, and, desc, gt, ilike, inArray, ne, sql } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-// ─── In-memory typing state ───────────────────────────────────────────────────
-// Kept here (module-level singleton) so it survives across requests in the same
-// Node.js process, exactly mirroring the tRPC presence router behaviour.
 const typingState = new Map<number, Map<string, { name: string; expiresAt: number }>>();
 
 function cleanExpiredTypers(channelId: number) {
@@ -32,9 +24,6 @@ function cleanExpiredTypers(channelId: number) {
   if (channel.size === 0) typingState.delete(channelId);
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Throws an Error with a 403-friendly message when user is not a channel member. */
 async function assertChannelMember(channelId: number, userId: string) {
   const member = await db.query.chatChannelMembers.findFirst({
     where: and(
@@ -50,12 +39,6 @@ async function assertChannelMember(channelId: number, userId: string) {
   return member;
 }
 
-// ─── Channel queries ──────────────────────────────────────────────────────────
-
-/**
- * Returns all non-archived channels the user belongs to, enriched with
- * unread counts and the last message preview.
- */
 export async function getMyChannels(userId: string, orgId: string) {
   try {
     const memberships = await db
@@ -67,7 +50,6 @@ export async function getMyChannels(userId: string, orgId: string) {
 
     const channelIds = memberships.map((m) => m.channelId);
 
-    // 1. Fetch channels with members in a single query
     const channels = await db.query.chatChannels.findMany({
       where: and(
         eq(chatChannels.orgId, orgId),
@@ -82,7 +64,6 @@ export async function getMyChannels(userId: string, orgId: string) {
       },
     });
 
-    // 2. Batch unread counts in ONE query
     const unreadRows = await db
       .select({
         channelId: chatMessages.channelId,
@@ -104,7 +85,6 @@ export async function getMyChannels(userId: string, orgId: string) {
 
     const unreadMap = new Map(unreadRows.map((r) => [r.channelId, r.count]));
 
-    // 3. Batch last messages via DISTINCT ON
     const channelIdArray = channelIds.map(Number);
     const lastMessages = await db.execute<{
       channel_id: number;
@@ -148,10 +128,6 @@ export async function getMyChannels(userId: string, orgId: string) {
   }
 }
 
-/**
- * Returns a single channel (with members) if the requesting user is a member.
- * Returns null if not found or the user is not a member.
- */
 export async function getChannel(channelId: number, userId: string) {
   await assertChannelMember(channelId, userId);
 
@@ -169,10 +145,6 @@ export async function getChannel(channelId: number, userId: string) {
   return channel ?? null;
 }
 
-/**
- * Returns paginated messages for a channel (oldest-first for display).
- * The caller must have already verified membership.
- */
 export async function getMessages(channelId: number, cursor?: number, limit = 50) {
   const safeLimit = Math.min(Math.max(1, limit), 100);
 
@@ -206,9 +178,6 @@ export async function getMessages(channelId: number, cursor?: number, limit = 50
   };
 }
 
-/**
- * Returns messages created after `since` (ISO timestamp) — used for polling.
- */
 export async function pollMessages(channelId: number, since: string, userId: string) {
   await assertChannelMember(channelId, userId);
   const sinceDate = new Date(since);
@@ -232,9 +201,6 @@ export async function pollMessages(channelId: number, since: string, userId: str
   return newMessages.reverse();
 }
 
-/**
- * Returns the total number of unread messages across all channels for a user.
- */
 export async function getUnreadTotal(userId: string) {
   try {
     const [result] = await db.execute<{ total: number }>(sql`
@@ -260,13 +226,8 @@ export async function getUnreadTotal(userId: string) {
   }
 }
 
-// ─── Presence queries ─────────────────────────────────────────────────────────
-
-/**
- * Returns users who have been seen within the last 60 seconds in the given org.
- */
 export async function getOnlineUsers(orgId: string) {
-  const oneMinAgo = new Date(Date.now() - 90 * 1000); // 90 s window — heartbeat fires every 15 s
+  const oneMinAgo = new Date(Date.now() - 90 * 1000);
 
   return db
     .select({
@@ -286,9 +247,6 @@ export async function getOnlineUsers(orgId: string) {
     );
 }
 
-/**
- * Upserts the user's presence record (heartbeat).
- */
 export async function upsertPresence(userId: string, orgId: string) {
   await db
     .insert(chatUserPresence)
@@ -299,11 +257,6 @@ export async function upsertPresence(userId: string, orgId: string) {
     });
 }
 
-// ─── Org users query ─────────────────────────────────────────────────────────
-
-/**
- * Returns all active org members except the requesting user — used for DM creation.
- */
 export async function getOrgUsers(userId: string, orgId: string) {
   return db
     .select({
@@ -324,11 +277,6 @@ export async function getOrgUsers(userId: string, orgId: string) {
     );
 }
 
-// ─── Search ───────────────────────────────────────────────────────────────────
-
-/**
- * Full-text (ILIKE) search across messages the user has access to.
- */
 export async function searchMessages(
   userId: string,
   query: string,
@@ -365,11 +313,6 @@ export async function searchMessages(
   });
 }
 
-// ─── Typing indicators ────────────────────────────────────────────────────────
-
-/**
- * Records the user as currently typing in a channel (expires in 4 s).
- */
 export function setTypingIndicator(channelId: number, userId: string, userName: string) {
   if (!typingState.has(channelId)) {
     typingState.set(channelId, new Map());
@@ -380,9 +323,6 @@ export function setTypingIndicator(channelId: number, userId: string, userName: 
   });
 }
 
-/**
- * Returns the list of users currently typing in a channel (excludes the caller).
- */
 export function getTypingIndicators(channelId: number, currentUserId: string) {
   cleanExpiredTypers(channelId);
   const channel = typingState.get(channelId);

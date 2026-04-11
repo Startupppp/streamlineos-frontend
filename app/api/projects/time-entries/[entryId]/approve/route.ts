@@ -1,6 +1,4 @@
-/**
- * PATCH /api/projects/time-entries/[entryId]/approve — approve a timesheet entry
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";

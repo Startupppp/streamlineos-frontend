@@ -24,9 +24,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { EmptyTeamIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useContacts } from "@/lib/api/hooks/crm";
+import { useContacts, useDeleteContact } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { CreateContactDialog } from "@/features/crm/contacts/create-contact-dialog";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const PAGE_SIZE = 20;
 
@@ -36,6 +38,7 @@ export default function ContactsPage() {
   const pathname = usePathname();
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
+  const deleteContact = useDeleteContact();
 
   const view = (searchParams.get("view") || "table") as "table" | "card";
   const searchInput = searchParams.get("q") || "";
@@ -114,7 +117,7 @@ export default function ContactsPage() {
       }
     >
       <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
-        {/* Table View (default) */}
+
         {view === "table" && (
           <motion.div variants={fadeUp}>
             <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-16rem)] min-h-[320px]">
@@ -188,9 +191,19 @@ export default function ContactsPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem><Pencil className="h-3.5 w-3.5 mr-2" />Edit</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}><Pencil className="h-3.5 w-3.5 mr-2" />View / Edit</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600"><Trash2 className="h-3.5 w-3.5 mr-2" />Delete</DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => {
+                                    if (confirm("Are you sure you want to delete this contact?")) {
+                                      deleteContact.mutate(contact.id, {
+                                        onSuccess: () => toast.success("Contact deleted"),
+                                        onError: (e) => toast.error(getErrorMessage(e)),
+                                      });
+                                    }
+                                  }}
+                                ><Trash2 className="h-3.5 w-3.5 mr-2" />Delete</DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -219,7 +232,6 @@ export default function ContactsPage() {
           </motion.div>
         )}
 
-        {/* Card View */}
         {view === "card" && (
           <>
             <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

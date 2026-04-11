@@ -45,7 +45,6 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     return d;
   }, [weekOffset]);
 
-  // Responsive: fewer days on smaller screens
   const [numDays, setNumDays] = useState(28);
   useMemo(() => {
     if (typeof window !== "undefined") {
@@ -66,7 +65,6 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     return arr;
   }, [startOfWeek, numDays]);
 
-  // Responsive dimensions
   const dayWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 28 : typeof window !== "undefined" && window.innerWidth < 1024 ? 34 : 40;
   const rowHeight = 36;
   const labelWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 120 : typeof window !== "undefined" && window.innerWidth < 1024 ? 180 : 240;

@@ -3,10 +3,8 @@ import { z } from "zod";
 const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
-  // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
-  // Auth
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z
     .string()
@@ -16,18 +14,15 @@ const serverSchema = z.object({
       "In production, NEXTAUTH_SECRET must be at least 44 characters (256-bit base64)"
     ),
 
-  // Security
   ENCRYPTION_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
 
-  // Email — SendGrid
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM_ADDRESS: z.string().email().optional(),
   EMAIL_FROM_NAME: z.string().optional(),
   EMAIL_PROVIDER: z.enum(["sendgrid", "smtp", "azure"]).default("sendgrid"),
 
-  // Email — SMTP
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
   SMTP_USER: z.string().optional(),
@@ -35,41 +30,32 @@ const serverSchema = z.object({
   SMTP_FROM_EMAIL: z.string().optional(),
   SMTP_FROM_NAME: z.string().optional(),
 
-  // AI
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
 
-  // Google OAuth (Calendar / Meet integration)
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
-  // Cloudflare R2 Storage
   R2_REGION: z.string().default("auto"),
   R2_BUCKET_NAME: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_ENDPOINT: z.string().optional(),
 
-  // Redis (Upstash)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
-  // Background Jobs (Inngest)
   INNGEST_EVENT_KEY: z.string().optional(),
   INNGEST_SIGNING_KEY: z.string().optional(),
 
-  // Push Notifications (Web Push / VAPID)
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
 
-  // Real-time (Ably)
   ABLY_API_KEY: z.string().optional(),
 
-  // Integrations
   BIOMETRIC_API_KEY: z.string().optional(),
   SLACK_WEBHOOK_URL: z.string().optional(),
 
-  // Test helpers
   ALLOW_TEST_EMAIL: z.string().optional(),
   TEST_EMAIL: z.string().email().optional().or(z.literal("")),
 });

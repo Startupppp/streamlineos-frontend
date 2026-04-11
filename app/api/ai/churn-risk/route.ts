@@ -11,7 +11,6 @@ const schema = z.object({
   daysSinceLastActivity: z.number().nullable().optional(),
 });
 
-/** POST /api/ai/churn-risk — Analyze churn risk for a client */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

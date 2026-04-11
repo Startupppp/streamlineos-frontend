@@ -7,30 +7,22 @@ import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { appUrl } from "@/lib/app-url";
 
-/**
- * Cron endpoint for scheduled report delivery.
- * Called by Vercel Cron or external cron service.
- *
- * Daily 9 AM: Lead activity summary → HR
- * Weekly Monday: Sales performance → HR, CEO
- * Monthly 1st: Full suite → HR, CEO
- */
 export async function GET(request: Request) {
-  // Verify cron secret
+
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday
+  const dayOfWeek = now.getDay();
   const dayOfMonth = now.getDate();
 
   try {
     const orgs = await db.query.organizations.findMany();
 
     for (const org of orgs) {
-      // Fetch admin recipients for this org via org members join
+
       const members = await db
         .select({
           userId: organizationMembers.userId,
@@ -46,7 +38,6 @@ export async function GET(request: Request) {
       );
       if (hrAdmins.length === 0) continue;
 
-      // Daily report (9 AM) — lead activity last 24h
       try {
         logger.info(`Sending daily report for org ${org.id}`);
         const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -55,7 +46,6 @@ export async function GET(request: Request) {
         logger.error("Daily report failed", { orgId: org.id, error: err });
       }
 
-      // Weekly report (Monday) — sales performance last 7 days
       if (dayOfWeek === 1) {
         try {
           logger.info(`Sending weekly report for org ${org.id}`);
@@ -66,7 +56,6 @@ export async function GET(request: Request) {
         }
       }
 
-      // Monthly report (1st of month) — full suite
       if (dayOfMonth === 1) {
         try {
           logger.info(`Sending monthly report for org ${org.id}`);
@@ -165,7 +154,6 @@ async function sendWeeklySalesReport(
     ? ((converted.length / weekLeads.length) * 100).toFixed(1)
     : "0";
 
-  // Per-user stats
   const userStats: Record<string, { leads: number; converted: number; revenue: number; activities: number }> = {};
   for (const lead of weekLeads) {
     if (!lead.assignedToId) continue;

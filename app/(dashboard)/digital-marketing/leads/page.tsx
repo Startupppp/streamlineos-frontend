@@ -15,11 +15,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   Plus, Search, Send, CheckCircle2, Loader2,
 } from "lucide-react";
@@ -71,7 +69,6 @@ export default function DmLeadsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "", phone: "", email: "", whatsappNumber: "",
     sourcePlatform: "linkedin", leadQuality: "warm", notes: "",
@@ -92,6 +89,28 @@ export default function DmLeadsPage() {
   const verifyMutation = useVerifyDmLead();
   const bulkSendMutation = useBulkSendDmLeadsToHr();
   const importMutation = useImportDmLeadToPipeline();
+
+  const handleCreateLead = useCallback(() => {
+    createMutation.mutate(
+      formData,
+      {
+        onSuccess: () => {
+          toast.success("Lead captured");
+          setShowCreateDialog(false);
+          setFormData({
+            name: "",
+            phone: "",
+            email: "",
+            whatsappNumber: "",
+            sourcePlatform: "linkedin",
+            leadQuality: "warm",
+            notes: "",
+          });
+        },
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  }, [createMutation, formData]);
 
   const leads = data?.leads ?? [];
   const allSelected = leads.length > 0 && leads.every((l: { id: number }) => selectedIds.has(l.id));
@@ -140,7 +159,7 @@ export default function DmLeadsPage() {
       }
     >
       <div className="space-y-6">
-        {/* Table */}
+
         <Card>
           <ScrollArea className="w-full max-h-[60vh]" type="auto">
           <div className="min-w-[700px]">
@@ -249,71 +268,62 @@ export default function DmLeadsPage() {
         </Card>
       </div>
 
-      {/* Create Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Capture New Lead</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Name *</Label>
-                <Input value={formData.name} onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Phone</Label>
-                <Input value={formData.phone} onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Email</Label>
-                <Input value={formData.email} onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">WhatsApp</Label>
-                <Input value={formData.whatsappNumber} onChange={(e) => setFormData(f => ({ ...f, whatsappNumber: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Platform *</Label>
-                <Select value={formData.sourcePlatform} onValueChange={(v) => setFormData(f => ({ ...f, sourcePlatform: v }))}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PLATFORMS.map(p => <SelectItem key={p} value={p} className="capitalize">{p.replace("_", " ")}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Quality</Label>
-                <Select value={formData.leadQuality} onValueChange={(v) => setFormData(f => ({ ...f, leadQuality: v }))}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hot">Hot</SelectItem>
-                    <SelectItem value="warm">Warm</SelectItem>
-                    <SelectItem value="cold">Cold</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Notes</Label>
-              <Textarea value={formData.notes} onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))} rows={2} />
-            </div>
+      <HrSheet
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        title="Capture New Lead"
+        onSubmit={handleCreateLead}
+        submitLabel={
+          <>
+            {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Capture Lead
+          </>
+        }
+        isPending={createMutation.isPending}
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Name *</Label>
+            <Input value={formData.name} onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))} />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button disabled={!formData.name || createMutation.isPending} onClick={() => createMutation.mutate(
-            formData,
-            {
-              onSuccess: () => { toast.success("Lead captured"); setShowCreateDialog(false); setFormData({ name: "", phone: "", email: "", whatsappNumber: "", sourcePlatform: "linkedin", leadQuality: "warm", notes: "" }); },
-              onError: (err) => toast.error(err.message),
-            }
-          )}>
-              {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Capture Lead
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Phone</Label>
+            <Input value={formData.phone} onChange={(e) => setFormData(f => ({ ...f, phone: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Email</Label>
+            <Input value={formData.email} onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">WhatsApp</Label>
+            <Input value={formData.whatsappNumber} onChange={(e) => setFormData(f => ({ ...f, whatsappNumber: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Platform *</Label>
+            <Select value={formData.sourcePlatform} onValueChange={(v) => setFormData(f => ({ ...f, sourcePlatform: v }))}>
+              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PLATFORMS.map(p => <SelectItem key={p} value={p} className="capitalize">{p.replace("_", " ")}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Quality</Label>
+            <Select value={formData.leadQuality} onValueChange={(v) => setFormData(f => ({ ...f, leadQuality: v }))}>
+              <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hot">Hot</SelectItem>
+                <SelectItem value="warm">Warm</SelectItem>
+                <SelectItem value="cold">Cold</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Notes</Label>
+          <Textarea value={formData.notes} onChange={(e) => setFormData(f => ({ ...f, notes: e.target.value }))} rows={2} />
+        </div>
+      </HrSheet>
     </PageWrapper>
   );
 }

@@ -10,22 +10,33 @@ export function getInitials(name: string | null | undefined) {
     .slice(0, 2);
 }
 
+function toDate(date: Date | string | null): Date | null {
+  if (!date) return null;
+  if (date instanceof Date) return date;
+
+  if (typeof date === "string" && !date.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(date) && !date.includes("T")) {
+    return new Date(date.replace(" ", "T") + "Z");
+  }
+  return new Date(date);
+}
+
 export function formatMessageTime(date: Date | string | null) {
-  if (!date) return "";
-  return format(new Date(date), "h:mm a");
+  const d = toDate(date);
+  if (!d) return "";
+  return format(d, "h:mm a");
 }
 
 export function formatMessageTimeFull(date: Date | string | null) {
-  if (!date) return "";
-  const d = new Date(date);
+  const d = toDate(date);
+  if (!d) return "";
   if (isToday(d)) return `Today at ${format(d, "h:mm a")}`;
   if (isYesterday(d)) return `Yesterday at ${format(d, "h:mm a")}`;
   return format(d, "MMM d, yyyy") + " at " + format(d, "h:mm a");
 }
 
 export function formatChannelTime(date: Date | string | null) {
-  if (!date) return "";
-  const d = new Date(date);
+  const d = toDate(date);
+  if (!d) return "";
   if (isToday(d)) return format(d, "h:mm a");
   if (isYesterday(d)) return "Yesterday";
   return format(d, "MMM d");
@@ -67,8 +78,8 @@ export function resolveFileUrl(url: string, mime?: string): string {
 }
 
 export function getDateLabel(date: Date | string | null) {
-  if (!date) return "";
-  const d = new Date(date);
+  const d = toDate(date);
+  if (!d) return "";
   if (isToday(d)) return "Today";
   if (isYesterday(d)) return "Yesterday";
   return format(d, "EEEE, MMMM d");

@@ -1,7 +1,4 @@
-/**
- * GET   /api/projects/[id]/sprints/[sprintId]  — sprint details
- * PATCH /api/projects/[id]/sprints/[sprintId]  — update sprint (admin only)
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";

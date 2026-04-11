@@ -261,11 +261,6 @@ function ExpensePdfContent({ data }: { data: PdfData }) {
   );
 }
 
-/**
- * Hook that provides a `downloadPDF` function and a hidden rendering portal.
- * The caller must render `pdfPortal` somewhere in the JSX tree (it is
- * aria-hidden and positioned off-screen so it never affects layout).
- */
 export function usePdfRenderer() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const [pdfData, setPdfData] = useState<PdfData | null>(null);

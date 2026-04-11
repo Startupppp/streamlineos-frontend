@@ -15,8 +15,6 @@ import type {
   GetWorkLogsInput,
 } from "@/types/hr";
 
-// ─── Attendance ───────────────────────────────────────────────────────────────
-
 export function useHrAttendanceStatus(
   options?: Omit<import("@tanstack/react-query").UseQueryOptions<AttendanceStatusResult, Error>, "queryKey" | "queryFn">
 ) {
@@ -114,8 +112,6 @@ export function useHrToggleBreak(
   });
 }
 
-// ─── Monthly Attendance ───────────────────────────────────────────────────────
-
 export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   return useQuery({
     queryKey: queryKeys.hr.monthlyAttendance(params),
@@ -124,8 +120,6 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
     enabled: !!params.userId,
   });
 }
-
-// ─── Work Logs ────────────────────────────────────────────────────────────────
 
 export function useGetWorkLogs(input: GetWorkLogsInput) {
   const params: Record<string, unknown> = {

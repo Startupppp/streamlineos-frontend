@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema";
 import { eq, and, lt, isNotNull, sql } from "drizzle-orm";
 
-/** GET /api/crm/sla/breached — Leads with SLA breaches */
 export async function GET() {
   return withAuth(async (session) => {
     const now = new Date();

@@ -80,8 +80,6 @@ function useIsActive(baseUrl: string) {
   };
 }
 
-// ── Desktop Sidebar (collapsible) ──────────────────────────────────────────
-
 function DesktopSidebar({
   projectId,
   projectName,
@@ -99,7 +97,7 @@ function DesktopSidebar({
         isCollapsed ? "w-[3.25rem]" : "w-52"
       )}
     >
-      {/* Header */}
+
       <div className={cn("shrink-0 border-b", isCollapsed ? "p-1.5" : "px-3 py-2.5")}>
         <Link
           href="/projects"
@@ -121,7 +119,6 @@ function DesktopSidebar({
         </div>
       </div>
 
-      {/* Nav */}
       <ScrollArea className="flex-1">
         <div className={cn("py-1.5", isCollapsed ? "px-1" : "px-1.5")}>
           {sections.map((section, si) => (
@@ -162,7 +159,6 @@ function DesktopSidebar({
         </div>
       </ScrollArea>
 
-      {/* Collapse toggle */}
       <div className="shrink-0 border-t p-1.5">
         <Button
           variant="ghost"
@@ -187,8 +183,6 @@ function DesktopSidebar({
   );
 }
 
-// ── Mobile Nav Bar + Sheet ─────────────────────────────────────────────────
-
 function MobileProjectNav({
   projectId,
   projectName,
@@ -200,7 +194,6 @@ function MobileProjectNav({
   const isActive = useIsActive(baseUrl);
   const pathname = usePathname();
 
-  // Find current page label
   const allItems = sections.flatMap((s) => s.items);
   const current = allItems.find((i) => isActive(i.href));
 
@@ -215,7 +208,7 @@ function MobileProjectNav({
         <SheetContent side="left" className="w-64 p-0">
           <SheetTitle className="sr-only">Project Navigation</SheetTitle>
           <div className="flex flex-col h-full">
-            {/* Header */}
+
             <div className="px-3 py-3 border-b">
               <Link
                 href="/projects"
@@ -233,7 +226,6 @@ function MobileProjectNav({
               </div>
             </div>
 
-            {/* Nav links */}
             <ScrollArea className="flex-1">
               <div className="py-1.5 px-1.5">
                 {sections.map((section, si) => (
@@ -269,7 +261,6 @@ function MobileProjectNav({
         </SheetContent>
       </Sheet>
 
-      {/* Breadcrumb: Key > Current page */}
       <div className="flex items-center gap-1.5 min-w-0 text-sm">
         <Link href={`/projects/${projectId}`} className="font-semibold text-foreground shrink-0">
           {projectKey}
@@ -285,16 +276,14 @@ function MobileProjectNav({
   );
 }
 
-// ── Export ──────────────────────────────────────────────────────────────────
-
 export function ProjectSidebar(props: ProjectSidebarProps) {
   return (
     <>
-      {/* Desktop — rendered by layout in a hidden md:block wrapper */}
+
       <div className="hidden md:flex h-full">
         <DesktopSidebar {...props} />
       </div>
-      {/* Mobile — rendered by layout in a md:hidden wrapper */}
+
       <div className="md:hidden">
         <MobileProjectNav {...props} />
       </div>

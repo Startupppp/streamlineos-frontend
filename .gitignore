@@ -28,6 +28,8 @@
 .DS_Store
 **/.DS_Store
 *.pem
+*.docx
+*.pdf
 
 # debug
 npm-debug.log*

@@ -22,7 +22,6 @@ const createSchema = z.object({
   budgetAllocated: z.string().optional(),
 });
 
-/** GET /api/marketing/campaigns */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit, offset } = parseQuery(req, listSchema);
@@ -42,7 +41,6 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/marketing/campaigns */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, createSchema);

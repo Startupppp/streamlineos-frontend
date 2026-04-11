@@ -9,7 +9,6 @@ const schema = z.object({
   userId: z.string().min(1, "User ID is required"),
 });
 
-/** POST /api/ai/attrition-risk — Assess employee attrition risk */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     if (!isOpenAIConfigured()) {

@@ -5,8 +5,6 @@ import { targets, targetHistory } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type { TargetFilters } from "@/types/crm";
 
-// ─── Targets ─────────────────────────────────────────────────────────────────
-
 export async function getTargets(orgId: string, filters?: TargetFilters) {
   const f = [eq(targets.orgId, orgId)];
   if (filters?.userId) f.push(eq(targets.userId, filters.userId));

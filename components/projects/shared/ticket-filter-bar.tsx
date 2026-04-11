@@ -32,10 +32,6 @@ interface TicketFilterBarProps {
   className?: string;
 }
 
-/**
- * Renders filter controls as **sibling fragments** (no wrapper div)
- * so they participate directly in the parent's flex layout.
- */
 export function TicketFilterBar({
   sprints,
   members,
@@ -75,7 +71,7 @@ export function TicketFilterBar({
 
   const clearAll = useCallback(() => {
     startTransition(() => {
-      // Keep non-filter params like "view"
+
       const params = new URLSearchParams(searchParams.toString());
       ["q", "status", "priority", "type", "sprintId", "assigneeId", "page"].forEach((k) =>
         params.delete(k)
@@ -87,7 +83,7 @@ export function TicketFilterBar({
 
   return (
     <Fragment>
-      {/* Search */}
+
       <div className="relative min-w-[140px] max-w-[200px] flex-1">
         <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -98,7 +94,6 @@ export function TicketFilterBar({
         />
       </div>
 
-      {/* Status */}
       <Select
         value={status || "ALL"}
         onValueChange={(v) => setParam("status", v === "ALL" ? "" : v)}
@@ -116,7 +111,6 @@ export function TicketFilterBar({
         </SelectContent>
       </Select>
 
-      {/* Priority */}
       <Select
         value={priority || "ALL"}
         onValueChange={(v) => setParam("priority", v === "ALL" ? "" : v)}
@@ -134,7 +128,6 @@ export function TicketFilterBar({
         </SelectContent>
       </Select>
 
-      {/* Type */}
       {showTypeFilter && (
         <Select
           value={type || "ALL"}
@@ -154,7 +147,6 @@ export function TicketFilterBar({
         </Select>
       )}
 
-      {/* Sprint */}
       {showSprintFilter && sprints && sprints.length > 0 && (
         <Select
           value={sprintId || "ALL"}
@@ -174,7 +166,6 @@ export function TicketFilterBar({
         </Select>
       )}
 
-      {/* Assignee */}
       {showAssigneeFilter && members && members.length > 0 && (
         <Select
           value={assigneeId || "ALL"}
@@ -194,7 +185,6 @@ export function TicketFilterBar({
         </Select>
       )}
 
-      {/* Clear */}
       {hasFilters && (
         <Button
           variant="ghost"

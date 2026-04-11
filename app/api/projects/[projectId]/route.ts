@@ -1,8 +1,4 @@
-/**
- * GET    /api/projects/[id]  — project details
- * PATCH  /api/projects/[id]  — update project settings
- * DELETE /api/projects/[id]  — delete project (CEO only)
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

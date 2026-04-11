@@ -1,4 +1,5 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err } from "@/lib/api/helpers";
+import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { terminations, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -6,17 +7,19 @@ import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
-  userId: z.string().min(1, "userId is required"),
+  userId: z.string().min(1, "Employee is required"),
   reasons: z.array(z.string().min(1)).min(1, "At least one reason is required"),
   detailedExplanation: z.string().min(1, "Detailed explanation is required"),
-  effectiveDate: z.string().min(1, "effectiveDate is required"),
+  effectiveDate: z.string().min(1, "Effective date is required"),
   severanceAmount: z.number().nonnegative().optional(),
   noticePeriodWaived: z.boolean().optional().default(false),
   internalNotes: z.string().optional(),
 });
 
 export async function GET(_req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAuth(async (session) => {
+    if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
+
     const rows = await db
       .select({
         id: terminations.id,
@@ -44,10 +47,13 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  return withAdmin(async (session) => {
+  return withAuth(async (session) => {
+    if (session.user.role !== "HR" && session.user.role !== "CEO") {
+      return err("Only HR can initiate terminations.", 403);
+    }
+
     const body = createSchema.parse(await req.json());
 
-    // Verify the target user is a member of this org
     const membership = await db.query.organizationMembers.findFirst({
       where: and(
         eq(organizationMembers.userId, body.userId),

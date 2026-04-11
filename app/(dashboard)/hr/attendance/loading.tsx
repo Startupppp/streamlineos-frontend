@@ -6,7 +6,7 @@ export default function AttendanceLoading() {
   return (
     <PageWrapper title="Attendance" subtitle="Track daily check-ins, work hours and leave balances.">
       <div className="space-y-6">
-        {/* Clock-in tracker + Balance cards */}
+
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -36,7 +36,6 @@ export default function AttendanceLoading() {
           </div>
         </div>
 
-        {/* Calendar */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <Skeleton className="h-5 w-40" />
@@ -58,7 +57,6 @@ export default function AttendanceLoading() {
           </CardContent>
         </Card>
 
-        {/* History table */}
         <Card>
           <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
           <CardContent>

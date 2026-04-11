@@ -128,7 +128,6 @@ export function LeadTableView({
         </div>
       </div>
 
-      {/* Table — Bloomberg-dense */}
       <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
         <div className="min-w-max">
           <table className="w-full caption-bottom text-[11px]">
@@ -202,7 +201,6 @@ export function LeadTableView({
         </div>
       </div>
 
-      {/* Pagination — compact */}
       {totalPages > 1 && (
         <div className="shrink-0 flex items-center justify-between pt-0.5 px-1">
           <span className="text-[10px] text-muted-foreground tabular-nums">

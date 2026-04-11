@@ -6,7 +6,6 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { ensureOrgMembership } from "@/lib/auth-helpers";
 
-/** Get authenticated member, auto-creating org membership if needed */
 export async function getExpenseMember() {
   const session = await auth();
   if (!session?.user?.id) return null;

@@ -37,7 +37,7 @@ export function DocumentFilters({
   return (
     <Card className="shadow-sm border">
       <CardContent className="p-4 space-y-3">
-        {/* Search + Category Tabs row */}
+
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search
@@ -69,7 +69,6 @@ export function DocumentFilters({
           </div>
         </div>
 
-        {/* Type filter row */}
         <div className="flex items-center gap-1.5 pt-1 border-t">
           <span className="text-xs text-muted-foreground font-medium flex items-center gap-1 mr-1">
             <Filter className="h-3 w-3" />

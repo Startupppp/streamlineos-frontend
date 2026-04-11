@@ -30,12 +30,11 @@ export function SidebarSection({
 }: SidebarSectionProps) {
   const pathname = usePathname();
 
-  // In icon-only (collapsed sidebar) mode — no accordion, show all items
   const showItems = isCollapsed || !isGroupCollapsed;
 
   return (
     <div className={cn(groupIndex > 0 && "mt-2")}>
-      {/* Section header — expanded sidebar: clickable accordion toggle */}
+
       {!isCollapsed && (
         <button
           type="button"
@@ -54,12 +53,10 @@ export function SidebarSection({
         </button>
       )}
 
-      {/* Visual divider between groups in collapsed mode */}
       {isCollapsed && groupIndex > 0 && (
         <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" />
       )}
 
-      {/* Route list — hidden when group is collapsed (accordion) */}
       {showItems && (
         <div className="space-y-0.5">
           {group.routes.map((route) => {
@@ -89,12 +86,11 @@ export function SidebarSection({
                   isActive && "active"
                 )}
               >
-                {/* Active indicator strip */}
+
                 {isActive && !isCollapsed && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full bg-gold" />
                 )}
 
-                {/* Icon */}
                 <route.icon
                   className={cn(
                     "nav-icon transition-colors duration-150",
@@ -103,7 +99,6 @@ export function SidebarSection({
                   )}
                 />
 
-                {/* Label + badge — expanded sidebar only */}
                 {!isCollapsed && (
                   <>
                     <span className="flex-1 truncate text-[0.8125rem]">
@@ -125,7 +120,6 @@ export function SidebarSection({
                   </>
                 )}
 
-                {/* Collapsed badge dot */}
                 {isCollapsed && hasBadge && (
                   <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-sidebar" />
                 )}

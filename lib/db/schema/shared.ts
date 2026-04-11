@@ -1,6 +1,4 @@
-/**
- * Shared / cross-domain tables: notifications, audit logs.
- */
+
 import { pgTable, text, serial, timestamp, boolean, jsonb, integer, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { notificationTypeEnum } from "./enums";
@@ -104,7 +102,6 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ─── Webhooks ───
 export const webhookEndpoints = pgTable("webhook_endpoints", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").references(() => organizations.id).notNull(),
@@ -136,7 +133,6 @@ export const webhookLogs = pgTable("webhook_logs", {
   index("idx_webhook_logs_org_event").on(table.orgId, table.event),
 ]);
 
-// ─── Shared Relations ───
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, { fields: [notifications.userId], references: [users.id] }),
 }));

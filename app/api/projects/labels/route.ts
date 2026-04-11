@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/labels  — list all org-scoped labels (no projectId needed)
- * POST /api/projects/labels  — create a new org-scoped label
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, parseBody } from "@/lib/api/helpers";

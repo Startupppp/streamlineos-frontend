@@ -26,7 +26,6 @@ const resolveSchema = z.object({
   rejectionReason: z.string().optional(),
 });
 
-/** GET /api/deals/approvals — List pending/all approvals */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit } = parseQuery(req, listSchema);
@@ -65,12 +64,10 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/deals/approvals — Request approval or resolve an approval */
 export async function POST(req: NextRequest) {
   return withAuth<unknown>(async (session) => {
     const body = await req.json();
 
-    // Resolve an existing approval
     if (body.approvalId) {
       const { approvalId, action, rejectionReason } = resolveSchema.parse(body);
       const role = session.user.role ?? "";
@@ -89,7 +86,6 @@ export async function POST(req: NextRequest) {
 
       if (!updated) return err("Approval not found", 404);
 
-      // If approved, update the deal stage
       if (action === "approve") {
         await db
           .update(deals)
@@ -97,7 +93,6 @@ export async function POST(req: NextRequest) {
           .where(eq(deals.id, updated.dealId));
       }
 
-      // Notify the requester
       await createNotification({
         orgId: session.orgId,
         userId: updated.requestedBy,
@@ -113,10 +108,8 @@ export async function POST(req: NextRequest) {
       return ok(updated);
     }
 
-    // Request a new approval
     const { dealId, requestedStage } = requestSchema.parse(body);
 
-    // Check if deal needs approval
     const [deal] = await db.select().from(deals).where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId)));
     if (!deal) return err("Deal not found", 404);
 
@@ -128,12 +121,11 @@ export async function POST(req: NextRequest) {
     const needsApproval = rules.some(r => Number(deal.value ?? 0) >= Number(r.minValue));
 
     if (!needsApproval) {
-      // No approval needed — just update the stage directly
+
       await db.update(deals).set({ stage: requestedStage as typeof deals.$inferSelect.stage, updatedAt: new Date() }).where(eq(deals.id, dealId));
       return ok({ approved: true, directUpdate: true });
     }
 
-    // Create approval request
     const [approval] = await db
       .insert(dealApprovals)
       .values({

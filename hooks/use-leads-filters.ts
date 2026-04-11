@@ -40,7 +40,6 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
-  // Read current values from URL (with defaults)
   const view = (searchParams.get("view") as LeadsView) || "table";
   const searchQuery = searchParams.get("q") || "";
   const statusFilter = parseOptional(searchParams.get("status"));
@@ -71,7 +70,7 @@ export function useLeadsFilters(): UseLeadsFiltersReturn {
   const setView = useCallback(
     (v: LeadsView) => {
       update({ view: v });
-      // Keep localStorage as fallback for initial load
+
       if (typeof window !== "undefined") localStorage.setItem("leads-view", v);
     },
     [update],

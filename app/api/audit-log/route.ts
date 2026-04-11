@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { auditLogs, users } from "@/lib/db/schema";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 
-
 export async function GET(req: NextRequest) {
   return withAdmin(async (session) => {
     const params = req.nextUrl.searchParams;

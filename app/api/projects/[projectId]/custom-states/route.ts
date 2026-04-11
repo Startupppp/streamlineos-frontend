@@ -1,10 +1,4 @@
-/**
- * GET  /api/projects/[id]/custom-states  — list custom states for project
- * POST /api/projects/[id]/custom-states  — create custom state
- *
- * Custom states are ordered by sequence.
- * On POST, if isDefault=true the previous default in the same group is cleared.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

@@ -12,7 +12,7 @@ import {
 export function PayrollListSkeleton() {
   return (
     <div className="space-y-6">
-      {/* 3 Stat cards matching actual layout */}
+
       <div className="grid gap-4 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i}>
@@ -28,7 +28,6 @@ export function PayrollListSkeleton() {
         ))}
       </div>
 
-      {/* Payroll table */}
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-48" />

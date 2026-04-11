@@ -59,7 +59,7 @@ export function PageWrapper({
 
       {filters && (
         <div className="shrink-0 border-b border-border/60 bg-background">
-          <div className="px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto scrollbar-thin">
+          <div className="px-3 sm:px-4 py-2 flex items-center gap-3 overflow-x-auto scrollbar-thin">
             {filters}
           </div>
         </div>
@@ -73,7 +73,7 @@ export function PageWrapper({
         </div>
       ) : (
         <ScrollArea className="flex-1 min-h-0">
-          <div className={cn("px-4 sm:px-6 pt-3 pb-6", contentClassName)}>
+          <div className={cn("px-4 sm:px-6 pt-3 pb-6 overflow-x-hidden", contentClassName)}>
             {children}
           </div>
         </ScrollArea>

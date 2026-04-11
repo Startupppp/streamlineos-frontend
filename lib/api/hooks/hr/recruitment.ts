@@ -17,16 +17,12 @@ import type {
   UpdateInterviewInput,
 } from "@/types/hr";
 
-// ─── Stats ───────────────────────────────────────────────────────────────────
-
 export function useRecruitmentStats() {
   return useQuery({
     queryKey: queryKeys.hr.recruitmentStats(),
     queryFn: () => apiClient.get<RecruitmentStats>("/hr/recruitment/stats"),
   });
 }
-
-// ─── Job Postings ────────────────────────────────────────────────────────────
 
 export function useJobPostings(params?: { status?: string }) {
   return useQuery({
@@ -76,8 +72,6 @@ export function useDeleteJobPosting() {
   });
 }
 
-// ─── Candidates ──────────────────────────────────────────────────────────────
-
 export function useCandidates(params?: { status?: string; jobId?: number }) {
   return useQuery({
     queryKey: queryKeys.hr.candidates(params as Record<string, unknown> | undefined),
@@ -120,8 +114,6 @@ export function useUpdateCandidate() {
   });
 }
 
-// ─── Applications ────────────────────────────────────────────────────────────
-
 export function useCreateApplication() {
   const qc = useQueryClient();
   return useMutation({
@@ -136,8 +128,6 @@ export function useCreateApplication() {
     },
   });
 }
-
-// ─── Interviews ──────────────────────────────────────────────────────────────
 
 export function useInterviews(params?: { candidateId?: number; upcoming?: boolean }) {
   return useQuery({
@@ -178,8 +168,6 @@ export function useDeleteInterview() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() }),
   });
 }
-
-// ─── Pipeline ────────────────────────────────────────────────────────────────
 
 export function useRecruitmentPipeline() {
   return useQuery({

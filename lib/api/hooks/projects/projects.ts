@@ -18,8 +18,6 @@ import type {
   CreateLabelInput,
 } from "@/types/projects";
 
-// ─── Projects ─────────────────────────────────────────────────────────────────
-
 export function useProjects(
   filters?: ProjectFilters,
   options?: Omit<UseQueryOptions<PaginatedResponse<ProjectListItem>>, "queryKey" | "queryFn">
@@ -84,8 +82,6 @@ export function useDeleteProject(
   });
 }
 
-// ─── Project Members ──────────────────────────────────────────────────────────
-
 export function useProjectMembers(
   projectId: number,
   options?: Omit<UseQueryOptions<ProjectMember[]>, "queryKey" | "queryFn" | "enabled">
@@ -127,8 +123,6 @@ export function useRemoveProjectMember(options?: Parameters<typeof useMutation>[
     ...options,
   });
 }
-
-// ─── Labels ───────────────────────────────────────────────────────────────────
 
 export function useProjectLabels(
   projectId?: number,

@@ -1,20 +1,6 @@
-/**
- * Zod schemas for all AI feature outputs.
- *
- * These schemas serve dual purpose:
- *   1. Runtime validation via OpenAI structured outputs (guaranteed compliance)
- *   2. Inferred TypeScript types for hooks and components
- *
- * IMPORTANT for OpenAI structured outputs:
- *   - All fields must be required (use z.object().strict() implicit)
- *   - Use z.array() not z.tuple()
- *   - Use z.enum() for fixed string sets
- *   - Avoid recursive types and additionalProperties
- */
+
 
 import { z } from "zod";
-
-/* ─── Lead Scoring ────────────────────────────────────────────────────────── */
 
 export const LeadScoreSchema = z.object({
   score: z.number().min(0).max(100).describe("Score from 0 (cold) to 100 (hot)"),
@@ -24,8 +10,6 @@ export const LeadScoreSchema = z.object({
   suggestedActions: z.array(z.string()).describe("2-3 concrete next actions to take"),
 });
 export type LeadScoreResult = z.infer<typeof LeadScoreSchema>;
-
-/* ─── Email Generator ─────────────────────────────────────────────────────── */
 
 export const EmailToneSchema = z.enum(["formal", "friendly", "urgent"]);
 export type EmailTone = z.infer<typeof EmailToneSchema>;
@@ -47,8 +31,6 @@ export const EmailVariationsSchema = z.object({
 });
 export type EmailVariations = z.infer<typeof EmailVariationsSchema>;
 
-/* ─── Deal Prediction ─────────────────────────────────────────────────────── */
-
 export const DealPredictionSchema = z.object({
   winProbability: z.number().min(0).max(100).describe("Win probability 0-100"),
   confidence: z.enum(["low", "medium", "high"]),
@@ -59,8 +41,6 @@ export const DealPredictionSchema = z.object({
 });
 export type DealPredictionResult = z.infer<typeof DealPredictionSchema>;
 
-/* ─── Next-Best-Action ────────────────────────────────────────────────────── */
-
 export const NextActionSchema = z.object({
   action: z.string().describe("Concise action description, max 10 words"),
   urgency: z.enum(["low", "medium", "high", "critical"]),
@@ -68,8 +48,6 @@ export const NextActionSchema = z.object({
   template: z.string().describe("Optional message template if action is email/call. Empty string if not applicable."),
 });
 export type NextActionResult = z.infer<typeof NextActionSchema>;
-
-/* ─── Churn Risk ──────────────────────────────────────────────────────────── */
 
 export const ChurnRiskSchema = z.object({
   churnRiskScore: z.number().min(0).max(100),
@@ -80,8 +58,6 @@ export const ChurnRiskSchema = z.object({
 });
 export type ChurnRiskResult = z.infer<typeof ChurnRiskSchema>;
 
-/* ─── Conversation Summary ────────────────────────────────────────────────── */
-
 export const ConversationSummarySchema = z.object({
   summary: z.string().describe("1-2 sentence summary"),
   keyPoints: z.array(z.string()),
@@ -89,8 +65,6 @@ export const ConversationSummarySchema = z.object({
   sentiment: z.enum(["positive", "neutral", "negative"]),
 });
 export type ConversationSummaryResult = z.infer<typeof ConversationSummarySchema>;
-
-/* ─── Lead Enrichment ─────────────────────────────────────────────────────── */
 
 export const LeadEnrichmentSchema = z.object({
   companyInsight: z.string(),
@@ -102,8 +76,6 @@ export const LeadEnrichmentSchema = z.object({
 });
 export type LeadEnrichmentResult = z.infer<typeof LeadEnrichmentSchema>;
 
-/* ─── HR: Candidate Scoring ───────────────────────────────────────────────── */
-
 export const CandidateScoreSchema = z.object({
   score: z.number().min(0).max(100),
   fitLevel: z.enum(["excellent", "good", "average", "poor"]),
@@ -113,8 +85,6 @@ export const CandidateScoreSchema = z.object({
   suggestedQuestions: z.array(z.string()).describe("3-5 interview questions to validate the candidate"),
 });
 export type CandidateScoreResult = z.infer<typeof CandidateScoreSchema>;
-
-/* ─── HR: Performance Review Draft ────────────────────────────────────────── */
 
 export const ReviewRatingItemSchema = z.object({
   category: z.string(),
@@ -131,8 +101,6 @@ export const ReviewDraftSchema = z.object({
 });
 export type ReviewDraftResult = z.infer<typeof ReviewDraftSchema>;
 
-/* ─── HR: Helpdesk Reply ──────────────────────────────────────────────────── */
-
 export const HelpdeskReplySchema = z.object({
   suggestedReply: z.string().describe("Professional reply text, max 100 words"),
   category: z.string().describe("Inferred category: Leave / Payroll / IT / Benefits / Policy / Other"),
@@ -140,8 +108,6 @@ export const HelpdeskReplySchema = z.object({
   followUpActions: z.array(z.string()),
 });
 export type HelpdeskReplyResult = z.infer<typeof HelpdeskReplySchema>;
-
-/* ─── HR: Attrition Risk ──────────────────────────────────────────────────── */
 
 export const AttritionRiskSchema = z.object({
   attritionRiskScore: z.number().min(0).max(100),

@@ -8,7 +8,6 @@ import { candidates, jobPostings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-/** Score a candidate using AI. */
 export async function aiScoreCandidate(
   orgId: string,
   candidateId: number,
@@ -66,7 +65,6 @@ export async function aiScoreCandidate(
 
   result.score = Math.max(0, Math.min(100, Math.round(result.score)));
 
-  // Persist score as 0-5 rating on candidate
   const ratingFiveScale = Math.round((result.score / 100) * 5);
   await db
     .update(candidates)

@@ -1,10 +1,6 @@
-/**
- * All pgEnum declarations for the application.
- * Centralized here so every domain schema file can import without circular deps.
- */
+
 import { pgEnum } from "drizzle-orm/pg-core";
 
-// ─── Project / Ticket ───
 export const ticketTypeEnum = pgEnum("ticket_type", ["EPIC", "STORY", "TASK", "BUG"]);
 export const ticketStatusEnum = pgEnum("ticket_status", ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 export const ticketPriorityEnum = pgEnum("ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
@@ -17,7 +13,6 @@ export const intakeSourceEnum = pgEnum("intake_source", ["manual", "web_form", "
 export const workItemRelationTypeEnum = pgEnum("work_item_relation_type", ["blocks", "blocked_by", "duplicate_of", "relates_to"]);
 export const viewLayoutEnum = pgEnum("view_layout", ["board", "list", "table", "calendar", "gantt"]);
 
-// ─── HR ───
 export const leaveStatusEnum = pgEnum("leave_status", ["PENDING", "APPROVED", "REJECTED"]);
 export const payrollStatusEnum = pgEnum("payroll_status", ["DRAFT", "PENDING_APPROVAL", "APPROVED", "PAID"]);
 export const expenseStatusEnum = pgEnum("expense_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
@@ -32,7 +27,7 @@ export const reviewCycleStatusEnum = pgEnum("review_cycle_status", ["DRAFT", "AC
 export const meetingStatusEnum = pgEnum("meeting_status", ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"]);
 export const trainingStatusEnum = pgEnum("training_status", ["DRAFT", "PUBLISHED", "ARCHIVED"]);
 export const enrollmentStatusEnum = pgEnum("enrollment_status", ["ENROLLED", "IN_PROGRESS", "COMPLETED", "DROPPED"]);
-export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "PENDING_HR", "HR_APPROVED", "CEO_APPROVED", "IN_PROGRESS", "APPROVED", "REJECTED", "WITHDRAWN", "COMPLETED"]);
+export const resignationStatusEnum = pgEnum("resignation_status", ["SUBMITTED", "PENDING_HR", "HR_APPROVED", "CEO_APPROVED", "IN_PROGRESS", "APPROVED", "WITHDRAWN", "COMPLETED", "REJECTED"]);
 export const exitChecklistStatusEnum = pgEnum("exit_checklist_status", ["PENDING", "DONE"]);
 export const ackStatusEnum = pgEnum("ack_status", ["PENDING", "ACKNOWLEDGED", "DECLINED"]);
 export const reimbursementStatusEnum = pgEnum("reimbursement_status", ["PENDING", "APPROVED", "REJECTED", "PAID"]);
@@ -47,7 +42,6 @@ export const onboardingDocStatusEnum = pgEnum("onboarding_doc_status", ["PENDING
 export const onboardingDocumentStatusEnum = pgEnum("onboarding_document_status", ["PENDING", "SUBMITTED", "APPROVED", "REJECTED", "RE_UPLOAD_REQUESTED"]);
 export const docAuditActionEnum = pgEnum("doc_audit_action", ["UPLOADED", "APPROVED", "REJECTED", "RE_UPLOAD_REQUESTED", "RE_UPLOADED"]);
 
-// ─── CRM / Leads / Deals ───
 export const leadPipelineStatusEnum = pgEnum("lead_pipeline_status", ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]);
 export const leadActivityTypeEnum = pgEnum("lead_activity_type", ["call", "email", "whatsapp", "meeting", "site_visit"]);
 export const leadSourceEnum = pgEnum("lead_source", ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"]);
@@ -66,7 +60,6 @@ export const orgSizeEnum = pgEnum("org_size", ["1-10", "11-50", "51-200", "201-1
 export const branchStatusEnum = pgEnum("branch_status", ["ACTIVE", "INACTIVE"]);
 export const dmLeadStatusEnum = pgEnum("dm_lead_status", ["pending_review", "verified", "sent_to_hr", "imported_to_pipeline"]);
 
-// ─── CRM Legacy (Seeded demo data) ───
 export const crmPersonRoleEnum = pgEnum("crm_person_role", ["sales_rep", "csm", "marketing"]);
 export const crmHealthEnum = pgEnum("crm_health", ["healthy", "at_risk", "critical"]);
 export const crmDealStageEnum = pgEnum("crm_deal_stage", ["Discovery", "Qualified", "Proposal", "Negotiation", "Closed Won"]);
@@ -77,25 +70,19 @@ export const crmSupportTicketPriorityEnum = pgEnum("crm_support_ticket_priority"
 export const crmActivityTypeEnum = pgEnum("crm_activity_type", ["deal_won", "meeting", "proposal", "call", "email", "ticket", "escalation"]);
 export const crmEventStatusEnum = pgEnum("crm_event_status", ["planning", "confirmed", "completed"]);
 
-// ─── Recruitment ───
 export const jobPostingStatusEnum = pgEnum("job_posting_status", ["DRAFT", "OPEN", "PAUSED", "CLOSED", "FILLED"]);
 export const candidateStatusEnum = pgEnum("candidate_status", ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"]);
 export const interviewTypeEnum = pgEnum("interview_type", ["PHONE", "VIDEO", "ONSITE", "TECHNICAL", "HR", "FINAL"]);
 export const interviewResultEnum = pgEnum("interview_result", ["PENDING", "PASSED", "FAILED", "NO_SHOW"]);
 export const applicationStatusEnum = pgEnum("application_status", ["APPLIED", "SHORTLISTED", "INTERVIEWING", "OFFERED", "ACCEPTED", "REJECTED", "WITHDRAWN"]);
 
-// ─── Chat ───
 export const chatMessageTypeEnum = pgEnum("chat_message_type", ["text", "lead_submission", "system"]);
 
-// ─── Notifications / Shared ───
 export const notificationTypeEnum = pgEnum("notification_type", ["INFO", "SUCCESS", "WARNING", "ERROR"]);
 
-// ─── Invoices ───
 export const invoiceStatusEnum = pgEnum("invoice_status", ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"]);
 
-// ─── Support ───
 export const supportTicketStatusEnum = pgEnum("support_ticket_status", ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"]);
 export const supportTicketPriorityEnum = pgEnum("support_ticket_priority", ["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
-// ─── Social Media ───
 export const socialPlatformEnum = pgEnum("social_platform", ["instagram", "twitter", "linkedin", "facebook", "youtube"]);

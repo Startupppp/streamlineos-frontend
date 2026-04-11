@@ -1,7 +1,4 @@
-/**
- * GET  /api/projects/[id]/views  — list views for project
- * POST /api/projects/[id]/views  — create view
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

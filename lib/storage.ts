@@ -42,7 +42,7 @@ export async function uploadFile(
   mimeTypeOverride?: string
 ): Promise<UploadResult> {
   const config = getR2Config();
-  
+
   if (!config.bucketName) {
     throw new Error("R2 bucket not configured");
   }
@@ -50,10 +50,10 @@ export async function uploadFile(
   const buffer = Buffer.isBuffer(file) ? file : Buffer.from(await file.arrayBuffer());
   const originalName = Buffer.isBuffer(file) ? fileName ?? "file" : file.name;
   const mimeType = mimeTypeOverride || (Buffer.isBuffer(file) ? "application/octet-stream" : file.type);
-  
+
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, "-");
   const key = `${folder}/${Date.now()}-${sanitizedName}`;
-  
+
   const s3Client = getS3Client();
   await s3Client.send(
     new PutObjectCommand({
@@ -78,7 +78,7 @@ export async function uploadFile(
 
 export async function getFileUrl(key: string, expiresIn: number = 3600): Promise<string> {
   const config = getR2Config();
-  
+
   if (!config.bucketName) {
     throw new Error("R2 bucket not configured");
   }
@@ -94,7 +94,7 @@ export async function getFileUrl(key: string, expiresIn: number = 3600): Promise
 
 export async function deleteFile(key: string): Promise<void> {
   const config = getR2Config();
-  
+
   if (!config.bucketName) {
     throw new Error("R2 bucket not configured");
   }
@@ -110,7 +110,7 @@ export async function deleteFile(key: string): Promise<void> {
 
 export async function fileExists(key: string): Promise<boolean> {
   const config = getR2Config();
-  
+
   if (!config.bucketName) {
     return false;
   }

@@ -10,7 +10,6 @@ export async function POST() {
     const uri = generateTotpUri(secret, session.user.email ?? session.user.id);
     const qrDataUrl = await generateQrCodeDataUrl(uri);
 
-    // Store pending secret in user record — not enabled until verified
     await db.update(users).set({ totpSecret: secret }).where(eq(users.id, session.user.id));
 
     return ok({ qrDataUrl, secret, manualEntryKey: secret });

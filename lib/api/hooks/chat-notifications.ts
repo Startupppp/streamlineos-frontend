@@ -1,14 +1,5 @@
 "use client";
 
-/**
- * Global chat notification hook.
- * Subscribes to ALL of the user's channels via Ably and fires in-app toasts
- * + browser (desktop) notifications for messages received in channels other
- * than the currently active one.
- *
- * Must be rendered inside <ChatAblyProvider>.
- */
-
 import { useEffect, useRef } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
@@ -35,14 +26,12 @@ export function useChatGlobalNotifications(
   const { data: session } = useSession();
   const orgId = session?.orgId;
 
-  // Refs so handlers always read the latest values without triggering re-subscription
   const activeChannelIdRef = useRef(activeChannelId);
   activeChannelIdRef.current = activeChannelId;
 
   const currentUserIdRef = useRef(currentUserId);
   currentUserIdRef.current = currentUserId;
 
-  // Request desktop notification permission on first render
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission === "default") {
@@ -68,11 +57,9 @@ export function useChatGlobalNotifications(
         const payload = msg.data as NotificationPayload;
         if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
 
-        // Keep unread counts fresh
         queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
         queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
 
-        // No notification for the currently active (and visible) channel
         if (channelId === activeChannelIdRef.current) return;
 
         const senderName = payload.senderName ?? "Someone";
@@ -82,10 +69,8 @@ export function useChatGlobalNotifications(
             : `#${channelDisplayName ?? "channel"}`;
         const body = payload.content?.slice(0, 80) ?? "Sent an attachment";
 
-        // In-app toast
         toast(title, { description: body, duration: 5_000 });
 
-        // Always show Chrome desktop notification
         if (
           typeof window !== "undefined" &&
           "Notification" in window &&

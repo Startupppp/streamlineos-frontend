@@ -180,7 +180,6 @@ export default function CrmAnalyticsPage() {
           <ConversionChart data={wonLostReasons} />
           <DealValueChart data={dealsByStageValue} />
 
-          {/* SLA Compliance */}
           <AnalyticsChartCard title="SLA Compliance Rate" data={[]} filename="sla-compliance">
             {slaReport && (
               <div className="flex flex-col items-center justify-center h-[280px]">
@@ -209,7 +208,6 @@ export default function CrmAnalyticsPage() {
             )}
           </AnalyticsChartCard>
 
-          {/* Score Distribution */}
           <AnalyticsChartCard title="Score Distribution" data={scoreDistribution} filename="score-distribution">
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={scoreDistribution}>
@@ -224,7 +222,6 @@ export default function CrmAnalyticsPage() {
             </ResponsiveContainer>
           </AnalyticsChartCard>
 
-          {/* Assignment Distribution */}
           {analyticsSummary && analyticsSummary.assignmentDistribution.length > 0 && (
             <AnalyticsChartCard title="Lead Assignment Distribution" data={analyticsSummary.assignmentDistribution as unknown as Record<string, unknown>[]} filename="assignment-distribution">
               <ResponsiveContainer width="100%" height={280}>
@@ -239,7 +236,6 @@ export default function CrmAnalyticsPage() {
             </AnalyticsChartCard>
           )}
 
-          {/* Conversion by Source */}
           {analyticsSummary && analyticsSummary.conversionBySource.length > 0 && (
             <AnalyticsChartCard title="Conversion Rate by Source" data={analyticsSummary.conversionBySource as unknown as Record<string, unknown>[]} filename="conversion-by-source">
               <ResponsiveContainer width="100%" height={280}>
@@ -256,7 +252,6 @@ export default function CrmAnalyticsPage() {
             </AnalyticsChartCard>
           )}
 
-          {/* Monthly Revenue */}
           {analyticsSummary && analyticsSummary.monthlyRevenue.length > 0 && (
             <AnalyticsChartCard title="Monthly Revenue Trend" data={analyticsSummary.monthlyRevenue as unknown as Record<string, unknown>[]} filename="monthly-revenue">
               <ResponsiveContainer width="100%" height={280}>

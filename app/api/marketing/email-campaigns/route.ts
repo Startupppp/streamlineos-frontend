@@ -24,7 +24,6 @@ const createSchema = z.object({
   scheduledAt: z.string().optional(),
 });
 
-/** GET /api/marketing/email-campaigns */
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const { status, limit } = parseQuery(req, listSchema);
@@ -42,7 +41,6 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/marketing/email-campaigns */
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const input = await parseBody(req, createSchema);

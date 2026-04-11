@@ -113,7 +113,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
               name="startDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Start Date</FormLabel>
+                  <FormLabel className="text-xs font-medium">Start Date</FormLabel>
                   <FormControl>
                     <DatePicker
                       value={field.value}
@@ -131,7 +131,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
               name="endDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">End Date</FormLabel>
+                  <FormLabel className="text-xs font-medium">End Date</FormLabel>
                   <FormControl>
                     <DatePicker
                       value={field.value}
@@ -151,7 +151,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
             name="reason"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Reason</FormLabel>
+                <FormLabel className="text-xs font-medium">Reason</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="text-sm">
@@ -174,7 +174,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
             name="approverId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Approver</FormLabel>
+                <FormLabel className="text-xs font-medium">Approver</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="text-sm">
@@ -199,7 +199,7 @@ export function WfhRequestSheet({ open, onOpenChange, approvers }: WfhRequestShe
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">
+                <FormLabel className="text-xs font-medium">
                   Notes <span className="text-muted-foreground">(optional)</span>
                 </FormLabel>
                 <FormControl>

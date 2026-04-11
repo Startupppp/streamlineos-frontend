@@ -65,7 +65,6 @@ export async function submitLeaveRequest(data: {
 
   if (data.startDate > data.endDate) return { error: "Invalid date range" };
 
-  // Reject leave requests that start before the employee's Date of Joining
   const userRecord = await db.query.users.findFirst({
     where: eq(users.id, session.user.id),
     columns: { joiningDate: true },
@@ -99,7 +98,7 @@ export async function submitLeaveRequest(data: {
     const leaveType = await db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, data.leaveTypeId) });
 
     if (isCeo) {
-      // CEO auto-approved: deduct balance immediately
+
       if (leaveType?.name !== "Unpaid Leave") {
         const start = data.startDate;
         const end = data.endDate;
@@ -163,7 +162,6 @@ export async function submitLeaveRequest(data: {
         metadata: { leaveType: leaveType?.name, reason: data.reason },
       });
 
-      // Also notify all HR and CEO users about the leave request
       await notifyByRoles(member.orgId, [ROLES.CEO, ROLES.HR], {
         type: "INFO",
         title: "New Leave Request",
@@ -221,7 +219,6 @@ export async function processLeaveRequest(data: {
         throw new Error("Leave request not found");
       }
 
-      // If reverting from APPROVED back to PENDING, restore the leave balance
       if (data.status === "PENDING" && request.status === "APPROVED" && request.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, request.leaveTypeId),
@@ -385,7 +382,7 @@ export async function getIncomingRequests() {
 
   return await db.query.leaveRequests.findMany({
     where: and(
-      // HR/CEO/Admin see all pending requests in the org, others see only their assigned ones
+
       ...(isAdminRole
         ? [eq(leaveRequests.orgId, member.orgId)]
         : [eq(leaveRequests.approverId, session.user.id), eq(leaveRequests.orgId, member.orgId)]

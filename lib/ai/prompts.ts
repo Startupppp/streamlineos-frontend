@@ -1,11 +1,4 @@
-/**
- * Centralized prompt templates for all AI features.
- * Each prompt is a function that accepts structured data and returns a system + user message pair.
- *
- * Result types and Zod schemas are defined in `./schemas.ts` for use with
- * `aiStructured()` (the recommended way to call AI in this codebase).
- * This file re-exports them for backward compatibility with existing imports.
- */
+
 
 export type {
   LeadScoreResult,
@@ -24,8 +17,6 @@ export type {
 
 import type { EmailTone } from "./schemas";
 export type { EmailTone };
-
-/* ─── Lead Scoring ────────────────────────────────────────────────────────── */
 
 export interface LeadScoringInput {
   name: string;
@@ -83,8 +74,6 @@ Has assignee: ${lead.hasAssignee ? "Yes" : "No"}`,
   };
 }
 
-/* ─── Follow-up Email Generator ───────────────────────────────────────────── */
-
 export interface EmailGeneratorInput {
   leadName: string;
   company?: string | null;
@@ -99,8 +88,6 @@ export interface EmailGeneratorInput {
   tone: EmailTone;
   context?: string;
 }
-
-/* ─── Deal Win/Loss Prediction ────────────────────────────────────────────── */
 
 export interface DealPredictionInput {
   dealName: string;
@@ -156,8 +143,6 @@ Notes: ${deal.notes || "None"}`,
   };
 }
 
-/* ─── Smart Next-Best-Action ──────────────────────────────────────────────── */
-
 export interface NextActionInput {
   entityType: "lead" | "deal";
   name: string;
@@ -202,8 +187,6 @@ Follow-up Date: ${input.followUpDate || "Not set"}${input.isOverdueFollowUp ? " 
 Notes: ${input.notes || "None"}`,
   };
 }
-
-/* ─── Client Churn Risk Analysis ──────────────────────────────────────────── */
 
 export interface ChurnRiskInput {
   clientName: string;
@@ -251,8 +234,6 @@ Client Since: ${input.daysSinceConversion} days ago`,
   };
 }
 
-/* ─── Conversation Summary ─────────────────────────────────────────────────── */
-
 export interface ConversationSummaryInput {
   activityType: string;
   subject?: string;
@@ -277,8 +258,6 @@ ${input.leadName ? `Lead: ${input.leadName}` : ""}${input.dealName ? `Deal: ${in
 Notes: ${input.notes}`,
   };
 }
-
-/* ─── Lead Enrichment ─────────────────────────────────────────────────────── */
 
 export interface LeadEnrichmentInput {
   name: string;
@@ -317,8 +296,6 @@ const TONE_INSTRUCTIONS: Record<EmailTone, string> = {
   friendly: "Use warm, conversational tone. First-name basis. Sign off with 'Cheers' or 'Looking forward'.",
   urgent: "Convey time-sensitivity. Mention deadlines or limited availability. Be direct and action-oriented.",
 };
-
-/* ─── HR: Candidate Scoring ───────────────────────────────────────────────── */
 
 export interface CandidateScoringInput {
   firstName: string;
@@ -368,8 +345,6 @@ ${input.jobDescription ? `Job Description: ${input.jobDescription}` : ""}
 ${input.jobRequiredSkills?.length ? `Required Skills: ${input.jobRequiredSkills.join(", ")}` : ""}`,
   };
 }
-
-/* ─── HR: Performance Review Draft ────────────────────────────────────────── */
 
 export interface ReviewDraftInput {
   employeeName: string;
@@ -430,8 +405,6 @@ ${input.managerNotes ? `\nManager Notes: ${input.managerNotes}` : ""}`,
   };
 }
 
-/* ─── HR: Helpdesk Ticket Reply Suggestion ─────────────────────────────────── */
-
 export interface HelpdeskReplyInput {
   ticketTitle: string;
   ticketDescription?: string | null;
@@ -467,8 +440,6 @@ Priority: ${input.priority || "MEDIUM"}
 Employee: ${input.employeeName || "Anonymous"}`,
   };
 }
-
-/* ─── HR: Employee Attrition Risk ─────────────────────────────────────────── */
 
 export interface AttritionRiskInput {
   employeeName: string;

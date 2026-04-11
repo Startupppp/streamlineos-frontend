@@ -3,9 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ChatLoading() {
   return (
     <div className="flex h-full overflow-hidden bg-background">
-      {/* Channel sidebar */}
+
       <div className="hidden md:flex flex-col shrink-0 border-r border-border/40 bg-card/50 w-[300px] lg:w-[340px]">
-        {/* Sidebar header */}
+
         <div className="p-3 border-b border-border/40 space-y-2">
           <div className="flex items-center justify-between">
             <Skeleton className="h-5 w-20" />
@@ -16,7 +16,7 @@ export default function ChatLoading() {
           </div>
           <Skeleton className="h-8 w-full rounded-md" />
         </div>
-        {/* Channel list */}
+
         <div className="flex-1 overflow-hidden p-2 space-y-1">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 p-2 rounded-md">
@@ -30,7 +30,6 @@ export default function ChatLoading() {
         </div>
       </div>
 
-      {/* Message panel (empty state) */}
       <div className="flex-1 flex flex-col min-w-0 items-center justify-center gap-3">
         <Skeleton className="h-16 w-16 rounded-full" />
         <Skeleton className="h-5 w-48" />

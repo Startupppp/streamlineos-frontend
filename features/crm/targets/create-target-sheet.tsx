@@ -112,7 +112,7 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
         </Button>
       </SheetTrigger>
       <SheetContent className="flex flex-col p-0 sm:max-w-[440px]">
-        {/* Header — pinned */}
+
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-gold/10 flex items-center justify-center">
@@ -125,7 +125,6 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
           </div>
         </SheetHeader>
 
-        {/* Body — scrollable */}
         <ScrollArea className="flex-1 min-h-0">
           <form id="create-target-form" onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
             <div className="space-y-2">
@@ -233,7 +232,6 @@ export function CreateTargetSheet({ assignableEmployees, isPending, onSubmit }: 
           </form>
         </ScrollArea>
 
-        {/* Footer — pinned */}
         <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>
             Cancel

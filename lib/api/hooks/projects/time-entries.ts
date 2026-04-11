@@ -12,8 +12,6 @@ import type {
   UpdateTimeEntryInput,
 } from "@/types/projects";
 
-// ─── Time Entries ─────────────────────────────────────────────────────────────
-
 export function useTimeEntries(
   filters?: TimeEntryFilters,
   options?: Omit<UseQueryOptions<TimeEntryWithUser[]>, "queryKey" | "queryFn">
@@ -91,8 +89,6 @@ export function useDeleteTimeEntry(options?: Parameters<typeof useMutation>[0]) 
   });
 }
 
-// ─── Team Timesheets (CEO/Admin) ──────────────────────────────────────────────
-
 export interface TeamTimesheetFilters {
   userId?: string;
   projectId?: number;
@@ -136,8 +132,6 @@ export function useRejectTimesheet(options?: Parameters<typeof useMutation>[0]) 
     ...options,
   });
 }
-
-// ─── Billing ──────────────────────────────────────────────────────────────────
 
 export interface BillingSummaryItem {
   projectId: number;

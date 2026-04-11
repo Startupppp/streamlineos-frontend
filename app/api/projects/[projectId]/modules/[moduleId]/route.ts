@@ -1,9 +1,4 @@
-/**
- * PATCH  /api/projects/[id]/modules/[moduleId]  — update module
- * DELETE /api/projects/[id]/modules/[moduleId]  — delete module (unlinking work items)
- *
- * On delete, sets moduleId = null on all associated tickets.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -53,7 +48,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     const mId = Number(moduleId);
     if (!projectId || !mId) return err("Invalid id", 400);
 
-    // Unlink all tickets from this module before deletion
     await db
       .update(tickets)
       .set({ moduleId: null })

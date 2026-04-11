@@ -1,9 +1,4 @@
-/**
- * PATCH /api/projects/[id]/tickets/reorder  — bulk-reorder tickets (board drag-and-drop)
- *
- * Body: { items: Array<{ id: number; status: string; order: number }> }
- * Updates status and order for each ticket in a transaction.
- */
+
 
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";

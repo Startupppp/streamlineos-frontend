@@ -1,14 +1,4 @@
-/**
- * Lead Auto-Triggers
- *
- * Standalone helper functions extracted from the assignment-rules,
- * scoring-rules, and SLA routers so they can be called inline
- * (e.g. when a lead is created or updated) without going through tRPC.
- *
- * Every function is safe to call in a fire-and-forget manner — callers
- * should wrap invocations in try/catch so failures here never break the
- * primary lead create / update flow.
- */
+
 
 import { eq, and, asc, sql } from "drizzle-orm";
 import {
@@ -21,15 +11,7 @@ import {
 import { logger } from "@/lib/logger";
 import type { db as _db } from "@/lib/db";
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
 type DbHandle = typeof _db;
-
-/* ------------------------------------------------------------------ */
-/*  1. Assignment-rule evaluation                                      */
-/* ------------------------------------------------------------------ */
 
 export async function evaluateAssignmentRules(
   db: DbHandle,
@@ -126,10 +108,6 @@ export async function evaluateAssignmentRules(
   return { assigned: false, userId: null, ruleName: null };
 }
 
-/* ------------------------------------------------------------------ */
-/*  2. Lead-score recalculation                                        */
-/* ------------------------------------------------------------------ */
-
 export async function recalculateLeadScore(
   db: DbHandle,
   orgId: string,
@@ -189,10 +167,6 @@ export async function recalculateLeadScore(
 
   return score;
 }
-
-/* ------------------------------------------------------------------ */
-/*  3. SLA policy application                                          */
-/* ------------------------------------------------------------------ */
 
 export async function applySlaPolicy(
   db: DbHandle,

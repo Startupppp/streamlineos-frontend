@@ -29,10 +29,6 @@ import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/documen
 import { DocumentTable, type Document, type FolderItem } from "@/features/hr/documents/document-table";
 import { NewFolderDialog } from "@/features/hr/documents/new-folder-dialog";
 
-/* ------------------------------------------------------------------ */
-/* Constants                                                            */
-/* ------------------------------------------------------------------ */
-
 const DOCUMENT_CATEGORIES = [
   "Personal Documents",
   "Employment",
@@ -52,14 +48,9 @@ const DEFAULT_CATEGORY_TABS = [
   "Payroll",
 ];
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                 */
-/* ------------------------------------------------------------------ */
-
 export default function DocumentsPage() {
   const { data: session } = useSession();
 
-  /* State */
   const [documents, setDocuments] = useState<Document[]>([]);
   const [policies, setPolicies] = useState<Document[]>([]);
   const [stats, setStats] = useState<Awaited<ReturnType<typeof getDocumentStats>>>(null);
@@ -83,7 +74,6 @@ export default function DocumentsPage() {
     [customFolders],
   );
 
-  /* Data loading */
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -109,7 +99,6 @@ export default function DocumentsPage() {
     loadData();
   }, [loadData, isAdmin]);
 
-  /* Filtering */
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
       const matchesSearch =
@@ -142,12 +131,10 @@ export default function DocumentsPage() {
     });
   }, [documents, searchTerm, selectedCategory, customFolders]);
 
-  /* Pagination */
   const totalFiltered = filteredDocuments.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const paginatedDocuments = filteredDocuments.slice((page - 1) * pageSize, page * pageSize);
 
-  /* Virtual folders */
   const folders: FolderItem[] = [
     {
       name: "Employee Contracts",
@@ -169,17 +156,14 @@ export default function DocumentsPage() {
     },
   ];
 
-  /* Storage */
   const totalStorageBytes = documents.reduce((acc, doc) => acc + (doc.fileSize || 0), 0);
   const maxStorageGB = 20;
   const usedGB = totalStorageBytes / (1024 * 1024 * 1024);
   const storagePercent = Math.min(100, Math.round((usedGB / maxStorageGB) * 100));
 
-  /* Stable callbacks — declared before any early return to satisfy Rules of Hooks */
   const handleNewFolderOpen = useCallback(() => setIsNewFolderOpen(true), []);
   const handleUploadOpen = useCallback(() => setIsUploadOpen(true), []);
 
-  /* Handlers */
   const handleDelete = async (documentId: number) => {
     const result = await deleteDocument(documentId);
     if (result.success) {
@@ -213,20 +197,16 @@ export default function DocumentsPage() {
     toast.success(`Folder "${name}" created`);
   };
 
-  /* ---------------------------------------------------------------- */
-  /* Loading skeleton                                                   */
-  /* ---------------------------------------------------------------- */
   if (loading) {
     return (
       <div className="flex-1 space-y-6">
-        {/* Breadcrumb */}
+
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-3.5 w-3.5" />
           <Skeleton className="h-4 w-20" />
         </div>
 
-        {/* Header */}
         <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
             <Skeleton className="h-8 w-52" />
@@ -238,7 +218,6 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Search + Category Tabs */}
         <Card className="shadow-sm border">
           <CardContent className="p-4">
             <div className="flex flex-wrap items-center gap-4">
@@ -257,7 +236,6 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
 
-        {/* Main Table */}
         <Card className="shadow-sm border overflow-hidden">
           <CardContent className="p-0">
             <div className="flex items-center bg-muted/30 px-6 py-3 border-b">
@@ -309,7 +287,6 @@ export default function DocumentsPage() {
           </CardContent>
         </Card>
 
-        {/* Storage Usage */}
         <div className="flex items-center gap-3">
           <Skeleton className="h-4 w-8" />
           <Skeleton className="w-32 h-2 rounded-full" />
@@ -319,9 +296,6 @@ export default function DocumentsPage() {
     );
   }
 
-  /* ---------------------------------------------------------------- */
-  /* Render                                                             */
-  /* ---------------------------------------------------------------- */
   const pageActions = (
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" className="gap-2" onClick={handleNewFolderOpen}>
@@ -440,10 +414,6 @@ export default function DocumentsPage() {
     </PageWrapper>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Rich Documents Section                                               */
-/* ------------------------------------------------------------------ */
 
 function RichDocumentsSection() {
   const { data: richDocs, isLoading } = useRichDocuments();

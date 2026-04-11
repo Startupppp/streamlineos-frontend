@@ -20,7 +20,7 @@ export async function approveExpense(expenseId: number) {
   }
 
   try {
-    // BUG-007 fix: atomic update with row count check to prevent double-approval
+
     const [updated] = await db.update(expenses)
       .set({
         status: "APPROVED",
@@ -79,7 +79,7 @@ export async function rejectExpense(expenseId: number, reason: string) {
   }
 
   try {
-    // BUG-007 fix: atomic update with row count check
+
     const [rejected] = await db.update(expenses)
       .set({
         status: "REJECTED",

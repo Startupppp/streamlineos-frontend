@@ -6,7 +6,7 @@ export default function EmployeeDetailLoading() {
   return (
     <PageWrapper title="Employee Profile" subtitle="View and edit employee details.">
       <div className="space-y-6">
-        {/* Profile header */}
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start gap-6">
@@ -23,10 +23,8 @@ export default function EmployeeDetailLoading() {
           </CardContent>
         </Card>
 
-        {/* Tabs */}
         <Skeleton className="h-10 w-96" />
 
-        {/* Stats grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -38,7 +36,6 @@ export default function EmployeeDetailLoading() {
           ))}
         </div>
 
-        {/* Content cards */}
         <div className="grid gap-6 md:grid-cols-2">
           {Array.from({ length: 2 }).map((_, i) => (
             <Card key={i}>

@@ -40,7 +40,7 @@ export function LeadSidebar({
 
   return (
     <div className="space-y-6">
-      {/* ── Assigned To ─────────────────────────────────────────────────── */}
+
       {lead.assignedTo && (
         <Card className="shadow-noir">
           <CardHeader>
@@ -62,7 +62,6 @@ export function LeadSidebar({
         </Card>
       )}
 
-      {/* ── Key Dates ───────────────────────────────────────────────────── */}
       <Card className="shadow-noir">
         <CardHeader>
           <CardTitle className="text-base">Key Dates</CardTitle>
@@ -82,7 +81,6 @@ export function LeadSidebar({
         </CardContent>
       </Card>
 
-      {/* ── Activity Timeline ───────────────────────────────────────────── */}
       <LeadActivityTimeline
         timeline={timeline}
         isLoading={timelineLoading}

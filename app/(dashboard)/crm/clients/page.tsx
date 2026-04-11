@@ -110,7 +110,7 @@ export default function ClientAccountsPage() {
       }
     >
       <motion.div className="space-y-6" variants={staggerContainer} initial="hidden" animate="visible">
-      {/* Stats */}
+
       <motion.div variants={fadeUp} className="grid gap-4 grid-cols-2 md:grid-cols-5">
         {[
           { label: "Total", value: stats?.total ?? 0, icon: Users, color: "text-foreground" },
@@ -133,7 +133,6 @@ export default function ClientAccountsPage() {
         ))}
       </motion.div>
 
-      {/* Table */}
       <motion.div variants={fadeUp}>
         <div className="border border-border rounded-md flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
           <div className="flex-1 min-h-0 overflow-auto">

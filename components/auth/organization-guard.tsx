@@ -18,7 +18,6 @@ export function OrganizationGuard({ children }: OrganizationGuardProps) {
     if (didRun.current) return;
     didRun.current = true;
 
-    // If already verified this session, skip the async check entirely
     if (sessionStorage.getItem(ORG_CACHE_KEY) === "true") {
       setHasOrg(true);
       setIsChecking(false);

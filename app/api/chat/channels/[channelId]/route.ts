@@ -1,7 +1,4 @@
-/**
- * GET   /api/chat/channels/[id]  — get channel detail
- * PATCH /api/chat/channels/[id]  — update channel (admin only)
- */
+
 
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
@@ -48,7 +45,6 @@ export async function PATCH(
     const channelId = Number(id);
     if (!Number.isFinite(channelId)) return err("Invalid channel id", 400);
 
-    // Verify admin membership
     const membership = await db.query.chatChannelMembers.findFirst({
       where: and(
         eq(chatChannelMembers.channelId, channelId),

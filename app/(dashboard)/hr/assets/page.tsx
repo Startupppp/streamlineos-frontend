@@ -72,7 +72,6 @@ export default function HrAssetsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
-  // Form state
   const [name, setName] = useState("");
   const [type, setType] = useState("Laptop");
   const [status, setStatus] = useState("AVAILABLE");

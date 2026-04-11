@@ -112,7 +112,7 @@ export function LandingPage() {
       </header>
 
       <main className="flex-1">
-        {/* Hero */}
+
         <section ref={heroRef} className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-[-15%] right-[5%] h-[600px] w-[600px] rounded-full bg-amber-500/[0.05] blur-[120px]" />
@@ -196,7 +196,6 @@ export function LandingPage() {
           </motion.div>
         </section>
 
-        {/* Stats bar */}
         <section className="relative py-12 border-y border-white/[0.05] bg-white/[0.01]">
           <div className="container mx-auto px-4 lg:px-8">
             <StaggerReveal className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
@@ -215,7 +214,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Features */}
         <section id="features" className="py-24 lg:py-32">
           <div className="container mx-auto px-4 lg:px-8">
             <SectionReveal className="text-center mb-16">
@@ -253,7 +251,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Why Vaivamm */}
         <section className="py-24 lg:py-32 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-[20%] right-[10%] h-[350px] w-[350px] rounded-full bg-amber-500/[0.04] blur-[80px]" />
@@ -316,7 +313,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* Testimonials */}
         <section className="py-24 lg:py-32 relative">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-amber-500/[0.02] to-transparent pointer-events-none" />
           <div className="container mx-auto px-4 lg:px-8">
@@ -348,7 +344,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* CTA */}
         <section className="py-24 lg:py-32 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-[10%] left-[50%] -translate-x-1/2 h-[400px] w-[600px] rounded-full bg-amber-500/[0.07] blur-[100px]" />

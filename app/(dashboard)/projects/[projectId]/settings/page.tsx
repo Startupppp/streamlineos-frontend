@@ -165,7 +165,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       subtitle={project.name}
     >
       <div className="max-w-xl mx-auto space-y-6 pb-8">
-        {/* General */}
+
         <Card>
           <CardContent className="pt-5 space-y-5">
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -237,7 +237,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                   )}
                 />
 
-                {/* Members */}
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -258,7 +257,6 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* Danger Zone */}
         {isOwner && (
           <Card className="border-destructive/30">
             <CardContent className="pt-5 space-y-4">

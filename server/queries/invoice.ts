@@ -93,7 +93,6 @@ export async function createPayment(
       createdBy: data.createdBy,
     }).returning();
 
-    // Check total paid vs invoice total
     const [{ totalPaid }] = await tx
       .select({ totalPaid: sql<number>`COALESCE(sum(amount::numeric), 0)::float` })
       .from(payments)

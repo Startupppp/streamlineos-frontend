@@ -6,7 +6,7 @@ import { expenses, organizationMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_ROWS = 10_000;
 
 const ALLOWED_CATEGORIES = new Set([
@@ -15,7 +15,6 @@ const ALLOWED_CATEGORIES = new Set([
   "Salary", "Miscellaneous", "Other",
 ]);
 
-/** Strip leading formula injection characters from CSV cell values */
 function sanitizeCell(value: string): string {
   return value.replace(/^[=+\-@\t\r]+/, "").trim();
 }
@@ -25,7 +24,7 @@ function normalizeHeader(header: string): string {
 }
 
 function excelSerialToIsoDate(serial: number): string {
-  // Excel serial dates are days from 1899-12-30.
+
   const epoch = new Date(Date.UTC(1899, 11, 30));
   const date = new Date(epoch.getTime() + serial * 24 * 60 * 60 * 1000);
   return date.toISOString().split("T")[0];

@@ -15,7 +15,6 @@ import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
 import type { Channel } from "@/types/chat";
 
-/** Inner component rendered inside ChatAblyProvider so useAbly() is available. */
 function ChatNotifications({
   activeChannelId,
   currentUserId,
@@ -79,7 +78,7 @@ export default function ChatPage() {
     <ChatAblyProvider>
       <ChatNotifications activeChannelId={activeChannelId} currentUserId={currentUserId} />
     <div className="flex h-full overflow-hidden bg-background">
-      {/* Sidebar */}
+
       <div
         className={cn(
           "flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-all duration-300",
@@ -97,7 +96,6 @@ export default function ChatPage() {
         />
       </div>
 
-      {/* Messages */}
       <div
         className={cn(
           "flex-1 flex flex-col min-w-0 relative",
@@ -124,7 +122,6 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Info Panel */}
       <AnimatePresence>
         {showInfoPanel && activeChannelId && (
           <motion.div
@@ -143,7 +140,6 @@ export default function ChatPage() {
         )}
       </AnimatePresence>
 
-      {/* Page-level dialogs for empty state */}
       <NewDMDialog open={emptyDMOpen} onOpenChange={setEmptyDMOpen} onCreated={handleSelectChannel} hideTrigger />
       <NewGroupDialog open={emptyGroupOpen} onOpenChange={setEmptyGroupOpen} onCreated={handleSelectChannel} hideTrigger />
     </div>

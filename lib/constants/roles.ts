@@ -1,6 +1,4 @@
-/**
- * Centralized role constants. Import these instead of using hardcoded strings.
- */
+
 export const ROLES = {
   CEO: "CEO",
   HR: "HR",
@@ -15,11 +13,8 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
-/** Roles with full admin privileges */
 export const ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR];
 
-/** Roles that can approve/manage expenses */
 export const EXPENSE_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.ADMIN];
 
-/** All defined system roles */
 export const ALL_ROLES: readonly string[] = Object.values(ROLES);
