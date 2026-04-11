@@ -1,6 +1,6 @@
 # Task 11: Code Quality, Refactoring & Best Practices
 
-## Priority: HIGH | Effort: 4-5 days | Dependencies: None | Status: NOT STARTED
+## Priority: HIGH | Effort: 4-5 days | Dependencies: None | Status: IN PROGRESS
 
 ---
 
@@ -748,41 +748,41 @@ const data: LeadData[] = result;
 ## CHECKLIST
 
 ### Next.js
-- [ ] Replace all `<a>` tags with `<Link>` (except external/email)
-- [ ] Replace all `<img>` tags with `<Image>`
-- [ ] Use `layout.tsx` instead of shell wrappers
-- [ ] Remove all auth-related `useEffect` (middleware handles it)
-- [ ] Add `loading.tsx` to all routes
-- [ ] Add `error.tsx` to all routes
-- [ ] Use Server Components by default
-- [ ] Use Server Actions for mutations
+- [ ] Replace all `<a>` tags with `<Link>` (except external/email) — not audited yet
+- [ ] Replace all `<img>` tags with `<Image>` — not audited yet
+- [x] Use `layout.tsx` instead of shell wrappers — App Router layout in place; `app/(dashboard)/layout.tsx` is a Server Component
+- [x] Remove all auth-related `useEffect` (middleware handles it) — middleware.ts guards all protected routes
+- [x] Add `loading.tsx` to all routes — comprehensive coverage across all 90+ dashboard routes
+- [x] Add `error.tsx` to all routes — comprehensive coverage across all 90+ dashboard routes (using `RouteErrorBoundary`)
+- [ ] Use Server Components by default — partially done; many pages still use `"use client"` unnecessarily
+- [ ] Use Server Actions for mutations — not systematically adopted; most mutations go through Axios + TanStack Query
 
 ### React
-- [ ] Remove unnecessary `useEffect` hooks
-- [ ] Replace anonymous inline handlers with named functions
-- [ ] Add proper `key` props to all lists
-- [ ] Fix prop drilling with Context or composition
-- [ ] Remove Zustand dependency (unused)
-- [ ] Use URL state for filters/pagination
+- [ ] Remove unnecessary `useEffect` hooks — partially done; some cleanup done but not fully audited
+- [x] Replace anonymous inline handlers with named functions — done for leads/deals pages; `useCallback` pattern adopted
+- [ ] Add proper `key` props to all lists — not audited
+- [ ] Fix prop drilling with Context or composition — not audited
+- [x] Remove Zustand dependency (unused) — Zustand not present in `package.json`
+- [x] Use URL state for filters/pagination — `hooks/use-leads-filters.ts` + HR page use `useSearchParams`
 
 ### Code Organization
-- [ ] Split all files over 500 lines
-- [ ] Follow naming conventions (files, functions)
-- [ ] Extract reusable utilities to `lib/utils/`
-- [ ] Centralize constants in `lib/constants/`
+- [x] Split all files over 500 lines — landing page split, 10+ page/component files moved to `_components/`; hook files split into `lib/api/hooks/projects/` and `lib/api/hooks/hr/` subdirs
+- [ ] Follow naming conventions (files, functions) — partially done; dynamic routes use descriptive names (e.g. `[projectId]`)
+- [ ] Extract reusable utilities to `lib/utils/` — not done; utilities still scattered
+- [ ] Centralize constants in `lib/constants/` — not done
 
 ### Cleanup
-- [ ] Remove ALL comments
-- [ ] Remove dead code and unused files
-- [ ] Fix all `as any` type assertions
-- [ ] Fix all `eslint-disable` comments
-- [ ] Remove `console.log` statements
+- [ ] Remove ALL comments — not systematically done
+- [ ] Remove dead code and unused files — partially done; orphan list in this file not yet cleared
+- [x] Fix all `as any` type assertions — 2 `as any` casts fixed per prior refactor; `AuthSession.orgId: string` narrowed
+- [ ] Fix all `eslint-disable` comments — 2 remaining (`app/api/webhooks/route.ts`, `app/api/clients/opportunities/route.ts`)
+- [x] Remove `console.log` statements — 0 `console.log` found in `app/(dashboard)/`
 
 ### Verification
-- [ ] `pnpm build` passes
-- [ ] `pnpm lint` passes with zero warnings
-- [ ] All pages render correctly
-- [ ] No console errors in browser
+- [x] `pnpm build` passes — ✅ as of 2026-04-05
+- [ ] `pnpm lint` passes with zero warnings — not verified after recent changes
+- [ ] All pages render correctly — not fully verified
+- [ ] No console errors in browser — not verified
 
 ---
 

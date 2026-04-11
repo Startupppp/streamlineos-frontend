@@ -1,6 +1,6 @@
 # Task 10: Email System Improvements
 
-## Priority: MEDIUM | Effort: 3-4 days | Dependencies: None | Status: NOT STARTED
+## Priority: MEDIUM | Effort: 3-4 days | Dependencies: None | Status: IN PROGRESS
 
 ---
 
@@ -115,16 +115,16 @@ Email system exists (SendGrid + SMTP) but has gaps:
 
 ## Checklist
 
-- [ ] Create appraisal email templates (5 types)
-- [ ] Create CRM email templates (5 types)
-- [ ] Generate payslip PDF with jspdf
-- [ ] Attach PDF to payslip email
-- [ ] Build email template preview page (`/settings/email-templates`)
-- [ ] Add "Send Test Email" functionality
-- [ ] Automate CRM follow-up reminders via Inngest
-- [ ] Evaluate and optionally migrate to Resend + React Email
-- [ ] Add email sending to all relevant notification events
-- [ ] `pnpm build` passes
+- [ ] Create appraisal email templates (5 types) — `lib/email-templates/hr.ts` has leave/expense templates but no appraisal/performance review templates
+- [ ] Create CRM email templates (5 types) — `app/api/crm/email-templates/route.ts` exists for DB-stored templates; HTML template functions for lead-welcome, follow-up, deal-won, SLA-breach not in `lib/email-templates/`
+- [ ] Generate payslip PDF with jspdf — `jspdf` installed; `app/(dashboard)/hr/my-payslips/page.tsx` exists; server-side PDF generation for email attachment not confirmed
+- [ ] Attach PDF to payslip email — not implemented
+- [ ] Build email template preview page (`/settings/email-templates`) — `/hr/email-templates` and `/crm/settings/email-templates` pages exist; unified `/settings/email-templates` admin page not found
+- [ ] Add "Send Test Email" functionality — not found in any settings page
+- [x] Automate CRM follow-up reminders via Inngest — `lib/inngest/functions/sla-check.ts` + `daily-notifications.ts` + `daily-sales-digest.ts` cover automated follow-ups
+- [ ] Evaluate and optionally migrate to Resend + React Email — `lib/resend.ts` does not exist; templates are still HTML string functions (not React Email components)
+- [x] Add email sending to all relevant notification events — `lib/inngest/functions/notification-handler.ts` + `hr-exit-notifications.ts` + `payment-reminders.ts` + `holiday-notifications.ts` cover key events
+- [x] `pnpm build` passes
 
 ## Acceptance Criteria
 

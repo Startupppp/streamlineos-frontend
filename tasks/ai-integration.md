@@ -1,6 +1,6 @@
 # Task 09: AI & Agent Integration
 
-## Priority: MEDIUM | Effort: 4-5 days | Dependencies: Task 05 (Notifications) | Status: NOT STARTED
+## Priority: MEDIUM | Effort: 4-5 days | Dependencies: Task 05 (Notifications) | Status: IN PROGRESS
 
 ---
 
@@ -119,17 +119,17 @@ AI capabilities exist (Google Gemini via Vercel AI SDK + LangChain) but are unde
 
 ## Checklist
 
-- [ ] Enhance AI chat with user data context (leads, deals, tasks)
+- [ ] Enhance AI chat with user data context (leads, deals, tasks) — `lib/ai/automation.ts` + `langchain-graph.ts` exist but no context injection yet
 - [ ] Add tool functions AI can call (update lead status, create task)
-- [ ] Create `lib/ai/lead-scorer.ts` with AI scoring
-- [ ] Integrate AI scoring into lead creation/update flow
-- [ ] Build "Draft Email" button on lead detail page
-- [ ] Enhance weekly CEO recap with AI narrative
+- [x] Create `lib/ai/lead-scorer.ts` with AI scoring — implemented as `lib/ai/lead-scoring.ts` (`aiScoreLead`)
+- [x] Integrate AI scoring into lead creation/update flow — `recalculateLeadScore` called in `app/api/leads/route.ts` and `app/api/leads/[leadId]/route.ts`
+- [ ] Build "Draft Email" button on lead detail page — `app/api/ai/generate-email/route.ts` + `lib/ai/email-generator.ts` exist; UI button on lead detail page missing
+- [ ] Enhance weekly CEO recap with AI narrative — Inngest job exists (`lib/inngest/functions/weekly-ceo-recap.ts`) but uses HTML template, not AI narrative
 - [ ] Create smart notification templates with AI
 - [ ] Evaluate Composio vs alternatives for external integrations
 - [ ] Set up cost tracking for AI API calls
 - [ ] Add AI feature flags (can disable per org)
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ## Acceptance Criteria
 
