@@ -13,7 +13,7 @@ import {
   ackStatusEnum, reimbursementStatusEnum, loanStatusEnum,
   pipStatusEnum, surveyStatusEnum,
   feedbackTypeEnum, bonusTypeEnum, fnfStatusEnum,
-  terminationStatusEnum, onboardingDocStatusEnum, onboardingDocumentStatusEnum, docAuditActionEnum,
+  onboardingDocStatusEnum, onboardingDocumentStatusEnum, docAuditActionEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -356,32 +356,6 @@ export const resignations = pgTable("resignations", {
 }, (table) => [
   index("idx_resignations_org").on(table.orgId),
   index("idx_resignations_user").on(table.userId),
-]);
-
-export const terminations = pgTable("terminations", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  userId: text("user_id").references(() => users.id).notNull(),
-  reasons: text("reasons").array(),
-  detailedExplanation: text("detailed_explanation"),
-  effectiveDate: date("effective_date"),
-  severanceAmount: decimal("severance_amount"),
-  noticePeriodWaived: boolean("notice_period_waived").default(false),
-  terminationLetterUrl: text("termination_letter_url"),
-  supportingDocUrls: text("supporting_doc_urls").array(),
-  internalNotes: text("internal_notes"),
-  status: terminationStatusEnum("status").default("DRAFT"),
-  initiatedBy: text("initiated_by").references(() => users.id),
-  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
-  ceoReviewedAt: timestamp("ceo_reviewed_at"),
-  ceoRemarks: text("ceo_remarks"),
-  emailSentAt: timestamp("email_sent_at"),
-  emailStatus: text("email_status"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  index("idx_terminations_org").on(table.orgId),
-  index("idx_terminations_user").on(table.userId),
 ]);
 
 export const exitChecklists = pgTable("exit_checklists", {
