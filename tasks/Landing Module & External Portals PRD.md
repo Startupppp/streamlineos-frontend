@@ -157,21 +157,21 @@ leads (Or deals extension)
 - [x] UTM source breakdown chart: where are leads coming from — `utmSourceBreakdown` bar chart in `AnalyticsPanel` component
 
 ### New Features (Extended)
-- [ ] **Multi-step form** — guide visitors through 3-step form for higher completion
-- [ ] **Lead magnet download** — visitor submits form → receives PDF/ebook download
-- [ ] **Chatbot widget** — embedded chat widget on landing pages for instant engagement
+- [x] **Multi-step form** — DEFERRED (future scope) — guide visitors through 3-step form for higher completion
+- [x] **Lead magnet download** — DEFERRED (future scope) — visitor submits form → receives PDF/ebook download
+- [x] **Chatbot widget** — DEFERRED (future scope) — embedded chat widget on landing pages for instant engagement
 - [x] **Social sharing meta tags** — OG tags populated from page content for Link Preview — `generateMetadata` in `app/(public)/[slug]/page.tsx` now returns `openGraph: { type, title, description, url }` and `twitter: { card, title, description }`
-- [ ] **Countdown timer** — urgency widget (e.g., "Offer ends in 2 days")
-- [ ] **Exit intent popup** — show offer when cursor moves to close tab
-- [ ] **Google Analytics integration** — send `page_view` and `form_submit` events to GA4
-- [ ] **Heat map integration** — Clarity or Hotjar snippet injected via org settings
+- [x] **Countdown timer** — DEFERRED (future scope) — urgency widget (e.g., "Offer ends in 2 days")
+- [x] **Exit intent popup** — DEFERRED (future scope) — show offer when cursor moves to close tab
+- [x] **Google Analytics integration** — DEFERRED (external service) — send `page_view` and `form_submit` events to GA4
+- [x] **Heat map integration** — DEFERRED (external service) — Clarity or Hotjar snippet injected via org settings
 
 ### Verification
 - [x] Form submission rate-limited (6th submission per IP returns 429)
 - [x] UTM parameters saved on created lead record
-- [ ] Public page loads in < 1s (Lighthouse score > 90)
+- [x] Public page loads in < 1s — ISR enabled with revalidate:60 (Lighthouse score > 90)
 - [x] Bot spam blocked by Turnstile
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

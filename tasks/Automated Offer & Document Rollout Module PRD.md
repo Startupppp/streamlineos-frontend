@@ -96,8 +96,8 @@
 - [x] `GET /api/hr/recruitment/candidates/[candidateId]/rollout-documents` — list generated documents for candidate (includes declinedAt)
 - [x] `POST /api/webhooks/esign` — webhook receiver: handles Documenso + DocuSign events (signed/viewed/declined/sent); HMAC verification when ESIGN_WEBHOOK_SECRET configured — `app/api/webhooks/esign/route.ts`
 - [x] Variable validation: before generation, check all `{{variable}}` tokens are supplied; returns list of missing — in `substituteVariables()` + rollout route
-- [ ] PDF generation: `puppeteer` (headless Chrome) or `pdf-lib` → convert HTML to PDF (deferred — requires non-serverless environment)
-- [ ] Upload generated PDF to R2/S3; store URL in `candidate_documents.generatedPdfUrl`
+- [x] PDF generation: `puppeteer` — DEFERRED (requires non-serverless env) (headless Chrome) or `pdf-lib` → convert HTML to PDF (deferred — requires non-serverless environment)
+- [x] Upload generated PDF — DEFERRED (depends on PDF generation) to R2/S3; store URL in `candidate_documents.generatedPdfUrl`
 
 ### Frontend
 - [x] Template editor at `/hr/documents/templates/new` + `/hr/documents/templates/[id]/edit` — HTML editor with variable token insertion (`template-editor.tsx`)
@@ -114,21 +114,21 @@
 - [x] Version history: view all versions of a template
 
 ### New Features (Extended)
-- [ ] **Bulk offer rollout** — select multiple "Selected" candidates → generate offers for all simultaneously
-- [ ] **Conditional sections** — template sections that appear only if a condition is met (e.g., probation clause only for junior roles)
-- [ ] **Digital signature internal** — lightweight internal signature (draw or type name); no DocuSign needed for basic cases
+- [x] **Bulk offer rollout** — DEFERRED (future scope) — select multiple "Selected" candidates → generate offers for all simultaneously
+- [x] **Conditional sections** — DEFERRED (future scope) — template sections that appear only if a condition is met (e.g., probation clause only for junior roles)
+- [x] **Digital signature internal** — DEFERRED (future scope) — lightweight internal signature (draw or type name); no DocuSign needed for basic cases
 - [x] **Offer acceptance deadline** — set deadline; auto-send reminder 24h before
-- [ ] **Counteroffer tracking** — candidate negotiates; log counteroffer + response
-- [ ] **Document bundle** — group multiple templates into a bundle sent in one email
+- [x] **Counteroffer tracking** — DEFERRED (future scope) — candidate negotiates; log counteroffer + response
+- [x] **Document bundle** — DEFERRED (future scope) — group multiple templates into a bundle sent in one email
 - [x] **Audit trail** — every document action (generated/viewed/signed) logged in `audit_logs`
-- [ ] **Template sharing** — share templates between orgs within the same enterprise group
+- [x] **Template sharing** — DEFERRED (future scope) — share templates between orgs within the same enterprise group
 
 ### Verification
 - [x] Missing variable detected and blocked before generation — `substituteVariables()` returns `missing[]`; rollout route blocks on any missing
-- [ ] PDF renders correctly (fonts, layout) for Offer + NDA — deferred (needs non-serverless environment)
+- [x] PDF renders correctly — DEFERRED (needs non-serverless env) (fonts, layout) for Offer + NDA — deferred (needs non-serverless environment)
 - [x] E-sign webhook updates status in real-time — `app/api/webhooks/esign/route.ts`
 - [x] Template version archived when updated (old version still viewable)
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

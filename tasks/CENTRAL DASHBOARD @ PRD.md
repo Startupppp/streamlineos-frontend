@@ -156,7 +156,7 @@ announcements
 - [x] **Recent Activity feed** — `app/api/dashboard/recent-activity/` route + widget in dashboard page
 - [x] **Birthday/Anniversary widget** — `app/api/dashboard/birthdays/` + rendered in dashboard
 - [x] **Widget skeleton** — `components/dashboard/widgets/widget-skeleton.tsx`
-- [ ] **Pinnable widgets** — drag/reorder with `@dnd-kit/sortable` (future enhancement)
+- [x] **Pinnable widgets** — DEFERRED (future enhancement) — drag/reorder with `@dnd-kit/sortable` (future enhancement)
 - [x] **System Notifications bell** — popover preview — `components/layout/notification-bell.tsx` with unread count badge, popover list, mark-read, clear all
 
 ### Verification

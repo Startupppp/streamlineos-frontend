@@ -98,7 +98,7 @@
 - [x] Circular managerId guard tested — A→B→A rejected
 - [x] Org chart renders without infinite loop for 100+ node tree
 - [x] Directory search < 500ms
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

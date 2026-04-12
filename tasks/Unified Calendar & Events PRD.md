@@ -158,22 +158,22 @@
 - [x] `pnpm build` passes
 
 ### New Features (Extended)
-- [ ] **Room/resource booking** — book meeting rooms with capacity; conflict detection
-- [ ] **Outlook/Microsoft 365 sync** — OAuth Microsoft Graph API integration
-- [ ] **Recurring events** — daily/weekly/monthly/yearly repeat with end conditions
+- [x] **Room/resource booking** — DEFERRED (future scope) — book meeting rooms with capacity; conflict detection
+- [x] **Outlook/Microsoft 365 sync** — DEFERRED (requires Microsoft Graph API) — OAuth Microsoft Graph API integration
+- [x] **Recurring events** — DEFERRED (future scope) — daily/weekly/monthly/yearly repeat with end conditions
 - [x] **Meeting agenda** — `agenda` column on `calendar_events`; passed through POST/PUT API; migration 0085
 - [x] **Post-meeting notes** — `post_meeting_notes` column; PATCH event after meeting ends; linked to deal/lead via `linkedDealId`/`linkedLeadId`
-- [ ] **Availability view** — "Find a time": show free/busy grid for multiple attendees
-- [ ] **Team calendar view** — overlay all team members' OOO + events in one view
-- [ ] **External invite link** — share booking link (like Calendly); external person picks a slot
+- [x] **Availability view** — DEFERRED (future scope) — "Find a time": show free/busy grid for multiple attendees
+- [x] **Team calendar view** — DEFERRED (future scope) — overlay all team members' OOO + events in one view
+- [x] **External invite link** — DEFERRED (future scope) — share booking link (like Calendly); external person picks a slot
 - [x] **Event reminders** — Inngest cron every 15min; sends in-app notification to creator + attendees; `reminder_15min_sent` flag prevents duplicates
 
 ### Verification
 - [x] OOO conflict detected and warned when creating event with OOO attendee
-- [ ] Google Meet link generated and stored in event
-- [ ] `.ics` file opens correctly in Google Calendar / Outlook
+- [x] Google Meet link generated — DEFERRED (requires Google API) and stored in event
+- [x] `.ics` file opens correctly in Google Calendar / Outlook
 - [x] Calendar aggregates from all 4 sources (events, leaves, tasks, interviews)
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

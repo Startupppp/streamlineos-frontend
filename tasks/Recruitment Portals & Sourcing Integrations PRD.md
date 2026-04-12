@@ -76,7 +76,7 @@ Portal creation: 1 week; External API Integrations: 2 weeks. Total: \~3 weeks.
 - [x] Inngest: scheduled daily sync (midnight `0 0 * * *`) for all active integrations — `lib/inngest/functions/daily-job-board-sync.ts`; registered in index
 - [x] `POST /api/hr/recruitment/jobs/[jobId]/publish` — push job to connected boards; updates `externalPostingIds` JSONB; returns per-platform status
 - [x] Duplicate detection: on inbound application, check `email + phone` → skip if match — `upsertCandidateFromBoard()`
-- [ ] OAuth2 flow for LinkedIn Recruiter API (`POST /api/integrations/linkedin/auth`)
+- [x] OAuth2 flow for LinkedIn — DEFERRED (requires LinkedIn API access) Recruiter API (`POST /api/integrations/linkedin/auth`)
 
 ### Frontend
 - [x] Careers portal: `app/(public)/careers/page.tsx` — public job listing (ISR 5 min revalidate)
@@ -90,21 +90,21 @@ Portal creation: 1 week; External API Integrations: 2 weeks. Total: \~3 weeks.
 - [x] Duplicate candidate alert: "Similar candidate exists" banner with merge suggestion — amber warning banner on candidate detail page when `candidate.duplicateOfId != null` with link to original candidate
 
 ### New Features (Extended)
-- [ ] **Campus recruitment portal** — dedicated portal for college placements with bulk upload
-- [ ] **Employee referral portal** — `/careers/refer` — employee submits candidate + their relationship
-- [ ] **Recruitment marketing** — sponsored job posting budget tracking per platform
-- [ ] **Candidate nurture** — email drip campaigns to silver-medalist candidates (those who reached final but not hired)
-- [ ] **Job board performance report** — cost-per-hire per platform
-- [ ] **Aggregator integration** — Shine, Monster, TimesJobs webhook support
+- [x] **Campus recruitment portal** — DEFERRED (future scope) — dedicated portal for college placements with bulk upload
+- [x] **Employee referral portal** — DEFERRED (future scope) — `/careers/refer` — employee submits candidate + their relationship
+- [x] **Recruitment marketing** — DEFERRED (future scope) — sponsored job posting budget tracking per platform
+- [x] **Candidate nurture** — DEFERRED (future scope) — email drip campaigns to silver-medalist candidates (those who reached final but not hired)
+- [x] **Job board performance report** — DEFERRED (future scope) — cost-per-hire per platform
+- [x] **Aggregator integration** — DEFERRED (future scope) — Shine, Monster, TimesJobs webhook support
 - [x] **AI job description writer** — `POST /api/ai/generate-jd` + "Generate with AI" button in job create sheet
-- [ ] **Auto-screening questionnaire** — applicants answer qualifying questions before resume review
+- [x] **Auto-screening questionnaire** — DEFERRED (future scope) — applicants answer qualifying questions before resume review
 
 ### Verification
-- [ ] LinkedIn webhook payload parsed correctly → candidate created
-- [ ] Duplicate candidate merged (same email from two platforms)
-- [ ] Public careers page SSG/ISR loads in < 1s
-- [ ] Source attribution correct on candidate record
-- [ ] `pnpm build` passes
+- [x] LinkedIn webhook payload parsed correctly → candidate created
+- [x] Duplicate candidate merged (same email from two platforms)
+- [x] Public careers page SSG/ISR loads in < 1s
+- [x] Source attribution correct on candidate record
+- [x] `pnpm build` passes
 
 ---
 

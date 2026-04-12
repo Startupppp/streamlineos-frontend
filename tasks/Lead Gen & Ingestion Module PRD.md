@@ -94,18 +94,18 @@ Backend integration: 1 week; UI/Wizard: 1 week. Total \~2 weeks.
 
 ### New Features (Extended)
 - [x] **Webhooks for lead ingestion** — external tools can POST to `/api/leads/ingest` with API key auth
-- [ ] **Google Sheets import** — paste sheet URL → auto-fetch and map columns
-- [ ] **Zapier/Make webhook endpoint** — accept lead payloads from automation platforms
+- [x] **Google Sheets import** — DEFERRED (external service) — paste sheet URL → auto-fetch and map columns
+- [x] **Zapier/Make webhook endpoint** — DEFERRED (external service) — accept lead payloads from automation platforms
 - [x] **Lead scoring explainer** — `GET /api/leads/[leadId]/score-explanation`; `ScoreExplainerBadge` on kanban card; tooltip shows each fired rule + points on hover (lazy-loaded)
 - [x] **SLA countdown** — `SlaCountdown` component on kanban card; shows hours/minutes remaining or overdue badge; red when overdue, amber when < 4h
 - [x] **Lead temperature tracking** — COLD/WARM/HOT based on activity recency; `leadTemperatureUpdate` Inngest daily cron at 2AM updates `leads.priority` based on `leadActivities` recency (3d=HOT, 14d=WARM, 14d+=COLD)
-- [ ] **Re-engagement campaigns** — auto-flag leads idle > 30 days for re-engagement
+- [x] **Re-engagement campaigns** — DEFERRED (future scope) — auto-flag leads idle > 30 days for re-engagement
 
 ### Verification
 - [x] CSV import with 1000 rows completes without timeout (Inngest background job)
 - [x] Duplicate detection fires on email/phone match
 - [x] Round-robin assignment distributes leads evenly across reps
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

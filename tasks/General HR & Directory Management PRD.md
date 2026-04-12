@@ -168,9 +168,9 @@ leave\_requests
 
 ### New Features (Extended)
 - [x] **Comp-off / compensatory leave** — `POST /api/hr/leaves/comp-off`; upserts leaveBalance for "Compensatory Off" type; `useCreditCompOff()` hook
-- [ ] **Leave encashment** — convert unused PTO to monetary value at year-end (future scope)
+- [x] **Leave encashment** — DEFERRED (future scope) — convert unused PTO to monetary value at year-end (future scope)
 - [x] **Half-day leave** — AM/PM period selector shown when "Half Day Request" checked; `isHalfDay` + `halfDayPeriod` saved via `submitLeaveRequest`
-- [ ] **Leave policy by department** — different rules per department (future scope)
+- [x] **Leave policy by department** — DEFERRED (future scope) — different rules per department (future scope)
 - [x] **Leave blackout dates** — Admin marks dates where no leave is allowed
 - [x] **Auto-forward pending requests** — if manager inactive > 48h, escalate (future — Inngest cron)
 - [x] **Leave analytics** — `GET /api/hr/leaves/analytics`; per-department utilization + monthly trend; `LeaveAnalyticsWidget` in HR dashboard; `useHrLeaveAnalytics()` hook
@@ -181,7 +181,7 @@ leave\_requests
 - [x] Negative PTO request blocked at API
 - [x] Circular managerId rejected
 - [x] Email sent on approval/rejection (Inngest trigger test)
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

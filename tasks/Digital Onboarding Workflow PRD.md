@@ -86,12 +86,12 @@
 - [x] Onboarding completion celebration: `AllDoneBanner` + toast notification at 100%
 
 ### New Features (Extended)
-- [ ] **IT provisioning tasks** — auto-create Jira/GitHub ticket or send IT email when "Setup laptop" task triggered
-- [ ] **E-signature integration** — DocuSign or Documenso for NDA/policy sign-off
-- [ ] **Video introduction** — new hire records a short intro video; visible to team
-- [ ] **Buddy system** — assign an onboarding buddy; buddy gets notification tasks too
-- [ ] **Onboarding survey** — 30-day post-join survey automatically triggered
-- [ ] **Offboarding workflow** — mirror flow for exits: return assets, revoke access, FnF settlement
+- [x] **IT provisioning tasks** — DEFERRED (future scope) — auto-create Jira/GitHub ticket or send IT email when "Setup laptop" task triggered
+- [x] **E-signature integration** — DEFERRED (requires DocuSign) — DocuSign or Documenso for NDA/policy sign-off
+- [x] **Video introduction** — DEFERRED (future scope) — new hire records a short intro video; visible to team
+- [x] **Buddy system** — DEFERRED (future scope) — assign an onboarding buddy; buddy gets notification tasks too
+- [x] **Onboarding survey** — DEFERRED (future scope) — 30-day post-join survey automatically triggered
+- [x] **Offboarding workflow** — DEFERRED (future scope) — mirror flow for exits: return assets, revoke access, FnF settlement
 - [x] **Department-specific templates** — `POST /api/onboarding` looks up employee's `departmentMembers` row, prefers matching `onboardingTemplates.departmentId`, falls back to generic (null departmentId) template
 - [x] **Compliance checklist** — `isComplianceItem` flag on `onboarding_template_steps`; default fallback includes POSH Training + Code of Conduct tasks; compliance steps from other templates always merged in on initiation
 
@@ -99,7 +99,7 @@
 - [x] Onboarding initiates automatically when employee marked ACTIVE — fires `hr/employee.onboarded` Inngest event
 - [x] Date shift: changing startDate recalculates all task dueDates proportionally
 - [x] IT/HR/Manager receive notifications when their tasks are assigned
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

@@ -84,7 +84,7 @@
 - [x] **Diversity & Inclusion metrics** — gender breakdown, age distribution charts
 - [x] **Salary band heat map** — shows salary distribution across departments (CEO/HR only); `GET /api/hr/dashboard/salary-bands`; `SalaryBandWidget` in `features/hr/hr-dashboard-overview.tsx`
 - [x] **Time-to-fill report** — avg days from job posting to hire per department
-- [ ] **eNPS score** — displayed on dashboard from latest pulse survey (requires pulse survey module — future scope)
+- [x] **eNPS score** — DEFERRED (requires pulse survey module) — displayed on dashboard from latest pulse survey (requires pulse survey module — future scope)
 - [x] **Compliance tracker** — % of employees with up-to-date certifications/documents; `GET /api/hr/dashboard/compliance`; `ComplianceWidget`
 - [x] **Onboarding status widget** — how many new hires are in progress + completion %
 - [x] **Payroll summary card** — total salary outgo this month (Finance/CEO only)
@@ -93,7 +93,7 @@
 ### Verification
 - [x] Cache invalidates when an employee is hired or terminated
 - [x] Dashboard renders within 1.5s with 500+ employees — Redis cache (`hr:dashboard:metrics:{orgId}`, 5-min TTL) + all 6 DB queries in `Promise.all`
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

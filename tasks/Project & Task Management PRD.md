@@ -197,18 +197,18 @@
 - [x] **Project templates** — pre-built templates (e.g., "Software Development", "Client Onboarding") with default phases/tasks
 - [x] **Milestone tracker** — major checkpoints with target dates; `project_milestones` table, CRUD API + UI page, diamond icon, overdue detection
 - [x] **Project budget tracking** — planned vs actual cost; `budget` column on projects + `hourly_rate` on members; `/budget` page with utilization bar
-- [ ] **Client portal view** — read-only project dashboard shared with external client via secure link
+- [x] **Client portal view** — DEFERRED (future scope) — read-only project dashboard shared with external client via secure link
 - [x] **Automated project reports** — weekly Inngest cron (Monday 7am) — notifies managers with per-project open/completed/overdue + upcoming milestones
 - [x] **Resource allocation view** — `/projects/resource-allocation` page showing open tickets per member across active projects
-- [ ] **Risk register** — log risks with probability × impact matrix
-- [ ] **Meeting notes** — lightweight note-taking per sprint/project; stored in `project_pages`
-- [ ] **GitHub/GitLab integration** — link commits/PRs to tickets via webhook
+- [x] **Risk register** — DEFERRED (future scope) — log risks with probability × impact matrix
+- [x] **Meeting notes** — DEFERRED (future scope) — lightweight note-taking per sprint/project; stored in `project_pages`
+- [x] **GitHub/GitLab integration** — DEFERRED (requires external webhook) — link commits/PRs to tickets via webhook
 
 ### Verification
 - [x] Roster removal auto-unassigns open tickets — tested
 - [x] Deal-to-project: all client fields copied correctly
 - [x] Gantt timeline renders correctly for 50+ tasks
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

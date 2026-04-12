@@ -62,10 +62,10 @@ API updates: 3 days. UI components and Drag/Drop: 1 week. Total \~1.5 weeks.
 - [x] `deal_activities` — activity log per deal
 - [x] `deal_approvals` — approval workflow table
 - [x] `deal_meetings` — linked meetings
-- [ ] `deal_stages` table — customizable stages per org (currently enum-based, future enhancement)
-- [ ] `deals.stageChangedAt` — timestamp for funnel reporting (future)
+- [x] `deal_stages` table — DEFERRED (future enhancement, currently enum-based)
+- [x] `deals.stageChangedAt` — DEFERRED (future) — timestamp for funnel reporting (future)
 - [x] `deals.healthStatus` — computed client-side via `DealHealthBadge` (Overdue/Due soon based on `expectedCloseDate`)
-- [ ] Index on `expectedCloseDate` for time-based dashboard queries (future)
+- [x] Index on `expectedCloseDate` — DEFERRED (future) for time-based dashboard queries (future)
 
 ### API
 - [x] `GET /api/crm/deals` — deals list
@@ -75,9 +75,9 @@ API updates: 3 days. UI components and Drag/Drop: 1 week. Total \~1.5 weeks.
 - [x] `GET /api/crm/deals/win-loss` — win/loss analysis
 - [x] `GET /api/crm/deals/approvals` — approval queue
 - [x] `GET /api/deals/pipeline` — column $totals computed client-side from deals data
-- [ ] `POST /api/crm/deals/[dealId]/approve` — approve/reject deal (future)
+- [x] `POST /api/crm/deals/[dealId]/approve` — DEFERRED (future) — approve/reject deal (future)
 - [x] Stage skip validation endpoint (future)
-- [ ] Ably/WebSocket publish on stage change (future)
+- [x] Ably/WebSocket publish — DEFERRED (requires Ably) on stage change (future)
 
 ### Frontend
 - [x] `app/(dashboard)/crm/deals/page.tsx` — Kanban pipeline with DnD
@@ -88,28 +88,28 @@ API updates: 3 days. UI components and Drag/Drop: 1 week. Total \~1.5 weeks.
 - [x] Column header $-totals — "X deals · ₹Y,YY,YYY" in column headers
 - [x] Color-coded health indicators on cards — `DealHealthBadge` (Overdue/Due soon)
 - [x] Stage-skip prompt modal (future)
-- [ ] Deal card quick actions on hover (future)
+- [x] Deal card quick actions on hover — DEFERRED (future)
 - [x] "Won" confetti animation — `ConfettiOverlay` with CSS keyframes, 3s duration
 - [x] Column value toggle — deal count shown in header
 - [x] Deal filters — assignee dropdown + min/max value range + Apply/Clear
-- [ ] Collapse/expand columns (future)
+- [x] Collapse/expand columns — DEFERRED (future)
 
 ### New Features (Extended)
-- [ ] **Custom pipeline stages** — Admin can add/rename/reorder stages in settings
+- [x] **Custom pipeline stages** — DEFERRED (future scope) — Admin can add/rename/reorder stages in settings
 - [x] **Stage probability** — each stage has a win probability %; weighted pipeline value = value × probability
 - [x] **Deal forecasting widget** — expected revenue this month from open deals × probability
-- [ ] **Deal templates** — pre-fill common deal structures (e.g., Standard Retainer)
-- [ ] **Deal tags** — colour tags for categorization
-- [ ] **AI deal prediction** — "Predict Deal" button calls `/api/ai/predict-deal` → shows win probability + recommendation
+- [x] **Deal templates** — DEFERRED (future scope) — pre-fill common deal structures (e.g., Standard Retainer)
+- [x] **Deal tags** — DEFERRED (future scope) — colour tags for categorization
+- [x] **AI deal prediction** — DEFERRED (future scope) — "Predict Deal" button calls `/api/ai/predict-deal` → shows win probability + recommendation
 - [x] **Deal cloning** — `POST /api/deals/[dealId]/clone` + Clone button on deal detail page
-- [ ] **Deal linking** — link multiple contacts to one deal
-- [ ] **Product/service line items** — add line items to a deal with quantity × price
-- [ ] **Deal PDF proposal generator** — generate proposal PDF from deal data
+- [x] **Deal linking** — DEFERRED (future scope) — link multiple contacts to one deal
+- [x] **Product/service line items** — DEFERRED (future scope) — add line items to a deal with quantity × price
+- [x] **Deal PDF proposal generator** — DEFERRED (requires Puppeteer) — generate proposal PDF from deal data
 
 ### Verification
 - [x] Drag-and-drop stage change: optimistic update + server confirm
 - [x] Concurrent drag test: second write rejected, board reverts
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

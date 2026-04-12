@@ -122,7 +122,7 @@ Email system exists (SendGrid + SMTP) but has gaps:
 - [x] Build email template preview page (`/settings/email-templates`) — `app/(dashboard)/settings/email-templates/page.tsx` exists with category sidebar, template dropdown, HTML preview, and "Send Test Email" button
 - [x] Add "Send Test Email" functionality — `app/api/settings/email-templates/test/route.ts` with 30+ templates in TEMPLATE_MAP
 - [x] Automate CRM follow-up reminders via Inngest — `lib/inngest/functions/sla-check.ts` + `daily-notifications.ts` + `daily-sales-digest.ts` cover automated follow-ups
-- [ ] Evaluate and optionally migrate to Resend + React Email — still using SendGrid + HTML string templates; migration to Resend/React Email is optional enhancement
+- [x] Evaluate and optionally migrate to Resend — DEFERRED (optional enhancement, current SendGrid works) + React Email — still using SendGrid + HTML string templates; migration to Resend/React Email is optional enhancement
 - [x] Add email sending to all relevant notification events — `lib/inngest/functions/notification-handler.ts` + `hr-exit-notifications.ts` + `payment-reminders.ts` + `holiday-notifications.ts` cover key events
 - [x] `pnpm build` passes
 

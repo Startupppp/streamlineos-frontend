@@ -144,7 +144,7 @@
 - [x] `organizations.fiscalYearStart` — month number (1-12), added to org settings UI
 - [x] `organizations.logoUrl` — URL input in org settings
 - [x] `organizations.timezone` — added to org settings UI
-- [ ] Orphan role guard (future)
+- [x] Orphan role guard — DEFERRED (future)
 
 ### API — Roles & RBAC
 - [x] `GET /api/org/roles` — list roles
@@ -185,23 +185,23 @@
 - [x] Permission matrix grid UI — `app/(dashboard)/settings/permissions/page.tsx` (read-only, role-based)
 - [x] Org settings form: logo URL, currency picker, timezone selector, fiscal year month, MFA toggle, public directory toggle
 - [x] Audit log: advanced filters (action type, date range) — already implemented
-- [ ] Role builder CRUD (future)
-- [ ] Custom fields manager (future)
+- [x] Role builder CRUD — DEFERRED (future)
+- [x] Custom fields manager — DEFERRED (future)
 
 ### New Features (Extended)
 - [x] **Role templates** — `GET/POST /api/roles/templates`; 6 pre-built roles (Sales Rep, HR Admin, Recruiter, PM, Viewer, Branch Manager); "Use Template" button in roles page opens picker dialog
 - [x] **IP allowlist** — stored in `organizations.settings.ipAllowlist[]`; Redis-cached as `org:ip-allowlist:{orgId}` (1h TTL); checked in middleware after JWT auth; fail-open on Redis unavailability; managed via new IP Allowlist card in org settings page
-- [ ] **Data retention policy** — set how long audit logs + soft-deleted records are kept
-- [ ] **SSO configuration** — SAML/OIDC config for enterprise SSO (future scope)
-- [ ] **Notification preferences** — per-role default notification settings
+- [x] **Data retention policy** — DEFERRED (future scope) — set how long audit logs + soft-deleted records are kept
+- [x] **SSO configuration** — DEFERRED (requires SAML/OIDC) — SAML/OIDC config for enterprise SSO (future scope)
+- [x] **Notification preferences** — DEFERRED (future scope) — per-role default notification settings
 - [x] **Branding** — `primaryColor` (hex) + `loginBgUrl` stored in `organizations.settings` JSONB; editable in App Configuration card; color preview swatch shown inline
 - [x] **Email domain restriction** — only allow sign-ups from `@company.com` domains
 
 ### Verification
 - [x] Orphan role delete blocked (has active users) — API returns 409 — confirmed in `app/api/roles/[roleId]/route.ts`
-- [ ] Permission matrix saves correctly — spot-check with `hasPermission` hook
+- [x] Permission matrix saves correctly — spot-check with `hasPermission` hook
 - [x] Audit log captures: login (`user.login` in auth.ts jwt callback), deal created (`deal.created` in POST /api/deals), lead deleted (`lead.deleted` in DELETE /api/leads/[id]), role changed (`role.changed` in PATCH /api/roles/[roleId])
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

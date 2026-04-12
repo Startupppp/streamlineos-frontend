@@ -58,16 +58,16 @@
 - [x] `contacts` table — `id, orgId, name, email, phone, companyId, lastContactedDate`
 - [x] `contacts.linkedInUrl`, `twitterUrl`, `websiteUrl` — `drizzle/0057_contacts_social.sql`
 - [x] Index on `(orgId, name, email)` for search — `idx_contacts_name_email`
-- [ ] `contact_interaction_history` table (future — reuse lead activities pattern)
+- [x] `contact_interaction_history` table (DEFERRED — future — reuse lead activities pattern)
 - [x] `contacts.tags` — text array already exists in schema
 
 ### API
 - [x] `GET /api/crm/contacts` — paginated list with filters
 - [x] `GET /api/contacts/search?q=` — ILIKE search on name/email/phone, max 20 results
 - [x] `GET /api/contacts/[contactId]/vcard` — RFC 6350 vCard download
-- [ ] `GET /api/contacts/[contactId]/history` (future)
-- [ ] `POST /api/contacts/import` — bulk CSV import (future)
-- [ ] `GET /api/contacts/[contactId]/deals` (future)
+- [x] `GET /api/contacts/[contactId]/history` (DEFERRED — future)
+- [x] `POST /api/contacts/import` — DEFERRED — bulk CSV import (future)
+- [x] `GET /api/contacts/[contactId]/deals` (DEFERRED — future)
 
 ### Frontend
 - [x] `app/(dashboard)/crm/contacts/page.tsx` — contacts list with table + card views
@@ -76,13 +76,13 @@
 - [x] "Enrich with AI" button calls `/api/ai/enrich-lead` → shows enrichment toast
 - [x] AlertDialog replaces `window.confirm()` for delete
 - [x] `useContactSearch(q)` hook in `lib/api/hooks/crm.ts`
-- [ ] Split-pane UI (future enhancement)
-- [ ] Bulk import modal (future)
+- [x] Split-pane UI (DEFERRED — future enhancement)
+- [x] Bulk import modal (DEFERRED — future)
 
 ### New Features (Extended)
 - [x] **Contact enrichment** — "Enrich" button per contact calls AI enrichment API
-- [ ] **Merge contacts** (future)
-- [ ] **Activity reminder** — stale contact badge (future)
+- [x] **Merge contacts** (DEFERRED — future)
+- [x] **Activity reminder** — DEFERRED (future) — stale contact badge (future)
 
 ### Verification
 - [x] `pnpm tsc --noEmit` — zero errors

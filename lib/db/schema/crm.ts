@@ -977,7 +977,7 @@ export const clientOnboardingTemplates = pgTable("client_onboarding_templates", 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
-  index("idx_onboarding_templates_org").on(table.orgId),
+  index("idx_client_onboarding_templates_org").on(table.orgId),
 ]);
 
 export const clientOnboardingItems = pgTable("client_onboarding_items", {

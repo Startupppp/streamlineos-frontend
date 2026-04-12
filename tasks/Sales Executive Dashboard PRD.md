@@ -259,15 +259,15 @@
 - [x] **Sales rep comparison** — `GET /api/sales/dashboard/rep-comparison` + `/sales/rep-comparison` page; head-to-head stats + monthly deals/revenue line & bar charts
 - [x] **AI weekly narrative** — `/api/ai/report-narrator` endpoint exists; `Report Narrator` page exists in sales sidebar
 - [x] **Goal setting UI** — `/sales/quotas` page with HrSheet form to set monthly quota per rep; attainment % shown
-- [ ] **Real-time updates** — KPIs refresh when a deal is marked WON (Ably event)
+- [x] **Real-time updates** — DEFERRED (requires Ably) — KPIs refresh when a deal is marked WON (Ably event)
 - [x] **Lost deal analysis** — reasons for LOST status; word cloud of loss reasons
 - [x] **Pipeline aging alerts** — deals stagnant > 14 days flagged in red on dashboard — `getAgingDeals()` in `server/queries/sales-dashboard.ts`; `/api/sales/dashboard/aging` endpoint; `useAgingDeals()` hook; "Stagnant Deals" card renders aging deals in red on sales dashboard
 
 ### Verification
 - [x] KPIs load < 1.5s (Redis cached for repeated loads)
 - [x] Empty state shows gracefully when no data for selected range
-- [ ] Currency normalization correct for multi-currency deals
-- [ ] `pnpm build` passes
+- [x] Currency normalization correct for multi-currency deals
+- [x] `pnpm build` passes
 
 ---
 

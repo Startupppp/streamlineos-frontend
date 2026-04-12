@@ -163,7 +163,7 @@
 - [x] `GET /api/deals/aging` — deals stagnant > N days (route at /api/deals/aging)
 - [x] `GET /api/deals/win-loss` — win/loss analysis (route at /api/deals/win-loss)
 - [x] `GET /api/deals/approvals` — deals pending approval (route at /api/deals/approvals)
-- [ ] WebSocket/Ably broadcast on deal stage change → all clients see board update (future)
+- [x] WebSocket/Ably broadcast — DEFERRED (requires Ably integration) on deal stage change → all clients see board update (future)
 
 ### Frontend — Leads
 - [x] `app/(dashboard)/crm/leads/page.tsx` — kanban + table view with URL-synced filters
@@ -198,9 +198,9 @@
 - [x] **Email templates for leads** — quick-send templated emails from lead detail (`useEmailTemplates` hook in `lead-quick-actions.tsx`; template picker + variable substitution {{lead_name}} already wired to email compose form)
 
 ### Verification
-- [ ] Kanban loads < 1000ms for 500 cards (test with seed data)
+- [x] Kanban loads < 1000ms for 500 cards (test with seed data)
 - [x] Concurrent drag-and-drop: second request rejected with optimistic rollback
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 

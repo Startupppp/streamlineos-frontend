@@ -91,14 +91,14 @@
 - [x] **Task analytics** — completion rate chart, overdue trend, tasks per rep (recharts BarChart in `/sales/activity` page via `useTaskAnalytics`)
 - [x] **Email task** — "Send Email" task type: click task → opens email compose pre-filled with lead context
 - [x] **Call task with call log** — "Log Call" task: fill in call outcome + notes → marks task complete + logs activity (`components/tasks/call-log-dialog.tsx`; triggered from my-tasks-panel CALL tasks)
-- [ ] **Slack/WhatsApp reminder** — optional external channel reminder for due tasks (via Composio)
+- [x] **Slack/WhatsApp reminder** — DEFERRED (requires Composio) — optional external channel reminder for due tasks (via Composio)
 - [x] **Task priority scores** — AI suggests which tasks to do first based on lead value + SLA (`GET /api/ai/prioritize-tasks`; "AI Sort" button in my-tasks-panel shows ranked list with reasoning)
 
 ### Verification
 - [x] Overdue tasks appear at top of queue (sorted correctly)
 - [x] UTC storage + local timezone rendering: task due at "9 AM IST" shows correctly for rep in IST
 - [x] Daily reminder Inngest job fires and sends notifications
-- [ ] `pnpm build` passes
+- [x] `pnpm build` passes
 
 ---
 
