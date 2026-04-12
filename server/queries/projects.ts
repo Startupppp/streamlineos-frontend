@@ -343,6 +343,53 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
       .limit(50),
   ]);
 
+  // ── Health Score ─────────────────────────────────────────────────────────────
+  // Composed of three signals (0–100):
+  //   1. Completion rate  (50 pts): % of tickets DONE
+  //   2. On-time rate     (30 pts): % of tickets not overdue among open ones
+  //   3. Velocity trend   (20 pts): recent sprint velocity ≥ avg velocity
+
+  const today = new Date();
+  const totalTickets = stateDistribution.reduce((s, r) => s + Number(r.count), 0);
+  const doneTickets = stateDistribution
+    .filter((r) => r.status === "DONE")
+    .reduce((s, r) => s + Number(r.count), 0);
+  const completionRate = totalTickets > 0 ? doneTickets / totalTickets : 0;
+
+  // Overdue = not DONE/CANCELLED and dueDate < today
+  const [overdueResult] = await db
+    .select({ count: count() })
+    .from(tickets)
+    .where(
+      and(
+        orgFilter,
+        sql`${tickets.status} NOT IN ('DONE', 'CANCELLED')`,
+        sql`${tickets.dueDate} IS NOT NULL`,
+        sql`${tickets.dueDate} < ${today.toISOString().slice(0, 10)}`,
+      ),
+    );
+  const openTickets = stateDistribution
+    .filter((r) => !["DONE", "CANCELLED"].includes(r.status))
+    .reduce((s, r) => s + Number(r.count), 0);
+  const overdueCount = Number(overdueResult?.count ?? 0);
+  const onTimeRate = openTickets > 0 ? 1 - overdueCount / openTickets : 1;
+
+  // Velocity trend: is latest sprint ≥ average?
+  const velocities = cycleVelocity.map((c) => Number(c.completedPoints));
+  const avgVelocity = velocities.length > 0 ? velocities.reduce((a, b) => a + b, 0) / velocities.length : 0;
+  const latestVelocity = velocities.length > 0 ? velocities[velocities.length - 1] : 0;
+  const velocityScore = avgVelocity > 0 ? Math.min(1, latestVelocity / avgVelocity) : 1;
+
+  const healthScore = Math.round(
+    completionRate * 50 + onTimeRate * 30 + velocityScore * 20,
+  );
+
+  const healthStatus: "EXCELLENT" | "GOOD" | "AT_RISK" | "CRITICAL" =
+    healthScore >= 80 ? "EXCELLENT"
+    : healthScore >= 60 ? "GOOD"
+    : healthScore >= 40 ? "AT_RISK"
+    : "CRITICAL";
+
   return {
     stateDistribution,
     priorityBreakdown,
@@ -350,6 +397,15 @@ export async function getProjectAnalytics(orgId: string, projectId: number) {
     volumeOverTime,
     cycleVelocity,
     estimateVsActual,
+    healthScore,
+    healthStatus,
+    healthBreakdown: {
+      completionPct: Math.round(completionRate * 100),
+      onTimePct: Math.round(onTimeRate * 100),
+      velocityScore: Math.round(velocityScore * 100),
+      overdueTickets: overdueCount,
+      totalTickets,
+    },
   };
 }
 

@@ -21,6 +21,8 @@ import { getSignedFileUrl, viewFile } from "@/hooks/use-file-url";
 import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketSubtasks } from "./ticket-subtasks";
+import { TicketRelations } from "./ticket-relations";
+import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
 import { ActivityFeed } from "./activity-feed";
 import type { TicketDetailsDialogProps, ProjectMember } from "./types";
@@ -311,6 +313,17 @@ export function TicketDetailsDialog({
                     </div>
                   </div>
                 )}
+
+                <TicketRelations
+                  ticketId={ticketId!}
+                  projectId={projectId}
+                />
+
+                <TicketTimeTracker
+                  ticketId={ticketId!}
+                  projectId={projectId}
+                  timeSpent={ticket.timeSpent ?? null}
+                />
 
                 <WatcherList
                   projectId={projectId}

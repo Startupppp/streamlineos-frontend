@@ -14,9 +14,19 @@ import {
   subDays,
   startOfWeek,
   endOfWeek,
+  startOfYear,
+  endOfYear,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCalendarEvents } from "@/lib/api/hooks/calendar";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
@@ -119,6 +129,27 @@ export function CalendarView() {
 
   const handleToday = useCallback(() => setCurrentDate(new Date()), []);
 
+  const handleExport = useCallback(
+    (range: "month" | "3months" | "year") => {
+      let from: Date;
+      let to: Date;
+      if (range === "month") {
+        from = startOfMonth(currentDate);
+        to = endOfMonth(currentDate);
+      } else if (range === "3months") {
+        from = startOfMonth(currentDate);
+        to = endOfMonth(addMonths(currentDate, 2));
+      } else {
+        from = startOfYear(currentDate);
+        to = endOfYear(currentDate);
+      }
+      const fromStr = format(from, "yyyy-MM-dd");
+      const toStr = format(to, "yyyy-MM-dd");
+      window.open(`/api/calendar/export?from=${fromStr}&to=${toStr}`, "_blank");
+    },
+    [currentDate]
+  );
+
   return (
     <div className="flex flex-col gap-3 h-[calc(100dvh-10rem)]">
       <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
@@ -167,6 +198,27 @@ export function CalendarView() {
               </button>
             ))}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs" aria-label="Export calendar">
+                <Download className="h-3.5 w-3.5 mr-1" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel className="text-xs">Export to .ics</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-xs" onClick={() => handleExport("month")}>
+                This month
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs" onClick={() => handleExport("3months")}>
+                Next 3 months
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-xs" onClick={() => handleExport("year")}>
+                This year
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button size="sm" className="h-8 text-xs" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add Event

@@ -7,6 +7,7 @@ import {
   useCancelInvitation,
   useUpdateMemberRole,
 } from "@/lib/api/hooks/organization";
+import { useResetMfa, useResendInvitation } from "@/lib/api/hooks/mfa";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +17,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useState, useTransition, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { Search, UserPlus, Shield } from "lucide-react";
+import { Search, UserPlus, Shield, ShieldOff, RefreshCw } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -56,6 +69,7 @@ export default function MembersSettingsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [, startTransition] = useTransition();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<string>("ENGINEERING");
@@ -64,6 +78,9 @@ export default function MembersSettingsPage() {
   const memberSearch = searchParams.get("q") || "";
   const page = Number(searchParams.get("page")) || 1;
   const debouncedSearch = useDebouncedValue(memberSearch, 300);
+
+  const currentUserRole = session?.user?.role;
+  const canManageMfa = currentUserRole === "CEO" || currentUserRole === "HR";
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -88,6 +105,8 @@ export default function MembersSettingsPage() {
   const inviteUser = useInviteUser();
   const cancelInvitation = useCancelInvitation();
   const updateRole = useUpdateMemberRole();
+  const resetMfa = useResetMfa();
+  const resendInvitation = useResendInvitation();
 
   const handleInvite = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +132,16 @@ export default function MembersSettingsPage() {
     );
   }, [cancelInvitation]);
 
+  const handleResendInvitation = useCallback((invitationId: string) => {
+    resendInvitation.mutate(
+      { invitationId },
+      {
+        onSuccess: () => toast.success("Invitation resent"),
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  }, [resendInvitation]);
+
   const handleUpdateRole = useCallback((userId: string, newRole: string, currentRole: string) => {
     if (newRole === currentRole) return;
     updateRole.mutate(
@@ -123,6 +152,16 @@ export default function MembersSettingsPage() {
       }
     );
   }, [updateRole]);
+
+  const handleResetMfa = useCallback((userId: string) => {
+    resetMfa.mutate(
+      { userId },
+      {
+        onSuccess: () => toast.success("MFA reset successfully"),
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  }, [resetMfa]);
 
   const handleToggleInviteForm = useCallback(() => setShowInviteForm((v) => !v), []);
   const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setInviteEmail(e.target.value), []);
@@ -234,7 +273,7 @@ export default function MembersSettingsPage() {
                           <TableHead className="text-xs font-semibold px-4">Email</TableHead>
                           <TableHead className="text-xs font-semibold px-4">Role</TableHead>
                           <TableHead className="text-xs font-semibold px-4">Joined</TableHead>
-                          <TableHead className="text-xs font-semibold px-4 text-right">Change Role</TableHead>
+                          <TableHead className="text-xs font-semibold px-4 text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -258,6 +297,9 @@ export default function MembersSettingsPage() {
                               key={member.userId}
                               member={member}
                               onUpdateRole={handleUpdateRole}
+                              onResetMfa={handleResetMfa}
+                              canManageMfa={canManageMfa}
+                              isResettingMfa={resetMfa.isPending}
                             />
                           ))
                         )}
@@ -291,7 +333,13 @@ export default function MembersSettingsPage() {
                 {invitations && invitations.length > 0 ? (
                   <div className="space-y-2">
                     {invitations.map((inv) => (
-                      <InvitationRow key={inv.id} inv={inv} onCancel={handleCancelInvitation} />
+                      <InvitationRow
+                        key={inv.id}
+                        inv={inv}
+                        onCancel={handleCancelInvitation}
+                        onResend={handleResendInvitation}
+                        isResending={resendInvitation.isPending}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -309,12 +357,24 @@ export default function MembersSettingsPage() {
 }
 
 interface MemberTableRowProps {
-  member: { userId: string; name: string | null; email: string; image?: string | null; role: string; joinedAt?: string | Date | null };
+  member: {
+    userId: string;
+    name: string | null;
+    email: string;
+    image?: string | null;
+    role: string;
+    joinedAt?: string | Date | null;
+    totpEnabled?: boolean;
+  };
   onUpdateRole: (userId: string, newRole: string, currentRole: string) => void;
+  onResetMfa: (userId: string) => void;
+  canManageMfa: boolean;
+  isResettingMfa: boolean;
 }
 
-function MemberTableRow({ member, onUpdateRole }: MemberTableRowProps) {
+function MemberTableRow({ member, onUpdateRole, onResetMfa, canManageMfa, isResettingMfa }: MemberTableRowProps) {
   const handleRoleChange = useCallback((newRole: string) => onUpdateRole(member.userId, newRole, member.role), [member.userId, member.role, onUpdateRole]);
+  const handleResetMfa = useCallback(() => onResetMfa(member.userId), [member.userId, onResetMfa]);
 
   return (
     <TableRow className="hover:bg-muted/30">
@@ -324,7 +384,12 @@ function MemberTableRow({ member, onUpdateRole }: MemberTableRowProps) {
             <AvatarImage src={resolveImageUrl(member.image)} />
             <AvatarFallback className="text-xs bg-gold/10 text-gold">{member.name?.charAt(0) || "?"}</AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium">{member.name || "Unknown"}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-medium">{member.name || "Unknown"}</span>
+            {member.totpEnabled && (
+              <Shield className="h-3 w-3 text-green-500" aria-label="MFA enabled" />
+            )}
+          </div>
         </div>
       </TableCell>
       <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">{member.email}</TableCell>
@@ -335,14 +400,48 @@ function MemberTableRow({ member, onUpdateRole }: MemberTableRowProps) {
         {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}
       </TableCell>
       <TableCell className="px-4 py-2.5 text-right">
-        <Select value={member.role} onValueChange={handleRoleChange}>
-          <SelectTrigger className="h-7 w-[150px] text-xs ml-auto"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {ALL_ROLES.map(r => (
-              <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center justify-end gap-2">
+          {canManageMfa && member.totpEnabled && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                  disabled={isResettingMfa}
+                >
+                  <ShieldOff className="h-3 w-3 mr-1" />
+                  Reset MFA
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset MFA for {member.name || member.email}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will disable two-factor authentication for this user. They will need to re-enable it to regain MFA protection.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={handleResetMfa}
+                  >
+                    Reset MFA
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          <Select value={member.role} onValueChange={handleRoleChange}>
+            <SelectTrigger className="h-7 w-[150px] text-xs ml-auto"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ALL_ROLES.map(r => (
+                <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -351,10 +450,13 @@ function MemberTableRow({ member, onUpdateRole }: MemberTableRowProps) {
 interface InvitationRowProps {
   inv: { id: string; email: string; role: string };
   onCancel: (id: string) => void;
+  onResend: (id: string) => void;
+  isResending: boolean;
 }
 
-function InvitationRow({ inv, onCancel }: InvitationRowProps) {
+function InvitationRow({ inv, onCancel, onResend, isResending }: InvitationRowProps) {
   const handleCancel = useCallback(() => onCancel(inv.id), [inv.id, onCancel]);
+  const handleResend = useCallback(() => onResend(inv.id), [inv.id, onResend]);
 
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -362,7 +464,20 @@ function InvitationRow({ inv, onCancel }: InvitationRowProps) {
         <p className="text-sm font-medium">{inv.email}</p>
         <Badge variant="outline" className={`text-[10px] mt-1 ${ROLE_COLORS[inv.role] || ""}`}>{inv.role}</Badge>
       </div>
-      <Button variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
+      <div className="flex gap-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs"
+          onClick={handleResend}
+          disabled={isResending}
+          aria-label="Resend invitation"
+        >
+          <RefreshCw className="h-3 w-3 mr-1" />
+          Resend
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs" onClick={handleCancel}>Cancel</Button>
+      </div>
     </div>
   );
 }

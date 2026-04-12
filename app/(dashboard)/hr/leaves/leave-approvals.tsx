@@ -12,11 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
-import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck } from "lucide-react";
+import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck, ShieldAlert } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
@@ -58,70 +60,118 @@ function LeaveApprovalItem({
 }: {
   req: LeaveRequest;
   processingId: number | null;
-  onProcess: (requestId: number, status: "APPROVED" | "REJECTED") => void;
+  onProcess: (requestId: number, status: "APPROVED" | "REJECTED", forceApprove?: boolean, justification?: string) => void;
 }) {
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [forceApprove, setForceApprove] = useState(false);
+  const [justification, setJustification] = useState("");
+
   const status = req.status ?? "PENDING";
   const isPending = status === "PENDING";
   const priority = req.priority || "MEDIUM";
   const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
 
-  const handleApprove = useCallback(() => onProcess(req.id, "APPROVED"), [req.id, onProcess]);
+  const handleApprove = useCallback(() => {
+    if (forceApprove && !justification.trim()) {
+      toast.error("Justification is required for override approval.");
+      return;
+    }
+    onProcess(req.id, "APPROVED", forceApprove, justification || undefined);
+  }, [req.id, onProcess, forceApprove, justification]);
   const handleReject = useCallback(() => onProcess(req.id, "REJECTED"), [req.id, onProcess]);
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border" role="listitem">
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <Avatar className="h-9 w-9 shrink-0">
-          <AvatarImage src={resolveImageUrl(req.user?.image)} />
-          <AvatarFallback className="text-xs bg-primary/10 text-primary">
-            {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-foreground">
-              {req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user?.email}
+    <div className="rounded-xl bg-muted/30 border border-border" role="listitem">
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <Avatar className="h-9 w-9 shrink-0">
+            <AvatarImage src={resolveImageUrl(req.user?.image)} />
+            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+              {req.user?.firstName?.[0]}{req.user?.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-foreground">
+                {req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user?.email}
+              </p>
+              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 gap-1 ${pConfig.textColor} border-current/20`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${pConfig.dotColor}`} />
+                {pConfig.label}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
+              {format(new Date(req.endDate), "MMM dd, yyyy")}
             </p>
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 gap-1 ${pConfig.textColor} border-current/20`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${pConfig.dotColor}`} />
-              {pConfig.label}
-            </Badge>
+            {req.reason && (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
+            )}
+            {!isPending && req.approver?.name && (
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <UserCheck className="h-3 w-3" aria-hidden="true" />
+                {status === "APPROVED" ? "Approved" : "Rejected"} by {req.approver.name}
+              </p>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
-            {format(new Date(req.endDate), "MMM dd, yyyy")}
-          </p>
-          {req.reason && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{req.reason}</p>
-          )}
-          {!isPending && req.approver?.name && (
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <UserCheck className="h-3 w-3" aria-hidden="true" />
-              {status === "APPROVED" ? "Approved" : "Rejected"} by {req.approver.name}
-            </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 ml-3">
+          {isPending ? (
+            <>
+              <Button size="sm" variant="default" className="h-8" disabled={processingId === req.id} onClick={handleApprove}>
+                {processingId === req.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                )}
+                Approve
+              </Button>
+              <Button size="sm" variant="outline" className="h-8" disabled={processingId === req.id} onClick={handleReject}>
+                <XCircle className="h-3 w-3 mr-1" />
+                Reject
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                onClick={() => setOverrideOpen((v) => !v)}
+                title="HR override options"
+              >
+                <ShieldAlert className="h-3.5 w-3.5" />
+              </Button>
+            </>
+          ) : (
+            <LeaveStatusBadge status={status} />
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0 ml-3">
-        {isPending ? (
-          <>
-            <Button size="sm" variant="default" className="h-8" disabled={processingId === req.id} onClick={handleApprove}>
-              {processingId === req.id ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-              )}
-              Approve
-            </Button>
-            <Button size="sm" variant="outline" className="h-8" disabled={processingId === req.id} onClick={handleReject}>
-              <XCircle className="h-3 w-3 mr-1" />
-              Reject
-            </Button>
-          </>
-        ) : (
-          <LeaveStatusBadge status={status} />
-        )}
-      </div>
+      {isPending && overrideOpen && (
+        <div className="border-t border-border px-4 pb-4 pt-3 space-y-3 bg-amber-50/50 dark:bg-amber-900/10 rounded-b-xl">
+          <div className="flex items-center gap-3">
+            <Switch
+              id={`force-approve-${req.id}`}
+              checked={forceApprove}
+              onCheckedChange={setForceApprove}
+            />
+            <Label htmlFor={`force-approve-${req.id}`} className="text-xs font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              Approve beyond balance (HR override)
+            </Label>
+          </div>
+          {forceApprove && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Justification note <span className="text-destructive">*</span></Label>
+              <Textarea
+                placeholder="Required: reason for overriding leave balance..."
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                rows={2}
+                className="resize-none text-xs"
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -130,10 +180,10 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const router = useRouter();
 
-  const handleProcess = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED") => {
+  const handleProcess = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED", forceApprove?: boolean, justification?: string) => {
     setProcessingId(requestId);
     const { processLeaveRequest } = await import("@/server/actions/leave-actions");
-    const res = await processLeaveRequest({ requestId, status });
+    const res = await processLeaveRequest({ requestId, status, forceApprove, justification });
     setProcessingId(null);
     if (res.success) {
       toast.success(`Request ${status.toLowerCase()} successfully`);

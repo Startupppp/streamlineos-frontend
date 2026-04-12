@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { useRbacUserPermissions } from "../hooks/trpc-hooks";
+import { useUserPermissions } from "../api/hooks/rbac";
 
 export function usePermissions() {
   const { data: session } = useSession();
-  const { data: userPermissions } = useRbacUserPermissions({
+  const { data: userPermissions } = useUserPermissions({
     enabled: !!session?.user?.id,
   });
 
@@ -13,7 +13,7 @@ export function usePermissions() {
       if (!userPermissions) return false;
       return userPermissions.includes(permission);
     },
-    [userPermissions]
+    [userPermissions],
   );
 
   const hasAnyPermission = useMemo(
@@ -21,7 +21,7 @@ export function usePermissions() {
       if (!userPermissions) return false;
       return permissions.some((perm) => userPermissions.includes(perm));
     },
-    [userPermissions]
+    [userPermissions],
   );
 
   const hasAllPermissions = useMemo(
@@ -29,7 +29,7 @@ export function usePermissions() {
       if (!userPermissions) return false;
       return permissions.every((perm) => userPermissions.includes(perm));
     },
-    [userPermissions]
+    [userPermissions],
   );
 
   return {

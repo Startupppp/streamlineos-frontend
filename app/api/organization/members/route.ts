@@ -75,6 +75,21 @@ export async function POST(req: NextRequest) {
         return err("An invitation has already been sent to this email", 409);
       }
 
+      const org = await db.query.organizations.findFirst({
+        where: eq(organizations.id, session.orgId),
+      });
+
+      if (org?.allowedEmailDomains && org.allowedEmailDomains.length > 0) {
+        const emailDomain = input.email.split("@")[1]?.toLowerCase();
+        const allowed = org.allowedEmailDomains.map((d) => d.toLowerCase());
+        if (!emailDomain || !allowed.includes(emailDomain)) {
+          return err(
+            `Email domain not allowed. Permitted: ${org.allowedEmailDomains.join(", ")}`,
+            400
+          );
+        }
+      }
+
       const invitationToken = nanoid(32);
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
@@ -90,14 +105,10 @@ export async function POST(req: NextRequest) {
         expiresAt,
       });
 
-      const org = await db.query.organizations.findFirst({
-        where: eq(organizations.id, session.orgId),
-      });
-
       await sendInvitationEmail(
         input.email,
         invitationToken,
-        org?.name || "Unknown Organization"
+        org?.name ?? "Unknown Organization"
       );
 
       await createAuditLog({

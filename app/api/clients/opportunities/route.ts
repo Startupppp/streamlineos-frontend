@@ -1,7 +1,7 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { clientOpportunities, clients } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
 
@@ -21,8 +21,7 @@ export async function GET(req: NextRequest) {
     const clientIdParam = req.nextUrl.searchParams.get("clientId");
     const clientId = clientIdParam ? Number(clientIdParam) : undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const conditions: any[] = [eq(clientOpportunities.orgId, session.orgId)];
+    const conditions: SQL[] = [eq(clientOpportunities.orgId, session.orgId)];
     if (clientId) {
       conditions.push(eq(clientOpportunities.clientId, clientId));
     }
@@ -60,7 +59,7 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await req.json();
     const parsed = createSchema.safeParse(body);
-    if (!parsed.success) return err(parsed.error.message, 400);
+    if (!parsed.success) return err("Invalid input", 400);
 
     const { clientId, title, type, stage, value, notes, expectedCloseDate } = parsed.data;
 

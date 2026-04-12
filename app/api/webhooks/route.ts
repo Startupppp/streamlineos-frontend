@@ -20,8 +20,7 @@ export async function GET(_req: NextRequest) {
     });
 
     const safe = endpoints.map((ep) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { secret: _s, ...rest } = ep;
+      const { secret: _secret, ...rest } = ep;
       return rest;
     });
     return ok(safe);

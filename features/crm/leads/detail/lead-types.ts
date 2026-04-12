@@ -40,7 +40,7 @@ export const TIMELINE_ICONS: Record<
   activity: { icon: Phone, color: "bg-green-500/15 text-green-400" },
 };
 
-export type QuickAction = "call" | "email" | "note" | "task" | null;
+export type QuickAction = "call" | "email" | "note" | "task" | "draft" | null;
 
 export const noteSchema = z.object({
   body: z.string().min(1, "Note cannot be empty"),

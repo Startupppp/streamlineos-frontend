@@ -1,10 +1,23 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getAssets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { assets } from "@/lib/db/schema";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const postAssetSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  status: z.string().optional(),
+  serialNumber: z.string().optional(),
+  assignedTo: z.string().optional(),
+  purchaseDate: z.string().optional(),
+  purchaseCost: z.number().optional(),
+  location: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -19,21 +32,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can create assets.", 403);
     }
 
-    const body = await req.json() as {
-      name: string;
-      type: string;
-      status?: string;
-      serialNumber?: string;
-      assignedTo?: string;
-      purchaseDate?: string;
-      purchaseCost?: number;
-      location?: string;
-      notes?: string;
-    };
-
-    if (!body.name || !body.type) {
-      return err("name and type are required.", 400);
-    }
+    const body = await parseBody(req, postAssetSchema);
 
     const [asset] = await db
       .insert(assets)

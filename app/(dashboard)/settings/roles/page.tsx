@@ -6,6 +6,9 @@ import {
   useCreateRole,
   useUpdateRole,
   useDeleteRole,
+  useRoleTemplates,
+  useCloneRoleTemplate,
+  type RoleTemplate,
 } from "@/lib/api/hooks/roles";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import {
@@ -15,6 +18,7 @@ import {
   Shield,
   ChevronDown,
   ChevronRight,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +92,7 @@ function RolesContent() {
   const { data: roles, isLoading } = useRoles();
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const deleteRole = useDeleteRole();
 
@@ -115,9 +120,14 @@ function RolesContent() {
       subtitle="Configure access controls for each role"
       noInternalScroll
       actions={
-        <Button onClick={handleOpenCreate} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="h-4 w-4" /> New Role
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setTemplateOpen(true)} className="gap-2">
+            <Copy className="h-4 w-4" /> Use Template
+          </Button>
+          <Button onClick={handleOpenCreate} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Plus className="h-4 w-4" /> New Role
+          </Button>
+        </div>
       }
     >
       <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:h-full lg:min-h-0">
@@ -168,6 +178,7 @@ function RolesContent() {
       </div>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <RoleTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
 
       <Dialog open={!!deleteTarget} onOpenChange={handleDeleteDialogClose}>
         <DialogContent className="sm:max-w-sm">
@@ -295,9 +306,64 @@ function PermissionMatrix({
   );
 }
 
+// ─── Role Templates ───────────────────────────────────────────────────────────
+
+const ROLE_TEMPLATES: Array<{ label: string; name: string; slug: string; permissions: string[] }> = [
+  {
+    label: "Sales Rep",
+    name: "Sales Rep",
+    slug: "SALES_REP",
+    permissions: [
+      "crm:leads:view", "crm:leads:create", "crm:leads:update",
+      "crm:targets:view", "dashboard:sales:view", "self:view",
+    ],
+  },
+  {
+    label: "HR Admin",
+    name: "HR Admin",
+    slug: "HR_ADMIN",
+    permissions: [
+      "hr:employees:view", "hr:employees:create", "hr:employees:update",
+      "hr:leaves:view", "hr:leaves:manage", "hr:attendance:view", "hr:attendance:manage",
+      "hr:payroll:view", "hr:payroll:manage", "settings:rbac:view",
+    ],
+  },
+  {
+    label: "Recruiter",
+    name: "Recruiter",
+    slug: "RECRUITER",
+    permissions: [
+      "hr:employees:view",
+      "hr:documents:view", "hr:documents:create",
+    ],
+  },
+  {
+    label: "Project Manager",
+    name: "Project Manager",
+    slug: "PROJECT_MANAGER",
+    permissions: [
+      "projects:view", "projects:create", "projects:update",
+      "projects:tickets:view", "projects:tickets:create", "projects:tickets:update",
+      "projects:sprints:view", "projects:sprints:create",
+      "projects:timesheets:view", "projects:timesheets:manage",
+    ],
+  },
+  {
+    label: "Finance Manager",
+    name: "Finance Manager",
+    slug: "FINANCE_MANAGER",
+    permissions: [
+      "hr:payroll:view", "hr:payroll:manage",
+      "hr:expenses:view", "hr:expenses:manage",
+      "hr:salary:view", "reports:view",
+    ],
+  },
+];
+
 function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const create = useCreateRole();
 
   const handleNameChange = useCallback((value: string) => {
@@ -307,30 +373,60 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
 
   const handleNameInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => handleNameChange(e.target.value), [handleNameChange]);
   const handleSlugInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSlug(e.target.value.toUpperCase().replace(/[^A-Z_]/g, "")), []);
-  const handleCancelDialog = useCallback(() => onOpenChange(false), [onOpenChange]);
+  const handleCancelDialog = useCallback(() => { onOpenChange(false); setName(""); setSlug(""); setSelectedPermissions([]); }, [onOpenChange]);
+
+  const handleTemplateSelect = useCallback((tmpl: typeof ROLE_TEMPLATES[number]) => {
+    setName(tmpl.name);
+    setSlug(tmpl.slug);
+    setSelectedPermissions(tmpl.permissions);
+  }, []);
 
   const handleCreate = useCallback(() => {
     create.mutate(
-      { name, slug, permissions: [] },
+      { name, slug, permissions: selectedPermissions },
       {
         onSuccess: () => {
           onOpenChange(false);
           setName("");
           setSlug("");
+          setSelectedPermissions([]);
           toast.success("Role created");
         },
         onError: (err) => toast.error(err.message),
       }
     );
-  }, [create, name, slug, onOpenChange]);
+  }, [create, name, slug, selectedPermissions, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create New Role</DialogTitle>
+          <DialogDescription className="text-xs">Start from a template or create a custom role.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Templates */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-2 block">Start from a template</Label>
+            <div className="flex flex-wrap gap-2">
+              {ROLE_TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.slug}
+                  type="button"
+                  onClick={() => handleTemplateSelect(tmpl)}
+                  className={cn(
+                    "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                    slug === tmpl.slug
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border hover:border-primary hover:text-primary"
+                  )}
+                >
+                  {tmpl.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <Label className="text-xs">Role Name</Label>
             <Input
@@ -349,6 +445,11 @@ function CreateRoleDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
               className="mt-1 font-mono text-xs"
             />
           </div>
+          {selectedPermissions.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedPermissions.length} permissions pre-selected from template. You can edit them after creation.
+            </p>
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={handleCancelDialog}>Cancel</Button>
             <Button
@@ -466,5 +567,72 @@ function PermissionRow({ perm, enabled, isCEO, onToggle }: PermissionRowProps) {
       </div>
       <Switch checked={enabled} onCheckedChange={handleToggle} disabled={isCEO} className="h-4 w-7" />
     </div>
+  );
+}
+
+// ─── Role Template Dialog ─────────────────────────────────────────────────────
+
+function RoleTemplateDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { data: templates, isLoading } = useRoleTemplates();
+  const clone = useCloneRoleTemplate();
+
+  function handleClone(template: RoleTemplate) {
+    clone.mutate(
+      { templateId: template.id },
+      {
+        onSuccess: () => {
+          toast.success(`"${template.name}" role cloned`);
+          onOpenChange(false);
+        },
+        onError: (e) => toast.error(e.message ?? "Failed to clone template"),
+      },
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Role Templates</DialogTitle>
+          <DialogDescription>
+            Clone a pre-built role to get started quickly. You can customize permissions after.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground text-center py-4">Loading templates…</div>
+          ) : (
+            templates?.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center justify-between rounded-md border px-3 py-2"
+              >
+                <div>
+                  <p className="text-sm font-medium">{t.name}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{t.slug}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t.permissions.length} permission{t.permissions.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={clone.isPending}
+                  onClick={() => handleClone(t)}
+                >
+                  <Copy className="h-3.5 w-3.5 mr-1" /> Clone
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

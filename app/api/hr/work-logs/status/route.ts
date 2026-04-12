@@ -1,9 +1,16 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const patchWorkLogStatusSchema = z.object({
+  id: z.number(),
+  status: z.enum(["APPROVED", "REJECTED"]),
+  rejectionReason: z.string().optional(),
+});
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
@@ -11,19 +18,7 @@ export async function PATCH(req: NextRequest) {
       return err("Only admins can approve or reject work logs.", 403);
     }
 
-    const body = await req.json() as {
-      id: number;
-      status: "APPROVED" | "REJECTED";
-      rejectionReason?: string;
-    };
-
-    if (!body.id || !body.status) {
-      return err("id and status are required.", 400);
-    }
-
-    if (!["APPROVED", "REJECTED"].includes(body.status)) {
-      return err("status must be APPROVED or REJECTED.", 400);
-    }
+    const body = await parseBody(req, patchWorkLogStatusSchema);
 
     const existing = await db.query.timesheets.findFirst({
       where: and(

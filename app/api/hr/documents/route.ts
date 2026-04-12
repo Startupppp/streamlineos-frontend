@@ -1,11 +1,31 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getDocuments } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { documents, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
-import type { DocumentType } from "@/types/hr";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const DOCUMENT_TYPES = [
+  "CONTRACT",
+  "CERTIFICATE",
+  "ID_PROOF",
+  "PAYSLIP",
+  "POLICY",
+  "OFFER_LETTER",
+  "RESUME",
+  "OTHER",
+] as const;
+
+const createDocumentSchema = z.object({
+  name: z.string().min(1).max(255),
+  type: z.enum(DOCUMENT_TYPES),
+  fileUrl: z.string().url(),
+  fileSize: z.number().int().positive().optional(),
+  mimeType: z.string().optional(),
+  userId: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -31,18 +51,7 @@ export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     const isAdmin = isAdminOrOwner(session.user.role);
 
-    const body = await req.json() as {
-      name: string;
-      type: DocumentType;
-      fileUrl: string;
-      fileSize?: number;
-      mimeType?: string;
-      userId?: string;
-    };
-
-    if (!body.name || !body.type || !body.fileUrl) {
-      return err("name, type, and fileUrl are required.", 400);
-    }
+    const body = await parseBody(req, createDocumentSchema);
 
     const targetUserId =
       body.userId && isAdmin ? body.userId : session.user.id;

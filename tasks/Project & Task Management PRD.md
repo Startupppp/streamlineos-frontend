@@ -150,10 +150,10 @@
 - [x] `timesheets`, `time_entries` — time tracking
 - [x] `work_item_relations` — task dependencies
 - [x] `custom_states` — custom ticket states per project
-- [ ] `projects.dealId` FK verify: ensure deal-to-project link is saved on project creation
-- [ ] `tickets.estimatedHours` — for capacity planning
-- [ ] `tickets.completionPercentage` — derived field or stored for sub-task tracking
-- [ ] `project_pages` — wiki/notes per project (already has `pages` route)
+- [x] `projects.dealId` FK verify: `dealId` column exists in projects schema; `POST /api/projects/from-deal` sets it
+- [x] `tickets.estimatedHours` — already present in schema (`original_estimate` + `estimated_hours` in template table)
+- [x] `tickets.completionPercentage` — added to schema + migration 0084
+- [x] `project_pages` — wiki/notes per project — pages route already exists at `app/(dashboard)/projects/[projectId]/pages/`
 
 ### API
 - [x] `GET/POST /api/projects` — project list + create
@@ -161,13 +161,14 @@
 - [x] `GET/POST /api/projects/[projectId]/tickets` — tickets
 - [x] `GET/POST /api/projects/[projectId]/sprints` — sprints
 - [x] `GET /api/projects/[projectId]/analytics` — project analytics (page exists)
-- [ ] `POST /api/projects/from-deal` — "Create Project from Deal" → copies client/value/contacts
-- [ ] `DELETE /api/projects/[projectId]/members/[userId]` — auto-unassign from all tickets when removed from roster
-- [ ] `GET /api/projects/[projectId]/timeline` — returns tasks with dates for Gantt (verify existing)
-- [ ] `GET /api/projects/[projectId]/burndown` — sprint burndown chart data
-- [ ] `GET /api/projects/[projectId]/velocity` — sprint velocity history
-- [ ] Ticket deletion warning if it has dependents in `work_item_relations`
-- [ ] Roster removal triggers ticket reassignment prompt
+- [x] `POST /api/projects/from-deal` — implemented in `app/api/projects/from-deal/route.ts`
+- [x] `DELETE /api/projects/[projectId]/members/[userId]` — auto-unassign from all tickets when removed from roster
+- [x] `GET /api/projects/[projectId]/sprints/[sprintId]/burndown` — sprint burndown chart data (already existed)
+- [x] Sprint velocity chart — computed client-side from completed sprint story points in `VelocityChart` component
+- [x] `GET/POST/DELETE /api/projects/[projectId]/tickets/[ticketId]/relations` — ticket dependency CRUD
+- [x] `POST /api/projects/[projectId]/tickets/bulk` — bulk update: assign, status, sprint, priority
+- [x] Ticket deletion warning if it has dependents in `work_item_relations` — DELETE returns 409 with count when blocked; use `?force=true` to override
+- [x] Roster removal triggers ticket reassignment prompt
 
 ### Frontend
 - [x] `app/(dashboard)/projects/page.tsx` — projects grid with progress bars
@@ -182,31 +183,31 @@
 - [x] `app/(dashboard)/projects/[projectId]/intake/page.tsx` — issue intake
 - [x] `app/(dashboard)/projects/[projectId]/my-tickets/page.tsx` — my tickets
 - [x] `components/projects/gantt-view.tsx` — Gantt in ScrollArea
-- [ ] "Create Project from Deal" button on deal detail (WON stage) → prefills project form
-- [ ] Project progress bar: `completedTickets / totalTickets * 100`
-- [ ] Sprint burndown chart (story points remaining per day)
-- [ ] Sprint velocity chart (completed story points per sprint history)
-- [ ] Ticket dependency visualization: blocked-by / blocks relationship in ticket detail
-- [ ] Ticket bulk actions: multi-select → assign, change status, move to sprint
-- [ ] Kanban board view for tickets (in addition to backlog list view)
-- [ ] Time tracking UI on ticket: start/stop timer; log hours manually
-- [ ] Project health score: computed from overdue tickets % + sprint velocity trend
+- [x] "Create Project from Deal" button on deal detail (WON stage) → `POST /api/projects/from-deal`
+- [x] Project progress bar: `completedTickets / totalTickets * 100`
+- [x] Sprint burndown chart (story points remaining per day) — `BurndownChart` component, SVG with ideal vs actual lines
+- [x] Sprint velocity chart (completed story points per sprint history) — `VelocityChart` component with bar chart
+- [x] Ticket dependency visualization: `TicketRelations` component in ticket details dialog; blocks/blocked_by/duplicate_of/relates_to with add/remove
+- [x] Ticket bulk actions: checkbox column in backlog + floating bar → assign, change status, move to sprint via `useBulkUpdateTickets`
+- [x] Kanban board view for tickets — `KanbanBoard` on main project page with ViewSwitcher (board/list/table/calendar/gantt)
+- [x] Time tracking UI on ticket: start/stop timer; log hours manually — `TicketTimeTracker` component in ticket details dialog
+- [x] Project health score: computed from overdue tickets % + sprint velocity trend
 
 ### New Features (Extended)
-- [ ] **Project templates** — pre-built templates (e.g., "Software Development", "Client Onboarding") with default phases/tasks
-- [ ] **Milestone tracker** — major checkpoints with target dates; shown on Gantt as diamonds
-- [ ] **Project budget tracking** — planned vs actual cost; linked to billable hours from timesheets
+- [x] **Project templates** — pre-built templates (e.g., "Software Development", "Client Onboarding") with default phases/tasks
+- [x] **Milestone tracker** — major checkpoints with target dates; `project_milestones` table, CRUD API + UI page, diamond icon, overdue detection
+- [x] **Project budget tracking** — planned vs actual cost; `budget` column on projects + `hourly_rate` on members; `/budget` page with utilization bar
 - [ ] **Client portal view** — read-only project dashboard shared with external client via secure link
-- [ ] **Automated project reports** — weekly email digest of project status (Inngest scheduled)
-- [ ] **Resource allocation view** — which team members are over/under allocated across all projects
+- [x] **Automated project reports** — weekly Inngest cron (Monday 7am) — notifies managers with per-project open/completed/overdue + upcoming milestones
+- [x] **Resource allocation view** — `/projects/resource-allocation` page showing open tickets per member across active projects
 - [ ] **Risk register** — log risks with probability × impact matrix
 - [ ] **Meeting notes** — lightweight note-taking per sprint/project; stored in `project_pages`
 - [ ] **GitHub/GitLab integration** — link commits/PRs to tickets via webhook
 
 ### Verification
-- [ ] Roster removal auto-unassigns open tickets — tested
-- [ ] Deal-to-project: all client fields copied correctly
-- [ ] Gantt timeline renders correctly for 50+ tasks
+- [x] Roster removal auto-unassigns open tickets — tested
+- [x] Deal-to-project: all client fields copied correctly
+- [x] Gantt timeline renders correctly for 50+ tasks
 - [ ] `pnpm build` passes
 
 ---

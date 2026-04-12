@@ -170,17 +170,35 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   });
 }
 
-export async function DELETE(_req: NextRequest, { params }: RouteParams) {
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
   return withAuth(async (session) => {
     const { ticketId } = await params;
     const id = Number(ticketId);
     if (!id) return err("Invalid ticket id", 400);
+    const force = req.nextUrl.searchParams.get("force") === "true";
 
     const ticket = await db.query.tickets.findFirst({
       where: and(eq(tickets.id, id), eq(tickets.orgId, session.orgId!)),
       columns: { id: true },
     });
     if (!ticket) return err("Ticket not found", 404);
+
+    // Check for blocking dependents before deletion
+    if (!force) {
+      const blockedBy = await db.query.workItemRelations.findMany({
+        where: and(
+          eq(workItemRelations.relatedWorkItemId, id),
+          eq(workItemRelations.relationType, "blocks")
+        ),
+        columns: { workItemId: true },
+      });
+      if (blockedBy.length > 0) {
+        return err(
+          `This ticket is blocked by ${blockedBy.length} other ticket(s). Add ?force=true to delete anyway.`,
+          409
+        );
+      }
+    }
 
     await db.transaction(async (tx) => {
 

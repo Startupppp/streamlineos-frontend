@@ -16,6 +16,7 @@ const updateSchema = z.object({
   organizationId: z.number().nullable().optional(),
   linkedinUrl: z.string().nullable().optional(),
   twitterUrl: z.string().nullable().optional(),
+  websiteUrl: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   leadId: z.number().nullable().optional(),

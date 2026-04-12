@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getPayrolls } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import {
@@ -12,6 +12,11 @@ import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { logger } from "@/lib/logger";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const generatePayrollSchema = z.object({
+  month: z.string().optional(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -26,7 +31,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can generate payroll.", 403);
     }
 
-    const body = await req.json() as { month?: string };
+    const body = await parseBody(req, generatePayrollSchema);
     if (!body.month || !/^\d{4}-\d{2}$/.test(body.month)) {
       return err("month is required in YYYY-MM format.", 400);
     }

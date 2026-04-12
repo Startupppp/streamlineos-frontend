@@ -57,12 +57,12 @@ export function LeavesTodayWidget() {
             {data.map((l: LeaveToday) => (
               <div key={l.id} className="flex items-center gap-2.5">
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={resolveImageUrl(l.userImage)} />
-                  <AvatarFallback className="text-[10px] bg-primary/10">{l.userName?.[0]}</AvatarFallback>
+                  <AvatarImage src={resolveImageUrl(l.employeeImage)} />
+                  <AvatarFallback className="text-[10px] bg-primary/10">{l.employeeName?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{l.userName}</p>
-                  <p className="text-[10px] text-muted-foreground">{l.leaveType ?? "Leave"} · back {format(new Date(l.endDate), "MMM d")}</p>
+                  <p className="text-xs font-medium truncate">{l.employeeName}</p>
+                  <p className="text-[10px] text-muted-foreground">Leave · back {format(new Date(l.endDate), "MMM d")}</p>
                 </div>
               </div>
             ))}
@@ -189,7 +189,7 @@ export function PendingRequestsWidget() {
             {data.map((r: PendingRequest) => (
               <div key={r.id} className="flex items-center gap-2 p-2 rounded-md border text-xs">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium">{r.leaveType ?? "Leave"}</p>
+                  <p className="font-medium">{r.leaveTypeName ?? "Leave"}</p>
                   <p className="text-[10px] text-muted-foreground">{format(new Date(r.startDate), "MMM d")} – {format(new Date(r.endDate), "MMM d")}</p>
                 </div>
                 <Badge variant="outline" className="text-[10px] text-yellow-600">Pending</Badge>
@@ -224,14 +224,14 @@ export function BirthdaysWidget() {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{b.name}</p>
                   <div className="flex items-center gap-1.5">
-                    {b.isBirthday && (
+                    {b.type === "birthday" && (
                       <span className="text-[10px] text-pink-600 flex items-center gap-0.5">
-                        <Cake className="h-3 w-3" /> Birthday {b.dateOfBirth ? format(new Date(b.dateOfBirth), "MMM d") : ""}
+                        <Cake className="h-3 w-3" /> Birthday {b.date ? format(new Date(b.date), "MMM d") : ""}
                       </span>
                     )}
-                    {b.isAnniversary && (
+                    {b.type === "anniversary" && (
                       <span className="text-[10px] text-blue-600 flex items-center gap-0.5">
-                        <Award className="h-3 w-3" /> {b.yearsOfService}yr anniversary
+                        <Award className="h-3 w-3" /> {b.yearsCompleted}yr anniversary
                       </span>
                     )}
                   </div>

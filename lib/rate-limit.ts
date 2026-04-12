@@ -51,9 +51,27 @@ export const RATE_LIMIT_TIERS: Record<string, RateLimitTier> = {
     progressive: true,
     maxBlockMs: 10 * 60_000,
   },
+  "landing-submit": {
+    maxRequests: 5,
+    windowMs: 60_000,
+    progressive: true,
+    maxBlockMs: 10 * 60_000,
+  },
   "api-default": {
     maxRequests: 100,
     windowMs: 60_000,
+  },
+  // Dedicated tier for programmatic API key access (keyed by API key ID, not IP)
+  "api-key": {
+    maxRequests: 300,
+    windowMs: 60_000,
+  },
+  // Stricter tier for webhook/ingest endpoints accessed via API key
+  "api-key-ingest": {
+    maxRequests: 60,
+    windowMs: 60_000,
+    progressive: true,
+    maxBlockMs: 5 * 60_000,
   },
 };
 
@@ -217,6 +235,7 @@ const ROUTE_RULES: RouteRule[] = [
   { prefix: "/api/storage/upload", tier: "upload" },
   { prefix: "/api/expenses/import", tier: "upload" },
   { prefix: "/api/public/", tier: "public-intake" },
+  { prefix: "/api/landing/submit", tier: "landing-submit" },
   { prefix: "/api/auth/", tier: "auth-write" },
 ];
 
@@ -227,8 +246,12 @@ const NEXTAUTH_INTERNAL = new Set([
   "/api/auth/_log",
 ]);
 
+// Routes that handle their own per-API-key rate limiting; skip middleware IP-based tier
+const API_KEY_SELF_LIMITED = new Set(["/api/leads/ingest"]);
+
 export function resolveTier(pathname: string): string | null {
   if (NEXTAUTH_INTERNAL.has(pathname)) return null;
+  if (API_KEY_SELF_LIMITED.has(pathname)) return null;
 
   if (pathname.startsWith("/api/auth/callback/") && pathname !== "/api/auth/callback/credentials") return null;
   if (!pathname.startsWith("/api/")) return null;

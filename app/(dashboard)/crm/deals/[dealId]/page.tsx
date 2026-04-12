@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Calendar, User, Edit2, Trophy, XCircle,
   ChevronRight, Clock, Phone, Mail, StickyNote, PhoneCall, Video,
-  Plus, Trash2, CalendarCheck, Users, Link2,
+  Plus, Trash2, CalendarCheck, Users, Link2, Copy, FolderKanban,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,12 @@ import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity,
-  useDealMeetings, useCreateDealMeeting, useDeleteDealMeeting,
+  useDealMeetings, useCreateDealMeeting, useDeleteDealMeeting, useCloneDeal,
   type DealMeeting,
 } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 import Link from "next/link";
+import { apiClient } from "@/lib/api-client";
 import { DealEditForm, type EditFormValues } from "@/features/crm/deals/detail/deal-edit-form";
 import { ActivityTimeline } from "@/features/crm/deals/detail/activity-timeline";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
@@ -76,6 +77,12 @@ export default function DealDetailPage({
   const [meetingActionItems, setMeetingActionItems] = useState("");
   const [meetingRecordingLink, setMeetingRecordingLink] = useState("");
 
+  const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [projectStartDate, setProjectStartDate] = useState("");
+  const [projectEndDate, setProjectEndDate] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+
   const updateDeal = useUpdateDeal();
   const { data: activities } = useDealActivities(dealId, 30);
   const { data: meetings } = useDealMeetings(dealId);
@@ -83,6 +90,17 @@ export default function DealDetailPage({
   const createMeeting = useCreateDealMeeting(dealId);
   const deleteMeeting = useDeleteDealMeeting(dealId);
   const updateStage = useUpdateDealStage();
+  const cloneDeal = useCloneDeal();
+
+  const handleClone = useCallback(() => {
+    cloneDeal.mutate(dealId, {
+      onSuccess: (newDeal) => {
+        toast.success("Deal cloned");
+        router.push(`/crm/deals/${newDeal.id}`);
+      },
+      onError: () => toast.error("Failed to clone deal"),
+    });
+  }, [dealId, cloneDeal, router]);
 
   const currentStageIndex = useMemo(() => {
     if (!deal) return -1;
@@ -181,6 +199,34 @@ export default function DealDetailPage({
     });
   }, [deleteMeeting]);
 
+  const handleOpenCreateProject = useCallback(() => {
+    if (deal) setProjectName(deal.name);
+    setCreateProjectOpen(true);
+  }, [deal]);
+
+  const handleCreateProject = useCallback(async () => {
+    if (!projectName.trim()) {
+      toast.error("Project name is required");
+      return;
+    }
+    setIsCreatingProject(true);
+    try {
+      const newProject = await apiClient.post<{ id: number }>("/projects/from-deal", {
+        dealId,
+        name: projectName.trim(),
+        startDate: projectStartDate || undefined,
+        endDate: projectEndDate || undefined,
+      });
+      toast.success("Project created successfully");
+      setCreateProjectOpen(false);
+      router.push(`/projects/${newProject.id}`);
+    } catch {
+      toast.error("Failed to create project");
+    } finally {
+      setIsCreatingProject(false);
+    }
+  }, [dealId, projectName, projectStartDate, projectEndDate, router]);
+
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
@@ -229,6 +275,10 @@ export default function DealDetailPage({
             <Badge variant="secondary" className="text-xs">{deal.probability}% probability</Badge>
           )}
           <AIPredictDealButton dealId={dealId} compact />
+          <Button variant="outline" size="sm" onClick={handleClone} disabled={cloneDeal.isPending}>
+            <Copy className="h-4 w-4 mr-1" />
+            Clone
+          </Button>
           <Button variant="outline" size="sm" onClick={handleToggleEdit}>
             <Edit2 className="h-4 w-4 mr-1" />
             {isEditing ? "Cancel" : "Edit"}
@@ -244,6 +294,12 @@ export default function DealDetailPage({
                 Mark Lost
               </Button>
             </>
+          )}
+          {(deal.stage === "WON" || deal.stage === "NEGOTIATION") && (
+            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleOpenCreateProject}>
+              <FolderKanban className="h-4 w-4 mr-1" />
+              Create Project
+            </Button>
           )}
         </>
       }
@@ -608,6 +664,57 @@ export default function DealDetailPage({
             <Button variant="outline" className="flex-1" onClick={() => setMeetingDialogOpen(false)}>Cancel</Button>
             <Button className="flex-1" onClick={handleCreateMeeting} disabled={createMeeting.isPending}>
               {createMeeting.isPending ? "Saving..." : "Save Meeting"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Project from Deal Dialog */}
+      <Dialog open={createProjectOpen} onOpenChange={setCreateProjectOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderKanban className="h-5 w-5 text-primary" />
+              Create Project from Deal
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="proj-name">Project Name *</Label>
+              <Input
+                id="proj-name"
+                placeholder="e.g. Website Redesign"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-start">Start Date</Label>
+                <Input
+                  id="proj-start"
+                  type="date"
+                  value={projectStartDate}
+                  onChange={(e) => setProjectStartDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-end">End Date</Label>
+                <Input
+                  id="proj-end"
+                  type="date"
+                  value={projectEndDate}
+                  onChange={(e) => setProjectEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" className="flex-1" onClick={() => setCreateProjectOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleCreateProject} disabled={isCreatingProject}>
+              {isCreatingProject ? "Creating..." : "Create Project"}
             </Button>
           </DialogFooter>
         </DialogContent>

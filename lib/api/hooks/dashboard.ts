@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -233,11 +233,11 @@ export const useLeavesToday = (
   });
 
 export const useUpcomingLeaves = (
-  options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
+  options?: Omit<UseQueryOptions<UpcomingLeave[], Error>, "queryKey" | "queryFn">
 ) =>
-  useQuery<LeaveToday[], Error>({
+  useQuery<UpcomingLeave[], Error>({
     queryKey: hrWidgetKeys.upcomingLeaves,
-    queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/upcoming-leaves"),
+    queryFn: () => apiClient.get<UpcomingLeave[]>("/dashboard/upcoming-leaves"),
     staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
@@ -296,4 +296,104 @@ export const useTeamAttendance = () =>
     queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+  });
+
+export interface Announcement {
+  id: number;
+  content: string;
+  isPinned: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+  authorId: string;
+  authorName: string | null;
+  authorFirstName: string | null;
+  authorLastName: string | null;
+}
+
+export interface PersonalDashboard {
+  myTasks: { id: number; title: string; status: string; priority: string | null; dueDate: string | null; projectName: string | null }[];
+  timesheetStatus: { submitted: boolean; weekLabel: string; hoursLogged: number };
+  leaveBalance: { type: string; remaining: number; total: number }[];
+  upcomingEvents: { id: number; title: string; startTime: Date; endTime: Date; type: string }[];
+  unreadNotifications: number;
+}
+
+export interface ExecutiveDashboard {
+  mrr: number;
+  pipelineValue: number;
+  headcount: number;
+  openRoles: number;
+  newLeadsThisWeek: number;
+  activeProjects: number;
+  conversionRate: number;
+}
+
+export interface ManagerDashboard {
+  teamAttendanceToday: { userId: string; name: string; status: "present" | "absent" | "leave" }[];
+  pendingLeaveApprovals: number;
+  pendingExpenseApprovals: number;
+  teamOverdueTasks: number;
+}
+
+export const useAnnouncements = (
+  options?: Omit<UseQueryOptions<Announcement[], Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<Announcement[], Error>({
+    queryKey: queryKeys.dashboard.announcements(),
+    queryFn: () => apiClient.get<Announcement[]>("/dashboard/announcements"),
+    staleTime: 60_000,
+    ...options,
+  });
+
+export const useCreateAnnouncement = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { content: string; isPinned?: boolean; expiresAt?: string }) =>
+      apiClient.post<Announcement>("/dashboard/announcements", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
+    },
+  });
+};
+
+export const useDeleteAnnouncement = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
+    },
+  });
+};
+
+export const usePersonalDashboard = (
+  options?: Omit<UseQueryOptions<PersonalDashboard, Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<PersonalDashboard, Error>({
+    queryKey: queryKeys.dashboard.personal(),
+    queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
+    staleTime: 2 * 60_000,
+    ...options,
+  });
+
+export const useExecutiveDashboard = (
+  options?: Omit<UseQueryOptions<ExecutiveDashboard, Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<ExecutiveDashboard, Error>({
+    queryKey: queryKeys.dashboard.executive(),
+    queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
+    staleTime: 5 * 60_000,
+    ...options,
+  });
+
+export const useManagerDashboard = (
+  options?: Omit<UseQueryOptions<ManagerDashboard, Error>, "queryKey" | "queryFn">
+) =>
+  useQuery<ManagerDashboard, Error>({
+    queryKey: queryKeys.dashboard.manager(),
+    queryFn: () => apiClient.get<ManagerDashboard>("/dashboard/manager"),
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    ...options,
   });

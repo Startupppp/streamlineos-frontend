@@ -66,6 +66,10 @@ export interface LeaveRequest {
   status: string | null;
   priority: string | null;
   reason: string | null;
+  managerComment?: string | null;
+  rejectionReason?: string | null;
+  isHalfDay?: boolean;
+  halfDayPeriod?: string | null;
   createdAt?: string | Date | null;
   leaveType: { name: string } | null;
   approver?: { name: string | null } | null;
@@ -278,15 +282,20 @@ export const StatsCard = React.memo(function StatsCard({
 export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   request,
   isAdmin = false,
+  isSelf = false,
   onApprove,
   onReject,
   onRevert,
+  onCancel,
 }: {
   request: LeaveRequest;
   isAdmin?: boolean;
+  /** True when this row belongs to the currently logged-in user */
+  isSelf?: boolean;
   onApprove?: (id: number) => void;
   onReject?: (id: number, reason?: string) => void;
   onRevert?: (id: number) => void;
+  onCancel?: (id: number) => void;
 }) {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -310,6 +319,8 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
       ? "bg-amber-500"
       : status === "APPROVED"
       ? "bg-emerald-500"
+      : status === "CANCELLED"
+      ? "bg-slate-400"
       : "bg-red-500";
 
   const priority = request.priority || "MEDIUM";
@@ -347,17 +358,31 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
         </div>
       </td>
       <td className="py-3.5 px-3">
-        <div className="flex items-center gap-1.5">
-          <span className={`h-2 w-2 rounded-full ${statusDotColor}`} />
-          <span className={`text-xs font-medium ${
-            status === "PENDING"
-              ? "text-amber-600 dark:text-amber-400"
-              : status === "APPROVED"
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-red-600 dark:text-red-400"
-          }`}>
-            {status.charAt(0) + status.slice(1).toLowerCase()}
-          </span>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full ${statusDotColor}`} />
+            <span className={`text-xs font-medium ${
+              status === "PENDING"
+                ? "text-amber-600 dark:text-amber-400"
+                : status === "APPROVED"
+                ? "text-emerald-600 dark:text-emerald-400"
+                : status === "CANCELLED"
+                ? "text-slate-500 dark:text-slate-400"
+                : "text-red-600 dark:text-red-400"
+            }`}>
+              {status.charAt(0) + status.slice(1).toLowerCase()}
+            </span>
+          </div>
+          {request.managerComment && (
+            <span className="text-xs text-muted-foreground truncate max-w-[140px]" title={request.managerComment}>
+              &ldquo;{request.managerComment}&rdquo;
+            </span>
+          )}
+          {status === "REJECTED" && request.rejectionReason && (
+            <span className="text-xs text-red-500 dark:text-red-400 truncate max-w-[140px]" title={request.rejectionReason}>
+              {request.rejectionReason}
+            </span>
+          )}
         </div>
       </td>
       <td className="py-3.5 px-3 text-right">
@@ -372,10 +397,22 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
               <Eye className="mr-2 h-4 w-4" />
               View Details
             </DropdownMenuItem>
+            {isSelf && status === "PENDING" && onCancel && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onCancel(request.id)}
+                  className="text-slate-600"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel Request
+                </DropdownMenuItem>
+              </>
+            )}
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
-                {status !== "APPROVED" && (
+                {status !== "APPROVED" && status !== "CANCELLED" && (
                   <DropdownMenuItem
                     onClick={() => onApprove?.(request.id)}
                     className="text-emerald-600"
@@ -384,7 +421,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
                     Approve
                   </DropdownMenuItem>
                 )}
-                {status !== "REJECTED" && (
+                {status !== "REJECTED" && status !== "CANCELLED" && (
                   <DropdownMenuItem
                     onClick={() => { setRejectReason(""); setRejectDialogOpen(true); }}
                     className="text-red-600"

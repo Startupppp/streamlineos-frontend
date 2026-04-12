@@ -17,6 +17,18 @@ import {
   onTerminationSubmitted,
   onTerminationCeoApproved,
 } from "./hr-exit-notifications";
+import { overdueTaskAlerts } from "./overdue-task-alerts";
+import { interviewSlaCheck } from "./interview-sla-check";
+import { initiateOnboarding } from "./initiate-onboarding";
+import { interviewReminders } from "./interview-reminders";
+import { interviewNoShow } from "./interview-no-show";
+import { dailyJobBoardSync } from "./daily-job-board-sync";
+import { leadTemperatureUpdate } from "./lead-temperature-update";
+import { weeklyProjectReport } from "./weekly-project-report";
+import { eventReminders } from "./event-reminders";
+import { offerDeadlineReminder } from "./offer-deadline-reminder";
+import { leaveEscalation } from "./leave-escalation";
+import { candidateFeedbackEmail } from "./candidate-feedback-email";
 
 export const inngestFunctions = [
   dailyNotifications,
@@ -36,4 +48,16 @@ export const inngestFunctions = [
   onResignationCeoApproved,
   onTerminationSubmitted,
   onTerminationCeoApproved,
+  overdueTaskAlerts,
+  interviewSlaCheck,
+  initiateOnboarding,
+  interviewReminders,
+  interviewNoShow,
+  dailyJobBoardSync,
+  leadTemperatureUpdate,
+  weeklyProjectReport,
+  eventReminders,
+  offerDeadlineReminder,
+  leaveEscalation,
+  candidateFeedbackEmail,
 ];

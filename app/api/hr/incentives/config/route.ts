@@ -1,9 +1,14 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getIncentiveConfigs } from "@/server/queries/hr";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { incentiveConfig } from "@/lib/db/schema/crm";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const createIncentiveConfigSchema = z.object({
+  incentiveRate: z.string(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -18,11 +23,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can set incentive config.", 403);
     }
 
-    const body = await req.json() as { incentiveRate: string };
-
-    if (!body.incentiveRate) {
-      return err("incentiveRate is required.", 400);
-    }
+    const body = await parseBody(req, createIncentiveConfigSchema);
 
     const [config] = await db
       .insert(incentiveConfig)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import {
   Plus,
   ExternalLink,
@@ -12,6 +13,9 @@ import {
   Globe,
   Eye,
   TrendingUp,
+  FileText,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,13 +52,18 @@ import {
 } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useLandingPages,
   useLandingPageDetail,
   useCreateLandingPage,
   useUpdateLandingPage,
   useDeleteLandingPage,
+  useCrmPages,
+  useUpdateCrmPage,
+  useDeleteCrmPage,
   type LandingPage,
+  type CrmPage,
 } from "@/lib/api/hooks/marketing";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -346,12 +355,38 @@ export default function LandingPagesPage() {
       title="Landing Pages"
       subtitle="Track analytics and performance of your landing pages"
       actions={
-        <Button onClick={openCreate} size="sm" aria-label="Add landing page">
-          <Plus className="mr-1 h-4 w-4" />
-          Add Landing Page
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/marketing/landing-pages/new">
+              <Plus className="mr-1 h-4 w-4" />
+              New Hosted Page
+            </Link>
+          </Button>
+          <Button onClick={openCreate} size="sm" aria-label="Add landing page">
+            <Plus className="mr-1 h-4 w-4" />
+            Track External Page
+          </Button>
+        </div>
       }
     >
+      <Tabs defaultValue="hosted" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="hosted">
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            Hosted Pages
+          </TabsTrigger>
+          <TabsTrigger value="tracked">
+            <BarChart2 className="mr-1.5 h-3.5 w-3.5" />
+            Tracked Pages
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="hosted">
+          <CrmHostedPagesTab />
+        </TabsContent>
+
+        <TabsContent value="tracked">
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Pages" value={totalPages} icon={Globe} color="blue" />
@@ -548,6 +583,151 @@ export default function LandingPagesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+        </TabsContent>
+      </Tabs>
     </PageWrapper>
+  );
+}
+
+// ─── CRM Hosted Pages Tab ─────────────────────────────────────────────────────
+
+function CrmHostedPagesTab() {
+  const { data: pages, isLoading } = useCrmPages();
+  const updatePage = useUpdateCrmPage();
+  const deletePage = useDeleteCrmPage();
+  const [deleteCrmId, setDeleteCrmId] = useState<number | null>(null);
+
+  const handleTogglePublish = useCallback(
+    (page: CrmPage) => {
+      updatePage.mutate(
+        { id: page.id, isPublished: !page.isPublished },
+        {
+          onSuccess: () =>
+            toast.success(page.isPublished ? "Page unpublished." : "Page published."),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [updatePage],
+  );
+
+  const handleDeleteCrm = useCallback(() => {
+    if (!deleteCrmId) return;
+    deletePage.mutate(deleteCrmId, {
+      onSuccess: () => { toast.success("Page archived."); setDeleteCrmId(null); },
+      onError: (e) => { toast.error(getErrorMessage(e)); setDeleteCrmId(null); },
+    });
+  }, [deleteCrmId, deletePage]);
+
+  const crmPages: CrmPage[] = pages ?? [];
+
+  return (
+    <>
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : crmPages.length === 0 ? (
+        <div className="rounded-xl border border-dashed py-16 text-center">
+          <FileText className="mx-auto h-10 w-10 text-muted-foreground/40 mb-3" />
+          <p className="text-sm font-medium text-muted-foreground">No hosted pages yet</p>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">
+            Create a landing page hosted directly on your CRM.
+          </p>
+          <Button size="sm" asChild>
+            <Link href="/marketing/landing-pages/new">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create First Page
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {crmPages.map((page) => (
+            <div
+              key={page.id}
+              className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">{page.title ?? page.name}</p>
+                  {page.isPublished ? (
+                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-transparent text-xs">
+                      <CheckCircle2 className="mr-1 h-3 w-3" />
+                      Live
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs text-muted-foreground">
+                      <Clock className="mr-1 h-3 w-3" />
+                      Draft
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  /{page.slug ?? "—"}
+                  {page.description && (
+                    <span className="ml-2 truncate">{page.description}</span>
+                  )}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {page.isPublished && page.slug && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                    <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer" aria-label="View live">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                )}
+                <Switch
+                  checked={page.isPublished ?? false}
+                  onCheckedChange={() => handleTogglePublish(page)}
+                  aria-label={`Toggle publish for ${page.title}`}
+                  className="scale-75"
+                />
+                <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                  <Link href={`/marketing/landing-pages/${page.id}/edit`} aria-label="Edit page">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  onClick={() => setDeleteCrmId(page.id)}
+                  aria-label="Delete page"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CRM page delete dialog */}
+      <AlertDialog open={deleteCrmId !== null} onOpenChange={(o) => { if (!o) setDeleteCrmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Page?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will unpublish and archive the page. It will no longer be publicly accessible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCrm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

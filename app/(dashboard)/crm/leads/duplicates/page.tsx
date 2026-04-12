@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import {
-  Copy,
   CheckCircle2,
   RefreshCw,
   Users,
@@ -18,17 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useDuplicateLeads, useMergeLead, type DuplicateGroup } from "@/lib/api/hooks/crm";
 import { cn } from "@/lib/utils";
 
@@ -286,32 +276,15 @@ export default function DuplicateLeadsPage() {
       )}
 
       {/* Merge Confirmation Dialog */}
-      <AlertDialog open={!!pendingMerge} onOpenChange={(open) => !open && setPendingMerge(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Copy className="h-5 w-5 text-destructive" />
-              Remove Duplicate Lead
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark{" "}
-              <span className="font-semibold text-foreground">{pendingMerge?.mergeName}</span> as{" "}
-              <span className="font-semibold text-foreground">LOST</span> and note it as a duplicate.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isMerging}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmMerge}
-              disabled={isMerging}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {isMerging ? "Removing…" : "Remove Duplicate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={!!pendingMerge}
+        onOpenChange={(open) => !open && setPendingMerge(null)}
+        title="Remove Duplicate Lead"
+        description={`This will merge "${pendingMerge?.mergeName}" into the primary lead and soft-delete it. All activities and notes will be preserved. This action cannot be undone.`}
+        confirmLabel={isMerging ? "Merging…" : "Merge & Remove"}
+        destructive
+        onConfirm={confirmMerge}
+      />
     </PageWrapper>
   );
 }

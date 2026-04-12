@@ -32,6 +32,7 @@ export const queryKeys = {
     holidaysCalendar: (params: { year: number; month: number }) => [...base, "hr", "holidaysCalendar", params] as const,
     devices: (params?: Record<string, unknown>) => [...base, "hr", "devices", params] as const,
     monthlyAttendance: (params: { userId: string; year: number; month: number }) => [...base, "hr", "monthlyAttendance", params] as const,
+    attendanceHeatmap: (params: { userId: string; year: number }) => [...base, "hr", "attendanceHeatmap", params] as const,
     employeeStats: (userId: string) => [...base, "hr", "employeeStats", userId] as const,
     employeePayslips: (userId?: string) => [...base, "hr", "employeePayslips", userId] as const,
 
@@ -42,11 +43,20 @@ export const queryKeys = {
     candidate: (id: number) => [...base, "hr", "candidate", id] as const,
     interviews: (params?: Record<string, unknown>) => [...base, "hr", "interviews", params] as const,
     recruitmentPipeline: () => [...base, "hr", "recruitmentPipeline"] as const,
+    scorecardTemplates: () => [...base, "hr", "scorecardTemplates"] as const,
+    interviewScorecard: (interviewId: number) => [...base, "hr", "interviewScorecard", interviewId] as const,
+    interviewerPerformance: (days: number) => [...base, "hr", "interviewerPerformance", days] as const,
+    interviewScorecardSummary: (interviewId: number) => [...base, "hr", "interviewScorecardSummary", interviewId] as const,
+    candidateVault: (candidateId: number) => [...base, "hr", "candidateVault", candidateId] as const,
     reviewCycles: () => [...base, "hr", "reviewCycles"] as const,
     reviewCycle: (id: number) => [...base, "hr", "reviewCycle", id] as const,
     oneOnOnes: (params?: Record<string, unknown>) => [...base, "hr", "oneOnOnes", params] as const,
     terminations: () => [...base, "hr", "terminations"] as const,
     termination: (id: number) => [...base, "hr", "termination", id] as const,
+    documentTemplates: (params?: Record<string, unknown>) => [...base, "hr", "documentTemplates", params] as const,
+    documentTemplate: (id: number) => [...base, "hr", "documentTemplate", id] as const,
+    candidateDocuments: (candidateId: number) => [...base, "hr", "candidateDocuments", candidateId] as const,
+    rolloutDocuments: (candidateId: number) => [...base, "hr", "rolloutDocuments", candidateId] as const,
   },
 
   leads: {
@@ -61,6 +71,7 @@ export const queryKeys = {
     analyticsSummary: (params?: Record<string, unknown>) => [...base, "leads", "analyticsSummary", params] as const,
     dashboardMetrics: () => [...base, "leads", "dashboardMetrics"] as const,
     unverified: () => [...base, "leads", "unverified"] as const,
+    duplicates: () => [...base, "leads", "duplicates"] as const,
   },
 
   deals: {
@@ -134,6 +145,10 @@ export const queryKeys = {
     myIssues: (userId: string) => [...base, "dashboard", "myIssues", userId] as const,
     activeSprintSummary: () => [...base, "dashboard", "activeSprintSummary"] as const,
     recentActivity: () => [...base, "dashboard", "recentActivity"] as const,
+    announcements: () => [...base, "dashboard", "announcements"] as const,
+    personal: () => [...base, "dashboard", "personal"] as const,
+    executive: () => [...base, "dashboard", "executive"] as const,
+    manager: () => [...base, "dashboard", "manager"] as const,
   },
 
   reports: {
@@ -193,6 +208,10 @@ export const queryKeys = {
   crm: {
     all: [...base, "crm"] as const,
     salesDashboard: () => [...base, "crm", "salesDashboard"] as const,
+    salesKpis: (params: Record<string, unknown>) => [...base, "crm", "salesKpis", params] as const,
+    salesFunnel: (params: Record<string, unknown>) => [...base, "crm", "salesFunnel", params] as const,
+    salesLeaderboard: (params: Record<string, unknown>) => [...base, "crm", "salesLeaderboard", params] as const,
+    revenueVsGoal: (year: number) => [...base, "crm", "revenueVsGoal", year] as const,
     marketingDashboard: () => [...base, "crm", "marketingDashboard"] as const,
     supportDashboard: () => [...base, "crm", "supportDashboard"] as const,
     customerExecutiveDashboard: () => [...base, "crm", "customerExecutiveDashboard"] as const,
@@ -214,6 +233,10 @@ export const queryKeys = {
     all: [...base, "crmOrganizations"] as const,
     list: (params?: Record<string, unknown>) => [...base, "crmOrganizations", "list", params] as const,
     detail: (id: number) => [...base, "crmOrganizations", "detail", id] as const,
+    hierarchy: (id: number) => [...base, "crmOrganizations", "hierarchy", id] as const,
+    rollup: (id: number) => [...base, "crmOrganizations", "rollup", id] as const,
+    timeline: (id: number) => [...base, "crmOrganizations", "timeline", id] as const,
+    relatedLeads: (id: number) => [...base, "crmOrganizations", "relatedLeads", id] as const,
   },
 
   clientStats: {
@@ -298,6 +321,13 @@ export const queryKeys = {
     detail: (id: number) => [...base, "landingPages", "detail", id] as const,
   },
 
+  crmPages: {
+    all: [...base, "crmPages"] as const,
+    list: () => [...base, "crmPages", "list"] as const,
+    detail: (id: number) => [...base, "crmPages", "detail", id] as const,
+    analytics: (id: number, days?: number) => [...base, "crmPages", "analytics", id, days] as const,
+  },
+
   webLeadForms: {
     all: [...base, "webLeadForms"] as const,
     list: () => [...base, "webLeadForms", "list"] as const,
@@ -307,6 +337,16 @@ export const queryKeys = {
   contentCalendar: {
     all: [...base, "contentCalendar"] as const,
     list: (month?: string) => [...base, "contentCalendar", "list", month] as const,
+  },
+
+  tasks: {
+    all: [...base, "tasks"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "tasks", "list", params] as const,
+    detail: (id: number) => [...base, "tasks", "detail", id] as const,
+    myQueue: () => [...base, "tasks", "myQueue"] as const,
+    overdue: () => [...base, "tasks", "overdue"] as const,
+    overdueCount: () => [...base, "tasks", "overdueCount"] as const,
+    sequences: () => [...base, "tasks", "sequences"] as const,
   },
 
 } as const;

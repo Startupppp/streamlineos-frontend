@@ -76,3 +76,28 @@ export function useRolesList(
 ) {
   return useRoles(options);
 }
+
+// ─── Role Templates ───────────────────────────────────────────────────────────
+
+export interface RoleTemplate {
+  id: string;
+  name: string;
+  slug: string;
+  permissions: readonly string[];
+}
+
+export function useRoleTemplates() {
+  return useQuery<RoleTemplate[], Error>({
+    queryKey: [...queryKeys.roles.all, "templates"] as const,
+    queryFn: () => apiClient.get<RoleTemplate[]>("/roles/templates"),
+    staleTime: 10 * 60_000,
+  });
+}
+
+export function useCloneRoleTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation<Role, Error, { templateId: string; name?: string; slug?: string }>({
+    mutationFn: (data) => apiClient.post<Role>("/roles/templates", data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.roles.all }),
+  });
+}

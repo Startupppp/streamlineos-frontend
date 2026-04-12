@@ -3,8 +3,8 @@
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { projectMembers, users } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { projectMembers, users, tickets, ticketAssignees } from "@/lib/db/schema";
+import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 
 const addMemberSchema = z.object({
@@ -81,14 +81,53 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
     const body = await parseBody(req, removeMemberSchema);
 
+    const userId = body.userId;
+
+    // Remove from project roster
+    await db.delete(projectMembers).where(
+      and(
+        eq(projectMembers.projectId, projectId),
+        eq(projectMembers.userId, userId),
+      ),
+    );
+
+    // Auto-unassign from open tickets (primary assignee)
     await db
-      .delete(projectMembers)
+      .update(tickets)
+      .set({ assigneeId: null })
       .where(
         and(
-          eq(projectMembers.projectId, projectId),
-          eq(projectMembers.userId, body.userId)
-        )
+          eq(tickets.projectId, projectId),
+          eq(tickets.assigneeId, userId),
+          ne(tickets.status, "DONE"),
+          ne(tickets.status, "CANCELLED"),
+        ),
       );
+
+    // Remove from ticket_assignees multi-assignee table for this project's open tickets
+    const { inArray } = await import("drizzle-orm");
+    const projectTicketIds = await db
+      .select({ id: tickets.id })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.projectId, projectId),
+          ne(tickets.status, "DONE"),
+          ne(tickets.status, "CANCELLED"),
+        ),
+      );
+
+    if (projectTicketIds.length > 0) {
+      const ids = projectTicketIds.map((t) => t.id);
+      await db
+        .delete(ticketAssignees)
+        .where(
+          and(
+            eq(ticketAssignees.userId, userId),
+            inArray(ticketAssignees.ticketId, ids),
+          ),
+        );
+    }
 
     return ok({ success: true });
   });

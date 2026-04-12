@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -314,5 +314,92 @@ export function useMeetingPrep() {
       scheduledAt: string;
       notes?: string;
     }) => apiClient.post<MeetingPrepResult>("/ai/meeting-prep", data),
+  });
+}
+
+/* ─── AI Job Description Generator ──────────────────────────────────────────── */
+
+export interface GenerateJdInput {
+  title: string;
+  requirements?: string;
+  location?: string;
+  type?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+}
+
+export function useGenerateJobDescription() {
+  return useMutation({
+    mutationFn: (input: GenerateJdInput) =>
+      apiClient.post<{ description: string }>("/ai/generate-jd", input),
+  });
+}
+
+/* ─── Feature Flags ──────────────────────────────────────────────────────────── */
+
+export interface OrgFeatureFlags {
+  aiChat: boolean;
+  aiLeadScoring: boolean;
+  aiEmailDraft: boolean;
+  aiSmartNotifications: boolean;
+  aiWeeklyRecap: boolean;
+}
+
+export function useOrgFeatureFlags() {
+  return useQuery({
+    queryKey: ["settings", "feature-flags"],
+    queryFn: () => apiClient.get<OrgFeatureFlags>("/settings/feature-flags"),
+  });
+}
+
+export function useUpdateFeatureFlag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { flag: keyof OrgFeatureFlags; enabled: boolean }) =>
+      apiClient.patch<{ success: boolean; flag: string; enabled: boolean }>(
+        "/settings/feature-flags",
+        data,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["settings", "feature-flags"] });
+    },
+  });
+}
+
+/* ─── AI Usage ───────────────────────────────────────────────────────────────── */
+
+interface AiUsageTotals {
+  totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
+  estimatedCostUsd: string;
+  requestCount: number;
+}
+
+interface AiUsageByFeature {
+  feature: string;
+  model: string;
+  totalTokens: number;
+  estimatedCostUsd: string;
+  requestCount: number;
+}
+
+interface AiUsageDaily {
+  date: string;
+  totalTokens: number;
+  estimatedCostUsd: string;
+  requestCount: number;
+}
+
+export interface AiUsageData {
+  totals: AiUsageTotals;
+  byFeature: AiUsageByFeature[];
+  daily: AiUsageDaily[];
+}
+
+export function useAiUsage() {
+  return useQuery({
+    queryKey: ["settings", "ai-usage"],
+    queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),
   });
 }

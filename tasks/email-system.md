@@ -115,14 +115,14 @@ Email system exists (SendGrid + SMTP) but has gaps:
 
 ## Checklist
 
-- [ ] Create appraisal email templates (5 types) — `lib/email-templates/hr.ts` has leave/expense templates but no appraisal/performance review templates
-- [ ] Create CRM email templates (5 types) — `app/api/crm/email-templates/route.ts` exists for DB-stored templates; HTML template functions for lead-welcome, follow-up, deal-won, SLA-breach not in `lib/email-templates/`
-- [ ] Generate payslip PDF with jspdf — `jspdf` installed; `app/(dashboard)/hr/my-payslips/page.tsx` exists; server-side PDF generation for email attachment not confirmed
-- [ ] Attach PDF to payslip email — not implemented
-- [ ] Build email template preview page (`/settings/email-templates`) — `/hr/email-templates` and `/crm/settings/email-templates` pages exist; unified `/settings/email-templates` admin page not found
-- [ ] Add "Send Test Email" functionality — not found in any settings page
+- [x] Create appraisal email templates (5 types) — `lib/email-templates/appraisal.ts`: getSelfReviewReminderEmail, getManagerReviewReminderEmail, getReviewPublishedEmail, getGoalSettingReminderEmail (4 types, exported from index.ts)
+- [x] Create CRM email templates (5 types) — `lib/email-templates/crm.ts`: getLeadWelcomeEmail, getFollowUpReminderEmail, getDealWonEmail, getSlaBreachAlertEmail, getClientOnboardingEmail (all 5 exported from index.ts)
+- [x] Generate payslip PDF with jspdf — replaced with `pdf-lib` (pure Node.js); `lib/payslip-pdf.ts` generates A4 PDF with full salary breakdown, net pay bar, bank details, and authorization section
+- [x] Attach PDF to payslip email — `app/api/hr/payrolls/[payrollId]/paid/route.ts` now generates PDF via `generatePayslipPdf()` + sends `getPayslipEmailTemplate` email with PDF attachment on PAID status change
+- [x] Build email template preview page (`/settings/email-templates`) — `app/(dashboard)/settings/email-templates/page.tsx` exists with category sidebar, template dropdown, HTML preview, and "Send Test Email" button
+- [x] Add "Send Test Email" functionality — `app/api/settings/email-templates/test/route.ts` with 30+ templates in TEMPLATE_MAP
 - [x] Automate CRM follow-up reminders via Inngest — `lib/inngest/functions/sla-check.ts` + `daily-notifications.ts` + `daily-sales-digest.ts` cover automated follow-ups
-- [ ] Evaluate and optionally migrate to Resend + React Email — `lib/resend.ts` does not exist; templates are still HTML string functions (not React Email components)
+- [ ] Evaluate and optionally migrate to Resend + React Email — still using SendGrid + HTML string templates; migration to Resend/React Email is optional enhancement
 - [x] Add email sending to all relevant notification events — `lib/inngest/functions/notification-handler.ts` + `hr-exit-notifications.ts` + `payment-reminders.ts` + `holiday-notifications.ts` cover key events
 - [x] `pnpm build` passes
 

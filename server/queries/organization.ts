@@ -41,6 +41,7 @@ export async function getOrgMembers(
         name: users.name,
         email: users.email,
         image: users.image,
+        totpEnabled: users.totpEnabled,
       })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.userId, users.id))

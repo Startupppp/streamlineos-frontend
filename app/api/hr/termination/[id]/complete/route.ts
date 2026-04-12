@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { terminations, users, fnfSettlements, assetReturns, assets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 
 export async function PATCH(
   _req: NextRequest,
@@ -57,6 +58,9 @@ export async function PATCH(
         }))
       );
     }
+
+    // Invalidate HR dashboard caches so headcount reflects immediately
+    await invalidateHrDashboardCache(session.orgId);
 
     return ok({ success: true });
   });

@@ -1,11 +1,22 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { assets, assetStatusEnum } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 type AssetStatusEnum = (typeof assetStatusEnum.enumValues)[number];
+
+const patchAssetSchema = z.object({
+  name: z.string().optional(),
+  type: z.string().optional(),
+  serialNumber: z.string().optional(),
+  assignedTo: z.string().optional(),
+  status: z.enum(["AVAILABLE", "ASSIGNED", "MAINTENANCE", "RETIRED"] as [AssetStatusEnum, ...AssetStatusEnum[]]).optional(),
+  location: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -20,15 +31,7 @@ export async function PATCH(
     const assetId = Number(id);
     if (isNaN(assetId)) return err("Invalid asset ID.", 400);
 
-    const body = await req.json() as {
-      name?: string;
-      type?: string;
-      serialNumber?: string;
-      assignedTo?: string;
-      status?: AssetStatusEnum;
-      location?: string;
-      notes?: string;
-    };
+    const body = await parseBody(req, patchAssetSchema);
 
     const updatePayload: Partial<typeof assets.$inferInsert> = {};
 

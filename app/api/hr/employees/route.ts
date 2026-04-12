@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");
-    const search = searchParams.get("search") ?? undefined;
+    const search = searchParams.get("search") ?? searchParams.get("q") ?? undefined;
 
     const branchCtx = {
       role: session.user.role ?? "",

@@ -196,8 +196,9 @@ function TerminationCard({
   const { employee, status, reasons, effectiveDate, severanceAmount, noticePeriodWaived } =
     record;
 
-  const visibleReasons = reasons.slice(0, 2);
-  const extraCount = reasons.length - 2;
+  const reasonsList = reasons ?? [];
+  const visibleReasons = reasonsList.slice(0, 2);
+  const extraCount = reasonsList.length - 2;
 
   return (
     <Card>
@@ -205,14 +206,14 @@ function TerminationCard({
         <div className="flex items-start gap-3">
           <Avatar className="h-9 w-9 shrink-0 mt-0.5">
             <AvatarFallback className="text-xs bg-primary/10 text-primary">
-              {getInitials(employee.name)}
+              {getInitials(employee?.name ?? null)}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
             {/* Top row: name + status */}
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold truncate">{employee.name ?? "Employee"}</p>
+              <p className="text-sm font-semibold truncate">{employee?.name ?? "Employee"}</p>
               <Badge variant={statusVariant(status)} className="text-[10px] shrink-0">
                 {statusLabel(status)}
               </Badge>
@@ -220,13 +221,13 @@ function TerminationCard({
 
             {/* Second row: designation + employeeId */}
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
-              {employee.designation && (
+              {employee?.designation && (
                 <span className="flex items-center gap-1">
                   <User className="h-3 w-3" />
                   {employee.designation}
                 </span>
               )}
-              {employee.employeeId && <span>ID: {employee.employeeId}</span>}
+              {employee?.employeeId && <span>ID: {employee.employeeId}</span>}
               {effectiveDate && (
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
@@ -245,7 +246,7 @@ function TerminationCard({
             </div>
 
             {/* Reasons row */}
-            {reasons.length > 0 && (
+            {reasonsList.length > 0 && (
               <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                 {visibleReasons.map((r) => (
                   <Badge key={r} variant="outline" className="text-[9px] py-0 h-4">
@@ -271,7 +272,7 @@ function TerminationCard({
                 className="h-7 text-xs"
                 onClick={() => onSubmit(record.id)}
                 disabled={isSubmitting}
-                aria-label={`Submit termination for ${employee.name} for CEO approval`}
+                aria-label={`Submit termination for ${employee?.name ?? "employee"} for CEO approval`}
               >
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 Submit for Approval
@@ -286,7 +287,7 @@ function TerminationCard({
                   variant="outline"
                   className="h-7 text-xs"
                   onClick={() => onApprove(record.id)}
-                  aria-label={`Approve termination for ${employee.name}`}
+                  aria-label={`Approve termination for ${employee?.name ?? "employee"}`}
                 >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   Approve
@@ -296,7 +297,7 @@ function TerminationCard({
                   variant="outline"
                   className="h-7 text-xs text-destructive hover:text-destructive"
                   onClick={() => onReject(record.id)}
-                  aria-label={`Reject termination for ${employee.name}`}
+                  aria-label={`Reject termination for ${employee?.name ?? "employee"}`}
                 >
                   <XCircle className="h-3 w-3 mr-1" />
                   Reject
@@ -311,7 +312,7 @@ function TerminationCard({
                 variant="outline"
                 className="h-7 text-xs"
                 onClick={() => onSendEmail(record)}
-                aria-label={`Send termination email to ${employee.name}`}
+                aria-label={`Send termination email to ${employee?.name ?? "employee"}`}
               >
                 <Mail className="h-3 w-3 mr-1" />
                 Send Termination Email
@@ -803,16 +804,16 @@ export default function TerminationPage() {
             <div className="flex items-center gap-3 rounded-md border bg-muted/30 p-3">
               <Avatar className="h-9 w-9 shrink-0">
                 <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                  {getInitials(reviewRecord.employee.name)}
+                  {getInitials(reviewRecord.employee?.name ?? null)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <p className="text-sm font-semibold">
-                  {reviewRecord.employee.name ?? "Employee"}
+                  {reviewRecord.employee?.name ?? "Employee"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {reviewRecord.employee.designation ?? "—"}
-                  {reviewRecord.employee.employeeId
+                  {reviewRecord.employee?.designation ?? "—"}
+                  {reviewRecord.employee?.employeeId
                     ? ` · ID: ${reviewRecord.employee.employeeId}`
                     : ""}
                 </p>
@@ -837,7 +838,7 @@ export default function TerminationPage() {
                 Reasons
               </Label>
               <div className="flex flex-wrap gap-1">
-                {reviewRecord.reasons.map((r) => (
+                {(reviewRecord.reasons ?? []).map((r) => (
                   <Badge key={r} variant="outline" className="text-xs">
                     {r}
                   </Badge>
@@ -903,7 +904,7 @@ export default function TerminationPage() {
           if (!open) setEmailRecord(null);
         }}
         title="Send Termination Email"
-        description={`Send termination email to ${emailRecord?.employee.name ?? "this employee"}? This will deactivate their account and notify them officially.`}
+        description={`Send termination email to ${emailRecord?.employee?.name ?? "this employee"}? This will deactivate their account and notify them officially.`}
         confirmLabel="Send Email"
         variant="default"
         onConfirm={handleSendEmailConfirm}

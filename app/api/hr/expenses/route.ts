@@ -1,11 +1,20 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getExpenses } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { expenses } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createExpenseSchema = z.object({
+  category: z.string(),
+  amount: z.number(),
+  description: z.string().optional(),
+  receiptUrl: z.string().optional(),
+  expenseDate: z.string(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -38,13 +47,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      category: string;
-      amount: number;
-      description?: string;
-      receiptUrl?: string;
-      expenseDate: string;
-    };
+    const body = await parseBody(req, createExpenseSchema);
 
     if (!body.category || body.amount === undefined || !body.expenseDate) {
       return err("category, amount, and expenseDate are required.", 400);

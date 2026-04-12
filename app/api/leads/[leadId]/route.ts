@@ -6,6 +6,7 @@ import { leads } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { recalculateLeadScore } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
+import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -74,6 +75,13 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   return withAdmin(async (session) => {
     await db.delete(leads)
       .where(and(eq(leads.id, leadId), eq(leads.orgId, session.orgId!)));
+    void createAuditLog({
+      action: "lead.deleted",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(leadId),
+      targetType: "lead",
+    }).catch(() => {});
     return ok({ success: true });
   });
 }

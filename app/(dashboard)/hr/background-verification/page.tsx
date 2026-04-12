@@ -7,13 +7,16 @@ import {
   type BackgroundVerification,
 } from "@/lib/api/hooks/hr";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -21,7 +24,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Plus, ShieldCheck, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, ShieldCheck, CheckCircle2, XCircle, BarChart2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
 import Image from "next/image";
 
@@ -32,6 +35,51 @@ function statusBadge(s: string | null): "default" | "secondary" | "outline" | "d
   if (s === "IN_PROGRESS") return "secondary";
   if (s === "FLAGGED") return "destructive";
   return "outline";
+}
+
+function ComplianceDashboard() {
+  const { data: rows, isLoading } = useBgvComplianceDashboard();
+
+  if (isLoading) {
+    return <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>;
+  }
+
+  if (!rows?.length) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <BarChart2 className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No candidate BgV data yet.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {rows.map((row: BgvComplianceRow) => (
+        <Card key={row.jobPostingId}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">{row.jobTitle}</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            <div className="flex items-center gap-2">
+              <Progress value={row.clearedPct} className="flex-1 h-2" />
+              <span className="text-xs font-medium text-muted-foreground w-12 text-right">{row.clearedPct}%</span>
+            </div>
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span>Total: <span className="font-medium text-foreground">{row.total}</span></span>
+              <span className="text-green-600">Cleared: <span className="font-medium">{row.cleared}</span></span>
+              <span className="text-yellow-600">Pending: <span className="font-medium">{row.pending}</span></span>
+              <span className="text-blue-600">Initiated: <span className="font-medium">{row.initiated}</span></span>
+              <span className="text-destructive">Failed: <span className="font-medium">{row.failed}</span></span>
+              <span className="text-muted-foreground">Not initiated: <span className="font-medium">{row.notInitiated}</span></span>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 function BGVContent() {
@@ -73,66 +121,78 @@ function BGVContent() {
     });
   }, [update]);
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Background Verification" subtitle="BGV tracking for employees">
-        <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper
       title="Background Verification"
-      subtitle="Initiate and track employee background checks"
+      subtitle="Initiate, track employee background checks, and view candidate compliance"
       badge={`${items?.length ?? 0} checks`}
       actions={<Button size="sm" onClick={() => setSheetOpen(true)}><Plus className="h-3.5 w-3.5 mr-1" />Initiate BGV</Button>}
     >
-      {!items?.length ? (
-        <Card><CardContent className="py-12 text-center">
-          <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
-            <p className="text-sm text-muted-foreground">No background verifications initiated.</p>
-        </CardContent></Card>
-      ) : (
-        <div className="space-y-2">
-          {items.map((bgv: BackgroundVerification) => (
-            <Card key={bgv.id}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <ShieldCheck className="h-5 w-5 text-muted-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold">{bgv.user?.name ?? "Employee"}</p>
-                    <Badge variant="outline" className="text-[10px]">{bgv.type}</Badge>
-                    <Badge variant={statusBadge(bgv.status)} className="text-[10px]">{bgv.status ?? "PENDING"}</Badge>
-                  </div>
-                  <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
-                    {bgv.provider && <span>Provider: {bgv.provider}</span>}
-                    {bgv.referenceNumber && <span>Ref: {bgv.referenceNumber}</span>}
-                    {bgv.createdAt && <span>{format(new Date(bgv.createdAt), "MMM d, yyyy")}</span>}
-                  </div>
-                </div>
-                {(!bgv.status || bgv.status === "IN_PROGRESS") && (
-                  <div className="flex gap-1.5 shrink-0">
-                    <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "CLEAR")} disabled={update.isPending}>
-                      <CheckCircle2 className="h-3 w-3 mr-1" />Clear
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "FLAGGED")} disabled={update.isPending}>
-                      <XCircle className="h-3 w-3 mr-1" />Flag
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Tabs defaultValue="employee-bgv">
+        <TabsList className="mb-4">
+          <TabsTrigger value="employee-bgv">Employee BGV</TabsTrigger>
+          <TabsTrigger value="candidate-compliance">Candidate Compliance</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="employee-bgv">
+          {isLoading ? (
+            <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
+          ) : !items?.length ? (
+            <Card><CardContent className="py-12 text-center">
+              <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
+              <Image
+                src="/illustrations/undraw-online-survey.svg"
+                alt="Empty state illustration"
+                width={200}
+                height={160}
+                className="mx-auto mb-4 opacity-90"
+              />
+              <p className="text-sm text-muted-foreground">No background verifications initiated.</p>
+            </CardContent></Card>
+          ) : (
+            <div className="space-y-2">
+              {items.map((bgv: BackgroundVerification) => (
+                <Card key={bgv.id}>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold">{bgv.user?.name ?? "Employee"}</p>
+                        <Badge variant="outline" className="text-[10px]">{bgv.type}</Badge>
+                        <Badge variant={statusBadge(bgv.status)} className="text-[10px]">{bgv.status ?? "PENDING"}</Badge>
+                      </div>
+                      <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
+                        {bgv.provider && <span>Provider: {bgv.provider}</span>}
+                        {bgv.referenceNumber && <span>Ref: {bgv.referenceNumber}</span>}
+                        {bgv.createdAt && <span>{format(new Date(bgv.createdAt), "MMM d, yyyy")}</span>}
+                      </div>
+                    </div>
+                    {(!bgv.status || bgv.status === "IN_PROGRESS") && (
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "CLEAR")} disabled={update.isPending}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" />Clear
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleUpdateStatus(bgv.id, "FLAGGED")} disabled={update.isPending}>
+                          <XCircle className="h-3 w-3 mr-1" />Flag
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="candidate-compliance">
+          <div className="mb-3">
+            <p className="text-sm text-muted-foreground">
+              BgV completion rate per job posting — percentage of candidates with cleared background verification.
+            </p>
+          </div>
+          <ComplianceDashboard />
+        </TabsContent>
+      </Tabs>
 
       <HrSheet open={sheetOpen} onOpenChange={setSheetOpen} title="Initiate BGV" onSubmit={handleCreate} submitLabel="Initiate" isPending={create.isPending}>
         <div className="space-y-1.5">

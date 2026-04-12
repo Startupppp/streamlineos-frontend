@@ -121,6 +121,20 @@ export function useHrMonthlyAttendance(params: GetMonthlyAttendanceInput) {
   });
 }
 
+export function useAttendanceHeatmap(params: { userId: string; year: number }) {
+  return useQuery({
+    queryKey: queryKeys.hr.attendanceHeatmap(params),
+    queryFn: () =>
+      apiClient.get<{
+        year: number;
+        userId: string;
+        heatmap: { date: string; hours: number; sessions: number; intensity: number }[];
+        summary: { totalDays: number; totalHours: string; avgHoursPerDay: string; longestStreak: number };
+      }>("/hr/attendance/heatmap", params as unknown as Record<string, unknown>),
+    enabled: !!params.userId,
+  });
+}
+
 export function useGetWorkLogs(input: GetWorkLogsInput) {
   const params: Record<string, unknown> = {
     year: input.year,

@@ -7,7 +7,7 @@ declare module "next-auth" {
     sessionId?: string;
     user: {
       id: string;
-      role?: string;
+      role: string;
       forceChangePassword?: boolean;
       isActive?: boolean;
       hasDashboardAccess?: boolean;
@@ -34,5 +34,7 @@ declare module "next-auth/jwt" {
     image?: string | null;
     branchId?: number | null;
     sessionId?: string;
+    totpEnabled?: boolean;
+    mfaEnforced?: boolean;
   }
 }

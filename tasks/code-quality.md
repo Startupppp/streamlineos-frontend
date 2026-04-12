@@ -748,8 +748,8 @@ const data: LeadData[] = result;
 ## CHECKLIST
 
 ### Next.js
-- [ ] Replace all `<a>` tags with `<Link>` (except external/email) — not audited yet
-- [ ] Replace all `<img>` tags with `<Image>` — not audited yet
+- [x] Replace all `<a>` tags with `<Link>` (except external/email) — audited: all `<a>` uses are external URLs / mailto / tel / download, no internal nav `<a>` found
+- [x] Replace all `<img>` tags with `<Image>` — audited: zero `<img>` tags in app/ features/ components/; all already use `<Image>`
 - [x] Use `layout.tsx` instead of shell wrappers — App Router layout in place; `app/(dashboard)/layout.tsx` is a Server Component
 - [x] Remove all auth-related `useEffect` (middleware handles it) — middleware.ts guards all protected routes
 - [x] Add `loading.tsx` to all routes — comprehensive coverage across all 90+ dashboard routes
@@ -773,13 +773,17 @@ const data: LeadData[] = result;
 
 ### Cleanup
 - [ ] Remove ALL comments — not systematically done
-- [ ] Remove dead code and unused files — partially done; orphan list in this file not yet cleared
+- [x] Remove dead code and unused files — all 27 orphan components from list already deleted; `request-leave-dialog.tsx` (orphaned) deleted 2026-04-12
 - [x] Fix all `as any` type assertions — 2 `as any` casts fixed per prior refactor; `AuthSession.orgId: string` narrowed
-- [ ] Fix all `eslint-disable` comments — 2 remaining (`app/api/webhooks/route.ts`, `app/api/clients/opportunities/route.ts`)
+- [x] Fix all `req.json() as { ... }` forced type casts — all 30+ routes now use `parseBody(req, zodSchema)` pattern; only `as unknown` / `as Record<string, unknown>` remain (acceptable)
+- [x] Fix `eslint-disable` in `app/api/clients/opportunities/route.ts` — replaced `any[]` with `SQL[]` typed condition array
+- [ ] Fix `eslint-disable` remaining in `app/(dashboard)/crm/deals/page.tsx` (legitimate: intentional stable `useMemo` ref) — leave as-is
 - [x] Remove `console.log` statements — 0 `console.log` found in `app/(dashboard)/`
 
 ### Verification
 - [x] `pnpm build` passes — ✅ as of 2026-04-05
+- [x] `pnpm tsc --noEmit` passes — ✅ 0 errors as of 2026-04-12
+- [x] Replace `<a href="/...">` with `<Link>` in `settings/permissions/page.tsx`
 - [ ] `pnpm lint` passes with zero warnings — not verified after recent changes
 - [ ] All pages render correctly — not fully verified
 - [ ] No console errors in browser — not verified

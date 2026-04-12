@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { invalidateCache, CACHE_KEYS } from "@/lib/cache";
 import { getDeals } from "@/server/queries/crm";
+import { createAuditLog } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { deals } from "@/lib/db/schema";
 import { z } from "zod";
@@ -61,6 +62,16 @@ export async function POST(req: NextRequest) {
     }).returning();
 
     await invalidateCache(CACHE_KEYS.dealsForecast(session.orgId));
+    if (deal) {
+      void createAuditLog({
+        action: "deal.created",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(deal.id),
+        targetType: "deal",
+        metadata: { name: deal.name, stage: deal.stage, value: deal.value },
+      }).catch(() => {});
+    }
     return ok(deal, 201);
   });
 }

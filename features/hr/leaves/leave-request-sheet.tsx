@@ -23,13 +23,14 @@ import { AlertCircle } from "lucide-react";
 import { submitLeaveRequest } from "@/server/actions/leave-actions";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { LeaveType, Approver } from "@/app/(dashboard)/hr/leaves/leaves-shared";
+import type { LeaveType, Approver, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
 
 const leaveFormSchema = z.object({
   leaveTypeId: z.string().min(1, "Leave type is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
   halfDay: z.boolean(),
+  halfDayPeriod: z.enum(["AM", "PM"]),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
   reason: z.string().min(1, "Reason is required"),
   approverId: z.string().optional(),
@@ -42,10 +43,11 @@ interface LeaveRequestSheetProps {
   leaveTypes: LeaveType[];
   approvers: Approver[];
   joiningDate: string | null;
+  balances?: LeaveBalance[];
 }
 
 export function LeaveRequestSheet({
-  open, onOpenChange, leaveTypes, approvers, joiningDate,
+  open, onOpenChange, leaveTypes, approvers, joiningDate, balances = [],
 }: LeaveRequestSheetProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +64,7 @@ export function LeaveRequestSheet({
       startDate: "",
       endDate: "",
       halfDay: false,
+      halfDayPeriod: "AM" as const,
       priority: "MEDIUM",
       reason: "",
       approverId: "",
@@ -73,20 +76,41 @@ export function LeaveRequestSheet({
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
 
+  const { requestedDays, balancePreview } = useMemo(() => {
+    if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) {
+      return { requestedDays: 0, balancePreview: null };
+    }
+    const days = watchedHalfDay
+      ? 0.5
+      : differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
+    const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
+    if (!selectedType) return { requestedDays: days, balancePreview: null };
+
+    const matchedBal = balances.find((b) => b.leaveTypeId === selectedType.id);
+    if (!matchedBal) return { requestedDays: days, balancePreview: null };
+
+    const available = Number(matchedBal.balance ?? 0);
+    return {
+      requestedDays: days,
+      balancePreview: {
+        available,
+        after: available - days,
+        typeName: selectedType.name,
+      },
+    };
+  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes, balances]);
+
   const leaveDayLimitError = useMemo(() => {
     if (!watchedLeaveTypeId || !watchedStartDate || !watchedEndDate) return null;
     const selectedType = leaveTypes.find((t) => t.id.toString() === watchedLeaveTypeId);
     if (!selectedType) return null;
     const maxDays = LEAVE_MAX_DAYS[selectedType.name];
     if (maxDays === undefined) return null;
-    const days = watchedHalfDay
-      ? 0.5
-      : differenceInCalendarDays(new Date(watchedEndDate), new Date(watchedStartDate)) + 1;
-    if (days > maxDays) {
-      return `${selectedType.name} cannot exceed ${maxDays} days. You selected ${days} day${days !== 1 ? "s" : ""}.`;
+    if (requestedDays > maxDays) {
+      return `${selectedType.name} cannot exceed ${maxDays} days. You selected ${requestedDays} day${requestedDays !== 1 ? "s" : ""}.`;
     }
     return null;
-  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay, leaveTypes]);
+  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, requestedDays, leaveTypes]);
 
   const handleAttachmentUpload = useCallback((url: string) => setAttachmentUrl(url), []);
 
@@ -104,6 +128,8 @@ export function LeaveRequestSheet({
         priority: data.priority,
         approverId,
         attachmentUrl: attachmentUrl || undefined,
+        isHalfDay: data.halfDay,
+        halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
       });
       if (result.success) {
         toast.success("Leave requested successfully!");
@@ -210,6 +236,30 @@ export function LeaveRequestSheet({
             )}
           />
 
+          {watchedHalfDay && (
+            <FormField
+              control={form.control}
+              name="halfDayPeriod"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Half Day Period</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="AM">AM (Morning — first half)</SelectItem>
+                      <SelectItem value="PM">PM (Afternoon — second half)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           <FormField
             control={form.control}
             name="priority"
@@ -301,6 +351,27 @@ export function LeaveRequestSheet({
               onUploadComplete={handleAttachmentUpload}
             />
           </div>
+
+          {balancePreview && requestedDays > 0 && (
+            <div className={`flex items-start gap-2 p-3 rounded-lg border text-xs ${
+              balancePreview.after < 0
+                ? "bg-destructive/10 border-destructive/20 text-destructive"
+                : "bg-muted/50 border-border text-foreground"
+            }`}>
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                This will consume{" "}
+                <strong>{requestedDays} day{requestedDays !== 1 ? "s" : ""}</strong>{" "}
+                of your{" "}
+                <strong>{balancePreview.available} remaining {balancePreview.typeName} days.</strong>
+                {balancePreview.after >= 0 ? (
+                  <> You will have <strong>{balancePreview.after} day{balancePreview.after !== 1 ? "s" : ""}</strong> left.</>
+                ) : (
+                  <> This exceeds your balance by <strong>{Math.abs(balancePreview.after)} day{Math.abs(balancePreview.after) !== 1 ? "s" : ""}.</strong></>
+                )}
+              </span>
+            </div>
+          )}
 
           {leaveDayLimitError && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">

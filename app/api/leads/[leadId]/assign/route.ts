@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { sendEmail } from "@/lib/email";
 import { appUrl } from "@/lib/app-url";
 import { logger } from "@/lib/logger";
+import { generateSmartNotification } from "@/lib/ai/smart-notification";
 import { z } from "zod";
 
 const schema = z.object({ assignedToId: z.string() });
@@ -50,12 +51,31 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       logger.error("Failed to write lead assignment audit log", { leadId, error: auditErr });
     }
 
+    // Generate AI-enriched notification (non-blocking, falls back gracefully)
+    const notifContent = await generateSmartNotification({
+      event: "LEAD_ASSIGNED",
+      defaultTitle: "Lead Assigned to You",
+      defaultMessage: `You have been assigned lead: ${updated.name}`,
+      context: {
+        leadName: updated.name,
+        priority: updated.priority ?? undefined,
+        source: updated.source ?? undefined,
+        company: updated.company ?? undefined,
+        potentialValue: updated.potentialValue ?? undefined,
+        notes: updated.notes ?? undefined,
+      },
+    }).catch(() => ({
+      title: "Lead Assigned to You",
+      message: `You have been assigned lead: ${updated.name}`,
+      enriched: false,
+    }));
+
     await db.insert(notifications).values({
       orgId,
       userId: assignedToId,
       type: "INFO",
-      title: "Lead Assigned to You",
-      message: `You have been assigned lead: ${updated.name}`,
+      title: notifContent.title,
+      message: notifContent.message,
       link: `/crm/leads/${updated.id}`,
     });
 

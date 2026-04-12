@@ -7,6 +7,9 @@ export {
   getWelcomeEmailTemplate,
   getPasswordChangeConfirmationEmailTemplate,
   getAccountDeactivationEmailTemplate,
+  getAccountLockedEmailTemplate,
+  getNewDeviceLoginEmailTemplate,
+  getPasswordExpiryWarningEmailTemplate,
 } from "./auth";
 
 export {
@@ -30,6 +33,8 @@ export {
   getResignationSubmittedEmailTemplate,
   getResignationApprovedEmailTemplate,
   getTerminationEmailTemplate,
+  getCandidateRejectionEmail,
+  getPayslipEmailTemplate,
 } from "./hr";
 
 export {
@@ -44,3 +49,18 @@ export {
   getMonthlyExpenseReportTemplate,
 } from "./reports";
 export type { MonthlyExpenseReportRow } from "./reports";
+
+export {
+  getSelfReviewReminderEmail,
+  getManagerReviewReminderEmail,
+  getReviewPublishedEmail,
+  getGoalSettingReminderEmail,
+} from "./appraisal";
+
+export {
+  getLeadWelcomeEmail,
+  getFollowUpReminderEmail,
+  getDealWonEmail,
+  getSlaBreachAlertEmail,
+  getClientOnboardingEmail,
+} from "./crm";

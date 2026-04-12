@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useMemo } from "react";
-import { useProjectAnalytics } from "@/lib/api/hooks/projects";
+import { use, useMemo, useState } from "react";
+import { useProjectAnalytics, useSprints, useSprintBurndown } from "@/lib/api/hooks/projects";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import type { Sprint, SprintBurndownPoint } from "@/types/projects";
 import {
   BarChart,
   PieChart,
@@ -63,6 +64,18 @@ export default function AnalyticsPage({
   const projectId = parseInt(projectIdStr);
 
   const { data: analytics, isLoading } = useProjectAnalytics(projectId);
+  const { data: sprints } = useSprints(projectId);
+  const [selectedSprintId, setSelectedSprintId] = useState<number | null>(null);
+
+  const activeSprint = useMemo(() => {
+    if (!sprints || sprints.length === 0) return null;
+    const active = sprints.find((s: Sprint) => s.status === "ACTIVE");
+    return active ?? sprints[sprints.length - 1];
+  }, [sprints]);
+
+  const sprintId = selectedSprintId ?? activeSprint?.id ?? 0;
+
+  const { data: burndownData } = useSprintBurndown(projectId, sprintId);
 
   const stateData = useMemo(() => {
     if (!analytics?.stateDistribution) return [];
@@ -120,6 +133,24 @@ export default function AnalyticsPage({
     );
   }, [analytics?.cycleVelocity]);
 
+  const burndownChartData = useMemo(() => {
+    if (!burndownData) return [];
+    const idealMap = new Map(
+      burndownData.idealBurndown.map((p: SprintBurndownPoint) => [
+        typeof p.date === "string" ? p.date.slice(0, 10) : new Date(p.date).toISOString().slice(0, 10),
+        p.points,
+      ])
+    );
+    return burndownData.actualBurndown.map((p: SprintBurndownPoint) => {
+      const dateKey = typeof p.date === "string" ? p.date.slice(0, 10) : new Date(p.date).toISOString().slice(0, 10);
+      return {
+        date: dateKey,
+        remaining: Math.max(0, p.points),
+        ideal: Math.max(0, idealMap.get(dateKey) ?? 0),
+      };
+    });
+  }, [burndownData]);
+
   const estimateData = useMemo(() => {
     if (!analytics?.estimateVsActual) return [];
     return analytics.estimateVsActual.map(
@@ -157,8 +188,54 @@ export default function AnalyticsPage({
     );
   }
 
+  const healthScore = (analytics as { healthScore?: number } | undefined)?.healthScore;
+  const healthStatus = (analytics as { healthStatus?: string } | undefined)?.healthStatus;
+  const healthBreakdown = (analytics as { healthBreakdown?: { completionPct: number; onTimePct: number; velocityScore: number; overdueTickets: number; totalTickets: number } } | undefined)?.healthBreakdown;
+
+  const healthColor =
+    healthStatus === "EXCELLENT" ? "text-emerald-500"
+    : healthStatus === "GOOD" ? "text-blue-500"
+    : healthStatus === "AT_RISK" ? "text-amber-500"
+    : "text-destructive";
+
   return (
     <PageWrapper title="Analytics">
+      {healthScore != null && healthBreakdown && (
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Project Health Score</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-6 flex-wrap">
+              <div className="text-center">
+                <p className={`text-5xl font-bold tabular-nums ${healthColor}`}>{healthScore}</p>
+                <p className={`text-sm font-medium mt-1 ${healthColor}`}>{healthStatus?.replace("_", " ")}</p>
+              </div>
+              <div className="flex-1 space-y-3 min-w-48">
+                {[
+                  { label: "Completion Rate", value: healthBreakdown.completionPct, weight: "50%" },
+                  { label: "On-Time Rate", value: healthBreakdown.onTimePct, weight: "30%" },
+                  { label: "Velocity Score", value: healthBreakdown.velocityScore, weight: "20%" },
+                ].map((item) => (
+                  <div key={item.label} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{item.label} <span className="opacity-60">({item.weight} weight)</span></span>
+                      <span className="font-medium">{item.value}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${item.value}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p><span className="font-medium text-foreground">{healthBreakdown.overdueTickets}</span> overdue tickets</p>
+                <p><span className="font-medium text-foreground">{healthBreakdown.totalTickets}</span> total tickets</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -368,6 +445,79 @@ export default function AnalyticsPage({
               ) : (
                 <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
                   No velocity data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <CardTitle className="text-base">Sprint Burndown</CardTitle>
+                {sprints && sprints.length > 0 && (
+                  <select
+                    className="text-xs rounded-md border border-border bg-background px-2 py-1 text-foreground"
+                    value={sprintId}
+                    onChange={(e) => setSelectedSprintId(Number(e.target.value))}
+                    aria-label="Select sprint for burndown chart"
+                  >
+                    {sprints.map((s: Sprint) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} {s.status === "ACTIVE" ? "(Active)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {burndownChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={burndownChartData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      className="fill-muted-foreground"
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      className="fill-muted-foreground"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="ideal"
+                      stroke="#94a3b8"
+                      fill="#94a3b8"
+                      fillOpacity={0.08}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      name="Ideal"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="remaining"
+                      stroke="#6366f1"
+                      fill="#6366f1"
+                      fillOpacity={0.15}
+                      strokeWidth={2}
+                      name="Remaining"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
+                  {sprints && sprints.length === 0
+                    ? "No sprints found for this project"
+                    : "No burndown data available for this sprint"}
                 </div>
               )}
             </CardContent>

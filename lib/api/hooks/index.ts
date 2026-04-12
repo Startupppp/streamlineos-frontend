@@ -20,3 +20,4 @@ export * from "./mfa";
 export * from "./calendar";
 export * from "./ai";
 export * from "./marketing";
+export * from "./tasks";

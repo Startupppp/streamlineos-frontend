@@ -1,8 +1,14 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { richDocuments } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const updateRichDocumentSchema = z.object({
+  title: z.string().optional(),
+  contentJson: z.unknown().optional(),
+});
 
 export async function GET(
   _req: NextRequest,
@@ -36,10 +42,7 @@ export async function PATCH(
     });
     if (!existing) return err("Document not found.", 404);
 
-    const body = await req.json() as {
-      title?: string;
-      contentJson?: unknown;
-    };
+    const body = await parseBody(req, updateRichDocumentSchema);
 
     await db
       .update(richDocuments)

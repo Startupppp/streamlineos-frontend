@@ -2,6 +2,19 @@ export interface OrgSettings {
   id: string;
   name: string;
   slug: string;
+  logo: string | null;
+  timezone: string | null;
+  currency: string | null;
+  fiscalYearStart: number | null;
+  mfaEnforced?: boolean;
+  passwordExpiryDays?: number | null;
+  allowedEmailDomains?: string[] | null;
+  settings?: Record<string, unknown> | null;
+  // Flattened from settings JSONB
+  primaryColor?: string | null;
+  loginBgUrl?: string | null;
+  ipAllowlist?: string[];
+  directoryPublic?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,6 +26,7 @@ export interface OrgMember {
   name: string | null;
   email: string;
   image: string | null;
+  totpEnabled?: boolean;
 }
 
 export interface Invitation {

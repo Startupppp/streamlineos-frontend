@@ -12,6 +12,7 @@ import { eq, and, gte, sql, count } from "drizzle-orm";
 import { sendEmail } from "@/lib/email";
 import { getWeeklyCeoRecapTemplate } from "@/lib/email-templates/weekly-ceo-recap";
 import type { WeeklyCeoRecapData } from "@/lib/email-templates/weekly-ceo-recap";
+import { generateRecapNarrative } from "@/lib/ai/weekly-recap-narrator";
 import { logger } from "@/lib/logger";
 import { subDays, format } from "date-fns";
 
@@ -112,7 +113,15 @@ export async function generateAndSendWeeklyCeoRecap() {
         pipelineSummary: pipelineRaw.map((r) => ({ status: r.status, count: r.count })),
       };
 
-      const html = getWeeklyCeoRecapTemplate(recapData);
+      // Generate AI narrative (non-blocking fallback)
+      let aiNarrative = "";
+      try {
+        aiNarrative = await generateRecapNarrative(recapData);
+      } catch {
+        aiNarrative = "";
+      }
+
+      const html = getWeeklyCeoRecapTemplate({ ...recapData, aiNarrative });
 
       for (const owner of owners) {
         if (!owner.email) continue;

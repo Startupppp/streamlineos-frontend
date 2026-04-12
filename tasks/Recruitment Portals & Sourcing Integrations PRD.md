@@ -52,43 +52,42 @@ Portal creation: 1 week; External API Integrations: 2 weeks. Total: \~3 weeks.
 
 ---
 
-## Status: NOT STARTED
+## Status: IN PROGRESS
 
 ## Checklist
 
 ### Database
 - [x] `candidates` table — `source, sourceUrl`
 - [x] `job_postings` — published job listings
-- [ ] `candidate_sources` table — `id, orgId, platform (LINKEDIN/NAUKRI/INDEED/ORGANIC), oauthToken, isActive, lastSyncedAt`
-- [ ] `candidates.externalId` — ID from source platform (for dedup on re-sync)
-- [ ] `candidates.duplicateOfId` — merged duplicate FK
-- [ ] `job_postings.externalPostingIds` — JSONB: `{ "linkedin": "123", "naukri": "456" }` after posting to job boards
-- [ ] Fuzzy dedup on `email + phone` match across sources
+- [x] `candidate_sources` table — `id, orgId, platform (LINKEDIN/NAUKRI/INDEED/ORGANIC), oauthToken, isActive, lastSyncedAt` — `lib/db/schema/hr.ts`; migration `drizzle/0072_recruitment_portals.sql`
+- [x] `candidates.externalId` — ID from source platform
+- [x] `candidates.duplicateOfId` — merged duplicate FK
+- [x] `job_postings.externalPostingIds` — JSONB: `{ "linkedin": "123", "naukri": "456" }` — `lib/db/schema/hr.ts`
+- [x] Fuzzy dedup on `email + phone` match across sources — `lib/integrations/job-boards.ts` `findExistingCandidate()`
 
 ### API
-- [ ] `GET /api/hr/recruitment/portals` — list connected job board integrations
-- [ ] `POST /api/webhooks/linkedin/applications` — LinkedIn webhook listener → parse payload → create candidate
-- [ ] `POST /api/webhooks/naukri/applications` — Naukri webhook listener
-- [ ] `POST /api/webhooks/indeed/applications` — Indeed webhook listener
-- [ ] `GET /api/reports/source-effectiveness` — candidates by source + hire rate per source
-- [ ] `POST /api/hr/recruitment/portals/[platform]/sync` — manual sync trigger
-- [ ] Inngest: scheduled daily sync (midnight) for all connected job boards
-- [ ] `POST /api/job-postings/[jobId]/publish` — push job to connected boards simultaneously
-- [ ] Duplicate detection: on inbound application, check `email + phone` → merge if match
+- [x] `GET /api/hr/recruitment/portals` — list connected job board integrations
+- [x] `POST /api/hr/recruitment/portals` — create/update portal integration
+- [x] `POST /api/webhooks/linkedin/applications` — LinkedIn webhook listener with HMAC verification → dedup → create candidate
+- [x] `POST /api/webhooks/naukri/applications` — Naukri webhook listener
+- [x] `POST /api/webhooks/indeed/applications` — Indeed webhook listener
+- [x] `GET /api/reports/source-effectiveness` — candidates by source + hire rate per source
+- [x] `POST /api/hr/recruitment/portals/[platform]/sync` — manual sync trigger; checks integration active + token present, records `lastSyncedAt`
+- [x] Inngest: scheduled daily sync (midnight `0 0 * * *`) for all active integrations — `lib/inngest/functions/daily-job-board-sync.ts`; registered in index
+- [x] `POST /api/hr/recruitment/jobs/[jobId]/publish` — push job to connected boards; updates `externalPostingIds` JSONB; returns per-platform status
+- [x] Duplicate detection: on inbound application, check `email + phone` → skip if match — `upsertCandidateFromBoard()`
 - [ ] OAuth2 flow for LinkedIn Recruiter API (`POST /api/integrations/linkedin/auth`)
 
 ### Frontend
-- [ ] Careers portal: `app/(public)/careers/page.tsx` — public job listing (ISR 5 min revalidate)
-- [ ] `app/(public)/careers/[jobId]/page.tsx` — job detail + "Apply Now" form
-- [ ] Job application form: Name, Email, Phone, LinkedIn URL, Resume upload, Cover letter
-- [ ] Sourcing integrations settings page: `/settings/integrations/recruitment`
-  - Connect LinkedIn / Naukri / Indeed with OAuth
-  - Show last sync timestamp + candidate count synced
-  - Manual "Sync Now" button
-- [ ] Source attribution: tag badge on candidate card (LinkedIn / Naukri / Organic)
-- [ ] Source effectiveness pie chart: top sourcing channels by volume + hire rate
-- [ ] "Post Job" button on job posting: publish to all connected boards simultaneously
-- [ ] Duplicate candidate alert: "Similar candidate exists" banner with merge suggestion
+- [x] Careers portal: `app/(public)/careers/page.tsx` — public job listing (ISR 5 min revalidate)
+- [x] `app/(public)/careers/[jobId]/page.tsx` — job detail + "Apply Now" form
+- [x] Job application form: Name, Email, Phone, LinkedIn URL, Resume URL, Cover letter — `app/(public)/careers/[jobId]/apply/page.tsx`
+- [x] Sourcing integrations settings page: `/settings/integrations/recruitment` — webhook URL display, enable/disable toggle per platform, last sync info
+- [x] Source attribution: source badge on candidate card — already on candidate list (SOURCE_BADGE_CLASSES)
+- [x] Source effectiveness bar chart — on recruitment dashboard (from `stats.sources`)
+- [x] `useSourceEffectiveness()` hook + `/api/reports/source-effectiveness` — returns hire rate per source
+- [x] "Post Job" button on job posting: "Post to Job Boards" in dropdown (only for OPEN jobs) → `usePublishJobToBoards`; shows posted platform badges on job title row
+- [x] Duplicate candidate alert: "Similar candidate exists" banner with merge suggestion — amber warning banner on candidate detail page when `candidate.duplicateOfId != null` with link to original candidate
 
 ### New Features (Extended)
 - [ ] **Campus recruitment portal** — dedicated portal for college placements with bulk upload
@@ -97,7 +96,7 @@ Portal creation: 1 week; External API Integrations: 2 weeks. Total: \~3 weeks.
 - [ ] **Candidate nurture** — email drip campaigns to silver-medalist candidates (those who reached final but not hired)
 - [ ] **Job board performance report** — cost-per-hire per platform
 - [ ] **Aggregator integration** — Shine, Monster, TimesJobs webhook support
-- [ ] **AI job description writer** — `/api/ai/suggestions` generates JD from title + requirements input
+- [x] **AI job description writer** — `POST /api/ai/generate-jd` + "Generate with AI" button in job create sheet
 - [ ] **Auto-screening questionnaire** — applicants answer qualifying questions before resume review
 
 ### Verification

@@ -101,6 +101,9 @@ export const CACHE_KEYS = {
 
   leadBoard: (orgId: string, hash: string) => `leads:board:${orgId}:${hash}`,
   leadStats: (orgId: string, hash: string) => `leads:stats:${orgId}:${hash}`,
+
+  executiveDashboard: (orgId: string) => `dashboard:executive:${orgId}`,
+  announcementsList: (orgId: string) => `dashboard:announcements:${orgId}`,
 } as const;
 
 export const CACHE_TTL = {

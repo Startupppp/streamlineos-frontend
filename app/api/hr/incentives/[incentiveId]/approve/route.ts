@@ -1,9 +1,15 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { incentives } from "@/lib/db/schema/crm";
 import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const approveIncentiveSchema = z.object({
+  approvedAmount: z.string(),
+  notes: z.string().optional(),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -18,14 +24,7 @@ export async function PATCH(
     const incentiveId = Number(id);
     if (!incentiveId) return err("Invalid incentive ID.", 400);
 
-    const body = await req.json() as {
-      approvedAmount: string;
-      notes?: string;
-    };
-
-    if (!body.approvedAmount) {
-      return err("approvedAmount is required.", 400);
-    }
+    const body = await parseBody(req, approveIncentiveSchema);
 
     const existing = await db.query.incentives.findFirst({
       where: and(eq(incentives.id, incentiveId), eq(incentives.orgId, session.orgId)),

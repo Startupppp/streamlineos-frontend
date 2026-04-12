@@ -9,6 +9,10 @@ const trackSchema = z.object({
   country: z.string().optional(),
   city: z.string().optional(),
   deviceType: z.enum(["desktop", "mobile", "tablet"]).optional(),
+  utmSource: z.string().optional(),
+  utmMedium: z.string().optional(),
+  utmCampaign: z.string().optional(),
+  abVariant: z.string().optional(),
 });
 
 type Ctx = { params: Promise<{ pageId: string }> };
@@ -48,6 +52,10 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     country: input.country ?? null,
     city: input.city ?? null,
     deviceType: input.deviceType ?? null,
+    utmSource: input.utmSource ?? null,
+    utmMedium: input.utmMedium ?? null,
+    utmCampaign: input.utmCampaign ?? null,
+    abVariant: input.abVariant ?? null,
   });
 
   return NextResponse.json({ success: true });

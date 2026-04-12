@@ -28,3 +28,43 @@ export function useAddSkill() {
     onSuccess: () => qc.invalidateQueries({ queryKey: skillKeys.all }),
   });
 }
+
+// ─── Skills Matrix ────────────────────────────────────────────────────────────
+
+export interface SkillsMatrixData {
+  employees: {
+    userId: string;
+    name: string | null;
+    image: string | null;
+    skills: Record<string, number>;
+  }[];
+  skills: string[];
+}
+
+export function useSkillsMatrix() {
+  return useQuery({
+    queryKey: [...skillKeys.all, "matrix"] as const,
+    queryFn: () => apiClient.get<SkillsMatrixData>("/hr/employees/skills-matrix"),
+    staleTime: 60_000,
+  });
+}
+
+// ─── Anniversary Feed ─────────────────────────────────────────────────────────
+
+export interface AnniversaryFeedItem {
+  userId: string;
+  name: string | null;
+  image: string | null;
+  type: "BIRTHDAY" | "WORK_ANNIVERSARY";
+  daysAway: number;
+  dateStr: string;
+  yearsCount?: number;
+}
+
+export function useAnniversaryFeed() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "anniversary-feed"] as const,
+    queryFn: () => apiClient.get<AnniversaryFeedItem[]>("/hr/employees/anniversary-feed"),
+    staleTime: 60 * 60_000, // 1 hour
+  });
+}

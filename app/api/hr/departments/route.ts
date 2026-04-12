@@ -1,9 +1,14 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getDepartments } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { departments } from "@/lib/db/schema";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const postDepartmentSchema = z.object({
+  name: z.string().min(1),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -18,10 +23,7 @@ export async function POST(req: NextRequest) {
       return err("Only Admins and Owners can create departments.", 403);
     }
 
-    const body = await req.json() as { name?: string };
-    if (!body.name || typeof body.name !== "string" || body.name.trim().length === 0) {
-      return err("Department name is required.", 400);
-    }
+    const body = await parseBody(req, postDepartmentSchema);
 
     await db.insert(departments).values({
       name: body.name.trim(),

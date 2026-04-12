@@ -27,7 +27,28 @@ export type AuditAction =
   | "file.download"
   | "target.created"
   | "target.updated"
-  | "target.deleted";
+  | "target.deleted"
+  | "security_settings.updated"
+  | "mfa.reset"
+  | "deal.created"
+  | "deal.updated"
+  | "deal.deleted"
+  | "lead.created"
+  | "lead.updated"
+  | "lead.deleted"
+  | "lead.assigned"
+  | "LEAD_MERGED"
+  | "document.generated"
+  | "CANDIDATE_STAGE_CHANGED"
+  | "DOWNLOAD"
+  | "VIEW"
+  | "hr.leave_cancelled"
+  | "project.created_from_deal"
+  | "role.changed"
+  | "submit_lead"
+  | "document.signed"
+  | "document.viewed"
+  | "document.declined";
 
 interface AuditLogEntry {
   action: AuditAction;

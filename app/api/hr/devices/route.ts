@@ -1,10 +1,22 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getDevices } from "@/server/queries/hr";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { employeeDevices } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const postDeviceSchema = z.object({
+  userId: z.string(),
+  deviceType: z.string(),
+  deviceName: z.string(),
+  serialNumber: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  notes: z.string().optional(),
+  assignedDate: z.string().optional(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -19,20 +31,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can add devices.", 403);
     }
 
-    const body = await req.json() as {
-      userId: string;
-      deviceType: string;
-      deviceName: string;
-      serialNumber?: string;
-      brand?: string;
-      model?: string;
-      notes?: string;
-      assignedDate?: string;
-    };
-
-    if (!body.userId || !body.deviceType || !body.deviceName) {
-      return err("userId, deviceType, and deviceName are required.", 400);
-    }
+    const body = await parseBody(req, postDeviceSchema);
 
     const [device] = await db
       .insert(employeeDevices)

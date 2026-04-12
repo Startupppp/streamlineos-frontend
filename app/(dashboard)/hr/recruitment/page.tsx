@@ -1,6 +1,7 @@
 "use client";
 
 import { useRecruitmentStats, useJobPostings, useInterviews } from "@/lib/api/hooks/hr";
+import { useRecruitmentAnalytics } from "@/lib/api/hooks/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,13 +9,48 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Users, Calendar, UserCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatDistanceToNow } from "date-fns";
 import Image from "next/image";
+
+// ─── Pie chart colours ────────────────────────────────────────────────────────
+
+const PIE_COLORS = ["#0f2b7f", "#bd882c", "#10b981", "#8b5cf6", "#f43f5e", "#06b6d4"];
+
+function SourcePieChart({ sources }: { sources: { source: string; count: number }[] }) {
+  const data = sources.map((s) => ({ name: s.source, value: s.count }));
+  return (
+    <ResponsiveContainer width="100%" height={160}>
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          innerRadius={36}
+          outerRadius={60}
+          paddingAngle={2}
+          dataKey="value"
+        >
+          {data.map((_, idx) => (
+            <Cell key={`cell-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip contentStyle={{ fontSize: 11 }} />
+        <Legend
+          iconType="circle"
+          iconSize={8}
+          wrapperStyle={{ fontSize: 10 }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
 
 export default function RecruitmentDashboardPage() {
   const { data: stats, isLoading: statsLoading } = useRecruitmentStats();
   const { data: recentJobs, isLoading: jobsLoading } = useJobPostings({ status: "OPEN" });
   const { data: upcomingInterviews, isLoading: interviewsLoading } = useInterviews({ upcoming: true });
+  const { data: analytics } = useRecruitmentAnalytics();
 
   const isLoading = statsLoading || jobsLoading || interviewsLoading;
 
@@ -50,6 +86,9 @@ export default function RecruitmentDashboardPage() {
           </Button>
           <Button size="sm" asChild>
             <Link href="/hr/recruitment/jobs">Jobs</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/hr/recruitment/question-bank">Question Bank</Link>
           </Button>
         </div>
       }
@@ -104,33 +143,11 @@ export default function RecruitmentDashboardPage() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Source Effectiveness</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Candidate Sources</h3>
                 {stats.sources.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {stats.sources.map((s) => {
-                      const max = Math.max(...stats.sources.map((x) => x.count), 1);
-                      return (
-                        <div key={s.source} className="flex items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground w-16 shrink-0 truncate">{s.source}</span>
-                          <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-primary/70 rounded-full" style={{ width: `${Math.max(2, (s.count / max) * 100)}%` }} />
-                          </div>
-                          <span className="text-xs font-medium tabular-nums w-6 text-right">{s.count}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <SourcePieChart sources={stats.sources} />
                 ) : (
-                  <div className="py-4">
-                    <Image
-                      src="/illustrations/undraw-online-survey.svg"
-                      alt="Empty state illustration"
-                      width={200}
-                      height={160}
-                      className="mx-auto mb-4 opacity-90"
-                    />
-                    <p className="text-xs text-muted-foreground text-center">No source data</p>
-                  </div>
+                  <p className="text-xs text-muted-foreground text-center py-6">No source data yet.</p>
                 )}
               </CardContent>
             </Card>
@@ -208,6 +225,38 @@ export default function RecruitmentDashboardPage() {
           </Card>
         </div>
       </div>
+
+      {/* Time-to-Hire Funnel */}
+      {analytics && analytics.funnel.some((s) => s.count > 0) && (
+        <Card>
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium">Pipeline Funnel</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="flex items-end gap-2 overflow-x-auto pb-2">
+              {analytics.funnel.map((stage) => {
+                const maxCount = Math.max(...analytics.funnel.map((s) => s.count), 1);
+                const heightPct = Math.max((stage.count / maxCount) * 100, 4);
+                return (
+                  <div key={stage.stage} className="flex flex-col items-center gap-1 flex-1 min-w-[60px]">
+                    <span className="text-xs font-semibold tabular-nums">{stage.count}</span>
+                    <div className="w-full rounded-t-sm bg-primary/80" style={{ height: `${heightPct * 0.6}px`, minHeight: 4 }} />
+                    <span className="text-[10px] text-muted-foreground text-center leading-tight">{stage.stage}</span>
+                    {stage.avgDaysInStage !== null && (
+                      <span className="text-[10px] text-muted-foreground">{stage.avgDaysInStage}d avg</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+              <span>Hire Rate: <span className="font-semibold text-foreground">{analytics.hireRate}%</span></span>
+              <span>Total: <span className="font-semibold text-foreground">{analytics.totalCandidates}</span></span>
+              <span>Hired: <span className="font-semibold text-foreground">{analytics.totalHired}</span></span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </PageWrapper>
   );
 }

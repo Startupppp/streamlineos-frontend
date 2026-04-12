@@ -3,6 +3,7 @@ import { pgTable, text, serial, timestamp, boolean, jsonb, integer, index, uniqu
 import { relations } from "drizzle-orm";
 import { chatMessageTypeEnum } from "./enums";
 import { organizations, users } from "./auth";
+import { deals } from "./crm";
 
 export const chatChannels = pgTable("chat_channels", {
   id: serial("id").primaryKey(),
@@ -13,6 +14,8 @@ export const chatChannels = pgTable("chat_channels", {
   avatarUrl: text("avatar_url"),
   createdBy: text("created_by").references(() => users.id).notNull(),
   isArchived: boolean("is_archived").default(false).notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  linkedDealId: integer("linked_deal_id").references(() => deals.id, { onDelete: "set null" }),
   lastMessageAt: timestamp("last_message_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -44,6 +47,7 @@ export const chatMessages = pgTable("chat_messages", {
   isEdited: boolean("is_edited").default(false).notNull(),
   isDeleted: boolean("is_deleted").default(false).notNull(),
   messageType: chatMessageTypeEnum("message_type").notNull().default("text"),
+  reactions: jsonb("reactions").$type<Record<string, string[]>>().default({}).notNull(),
   metadata: jsonb("metadata"),
   actionStatus: text("action_status"),
   createdAt: timestamp("created_at").defaultNow(),

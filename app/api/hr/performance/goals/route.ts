@@ -1,11 +1,35 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getGoals } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { goals } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createGoalSchema = z.object({
+  userId: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  type: z.string().optional(),
+  targetValue: z.number().optional(),
+  currentValue: z.number(),
+  unit: z.string().optional(),
+  startDate: z.string(),
+  endDate: z.string(),
+  parentGoalId: z.number().optional(),
+});
+
+const updateGoalSchema = z.object({
+  goalId: z.number(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  targetValue: z.number().optional(),
+  currentValue: z.number().optional(),
+  status: z.string().optional(),
+  progress: z.number().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -33,18 +57,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can create goals.", 403);
     }
 
-    const body = await req.json() as {
-      userId: string;
-      title: string;
-      description?: string;
-      type?: string;
-      targetValue?: number;
-      currentValue: number;
-      unit?: string;
-      startDate: string;
-      endDate: string;
-      parentGoalId?: number;
-    };
+    const body = await parseBody(req, createGoalSchema);
 
     if (!body.userId || !body.title || !body.startDate || !body.endDate) {
       return err("userId, title, startDate, and endDate are required.", 400);
@@ -79,15 +92,7 @@ export async function PATCH(req: NextRequest) {
       return err("Only admins can update goals.", 403);
     }
 
-    const body = await req.json() as {
-      goalId: number;
-      title?: string;
-      description?: string;
-      targetValue?: number;
-      currentValue?: number;
-      status?: string;
-      progress?: number;
-    };
+    const body = await parseBody(req, updateGoalSchema);
 
     if (!body.goalId) return err("goalId is required.", 400);
 

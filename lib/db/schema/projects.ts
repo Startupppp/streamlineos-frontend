@@ -19,6 +19,8 @@ export const projects = pgTable("projects", {
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   status: projectStatusEnum("status").default("ACTIVE"),
+  dealId: integer("deal_id"),
+  budget: decimal("budget"),
   settings: jsonb("settings").$type<{
     modules: {
       sprints: boolean;
@@ -127,6 +129,7 @@ export const tickets = pgTable("tickets", {
   cycleId: integer("cycle_id"),
   sequenceId: text("sequence_id"),
   estimate: integer("estimate"),
+  completionPercentage: integer("completion_percentage").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (t) => ({
@@ -154,6 +157,7 @@ export const projectMembers = pgTable("project_members", {
   projectId: integer("project_id").references(() => projects.id).notNull(),
   userId: text("user_id").references(() => users.id).notNull(),
   role: text("role").default("CONTRIBUTOR"),
+  hourlyRate: decimal("hourly_rate").default("0"),
   joinedAt: timestamp("joined_at").defaultNow(),
 }, (table) => [
   uniqueIndex("uniq_project_members_project_user").on(table.projectId, table.userId),
@@ -320,12 +324,34 @@ export const reports = pgTable("reports", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const projectMilestones = pgTable("project_milestones", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  targetDate: date("target_date").notNull(),
+  status: text("status").notNull().default("PENDING"), // PENDING | ACHIEVED | MISSED
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_project_milestones_project").on(table.projectId),
+  index("idx_project_milestones_org").on(table.orgId),
+]);
+
+export const projectMilestonesRelations = relations(projectMilestones, ({ one }) => ({
+  project: one(projects, { fields: [projectMilestones.projectId], references: [projects.id] }),
+  creator: one(users, { fields: [projectMilestones.createdBy], references: [users.id] }),
+}));
+
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   tickets: many(tickets),
   manager: one(users, { fields: [projects.managerId], references: [users.id], relationName: "projectManager" }),
   client: one(users, { fields: [projects.clientId], references: [users.id], relationName: "projectClient" }),
   members: many(projectMembers),
   statuses: many(projectStatuses, { relationName: "projectStatuses" }),
+  milestones: many(projectMilestones),
 }));
 
 export const sprintsRelations = relations(sprints, ({ one, many }) => ({
@@ -444,4 +470,38 @@ export const ticketWatchersRelations = relations(ticketWatchers, ({ one }) => ({
 export const timesheetsRelations = relations(timesheets, ({ one }) => ({
   ticket: one(tickets, { fields: [timesheets.ticketId], references: [tickets.id] }),
   user: one(users, { fields: [timesheets.userId], references: [users.id] }),
+}));
+
+// ─── Project Templates ─────────────────────────────────────────────────────────
+
+export const projectTemplates = pgTable("project_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").default("GENERAL"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const projectTemplateTickets = pgTable("project_template_tickets", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => projectTemplates.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: text("type").default("TASK"),
+  priority: text("priority").default("MEDIUM"),
+  estimatedHours: decimal("estimated_hours"),
+  order: integer("order").notNull().default(0),
+  phase: text("phase"),
+});
+
+export const projectTemplatesRelations = relations(projectTemplates, ({ one, many }) => ({
+  org: one(organizations, { fields: [projectTemplates.orgId], references: [organizations.id] }),
+  createdBy: one(users, { fields: [projectTemplates.createdBy], references: [users.id] }),
+  tickets: many(projectTemplateTickets),
+}));
+
+export const projectTemplateTicketsRelations = relations(projectTemplateTickets, ({ one }) => ({
+  template: one(projectTemplates, { fields: [projectTemplateTickets.templateId], references: [projectTemplates.id] }),
 }));

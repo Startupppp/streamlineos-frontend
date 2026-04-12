@@ -13,11 +13,17 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CalendarIcon, MapPin, Trash2, Tag, Pencil } from "lucide-react";
-import { useDeleteCalendarEvent } from "@/lib/api/hooks/calendar";
+import { CalendarIcon, MapPin, Trash2, Tag, Pencil, Download, Users, Check, X, HelpCircle } from "lucide-react";
+import {
+  useDeleteCalendarEvent,
+  useRsvpCalendarEvent,
+  useEventAttendees,
+} from "@/lib/api/hooks/calendar";
 import type { CalendarEvent } from "@/lib/api/hooks/calendar";
 import { EventCreateDialog } from "./event-create-dialog";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveImageUrl } from "@/lib/utils";
 
 const EVENT_COLORS: Record<string, string> = {
   blue: "#3b82f6",
@@ -33,10 +39,19 @@ interface EventDetailSheetProps {
   onClose: () => void;
 }
 
+const RSVP_STATUS_LABELS: Record<string, string> = {
+  accepted: "Accepted",
+  declined: "Declined",
+  tentative: "Tentative",
+  pending: "Pending",
+};
+
 export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const deleteEvent = useDeleteCalendarEvent();
+  const rsvpMutation = useRsvpCalendarEvent();
+  const { data: attendees = [] } = useEventAttendees(event?.id ?? null);
 
   const handleDelete = useCallback(async () => {
     if (!event) return;
@@ -48,6 +63,28 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
       toast.error("Failed to delete event");
     }
   }, [event, deleteEvent, onClose]);
+
+  const handleRsvp = useCallback(
+    async (status: "accepted" | "declined" | "tentative") => {
+      if (!event) return;
+      try {
+        await rsvpMutation.mutateAsync({ eventId: event.id, status });
+        toast.success(`RSVP updated: ${RSVP_STATUS_LABELS[status]}`);
+      } catch {
+        toast.error("Failed to update RSVP");
+      }
+    },
+    [event, rsvpMutation]
+  );
+
+  const handleExportIcs = useCallback(() => {
+    if (!event) return;
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    const from = format(start, "yyyy-MM-dd");
+    const to = format(end, "yyyy-MM-dd");
+    window.open(`/api/calendar/export?from=${from}&to=${to}`, "_blank");
+  }, [event]);
 
   const colorHex = event
     ? (EVENT_COLORS[event.color ?? "blue"] ?? EVENT_COLORS.blue)
@@ -111,11 +148,94 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                       <p className="text-xs text-muted-foreground">Created by {event.creator.name}</p>
                     </>
                   )}
+
+                  {/* RSVP buttons */}
+                  <Separator />
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your RSVP</p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-8 text-xs gap-1.5 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:border-green-900 dark:hover:bg-green-950"
+                        disabled={rsvpMutation.isPending}
+                        onClick={() => handleRsvp("accepted")}
+                        aria-label="Accept event"
+                      >
+                        <Check className="h-3 w-3" />
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-8 text-xs gap-1.5 text-yellow-600 border-yellow-200 hover:bg-yellow-50 hover:text-yellow-700 dark:text-yellow-400 dark:border-yellow-900 dark:hover:bg-yellow-950"
+                        disabled={rsvpMutation.isPending}
+                        onClick={() => handleRsvp("tentative")}
+                        aria-label="Mark as tentative"
+                      >
+                        <HelpCircle className="h-3 w-3" />
+                        Maybe
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-8 text-xs gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950"
+                        disabled={rsvpMutation.isPending}
+                        onClick={() => handleRsvp("declined")}
+                        aria-label="Decline event"
+                      >
+                        <X className="h-3 w-3" />
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Attendees list */}
+                  {attendees.length > 0 && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          <Users className="h-3 w-3" />
+                          Attendees ({attendees.length})
+                        </div>
+                        <div className="space-y-1.5">
+                          {attendees.map((a) => (
+                            <div key={a.id} className="flex items-center gap-2 text-sm">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={resolveImageUrl(a.user?.image ?? null)} />
+                                <AvatarFallback className="text-[10px]">
+                                  {(a.user?.name ?? a.user?.email ?? "?").slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="flex-1 truncate text-xs">
+                                {a.user?.name ?? a.user?.email ?? "Unknown"}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] h-4 px-1.5 capitalize ${
+                                  a.status === "accepted"
+                                    ? "border-green-200 text-green-600 dark:border-green-900 dark:text-green-400"
+                                    : a.status === "declined"
+                                      ? "border-red-200 text-red-600 dark:border-red-900 dark:text-red-400"
+                                      : a.status === "tentative"
+                                        ? "border-yellow-200 text-yellow-600 dark:border-yellow-900 dark:text-yellow-400"
+                                        : "border-border text-muted-foreground"
+                                }`}
+                              >
+                                {RSVP_STATUS_LABELS[a.status] ?? a.status}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
           </ScrollArea>
-          <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between">
+          <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -126,6 +246,15 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
               Delete
             </Button>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportIcs}
+                aria-label="Export as .ics"
+              >
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                .ics
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
                 <Pencil className="h-3.5 w-3.5 mr-1.5" />
                 Edit

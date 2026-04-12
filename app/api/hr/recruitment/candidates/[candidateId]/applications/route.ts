@@ -1,8 +1,14 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { candidateApplications, candidates } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createApplicationSchema = z.object({
+  jobPostingId: z.number(),
+  coverLetter: z.string().optional(),
+});
 
 export async function POST(
   req: NextRequest,
@@ -18,10 +24,7 @@ export async function POST(
     });
     if (!candidate) return err("Candidate not found.", 404);
 
-    const body = await req.json() as {
-      jobPostingId: number;
-      coverLetter?: string;
-    };
+    const body = await parseBody(req, createApplicationSchema);
 
     if (!body.jobPostingId) return err("jobPostingId is required.", 400);
 

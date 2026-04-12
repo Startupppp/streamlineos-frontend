@@ -1,8 +1,15 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { richDocuments } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createRichDocumentSchema = z.object({
+  title: z.string(),
+  templateType: z.string().optional(),
+  contentJson: z.unknown().optional(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -16,11 +23,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      title: string;
-      templateType?: string;
-      contentJson?: unknown;
-    };
+    const body = await parseBody(req, createRichDocumentSchema);
 
     if (!body.title) return err("title is required.", 400);
 

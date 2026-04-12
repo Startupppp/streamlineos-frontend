@@ -201,6 +201,129 @@ export function useDeleteLandingPage() {
   });
 }
 
+// ─── CRM-Hosted Landing Pages ─────────────────────────────────────────────────
+
+export interface CrmPageTestimonial {
+  id: string;
+  name: string;
+  role?: string;
+  text: string;
+  avatar?: string;
+  rating?: number;
+}
+
+export interface CrmPageSettings {
+  testimonials?: CrmPageTestimonial[];
+  trustBadges?: string[];
+  showTrustSection?: boolean;
+}
+
+export interface CrmPage {
+  id: number;
+  orgId: string;
+  name: string;
+  slug: string | null;
+  title: string | null;
+  description: string | null;
+  content: string | null;
+  isPublished: boolean | null;
+  isActive: boolean | null;
+  settings: CrmPageSettings | null;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCrmPageInput {
+  slug: string;
+  title: string;
+  description?: string;
+  content?: string;
+  isPublished?: boolean;
+}
+
+export interface UpdateCrmPageInput {
+  id: number;
+  slug?: string;
+  title?: string;
+  description?: string | null;
+  content?: string | null;
+  isPublished?: boolean;
+  name?: string;
+  settings?: CrmPageSettings | null;
+}
+
+export interface CrmPageAnalytics {
+  pageId: number;
+  title: string | null;
+  slug: string | null;
+  period: { days: number; since: string };
+  summary: { totalViews: number; totalLeads: number; conversionRate: number };
+  dailyViews: { date: string; views: number }[];
+  deviceBreakdown: { type: string; count: number }[];
+  utmSourceBreakdown: { source: string; count: number }[];
+}
+
+export function useCrmPages() {
+  return useQuery<CrmPage[]>({
+    queryKey: queryKeys.crmPages.list(),
+    queryFn: () => apiClient.get<CrmPage[]>("/landing/pages"),
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function useCrmPage(id: number | null) {
+  return useQuery<CrmPage>({
+    queryKey: queryKeys.crmPages.detail(id ?? 0),
+    queryFn: () => apiClient.get<CrmPage>(`/landing/pages/${id}`),
+    enabled: id !== null && id > 0,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useCrmPageAnalytics(id: number | null, days = 30) {
+  return useQuery<CrmPageAnalytics>({
+    queryKey: queryKeys.crmPages.analytics(id ?? 0, days),
+    queryFn: () =>
+      apiClient.get<CrmPageAnalytics>(`/landing/pages/${id}/analytics?days=${days}`),
+    enabled: id !== null && id > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCreateCrmPage() {
+  const qc = useQueryClient();
+  return useMutation<CrmPage, Error, CreateCrmPageInput>({
+    mutationFn: (data) => apiClient.post<CrmPage>("/landing/pages", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.crmPages.list() });
+    },
+  });
+}
+
+export function useUpdateCrmPage() {
+  const qc = useQueryClient();
+  return useMutation<CrmPage, Error, UpdateCrmPageInput>({
+    mutationFn: ({ id, ...data }) =>
+      apiClient.put<CrmPage>(`/landing/pages/${id}`, data),
+    onSuccess: (_, { id }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.crmPages.list() });
+      void qc.invalidateQueries({ queryKey: queryKeys.crmPages.detail(id) });
+    },
+  });
+}
+
+export function useDeleteCrmPage() {
+  const qc = useQueryClient();
+  return useMutation<{ id: number; archived: boolean }, Error, number>({
+    mutationFn: (id) =>
+      apiClient.delete<{ id: number; archived: boolean }>(`/landing/pages/${id}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.crmPages.all });
+    },
+  });
+}
+
 // ─── Social Metrics ───────────────────────────────────────────────────────────
 
 export interface SocialMetric {

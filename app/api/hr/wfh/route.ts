@@ -1,9 +1,16 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getWfhRequests } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { wfhRequests } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const createWfhSchema = z.object({
+  date: z.string(),
+  reason: z.string().optional(),
+  approverId: z.string(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -14,15 +21,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      date: string;
-      reason?: string;
-      approverId: string;
-    };
-
-    if (!body.date || !body.approverId) {
-      return err("date and approverId are required.", 400);
-    }
+    const body = await parseBody(req, createWfhSchema);
 
     const [request] = await db
       .insert(wfhRequests)

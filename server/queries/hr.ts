@@ -91,16 +91,23 @@ export async function getEmployees(
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
-      role: u.role,
+      role: u.role ?? "EMPLOYEE",
       designation: u.designation,
       employeeId: u.employeeId,
       departmentId: u.departmentId,
       image: u.image,
-      isActive: u.isActive,
+      isActive: u.isActive ?? true,
       joiningDate: u.joiningDate,
-      hasDashboardAccess: u.hasDashboardAccess,
+      hasDashboardAccess: u.hasDashboardAccess ?? false,
       reportingTo: u.reportingTo,
       monthlySalary: u.monthlySalary,
+      bio: u.bio ?? null,
+      linkedinUrl: u.linkedinUrl ?? null,
+      twitterUrl: u.twitterUrl ?? null,
+      githubUrl: u.githubUrl ?? null,
+      websiteUrl: u.websiteUrl ?? null,
+      skills: u.skills ?? null,
+      phone: u.phone ?? null,
     }));
 }
 
@@ -127,7 +134,8 @@ export async function getEmployeesPaginated(
         or(
           ilike(users.name, `%${search}%`),
           ilike(users.email, `%${search}%`),
-          ilike(users.employeeId, `%${search}%`)
+          ilike(users.employeeId, `%${search}%`),
+          ilike(users.designation, `%${search}%`)
         ),
       ]
     : baseConditions;
@@ -204,6 +212,13 @@ export async function getEmployee(orgId: string, userId: string): Promise<Employ
     hasDashboardAccess: u.hasDashboardAccess,
     reportingTo: u.reportingTo,
     monthlySalary: u.monthlySalary,
+    bio: u.bio ?? null,
+    linkedinUrl: u.linkedinUrl ?? null,
+    twitterUrl: u.twitterUrl ?? null,
+    githubUrl: u.githubUrl ?? null,
+    websiteUrl: u.websiteUrl ?? null,
+    skills: u.skills ?? null,
+    phone: u.phone ?? null,
   };
 }
 
@@ -575,7 +590,7 @@ export async function getOrgChart(orgId: string): Promise<OrgChartNode[]> {
       id: u.id,
       name: u.name,
       email: u.email,
-      role: u.role,
+      role: u.role ?? "EMPLOYEE",
       designation: u.designation,
       image: u.image,
       departmentId: u.departmentId,

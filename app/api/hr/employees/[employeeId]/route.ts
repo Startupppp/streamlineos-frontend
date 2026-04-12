@@ -1,13 +1,32 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getEmployee } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { users, organizationMembers } from "@/lib/db/schema";
+import { users, organizationMembers, onboardingTasks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { invalidateUserSession } from "@/lib/auth";
 import { sendTerminationEmail } from "@/lib/email";
-import { format } from "date-fns";
+import { format, differenceInDays, addDays } from "date-fns";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { inngest } from "@/lib/inngest/client";
+
+const updateEmployeeSchema = z.object({
+  name: z.string().optional(),
+  designation: z.string().optional(),
+  departmentId: z.number().optional(),
+  phone: z.string().optional(),
+  image: z.string().optional(),
+  isActive: z.boolean().optional(),
+  skills: z.array(z.string()).optional(),
+  bio: z.string().max(500).optional(),
+  linkedinUrl: z.string().url().optional().or(z.literal("")),
+  twitterUrl: z.string().url().optional().or(z.literal("")),
+  githubUrl: z.string().url().optional().or(z.literal("")),
+  websiteUrl: z.string().url().optional().or(z.literal("")),
+  joiningDate: z.string().optional(), // ISO date string (YYYY-MM-DD)
+  reportingTo: z.string().nullable().optional(),
+});
 
 export async function GET(
   _req: NextRequest,
@@ -45,18 +64,32 @@ export async function PATCH(
       return err("You can only update your own profile.", 403);
     }
 
-    const body = await req.json() as {
-      name?: string;
-      designation?: string;
-      departmentId?: number;
-      phone?: string;
-      image?: string;
-      isActive?: boolean;
-    };
+    const body = await parseBody(req, updateEmployeeSchema);
 
     if (body.isActive === false) {
       if (!isOwnerOrAdmin) return err("Only admins can terminate employees.", 403);
       if (isSelf) return err("You cannot terminate your own account.", 400);
+    }
+
+    // Circular managerId guard: prevent A→B→A cycles
+    if (body.reportingTo !== undefined && body.reportingTo !== null) {
+      if (body.reportingTo === targetUserId) {
+        return err("An employee cannot report to themselves.", 400);
+      }
+      // Walk up the chain to detect cycles
+      let cursor: string | null = body.reportingTo;
+      const visited = new Set<string>([targetUserId]);
+      while (cursor) {
+        if (visited.has(cursor)) {
+          return err("This reporting structure would create a circular management chain.", 400);
+        }
+        visited.add(cursor);
+        const mgr: { reportingTo: string | null } | undefined = await db.query.users.findFirst({
+          where: eq(users.id, cursor),
+          columns: { reportingTo: true },
+        });
+        cursor = mgr?.reportingTo ?? null;
+      }
     }
 
     const targetUser = body.isActive === false
@@ -70,9 +103,45 @@ export async function PATCH(
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.image !== undefined) updateData.image = body.image;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    if (body.skills !== undefined) updateData.skills = body.skills;
+    if (body.bio !== undefined) updateData.bio = body.bio;
+    if (body.linkedinUrl !== undefined) updateData.linkedinUrl = body.linkedinUrl || null;
+    if (body.twitterUrl !== undefined) updateData.twitterUrl = body.twitterUrl || null;
+    if (body.githubUrl !== undefined) updateData.githubUrl = body.githubUrl || null;
+    if (body.websiteUrl !== undefined) updateData.websiteUrl = body.websiteUrl || null;
+    if (body.joiningDate !== undefined) updateData.joiningDate = body.joiningDate;
+    if (body.reportingTo !== undefined) updateData.reportingTo = body.reportingTo;
 
     if (Object.keys(updateData).length > 0) {
       await db.update(users).set(updateData).where(eq(users.id, targetUserId));
+    }
+
+    // Date shift: if joiningDate changed, proportionally shift onboarding task dueDates
+    if (body.joiningDate && isOwnerOrAdmin) {
+      const currentUser = await db.query.users.findFirst({
+        where: eq(users.id, targetUserId),
+        columns: { joiningDate: true },
+      });
+      const oldDate = currentUser?.joiningDate ? new Date(currentUser.joiningDate) : null;
+      const newDate = new Date(body.joiningDate);
+      if (oldDate && oldDate.getTime() !== newDate.getTime()) {
+        const dayDiff = differenceInDays(newDate, oldDate);
+        const tasks = await db.query.onboardingTasks.findMany({
+          where: and(
+            eq(onboardingTasks.userId, targetUserId),
+            eq(onboardingTasks.status, "PENDING")
+          ),
+          columns: { id: true, dueDate: true },
+        });
+        for (const task of tasks) {
+          if (task.dueDate) {
+            await db
+              .update(onboardingTasks)
+              .set({ dueDate: addDays(task.dueDate, dayDiff) })
+              .where(eq(onboardingTasks.id, task.id));
+          }
+        }
+      }
     }
 
     if (body.isActive === false) {
@@ -87,6 +156,22 @@ export async function PATCH(
           "Termination as per company policy."
         ).catch(() => undefined);
       }
+    }
+
+    // When an employee is activated (isActive = true), auto-initiate onboarding
+    if (body.isActive === true) {
+      const activatedUser = await db.query.users.findFirst({
+        where: eq(users.id, targetUserId),
+        columns: { joiningDate: true },
+      });
+      await inngest.send({
+        name: "hr/employee.onboarded",
+        data: {
+          userId: targetUserId,
+          orgId: session.orgId,
+          joiningDate: activatedUser?.joiningDate ?? new Date().toISOString().split("T")[0],
+        },
+      });
     }
 
     return ok({ success: true });

@@ -35,11 +35,40 @@ function buildTree(employees: Employee[]): TreeNode[] {
 
   for (const emp of employees) {
     const node = map.get(emp.id)!;
-    if (emp.reportingTo && map.has(emp.reportingTo)) {
+    if (emp.reportingTo && map.has(emp.reportingTo) && emp.reportingTo !== emp.id) {
       map.get(emp.reportingTo)!.children.push(node);
     } else {
       roots.push(node);
     }
+  }
+
+  // Break any remaining cycles (e.g. A→B→A) by DFS; nodes in cycles become roots
+  const visited = new Set<string>();
+  const inStack = new Set<string>();
+
+  function detectAndBreakCycles(nodeId: string): boolean {
+    if (inStack.has(nodeId)) return true; // cycle detected
+    if (visited.has(nodeId)) return false;
+    visited.add(nodeId);
+    inStack.add(nodeId);
+    const node = map.get(nodeId);
+    if (node) {
+      node.children = node.children.filter((child) => {
+        const isCycle = detectAndBreakCycles(child.employee.id);
+        if (isCycle) {
+          // Detach this child from the cycle; make it a root instead
+          roots.push(child);
+          return false;
+        }
+        return true;
+      });
+    }
+    inStack.delete(nodeId);
+    return false;
+  }
+
+  for (const root of [...roots]) {
+    detectAndBreakCycles(root.employee.id);
   }
 
   const priority: Record<string, number> = { CEO: 0, ADMIN: 1, HR: 2 };
@@ -82,8 +111,10 @@ function PersonCard({ emp, size = "md" }: { emp: Employee; size?: "sm" | "md" })
   );
 }
 
+const MAX_TREE_DEPTH = 20;
+
 function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth?: number; isLast?: boolean }) {
-  const hasChildren = node.children.length > 0;
+  const hasChildren = node.children.length > 0 && depth < MAX_TREE_DEPTH;
 
   return (
     <div className="relative">

@@ -107,3 +107,89 @@ export function useOnboardEmployee() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }
+
+// ─── Availability ─────────────────────────────────────────────────────────────
+
+export type AvailabilityStatus = "ON_LEAVE" | "HALF_DAY" | "AVAILABLE";
+
+export interface AvailabilityEntry {
+  userId: string;
+  status: AvailabilityStatus;
+  leaveType?: string;
+}
+
+export function useEmployeeAvailability(userIds?: string[]) {
+  const param = userIds ? userIds.join(",") : undefined;
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "availability", param] as const,
+    queryFn: () =>
+      apiClient.get<AvailabilityEntry[]>("/hr/employees/availability", param ? { userIds: param } : undefined),
+    staleTime: 5 * 60_000,
+  });
+}
+
+// ─── Find Expert ──────────────────────────────────────────────────────────────
+
+export interface ExpertResult {
+  userId: string;
+  name: string | null;
+  image: string | null;
+  designation: string | null;
+  skills: string[];
+  matchedSkill: string;
+}
+
+export function useFindExpert(skill: string) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "findExpert", skill] as const,
+    queryFn: () => apiClient.get<ExpertResult[]>("/hr/employees/find-expert", { skill }),
+    enabled: skill.trim().length > 0,
+    staleTime: 2 * 60_000,
+  });
+}
+
+// ─── Direct Reports ───────────────────────────────────────────────────────────
+
+export interface DirectReport {
+  id: string;
+  name: string | null;
+  image: string | null;
+  designation: string | null;
+  email: string;
+}
+
+export function useDirectReports(employeeId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "directReports", employeeId] as const,
+    queryFn: () => apiClient.get<DirectReport[]>(`/hr/employees/${employeeId}/reports-to-me`),
+    enabled: !!employeeId,
+    staleTime: 5 * 60_000,
+  });
+}
+
+// ─── Manager Scorecard ────────────────────────────────────────────────────────
+
+export interface ManagerScorecard {
+  managerId: string;
+  teamSize: number;
+  avgPerformanceRating: number | null;
+  teamAttendanceRate: number | null;
+  pendingLeaveRequests: number;
+  directReports: Array<{
+    id: string;
+    name: string | null;
+    image: string | null;
+    designation: string | null;
+    avgRating: number | null;
+  }>;
+}
+
+export function useManagerScorecard(employeeId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "managerScorecard", employeeId] as const,
+    queryFn: () =>
+      apiClient.get<ManagerScorecard>(`/hr/employees/${employeeId}/manager-scorecard`),
+    enabled: !!employeeId,
+    staleTime: 5 * 60_000,
+  });
+}

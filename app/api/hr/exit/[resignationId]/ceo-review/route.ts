@@ -1,9 +1,15 @@
-import { withAuth, err, ok } from "@/lib/api/helpers";
+import { withAuth, err, ok, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { resignations, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { inngest } from "@/lib/inngest/client";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const ceoReviewSchema = z.object({
+  decision: z.enum(["approve", "reject"]),
+  remarks: z.string().optional(),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -16,7 +22,7 @@ export async function PATCH(
     const resignationId = Number(id);
     if (!resignationId) return err("Invalid ID.", 400);
 
-    const body = await req.json() as { decision: "approve" | "reject"; remarks?: string };
+    const body = await parseBody(req, ceoReviewSchema);
     if (!body.decision) return err("decision is required.", 400);
     if (body.decision === "reject" && !body.remarks) return err("Remarks required for rejection.", 400);
 

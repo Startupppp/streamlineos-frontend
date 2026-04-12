@@ -434,3 +434,190 @@ export function getDocumentExpiryReminderEmailTemplate(
     content,
   });
 }
+
+// ─── Candidate Rejection ─────────────────────────────────────────────────────
+
+export function getCandidateRejectionEmail(params: {
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  notes?: string;
+}): { subject: string; html: string } {
+  const sCandidateName = escapeHtml(params.candidateName);
+  const sJobTitle = escapeHtml(params.jobTitle);
+  const sCompanyName = escapeHtml(params.companyName);
+
+  const content = `
+    <p class="email-text">Dear ${sCandidateName},</p>
+    <p class="email-text">
+      Thank you for your interest in the <strong>${sJobTitle}</strong> position at ${sCompanyName}
+      and for taking the time to go through our hiring process.
+    </p>
+    <p class="email-text">
+      After careful consideration, we have decided to move forward with other candidates whose
+      qualifications more closely match our current requirements.
+    </p>
+    ${params.notes ? `<p class="email-text" style="color: #475569;">${escapeHtml(params.notes)}</p>` : ""}
+    <p class="email-text">
+      We appreciate the time and effort you invested in your application, and we encourage you to
+      apply for future openings that match your skills and experience.
+    </p>
+    <p class="email-text">We wish you all the best in your job search.</p>
+  `;
+
+  const subject = `Update on your application — ${sJobTitle} at ${sCompanyName}`;
+
+  return {
+    subject,
+    html: getEmailTemplate({ title: subject, preheader: "Thank you for applying", content }),
+  };
+}
+
+// ─── Payslip Generated ────────────────────────────────────────────────────────
+
+export function getPayslipEmailTemplate(params: {
+  employeeName: string;
+  month: string;
+  netSalary: string;
+  orgName: string;
+}): { subject: string; html: string } {
+  const sName = escapeHtml(params.employeeName);
+  const sMonth = escapeHtml(params.month);
+  const sNet = escapeHtml(params.netSalary);
+  const sOrg = escapeHtml(params.orgName);
+
+  const content = `
+    <p class="email-text">Dear <strong>${sName}</strong>,</p>
+    <p class="email-text">
+      Your payslip for <strong>${sMonth}</strong> has been processed and is attached to this email
+      as a PDF. You can also view it anytime from the <strong>My Payslips</strong> section of your
+      account.
+    </p>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+      <p style="margin:0;color:#166534;font-size:13px;">Net Salary — ${sMonth}</p>
+      <p style="margin:6px 0 0 0;color:#166534;font-size:26px;font-weight:700;">₹${sNet}</p>
+    </div>
+    <p class="email-text">
+      The PDF attachment contains your full salary breakdown including earnings, deductions, and bank
+      transfer details. If you have any questions, please contact the HR department.
+    </p>
+    <p class="email-text">Best regards,<br/><strong>${sOrg} — HR Team</strong></p>
+  `;
+
+  const subject = `Your Payslip for ${sMonth} is Ready — ${sOrg}`;
+
+  return {
+    subject,
+    html: getEmailTemplate({ title: "Your Payslip is Ready", preheader: `Net salary: ₹${sNet}`, content }),
+  };
+}
+
+export function getInterviewInviteEmail(params: {
+  recipientName: string;
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  format: string;
+  meetingLink?: string;
+  location?: string;
+  notes?: string;
+  /** "candidate" or "interviewer" — controls email copy */
+  recipientRole: "candidate" | "interviewer";
+}): { subject: string; html: string } {
+  const sRecipient = escapeHtml(params.recipientName);
+  const sCandidate = escapeHtml(params.candidateName);
+  const sJob = escapeHtml(params.jobTitle);
+  const sCompany = escapeHtml(params.companyName);
+  const sFormat = escapeHtml(params.format);
+  const sDate = escapeHtml(params.scheduledAt);
+  const sMeetLink = params.meetingLink ? escapeHtml(params.meetingLink) : null;
+  const sLocation = params.location ? escapeHtml(params.location) : null;
+  const sNotes = params.notes ? escapeHtml(params.notes) : null;
+
+  const isCandidate = params.recipientRole === "candidate";
+  const durationLabel =
+    params.durationMinutes >= 60
+      ? `${params.durationMinutes / 60}h`
+      : `${params.durationMinutes}min`;
+
+  const content = `
+    <h2 class="email-title">📅 Interview Scheduled${isCandidate ? "" : " — Action Required"}</h2>
+    <p class="email-text">Dear ${sRecipient},</p>
+    <p class="email-text">
+      ${
+        isCandidate
+          ? `We are pleased to invite you to interview for the <strong>${sJob}</strong> position at <strong>${sCompany}</strong>.`
+          : `You have been assigned as an interviewer for <strong>${sCandidate}</strong> applying for the <strong>${sJob}</strong> role.`
+      }
+    </p>
+
+    <div class="credential-box">
+      ${
+        !isCandidate
+          ? `<div class="credential-item">
+               <span class="credential-label">Candidate:</span>
+               <span class="credential-value">${sCandidate}</span>
+             </div>`
+          : ""
+      }
+      <div class="credential-item">
+        <span class="credential-label">Position:</span>
+        <span class="credential-value">${sJob}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">Date &amp; Time:</span>
+        <span class="credential-value">${sDate}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">Duration:</span>
+        <span class="credential-value">${durationLabel}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">Format:</span>
+        <span class="credential-value">${sFormat}</span>
+      </div>
+      ${
+        sMeetLink
+          ? `<div class="credential-item">
+               <span class="credential-label">Meeting Link:</span>
+               <span class="credential-value"><a href="${sMeetLink}" style="color:#1e40af">${sMeetLink}</a></span>
+             </div>`
+          : ""
+      }
+      ${
+        sLocation
+          ? `<div class="credential-item">
+               <span class="credential-label">Location:</span>
+               <span class="credential-value">${sLocation}</span>
+             </div>`
+          : ""
+      }
+    </div>
+
+    ${sNotes ? `<p class="email-text"><strong>Notes:</strong> ${sNotes}</p>` : ""}
+
+    <p class="email-text">
+      ${
+        isCandidate
+          ? "Please confirm your availability. If you need to reschedule, contact HR as soon as possible."
+          : "Please review the candidate's profile and prepare your evaluation criteria before the interview."
+      }
+    </p>
+  `;
+
+  const subject = isCandidate
+    ? `Interview Invitation — ${sJob} at ${sCompany}`
+    : `Interview Assigned: ${sCandidate} — ${sJob}`;
+
+  return {
+    subject,
+    html: getEmailTemplate({
+      title: isCandidate ? "Interview Invitation" : "Interview Assigned",
+      preheader: `${sFormat} interview on ${sDate} — ${durationLabel}`,
+      content,
+    }),
+  };
+}
+

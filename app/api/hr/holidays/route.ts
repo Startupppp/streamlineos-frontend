@@ -1,10 +1,18 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getHolidays } from "@/server/queries/hr";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { holidays } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const postHolidaySchema = z.object({
+  name: z.string(),
+  date: z.string(),
+  message: z.string().optional(),
+  isPublic: z.boolean().optional().default(false),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -21,15 +29,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can add holidays.", 403);
     }
 
-    const body = await req.json() as {
-      name: string;
-      date: string;
-      message?: string;
-    };
-
-    if (!body.name || !body.date) {
-      return err("name and date are required.", 400);
-    }
+    const body = await parseBody(req, postHolidaySchema);
 
     const [holiday] = await db
       .insert(holidays)
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
         name: body.name,
         date: formatDateOnly(new Date(body.date)),
         message: body.message,
+        isPublic: body.isPublic ?? false,
       })
       .returning();
 

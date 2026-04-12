@@ -79,6 +79,57 @@ export function useApproveLeave() {
   });
 }
 
+export function useHrMyLeaves() {
+  return useQuery({
+    queryKey: ["vaivamm", "hr", "leaves", "my"] as const,
+    queryFn: () => apiClient.get<{ requests: unknown[]; balances: unknown[] }>("/hr/leaves/my"),
+  });
+}
+
+export function useHrTeamLeaves() {
+  return useQuery({
+    queryKey: ["vaivamm", "hr", "leaves", "team"] as const,
+    queryFn: () => apiClient.get<unknown[]>("/hr/leaves/team"),
+  });
+}
+
+export function useApproveLeaveDedicated() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
+      apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, { comment }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+  });
+}
+
+export function useRejectLeaveDedicated() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leaveId, reason, comment }: { leaveId: number; reason: string; comment?: string }) =>
+      apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/reject`, { reason, comment }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+  });
+}
+
+export function useCancelLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (leaveId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}/cancel`, {}),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+  });
+}
+
+export function useHrDirectory() {
+  return useQuery({
+    queryKey: ["hr", "directory"],
+    queryFn: () => apiClient.get<unknown[]>("/hr/directory"),
+  });
+}
+
 export function useHrExpenses(
   userId?: string,
   status?: "PENDING" | "APPROVED" | "REJECTED" | "PAID"
@@ -439,5 +490,88 @@ export function useChangePassword() {
   return useMutation({
     mutationFn: (data: ChangePasswordInput) =>
       apiClient.patch<{ success: boolean }>("/hr/change-password", data),
+  });
+}
+
+// ─── Leave Blackout Dates ─────────────────────────────────────────────────────
+
+export interface LeaveBlackoutDate {
+  id: number;
+  orgId: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  appliesTo: string;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+export function useLeaveBlackoutDates(from?: string, to?: string) {
+  const params: Record<string, string> = {};
+  if (from) params.from = from;
+  if (to) params.to = to;
+
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "leaveBlackout", from, to] as const,
+    queryFn: () =>
+      apiClient.get<LeaveBlackoutDate[]>("/hr/leaves/blackout", params),
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateLeaveBlackout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { startDate: string; endDate: string; reason: string; appliesTo?: string }) =>
+      apiClient.post<LeaveBlackoutDate>("/hr/leaves/blackout", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "leaveBlackout"] }),
+  });
+}
+
+export function useDeleteLeaveBlackout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/leaves/blackout/${id}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "leaveBlackout"] }),
+  });
+}
+
+// ─── Leave Analytics ──────────────────────────────────────────────────────────
+export interface HrLeaveAnalytics {
+  year: number;
+  byDepartment: {
+    department: string;
+    total: number;
+    approved: number;
+    pending: number;
+    rejected: number;
+  }[];
+  monthlyTrend: { month: string; count: number }[];
+}
+
+export function useHrLeaveAnalytics(year?: number) {
+  const y = year ?? new Date().getFullYear();
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "leaveAnalytics", y] as const,
+    queryFn: () =>
+      apiClient.get<HrLeaveAnalytics>("/hr/leaves/analytics", { year: String(y) }),
+    staleTime: 120_000,
+  });
+}
+
+// ─── Comp-Off ─────────────────────────────────────────────────────────────────
+export function useCreditCompOff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { userId: string; days: number; reason?: string }) =>
+      apiClient.post<{ success: boolean; credited: number; leaveTypeId: number }>(
+        "/hr/leaves/comp-off",
+        data,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.all }),
   });
 }

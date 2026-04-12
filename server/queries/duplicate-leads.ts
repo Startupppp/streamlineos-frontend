@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { leads } from "@/lib/db/schema/crm";
-import { eq } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 
 function normalize(s: string | null | undefined): string {
   if (!s) return "";
@@ -51,7 +51,7 @@ export async function findDuplicateLeads(orgId: string): Promise<DuplicateGroup[
       createdAt: leads.createdAt,
     })
     .from(leads)
-    .where(eq(leads.orgId, orgId));
+    .where(and(eq(leads.orgId, orgId), isNull(leads.deletedAt)));
 
   const groups: DuplicateGroup[] = [];
   const paired = new Set<string>();

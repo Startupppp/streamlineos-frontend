@@ -4,7 +4,11 @@
 import { db } from "@/lib/db";
 import { webLeadForms, leads } from "@/lib/db/schema/crm";
 import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
+import { parseBody } from "@/lib/api/helpers";
+
+const leadFormBodySchema = z.record(z.string(), z.unknown());
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -41,34 +45,42 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Form not found or inactive" }, { status: 404 });
   }
 
-  const body = await req.json() as Record<string, string>;
+  const body = await parseBody(req, leadFormBodySchema);
 
   // Validate required fields
   const fields = (form.fields ?? []) as Array<{ name: string; label: string; required: boolean }>;
   for (const field of fields) {
-    if (field.required && !body[field.name]) {
+    const val = body[field.name];
+    if (field.required && (val === undefined || val === null || val === "")) {
       return NextResponse.json({ error: `${field.label} is required` }, { status: 400 });
     }
   }
 
   // Build the lead — name is required; derive it from form data
+  const strField = (key: string): string | null => {
+    const val = body[key];
+    return typeof val === "string" && val.length > 0 ? val : null;
+  };
+
   const leadName =
-    (body.name as string) ||
-    (body.full_name as string) ||
-    (body.first_name
-      ? `${body.first_name}${body.last_name ? " " + body.last_name : ""}`
-      : null) ||
+    strField("name") ??
+    strField("full_name") ??
+    (strField("first_name")
+      ? `${strField("first_name") ?? ""}${strField("last_name") ? " " + strField("last_name") : ""}`.trim()
+      : null) ??
     "Unknown";
+
+  const leadNotes = strField("message") ?? strField("notes");
 
   await db.insert(leads).values({
     orgId: form.orgId,
     name: leadName,
-    email: (body.email as string) ?? null,
-    phone: (body.phone as string) ?? null,
-    company: (body.company as string) ?? null,
-    notes: body.message ?? body.notes ?? null,
+    email: strField("email"),
+    phone: strField("phone"),
+    company: strField("company"),
+    notes: leadNotes,
     source: "website",
-    customData: body as Record<string, unknown>,
+    customData: body,
   });
 
   // Increment submission counter

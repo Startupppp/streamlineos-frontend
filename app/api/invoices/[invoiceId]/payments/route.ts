@@ -45,7 +45,7 @@ export async function POST(
 
     const body = await req.json() as unknown;
     const parsed = recordPaymentSchema.safeParse(body);
-    if (!parsed.success) return err("Invalid input", 400);
+    if (!parsed.success) return err("Invalid payment data", 400);
 
     const payment = await createPayment(session.orgId, invoiceId, {
       ...parsed.data,

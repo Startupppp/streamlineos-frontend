@@ -1,11 +1,22 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getSalaryStructures } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { salaryStructures } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createSalaryStructureSchema = z.object({
+  userId: z.string(),
+  basicSalary: z.number(),
+  hraPercentage: z.number(),
+  allowances: z.number(),
+  deductions: z.number(),
+  effectiveFrom: z.string(),
+  effectiveTo: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -33,15 +44,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can manage salary structures.", 403);
     }
 
-    const body = await req.json() as {
-      userId: string;
-      basicSalary: number;
-      hraPercentage: number;
-      allowances: number;
-      deductions: number;
-      effectiveFrom: string;
-      effectiveTo?: string;
-    };
+    const body = await parseBody(req, createSalaryStructureSchema);
 
     if (!body.userId || body.basicSalary === undefined || !body.effectiveFrom) {
       return err("userId, basicSalary, and effectiveFrom are required.", 400);

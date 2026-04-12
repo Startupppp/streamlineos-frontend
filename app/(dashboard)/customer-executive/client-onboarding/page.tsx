@@ -18,7 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CheckSquare, Square, Plus, Trash2, CalendarDays, User, ClipboardList } from "lucide-react";
-import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { isAdminOrOwner } from "@/lib/constants/roles";
 import {
   useClientAccounts,
   useClientOnboardingItems,

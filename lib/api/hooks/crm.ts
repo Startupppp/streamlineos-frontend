@@ -14,6 +14,7 @@ import type {
   Contact,
   PaginatedContacts,
   ContactFilters,
+  ContactSearchResult,
   CreateContactInput,
   UpdateContactInput,
   ClientAccount,
@@ -40,7 +41,13 @@ import type {
   CrmOrganizationFilters,
   PaginatedCrmOrganizations,
   CreateCrmOrganizationInput,
+  OrgHierarchyNode,
+  OrgRollup,
+  OrgTimelineEvent,
+  RelatedLead,
 } from "@/types/crm";
+
+export type { DealActivity };
 
 export function useDeals(filters?: DealFilters) {
   return useQuery({
@@ -97,9 +104,25 @@ export function useUpdateDeal() {
 export function useUpdateDealStage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, stage, lostReason }: UpdateDealStageInput) =>
-      apiClient.patch<Deal>(`/deals/${id}`, { stage, lostReason }),
-    onSuccess: (_, vars) => {
+    mutationFn: ({ id, stage, lostReason, version }: UpdateDealStageInput) =>
+      apiClient.patch<Deal>(`/deals/${id}`, { stage, lostReason, version }),
+    onMutate: async ({ id, stage }) => {
+      await qc.cancelQueries({ queryKey: queryKeys.deals.all });
+      const previous = qc.getQueryData<Deal[]>(queryKeys.deals.all);
+      if (previous) {
+        qc.setQueryData<Deal[]>(
+          queryKeys.deals.all,
+          previous.map((d) => (d.id === id ? { ...d, stage: stage as Deal["stage"] } : d))
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(queryKeys.deals.all, context.previous);
+      }
+    },
+    onSettled: (_data, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(vars.id) });
     },
@@ -153,6 +176,16 @@ export function useDeleteContact() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
     },
+  });
+}
+
+export function useContactSearch(q: string) {
+  return useQuery({
+    queryKey: ["contacts", "search", q],
+    queryFn: () =>
+      apiClient.get<ContactSearchResult[]>("/contacts/search", { q }),
+    enabled: q.length >= 2,
+    staleTime: 30_000,
   });
 }
 
@@ -697,6 +730,17 @@ export function useDeleteDeal() {
   });
 }
 
+export function useCloneDeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.post<Deal>(`/deals/${id}/clone`, {}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+    },
+  });
+}
+
 export function useClientAccountStats() {
   return useQuery({
     queryKey: queryKeys.clientStats.stats(),
@@ -731,6 +775,61 @@ export function useCreateCrmOrganization() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
     },
+  });
+}
+
+export function useUpdateCrmOrganization() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: Partial<CreateCrmOrganizationInput> & { id: number; parentId?: number | null; notes?: string | null; healthScore?: number | null }) =>
+      apiClient.patch<CrmOrganization>(`/crm/organizations/${id}`, input),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.detail(variables.id) });
+    },
+  });
+}
+
+export function useDeleteCrmOrganization() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/crm/organizations/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
+    },
+  });
+}
+
+export function useCrmOrgHierarchy(id: number) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.hierarchy(id),
+    queryFn: () => apiClient.get<OrgHierarchyNode>(`/crm/organizations/${id}/hierarchy`),
+    enabled: id > 0,
+  });
+}
+
+export function useCrmOrgRollup(id: number) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.rollup(id),
+    queryFn: () => apiClient.get<OrgRollup>(`/crm/organizations/${id}/roll-up`),
+    enabled: id > 0,
+  });
+}
+
+export function useCrmOrgTimeline(id: number) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.timeline(id),
+    queryFn: () => apiClient.get<OrgTimelineEvent[]>(`/crm/organizations/${id}/timeline`),
+    enabled: id > 0,
+  });
+}
+
+export function useCrmOrgRelatedLeads(id: number) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.relatedLeads(id),
+    queryFn: () => apiClient.get<RelatedLead[]>(`/crm/organizations/${id}/related-leads`),
+    enabled: id > 0,
   });
 }
 
@@ -1107,9 +1206,9 @@ export function useDeleteCsatSurvey() {
   });
 }
 
-// ─── Duplicate Lead Detection ─────────────────────────────────────────────────
+// ─── Duplicate Lead Detection + Merge ─────────────────────────────────────────
 
-export interface DuplicateLead {
+export interface DuplicateLeadEntry {
   id: number;
   name: string;
   email: string | null;
@@ -1117,30 +1216,40 @@ export interface DuplicateLead {
   company: string | null;
   status: string;
   source: string | null;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 export interface DuplicateGroup {
-  leads: DuplicateLead[];
+  leads: DuplicateLeadEntry[];
   matchReason: string[];
   score: number;
 }
 
 export function useDuplicateLeads() {
   return useQuery({
-    queryKey: ["leads", "duplicates"],
+    queryKey: queryKeys.leads.duplicates(),
     queryFn: () => apiClient.get<{ groups: DuplicateGroup[]; total: number }>("/leads/duplicates"),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
+}
+
+export interface MergeLeadInput {
+  keepLeadId: number;
+  mergeLeadId: number;
 }
 
 export function useMergeLead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { keepLeadId: number; mergeLeadId: number }) =>
-      apiClient.post<{ success: boolean }>(`/leads/${data.keepLeadId}/merge`, { mergeLeadId: data.mergeLeadId }),
+    mutationFn: ({ keepLeadId, mergeLeadId }: MergeLeadInput) =>
+      apiClient.post<{ merged: boolean; winner: DuplicateLeadEntry }>("/leads/merge", {
+        winnerId: keepLeadId,
+        loserId: mergeLeadId,
+        overrides: {},
+      }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.leads.duplicates() });
+      void qc.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
   });
 }
@@ -1423,3 +1532,219 @@ export function useDeleteWebLeadForm() {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Sales Dashboard — filtered KPI, funnel, leaderboard, revenue-vs-goal hooks
+// ---------------------------------------------------------------------------
+
+export interface SalesDashboardFilters {
+  from?: string;
+  to?: string;
+  repId?: number;
+}
+
+export interface SalesDashboardKPIsResult {
+  totalRevenue: number;
+  pipelineValue: number;
+  closeRate: number;
+  avgDealSize: number;
+  dealsWon: number;
+  totalDeals: number;
+  prevRevenue: number;
+  prevCloseRate: number;
+  prevAvgDealSize: number;
+}
+
+export interface SalesFunnelStageResult {
+  stage: string;
+  count: number;
+  value: number;
+  color: string;
+  dropOffPct: number | null;
+}
+
+export interface SalesLeaderboardEntryResult {
+  repId: number;
+  name: string;
+  initials: string;
+  dealsWon: number;
+  totalDeals: number;
+  revenue: number;
+  winRate: number;
+}
+
+export interface RevenueVsGoalEntryResult {
+  month: string;
+  actual: number;
+  target: number;
+}
+
+export function useSalesDashboardKPIs(filters: SalesDashboardFilters = {}) {
+  const params: Record<string, unknown> = {};
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+  if (filters.repId) params.repId = String(filters.repId);
+
+  return useQuery({
+    queryKey: queryKeys.crm.salesKpis(params),
+    queryFn: () => apiClient.get<SalesDashboardKPIsResult>("/sales/dashboard/kpis", params),
+  });
+}
+
+export function useSalesDashboardFunnel(filters: Omit<SalesDashboardFilters, "repId"> & { repId?: number } = {}) {
+  const params: Record<string, unknown> = {};
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+  if (filters.repId) params.repId = String(filters.repId);
+
+  return useQuery({
+    queryKey: queryKeys.crm.salesFunnel(params),
+    queryFn: () => apiClient.get<SalesFunnelStageResult[]>("/sales/dashboard/funnel", params),
+  });
+}
+
+export function useSalesDashboardLeaderboard(filters: Pick<SalesDashboardFilters, "from" | "to"> = {}) {
+  const params: Record<string, unknown> = {};
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+
+  return useQuery({
+    queryKey: queryKeys.crm.salesLeaderboard(params),
+    queryFn: () => apiClient.get<SalesLeaderboardEntryResult[]>("/sales/dashboard/leaderboard", params),
+  });
+}
+
+export function useRevenueVsGoal(year?: number) {
+  const y = year ?? new Date().getFullYear();
+  return useQuery({
+    queryKey: queryKeys.crm.revenueVsGoal(y),
+    queryFn: () => apiClient.get<RevenueVsGoalEntryResult[]>("/sales/dashboard/revenue-vs-goal", { year: String(y) }),
+  });
+}
+
+export interface DealVelocityResult {
+  avgDaysToClose: number;
+  medianDaysToClose: number;
+  fastestCloseDays: number;
+  slowestCloseDays: number;
+  dealCount: number;
+}
+
+export interface AgingDealResult {
+  id: number;
+  companyName: string;
+  stage: string;
+  value: number;
+  daysSinceUpdate: number;
+  salesRepId: number | null;
+}
+
+export function useDealVelocity(filters: Pick<SalesDashboardFilters, "from" | "to"> = {}) {
+  const params: Record<string, unknown> = {};
+  if (filters.from) params.from = filters.from;
+  if (filters.to) params.to = filters.to;
+
+  return useQuery({
+    queryKey: ["sales", "velocity", params],
+    queryFn: () => apiClient.get<DealVelocityResult>("/sales/dashboard/velocity", params),
+  });
+}
+
+export function useAgingDeals(thresholdDays = 14) {
+  return useQuery({
+    queryKey: ["sales", "aging", thresholdDays],
+    queryFn: () => apiClient.get<AgingDealResult[]>("/sales/dashboard/aging", { threshold: String(thresholdDays) }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Sales Cycle Length ───────────────────────────────────────────────────────
+
+export interface CycleLengthResult {
+  avgDays: number | null;
+  medianDays: number | null;
+  minDays: number | null;
+  maxDays: number | null;
+  histogram: { label: string; count: number }[];
+  totalDeals: number;
+}
+
+export function useSalesCycleLength(repId?: string) {
+  const params: Record<string, string> = {};
+  if (repId) params.repId = repId;
+  return useQuery({
+    queryKey: ["sales", "cycleLength", repId],
+    queryFn: () => apiClient.get<CycleLengthResult>("/sales/dashboard/cycle-length", params),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Lost Deal Analysis ───────────────────────────────────────────────────────
+
+export interface LostAnalysisResult {
+  total: number;
+  totalValue: number;
+  reasons: { reason: string; count: number; totalValue: number; pct: number }[];
+}
+
+export function useLostDealAnalysis(repId?: string) {
+  const params: Record<string, string> = {};
+  if (repId) params.repId = repId;
+  return useQuery({
+    queryKey: ["sales", "lostAnalysis", repId],
+    queryFn: () => apiClient.get<LostAnalysisResult>("/sales/dashboard/lost-analysis", params),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Cohort Analysis ──────────────────────────────────────────────────────────
+
+export interface CohortRow {
+  cohortMonth: string;
+  created: number;
+  converted: number;
+  conversionRate: number;
+  avgDaysToConvert: number | null;
+}
+
+export function useSalesCohort(months = 6) {
+  return useQuery({
+    queryKey: ["sales", "cohort", months],
+    queryFn: () => apiClient.get<CohortRow[]>("/sales/dashboard/cohort", { months: String(months) }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Rep Comparison ───────────────────────────────────────────────────────────
+
+export interface RepMonthStat {
+  month: string;
+  dealsWon: number;
+  revenue: number;
+}
+
+export interface RepComparisonData {
+  repId: number;
+  name: string;
+  initials: string;
+  dealsWon: number;
+  totalDeals: number;
+  revenue: number;
+  winRate: number;
+  avgDealSize: number;
+  monthly: RepMonthStat[];
+}
+
+export function useRepComparison(rep1Id: number | null, rep2Id: number | null) {
+  return useQuery({
+    queryKey: ["sales", "repComparison", rep1Id, rep2Id],
+    queryFn: () =>
+      apiClient.get<{ rep1: RepComparisonData; rep2: RepComparisonData }>(
+        "/sales/dashboard/rep-comparison",
+        { rep1: String(rep1Id), rep2: String(rep2Id) },
+      ),
+    enabled: !!rep1Id && !!rep2Id,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+

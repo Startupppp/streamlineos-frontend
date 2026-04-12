@@ -119,16 +119,16 @@ AI capabilities exist (Google Gemini via Vercel AI SDK + LangChain) but are unde
 
 ## Checklist
 
-- [ ] Enhance AI chat with user data context (leads, deals, tasks) — `lib/ai/automation.ts` + `langchain-graph.ts` exist but no context injection yet
-- [ ] Add tool functions AI can call (update lead status, create task)
+- [x] Enhance AI chat with user data context (leads, deals, tasks) — `langchain-graph.ts` `fetchContext()` now queries leads/deals counts + top 5 recent leads injected into `## CRM Context` system prompt
+- [x] Add tool functions AI can call (update lead status, create task) — `langchain-graph.ts` now has `updateLeadStatus`, `createTask`, `searchLeads` tools using `inputSchema: zodSchema(...)` + AI SDK v5 `stopWhen: stepCountIs(5)`
 - [x] Create `lib/ai/lead-scorer.ts` with AI scoring — implemented as `lib/ai/lead-scoring.ts` (`aiScoreLead`)
 - [x] Integrate AI scoring into lead creation/update flow — `recalculateLeadScore` called in `app/api/leads/route.ts` and `app/api/leads/[leadId]/route.ts`
-- [ ] Build "Draft Email" button on lead detail page — `app/api/ai/generate-email/route.ts` + `lib/ai/email-generator.ts` exist; UI button on lead detail page missing
-- [ ] Enhance weekly CEO recap with AI narrative — Inngest job exists (`lib/inngest/functions/weekly-ceo-recap.ts`) but uses HTML template, not AI narrative
-- [ ] Create smart notification templates with AI
+- [x] Build "Draft Email" button on lead detail page — `LeadQuickActions` "Draft Email" action button + `useGenerateEmail()` hook wired to `/api/ai/generate-email`; AI drafts pre-fill the email form
+- [x] Enhance weekly CEO recap with AI narrative — `lib/ai/weekly-recap-narrator.ts` + `generateRecapNarrative()` called in `server/actions/weekly-ceo-recap.ts`; AI narrative injected into the HTML email
+- [x] Create smart notification templates with AI — `lib/ai/smart-notification.ts` + `generateSmartNotification()` integrated into lead assign route; supports LEAD_ASSIGNED, LEAD_STATUS_CHANGED, DEAL_STAGE_CHANGED, TICKET_ASSIGNED, SLA_BREACH_WARNING
 - [ ] Evaluate Composio vs alternatives for external integrations
-- [ ] Set up cost tracking for AI API calls
-- [ ] Add AI feature flags (can disable per org)
+- [x] Set up cost tracking for AI API calls — `lib/ai/usage-tracker.ts` + `aiUsageLogs` table (migration 0026); tracked in `/api/chat/route.ts`; `/api/settings/ai-usage` endpoint returns totals/by-feature/daily breakdown
+- [x] Add AI feature flags (can disable per org) — `lib/org-features.ts` + `/api/settings/feature-flags` GET/PATCH; `/settings/ai` page with toggles + usage stats; `aiChat` flag checked in `/api/chat/route.ts`
 - [x] `pnpm build` passes
 
 ## Acceptance Criteria

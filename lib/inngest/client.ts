@@ -112,4 +112,26 @@ export type InngestEvents = {
   "hr/termination.ceo_decision": {
     data: { terminationId: number; orgId: string; employeeName: string; approved: boolean };
   };
+  "hr/employee.onboarded": {
+    data: {
+      userId: string;
+      orgId: string;
+      joiningDate: string | null;
+    };
+  };
+  "hr/interview.no_show": {
+    data: {
+      interviewId: number;
+      candidateId: number;
+      orgId: string;
+      candidateName: string;
+    };
+  };
+  "hr/interview.scorecard.submitted": {
+    data: {
+      interviewId: number;
+      candidateId: number;
+      orgId: string;
+    };
+  };
 };

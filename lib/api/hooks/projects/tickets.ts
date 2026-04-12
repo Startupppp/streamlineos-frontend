@@ -234,6 +234,85 @@ type AddAttachmentInput = {
   mimeType: string;
 };
 
+// ─── Bulk Update ─────────────────────────────────────────────────────────────
+
+export interface BulkUpdateTicketsInput {
+  ticketIds: number[];
+  assigneeId?: string;
+  status?: string;
+  sprintId?: number | null;
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+}
+
+export function useBulkUpdateTickets(projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkUpdateTicketsInput) =>
+      apiClient.post<{ updated: number; ticketIds: number[] }>(
+        `/projects/${projectId}/tickets/bulk`,
+        data
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets() });
+    },
+  });
+}
+
+// ─── Ticket Relations ─────────────────────────────────────────────────────────
+
+export type WorkItemRelationType = "blocks" | "blocked_by" | "duplicate_of" | "relates_to";
+
+export interface TicketRelation {
+  id: number;
+  relationType: WorkItemRelationType;
+  relatedTicket: {
+    id: number;
+    title: string;
+    ticketNumber: number | null;
+    status: string | null;
+    priority: string | null;
+  } | null;
+  direction: "outgoing" | "incoming";
+}
+
+export function useTicketRelations(ticketId: number, projectId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.projects.ticket(ticketId), "relations"],
+    queryFn: () =>
+      apiClient.get<TicketRelation[]>(`/projects/${projectId}/tickets/${ticketId}/relations`),
+    enabled: !!ticketId && !!projectId,
+  });
+}
+
+export function useAddTicketRelation(ticketId: number, projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { relatedTicketId: number; relationType: WorkItemRelationType }) =>
+      apiClient.post<{ id: number }>(`/projects/${projectId}/tickets/${ticketId}/relations`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.projects.ticket(ticketId), "relations"],
+      });
+    },
+  });
+}
+
+export function useRemoveTicketRelation(ticketId: number, projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (relatedId: number) =>
+      apiClient.delete<{ success: boolean }>(
+        `/projects/${projectId}/tickets/${ticketId}/relations?relatedId=${relatedId}`
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.projects.ticket(ticketId), "relations"],
+      });
+    },
+  });
+}
+
 export function useAddAttachment(
   options?: Omit<UseMutationOptions<{ id: number }, Error, AddAttachmentInput>, "mutationFn">
 ) {

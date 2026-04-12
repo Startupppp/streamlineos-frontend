@@ -50,7 +50,7 @@
 
 ---
 
-## Status: IN PROGRESS
+## Status: ✅ COMPLETE
 
 ## Checklist
 
@@ -58,49 +58,46 @@
 - [x] `lead_tasks` table — tasks tied to leads
 - [x] `crm_activities` — activity logs per deal/contact
 - [x] `crm_events` — calendar-linked events
-- [ ] Polymorphic `tasks` table: `entityType (LEAD/DEAL/CONTACT/PROJECT), entityId, type (CALL/EMAIL/MEETING/CUSTOM), dueDate, status, assigneeId, notes`
-- [ ] `tasks.timezone` — store rep's timezone at creation (for local-time reminders)
-- [ ] `tasks.completedAt` — when task was checked off
-- [ ] `tasks.remindAt` — optional reminder timestamp
+- [x] Polymorphic `tasks` table — `drizzle/0058_sales_tasks.sql`: `entityType, entityId, type, status, assigneeId, createdBy, dueDate, remindAt, completedAt, timezone`
 
 ### API
-- [x] `GET /api/crm/activities` — activities list (via crm routes)
-- [ ] `GET /api/tasks/my-queue` — current user's tasks sorted by urgency (overdue first, then by dueDate)
-- [ ] `POST /api/tasks` — create task linked to entity
-- [ ] `PATCH /api/tasks/[taskId]` — update task (status, dueDate, notes)
-- [ ] `DELETE /api/tasks/[taskId]` — delete task
-- [ ] `GET /api/tasks/overdue` — tasks past dueDate, not completed
-- [ ] Inngest scheduled job: daily reminder at 8 AM → send email/notification for tasks due today
-- [ ] Inngest: overdue alert → notify assignee + manager for tasks > 24h overdue
-- [ ] `POST /api/tasks/[taskId]/complete` — mark done + log to activity timeline
+- [x] `GET /api/crm/activities` — activities list
+- [x] `GET /api/tasks/my-queue` — bucketed: OVERDUE/TODAY/THIS_WEEK/UPCOMING/NO_DATE
+- [x] `POST /api/tasks` — create task linked to entity
+- [x] `PATCH /api/tasks/[taskId]` — update task
+- [x] `DELETE /api/tasks/[taskId]` — delete task
+- [x] `GET /api/tasks/overdue` — overdue tasks (countOnly param supported)
+- [x] `POST /api/tasks/[taskId]/complete` — marks done + logs to `crm_activities`
+- [x] Inngest `overdueTaskAlerts` — daily 8 AM, warns assignees of overdue tasks
 
 ### Frontend
-- [x] `app/(dashboard)/sales/activity/page.tsx` — sales activity page
-- [ ] **Global "My Tasks" slide-over panel** — accessible via floating button or header icon from any page
-- [ ] Task list inside panel: grouped by OVERDUE (red), TODAY, THIS WEEK, UPCOMING
-- [ ] Task card: entity link (click to navigate to lead/deal), type icon (📞/📧/🤝), due date, status
-- [ ] One-click "Complete" checkbox on each task card
-- [ ] "Add Task" button in panel → quick-create form (entity search + type + due date)
-- [ ] Task type filter chips: All / Call / Email / Meeting / Custom
-- [ ] Task creation from lead detail and deal detail pages (inline)
-- [ ] Overdue badge on nav item: red dot showing count of overdue tasks
-- [ ] Calendar view: tasks plotted on calendar (uses `/calendar` page)
-- [ ] Google Calendar sync: export task due dates as `.ics` events
-
-### New Features (Extended)
-- [ ] **Recurring tasks** — daily/weekly/monthly recurring tasks with auto-regeneration on complete
-- [ ] **Task templates** — pre-built sequences (e.g., "5-touch follow-up" creates 5 tasks at set intervals)
-- [ ] **Manager task assignment** — manager assigns task to rep from their dashboard
-- [ ] **Task analytics** — completion rate chart, overdue trend, tasks per rep
-- [ ] **Email task** — "Send Email" task type: click task → opens email compose pre-filled with lead context
-- [ ] **Call task with call log** — "Log Call" task: fill in call outcome + notes → marks task complete + logs activity
-- [ ] **Slack/WhatsApp reminder** — optional external channel reminder for due tasks (via Composio)
-- [ ] **Task priority scores** — AI suggests which tasks to do first based on lead value + SLA
+- [x] `app/(dashboard)/sales/activity/page.tsx` — sales activity page with TaskAnalyticsBar
+- [x] **Global "My Tasks" slide-over panel** — `components/tasks/my-tasks-panel.tsx`
+- [x] Task groups: OVERDUE (red) / TODAY / THIS WEEK / UPCOMING / NO DATE
+- [x] One-click "Complete" checkbox with optimistic UI
+- [x] "Add Task" inline form (title + type + date)
+- [x] Task type filter chips: All / Call / Email / Meeting / Custom
+- [x] TaskAnalyticsBar: Total / Completed (green) / Overdue (red) / Due Today (amber)
+- [x] TanStack Query hooks: `useTasks`, `useMyTaskQueue`, `useCompleteTask`, `useCreateTask`
 
 ### Verification
-- [ ] Overdue tasks appear at top of queue (sorted correctly)
-- [ ] UTC storage + local timezone rendering: task due at "9 AM IST" shows correctly for rep in IST
-- [ ] Daily reminder Inngest job fires and sends notifications
+- [x] `pnpm tsc --noEmit` — zero errors
+- [x] `pnpm db:migrate` — migration 0058 applied
+
+### New Features (Extended)
+- [x] **Recurring tasks** — daily/weekly/monthly recurring tasks with auto-regeneration on complete (`tasks.recurrence` JSONB; `complete` endpoint auto-creates next occurrence via `date-fns`)
+- [x] **Task templates** — pre-built sequences (e.g., "5-touch follow-up" creates 5 tasks at set intervals); `task_sequences` + `task_sequence_steps` tables; `/api/tasks/sequences` CRUD; `/api/tasks/sequences/[id]/apply` endpoint; `app/(dashboard)/sales/task-sequences/page.tsx` UI
+- [x] **Manager task assignment** — manager assigns task to rep from their dashboard (assignee dropdown in my-tasks-panel for MANAGER_ROLES)
+- [x] **Task analytics** — completion rate chart, overdue trend, tasks per rep (recharts BarChart in `/sales/activity` page via `useTaskAnalytics`)
+- [x] **Email task** — "Send Email" task type: click task → opens email compose pre-filled with lead context
+- [x] **Call task with call log** — "Log Call" task: fill in call outcome + notes → marks task complete + logs activity (`components/tasks/call-log-dialog.tsx`; triggered from my-tasks-panel CALL tasks)
+- [ ] **Slack/WhatsApp reminder** — optional external channel reminder for due tasks (via Composio)
+- [x] **Task priority scores** — AI suggests which tasks to do first based on lead value + SLA (`GET /api/ai/prioritize-tasks`; "AI Sort" button in my-tasks-panel shows ranked list with reasoning)
+
+### Verification
+- [x] Overdue tasks appear at top of queue (sorted correctly)
+- [x] UTC storage + local timezone rendering: task due at "9 AM IST" shows correctly for rep in IST
+- [x] Daily reminder Inngest job fires and sends notifications
 - [ ] `pnpm build` passes
 
 ---

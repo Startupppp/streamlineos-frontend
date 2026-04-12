@@ -1,5 +1,5 @@
 
-import { pgTable, text, serial, timestamp, boolean, jsonb, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, jsonb, integer, index, unique, numeric } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { notificationTypeEnum } from "./enums";
 import { organizations, users } from "./auth";
@@ -79,6 +79,11 @@ export const calendarEvents = pgTable("calendar_events", {
   attendeeIds: jsonb("attendee_ids").$type<string[]>().default([]),
   isRecurring: boolean("is_recurring").default(false),
   recurringRule: text("recurring_rule"),
+  agenda: text("agenda"),
+  postMeetingNotes: text("post_meeting_notes"),
+  linkedDealId: integer("linked_deal_id"),
+  linkedLeadId: integer("linked_lead_id"),
+  reminder15MinSent: boolean("reminder_15min_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -141,7 +146,61 @@ export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one })
   user: one(users, { fields: [pushSubscriptions.userId], references: [users.id] }),
 }));
 
-export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
+export const eventAttendees = pgTable("event_attendees", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => calendarEvents.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique("event_attendees_event_user_unique").on(table.eventId, table.userId),
+  index("idx_event_attendees_event_id").on(table.eventId),
+  index("idx_event_attendees_user_id").on(table.userId),
+]);
+
+export const calendarEventsRelations = relations(calendarEvents, ({ one, many }) => ({
   organization: one(organizations, { fields: [calendarEvents.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [calendarEvents.createdBy], references: [users.id] }),
+  attendees: many(eventAttendees),
 }));
+
+export const eventAttendeesRelations = relations(eventAttendees, ({ one }) => ({
+  event: one(calendarEvents, { fields: [eventAttendees.eventId], references: [calendarEvents.id] }),
+  user: one(users, { fields: [eventAttendees.userId], references: [users.id] }),
+}));
+
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  authorId: text("author_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  isPinned: boolean("is_pinned").notNull().default(false),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("idx_announcements_org").on(table.orgId, table.expiresAt),
+]);
+
+export const announcementsRelations = relations(announcements, ({ one }) => ({
+  organization: one(organizations, { fields: [announcements.orgId], references: [organizations.id] }),
+  author: one(users, { fields: [announcements.authorId], references: [users.id] }),
+}));
+
+export const aiUsageLogs = pgTable("ai_usage_logs", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  feature: text("feature").notNull(),
+  model: text("model").notNull(),
+  promptTokens: integer("prompt_tokens").notNull().default(0),
+  completionTokens: integer("completion_tokens").notNull().default(0),
+  totalTokens: integer("total_tokens").notNull().default(0),
+  estimatedCostUsd: numeric("estimated_cost_usd", { precision: 12, scale: 6 }),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ai_usage_org_feature").on(table.orgId, table.feature),
+  index("idx_ai_usage_org_created").on(table.orgId, table.createdAt),
+  index("idx_ai_usage_user").on(table.userId),
+]);

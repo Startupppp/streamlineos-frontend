@@ -145,6 +145,16 @@ export default function LeadDetailPage({
   const handleToggleEdit = useCallback(() => setIsEditing((prev) => !prev), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
 
+  const handleDraftEmail = useCallback(
+    (subject: string, body: string) => {
+      emailForm.setValue("subject", subject);
+      emailForm.setValue("body", body);
+      emailForm.setValue("to", lead?.email ?? "");
+      setActiveAction("email");
+    },
+    [emailForm, lead?.email],
+  );
+
   const onCallSubmit = useCallback(
     (data: CallForm) => {
       logActivityMutation.mutate(
@@ -240,6 +250,10 @@ export default function LeadDetailPage({
               isTaskPending={logActivityMutation.isPending}
               isEmailPending={logActivityMutation.isPending}
               isCallPending={logActivityMutation.isPending}
+              leadName={lead.name}
+              leadEmail={lead.email ?? ""}
+              leadContext={[lead.status, lead.priority, lead.potentialValue].filter(Boolean).join(", ")}
+              onDraftEmail={handleDraftEmail}
             />
           </div>
 

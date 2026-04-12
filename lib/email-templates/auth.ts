@@ -1,4 +1,4 @@
-import { getEmailTemplate, baseUrl, logoUrl, escapeHtml } from "./base";
+import { getEmailTemplate, baseUrl, escapeHtml } from "./base";
 
 export function getVerificationEmailTemplate(verificationUrl: string): string {
   const content = `
@@ -221,6 +221,137 @@ export function getAccountDeactivationEmailTemplate(
   return getEmailTemplate({
     title: 'Account Deactivated - Vaivamm Capital',
     preheader: 'Your account has been deactivated',
+    content,
+  });
+}
+
+export function getAccountLockedEmailTemplate(name: string): string {
+  const sName = escapeHtml(name);
+  const content = `
+    <h2 class="email-title">Account Temporarily Locked</h2>
+    <p class="email-text">
+      Hi <strong>${sName}</strong>,
+    </p>
+
+    <p class="email-text">
+      Your account has been temporarily locked due to multiple failed login attempts. This is a security measure to protect your account.
+    </p>
+
+    <div class="security-notice">
+      <p class="security-text">
+        <strong>Your account will be unlocked in 15 minutes.</strong>
+        If you did not attempt to log in, your credentials may have been compromised.
+        Please reset your password immediately.
+      </p>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${baseUrl}/forgot-password" class="email-button">
+        Reset Password
+      </a>
+    </div>
+
+    <p class="email-text" style="font-size: 14px; color: #64748b;">
+      If you need immediate assistance, please contact our support team at
+      <a href="mailto:support@vaivammcapital.com" style="color: #0f2b7f;">support@vaivammcapital.com</a>.
+    </p>
+  `;
+
+  return getEmailTemplate({
+    title: 'Account Locked - Vaivamm Capital',
+    preheader: 'Your account has been temporarily locked',
+    content,
+  });
+}
+
+export function getNewDeviceLoginEmailTemplate(
+  name: string,
+  deviceInfo: { userAgent: string; ipAddress: string; time: string }
+): string {
+  const sName = escapeHtml(name);
+  const sUserAgent = escapeHtml(deviceInfo.userAgent || "Unknown device");
+  const sIp = escapeHtml(deviceInfo.ipAddress || "Unknown IP");
+  const sTime = escapeHtml(deviceInfo.time);
+  const content = `
+    <h2 class="email-title">New Device Sign-In Detected</h2>
+    <p class="email-text">
+      Hi <strong>${sName}</strong>,
+    </p>
+
+    <p class="email-text">
+      We detected a sign-in to your Vaivamm Capital account from a new device or location.
+    </p>
+
+    <div class="credential-box">
+      <div class="credential-item">
+        <span class="credential-label">Device:</span>
+        <span style="color: #475569; margin-left: 8px; font-size: 13px;">${sUserAgent}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">IP Address:</span>
+        <span style="color: #475569; margin-left: 8px; font-size: 13px;">${sIp}</span>
+      </div>
+      <div class="credential-item">
+        <span class="credential-label">Time:</span>
+        <span style="color: #475569; margin-left: 8px; font-size: 13px;">${sTime}</span>
+      </div>
+    </div>
+
+    <div class="security-notice">
+      <p class="security-text">
+        <strong>Was this you?</strong> If you signed in, you can ignore this email.
+        If you did NOT sign in, your account may be compromised. Reset your password immediately.
+      </p>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${baseUrl}/forgot-password" class="email-button">
+        Secure My Account
+      </a>
+    </div>
+  `;
+
+  return getEmailTemplate({
+    title: 'New Device Sign-In - Vaivamm Capital',
+    preheader: 'A new device signed into your account',
+    content,
+  });
+}
+
+export function getPasswordExpiryWarningEmailTemplate(name: string, daysLeft: number): string {
+  const sName = escapeHtml(name);
+  const content = `
+    <h2 class="email-title">Your Password is Expiring Soon</h2>
+    <p class="email-text">
+      Hi <strong>${sName}</strong>,
+    </p>
+
+    <p class="email-text">
+      Your Vaivamm Capital account password will expire in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.
+      Please update it before it expires to avoid being locked out of your account.
+    </p>
+
+    <div class="security-notice">
+      <p class="security-text">
+        <strong>Action Required:</strong> Update your password within the next ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.
+        After expiry you will be required to reset your password before you can log in.
+      </p>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${baseUrl}/settings?tab=security" class="email-button">
+        Update Password
+      </a>
+    </div>
+
+    <p class="email-text" style="font-size: 14px; color: #64748b;">
+      Choose a strong password with at least 8 characters, including uppercase, lowercase, numbers, and special characters.
+    </p>
+  `;
+
+  return getEmailTemplate({
+    title: 'Password Expiring Soon - Vaivamm Capital',
+    preheader: `Your password expires in ${daysLeft} days`,
     content,
   });
 }

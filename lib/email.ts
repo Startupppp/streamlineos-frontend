@@ -15,6 +15,9 @@ import {
   getLeaveCancellationEmailTemplate,
   getPasswordChangeConfirmationEmailTemplate,
   getAccountDeactivationEmailTemplate,
+  getAccountLockedEmailTemplate,
+  getNewDeviceLoginEmailTemplate,
+  getPasswordExpiryWarningEmailTemplate,
   getHolidayAnnouncementEmailTemplate,
   getCompanyAnnouncementEmailTemplate,
   getExpenseSubmittedEmailTemplate,
@@ -700,6 +703,38 @@ export async function sendTerminationEmail(
       reason,
       hrContactEmail
     ),
+  });
+}
+
+export async function sendAccountLockedEmail(email: string, name: string): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: "Account Locked - Vaivamm Capital",
+    html: getAccountLockedEmailTemplate(name),
+  });
+}
+
+export async function sendNewDeviceLoginEmail(
+  email: string,
+  name: string,
+  deviceInfo: { userAgent: string; ipAddress: string; time: string }
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: "New Device Sign-In Detected - Vaivamm Capital",
+    html: getNewDeviceLoginEmailTemplate(name, deviceInfo),
+  });
+}
+
+export async function sendPasswordExpiryWarningEmail(
+  email: string,
+  name: string,
+  daysLeft: number
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: `Your Password Expires in ${daysLeft} Days - Vaivamm Capital`,
+    html: getPasswordExpiryWarningEmailTemplate(name, daysLeft),
   });
 }
 

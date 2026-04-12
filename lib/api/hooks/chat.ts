@@ -320,3 +320,26 @@ export const useMarkRead = useMarkChannelRead;
 export const useCreateDM = useCreateDMChannel;
 
 export const useChatSearch = useChatSearchMessages;
+
+export function useToggleReaction(channelId: number, messageId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ emoji }: { emoji: string }) =>
+      apiClient.post<{ reactions: Record<string, string[]> }>(
+        `/chat/channels/${channelId}/messages/${messageId}/reactions`,
+        { emoji }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.messages(channelId),
+      });
+    },
+  });
+}
+
+export function useUpdatePresenceStatus() {
+  return useMutation({
+    mutationFn: ({ status }: { status: "ONLINE" | "AWAY" | "OFFLINE" }) =>
+      apiClient.put<{ ok: boolean }>("/chat/status", { status }),
+  });
+}

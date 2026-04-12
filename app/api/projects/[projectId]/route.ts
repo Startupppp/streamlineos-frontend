@@ -16,7 +16,7 @@ import {
   sprints,
   users,
 } from "@/lib/db/schema";
-import { eq, and, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, inArray, ne } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { sendProjectAssignmentEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
@@ -31,6 +31,8 @@ const updateProjectSchema = z.object({
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   memberIds: z.array(z.string()).optional(),
+  // Map of removed userId → replacement assignee userId (null = unassign)
+  reassignments: z.record(z.string(), z.string()).optional(),
 });
 
 type RouteParams = { params: Promise<{ projectId: string }> };
@@ -146,6 +148,45 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
               role: "CONTRIBUTOR",
             }))
           );
+        }
+
+        // Reassign open tickets for removed members
+        const newMemberSet = new Set(body.memberIds!);
+        const removedMembers = [...existing].filter((id) => !newMemberSet.has(id));
+        if (removedMembers.length > 0 && body.reassignments) {
+          const openTickets = await tx
+            .select({ id: tickets.id, assigneeId: tickets.assigneeId })
+            .from(tickets)
+            .where(
+              and(
+                eq(tickets.projectId, projectId),
+                inArray(tickets.assigneeId, removedMembers),
+                ne(tickets.status, "DONE"),
+                ne(tickets.status, "CANCELLED"),
+              )
+            );
+          for (const ticket of openTickets) {
+            const newAssignee = ticket.assigneeId
+              ? (body.reassignments[ticket.assigneeId] ?? null)
+              : null;
+            await tx
+              .update(tickets)
+              .set({ assigneeId: newAssignee })
+              .where(eq(tickets.id, ticket.id));
+          }
+        } else if (removedMembers.length > 0) {
+          // Auto-unassign (no reassignment specified)
+          await tx
+            .update(tickets)
+            .set({ assigneeId: null })
+            .where(
+              and(
+                eq(tickets.projectId, projectId),
+                inArray(tickets.assigneeId, removedMembers),
+                ne(tickets.status, "DONE"),
+                ne(tickets.status, "CANCELLED"),
+              )
+            );
         }
 
         return existing;

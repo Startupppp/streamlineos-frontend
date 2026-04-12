@@ -1,0 +1,177 @@
+import { withAuth, ok, err } from "@/lib/api/helpers";
+import { db } from "@/lib/db";
+import { leaveRequests, leaveBalances, leaveTypes, users } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
+import { writeAuditLog } from "@/lib/db/audit";
+import { createNotification } from "@/server/actions/create-notification";
+import { sendLeaveStatusUpdateEmail } from "@/lib/email";
+import { EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
+import { LEAVE_POLICY } from "@/lib/leave-policy";
+import { z } from "zod";
+import type { NextRequest } from "next/server";
+
+const bodySchema = z.object({
+  comment: z.string().optional(),
+  forceApprove: z.boolean().optional(), // HR override: approve beyond balance with justification
+  justification: z.string().optional(),
+});
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ leaveId: string }> },
+) {
+  return withAuth(async (session) => {
+    const { leaveId: id } = await params;
+    const leaveId = Number(id);
+    if (isNaN(leaveId)) return err("Invalid leave request ID.", 400);
+
+    const isAuthorized =
+      EXPENSE_ADMIN_ROLES.includes(session.user.role ?? "") ||
+      session.user.role === "ADMIN";
+    if (!isAuthorized) {
+      return err("Only HR, Admin, or CEO can approve leave requests.", 403);
+    }
+
+    let comment: string | undefined;
+    let forceApprove = false;
+    let justification: string | undefined;
+    try {
+      const raw = await req.json() as unknown;
+      const parsed = bodySchema.safeParse(raw);
+      if (parsed.success) {
+        comment = parsed.data.comment;
+        forceApprove = parsed.data.forceApprove ?? false;
+        justification = parsed.data.justification;
+      }
+    } catch {
+      comment = undefined;
+    }
+
+    if (forceApprove && !justification?.trim()) {
+      return err("A justification note is required when approving beyond balance.", 400);
+    }
+
+    const existing = await db.query.leaveRequests.findFirst({
+      where: and(
+        eq(leaveRequests.id, leaveId),
+        eq(leaveRequests.orgId, session.orgId),
+      ),
+    });
+    if (!existing) return err("Leave request not found.", 404);
+    if (existing.status !== "PENDING") {
+      return err(`Cannot approve a request with status: ${existing.status}.`, 400);
+    }
+    if (existing.userId === session.user.id) {
+      return err("You cannot approve your own leave request.", 403);
+    }
+
+    // Deduct leave balance
+    await db.transaction(async (tx) => {
+      await tx
+        .update(leaveRequests)
+        .set({
+          status: "APPROVED",
+          approverId: session.user.id,
+          managerComment: comment ?? null,
+        })
+        .where(eq(leaveRequests.id, leaveId));
+
+      if (existing.leaveTypeId) {
+        const leaveType = await tx.query.leaveTypes.findFirst({
+          where: eq(leaveTypes.id, existing.leaveTypeId),
+          columns: { name: true },
+        });
+
+        if (leaveType?.name !== LEAVE_POLICY.UNPAID.name) {
+          const start = new Date(existing.startDate);
+          const end = new Date(existing.endDate);
+          let diffDays = existing.isHalfDay ? 0.5 : 0;
+          if (!existing.isHalfDay) {
+            const cursor = new Date(start);
+            while (cursor <= end) {
+              const day = cursor.getDay();
+              if (day !== 0 && day !== 6) diffDays++;
+              cursor.setDate(cursor.getDate() + 1);
+            }
+          }
+
+          const balanceRecord = await tx.query.leaveBalances.findFirst({
+            where: and(
+              eq(leaveBalances.userId, existing.userId),
+              eq(leaveBalances.leaveTypeId, existing.leaveTypeId),
+              eq(leaveBalances.year, new Date().getFullYear()),
+            ),
+          });
+
+          if (balanceRecord) {
+            const newBal = Number(balanceRecord.balance) - diffDays;
+            if (newBal < 0 && !forceApprove) {
+              throw new Error(
+                `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}. Use forceApprove with a justification to override.`,
+              );
+            }
+            await tx
+              .update(leaveBalances)
+              .set({ balance: newBal.toString() })
+              .where(eq(leaveBalances.id, balanceRecord.id));
+          }
+        }
+      }
+    });
+
+    // Fetch employee details for email
+    const employee = await db.query.users.findFirst({
+      where: eq(users.id, existing.userId),
+      columns: { email: true, name: true },
+    });
+    const leaveTypeName = existing.leaveTypeId
+      ? (await db.query.leaveTypes.findFirst({
+          where: eq(leaveTypes.id, existing.leaveTypeId),
+          columns: { name: true },
+        }))?.name ?? "Leave"
+      : "Leave";
+
+    await Promise.all([
+      createNotification({
+        orgId: session.orgId,
+        userId: existing.userId,
+        type: "SUCCESS",
+        title: "Leave Approved",
+        message: `Your leave request has been approved${forceApprove ? " (HR override)" : ""}${comment ? `: "${comment}"` : "."}`,
+        link: "/hr/leaves",
+      }),
+      writeAuditLog({
+        action: "hr.leave_approved",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(leaveId),
+        targetType: "leave_request",
+        metadata: { comment, forceApprove, justification },
+      }),
+      employee?.email
+        ? sendLeaveStatusUpdateEmail(
+            employee.email,
+            employee.name ?? "Employee",
+            leaveTypeName,
+            existing.startDate,
+            existing.endDate,
+            "APPROVED",
+            session.user.name ?? "HR"
+          ).catch(() => undefined)
+        : Promise.resolve(),
+    ]);
+
+    // Fire webhook event (non-blocking)
+    void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
+      dispatchWebhook(session.orgId, "leave.approved", {
+        leaveId,
+        userId: existing.userId,
+        startDate: existing.startDate,
+        endDate: existing.endDate,
+        leaveTypeId: existing.leaveTypeId,
+      })
+    );
+
+    return ok({ success: true });
+  });
+}

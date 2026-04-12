@@ -91,7 +91,11 @@ export const leaveRequests = pgTable("leave_requests", {
   status: leaveStatusEnum("status").default("PENDING"),
   approverId: text("approver_id").references(() => users.id),
   rejectionReason: text("rejection_reason"),
+  managerComment: text("manager_comment"),
   attachmentUrl: text("attachment_url"),
+  isHalfDay: boolean("is_half_day").default(false).notNull(),
+  halfDayPeriod: text("half_day_period"),
+  coveringEmployeeId: text("covering_employee_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_leave_requests_user_id").on(table.userId),
@@ -341,16 +345,6 @@ export const resignations = pgTable("resignations", {
   exitInterviewDate: timestamp("exit_interview_date"),
   exitInterviewConductedBy: text("exit_interview_conducted_by").references(() => users.id),
   feedback: jsonb("feedback").$type<{ question: string; answer: string }[]>(),
-  reasonCategory: text("reason_category"),
-  resignationLetterUrl: text("resignation_letter_url"),
-  hrReviewedBy: text("hr_reviewed_by").references(() => users.id),
-  hrReviewedAt: timestamp("hr_reviewed_at"),
-  hrRemarks: text("hr_remarks"),
-  ceoReviewedBy: text("ceo_reviewed_by").references(() => users.id),
-  ceoReviewedAt: timestamp("ceo_reviewed_at"),
-  ceoRemarks: text("ceo_remarks"),
-  willingForExitInterview: boolean("willing_for_exit_interview").default(true),
-  companyFeedback: text("company_feedback"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -842,6 +836,7 @@ export const holidays = pgTable("holidays", {
   name: text("name").notNull(),
   date: date("date").notNull(),
   message: text("message"),
+  isPublic: boolean("is_public").default(false).notNull(), // true = national/public holiday, false = org-specific
   notificationSent: boolean("notification_sent").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -925,12 +920,35 @@ export const jobPostings = pgTable("job_postings", {
   status: jobPostingStatusEnum("status").default("DRAFT"),
   openings: integer("openings").default(1),
   applicationDeadline: date("application_deadline"),
+  closingDate: timestamp("closing_date"),
   postedBy: text("posted_by").references(() => users.id),
+  /** JSONB map of external board IDs: { "linkedin": "123", "naukri": "456" } */
+  externalPostingIds: jsonb("external_posting_ids").$type<Record<string, string>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_job_postings_org").on(table.orgId),
   index("idx_job_postings_status").on(table.status),
+]);
+
+/** Connected job board integrations (per org) */
+export const candidateSources = pgTable("candidate_sources", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  platform: text("platform").notNull(), // LINKEDIN | NAUKRI | INDEED | ORGANIC
+  isActive: boolean("is_active").notNull().default(true),
+  /** Encrypted OAuth/API token — store opaquely */
+  oauthToken: text("oauth_token"),
+  /** Metadata: accountName, scope, etc. */
+  meta: jsonb("meta").$type<Record<string, unknown>>(),
+  lastSyncedAt: timestamp("last_synced_at"),
+  lastSyncCount: integer("last_sync_count").default(0),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_candidate_sources_org").on(table.orgId),
+  uniqueIndex("uq_candidate_sources_org_platform").on(table.orgId, table.platform),
 ]);
 
 export const candidates = pgTable("candidates", {
@@ -952,6 +970,21 @@ export const candidates = pgTable("candidates", {
   notes: text("notes"),
   rating: integer("rating"),
   referredBy: text("referred_by").references(() => users.id),
+  externalId: text("external_id"),
+  duplicateOfId: integer("duplicate_of_id"),
+  resumeText: text("resume_text"),
+  aiScore: integer("ai_score"),
+  aiScoreBreakdown: jsonb("ai_score_breakdown").$type<Record<string, number>>(),
+  aiScoreGeneratedAt: timestamp("ai_score_generated_at"),
+  // Background Verification
+  bgvStatus: text("bgv_status").$type<"NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED">().default("NOT_INITIATED"),
+  bgvAgency: text("bgv_agency"),
+  bgvNotes: text("bgv_notes"),
+  bgvInitiatedAt: timestamp("bgv_initiated_at"),
+  bgvCompletedAt: timestamp("bgv_completed_at"),
+  sourceUrl: text("source_url"),
+  location: text("location"),
+  gender: text("gender").$type<"MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY" | null>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -991,6 +1024,11 @@ export const interviews = pgTable("interviews", {
   rating: integer("rating"),
   rubric: jsonb("rubric").$type<{ category: string; score: number; maxScore: number; comment?: string }[]>(),
   notes: text("notes"),
+  recordingUrl: text("recording_url"),
+  recordingPlatform: text("recording_platform"),
+  panelInterviewerIds: jsonb("panel_interviewer_ids").$type<string[]>().default([]),
+  remindersSent: jsonb("reminders_sent").$type<Record<string, boolean>>().notNull().default({}),
+  calendarSyncToken: text("calendar_sync_token"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -998,6 +1036,185 @@ export const interviews = pgTable("interviews", {
   index("idx_interviews_interviewer").on(table.interviewerId),
   index("idx_interviews_scheduled").on(table.scheduledAt),
 ]);
+
+// ─── Interview Scorecards ───────────────────────────────────────────────────
+
+export const scorecardTemplates = pgTable("scorecard_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  criteria: jsonb("criteria").$type<Array<{ name: string; weight: number }>>().notNull().default([]),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_scorecard_templates_org").on(table.orgId),
+]);
+
+export const interviewScorecards = pgTable("interview_scorecards", {
+  id: serial("id").primaryKey(),
+  interviewId: integer("interview_id").references(() => interviews.id, { onDelete: "cascade" }).notNull(),
+  interviewerId: text("interviewer_id").references(() => users.id).notNull(),
+  templateId: integer("template_id").references(() => scorecardTemplates.id),
+  ratings: jsonb("ratings").$type<Record<string, number>>().notNull().default({}),
+  recommendation: text("recommendation").notNull().default("MAYBE"),
+  notes: text("notes"),
+  isBlindMode: boolean("is_blind_mode").notNull().default(false),
+  submittedAt: timestamp("submitted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_scorecards_interview").on(table.interviewId),
+  index("idx_scorecards_interviewer").on(table.interviewerId),
+  uniqueIndex("uniq_scorecard_interview_interviewer").on(table.interviewId, table.interviewerId),
+]);
+
+// ─── Interview Booking Links (Self-scheduling) ─────────────────────────────
+
+export interface BookingSlot {
+  start: string;
+  end: string;
+}
+
+export const interviewBookingLinks = pgTable("interview_booking_links", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
+  token: text("token").notNull().unique(),
+  interviewerIds: jsonb("interviewer_ids").$type<string[]>().notNull().default([]),
+  durationMinutes: integer("duration_minutes").notNull().default(60),
+  interviewType: text("interview_type").notNull().default("VIDEO"),
+  availableSlots: jsonb("available_slots").$type<BookingSlot[]>().notNull().default([]),
+  selectedSlot: timestamp("selected_slot"),
+  status: text("status").$type<"pending" | "booked" | "expired" | "cancelled">().notNull().default("pending"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_booking_links_token").on(table.token),
+  index("idx_booking_links_candidate").on(table.candidateId),
+]);
+
+// ─── Candidate Referrals ────────────────────────────────────────────────────
+
+export const candidateReferrals = pgTable("candidate_referrals", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  referredBy: text("referred_by").references(() => users.id).notNull(),
+  relationship: text("relationship"),
+  notes: text("notes"),
+  bonusEligible: boolean("bonus_eligible").notNull().default(true),
+  bonusAmount: decimal("bonus_amount", { precision: 12, scale: 2 }),
+  bonusPaidAt: timestamp("bonus_paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_referrals_candidate").on(table.candidateId),
+  index("idx_referrals_referred_by").on(table.referredBy),
+]);
+
+// ─── Calibration Sessions ───────────────────────────────────────────────────
+
+export const calibrationSessions = pgTable("calibration_sessions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  candidateId: integer("candidate_id").references(() => candidates.id, { onDelete: "cascade" }).notNull(),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
+  scheduledAt: timestamp("scheduled_at"),
+  status: text("status").$type<"pending" | "scheduled" | "completed" | "cancelled">().notNull().default("pending"),
+  notes: text("notes"),
+  decision: text("decision").$type<"STRONG_HIRE" | "HIRE" | "NO_HIRE" | "HOLD" | null>(),
+  participantIds: jsonb("participant_ids").$type<string[]>().notNull().default([]),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_calibration_sessions_candidate").on(table.candidateId),
+  index("idx_calibration_sessions_org").on(table.orgId),
+]);
+
+// ─── Candidate Documents Vault ──────────────────────────────────────────────
+
+export const candidateDocumentsVault = pgTable("candidate_documents_vault", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  filename: text("filename").notNull(),
+  s3Key: text("s3_key").notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull().default(0),
+  /** Category: AADHAR | PAN | PASSPORT | CERTIFICATE | OTHER */
+  documentType: text("document_type"),
+  avResult: text("av_result").$type<"PENDING" | "CLEAN" | "INFECTED">().notNull().default("PENDING"),
+  expiresAt: date("expires_at"), // for certifications / passports
+  uploadedBy: text("uploaded_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_vault_candidate").on(table.candidateId),
+  index("idx_vault_org").on(table.orgId),
+]);
+
+export const vaultAccessLogs = pgTable("vault_access_logs", {
+  id: serial("id").primaryKey(),
+  vaultDocumentId: integer("vault_document_id").references(() => candidateDocumentsVault.id, { onDelete: "cascade" }).notNull(),
+  accessedBy: text("accessed_by").references(() => users.id).notNull(),
+  action: text("action").notNull().default("VIEW"),
+  accessedAt: timestamp("accessed_at").defaultNow(),
+});
+
+// ─── Onboarding Workflow ─────────────────────────────────────────────────────
+
+export const onboardingTemplates = pgTable("onboarding_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  name: text("name").notNull(),
+  departmentId: integer("department_id"),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: text("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_onboarding_templates_org").on(table.orgId),
+]);
+
+export const onboardingTemplateSteps = pgTable("onboarding_template_steps", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => onboardingTemplates.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  ownerRole: text("owner_role").notNull().default("NEW_HIRE"),
+  dueOffsetDays: integer("due_offset_days").notNull().default(0),
+  isRequired: boolean("is_required").notNull().default(true),
+  isComplianceItem: boolean("is_compliance_item").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const onboardingTasks = pgTable("onboarding_tasks", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  templateStepId: integer("template_step_id").references(() => onboardingTemplateSteps.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  ownerRole: text("owner_role").notNull().default("NEW_HIRE"),
+  dueDate: timestamp("due_date"),
+  status: text("status").notNull().default("PENDING"),
+  completedAt: timestamp("completed_at"),
+  completedBy: text("completed_by").references(() => users.id),
+  dependsOnTaskIds: jsonb("depends_on_task_ids").$type<number[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_onboarding_tasks_user").on(table.userId, table.orgId),
+  index("idx_onboarding_tasks_status").on(table.orgId, table.status),
+]);
+
+// ─── Relations ───────────────────────────────────────────────────────────────
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
   organization: one(organizations, {
@@ -1022,6 +1239,7 @@ export const leaveRequestsRelations = relations(leaveRequests, ({ one }) => ({
   user: one(users, { fields: [leaveRequests.userId], references: [users.id] }),
   leaveType: one(leaveTypes, { fields: [leaveRequests.leaveTypeId], references: [leaveTypes.id] }),
   approver: one(users, { fields: [leaveRequests.approverId], references: [users.id], relationName: "leaveApprover" }),
+  coveringEmployee: one(users, { fields: [leaveRequests.coveringEmployeeId], references: [users.id], relationName: "leaveCoveringEmployee" }),
 }));
 
 export const leaveBalancesRelations = relations(leaveBalances, ({ one }) => ({
@@ -1102,6 +1320,11 @@ export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
   applications: many(candidateApplications),
 }));
 
+export const candidateSourcesRelations = relations(candidateSources, ({ one }) => ({
+  organization: one(organizations, { fields: [candidateSources.orgId], references: [organizations.id] }),
+  createdByUser: one(users, { fields: [candidateSources.createdBy], references: [users.id] }),
+}));
+
 export const candidatesRelations = relations(candidates, ({ many }) => ({
   applications: many(candidateApplications),
   interviews: many(interviews),
@@ -1112,10 +1335,11 @@ export const candidateApplicationsRelations = relations(candidateApplications, (
   jobPosting: one(jobPostings, { fields: [candidateApplications.jobPostingId], references: [jobPostings.id] }),
 }));
 
-export const interviewsRelations = relations(interviews, ({ one }) => ({
+export const interviewsRelations = relations(interviews, ({ one, many }) => ({
   candidate: one(candidates, { fields: [interviews.candidateId], references: [candidates.id] }),
   jobPosting: one(jobPostings, { fields: [interviews.jobPostingId], references: [jobPostings.id] }),
   interviewer: one(users, { fields: [interviews.interviewerId], references: [users.id] }),
+  scorecards: many(interviewScorecards),
 }));
 
 export const richDocumentsRelations = relations(richDocuments, ({ one }) => ({
@@ -1263,3 +1487,264 @@ export const teamEventParticipantsRelations = relations(teamEventParticipants, (
   event: one(teamEvents, { fields: [teamEventParticipants.eventId], references: [teamEvents.id] }),
   user: one(users, { fields: [teamEventParticipants.userId], references: [users.id] }),
 }));
+
+export const scorecardTemplatesRelations = relations(scorecardTemplates, ({ one, many }) => ({
+  organization: one(organizations, { fields: [scorecardTemplates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [scorecardTemplates.createdBy], references: [users.id] }),
+  scorecards: many(interviewScorecards),
+}));
+
+export const interviewScorecardsRelations = relations(interviewScorecards, ({ one }) => ({
+  interview: one(interviews, { fields: [interviewScorecards.interviewId], references: [interviews.id] }),
+  interviewer: one(users, { fields: [interviewScorecards.interviewerId], references: [users.id] }),
+  template: one(scorecardTemplates, { fields: [interviewScorecards.templateId], references: [scorecardTemplates.id] }),
+}));
+
+export const candidateDocumentsVaultRelations = relations(candidateDocumentsVault, ({ one, many }) => ({
+  organization: one(organizations, { fields: [candidateDocumentsVault.orgId], references: [organizations.id] }),
+  uploader: one(users, { fields: [candidateDocumentsVault.uploadedBy], references: [users.id] }),
+  accessLogs: many(vaultAccessLogs),
+}));
+
+export const vaultAccessLogsRelations = relations(vaultAccessLogs, ({ one }) => ({
+  document: one(candidateDocumentsVault, { fields: [vaultAccessLogs.vaultDocumentId], references: [candidateDocumentsVault.id] }),
+  accessor: one(users, { fields: [vaultAccessLogs.accessedBy], references: [users.id] }),
+}));
+
+export const onboardingTemplatesRelations = relations(onboardingTemplates, ({ one, many }) => ({
+  organization: one(organizations, { fields: [onboardingTemplates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [onboardingTemplates.createdBy], references: [users.id] }),
+  steps: many(onboardingTemplateSteps),
+}));
+
+export const onboardingTemplateStepsRelations = relations(onboardingTemplateSteps, ({ one }) => ({
+  template: one(onboardingTemplates, { fields: [onboardingTemplateSteps.templateId], references: [onboardingTemplates.id] }),
+}));
+
+export const onboardingTasksRelations = relations(onboardingTasks, ({ one }) => ({
+  user: one(users, { fields: [onboardingTasks.userId], references: [users.id], relationName: "onboardingTaskUser" }),
+  completedByUser: one(users, { fields: [onboardingTasks.completedBy], references: [users.id], relationName: "onboardingTaskCompletedBy" }),
+  templateStep: one(onboardingTemplateSteps, { fields: [onboardingTasks.templateStepId], references: [onboardingTemplateSteps.id] }),
+}));
+
+// ─── Document Templates & Candidate Documents ────────────────────────────────
+
+export const documentTemplates = pgTable("document_templates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  type: text("type").notNull().default("OFFER"),
+  htmlContent: text("html_content").notNull().default(""),
+  variables: jsonb("variables").$type<string[]>().notNull().default([]),
+  version: integer("version").notNull().default(1),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: text("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_doc_templates_org").on(table.orgId, table.type),
+]);
+
+export const candidateDocuments = pgTable("candidate_documents", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  templateId: integer("template_id").references(() => documentTemplates.id),
+  title: text("title").notNull(),
+  htmlContent: text("html_content").notNull().default(""),
+  status: text("status").notNull().default("GENERATED"),
+  /** External e-sign document ID (DocuSign/Documenso envelope ID) */
+  externalDocId: text("external_doc_id"),
+  sentAt: timestamp("sent_at"),
+  viewedAt: timestamp("viewed_at"),
+  signedAt: timestamp("signed_at"),
+  declinedAt: timestamp("declined_at"),
+  /** Offer acceptance deadline; reminder sent 24h before */
+  acceptanceDeadline: timestamp("acceptance_deadline"),
+  createdBy: text("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_candidate_docs_candidate").on(table.candidateId),
+  index("idx_candidate_docs_external").on(table.externalDocId),
+]);
+
+export const documentTemplateVersions = pgTable("document_template_versions", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => documentTemplates.id, { onDelete: "cascade" }),
+  orgId: text("org_id").notNull(),
+  version: integer("version").notNull(),
+  title: text("title").notNull(),
+  type: text("type").notNull(),
+  htmlContent: text("html_content").notNull(),
+  variables: jsonb("variables").$type<string[]>().notNull().default([]),
+  archivedAt: timestamp("archived_at").defaultNow(),
+  archivedBy: text("archived_by").notNull().references(() => users.id),
+}, (table) => [
+  index("idx_dtv_template_id").on(table.templateId),
+]);
+
+// Relations
+
+export const documentTemplatesRelations = relations(documentTemplates, ({ one, many }) => ({
+  organization: one(organizations, { fields: [documentTemplates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [documentTemplates.createdBy], references: [users.id] }),
+  candidateDocuments: many(candidateDocuments),
+  versions: many(documentTemplateVersions),
+}));
+
+export const documentTemplateVersionsRelations = relations(documentTemplateVersions, ({ one }) => ({
+  template: one(documentTemplates, { fields: [documentTemplateVersions.templateId], references: [documentTemplates.id] }),
+  archivedByUser: one(users, { fields: [documentTemplateVersions.archivedBy], references: [users.id] }),
+}));
+
+export const candidateDocumentsRelations = relations(candidateDocuments, ({ one }) => ({
+  template: one(documentTemplates, { fields: [candidateDocuments.templateId], references: [documentTemplates.id] }),
+  organization: one(organizations, { fields: [candidateDocuments.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [candidateDocuments.createdBy], references: [users.id] }),
+}));
+
+// ─── Interview SLA ──────────────────────────────────────────────────────────
+
+export const interviewSlas = pgTable("interview_slas", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  stage: text("stage").notNull(),
+  maxHours: integer("max_hours").notNull().default(48),
+  warningHours: integer("warning_hours").notNull().default(36),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_interview_sla_org_stage").on(table.orgId, table.stage),
+]);
+
+export const candidateSlaTracking = pgTable("candidate_sla_tracking", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
+  stage: text("stage").notNull(),
+  enteredAt: timestamp("entered_at").notNull().defaultNow(),
+  breachedAt: timestamp("breached_at"),
+  status: text("status").notNull().default("ON_TRACK"), // ON_TRACK | AT_RISK | BREACHED
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("uniq_sla_tracking_candidate_stage").on(table.candidateId, table.stage),
+  index("idx_sla_tracking_org_status").on(table.orgId, table.status),
+  index("idx_sla_tracking_candidate").on(table.candidateId),
+]);
+
+export const interviewSlasRelations = relations(interviewSlas, ({ one }) => ({
+  organization: one(organizations, { fields: [interviewSlas.orgId], references: [organizations.id] }),
+}));
+
+export const candidateSlaTrackingRelations = relations(candidateSlaTracking, ({ one }) => ({
+  organization: one(organizations, { fields: [candidateSlaTracking.orgId], references: [organizations.id] }),
+  candidate: one(candidates, { fields: [candidateSlaTracking.candidateId], references: [candidates.id] }),
+}));
+
+// ─── Interview Question Bank ──────────────────────────────────────────────────
+
+export const interviewQuestions = pgTable("interview_questions", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  category: text("category").notNull().default("GENERAL"),
+  role: text("role"),
+  difficulty: text("difficulty").notNull().default("MEDIUM"),
+  tags: text("tags").array().default([]),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_interview_questions_org").on(table.orgId),
+  index("idx_interview_questions_category").on(table.orgId, table.category),
+]);
+
+export const interviewQuestionsRelations = relations(interviewQuestions, ({ one }) => ({
+  organization: one(organizations, { fields: [interviewQuestions.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [interviewQuestions.createdBy], references: [users.id] }),
+}));
+
+// ─── Reference Checks ────────────────────────────────────────────────────────
+
+export const candidateReferenceChecks = pgTable("candidate_reference_checks", {
+  id: serial("id").primaryKey(),
+  candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
+  orgId: text("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  referenceName: text("reference_name").notNull(),
+  referenceDesignation: text("reference_designation"),
+  referenceCompany: text("reference_company"),
+  referenceEmail: text("reference_email"),
+  referencePhone: text("reference_phone"),
+  relationship: text("relationship"),
+  status: text("status").notNull().default("PENDING"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  contactedAt: timestamp("contacted_at"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_reference_checks_candidate").on(table.candidateId),
+  index("idx_reference_checks_org").on(table.orgId),
+]);
+
+export const candidateReferenceChecksRelations = relations(candidateReferenceChecks, ({ one }) => ({
+  candidate: one(candidates, { fields: [candidateReferenceChecks.candidateId], references: [candidates.id] }),
+  organization: one(organizations, { fields: [candidateReferenceChecks.orgId], references: [organizations.id] }),
+  createdByUser: one(users, { fields: [candidateReferenceChecks.createdBy], references: [users.id] }),
+}));
+
+// ─── Candidate Offers ────────────────────────────────────────────────────────
+
+export const candidateOffers = pgTable("candidate_offers", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  candidateId: integer("candidate_id").notNull().references(() => candidates.id, { onDelete: "cascade" }),
+  jobPostingId: integer("job_posting_id").references(() => jobPostings.id),
+  offeredBy: text("offered_by").references(() => users.id),
+  offerStatus: text("offer_status").notNull().default("DRAFT"),
+  // DRAFT | SENT | VIEWED | ACCEPTED | DECLINED | COUNTERED | EXPIRED
+  offeredSalary: decimal("offered_salary"),
+  offeredDesignation: text("offered_designation"),
+  joiningDate: date("joining_date"),
+  offerLetterUrl: text("offer_letter_url"),
+  validUntil: date("valid_until"),
+  notes: text("notes"),
+  sentAt: timestamp("sent_at"),
+  viewedAt: timestamp("viewed_at"),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_candidate_offers_candidate").on(table.candidateId),
+  index("idx_candidate_offers_org").on(table.orgId),
+]);
+
+export const candidateOffersRelations = relations(candidateOffers, ({ one }) => ({
+  candidate: one(candidates, { fields: [candidateOffers.candidateId], references: [candidates.id] }),
+  organization: one(organizations, { fields: [candidateOffers.orgId], references: [organizations.id] }),
+  jobPosting: one(jobPostings, { fields: [candidateOffers.jobPostingId], references: [jobPostings.id] }),
+  offeredByUser: one(users, { fields: [candidateOffers.offeredBy], references: [users.id] }),
+}));
+
+// ─── Leave Blackout Dates ─────────────────────────────────────────────────────
+
+export const leaveBlackoutDates = pgTable("leave_blackout_dates", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  reason: text("reason").notNull(),
+  appliesTo: text("applies_to").notNull().default("ALL"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_leave_blackout_org").on(table.orgId, table.startDate),
+]);
+
+export const leaveBlackoutDatesRelations = relations(leaveBlackoutDates, ({ one }) => ({
+  organization: one(organizations, { fields: [leaveBlackoutDates.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [leaveBlackoutDates.createdBy], references: [users.id] }),
+}));
+

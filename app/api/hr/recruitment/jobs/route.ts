@@ -1,11 +1,27 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { jobPostings } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
 import type { JobPostingStatus } from "@/types/hr";
+
+const createJobSchema = z.object({
+  title: z.string(),
+  departmentId: z.number().optional(),
+  location: z.string().optional(),
+  type: z.string().optional(),
+  experience: z.string().optional(),
+  salaryMin: z.number().optional(),
+  salaryMax: z.number().optional(),
+  description: z.string().optional(),
+  requirements: z.string().optional(),
+  benefits: z.string().optional(),
+  openings: z.number().optional(),
+  applicationDeadline: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -29,20 +45,7 @@ export async function POST(req: NextRequest) {
       return err("Only admins can create job postings.", 403);
     }
 
-    const body = await req.json() as {
-      title: string;
-      departmentId?: number;
-      location?: string;
-      type?: string;
-      experience?: string;
-      salaryMin?: number;
-      salaryMax?: number;
-      description?: string;
-      requirements?: string;
-      benefits?: string;
-      openings?: number;
-      applicationDeadline?: string;
-    };
+    const body = await parseBody(req, createJobSchema);
 
     if (!body.title) return err("title is required.", 400);
 

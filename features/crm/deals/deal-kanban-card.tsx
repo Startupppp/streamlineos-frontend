@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { User, Calendar, MoreHorizontal, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -15,10 +16,31 @@ import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { Deal } from "@/types/crm";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
 
+function DealHealthBadge({ expectedCloseDate }: { expectedCloseDate: string | null }) {
+  const status = useMemo(() => {
+    if (!expectedCloseDate) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const closeDate = new Date(expectedCloseDate);
+    closeDate.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((closeDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return "overdue" as const;
+    if (diffDays < 7) return "due-soon" as const;
+    return null;
+  }, [expectedCloseDate]);
+
+  if (!status) return null;
+  if (status === "overdue") {
+    return <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">Overdue</Badge>;
+  }
+  return <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-500 hover:bg-amber-500 text-white">Due soon</Badge>;
+}
+
 interface DealKanbanCardProps {
   deal: Deal;
   onStageChange: (id: number, stage: string) => void;
   onDelete: (id: number) => void;
+  onOpen?: (id: number) => void;
 }
 
 function StageMenuItem({
@@ -36,16 +58,27 @@ function StageMenuItem({
   );
 }
 
-export function DealKanbanCard({ deal, onStageChange, onDelete }: DealKanbanCardProps) {
+export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKanbanCardProps) {
   const router = useRouter();
   const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
-  const handleNavigate = useCallback(() => router.push(`/crm/deals/${deal.id}`), [deal.id, router]);
+  const handleNavigate = useCallback(() => {
+    if (onOpen) {
+      onOpen(deal.id);
+    } else {
+      router.push(`/crm/deals/${deal.id}`);
+    }
+  }, [deal.id, onOpen, router]);
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={handleNavigate}>
       <CardContent className="p-3">
         <div className="flex items-start justify-between">
-          <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
+          <div className="flex-1 min-w-0 mr-1">
+            <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
+            <div className="mt-0.5">
+              <DealHealthBadge expectedCloseDate={deal.expectedCloseDate} />
+            </div>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-6 w-6 -mr-1 -mt-0.5" aria-label="More options">

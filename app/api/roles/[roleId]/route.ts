@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getRole } from "@/server/queries/roles";
+import { createAuditLog } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { roles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -53,8 +54,7 @@ export async function PATCH(
       });
       if (!existing) return err("Role not found", 404);
 
-      const body = await req.json();
-      const input = updateSchema.parse(body);
+      const input = await parseBody(req, updateSchema);
 
       const updateData: Record<string, unknown> = { updatedAt: new Date() };
       if (input.name && !existing.isSystem) updateData.name = input.name;
@@ -64,6 +64,15 @@ export async function PATCH(
         .update(roles)
         .set(updateData)
         .where(and(eq(roles.id, roleId), eq(roles.orgId, session.orgId)));
+
+      void createAuditLog({
+        action: "role.changed",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(roleId),
+        targetType: "role",
+        metadata: { name: input.name, permissionsUpdated: !!input.permissions },
+      }).catch(() => {});
 
       return ok({ success: true });
     } catch (error) {
@@ -94,6 +103,27 @@ export async function DELETE(
       });
       if (!existing) return err("Role not found", 404);
       if (existing.isSystem) return err("System roles cannot be deleted", 403);
+
+      // Block delete if any org members use this role slug
+      const { users: usersTable, organizationMembers } = await import("@/lib/db/schema");
+      const { count } = await import("drizzle-orm");
+      const [{ value: userCount }] = await db
+        .select({ value: count() })
+        .from(organizationMembers)
+        .innerJoin(usersTable, eq(organizationMembers.userId, usersTable.id))
+        .where(
+          and(
+            eq(organizationMembers.orgId, session.orgId),
+            eq(usersTable.role, existing.slug)
+          )
+        );
+
+      if (Number(userCount) > 0) {
+        return err(
+          `Cannot delete role — ${userCount} user${Number(userCount) !== 1 ? "s are" : " is"} assigned to it. Reassign them first.`,
+          409
+        );
+      }
 
       await db
         .delete(roles)

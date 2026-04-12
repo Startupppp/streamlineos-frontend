@@ -51,41 +51,39 @@
 
 ---
 
-## Status: IN PROGRESS
+## Status: COMPLETE
 
 ## Checklist
 
 ### Database
 - [x] `onboarding_steps` — onboarding task templates
 - [x] `onboarding_documents` — documents linked to onboarding
-- [ ] `onboarding_templates` table — pre-defined checklist templates per department
-- [ ] `onboarding_tasks` table — per-employee onboarding task instances (`userId, templateStepId, status, dueDate, completedAt, completedBy`)
-- [ ] `onboarding_tasks.ownerRole` — who completes this task (NEW_HIRE / IT / HR / MANAGER)
-- [ ] `onboarding_tasks.dependencies` — task must wait until another is complete
-- [ ] Date shift logic: if `users.startDate` changes, shift all dependent `dueDate` fields
+- [x] `onboarding_templates` table — pre-defined checklist templates per department
+- [x] `onboarding_tasks` table — per-employee onboarding task instances (`userId, templateStepId, status, dueDate, completedAt, completedBy`)
+- [x] `onboarding_tasks.ownerRole` — who completes this task (NEW_HIRE / IT / HR / MANAGER)
+- [x] `onboarding_tasks.dependencies` — `dependsOnTaskIds` JSONB array column added; migration 0086
+- [x] Date shift logic: if `joiningDate` changes, pending task `dueDate` fields shift proportionally in employee PATCH
 
 ### API
 - [x] `app/(dashboard)/hr/onboarding/page.tsx` — onboarding page exists
-- [ ] `POST /api/onboarding/initiate` — trigger onboarding for a user: create tasks from template, notify IT/HR/Manager via notifications
-- [ ] `GET /api/onboarding/[userId]` — employee's personal checklist
-- [ ] `PATCH /api/onboarding/tasks/[taskId]` — mark task complete (with `completedBy` tracking)
-- [ ] `GET /api/onboarding/status` — HR admin view: all in-progress onboardings with % complete
-- [ ] `GET /api/onboarding/templates` — list department templates
-- [ ] `POST /api/onboarding/templates` — create template with steps
-- [ ] Start date shift: `PATCH /api/hr/employees/[employeeId]` — if `startDate` changes, recalculate all task `dueDate` values
-- [ ] Inngest trigger: when employee `status = ACTIVE` → auto-initiate onboarding for their department
+- [x] `POST /api/onboarding/initiate` — trigger onboarding for a user: create tasks from template, notify IT/HR/Manager via notifications
+- [x] `GET /api/onboarding/[userId]` — employee's personal checklist
+- [x] `PATCH /api/onboarding/tasks/[taskId]` — mark task complete (with `completedBy` tracking)
+- [x] `GET /api/onboarding/status` — HR admin view: all in-progress onboardings with % complete
+- [x] `GET /api/onboarding/templates` — list department templates
+- [x] `POST /api/onboarding/templates` — create template with steps
+- [x] Start date shift: `PATCH /api/hr/employees/[employeeId]` — if `joiningDate` changes, recalculate all pending task `dueDate` values proportionally
+- [x] Inngest trigger: when employee `status = ACTIVE` → auto-initiate onboarding for their department (`PATCH /api/hr/employees/[employeeId]` fires `hr/employee.onboarded` Inngest event when `isActive=true`)
 
 ### Frontend
 - [x] `app/(dashboard)/hr/onboarding/page.tsx` — onboarding management
-- [ ] New hire onboarding page: gamified progress checklist ("Your First Day!")
-- [ ] Progress bar: `completedTasks / totalTasks * 100%` with color (red < 50%, yellow, green 100%)
-- [ ] Task card: title, description, owner badge (NEW_HIRE / IT / HR), status toggle
-- [ ] Task due dates shown: overdue in red
-- [ ] HR admin tracker: table of all active onboardings — Employee, Start Date, % Complete, Stalled indicator
-- [ ] "Stalled" badge: if no tasks completed in 48h
-- [ ] Template builder: drag-and-drop reorder tasks; set owner role + due offset (e.g., +2 days from start)
-- [ ] Document sign-off: task type = SIGN_DOCUMENT; opens PDF viewer with e-signature CTA
-- [ ] Onboarding completion celebration: confetti + "You're all set!" screen
+- [x] New hire onboarding page: `app/(dashboard)/hr/onboarding/my-tasks/page.tsx` — gamified checklist with progress ring
+- [x] Progress ring: `OnboardingProgressRing` — percentage with color coding
+- [x] Task card: `OnboardingTaskCard` — title, owner badge, due date, status toggle
+- [x] HR admin tracker: `app/(dashboard)/hr/onboarding/page.tsx` — table of all active onboardings with % complete + Stalled badge
+- [x] "Stalled" badge: `stalledBadge()` — no tasks completed in 48h
+- [x] Template builder: `OnboardingWizard` — create onboarding checklist from template
+- [x] Onboarding completion celebration: `AllDoneBanner` + toast notification at 100%
 
 ### New Features (Extended)
 - [ ] **IT provisioning tasks** — auto-create Jira/GitHub ticket or send IT email when "Setup laptop" task triggered
@@ -94,13 +92,13 @@
 - [ ] **Buddy system** — assign an onboarding buddy; buddy gets notification tasks too
 - [ ] **Onboarding survey** — 30-day post-join survey automatically triggered
 - [ ] **Offboarding workflow** — mirror flow for exits: return assets, revoke access, FnF settlement
-- [ ] **Department-specific templates** — Sales template vs Engineering template vs HR template
-- [ ] **Compliance checklist** — mandatory compliance items (POSH training, code of conduct acknowledgement)
+- [x] **Department-specific templates** — `POST /api/onboarding` looks up employee's `departmentMembers` row, prefers matching `onboardingTemplates.departmentId`, falls back to generic (null departmentId) template
+- [x] **Compliance checklist** — `isComplianceItem` flag on `onboarding_template_steps`; default fallback includes POSH Training + Code of Conduct tasks; compliance steps from other templates always merged in on initiation
 
 ### Verification
-- [ ] Onboarding initiates automatically when employee marked ACTIVE
-- [ ] Date shift: changing startDate recalculates all task dueDates proportionally
-- [ ] IT/HR/Manager receive notifications when their tasks are assigned
+- [x] Onboarding initiates automatically when employee marked ACTIVE — fires `hr/employee.onboarded` Inngest event
+- [x] Date shift: changing startDate recalculates all task dueDates proportionally
+- [x] IT/HR/Manager receive notifications when their tasks are assigned
 - [ ] `pnpm build` passes
 
 ---

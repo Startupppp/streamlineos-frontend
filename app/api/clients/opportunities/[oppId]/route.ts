@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     const body = await req.json();
     const parsed = updateSchema.safeParse(body);
-    if (!parsed.success) return err(parsed.error.message, 400);
+    if (!parsed.success) return err("Invalid input", 400);
 
     const { title, type, stage, value, notes, expectedCloseDate } = parsed.data;
 

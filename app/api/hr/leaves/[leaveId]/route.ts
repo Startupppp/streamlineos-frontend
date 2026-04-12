@@ -1,9 +1,15 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const updateLeaveSchema = z.object({
+  status: z.enum(["APPROVED", "REJECTED"]),
+  rejectionReason: z.string().optional(),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -18,10 +24,7 @@ export async function PATCH(
     const requestId = Number(id);
     if (isNaN(requestId)) return err("Invalid leave request ID.", 400);
 
-    const body = await req.json() as {
-      status: "APPROVED" | "REJECTED";
-      rejectionReason?: string;
-    };
+    const body = await parseBody(req, updateLeaveSchema);
 
     if (!body.status || !["APPROVED", "REJECTED"].includes(body.status)) {
       return err("status must be APPROVED or REJECTED.", 400);

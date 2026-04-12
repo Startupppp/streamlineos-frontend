@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo, useCallback } from "react";
+import { use, useState, useMemo, useCallback, useRef } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -28,6 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
@@ -46,6 +54,7 @@ import {
   Settings,
   Users,
   Trash2,
+  UserX,
 } from "lucide-react";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { useSession } from "next-auth/react";
@@ -91,6 +100,43 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   const updateMutation = useUpdateProject();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Reassignment dialog: fires when an existing member is removed from the roster
+  const [reassignDialog, setReassignDialog] = useState<{
+    memberId: string;
+    memberName: string;
+  } | null>(null);
+  const [reassignTo, setReassignTo] = useState<string>("__unassign__");
+  // Accumulated map of { removedUserId → replacementUserId } built as user dismisses dialogs
+  const reassignmentsRef = useRef<Record<string, string>>({});
+  // Pending field change that waits for dialog confirmation
+  const pendingFieldChangeRef = useRef<(() => void) | null>(null);
+
+  const handleMemberRemoved = useCallback(
+    (memberId: string, memberName: string, applyChange: () => void) => {
+      setReassignTo("__unassign__");
+      pendingFieldChangeRef.current = applyChange;
+      setReassignDialog({ memberId, memberName });
+    },
+    []
+  );
+
+  const confirmReassign = useCallback(() => {
+    if (!reassignDialog) return;
+    if (reassignTo && reassignTo !== "__unassign__") {
+      reassignmentsRef.current[reassignDialog.memberId] = reassignTo;
+    } else {
+      delete reassignmentsRef.current[reassignDialog.memberId];
+    }
+    pendingFieldChangeRef.current?.();
+    pendingFieldChangeRef.current = null;
+    setReassignDialog(null);
+  }, [reassignDialog, reassignTo]);
+
+  const cancelReassign = useCallback(() => {
+    pendingFieldChangeRef.current = null;
+    setReassignDialog(null);
+  }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     deleteMutation.mutate(
@@ -141,10 +187,15 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   }
 
   const onSubmit = (values: FormValues) => {
+    const reassignments =
+      Object.keys(reassignmentsRef.current).length > 0
+        ? { ...reassignmentsRef.current }
+        : undefined;
     updateMutation.mutate(
-      { projectId, ...values },
+      { projectId, ...values, ...(reassignments && { reassignments }) },
       {
         onSuccess: () => {
+          reassignmentsRef.current = {};
           toast.success("Project settings updated");
           router.push(`/projects/${projectId}`);
         },
@@ -242,7 +293,13 @@ export default function ProjectSettingsPage({ params }: PageProps) {
                     <Users className="h-4 w-4 text-muted-foreground" />
                     Team Members
                   </div>
-                  <MembersSelector form={form} />
+                  <MembersSelector
+                    form={form}
+                    originalMemberIds={
+                      project.members?.map((m: { userId: string }) => m.userId) ?? []
+                    }
+                    onMemberRemoved={handleMemberRemoved}
+                  />
                 </div>
 
                 <Button
@@ -292,11 +349,111 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           </Card>
         )}
       </div>
+
+      {/* Ticket reassignment dialog shown when an existing member is removed */}
+      <ReassignDialog
+        open={reassignDialog !== null}
+        memberName={reassignDialog?.memberName ?? ""}
+        removedMemberId={reassignDialog?.memberId ?? ""}
+        currentMemberIds={form.getValues("memberIds") ?? []}
+        reassignTo={reassignTo}
+        onReassignToChange={setReassignTo}
+        onConfirm={confirmReassign}
+        onCancel={cancelReassign}
+      />
     </PageWrapper>
   );
 }
 
-function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
+interface ReassignDialogProps {
+  open: boolean;
+  memberName: string;
+  removedMemberId: string;
+  currentMemberIds: string[];
+  reassignTo: string;
+  onReassignToChange: (value: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ReassignDialog({
+  open,
+  memberName,
+  removedMemberId,
+  currentMemberIds,
+  reassignTo,
+  onReassignToChange,
+  onConfirm,
+  onCancel,
+}: ReassignDialogProps) {
+  const { data: employeesData } = useHrEmployees();
+  const employees = Array.isArray(employeesData)
+    ? employeesData
+    : (employeesData?.data ?? []);
+
+  // Only show current (remaining) members as reassignment targets
+  const remainingMembers = employees.filter(
+    (emp) =>
+      currentMemberIds.includes(emp.id) && emp.id !== removedMemberId
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserX className="h-4 w-4 text-amber-500" />
+            Reassign open tickets
+          </DialogTitle>
+          <DialogDescription>
+            <strong>{memberName}</strong> has open tickets in this project.
+            Choose a team member to reassign them to, or leave them unassigned.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2 py-1">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Reassign to
+          </p>
+          <Select value={reassignTo} onValueChange={onReassignToChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a member…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__unassign__">
+                <span className="text-muted-foreground">Leave unassigned</span>
+              </SelectItem>
+              {remainingMembers.map((emp) => (
+                <SelectItem key={emp.id} value={emp.id}>
+                  {emp.name || emp.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" size="sm" onClick={onCancel}>
+            Cancel removal
+          </Button>
+          <Button size="sm" onClick={onConfirm}>
+            Confirm
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MembersSelector({
+  form,
+  originalMemberIds,
+  onMemberRemoved,
+}: {
+  form: UseFormReturn<FormValues>;
+  originalMemberIds: string[];
+  onMemberRemoved: (memberId: string, memberName: string, applyChange: () => void) => void;
+}) {
   const { data: employeesData } = useHrEmployees();
   const employees = Array.isArray(employeesData)
     ? employeesData
@@ -354,10 +511,18 @@ function MembersSelector({ form }: { form: UseFormReturn<FormValues> }) {
                         className="flex items-center gap-2 w-full p-2 rounded-md hover:bg-accent text-left"
                         onClick={() => {
                           const current = field.value || [];
-                          const next = selected
-                            ? current.filter((id: string) => id !== emp.id)
-                            : [...current, emp.id];
-                          field.onChange(next);
+                          if (selected) {
+                            // Removing a member — check if they were an original member
+                            const applyRemoval = () =>
+                              field.onChange(current.filter((id: string) => id !== emp.id));
+                            if (originalMemberIds.includes(emp.id)) {
+                              onMemberRemoved(emp.id, emp.name ?? emp.email ?? emp.id, applyRemoval);
+                            } else {
+                              applyRemoval();
+                            }
+                          } else {
+                            field.onChange([...current, emp.id]);
+                          }
                         }}
                       >
                         <Checkbox

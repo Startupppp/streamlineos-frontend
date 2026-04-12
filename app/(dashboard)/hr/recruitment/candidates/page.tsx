@@ -5,11 +5,12 @@ import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useCandidates, useCreateCandidate, useUpdateCandidate } from "@/lib/api/hooks/hr";
+import { useCandidates, useCreateCandidate, useUpdateCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -17,13 +18,14 @@ import {
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, Search, Mail, Phone, Building2, Star } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building2, Star, XCircle, CheckSquare, GitCompare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CandidateStatus } from "@/types/hr";
 import { AIScoreCandidateButton } from "@/features/hr/recruitment/ai-score-candidate-button";
+import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 
 const STATUSES: { value: CandidateStatus; label: string; color: string }[] = [
   { value: "NEW", label: "New", color: "bg-blue-500" },
@@ -33,6 +35,26 @@ const STATUSES: { value: CandidateStatus; label: string; color: string }[] = [
   { value: "HIRED", label: "Hired", color: "bg-green-500" },
   { value: "REJECTED", label: "Rejected", color: "bg-red-500" },
 ];
+
+const SOURCE_LABELS: Record<string, string> = {
+  DIRECT: "Direct",
+  REFERRAL: "Referral",
+  LINKEDIN: "LinkedIn",
+  JOB_PORTAL: "Job Portal",
+  CAMPUS: "Campus",
+  CAREERS_PAGE: "Careers Page",
+  NAUKRI: "Naukri",
+};
+
+const SOURCE_BADGE_CLASSES: Record<string, string> = {
+  LINKEDIN: "border-blue-300 text-blue-700 dark:text-blue-400",
+  NAUKRI: "border-orange-300 text-orange-700 dark:text-orange-400",
+  REFERRAL: "border-green-300 text-green-700 dark:text-green-400",
+  CAMPUS: "border-purple-300 text-purple-700 dark:text-purple-400",
+  JOB_PORTAL: "border-cyan-300 text-cyan-700 dark:text-cyan-400",
+  CAREERS_PAGE: "border-primary/40 text-primary",
+  DIRECT: "text-muted-foreground",
+};
 
 function statusBadgeVariant(status: string | null): "default" | "secondary" | "outline" | "destructive" {
   switch (status) {
@@ -54,6 +76,7 @@ export default function CandidatesPage() {
   );
   const createCandidate = useCreateCandidate();
   const updateCandidate = useUpdateCandidate();
+  const bulkReject = useBulkRejectCandidates();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -61,6 +84,9 @@ export default function CandidatesPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [source, setSource] = useState("DIRECT");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const setFilter = useCallback(
     (key: string, value: string | null) => {
@@ -113,6 +139,36 @@ export default function CandidatesPage() {
     [updateCandidate]
   );
 
+  const handleToggleSelect = useCallback((id: number, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    const allIds = filteredCandidates.map((c) => c.id);
+    setSelectedIds((prev) =>
+      prev.size === allIds.length ? new Set() : new Set(allIds)
+    );
+  }, [filteredCandidates]);
+
+  const handleBulkReject = useCallback(() => {
+    bulkReject.mutate(
+      { candidateIds: Array.from(selectedIds), sendRejectionEmail: true },
+      {
+        onSuccess: (res) => {
+          toast.success(`${res.rejected} candidate(s) rejected, ${res.emailsSent} email(s) sent`);
+          setSelectedIds(new Set());
+          setBulkRejectOpen(false);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      }
+    );
+  }, [selectedIds, bulkReject]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Candidates" subtitle="Manage your talent pipeline">
@@ -128,6 +184,51 @@ export default function CandidatesPage() {
       badge={`${filteredCandidates.length} candidates`}
       actions={
         <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <>
+              <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="gap-1.5 h-8 text-xs"
+                onClick={() => setBulkRejectOpen(true)}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                Reject Selected
+              </Button>
+              {selectedIds.size >= 2 && selectedIds.size <= 3 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 h-8 text-xs"
+                  onClick={() => setCompareOpen(true)}
+                >
+                  <GitCompare className="h-3.5 w-3.5" />
+                  Compare ({selectedIds.size})
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                Clear
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 h-8 text-xs"
+            onClick={handleSelectAll}
+            title={selectedIds.size === filteredCandidates.length ? "Deselect all" : "Select all"}
+          >
+            <CheckSquare className="h-3.5 w-3.5" />
+            {selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0
+              ? "Deselect all"
+              : "Select all"}
+          </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link href="/hr/recruitment">Back</Link>
           </Button>
@@ -222,10 +323,24 @@ export default function CandidatesPage() {
           </Card>
         ) : (
           filteredCandidates.map((candidate) => (
-            <Link key={candidate.id} href={`/hr/recruitment/candidates/${candidate.id}`}>
-            <Card className="hover:border-primary/30 transition-colors cursor-pointer">
+            <Card
+              key={candidate.id}
+              className={`hover:border-primary/30 transition-colors relative ${selectedIds.has(candidate.id) ? "ring-2 ring-primary/40 border-primary/40" : ""}`}
+            >
+              {/* Checkbox overlay */}
+              <div
+                className="absolute top-3 right-3 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Checkbox
+                  checked={selectedIds.has(candidate.id)}
+                  onCheckedChange={(checked) => handleToggleSelect(candidate.id, checked === true)}
+                  aria-label={`Select ${candidate.firstName} ${candidate.lastName}`}
+                />
+              </div>
+              <Link href={`/hr/recruitment/candidates/${candidate.id}`}>
               <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-2 pr-6">
                   <div>
                     <h3 className="text-sm font-semibold">
                       {candidate.firstName} {candidate.lastName}
@@ -242,7 +357,14 @@ export default function CandidatesPage() {
                 <div className="space-y-1.5 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" />{candidate.email}</div>
                   {candidate.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{candidate.phone}</div>}
-                  {candidate.source && <div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5" />{candidate.source}</div>}
+                  {candidate.source && (
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-3.5 w-3.5" />
+                      <Badge variant="outline" className={SOURCE_BADGE_CLASSES[candidate.source] ?? "text-muted-foreground"}>
+                        {SOURCE_LABELS[candidate.source] ?? candidate.source}
+                      </Badge>
+                    </div>
+                  )}
                   {candidate.rating && (
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
@@ -272,11 +394,27 @@ export default function CandidatesPage() {
                   </div>
                 </div>
               </CardContent>
+              </Link>
             </Card>
-            </Link>
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={bulkRejectOpen}
+        onOpenChange={setBulkRejectOpen}
+        title={`Reject ${selectedIds.size} candidate(s)?`}
+        description="This will move all selected candidates to Rejected and send automated rejection emails. This action cannot be undone."
+        confirmLabel={bulkReject.isPending ? "Rejecting..." : `Reject ${selectedIds.size} Candidate(s)`}
+        destructive
+        onConfirm={handleBulkReject}
+      />
+      {compareOpen && (
+        <CandidateComparisonDialog
+          candidates={filteredCandidates.filter((c) => selectedIds.has(c.id))}
+          onClose={() => setCompareOpen(false)}
+        />
+      )}
     </PageWrapper>
   );
 }

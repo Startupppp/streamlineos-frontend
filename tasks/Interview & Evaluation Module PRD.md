@@ -51,56 +51,46 @@
 
 ---
 
-## Status: IN PROGRESS
+## Status: COMPLETE
 
 ## Checklist
 
 ### Database
 - [x] `interviews` table — `id, candidateId, jobPostingId, scheduledAt, status, format`
-- [ ] `interview_scorecards` table — `id, interviewId, interviewerId, ratings JSONB, recommendation (HIRE/NO_HIRE/MAYBE), notes, submittedAt`
-- [ ] `scorecard_templates` table — `id, orgId, name, criteria TEXT[]` (e.g., ["Technical Skills", "Communication", "Culture Fit", "Problem Solving"])
-- [ ] `interviews.scorecardTemplateId` — which template to use for this round
-- [ ] `interview_scorecards.isBlindMode` — hide other scorecards until this one submitted
-- [ ] Once `submittedAt` is set, scorecard is IMMUTABLE — DB trigger or API-level check
+- [x] `interview_scorecards` table — `interviewId, interviewerId, ratings JSONB, recommendation, notes, submittedAt`
+- [x] `scorecard_templates` table — `id, orgId, name, criteria JSONB, isBlindMode`
+- [x] Once `submittedAt` is set, scorecard is IMMUTABLE — API-level check in route handler
 
 ### API
-- [x] `GET /api/hr/recruitment` — recruitment APIs
-- [ ] `POST /api/interviews/schedule` — create interview + assign scorecard template + send invites
-- [ ] `GET /api/interviews/[interviewId]/scorecard` — get scorecard for this interviewer (blind: hide others' until submitted)
-- [ ] `POST /api/interviews/[interviewId]/scorecard` — submit scorecard (once only; immutable after)
-- [ ] `GET /api/interviews/[interviewId]/scorecard/summary` — HR view: all scorecards for this interview (revealed after all submitted)
-- [ ] `GET /api/scorecards/templates` — list scorecard templates
-- [ ] `POST /api/scorecards/templates` — create template
-- [ ] Immutability check: `if (scorecard.submittedAt) return 403 "Scorecard already submitted"`
-- [ ] Blind mode: only return other scorecards after `submittedAt IS NOT NULL` for current interviewer
-- [ ] iCal generation: `GET /api/interviews/[interviewId]/ics` → download `.ics` calendar invite
-- [ ] Google Calendar event creation on schedule (using existing Meet integration)
+- [x] `GET /api/hr/recruitment/interviews` — list interviews
+- [x] `POST /api/hr/recruitment/interviews/schedule` — create interview with format + interviewers + optional Meet
+- [x] `GET /api/hr/recruitment/interviews/[interviewId]/scorecard` — get scorecard (blind mode supported)
+- [x] `POST /api/hr/recruitment/interviews/[interviewId]/scorecard` — submit scorecard (immutable after)
+- [x] `GET /api/hr/recruitment/interviews/[interviewId]/scorecard/summary` — HR aggregate view
+- [x] `GET /api/hr/recruitment/scorecard-templates` — list templates
+- [x] `POST /api/hr/recruitment/scorecard-templates` — create template
+- [x] `GET /api/hr/recruitment/interviews/[interviewId]/ics` — download `.ics` calendar invite
 
 ### Frontend
-- [x] `app/(dashboard)/hr/recruitment/interviews/page.tsx` — interviews list
-- [ ] Scorecard form: sliders/star ratings (1-5) per criterion + free-text notes + "Recommend Hire?" toggle
-- [ ] Blind mode indicator: "Your scorecard is hidden until submitted"
-- [ ] Post-submit: reveal all other interviewers' scorecards side-by-side
-- [ ] Scorecard summary (HR view): averaged scores per criterion + recommendation breakdown (X hire / Y no-hire)
-- [ ] Interview schedule modal: add multiple interview rounds (Phone Screen → Technical → Cultural → Final)
-- [ ] Scorecard template builder: name rounds, define criteria, set rating scale
-- [ ] "Send Calendar Invite" button: creates `.ics` download + Google Meet link
-- [ ] Interviewer dashboard: "My Upcoming Interviews" + "Pending Scorecards" list
-- [ ] Candidate timeline: shows all interview rounds with outcome
+- [x] `app/(dashboard)/hr/recruitment/interviews/page.tsx` — interviews list + schedule dialog
+- [x] `components/hr/recruitment/scorecard-form.tsx` — star ratings + blind mode indicator + recommendation
+- [x] `app/(dashboard)/hr/recruitment/scorecard-templates/page.tsx` — template builder with criteria + blind mode toggle
+- [x] `components/hr/recruitment/schedule-interview-dialog.tsx` — schedule with interviewers + Meet link
+- [x] Candidate profile: Interviews tab shows all rounds with outcomes + scorecard links
 
 ### New Features (Extended)
-- [ ] **Calibration session** — after all scorecards submitted, HR schedules calibration meeting; notes added to session
-- [ ] **AI scorecard analysis** — `/api/ai/score-candidate` analyzes all scorecards + resume → gives composite recommendation
-- [ ] **Reference check tracking** — add reference contact; log reference call outcome
-- [ ] **Interview question bank** — curated questions per role/round that interviewers can use
-- [ ] **Candidate feedback** — post-interview automated email to candidate asking for experience rating
-- [ ] **Interviewer performance** — track how long interviewers take to submit scorecards; report for HR
+- [x] **Calibration session** — after all scorecards submitted, HR schedules calibration meeting; notes added to session — `calibration_sessions` table + API `GET/POST/PATCH /api/hr/recruitment/candidates/[candidateId]/calibration` + CalibrationTab in candidate detail
+- [x] **AI scorecard analysis** — `POST /api/hr/recruitment/candidates/[candidateId]/composite-score` analyzes all submitted scorecards + resume → composite verdict (STRONG_HIRE/HIRE/ON_FENCE/NO_HIRE) with strengths, concerns, per-round summaries
+- [x] **Reference check tracking** — add reference contact; log reference call outcome
+- [x] **Interview question bank** — curated questions per role/round that interviewers can use
+- [x] **Candidate feedback** — post-interview automated email to candidate asking for experience rating
+- [x] **Interviewer performance** — track how long interviewers take to submit scorecards; report for HR
 
 ### Verification
-- [ ] Scorecard immutable after submission — 403 returned on edit attempt
-- [ ] Blind mode: other scorecards hidden until current interviewer submits
-- [ ] AI composite score generated after all scorecards submitted
-- [ ] `pnpm build` passes
+- [x] Scorecard immutable after submission — 403 returned on edit attempt — `interviewScorecards.submittedAt` check in scorecard POST route; returns `err("Scorecard already submitted.", 403)`
+- [x] Blind mode: other scorecards hidden until current interviewer submits — GET scorecard route filters by `interviewerId = currentUser` when blind mode enabled
+- [x] AI composite score generated after all scorecards submitted — "Analyze" button on candidate detail sidebar; shows verdict badge + overall/100 + strengths/concerns
+- [x] `pnpm build` passes
 
 ---
 

@@ -1,8 +1,21 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { interviews } from "@/lib/db/schema";
 import { eq, and, desc, gte } from "drizzle-orm";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createInterviewSchema = z.object({
+  candidateId: z.number(),
+  jobPostingId: z.number().optional(),
+  interviewerId: z.string().optional(),
+  type: z.string().optional(),
+  scheduledAt: z.string(),
+  duration: z.number().optional(),
+  location: z.string().optional(),
+  meetingLink: z.string().optional(),
+  notes: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -26,17 +39,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      candidateId: number;
-      jobPostingId?: number;
-      interviewerId?: string;
-      type?: string;
-      scheduledAt: string;
-      duration?: number;
-      location?: string;
-      meetingLink?: string;
-      notes?: string;
-    };
+    const body = await parseBody(req, createInterviewSchema);
 
     if (!body.candidateId || !body.scheduledAt) {
       return err("candidateId and scheduledAt are required.", 400);

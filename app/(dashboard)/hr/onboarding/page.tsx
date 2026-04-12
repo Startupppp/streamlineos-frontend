@@ -16,6 +16,9 @@ import {
   AlertCircle,
   RefreshCw,
   ExternalLink,
+  UserPlus,
+  Users,
+  TrendingUp,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -27,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -34,6 +38,11 @@ import { OnboardingWizard } from "@/components/hr/onboarding-wizard";
 
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  useOnboardingStatus,
+  useInitiateOnboarding,
+  type OnboardingStatus,
+} from "@/lib/api/hooks/hr/onboarding";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -444,6 +453,163 @@ function EmployeeDocumentsTab() {
   );
 }
 
+// ─── HR Workflow Tab ─────────────────────────────────────────────────────────
+
+function InitiateSheet({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [userId, setUserId] = useState("");
+  const initiate = useInitiateOnboarding();
+
+  const handleSubmit = useCallback(() => {
+    if (!userId.trim()) {
+      toast.error("Please enter a user ID");
+      return;
+    }
+    initiate.mutate(userId.trim(), {
+      onSuccess: (data) => {
+        toast.success(`Onboarding initiated — ${data.tasksCreated} tasks created`);
+        setUserId("");
+        onOpenChange(false);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [userId, initiate, onOpenChange]);
+
+  return (
+    <HrSheet
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) setUserId("");
+        onOpenChange(v);
+      }}
+      title="Initiate Onboarding"
+      description="Create an onboarding checklist for an employee using the active template."
+      onSubmit={handleSubmit}
+      submitLabel="Start Onboarding"
+      isPending={initiate.isPending}
+    >
+      <div className="space-y-1.5">
+        <Label className="text-sm font-medium">
+          Employee User ID <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          placeholder="user_..."
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          aria-label="Employee user ID"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Enter the internal user ID of the employee to onboard.
+        </p>
+      </div>
+    </HrSheet>
+  );
+}
+
+function stalledBadge(row: OnboardingStatus): boolean {
+  if (row.percentComplete >= 100) return false;
+  if (!row.lastCompletedAt) return false;
+  const last = new Date(row.lastCompletedAt).getTime();
+  return Date.now() - last > 48 * 60 * 60 * 1000;
+}
+
+function HrWorkflowTab() {
+  const { data, isLoading } = useOnboardingStatus();
+  const [initiateOpen, setInitiateOpen] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2 pt-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-16" />
+        ))}
+      </div>
+    );
+  }
+
+  const rows = data ?? [];
+
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {rows.length > 0
+            ? `${rows.length} employee${rows.length !== 1 ? "s" : ""} in onboarding`
+            : "No active onboardings yet."}
+        </p>
+        <Button
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={() => setInitiateOpen(true)}
+          aria-label="Initiate onboarding for an employee"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          Initiate Onboarding
+        </Button>
+      </div>
+
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No onboardings in progress"
+          description="Use the button above to start onboarding for a new hire."
+          compact
+        />
+      ) : (
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <Card key={row.userId}>
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      <p className="text-sm font-medium truncate">{row.userName}</p>
+                      {row.percentComplete === 100 && (
+                        <Badge className="text-[10px] shrink-0" variant="default">
+                          Complete
+                        </Badge>
+                      )}
+                      {stalledBadge(row) && (
+                        <Badge className="text-[10px] shrink-0" variant="destructive">
+                          Stalled
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress value={row.percentComplete} className="h-1.5 flex-1" />
+                      <span className="text-[11px] text-muted-foreground shrink-0">
+                        {row.completedTasks}/{row.totalTasks}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs shrink-0"
+                    asChild
+                  >
+                    <Link href={`/hr/onboarding/${row.userId}`} aria-label={`View ${row.userName} onboarding`}>
+                      <TrendingUp className="h-3.5 w-3.5 mr-1" />
+                      View
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <InitiateSheet open={initiateOpen} onOpenChange={setInitiateOpen} />
+    </div>
+  );
+}
+
 // ─── HR / CEO Documents Tab ───────────────────────────────────────────────────
 
 function HrDocumentsTab() {
@@ -523,8 +689,11 @@ export default function OnboardingPage() {
       }
     >
       {isHROrCEO ? (
-        <Tabs defaultValue="wizard" className="space-y-4">
+        <Tabs defaultValue="workflow" className="space-y-4">
           <TabsList className="h-8">
+            <TabsTrigger value="workflow" className="text-xs h-7 px-3">
+              Workflow
+            </TabsTrigger>
             <TabsTrigger value="wizard" className="text-xs h-7 px-3">
               New Employee
             </TabsTrigger>
@@ -532,6 +701,10 @@ export default function OnboardingPage() {
               Documents
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="workflow" className="mt-0">
+            <HrWorkflowTab />
+          </TabsContent>
 
           <TabsContent value="wizard" className="mt-0">
             <OnboardingWizard />

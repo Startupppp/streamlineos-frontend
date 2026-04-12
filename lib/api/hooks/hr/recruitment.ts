@@ -7,6 +7,8 @@ import type {
   JobPosting,
   Candidate,
   CandidateApplication,
+  CandidateStatus,
+  AtsPipelineResponse,
   Interview,
   RecruitmentStats,
   CreateJobPostingInput,
@@ -80,13 +82,76 @@ export function useCandidates(params?: { status?: string; jobId?: number }) {
   });
 }
 
+export interface AiScoreBreakdown {
+  technicalSkills: number;
+  experience: number;
+  communication: number;
+  cultureFit: number;
+  leadership: number;
+}
+
+export interface AiScoreResult {
+  overall: number;
+  breakdown: AiScoreBreakdown;
+  summary: string;
+}
+
 export function useCandidate(id: number) {
   return useQuery({
     queryKey: queryKeys.hr.candidate(id),
-    queryFn: () => apiClient.get<Candidate & { applications?: CandidateApplication[]; interviews?: Interview[] }>(
-      `/hr/recruitment/candidates/${id}`
-    ),
+    queryFn: () =>
+      apiClient.get<
+        Candidate & {
+          applications?: CandidateApplication[];
+          interviews?: Interview[];
+          slaTracking?: CandidateSlaRecord[];
+        }
+      >(`/hr/recruitment/candidates/${id}`),
     enabled: !!id,
+  });
+}
+
+export function useGenerateCandidateAiScore() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (candidateId: number) =>
+      apiClient.post<AiScoreResult>(
+        `/hr/recruitment/candidates/${candidateId}/ai-score`,
+        {}
+      ),
+    onSuccess: (_data, candidateId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+    },
+  });
+}
+
+export type CompositeVerdict = "STRONG_HIRE" | "HIRE" | "ON_FENCE" | "NO_HIRE";
+
+export interface RoundSummary {
+  interviewType: string;
+  scheduledAt: string;
+  recommendation: string;
+  overallRating: number | null;
+  keyNotes: string;
+}
+
+export interface CompositeScoreResult {
+  verdict: CompositeVerdict;
+  overall: number;
+  reasoning: string;
+  strengthsAcrossRounds: string[];
+  concernsAcrossRounds: string[];
+  roundSummaries: RoundSummary[];
+}
+
+export function useGenerateCandidateCompositeScore() {
+  return useMutation({
+    mutationFn: (candidateId: number) =>
+      apiClient.post<CompositeScoreResult>(
+        `/hr/recruitment/candidates/${candidateId}/composite-score`,
+        {}
+      ),
   });
 }
 
@@ -177,11 +242,1079 @@ export function useRecruitmentPipeline() {
   });
 }
 
+const ATS_KANBAN_KEY = ["vaivamm", "hr", "atsKanban"] as const;
+
+/** ATS Kanban pipeline — returns the rich `stages` array format. */
+export function useAtsKanban() {
+  return useQuery({
+    queryKey: ATS_KANBAN_KEY,
+    queryFn: () => apiClient.get<AtsPipelineResponse>("/hr/recruitment/pipeline"),
+  });
+}
+
+/** Dedicated stage-move mutation with optimistic update on the ATS kanban cache. */
+export function useUpdateCandidateStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ candidateId, stage }: { candidateId: number; stage: CandidateStatus }) =>
+      apiClient.patch<{ id: number; stage: CandidateStatus; changed: boolean }>(
+        `/hr/recruitment/candidates/${candidateId}/stage`,
+        { stage }
+      ),
+    onMutate: async ({ candidateId, stage }) => {
+      await qc.cancelQueries({ queryKey: ATS_KANBAN_KEY });
+      const previous = qc.getQueryData<AtsPipelineResponse>(ATS_KANBAN_KEY);
+
+      if (previous) {
+        const next: AtsPipelineResponse = {
+          stages: previous.stages.map((s) => {
+            // Remove candidate from whichever column it sits in
+            const withoutCandidate = s.candidates.filter((c) => c.id !== candidateId);
+            if (s.stage !== stage) return { ...s, candidates: withoutCandidate };
+            // Find the candidate card from old data to slot into target column
+            const moved = previous.stages
+              .flatMap((st) => st.candidates)
+              .find((c) => c.id === candidateId);
+            return moved
+              ? { ...s, candidates: [moved, ...withoutCandidate] }
+              : { ...s, candidates: withoutCandidate };
+          }),
+        };
+        qc.setQueryData<AtsPipelineResponse>(ATS_KANBAN_KEY, next);
+      }
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(ATS_KANBAN_KEY, context.previous);
+      }
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+    },
+  });
+}
+
 export function useGenerateOfferLetter() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { candidateId: number; jobPostingId: number; salary: string; startDate: string }) =>
       apiClient.post<{ documentId: number; title: string }>("/hr/recruitment/offer-letter", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() }),
+  });
+}
+
+// ─── Scorecard Templates ─────────────────────────────────────────────────────
+
+export interface ScorecardCriterion {
+  name: string;
+  weight: number;
+}
+
+export interface ScorecardTemplate {
+  id: number;
+  orgId: string;
+  name: string;
+  criteria: ScorecardCriterion[];
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface InterviewScorecard {
+  id: number;
+  interviewId: number;
+  interviewerId: string;
+  templateId: number | null;
+  ratings: Record<string, number>;
+  recommendation: "HIRE" | "NO_HIRE" | "MAYBE";
+  notes: string | null;
+  isBlindMode: boolean;
+  submittedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface ScorecardSummary {
+  interviewId: number;
+  totalScorecards: number;
+  submittedCount: number;
+  scorecards: InterviewScorecard[];
+  aggregatedRatings: Record<string, { total: number; count: number; average: number }>;
+  recommendationCounts: Record<string, number>;
+}
+
+export interface VaultDocument {
+  id: number;
+  candidateId: number;
+  orgId: string;
+  filename: string;
+  s3Key: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  documentType: string | null;
+  avResult: "PENDING" | "CLEAN" | "INFECTED" | null;
+  expiresAt: string | null;
+  uploadedBy: string;
+  createdAt: string | null;
+}
+
+export type BgvStatus = "NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED";
+
+export function useScorecardTemplates() {
+  return useQuery({
+    queryKey: queryKeys.hr.scorecardTemplates(),
+    queryFn: () => apiClient.get<ScorecardTemplate[]>("/hr/recruitment/scorecard-templates"),
+  });
+}
+
+export function useCreateScorecardTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string; criteria: ScorecardCriterion[]; isBlindMode?: boolean }) =>
+      apiClient.post<ScorecardTemplate>("/hr/recruitment/scorecard-templates", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.scorecardTemplates() }),
+  });
+}
+
+// ─── Scorecard Submit ────────────────────────────────────────────────────────
+
+export function useInterviewScorecard(interviewId: number) {
+  return useQuery({
+    queryKey: queryKeys.hr.interviewScorecard(interviewId),
+    queryFn: () =>
+      apiClient.get<InterviewScorecard | null>(`/hr/recruitment/interviews/${interviewId}/scorecard`),
+    enabled: !!interviewId,
+  });
+}
+
+export function useSubmitScorecard(interviewId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      ratings: Record<string, number>;
+      recommendation: "HIRE" | "NO_HIRE" | "MAYBE";
+      notes?: string;
+      templateId?: number;
+      isBlindMode?: boolean;
+    }) =>
+      apiClient.post<InterviewScorecard>(
+        `/hr/recruitment/interviews/${interviewId}/scorecard`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.interviewScorecard(interviewId) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.interviewScorecardSummary(interviewId) });
+    },
+  });
+}
+
+export function useInterviewScorecardSummary(interviewId: number) {
+  return useQuery({
+    queryKey: queryKeys.hr.interviewScorecardSummary(interviewId),
+    queryFn: () =>
+      apiClient.get<ScorecardSummary>(`/hr/recruitment/interviews/${interviewId}/scorecard/summary`),
+    enabled: !!interviewId,
+  });
+}
+
+// ─── Schedule Interview (full: calendar + notifications) ────────────────────
+
+export interface ScheduleInterviewInput {
+  candidateId: number;
+  jobPostingId?: number;
+  scheduledAt: string;
+  durationMinutes?: number;
+  format?: "VIDEO" | "PHONE" | "IN_PERSON";
+  interviewers: string[];
+  notes?: string;
+  createMeet?: boolean;
+  notifyChannels?: { email: boolean; whatsapp: boolean };
+}
+
+export function useScheduleInterview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ScheduleInterviewInput) =>
+      apiClient.post<Interview>("/hr/recruitment/interviews/schedule", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
+    },
+  });
+}
+
+// ─── SLA Config ──────────────────────────────────────────────────────────────
+
+export interface InterviewSla {
+  id: number;
+  orgId: string;
+  stage: string;
+  maxHours: number;
+  warningHours: number;
+  createdAt: string | null;
+}
+
+const INTERVIEW_SLAS_KEY = ["vaivamm", "hr", "interviewSlas"] as const;
+
+export function useInterviewSlas() {
+  return useQuery({
+    queryKey: INTERVIEW_SLAS_KEY,
+    queryFn: () => apiClient.get<InterviewSla[]>("/hr/recruitment/interviews/slas"),
+  });
+}
+
+export function useUpsertInterviewSla() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { stage: string; maxHours: number; warningHours: number }) =>
+      apiClient.put<InterviewSla>("/hr/recruitment/interviews/slas", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: INTERVIEW_SLAS_KEY }),
+  });
+}
+
+// ─── Candidate SLA Tracking ──────────────────────────────────────────────────
+
+export interface CandidateSlaRecord {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  stage: string;
+  enteredAt: string;
+  breachedAt: string | null;
+  status: "ON_TRACK" | "AT_RISK" | "BREACHED";
+  updatedAt: string | null;
+}
+
+export function useCandidateSla(candidateId: number) {
+  return useQuery({
+    queryKey: ["vaivamm", "hr", "candidateSla", candidateId],
+    queryFn: () =>
+      apiClient.get<CandidateSlaRecord[]>(`/hr/recruitment/candidates/${candidateId}/sla`),
+    enabled: !!candidateId,
+  });
+}
+
+export function useResetCandidateSla() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ candidateId, stage }: { candidateId: number; stage: string }) =>
+      apiClient.patch<CandidateSlaRecord>(
+        `/hr/recruitment/candidates/${candidateId}/sla`,
+        { stage }
+      ),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "candidateSla", vars.candidateId] });
+      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "atsKanban"] });
+    },
+  });
+}
+
+// ─── Candidate Vault ─────────────────────────────────────────────────────────
+
+export function useCandidateVault(candidateId: number) {
+  return useQuery({
+    queryKey: queryKeys.hr.candidateVault(candidateId),
+    queryFn: () =>
+      apiClient.get<VaultDocument[]>(`/hr/recruitment/candidates/${candidateId}/vault`),
+    enabled: !!candidateId,
+  });
+}
+
+export type VaultDocumentType = "AADHAR" | "PAN" | "PASSPORT" | "CERTIFICATE" | "OFFER_LETTER" | "OTHER";
+
+export function useAddVaultDocument(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      filename: string;
+      s3Key: string;
+      fileUrl: string;
+      fileType: string;
+      fileSize: number;
+      documentType?: VaultDocumentType;
+    }) =>
+      apiClient.post<VaultDocument>(`/hr/recruitment/candidates/${candidateId}/vault`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateVault(candidateId) }),
+  });
+}
+
+export function useDeleteVaultDocument(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: number) =>
+      apiClient.delete<{ success: boolean }>(
+        `/hr/recruitment/candidates/${candidateId}/vault/${documentId}`
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidateVault(candidateId) }),
+  });
+}
+
+// ─── Offer & Document Rollout ─────────────────────────────────────────────────
+
+export interface RolloutDocumentRecord {
+  id: number;
+  templateId: number | null;
+  templateTitle: string | null;
+  title: string;
+  status: string;
+  sentAt: string | null;
+  viewedAt: string | null;
+  signedAt: string | null;
+  declinedAt: string | null;
+  createdAt: string | null;
+  createdBy: string;
+}
+
+export interface RolloutDocumentsInput {
+  templateIds: number[];
+  variables: Record<string, string>;
+  sendEmail: boolean;
+}
+
+export interface RolloutDocumentsResult {
+  documents: RolloutDocumentRecord[];
+  count: number;
+}
+
+export function useRolloutDocuments(candidateId: number) {
+  return useQuery({
+    queryKey: queryKeys.hr.rolloutDocuments(candidateId),
+    queryFn: () =>
+      apiClient.get<RolloutDocumentRecord[]>(
+        `/hr/recruitment/candidates/${candidateId}/rollout-documents`
+      ),
+    enabled: !!candidateId,
+  });
+}
+
+export function useGenerateAndRollout(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RolloutDocumentsInput) =>
+      apiClient.post<RolloutDocumentsResult>(
+        `/hr/recruitment/candidates/${candidateId}/rollout-documents`,
+        data
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.rolloutDocuments(candidateId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidateDocuments(candidateId) });
+    },
+  });
+}
+
+// ─── SLA Report ──────────────────────────────────────────────────────────────
+
+export interface SlaReportStage {
+  stage: string;
+  total: number;
+  breached: number;
+  breachPct: number;
+}
+
+export interface SlaReportMonth {
+  month: string;
+  label: string;
+  stages: SlaReportStage[];
+  overall: { total: number; breached: number; breachPct: number };
+}
+
+export interface SlaReportStageSummary {
+  stage: string;
+  avgBreachPct: number;
+  totalBreached: number;
+  totalAll: number;
+}
+
+export interface HrSlaReport {
+  report: SlaReportMonth[];
+  stages: string[];
+  stageSummary: SlaReportStageSummary[];
+}
+
+const SLA_REPORT_KEY = ["vaivamm", "hr", "slaReport"] as const;
+
+export function useHrSlaReport() {
+  return useQuery({
+    queryKey: SLA_REPORT_KEY,
+    queryFn: () => apiClient.get<HrSlaReport>("/hr/recruitment/interviews/sla-report"),
+  });
+}
+
+// ─── Bulk reschedule ─────────────────────────────────────────────────────────
+
+export function useBulkRescheduleInterviews() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, scheduledAt }: { ids: number[]; scheduledAt: string }) => {
+      await Promise.all(
+        ids.map((id) =>
+          apiClient.patch<{ success: boolean }>(`/hr/recruitment/interviews/${id}`, { scheduledAt })
+        )
+      );
+      return { rescheduled: ids.length };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() }),
+  });
+}
+
+// ─── Portal Sync & Job Publish ───────────────────────────────────────────────
+
+export type JobBoardPlatform = "LINKEDIN" | "NAUKRI" | "INDEED";
+
+export interface SyncResult {
+  platform: string;
+  status: "SYNC_INITIATED" | string;
+  lastSyncedAt: string;
+  message: string;
+}
+
+export function useTriggerPortalSync() {
+  return useMutation({
+    mutationFn: (platform: JobBoardPlatform) =>
+      apiClient.post<SyncResult>(`/hr/recruitment/portals/${platform}/sync`, {}),
+  });
+}
+
+export interface PublishResult {
+  platform: string;
+  status: "PUBLISHED" | "NO_INTEGRATION" | "INACTIVE" | "NO_TOKEN";
+}
+
+export interface PublishJobResult {
+  results: PublishResult[];
+  publishedCount: number;
+  externalIds: Record<string, string>;
+}
+
+export function usePublishJobToBoards() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ jobId, platforms }: { jobId: number; platforms: JobBoardPlatform[] }) =>
+      apiClient.post<PublishJobResult>(`/hr/recruitment/jobs/${jobId}/publish`, { platforms }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.jobPostings() }),
+  });
+}
+
+// ─── Bulk reject ──────────────────────────────────────────────────────────────
+
+export interface BulkRejectInput {
+  candidateIds: number[];
+  sendRejectionEmail?: boolean;
+}
+
+export interface BulkRejectResult {
+  rejected: number;
+  alreadyRejected: number;
+  emailsSent: number;
+}
+
+export function useBulkRejectCandidates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkRejectInput) =>
+      apiClient.post<BulkRejectResult>(
+        "/hr/recruitment/candidates/bulk-reject",
+        data
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      void qc.invalidateQueries({ queryKey: ATS_KANBAN_KEY });
+    },
+  });
+}
+
+// ─── Sourcing portals ─────────────────────────────────────────────────────────
+
+export interface SourcePortal {
+  id: number;
+  platform: string;
+  isActive: boolean;
+  lastSyncedAt: string | null;
+  lastSyncCount: number | null;
+  createdAt: string | null;
+}
+
+export interface UpsertPortalInput {
+  platform: "LINKEDIN" | "NAUKRI" | "INDEED" | "ORGANIC";
+  isActive?: boolean;
+  oauthToken?: string;
+  meta?: Record<string, unknown>;
+}
+
+export function useSourcePortals() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "sourcePortals"] as const,
+    queryFn: () => apiClient.get<SourcePortal[]>("/hr/recruitment/portals"),
+  });
+}
+
+export function useUpsertSourcePortal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpsertPortalInput) =>
+      apiClient.post<SourcePortal>("/hr/recruitment/portals", data),
+    onSuccess: () =>
+      void qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "sourcePortals"] as const }),
+  });
+}
+
+// ─── Source effectiveness report ─────────────────────────────────────────────
+
+export interface SourceEffectivenessRow {
+  source: string;
+  total: number;
+  hired: number;
+  rejected: number;
+  hireRate: number;
+}
+
+export function useSourceEffectiveness() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "sourceEffectiveness"] as const,
+    queryFn: () => apiClient.get<SourceEffectivenessRow[]>("/reports/source-effectiveness"),
+  });
+}
+
+// ─── BgV Status Update ───────────────────────────────────────────────────────
+
+export interface UpdateBgvInput {
+  bgvStatus: BgvStatus;
+  bgvAgency?: string;
+  bgvNotes?: string;
+}
+
+export function useUpdateCandidateBgv(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateBgvInput) =>
+      apiClient.patch<{ id: number; bgvStatus: BgvStatus }>(`/hr/recruitment/candidates/${candidateId}/bgv-status`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(candidateId) }),
+  });
+}
+
+// ─── Interview Question Bank ──────────────────────────────────────────────────
+
+export interface InterviewQuestion {
+  id: number;
+  orgId: string;
+  question: string;
+  category: string;
+  role: string | null;
+  difficulty: string;
+  tags: string[];
+  isActive: boolean;
+  createdBy: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface CreateQuestionInput {
+  question: string;
+  category?: string;
+  role?: string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  tags?: string[];
+}
+
+export function useInterviewQuestions(filters?: {
+  category?: string;
+  role?: string;
+  difficulty?: string;
+  q?: string;
+}) {
+  const params = new URLSearchParams();
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.role) params.set("role", filters.role);
+  if (filters?.difficulty) params.set("difficulty", filters.difficulty);
+  if (filters?.q) params.set("q", filters.q);
+  const qs = params.toString();
+
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "interviewQuestions", filters] as const,
+    queryFn: () =>
+      apiClient.get<InterviewQuestion[]>(`/hr/interview-questions${qs ? `?${qs}` : ""}`),
+  });
+}
+
+export function useCreateInterviewQuestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateQuestionInput) =>
+      apiClient.post<InterviewQuestion>("/hr/interview-questions", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "interviewQuestions"] }),
+  });
+}
+
+export function useUpdateInterviewQuestion(questionId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<CreateQuestionInput> & { isActive?: boolean }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/interview-questions/${questionId}`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "interviewQuestions"] }),
+  });
+}
+
+export function useDeleteInterviewQuestion(questionId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.delete<{ success: boolean }>(`/hr/interview-questions/${questionId}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "interviewQuestions"] }),
+  });
+}
+
+// ─── Reference Checks ────────────────────────────────────────────────────────
+
+export interface ReferenceCheck {
+  id: number;
+  candidateId: number;
+  orgId: string;
+  referenceName: string;
+  referenceDesignation: string | null;
+  referenceCompany: string | null;
+  referenceEmail: string | null;
+  referencePhone: string | null;
+  relationship: string | null;
+  status: string;
+  outcome: string | null;
+  notes: string | null;
+  contactedAt: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+}
+
+export interface CreateReferenceCheckInput {
+  referenceName: string;
+  referenceDesignation?: string;
+  referenceCompany?: string;
+  referenceEmail?: string;
+  referencePhone?: string;
+  relationship?: string;
+  notes?: string;
+}
+
+export function useReferenceChecks(candidateId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] as const,
+    queryFn: () =>
+      apiClient.get<ReferenceCheck[]>(`/hr/recruitment/candidates/${candidateId}/reference-checks`),
+    enabled: candidateId > 0,
+  });
+}
+
+export function useCreateReferenceCheck(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateReferenceCheckInput) =>
+      apiClient.post<ReferenceCheck>(
+        `/hr/recruitment/candidates/${candidateId}/reference-checks`,
+        data
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+  });
+}
+
+export function useUpdateReferenceCheck(candidateId: number, checkId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "DECLINED";
+      outcome?: string | null;
+      notes?: string | null;
+      contactedAt?: string;
+    }) =>
+      apiClient.patch<{ success: boolean }>(
+        `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`,
+        data
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+  });
+}
+
+export function useDeleteReferenceCheck(candidateId: number, checkId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.delete<{ success: boolean }>(
+        `/hr/recruitment/candidates/${candidateId}/reference-checks/${checkId}`
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "referenceChecks", candidateId] }),
+  });
+}
+
+// ─── Recruitment Analytics (Time-to-Hire / Pipeline Velocity) ─────────────────
+
+export interface RecruitmentFunnelStage {
+  stage: string;
+  count: number;
+  avgDaysInStage: number | null;
+}
+
+export interface RecruitmentAnalytics {
+  funnel: RecruitmentFunnelStage[];
+  hireRate: number;
+  totalCandidates: number;
+  totalHired: number;
+}
+
+export function useRecruitmentAnalytics() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "recruitmentAnalytics"] as const,
+    queryFn: () => apiClient.get<RecruitmentAnalytics>("/hr/recruitment/analytics"),
+  });
+}
+
+// ─── Vault Access Logs ────────────────────────────────────────────────────────
+
+export interface VaultAccessLog {
+  id: number;
+  action: string;
+  accessedAt: string | null;
+  fileName: string;
+  documentType: string | null;
+  accessorDisplayName: string;
+}
+
+export function useVaultAccessLogs(candidateId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "vaultAccessLogs", candidateId] as const,
+    queryFn: () =>
+      apiClient.get<VaultAccessLog[]>(
+        `/hr/recruitment/candidates/${candidateId}/vault/access-logs`
+      ),
+    enabled: candidateId > 0,
+  });
+}
+
+// ─── Job Share Links ──────────────────────────────────────────────────────────
+
+export interface JobShareLinks {
+  jobId: number;
+  title: string;
+  directLink: string;
+  shareLinks: Array<{
+    platform: string;
+    name: string;
+    url: string;
+    utmUrl: string;
+  }>;
+}
+
+export function useJobShareLinks(jobId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "jobShare", jobId] as const,
+    queryFn: () =>
+      apiClient.get<JobShareLinks>(`/hr/recruitment/jobs/${jobId}/share`),
+    enabled: jobId > 0,
+  });
+}
+
+// ─── Offer Tracking ───────────────────────────────────────────────────────────
+
+export interface CandidateOffer {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  jobPostingId: number | null;
+  offeredBy: string | null;
+  offerStatus: "DRAFT" | "SENT" | "VIEWED" | "ACCEPTED" | "DECLINED" | "COUNTERED" | "EXPIRED";
+  offeredSalary: string | null;
+  offeredDesignation: string | null;
+  joiningDate: string | null;
+  offerLetterUrl: string | null;
+  validUntil: string | null;
+  notes: string | null;
+  sentAt: string | null;
+  viewedAt: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function useCandidateOffers(candidateId: number) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] as const,
+    queryFn: () =>
+      apiClient.get<CandidateOffer[]>(`/hr/recruitment/candidates/${candidateId}/offers`),
+    enabled: candidateId > 0,
+  });
+}
+
+export function useCreateCandidateOffer(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      jobPostingId?: number;
+      offeredSalary?: number;
+      offeredDesignation?: string;
+      joiningDate?: string;
+      offerLetterUrl?: string;
+      validUntil?: string;
+      notes?: string;
+    }) => apiClient.post<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+  });
+}
+
+export function useUpdateCandidateOffer(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ offerId, ...data }: { offerId: number; offerStatus?: CandidateOffer["offerStatus"]; notes?: string; joiningDate?: string; validUntil?: string; offeredSalary?: number; offeredDesignation?: string }) =>
+      apiClient.patch<CandidateOffer>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+  });
+}
+
+export function useDeleteCandidateOffer(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (offerId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${candidateId}/offers/${offerId}`),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "candidateOffers", candidateId] }),
+  });
+}
+
+export interface BgvComplianceRow {
+  jobPostingId: number;
+  jobTitle: string;
+  total: number;
+  cleared: number;
+  failed: number;
+  pending: number;
+  initiated: number;
+  notInitiated: number;
+  clearedPct: number;
+}
+
+export function useBgvComplianceDashboard() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "bgv-compliance"],
+    queryFn: () => apiClient.get<BgvComplianceRow[]>("/hr/recruitment/bgv-compliance"),
+  });
+}
+
+// ─── Interviewer Performance ─────────────────────────────────────────────────
+
+export interface InterviewerPerformanceStat {
+  interviewerId: string;
+  interviewerName: string | null;
+  interviewerEmail: string | null;
+  totalAssigned: number;
+  submitted: number;
+  pending: number;
+  avgHoursToSubmit: number | null;
+  recommendations: Record<string, number>;
+}
+
+export interface InterviewerPerformanceResponse {
+  stats: InterviewerPerformanceStat[];
+  period: { days: number; since: string };
+}
+
+export function useInterviewerPerformance(days = 90) {
+  return useQuery<InterviewerPerformanceResponse>({
+    queryKey: queryKeys.hr.interviewerPerformance(days),
+    queryFn: () =>
+      apiClient.get<InterviewerPerformanceResponse>(
+        `/hr/recruitment/interviewer-performance?days=${days}`
+      ),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Interviewer Availability ────────────────────────────────────────────────
+
+export interface BusyBlock {
+  start: string;
+  end: string;
+  title: string;
+}
+
+export interface InterviewerAvailability {
+  interviewerId: string;
+  busyBlocks: BusyBlock[];
+}
+
+export interface InterviewerAvailabilityResponse {
+  date: string;
+  availability: InterviewerAvailability[];
+}
+
+// ─── Referrals ───────────────────────────────────────────────────────────────
+
+export interface CandidateReferral {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  referredBy: string;
+  relationship: string | null;
+  notes: string | null;
+  bonusEligible: boolean;
+  bonusAmount: string | null;
+  bonusPaidAt: string | null;
+  createdAt: string;
+}
+
+export function useCandidateReferrals(candidateId: number) {
+  return useQuery<CandidateReferral[]>({
+    queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"],
+    queryFn: () =>
+      apiClient.get<CandidateReferral[]>(`/hr/recruitment/candidates/${candidateId}/referral`),
+    enabled: candidateId > 0,
+  });
+}
+
+export function useCreateReferral(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      referredBy: string;
+      relationship?: string;
+      notes?: string;
+      bonusEligible?: boolean;
+      bonusAmount?: number;
+    }) => apiClient.post<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"] });
+    },
+  });
+}
+
+export function useUpdateReferral(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      id: number;
+      bonusEligible?: boolean;
+      bonusAmount?: number | null;
+      bonusPaidAt?: string | null;
+      notes?: string | null;
+    }) => apiClient.patch<CandidateReferral>(`/hr/recruitment/candidates/${candidateId}/referral`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "referrals"] });
+    },
+  });
+}
+
+// ─── Calibration Sessions ────────────────────────────────────────────────────
+
+export interface CalibrationSession {
+  id: number;
+  orgId: string;
+  candidateId: number;
+  jobPostingId: number | null;
+  scheduledAt: string | null;
+  status: "pending" | "scheduled" | "completed" | "cancelled";
+  notes: string | null;
+  decision: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "HOLD" | null;
+  participantIds: string[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function useCalibrationSessions(candidateId: number) {
+  return useQuery<CalibrationSession[]>({
+    queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"],
+    queryFn: () =>
+      apiClient.get<CalibrationSession[]>(`/hr/recruitment/candidates/${candidateId}/calibration`),
+    enabled: candidateId > 0,
+  });
+}
+
+export function useCreateCalibration(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      jobPostingId?: number;
+      scheduledAt?: string;
+      participantIds?: string[];
+      notes?: string;
+    }) => apiClient.post<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"] });
+    },
+  });
+}
+
+export function useUpdateCalibration(candidateId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      id: number;
+      scheduledAt?: string | null;
+      status?: "pending" | "scheduled" | "completed" | "cancelled";
+      notes?: string | null;
+      decision?: "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "HOLD" | null;
+      participantIds?: string[];
+    }) => apiClient.patch<CalibrationSession>(`/hr/recruitment/candidates/${candidateId}/calibration`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.candidate(candidateId), "calibration"] });
+    },
+  });
+}
+
+// ─── Self-Scheduling Booking Links ───────────────────────────────────────────
+
+export interface CreateBookingLinkInput {
+  candidateId: number;
+  jobPostingId?: number;
+  interviewerIds: string[];
+  durationMinutes?: number;
+  interviewType?: "VIDEO" | "PHONE" | "IN_PERSON";
+  availableSlots: { start: string; end: string }[];
+  expiresInDays?: number;
+  notes?: string;
+}
+
+export interface BookingLinkResponse {
+  id: number;
+  token: string;
+  bookingUrl: string;
+  expiresAt: string;
+}
+
+export function useCreateBookingLink() {
+  const qc = useQueryClient();
+  return useMutation<BookingLinkResponse, Error, CreateBookingLinkInput>({
+    mutationFn: (data) =>
+      apiClient.post<BookingLinkResponse>("/hr/recruitment/interviews/self-schedule", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.interviews() });
+    },
+  });
+}
+
+export function useInterviewerAvailability(
+  interviewerIds: string[],
+  date: string | null
+) {
+  const enabled = interviewerIds.length > 0 && !!date;
+  return useQuery<InterviewerAvailabilityResponse>({
+    queryKey: [...queryKeys.hr.all, "interviewerAvailability", date, interviewerIds],
+    queryFn: () =>
+      apiClient.get<InterviewerAvailabilityResponse>(
+        `/hr/recruitment/interviewers/availability?interviewerIds=${interviewerIds.join(",")}&date=${date}`
+      ),
+    enabled,
+    staleTime: 60 * 1000,
   });
 }

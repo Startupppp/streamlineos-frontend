@@ -114,6 +114,18 @@ export async function POST(req: NextRequest) {
     }
 
     await invalidateCachePattern(`leads:*:${orgId}:*`);
+
+    // Fire webhook event (non-blocking)
+    void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
+      dispatchWebhook(orgId, "lead.created", {
+        id: newLead.id,
+        name: newLead.name,
+        email: newLead.email,
+        source: newLead.source,
+        assignedToId: newLead.assignedToId,
+      })
+    );
+
     return ok(newLead, 201);
   });
 }

@@ -2,7 +2,7 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe, FolderOpen, HardDrive, Star } from "lucide-react";
+import { FolderPlus, Upload, FilePlus2, FileText, Pencil, Trash2, Globe, FolderOpen, HardDrive, Star, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -298,6 +298,12 @@ export default function DocumentsPage() {
 
   const pageActions = (
     <div className="flex items-center gap-2">
+      <Button variant="outline" size="sm" className="gap-2" asChild>
+        <Link href="/hr/documents/templates">
+          <LayoutTemplate className="h-4 w-4" />
+          <span className="hidden sm:inline">Templates</span>
+        </Link>
+      </Button>
       <Button variant="outline" size="sm" className="gap-2" onClick={handleNewFolderOpen}>
         <FolderPlus className="h-4 w-4" />
         <span className="hidden sm:inline">New Folder</span>

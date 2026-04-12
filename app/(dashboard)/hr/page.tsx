@@ -25,6 +25,7 @@ import { EmployeesLoadingSkeleton } from "@/features/hr/employees/employees-load
 import { HrFilterBar } from "@/features/hr/employees/hr-filter-bar";
 import { HrEmployeeTable } from "@/features/hr/employees/hr-employee-table";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
+import { HrDashboardOverview } from "@/features/hr/hr-dashboard-overview";
 
 export default function HRDashboardPage() {
   const { data: session } = useSession();
@@ -279,6 +280,8 @@ export default function HRDashboardPage() {
         />
       }
     >
+      <HrDashboardOverview />
+
       {paginatedEmployees.length > 0 ? (
         <HrEmployeeTable
           employees={paginatedEmployees}

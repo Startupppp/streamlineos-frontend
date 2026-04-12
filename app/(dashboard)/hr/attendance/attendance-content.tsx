@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TimerCard } from "@/features/hr/attendance/check-in-button";
 import { WfhBalancesCard } from "@/features/hr/attendance/wfh-balances-card";
 import { AttendanceCalendar } from "@/features/hr/attendance/attendance-calendar";
+import { AttendanceHeatmap } from "@/features/hr/attendance/attendance-heatmap";
 import { ManageHolidaysCard } from "@/features/hr/attendance/manage-holidays-card";
 import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
 
@@ -22,6 +23,7 @@ export function AttendanceContent({ userId, isAdmin = false }: { userId: string;
       <ScrollArea className="flex-1 min-w-0">
         <div className="space-y-5 pr-3 pb-6">
           <AttendanceCalendar userId={userId} />
+          <AttendanceHeatmap userId={userId} />
           {isAdmin && <ManageHolidaysCard />}
           <DailyHistoryTable />
         </div>

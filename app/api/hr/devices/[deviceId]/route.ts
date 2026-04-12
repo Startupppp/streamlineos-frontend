@@ -1,10 +1,23 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { employeeDevices } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const patchDeviceSchema = z.object({
+  userId: z.string().optional(),
+  deviceType: z.string().optional(),
+  deviceName: z.string().optional(),
+  serialNumber: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  notes: z.string().optional(),
+  status: z.enum(["ACTIVE", "INACTIVE", "LOST", "RETURNED"]).optional(),
+  returnDate: z.string().optional(),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -19,17 +32,7 @@ export async function PATCH(
     const deviceId = Number(id);
     if (!deviceId) return err("Invalid device ID.", 400);
 
-    const body = await req.json() as {
-      userId?: string;
-      deviceType?: string;
-      deviceName?: string;
-      serialNumber?: string;
-      brand?: string;
-      model?: string;
-      notes?: string;
-      status?: "ACTIVE" | "INACTIVE" | "LOST" | "RETURNED";
-      returnDate?: string;
-    };
+    const body = await parseBody(req, patchDeviceSchema);
 
     const existing = await db.query.employeeDevices.findFirst({
       where: and(eq(employeeDevices.id, deviceId), eq(employeeDevices.orgId, session.orgId)),

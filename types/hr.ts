@@ -45,6 +45,13 @@ export interface Employee {
   hasDashboardAccess: boolean;
   reportingTo: string | null;
   monthlySalary: string | null;
+  bio: string | null;
+  linkedinUrl: string | null;
+  twitterUrl: string | null;
+  githubUrl: string | null;
+  websiteUrl: string | null;
+  skills: string[] | null;
+  phone: string | null;
 }
 
 export interface PaginatedEmployees {
@@ -117,7 +124,11 @@ export interface LeaveRequest {
   status: LeaveStatus | null;
   approverId: string | null;
   rejectionReason: string | null;
+  managerComment: string | null;
   attachmentUrl: string | null;
+  isHalfDay: boolean;
+  halfDayPeriod: string | null;
+  coveringEmployeeId: string | null;
   createdAt: Date | string | null;
 }
 
@@ -397,6 +408,12 @@ export interface UpdateProfileInput {
   departmentId?: number;
   phone?: string;
   image?: string;
+  bio?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+  githubUrl?: string;
+  websiteUrl?: string;
+  skills?: string[];
 }
 
 export interface CheckInInput {
@@ -903,11 +920,15 @@ export interface JobPosting {
   status: JobPostingStatus | null;
   openings: number | null;
   applicationDeadline: string | null;
+  closingDate: string | null;
   postedBy: string | null;
+  externalPostingIds: Record<string, string> | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   _count?: { applications?: number };
 }
+
+export type BgvStatus = "NOT_INITIATED" | "INITIATED" | "PENDING" | "CLEARED" | "FAILED";
 
 export interface Candidate {
   id: number;
@@ -917,6 +938,7 @@ export interface Candidate {
   email: string;
   phone: string | null;
   resumeUrl: string | null;
+  resumeText: string | null;
   linkedinUrl: string | null;
   portfolioUrl: string | null;
   currentCompany: string | null;
@@ -924,9 +946,20 @@ export interface Candidate {
   experienceYears: string | null;
   skills: string[] | null;
   source: string | null;
+  sourceUrl: string | null;
   status: CandidateStatus | null;
   notes: string | null;
   rating: number | null;
+  aiScore: number | null;
+  aiScoreBreakdown: Record<string, number> | null;
+  aiScoreGeneratedAt: Date | string | null;
+  bgvStatus: BgvStatus | null;
+  bgvAgency: string | null;
+  bgvNotes: string | null;
+  bgvInitiatedAt: Date | string | null;
+  bgvCompletedAt: Date | string | null;
+  externalId: string | null;
+  duplicateOfId: number | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
 }
@@ -942,6 +975,33 @@ export interface CandidateApplication {
   notes: string | null;
   candidate?: Candidate;
   jobPosting?: JobPosting;
+}
+
+export type SlaCandidateStatus = "ON_TRACK" | "AT_RISK" | "BREACHED";
+
+// ATS Kanban pipeline types
+export interface AtsPipelineCandidate {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  source: string | null;
+  rating: number | null;
+  jobTitle: string | null;
+  applicationId: number | null;
+  appliedAt: Date | string | null;
+  slaStatus: SlaCandidateStatus | null;
+  resumeUrl: string | null;
+  notes: string | null;
+}
+
+export interface AtsPipelineStage {
+  stage: CandidateStatus;
+  candidates: AtsPipelineCandidate[];
+}
+
+export interface AtsPipelineResponse {
+  stages: AtsPipelineStage[];
 }
 
 export interface Interview {
@@ -960,6 +1020,9 @@ export interface Interview {
   rating: number | null;
   rubric: InterviewRubricEntry[] | null;
   notes: string | null;
+  recordingUrl?: string | null;
+  recordingPlatform?: string | null;
+  panelInterviewerIds?: string[] | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
   candidate?: Candidate;
@@ -1065,4 +1128,6 @@ export interface UpdateInterviewInput {
   rating?: number;
   rubric?: InterviewRubricEntry[];
   notes?: string;
+  recordingUrl?: string | null;
+  recordingPlatform?: string | null;
 }

@@ -20,6 +20,8 @@ import {
   BarChart3,
   Inbox,
   User,
+  Diamond,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -58,6 +60,7 @@ function useSections(baseUrl: string): NavSection[] {
         { label: "Modules", icon: Package, href: `${baseUrl}/modules` },
         { label: "Epics", icon: Layers, href: `${baseUrl}/epics` },
         { label: "Timeline", icon: GanttChart, href: `${baseUrl}/timeline` },
+        { label: "Milestones", icon: Diamond, href: `${baseUrl}/milestones` },
       ],
     },
     {
@@ -65,6 +68,7 @@ function useSections(baseUrl: string): NavSection[] {
       items: [
         { label: "Wiki", icon: FileText, href: `${baseUrl}/pages` },
         { label: "Reports", icon: BarChart3, href: `${baseUrl}/analytics` },
+        { label: "Budget", icon: DollarSign, href: `${baseUrl}/budget` },
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Settings", icon: Settings, href: `${baseUrl}/settings` },
       ],

@@ -19,6 +19,10 @@ const updateSchema = z.object({
   attendeeIds: z.array(z.string()).optional(),
   isRecurring: z.boolean().optional(),
   recurringRule: z.string().nullable().optional(),
+  agenda: z.string().nullable().optional(),
+  postMeetingNotes: z.string().nullable().optional(),
+  linkedDealId: z.number().int().nullable().optional(),
+  linkedLeadId: z.number().int().nullable().optional(),
 });
 
 type Ctx = { params: Promise<{ eventId: string }> };
@@ -49,6 +53,10 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
     if (input.attendeeIds !== undefined) updateData.attendeeIds = input.attendeeIds;
     if (input.isRecurring !== undefined) updateData.isRecurring = input.isRecurring;
     if (input.recurringRule !== undefined) updateData.recurringRule = input.recurringRule ?? null;
+    if (input.agenda !== undefined) updateData.agenda = input.agenda ?? null;
+    if (input.postMeetingNotes !== undefined) updateData.postMeetingNotes = input.postMeetingNotes ?? null;
+    if (input.linkedDealId !== undefined) updateData.linkedDealId = input.linkedDealId ?? null;
+    if (input.linkedLeadId !== undefined) updateData.linkedLeadId = input.linkedLeadId ?? null;
 
     const event = await updateCalendarEvent(id, session.orgId, session.user.id, updateData);
     if (!event) return err("Event not found or not authorized", 404);

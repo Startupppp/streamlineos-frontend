@@ -1,27 +1,26 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { payrolls, salaryStructures } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const generateSinglePayrollSchema = z.object({
+  userId: z.string(),
+  month: z.string(),
+  lopDays: z.number().optional(),
+  halfDays: z.number().optional(),
+  otherDeductions: z.number().optional(),
+  bonus: z.number().optional(),
+  overtimeType: z.enum(["days", "hours"]).optional(),
+  overtimeDays: z.number().optional(),
+  overtimeHours: z.number().optional(),
+  overtimeAmount: z.number().optional(),
+});
 
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
-    const body = await req.json() as {
-      userId: string;
-      month: string;
-      lopDays?: number;
-      halfDays?: number;
-      otherDeductions?: number;
-      bonus?: number;
-      overtimeType?: "days" | "hours";
-      overtimeDays?: number;
-      overtimeHours?: number;
-      overtimeAmount?: number;
-    };
-
-    if (!body.userId || !body.month) {
-      return err("userId and month are required.", 400);
-    }
+    const body = await parseBody(req, generateSinglePayrollSchema);
 
     const salary = await db.query.salaryStructures.findFirst({
       where: and(

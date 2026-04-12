@@ -11,6 +11,7 @@ import {
   crmLeadStatusEnum, crmSupportTicketStatusEnum, crmSupportTicketPriorityEnum,
   crmActivityTypeEnum, crmEventStatusEnum,
   invoiceStatusEnum, supportTicketStatusEnum, supportTicketPriorityEnum,
+  taskEntityTypeEnum, taskTypeEnum, taskStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -69,8 +70,18 @@ export const leads = pgTable("leads", {
   followUpDate: timestamp("follow_up_date"),
   followUpNotes: text("follow_up_notes"),
   customData: jsonb("custom_data").$type<Record<string, unknown>>(),
+  // UTM tracking + attribution
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  utmContent: text("utm_content"),
+  utmTerm: text("utm_term"),
+  ipAddress: text("ip_address"),
+  referrerUrl: text("referrer_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+  mergedIntoId: integer("merged_into_id"),
 }, (table) => [
   index("idx_leads_org_status").on(table.orgId, table.status),
   index("idx_leads_assigned_to").on(table.assignedToId),
@@ -576,6 +587,7 @@ export const contacts = pgTable("contacts", {
   organizationId: integer("organization_id"),
   linkedinUrl: text("linkedin_url"),
   twitterUrl: text("twitter_url"),
+  websiteUrl: text("website_url"),
   avatarUrl: text("avatar_url"),
   leadId: integer("lead_id").references(() => leads.id),
   dealId: integer("deal_id").references(() => deals.id),
@@ -585,6 +597,7 @@ export const contacts = pgTable("contacts", {
 }, (table) => [
   index("idx_contacts_org").on(table.orgId),
   index("idx_contacts_organization").on(table.organizationId),
+  index("idx_contacts_name_email").on(table.orgId, table.name, table.email),
 ]);
 
 export const crmOrganizations = pgTable("crm_organizations", {
@@ -598,10 +611,14 @@ export const crmOrganizations = pgTable("crm_organizations", {
   linkedinUrl: text("linkedin_url"),
   description: text("description"),
   healthScore: integer("health_score"),
+  parentId: integer("parent_id"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_crm_organizations_org").on(table.orgId),
+  index("idx_crm_organizations_parent").on(table.orgId, table.parentId),
+  foreignKey({ columns: [table.parentId], foreignColumns: [table.id] }).onDelete("set null"),
 ]);
 
 export const branches = pgTable("branches", {
@@ -1138,6 +1155,8 @@ export const csatResponsesRelations = relations(csatResponses, ({ one }) => ({
 export const crmOrganizationsRelations = relations(crmOrganizations, ({ one, many }) => ({
   org: one(organizations, { fields: [crmOrganizations.orgId], references: [organizations.id] }),
   contacts: many(contacts),
+  parent: one(crmOrganizations, { fields: [crmOrganizations.parentId], references: [crmOrganizations.id], relationName: "orgParent" }),
+  children: many(crmOrganizations, { relationName: "orgParent" }),
 }));
 
 export const branchesRelations = relations(branches, ({ one }) => ({
@@ -1279,4 +1298,99 @@ export const webLeadForms = pgTable("web_lead_forms", {
 export const webLeadFormsRelations = relations(webLeadForms, ({ one }) => ({
   organization: one(organizations, { fields: [webLeadForms.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [webLeadForms.createdBy], references: [users.id] }),
+}));
+
+// ─── Sales Tasks (polymorphic) ────────────────────────────────────────────────
+export const tasks = pgTable("tasks", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  title: text("title").notNull(),
+  notes: text("notes"),
+  entityType: taskEntityTypeEnum("entity_type"),
+  entityId: integer("entity_id"),
+  type: taskTypeEnum("type").notNull().default("CUSTOM"),
+  status: taskStatusEnum("status").notNull().default("pending"),
+  assigneeId: text("assignee_id").references(() => users.id),
+  createdBy: text("created_by").references(() => users.id),
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  remindAt: timestamp("remind_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  timezone: text("timezone"),
+  // Recurrence support
+  recurrence: jsonb("recurrence").$type<{
+    frequency: "DAILY" | "WEEKLY" | "MONTHLY";
+    interval: number;
+    endDate?: string;
+  } | null>(),
+  parentTaskId: integer("parent_task_id"),
+  // Template support
+  isTemplate: boolean("is_template").notNull().default(false),
+  templateName: text("template_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_tasks_org").on(table.orgId),
+  index("idx_tasks_assignee").on(table.assigneeId),
+  index("idx_tasks_status").on(table.status),
+  index("idx_tasks_due_date").on(table.dueDate),
+  index("idx_tasks_entity").on(table.entityType, table.entityId),
+  index("idx_tasks_parent").on(table.parentTaskId),
+]);
+
+// Task Sequences (pre-built task chains/templates)
+export const taskSequences = pgTable("task_sequences", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").notNull().references(() => organizations.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const taskSequenceSteps = pgTable("task_sequence_steps", {
+  id: serial("id").primaryKey(),
+  sequenceId: integer("sequence_id").notNull().references(() => taskSequences.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  type: text("type").notNull().default("CUSTOM"),
+  notes: text("notes"),
+  offsetDays: integer("offset_days").notNull().default(0),
+  order: integer("order").notNull().default(0),
+});
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  organization: one(organizations, { fields: [tasks.orgId], references: [organizations.id] }),
+  assignee: one(users, { fields: [tasks.assigneeId], references: [users.id], relationName: "taskAssignee" }),
+  createdByUser: one(users, { fields: [tasks.createdBy], references: [users.id], relationName: "taskCreator" }),
+  parentTask: one(tasks, { fields: [tasks.parentTaskId], references: [tasks.id], relationName: "childTasks" }),
+}));
+
+export const taskSequencesRelations = relations(taskSequences, ({ one, many }) => ({
+  organization: one(organizations, { fields: [taskSequences.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [taskSequences.createdBy], references: [users.id] }),
+  steps: many(taskSequenceSteps),
+}));
+
+export const taskSequenceStepsRelations = relations(taskSequenceSteps, ({ one }) => ({
+  sequence: one(taskSequences, { fields: [taskSequenceSteps.sequenceId], references: [taskSequences.id] }),
+}));
+
+export const leadImportBatches = pgTable("lead_import_batches", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  createdBy: text("created_by").references(() => users.id).notNull(),
+  filename: text("filename").notNull(),
+  status: text("status").notNull().default("PROCESSING"),
+  totalRows: integer("total_rows").notNull().default(0),
+  importedRows: integer("imported_rows").notNull().default(0),
+  failedRows: integer("failed_rows").notNull().default(0),
+  errorReport: jsonb("error_report").$type<Array<{ row: number; error: string }>>(),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+}, (table) => [
+  index("idx_lead_batches_org").on(table.orgId),
+]);
+
+export const leadImportBatchesRelations = relations(leadImportBatches, ({ one }) => ({
+  organization: one(organizations, { fields: [leadImportBatches.orgId], references: [organizations.id] }),
+  creator: one(users, { fields: [leadImportBatches.createdBy], references: [users.id] }),
 }));

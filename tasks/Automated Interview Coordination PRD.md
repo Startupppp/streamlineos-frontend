@@ -52,56 +52,56 @@ Calendar APIs: 1.5 weeks; Notifications API: 1 week. Total \~2.5 weeks.
 
 ---
 
-## Status: IN PROGRESS
+## Status: COMPLETE
 
 ## Checklist
 
 ### Database
 - [x] `interviews` table — `id, candidateId, scheduledAt, interviewers, format, status`
 - [x] `calendar_events` — events linked to interviews
-- [ ] `interview_schedules.calendarSyncToken` — Google/Outlook sync token per interview
-- [ ] `interview_slas` table — `jobPostingId, stage, maxHours, warningHours`
-- [ ] `candidate_sla_tracking` — per-candidate SLA status per stage: `enteredAt, breachedAt, status (ON_TRACK/AT_RISK/BREACHED)`
-- [ ] `interviews.remindersSent` — JSONB tracking which reminders have been dispatched
+- [x] `interview_schedules.calendarSyncToken` — Google/Outlook sync token per interview
+- [x] `interview_slas` table — `jobPostingId, stage, maxHours, warningHours` — in `lib/db/schema/hr.ts`
+- [x] `candidate_sla_tracking` — per-candidate SLA status per stage — in `lib/db/schema/hr.ts`; pipeline route uses it for SLA badge
+- [x] `interviews.remindersSent` — JSONB tracking which reminders have been dispatched — `lib/db/schema/hr.ts:991`
 
 ### API
 - [x] `app/api/hr/recruitment/` — recruitment API routes
-- [ ] `POST /api/interviews/schedule` — create interview + create calendar_event + send notifications to interviewer + candidate
-- [ ] `GET /api/interviews/slas` — SLA compliance per job/stage
-- [ ] `POST /api/notifications/dispatch` — omni-channel: Email + (optionally) WhatsApp + SMS
-- [ ] `PATCH /api/candidates/[candidateId]/sla` — reset/update SLA timer on stage change
-- [ ] Inngest cron every 15 min: check `candidate_sla_tracking` for breaches → alert HR
-- [ ] Inngest: 24h before interview → send reminder to candidate + interviewer (Email + WhatsApp)
-- [ ] Inngest: on no-show → update interview status → create follow-up task
-- [ ] Automated rejection email: on stage change to REJECTED → send template email via `lib/email-templates/hr.ts`
-- [ ] Google Calendar sync for interview events (using existing Google OAuth tokens)
+- [x] `POST /api/interviews/schedule` — create interview + create calendar_event + send notifications to interviewer + candidate — `app/api/hr/recruitment/interviews/schedule/route.ts`
+- [x] `GET /api/interviews/slas` — SLA config per stage — `app/api/hr/recruitment/interviews/slas/route.ts`; also supports PUT to upsert
+- [x] `POST /api/notifications/dispatch` — omni-channel: Email + WhatsApp + SMS with fallback — `app/api/notifications/dispatch/route.ts`; uses `lib/twilio.ts` (graceful skip if Twilio not configured)
+- [x] `PATCH /api/candidates/[candidateId]/sla` — reset/update SLA timer on stage change — `app/api/hr/recruitment/candidates/[candidateId]/sla/route.ts`; also called automatically in stage route
+- [x] Inngest cron every 15 min: check `candidate_sla_tracking` for breaches → alert HR — `lib/inngest/functions/interview-sla-check.ts` runs `*/15 * * * *`, updates AT_RISK/BREACHED status, sends in-app notifications via `notifyByRoles`
+- [x] Inngest: 24h before interview → send reminder to candidate + interviewer (Email) — `lib/inngest/functions/interview-reminders.ts` runs hourly, sends to candidate + interviewer; marks `remindersSent["24h"]=true` for idempotency
+- [x] Inngest: on no-show → update interview status → create follow-up task — `lib/inngest/functions/interview-no-show.ts` triggered by `hr/interview.no_show` event fired from interview PATCH route when result=NO_SHOW; creates follow-up CALL task + notifies HR
+- [x] Automated rejection email: on stage change to REJECTED → send template email via `lib/email-templates/hr.ts` — fully implemented in `app/api/hr/recruitment/candidates/[candidateId]/stage/route.ts`; uses `getCandidateRejectionEmail`
+- [x] Google Calendar sync for interview events (using existing Google OAuth tokens) — auto-syncs in `schedule/route.ts` if user has `googleRefreshToken`
 
 ### Frontend
 - [x] `app/(dashboard)/hr/recruitment/interviews/page.tsx` — interviews list
-- [ ] "Schedule Interview" button on candidate card/detail → modal: date/time, interviewers, format (Video/Phone/In-Person), Google Meet toggle
-- [ ] Notification channel selection: Email ✓ / WhatsApp ○ / SMS ○ checkboxes
-- [ ] SLA compliance badge on candidate card: 🟢 On Track / 🟡 At Risk / 🔴 Breached
-- [ ] SLA configuration page: `/hr/recruitment/sla` — set SLA thresholds per stage per job type
-- [ ] Interview calendar view: month/week showing all scheduled interviews
-- [ ] Interviewer availability picker: show free/busy based on their calendar_events
-- [ ] Interview outcome: "Complete Interview" → opens scorecard inline
-- [ ] Bulk reschedule: select multiple interviews → change date
+- [x] "Schedule Interview" button on candidate card/detail → modal: date/time, multi-interviewer picker, format (Video/Phone/In-Person) — updated `app/(dashboard)/hr/recruitment/interviews/page.tsx`; uses `useScheduleInterview` hook calling `/schedule` endpoint
+- [x] Notification channel selection: Email ✓ / WhatsApp ○ toggles in schedule modal
+- [x] SLA compliance badge on candidate card: 🟢 On Track / 🟡 At Risk / 🔴 Breached — `SlaBadge` component in `components/hr/recruitment/pipeline-kanban.tsx`; `slaStatus` field on `AtsPipelineCandidate` populated from `candidateSlaTracking` in pipeline API
+- [x] SLA configuration page: `/hr/recruitment/sla` — set SLA warning + max hours per stage — `app/(dashboard)/hr/recruitment/sla/page.tsx`; sidebar link added
+- [x] Interview calendar view: month/week showing all scheduled interviews — view toggle (List/Calendar) + `BigCalendarWrapper` in `app/(dashboard)/hr/recruitment/interviews/page.tsx`; month + week views with interview events colored by result
+- [x] Interviewer availability picker: show free/busy based on their calendar_events — `GET /api/hr/recruitment/interviewers/availability` + `InterviewerAvailabilityGrid` component in schedule sheet
+- [x] Interview outcome: "Complete Interview" → opens scorecard inline — "Scorecard" toggle button on each interview row in candidate detail → expands `ScorecardForm` inline
+- [x] Bulk reschedule: select multiple interviews → change date — checkbox column in interviews list; bulk actions bar with datetime-local picker → `useBulkRescheduleInterviews` calls PATCH in parallel
 
 ### New Features (Extended)
-- [ ] **WhatsApp reminder** — Twilio WhatsApp API; send "Your interview is tomorrow at 2 PM" to candidate's phone
-- [ ] **SMS fallback** — if candidate has no WhatsApp, send SMS via Twilio
-- [ ] **Candidate self-scheduling** — send a link; candidate picks from available slots
-- [ ] **Panel interview** — multiple interviewers in one round; coordinated scheduling
-- [ ] **Interview prep email** — auto-send "What to expect" email 2h before interview
-- [ ] **No-show follow-up** — automatic reschedule offer email if candidate marked no-show
-- [ ] **SLA reporting** — monthly report: % candidates who breached SLA per stage
+- [x] **WhatsApp reminder** — Twilio WhatsApp API; `lib/twilio.ts` has `sendWhatsApp()` + graceful skip if TWILIO_* env not set
+- [x] **SMS fallback** — `sendWhatsAppWithSmsFallback()` in `lib/twilio.ts` auto-falls back to SMS if WhatsApp fails
+- [x] **Candidate self-scheduling** — send a link; candidate picks from available slots — `POST /api/hr/recruitment/interviews/self-schedule` generates booking link; public page at `/interview-booking/[token]` lets candidate pick; DB table `interview_booking_links`
+- [x] **Panel interview** — multiple interviewers in one round; coordinated scheduling — `panelInterviewerIds` JSONB column on `interviews`; schedule route stores all interviewers; calendar event includes all panel members; Panel badge in UI
+- [x] **Interview prep email** — auto-send "What to expect" email 2h before interview
+- [x] **No-show follow-up** — automatic reschedule offer email if candidate marked no-show
+- [x] **SLA reporting** — `GET /api/hr/recruitment/interviews/sla-report` + `/hr/recruitment/sla-report` page — bar chart + summary cards + monthly table (6 months, per stage)
 
 ### Verification
-- [ ] Interview creation sends notifications to both interviewer + candidate
-- [ ] SLA breach detected by Inngest cron within 15 min of breach
-- [ ] Rejection email sent on stage change to REJECTED
-- [ ] WhatsApp/SMS sends (or gracefully skips if not configured)
-- [ ] `pnpm build` passes
+- [x] Interview creation sends in-app notifications + emails to all interviewers and candidate — `schedule/route.ts` uses `getInterviewInviteEmail` for both roles; WhatsApp via `sendWhatsAppWithSmsFallback` if notifyChannels.whatsapp=true and candidate has phone
+- [x] SLA breach detected by Inngest cron within 15 min of breach — `interview-sla-check.ts` runs `*/15 * * * *`
+- [x] Rejection email sent on stage change to REJECTED — stage route fires non-blocking email
+- [x] WhatsApp/SMS sends (or gracefully skips if not configured) — `lib/twilio.ts` checks TWILIO_* env vars before attempting; returns `{ sent: false, reason: "not_configured" }` if missing
+- [x] `pnpm build` passes
 
 ---
 

@@ -192,7 +192,11 @@ export function LeavesWfhContent({
             </TabsList>
 
             <TabsContent value="my-leaves" className="mt-4">
-              <LeavesTabContent balances={balances} myLeaveRequests={myLeaveRequests} />
+              <LeavesTabContent
+                balances={balances}
+                myLeaveRequests={myLeaveRequests}
+                approvedLeavesThisWeek={approvedLeavesThisWeek}
+              />
             </TabsContent>
 
             <TabsContent value="wfh" className="mt-4">
@@ -217,6 +221,7 @@ export function LeavesWfhContent({
         leaveTypes={leaveTypes}
         approvers={approvers}
         joiningDate={joiningDate}
+        balances={balances}
       />
       <WfhRequestSheet
         open={wfhSheetOpen}

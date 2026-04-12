@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -45,15 +45,18 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     return d;
   }, [weekOffset]);
 
-  const [numDays, setNumDays] = useState(28);
-  useMemo(() => {
-    if (typeof window !== "undefined") {
-      const w = window.innerWidth;
-      if (w < 640) setNumDays(14);
-      else if (w < 1024) setNumDays(21);
-      else setNumDays(28);
-    }
+  const [viewportWidth, setViewportWidth] = useState(1280);
+  useEffect(() => {
+    const update = () => setViewportWidth(window.innerWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
+
+  const numDays = viewportWidth < 640 ? 14 : viewportWidth < 1024 ? 21 : 28;
+  const dayWidth = viewportWidth < 640 ? 28 : viewportWidth < 1024 ? 34 : 40;
+  const rowHeight = 36;
+  const labelWidth = viewportWidth < 640 ? 120 : viewportWidth < 1024 ? 180 : 240;
 
   const days = useMemo(() => {
     const arr: Date[] = [];
@@ -64,10 +67,6 @@ export function GanttView({ tickets, onTicketClick }: GanttViewProps) {
     }
     return arr;
   }, [startOfWeek, numDays]);
-
-  const dayWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 28 : typeof window !== "undefined" && window.innerWidth < 1024 ? 34 : 40;
-  const rowHeight = 36;
-  const labelWidth = typeof window !== "undefined" && window.innerWidth < 640 ? 120 : typeof window !== "undefined" && window.innerWidth < 1024 ? 180 : 240;
 
   const toDateStr = (d: Date) => d.toISOString().split("T")[0];
   const today = toDateStr(new Date());

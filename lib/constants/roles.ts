@@ -18,3 +18,15 @@ export const ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR];
 export const EXPENSE_ADMIN_ROLES: readonly string[] = [ROLES.CEO, ROLES.HR, ROLES.ADMIN];
 
 export const ALL_ROLES: readonly string[] = Object.values(ROLES);
+
+export function isAdminOrOwner(role: string | undefined | null): boolean {
+  return !!role && ADMIN_ROLES.includes(role);
+}
+
+export function isCEO(role: string | undefined | null): boolean {
+  return role === ROLES.CEO;
+}
+
+export function isExpenseAdmin(role: string | undefined | null): boolean {
+  return !!role && EXPENSE_ADMIN_ROLES.includes(role);
+}

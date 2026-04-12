@@ -1,8 +1,9 @@
 "use client";
 
-import { use, useMemo, useCallback } from "react";
+import { use, useMemo, useCallback, useState } from "react";
 import Image from "next/image";
-import { useProject } from "@/lib/hooks/trpc-hooks";
+import { useProject, useSprints } from "@/lib/hooks/trpc-hooks";
+import { useBulkUpdateTickets } from "@/lib/api/hooks/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/components/projects/create-ticket-dialog";
 import { TicketFilterBar } from "@/components/projects/shared/ticket-filter-bar";
@@ -12,6 +13,11 @@ import { StatusBadge } from "@/components/projects/shared/status-badge";
 import { TicketDetailsDialog } from "@/components/projects/ticket-details/ticket-details-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,6 +29,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { X } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -32,8 +41,12 @@ export default function BacklogPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const { data, isLoading } = useProject(projectId);
+  const { data: sprints } = useSprints(projectId);
+  const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
@@ -95,6 +108,38 @@ export default function BacklogPage({ params }: PageProps) {
     [router, searchParams]
   );
 
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === filteredTickets.length
+        ? new Set()
+        : new Set(filteredTickets.map((t) => t.id))
+    );
+  }, [filteredTickets]);
+
+  const handleBulkUpdate = useCallback(
+    (update: { assigneeId?: string; status?: string; sprintId?: number | null }) => {
+      bulkUpdate.mutate(
+        { ticketIds: Array.from(selectedIds), ...update },
+        {
+          onSuccess: (data) => {
+            toast.success(`${data.updated} ticket${data.updated !== 1 ? "s" : ""} updated`);
+            setSelectedIds(new Set());
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        }
+      );
+    },
+    [selectedIds, bulkUpdate]
+  );
+
   const statuses =
     data && "statuses" in data
       ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
@@ -121,11 +166,62 @@ export default function BacklogPage({ params }: PageProps) {
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >
+      {/* Bulk actions bar */}
+      {selectedIds.size > 0 && (
+        <div className="mx-4 mb-3 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
+          <span className="text-sm font-medium text-primary shrink-0">{selectedIds.size} selected</span>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <Select onValueChange={(v) => handleBulkUpdate({ status: v })}>
+              <SelectTrigger className="h-7 text-xs w-36"><SelectValue placeholder="Set Status" /></SelectTrigger>
+              <SelectContent>
+                {["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"].map((s) => (
+                  <SelectItem key={s} value={s} className="text-xs">{s.replace("_", " ")}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(v) => handleBulkUpdate({ assigneeId: v })}>
+              <SelectTrigger className="h-7 text-xs w-36"><SelectValue placeholder="Assign to" /></SelectTrigger>
+              <SelectContent>
+                {members.map((m) => (
+                  <SelectItem key={m.id} value={m.id} className="text-xs">
+                    {m.firstName ?? m.name ?? m.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(v) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) })}>
+              <SelectTrigger className="h-7 text-xs w-40"><SelectValue placeholder="Move to Sprint" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="backlog" className="text-xs">Backlog (remove sprint)</SelectItem>
+                {(sprints ?? []).filter((s) => s.status !== "COMPLETED").map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)} className="text-xs">{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="border rounded-lg mx-4 mb-4">
         <Table>
           <caption className="sr-only">Backlog tickets</caption>
           <TableHeader>
             <TableRow className="text-xs">
+              <TableHead className="w-10" scope="col">
+                <Checkbox
+                  checked={filteredTickets.length > 0 && selectedIds.size === filteredTickets.length}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all tickets"
+                />
+              </TableHead>
               <TableHead className="w-[80px]" scope="col">ID</TableHead>
               <TableHead scope="col">Title</TableHead>
               <TableHead className="w-[120px]" scope="col">Status</TableHead>
@@ -137,7 +233,7 @@ export default function BacklogPage({ params }: PageProps) {
           <TableBody>
             {filteredTickets.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Image
                       src="/illustrations/undraw-task-brief.svg"
@@ -154,9 +250,16 @@ export default function BacklogPage({ params }: PageProps) {
               filteredTickets.map((ticket) => (
                 <TableRow
                   key={ticket.id}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className={`cursor-pointer hover:bg-muted/50 ${selectedIds.has(ticket.id) ? "bg-primary/5" : ""}`}
                   onClick={() => handleTicketSelect(ticket.id)}
                 >
+                  <TableCell onClick={(e) => { e.stopPropagation(); toggleSelect(ticket.id); }}>
+                    <Checkbox
+                      checked={selectedIds.has(ticket.id)}
+                      onCheckedChange={() => toggleSelect(ticket.id)}
+                      aria-label={`Select ticket ${ticket.ticketNumber}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <TicketTypeIcon type={ticket.type} />

@@ -452,6 +452,8 @@ export interface UpdateProjectInput {
   startDate?: Date | string | null;
   endDate?: Date | string | null;
   memberIds?: string[];
+  /** Map of removed userId → replacement assignee userId */
+  reassignments?: Record<string, string>;
 }
 
 export interface CreateTicketInput {

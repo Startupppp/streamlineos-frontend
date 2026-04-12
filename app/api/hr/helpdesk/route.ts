@@ -1,10 +1,18 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getHelpdeskTickets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { helpdeskTickets } from "@/lib/db/schema";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import type { TicketPriority, TicketStatus } from "@/types/hr";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const createTicketSchema = z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -32,16 +40,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      title: string;
-      description?: string;
-      category?: string;
-      priority?: TicketPriority;
-    };
-
-    if (!body.title || body.title.trim().length === 0) {
-      return err("title is required.", 400);
-    }
+    const body = await parseBody(req, createTicketSchema);
 
     const [ticket] = await db
       .insert(helpdeskTickets)

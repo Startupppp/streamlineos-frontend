@@ -6,6 +6,7 @@ import {
   isSuspiciousBot,
 } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { redis } from "@/lib/redis";
 
 function isLoopbackHostname(hostname: string): boolean {
   const h = hostname.toLowerCase();
@@ -278,6 +279,22 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (
+    isAuthenticated &&
+    token?.mfaEnforced &&
+    !token?.totpEnabled &&
+    startsWithAny(pathname, PROTECTED_ROUTES) &&
+    !pathname.startsWith("/settings") &&
+    !pathname.startsWith("/onboarding") &&
+    !pathname.startsWith("/api/auth/") &&
+    !pathname.startsWith("/api/auth/mfa/")
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/settings";
+    url.search = "?tab=security&mfa=required";
+    return NextResponse.redirect(url);
+  }
+
   // Org guard — redirect to onboarding if user has no organization
   if (
     isAuthenticated &&
@@ -289,6 +306,35 @@ export default async function middleware(req: NextRequest) {
     url.pathname = "/onboarding";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  // IP allowlist — check if org has IP restrictions and enforce them
+  if (isAuthenticated && token?.orgId && redis) {
+    try {
+      const allowlistRaw = await redis.get<string>(`org:ip-allowlist:${token.orgId as string}`);
+      if (allowlistRaw) {
+        const allowlist: string[] = typeof allowlistRaw === "string"
+          ? (JSON.parse(allowlistRaw) as string[])
+          : (allowlistRaw as unknown as string[]);
+        if (allowlist.length > 0) {
+          const clientIp =
+            req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+          const allowed = allowlist.some((entry) => {
+            // Exact match or simple prefix match (e.g. "192.168.1." for /24 CIDR shorthand)
+            return clientIp === entry || clientIp.startsWith(entry);
+          });
+          if (!allowed) {
+            logger.warn("IP not in org allowlist", { ip: clientIp, orgId: token.orgId });
+            return NextResponse.json(
+              { error: "Access denied: your IP is not permitted for this organization." },
+              { status: 403 }
+            );
+          }
+        }
+      }
+    } catch {
+      // Redis unavailable — fail open (don't block access on cache miss)
+    }
   }
 
   // RBAC route protection — block unauthorized role access

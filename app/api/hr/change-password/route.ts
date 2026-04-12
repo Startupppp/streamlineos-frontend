@@ -5,22 +5,20 @@ import { users, passwordHistory } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { PASSWORD_ZOD_SCHEMA } from "@/lib/utils/password-validation";
 
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 const PASSWORD_HISTORY_LIMIT = 5;
 
 const schema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(8).max(128).regex(PASSWORD_REGEX, {
-    message: "Password must contain uppercase, lowercase, number, and special character",
-  }),
+  newPassword: PASSWORD_ZOD_SCHEMA,
 });
 
 export async function PATCH(req: NextRequest) {
   return withAuth(async (session) => {
     const body = await req.json() as unknown;
     const parsed = schema.safeParse(body);
-    if (!parsed.success) return err(parsed.error.issues[0]?.message ?? "Invalid input", 400);
+    if (!parsed.success) return err("Invalid input", 400);
 
     const { currentPassword, newPassword } = parsed.data;
 
@@ -52,7 +50,11 @@ export async function PATCH(req: NextRequest) {
     await db.transaction(async (tx) => {
 
       await tx.update(users)
-        .set({ password: newHash, isPasswordChangeRequired: false })
+        .set({
+          password: newHash,
+          isPasswordChangeRequired: false,
+          passwordChangedAt: new Date(),
+        })
         .where(eq(users.id, session.user.id));
 
       await tx.insert(passwordHistory).values({

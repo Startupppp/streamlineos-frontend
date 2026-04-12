@@ -1,11 +1,19 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getLeaves } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { leaveRequests, leaveBalances, leaveTypes } from "@/lib/db/schema";
 import { eq, and, lte, gte } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { LEAVE_POLICY } from "@/lib/leave-policy";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const createLeaveSchema = z.object({
+  typeId: z.number(),
+  startDate: z.string(),
+  endDate: z.string(),
+  reason: z.string().optional(),
+});
 
 export async function GET() {
   return withAuth(async (session) => {
@@ -17,12 +25,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
     try {
-      const body = await req.json() as {
-        typeId: number;
-        startDate: string;
-        endDate: string;
-        reason?: string;
-      };
+      const body = await parseBody(req, createLeaveSchema);
 
       if (!body.typeId || !body.startDate || !body.endDate) {
         return err("typeId, startDate, and endDate are required.", 400);

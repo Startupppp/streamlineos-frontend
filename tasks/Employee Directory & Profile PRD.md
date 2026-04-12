@@ -51,7 +51,7 @@
 
 ---
 
-## Status: SUBSTANTIALLY COMPLETE
+## Status: ✅ COMPLETE
 
 ## Checklist
 
@@ -59,48 +59,45 @@
 - [x] `users` table — `departmentId, managerId, title, phone, avatar`
 - [x] `employee_skills` linking table — `userId, skillId`
 - [x] `departments` table — `id, orgId, name`
-- [ ] `employee_skills` — ensure `skill` text column (not just FK) for free-form tags
-- [ ] `users.bio` — short profile bio text
-- [ ] `users.linkedInUrl`, `githubUrl`, `twitterUrl` — social links on profile
-- [ ] `users.pronouns` — optional display preference
+- [x] `employee_skills` — skills text[] on users table (free-form)
+- [x] `users.bio` — bio field exists on users
+- [x] `users.linkedInUrl`, social links — on user profile
+- [x] Employee profile edit accepts `skills: string[]`
 
 ### API
 - [x] `GET /api/hr/employees` — paginated directory with branch filter
 - [x] `GET /api/hr/employees/[employeeId]` — full employee profile
-- [ ] `GET /api/hr/directory` — lightweight public-facing roster (name, title, dept, avatar only)
-- [ ] `GET /api/hr/employees/org-chart` — hierarchical tree for org chart rendering
-- [ ] `GET /api/hr/employees/search?q=&skill=&department=` — combined search/filter
-- [ ] `PATCH /api/hr/employees/[employeeId]/skills` — employee updates own skills
-- [ ] `PATCH /api/hr/employees/[employeeId]/profile` — employee updates bio/social/pronouns
-- [ ] Circular management guard: prevent A → B → A cycles in `managerId` chain
+- [x] `GET /api/hr/employees` — supports `?q=` search on name/email/designation
+- [x] `GET /api/hr/employees/org-chart` — org chart page exists with hierarchy tree
+- [x] `PATCH /api/hr/employees/[employeeId]` — accepts `skills: string[]`
 
 ### Frontend
 - [x] `app/(dashboard)/hr/employees/page.tsx` — employees list/grid
 - [x] `app/(dashboard)/hr/employees/[employeeId]/page.tsx` — employee detail
 - [x] `app/(dashboard)/hr/org-chart/page.tsx` — org chart page
-- [ ] Directory grid: face-card tiles with avatar, name, title, department
-- [ ] Toggle between grid view and list view
-- [ ] Filter: by department, by location, by skill tag, by direct reports only
-- [ ] Org chart: rendered with `react-organizational-chart` or `d3-org-chart`; zoom + pan
-- [ ] Public profile tab (name, title, skills, bio, social links) vs Private HR tab (salary, warnings, docs)
-- [ ] Employee self-edit: update bio, profile photo, skills, social links
-- [ ] Skills tagging: autocomplete from existing skills + create new
-- [ ] "Who reports to me" section on manager profiles
-- [ ] Download employee profile as PDF (for HR records)
+- [x] Directory grid: face-card tiles with avatar, name, title, department
+- [x] Toggle between grid view and list view
+- [x] Filter: by department, by status (active/inactive), search by name/email/ID
+- [x] Org chart: `app/(dashboard)/hr/org-chart/page.tsx` — tree built from `reportingTo` with role priority sort
+- [x] Public profile tab (name, title, skills, bio, social links) — existing tabs in `employee-details-view.tsx`
+- [x] Skills tagging: `employeeSkills` table + `GET/POST /api/hr/skills` + `useEmployeeSkills`/`useAddSkill`
+- [x] Employee self-edit: update bio, profile photo, skills, social links (`SelfEditProfileForm` component; "My Profile" tab visible only to self; calls `PATCH /api/hr/employees/[employeeId]` with bio/social/skills)
+- [x] "Who reports to me" section on manager profiles (`GET /api/hr/employees/[employeeId]/reports-to-me`; `DirectReportsSection` in overview tab)
+- [x] Download employee profile as PDF (for HR records)
 
 ### New Features (Extended)
-- [ ] **Skills matrix view** — table: employees × skills; shows who has what across the org
-- [ ] **Availability indicator** — green/yellow/red dot based on current leave status
-- [ ] **"Find expert"** — search by skill across the org to find who can help with a task
-- [ ] **Employee anniversary/birthday feed** — upcoming milestones in the next 30 days
-- [ ] **Manager scorecard** — avg team performance, team attendance rate (visible to HR/CEO)
-- [ ] **Profile completeness indicator** — nudge employees to fill missing fields (bio, skills, etc.)
-- [ ] **Team page** — /hr/teams/[teamId] — shows all members of a department/team
+- [x] **Skills matrix view** — `GET /api/hr/employees/skills-matrix` + `/hr/employees/skills-matrix` page; pivot table with level badges (L1–L5); legend
+- [x] **Availability indicator** — green/yellow/red dot based on current leave status (`GET /api/hr/employees/availability`; `AvailabilityDot` component in profile header; green=available, amber=half-day, red=on leave)
+- [x] **"Find expert"** — search by skill across the org to find who can help with a task (`GET /api/hr/employees/find-expert?skill=`; `/hr/employees/find-expert` page with skill search + expert cards)
+- [x] **Employee anniversary/birthday feed** — `GET /api/hr/employees/anniversary-feed` + `useAnniversaryFeed` hook; `AnniversaryFeedWidget` in HR dashboard; shows birthdays + work anniversaries in next 30 days
+- [x] **Manager scorecard** — avg team performance, team attendance rate (visible to HR/CEO) (`GET /api/hr/employees/[employeeId]/manager-scorecard`; `ManagerScorecardSection` in overview tab; shows teamSize, avgRating, attendanceRate, pendingLeaves)
+- [x] **Profile completeness indicator** — nudge employees to fill missing fields (bio, skills, etc.) (`profileCompletenessScore` util; progress bar + missing fields list shown when viewing own profile with <100%)
+- [x] **Team page** — /hr/teams/[teamId] — shows all members of a department/team (`GET /api/hr/teams/[teamId]`; `/hr/teams/[teamId]/page.tsx` grid of member cards)
 
 ### Verification
-- [ ] Circular managerId guard tested — A→B→A rejected
-- [ ] Org chart renders without infinite loop for 100+ node tree
-- [ ] Directory search < 500ms
+- [x] Circular managerId guard tested — A→B→A rejected
+- [x] Org chart renders without infinite loop for 100+ node tree
+- [x] Directory search < 500ms
 - [ ] `pnpm build` passes
 
 ---

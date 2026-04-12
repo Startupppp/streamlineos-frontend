@@ -1,0 +1,45 @@
+/**
+ * Source Effectiveness Report
+ * Returns candidate counts grouped by source, with hire rate per source.
+ * GET /api/reports/source-effectiveness
+ */
+
+import { withAuth, ok } from "@/lib/api/helpers";
+import { db } from "@/lib/db";
+import { candidates } from "@/lib/db/schema";
+import { eq, sql } from "drizzle-orm";
+import type { NextRequest } from "next/server";
+
+export interface SourceEffectivenessRow {
+  source: string;
+  total: number;
+  hired: number;
+  rejected: number;
+  hireRate: number; // percentage 0–100
+}
+
+export async function GET(_req: NextRequest) {
+  return withAuth(async (session) => {
+    const rows = await db
+      .select({
+        source: sql<string>`COALESCE(${candidates.source}, 'DIRECT')`,
+        total: sql<number>`COUNT(*)::int`,
+        hired: sql<number>`COUNT(*) FILTER (WHERE ${candidates.status} = 'HIRED')::int`,
+        rejected: sql<number>`COUNT(*) FILTER (WHERE ${candidates.status} = 'REJECTED')::int`,
+      })
+      .from(candidates)
+      .where(eq(candidates.orgId, session.orgId))
+      .groupBy(sql`COALESCE(${candidates.source}, 'DIRECT')`)
+      .orderBy(sql`COUNT(*) DESC`);
+
+    const data: SourceEffectivenessRow[] = rows.map((r) => ({
+      source: r.source,
+      total: r.total,
+      hired: r.hired,
+      rejected: r.rejected,
+      hireRate: r.total > 0 ? Math.round((r.hired / r.total) * 100) : 0,
+    }));
+
+    return ok(data);
+  });
+}

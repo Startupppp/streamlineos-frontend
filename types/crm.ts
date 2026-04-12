@@ -97,6 +97,7 @@ export interface UpdateDealStageInput {
   id: number;
   stage: DealStage;
   lostReason?: string;
+  version?: string;
 }
 
 export interface DealFilters {
@@ -118,6 +119,7 @@ export interface Contact {
   organizationId: number | null;
   linkedinUrl: string | null;
   twitterUrl: string | null;
+  websiteUrl: string | null;
   avatarUrl: string | null;
   leadId: number | null;
   dealId: number | null;
@@ -127,6 +129,16 @@ export interface Contact {
   crmOrganization?: CrmOrganization | null;
   lead?: { id: number; name: string } | null;
   deal?: { id: number; name: string } | null;
+}
+
+export interface ContactSearchResult {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  company: string | null;
+  jobTitle: string | null;
+  image: string | null;
 }
 
 export interface ContactFilters {
@@ -151,6 +163,7 @@ export interface CreateContactInput {
   organizationId?: number;
   linkedinUrl?: string;
   twitterUrl?: string;
+  websiteUrl?: string;
   leadId?: number;
   dealId?: number;
   tags?: string[];
@@ -167,6 +180,7 @@ export interface UpdateContactInput {
   organizationId?: number | null;
   linkedinUrl?: string | null;
   twitterUrl?: string | null;
+  websiteUrl?: string | null;
   avatarUrl?: string | null;
   tags?: string[];
 }
@@ -192,9 +206,50 @@ export interface CrmOrganization {
   linkedinUrl: string | null;
   description: string | null;
   healthScore: number | null;
+  parentId: number | null;
+  notes: string | null;
   createdAt: string | null;
   updatedAt: string | null;
   contacts?: Contact[];
+}
+
+export interface OrgHierarchyNode {
+  id: number;
+  name: string;
+  industry: string | null;
+  healthScore: number | null;
+  parentId: number | null;
+  children: OrgHierarchyNode[];
+}
+
+export interface OrgRollup {
+  totalContacts: number;
+  totalDeals: number;
+  openDeals: number;
+  totalDealValue: number;
+  totalLeads: number;
+}
+
+export type OrgTimelineEventType = "contact_created" | "deal_created" | "lead_linked" | "note_added";
+
+export interface OrgTimelineEvent {
+  id: string;
+  date: string;
+  type: OrgTimelineEventType;
+  description: string;
+  entityId: number;
+}
+
+export interface RelatedLead {
+  id: number;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  priority: string;
+  company: string | null;
+  source: string | null;
+  createdAt: string | null;
 }
 
 export interface PaginatedCrmOrganizations {

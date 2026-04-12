@@ -31,6 +31,7 @@ import type {
   RejectLeadInput,
   DistributeLeadsInput,
   DistributeResult,
+  LeadImportBatch,
 } from "@/types/leads";
 
 export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean }) {
@@ -338,4 +339,28 @@ export function useCheckLeadDuplicates(params: { email?: string; phone?: string 
   });
 }
 
+export function useLeadImportStatus(batchId: number | null) {
+  return useQuery({
+    queryKey: [...queryKeys.leads.all, "importBatch", batchId] as const,
+    queryFn: () => apiClient.get<LeadImportBatch>(`/leads/import/${batchId}`),
+    enabled: batchId !== null,
+    refetchInterval: 3000,
+  });
+}
+
 export const useSlaAlerts = useLeadSlaAlerts;
+
+export interface ScoreExplanation {
+  score: number;
+  totalRules: number;
+  firedRules: { name: string; field: string; operator: string; value: string; points: number }[];
+}
+
+export function useLeadScoreExplanation(leadId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: [...queryKeys.leads.all, "scoreExplanation", leadId] as const,
+    queryFn: () => apiClient.get<ScoreExplanation>(`/leads/${leadId}/score-explanation`),
+    enabled,
+    staleTime: 60_000,
+  });
+}

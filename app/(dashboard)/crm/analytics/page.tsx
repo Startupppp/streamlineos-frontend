@@ -15,6 +15,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadStats, useLeads, useLeadAnalyticsSummary, useSalesLeaderboard } from "@/lib/api/hooks/leads";
 import { useDeals } from "@/lib/api/hooks/crm";
+import { useTaskAnalytics } from "@/lib/api/hooks/tasks";
 import { useSlaReport } from "@/lib/api/hooks/crm-settings";
 import { CHART_TOOLTIP_STYLE, AXIS_TICK, CHART_COLORS } from "@/features/crm/shared/constants";
 import { PipelineFunnelChart } from "@/features/crm/analytics/pipeline-funnel-chart";
@@ -43,6 +44,8 @@ export default function CrmAnalyticsPage() {
   const { data: slaReport, isLoading: slaLoading } = useSlaReport();
   const { data: allLeadsResult, isLoading: leadsLoading } = useLeads({ limit: 100 });
   const allLeads = allLeadsResult?.leads;
+  const { data: taskAnalytics } = useTaskAnalytics(30);
+
   const { data: analyticsSummary, isLoading: summaryLoading } = useLeadAnalyticsSummary({
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
@@ -273,6 +276,56 @@ export default function CrmAnalyticsPage() {
           )}
         </div>
       </motion.div>
+
+      {/* Task Analytics */}
+      {taskAnalytics && (
+        <motion.div variants={fadeUp}>
+          <Card>
+            <CardHeader className="px-4 py-3 border-b">
+              <h3 className="text-sm font-semibold">Task Analytics (Last 30 Days)</h3>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-3 gap-4 mb-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold">{taskAnalytics.completionRate}%</p>
+                  <p className="text-xs text-muted-foreground">Completion Rate</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-destructive">{taskAnalytics.overdue}</p>
+                  <p className="text-xs text-muted-foreground">Overdue</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{taskAnalytics.total}</p>
+                  <p className="text-xs text-muted-foreground">Total Tasks</p>
+                </div>
+              </div>
+              {taskAnalytics.perRep.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Per Rep</p>
+                  {taskAnalytics.perRep.slice(0, 8).map((rep) => (
+                    <div key={rep.assigneeId} className="flex items-center gap-3">
+                      <p className="text-xs font-medium w-32 truncate shrink-0">{rep.name}</p>
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${rep.completionRate}%` }}
+                        />
+                      </div>
+                      <span className="text-xs tabular-nums w-10 text-right shrink-0">{rep.completionRate}%</span>
+                      <span className="text-xs text-muted-foreground tabular-nums w-12 text-right shrink-0">
+                        {rep.completed}/{rep.total}
+                      </span>
+                      {rep.overdue > 0 && (
+                        <span className="text-[10px] text-destructive shrink-0">{rep.overdue} late</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </PageWrapper>
   );
 }

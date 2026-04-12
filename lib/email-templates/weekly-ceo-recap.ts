@@ -12,6 +12,7 @@ export interface WeeklyCeoRecapData {
   pendingLeaves: number;
   topPerformers: { name: string; score: number }[];
   pipelineSummary: { status: string; count: number }[];
+  aiNarrative?: string;
 }
 
 export function getWeeklyCeoRecapTemplate(data: WeeklyCeoRecapData): string {
@@ -48,6 +49,14 @@ export function getWeeklyCeoRecapTemplate(data: WeeklyCeoRecapData): string {
 
   <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
     <p style="margin-top: 0;">Good morning! Here's your weekly overview for <strong>${data.orgName}</strong>.</p>
+
+    ${
+      data.aiNarrative
+        ? `<div style="background:#f8f3e8;border-left:4px solid #bd882c;padding:16px 20px;margin-bottom:24px;border-radius:4px;">
+        <p style="font-size:14px;color:#333;line-height:1.7;margin:0;">${data.aiNarrative.replace(/\n\n/g, '</p><p style="font-size:14px;color:#333;line-height:1.7;margin:12px 0 0 0;">').replace(/\n/g, " ")}</p>
+      </div>`
+        : ""
+    }
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;">
       <div style="background: #eff6ff; border-radius: 8px; padding: 16px; text-align: center;">

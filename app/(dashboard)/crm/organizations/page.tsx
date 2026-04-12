@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  Search, Building2, Globe, Users, ChevronLeft, ChevronRight, Heart,
+  Search, Building2, Globe, Users, ChevronLeft, ChevronRight, Heart, ArrowRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,8 @@ export default function OrganizationsPage() {
           {data?.organizations.map(org => {
             const health = getHealthBadge(org.healthScore);
             return (
-              <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40">
+              <Card key={org.id} className="shadow-sm hover:shadow-md transition-all hover:border-gold/40 cursor-pointer group">
+                <Link href={`/crm/organizations/${org.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
@@ -138,7 +140,13 @@ export default function OrganizationsPage() {
                   {org.description && (
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{org.description}</p>
                   )}
+                  <div className="mt-3 flex justify-end">
+                    <span className="text-xs text-gold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      View details <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
                 </CardContent>
+                </Link>
               </Card>
             );
           })}

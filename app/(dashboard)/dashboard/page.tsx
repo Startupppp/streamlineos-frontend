@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, useEffect, useRef } from "react";
+import { useMemo, useCallback, useEffect, useRef, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +16,7 @@ import {
   useBirthdays,
   usePendingApprovals,
   type LeaveToday,
+  type UpcomingLeave,
   type BirthdayEntry,
   type PendingApprovalsCount,
 } from "@/lib/api/hooks/dashboard";
@@ -39,7 +40,6 @@ import {
   ListChecks,
   Zap,
   UserCheck,
-  PartyPopper,
   Bell,
   AlertTriangle,
   Cake,
@@ -70,6 +70,17 @@ import {
   PendingRequestsWidget, BirthdaysWidget, PendingApprovalsWidget,
   TeamAttendanceWidget,
 } from "@/features/dashboard/hr-widgets";
+import { AnnouncementsWidget } from "@/components/dashboard/widgets/announcements-widget";
+import { MyTasksWidget } from "@/components/dashboard/widgets/my-tasks-widget";
+import { TimesheetWidget } from "@/components/dashboard/widgets/timesheet-widget";
+import { LeaveBalanceWidget as LeaveBalanceWidgetNew } from "@/components/dashboard/widgets/leave-balance-widget";
+import { ExecutiveKpiWidget } from "@/components/dashboard/widgets/executive-kpi-widget";
+import { ProjectHealthWidget } from "@/components/dashboard/widgets/project-health-widget";
+import { TeamAttendanceWidget as TeamAttendanceWidgetNew } from "@/components/dashboard/widgets/team-attendance-widget";
+import { UpcomingEventsWidget } from "@/components/dashboard/widgets/upcoming-events-widget";
+import { PendingApprovalsWidget as PendingApprovalsWidgetNew } from "@/components/dashboard/widgets/pending-approvals-widget";
+import { QuickActionsWidget } from "@/components/dashboard/widgets/quick-actions-widget";
+import { WidgetSkeleton } from "@/components/dashboard/widgets/widget-skeleton";
 import Link from "next/link";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -157,19 +168,19 @@ function UpcomingLeavesCard({ isAdmin }: { isAdmin: boolean }) {
           </div>
         ) : (
           <ul className="space-y-3">
-            {leaves.map((leave: LeaveToday) => (
+            {leaves.map((leave: UpcomingLeave) => (
               <li key={leave.id} className="flex items-center gap-3">
                 <Avatar className="h-8 w-8 shrink-0">
                   <AvatarImage
-                    src={resolveImageUrl(leave.employeeImage)}
-                    alt={leave.employeeName ?? "Employee"}
+                    src={resolveImageUrl(leave.userImage)}
+                    alt={leave.userName ?? "Employee"}
                   />
                   <AvatarFallback className="text-xs">
-                    {(leave.employeeName ?? "?")[0]?.toUpperCase()}
+                    {(leave.userName ?? "?")[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{leave.employeeName ?? "—"}</p>
+                  <p className="text-sm font-medium truncate">{leave.userName ?? "—"}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {format(parseISO(leave.startDate), "MMM d")}
                     {" – "}
@@ -312,7 +323,9 @@ export default function DashboardPage() {
   const currentUserId = session?.user?.id;
   const firstName = getFirstName(session);
   const role = session?.user?.role;
-  const isAdmin = role === "CEO" || role === "HR";
+  const isAdmin = role === "CEO" || role === "HR" || role === "ADMIN";
+  const isManager = role === "BRANCH_MANAGER" || role === "BRANCH_HR";
+  const isEmployee = !isAdmin && !isManager;
 
   const { data: stats, isLoading, error, refetch } = useDashboardStats({
     retry: 2,
@@ -465,79 +478,10 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : null}
-          <Card className="bg-card border-border shadow-noir">
-            <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-8 w-16 rounded-md" />
-            </CardHeader>
-            <CardContent className="px-4 pt-0 pb-4">
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <Skeleton className="h-9 w-9 rounded-lg" />
-                    <div className="flex-1 space-y-1.5">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <div className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
-            <Card className="lg:col-span-4 min-h-0">
-              <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
-              <CardContent className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </CardContent>
-            </Card>
-            <Card className="lg:col-span-3 min-h-0">
-              <CardHeader><Skeleton className="h-6 w-32" /></CardHeader>
-              <CardContent className="space-y-3">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-2 w-full rounded-full" />
-                <Skeleton className="h-20 w-full rounded" />
-                <Skeleton className="h-12 w-full rounded" />
-              </CardContent>
-            </Card>
-          </div>
-          <div
-            className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} md:auto-rows-[24rem]`}
-          >
-            <div className="sm:col-span-1 min-h-0">
-              <Card className="min-h-0">
-                <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
-                <CardContent className="space-y-3">
-                  {Array.from({ length: 4 }).map((_, j) => (
-                    <Skeleton key={j} className="h-12 w-full" />
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-            <div className="sm:col-span-1 min-h-0">
-              <Card className="min-h-0">
-                <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
-                <CardContent className="space-y-3">
-                  {Array.from({ length: 4 }).map((_, j) => (
-                    <Skeleton key={`b-${j}`} className="h-12 w-full" />
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-            {isAdmin ? (
-              <div className="sm:col-span-2 lg:col-span-1 min-h-0">
-                <Card className="min-h-0">
-                  <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
-                  <CardContent className="space-y-3">
-                    {Array.from({ length: 4 }).map((_, j) => (
-                      <Skeleton key={`c-${j}`} className="h-12 w-full" />
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-            ) : null}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            <WidgetSkeleton rows={3} />
+            <WidgetSkeleton rows={3} />
+            <WidgetSkeleton rows={3} />
           </div>
         </div>
       </PageWrapper>
@@ -585,90 +529,201 @@ export default function DashboardPage() {
     >
       <div className="space-y-5">
 
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${statCards.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"}`}>
-        {statCards.map((stat, i) => (
-          <StatCard
-            key={stat.id}
-            label={stat.label}
-            value={stat.value}
-            icon={stat.icon}
-            href={stat.href}
-            index={i}
-          />
-        ))}
-      </motion.div>
-
-      <motion.div variants={fadeUp} initial="hidden" animate="visible">
-        <QuickActions />
-      </motion.div>
-
-      {isAdmin && (
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-        >
-          <LeavesTodayCard isAdmin={isAdmin} />
-          <UpcomingLeavesCard isAdmin={isAdmin} />
-          <BirthdaysCard />
-          <PendingApprovalsCard />
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${statCards.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : statCards.length >= 3 ? "sm:grid-cols-2 md:grid-cols-3" : "sm:grid-cols-2"}`}>
+          {statCards.map((stat, i) => (
+            <StatCard
+              key={stat.id}
+              label={stat.label}
+              value={stat.value}
+              icon={stat.icon}
+              href={stat.href}
+              index={i}
+            />
+          ))}
         </motion.div>
-      )}
 
+        <motion.div variants={fadeUp} initial="hidden" animate="visible">
+          <QuickActions />
+        </motion.div>
 
-      <motion.div variants={fadeUp} initial="hidden" animate="visible">
-        <PublicDocumentsCard />
-      </motion.div>
-
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <LeaveBalanceWidget />
-        <UpcomingHolidaysWidget />
-        <LeavesTodayWidget />
-        <BirthdaysWidget />
-      </motion.div>
-
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
-        <PendingRequestsWidget />
-        <TeamAttendanceWidget />
-        {isAdmin && <PendingApprovalsWidget />}
-      </motion.div>
-
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
-        <div className="lg:col-span-4 min-h-0">
-          <MyIssuesCard
-            tickets={sortedMyTickets}
-            isLoading={ticketsLoading}
-            error={ticketsError}
-          />
-        </div>
-        <div className="lg:col-span-3 min-h-0">
-          <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
-        </div>
-      </motion.div>
-
-      <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} md:auto-rows-[24rem]`}>
-        <div className="sm:col-span-1 min-h-0">
-          <RecentProjectsCard
-            projects={recentProjects?.map((p) => ({ ...p, key: p.key ?? "" }))}
-            isLoading={projectsLoading}
-            error={projectsError}
-            onCreateProject={handleGoToProjects}
-          />
-        </div>
-        <div className="sm:col-span-1 min-h-0">
-          <RecentActivityCard
-            items={recentActivity}
-            isLoading={activityLoading}
-            error={activityError}
-          />
-        </div>
         {isAdmin && (
-          <div className="sm:col-span-2 lg:col-span-1 min-h-0">
-            <TeamCard members={teamAvailability} isLoading={teamLoading} />
-          </div>
+          <>
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+              <Suspense fallback={<WidgetSkeleton rows={2} />}>
+                <ExecutiveKpiWidget />
+              </Suspense>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <AnnouncementsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={2} />}>
+                <ProjectHealthWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <UpcomingEventsWidget />
+              </Suspense>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              <LeavesTodayCard isAdmin={isAdmin} />
+              <UpcomingLeavesCard isAdmin={isAdmin} />
+              <BirthdaysCard />
+              <PendingApprovalsCard />
+            </motion.div>
+
+            <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <LeaveBalanceWidget />
+              <UpcomingHolidaysWidget />
+              <LeavesTodayWidget />
+              <BirthdaysWidget />
+            </motion.div>
+
+            <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+              <PendingRequestsWidget />
+              <TeamAttendanceWidget />
+              <PendingApprovalsWidget />
+            </motion.div>
+
+            <motion.div variants={fadeUp} initial="hidden" animate="visible">
+              <PublicDocumentsCard />
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <QuickActionsWidget />
+              </Suspense>
+            </motion.div>
+          </>
         )}
-      </motion.div>
+
+        {isManager && (
+          <>
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={4} />}>
+                <TeamAttendanceWidgetNew />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={2} />}>
+                <PendingApprovalsWidgetNew />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <MyTasksWidget />
+              </Suspense>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <UpcomingEventsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <AnnouncementsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <QuickActionsWidget />
+              </Suspense>
+            </motion.div>
+          </>
+        )}
+
+        {isEmployee && (
+          <>
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={4} />}>
+                <MyTasksWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={2} />}>
+                <TimesheetWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <LeaveBalanceWidgetNew />
+              </Suspense>
+            </motion.div>
+
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            >
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <UpcomingEventsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <AnnouncementsWidget />
+              </Suspense>
+              <Suspense fallback={<WidgetSkeleton rows={3} />}>
+                <QuickActionsWidget />
+              </Suspense>
+            </motion.div>
+          </>
+        )}
+
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="grid gap-4 grid-cols-1 lg:grid-cols-7 md:auto-rows-[24rem]">
+          <div className="lg:col-span-4 min-h-0">
+            <MyIssuesCard
+              tickets={sortedMyTickets}
+              isLoading={ticketsLoading}
+              error={ticketsError}
+            />
+          </div>
+          <div className="lg:col-span-3 min-h-0">
+            <SprintCard summary={sprintSummary ?? undefined} isLoading={sprintLoading} />
+          </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" className={`grid gap-4 grid-cols-1 ${isAdmin ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"} md:auto-rows-[24rem]`}>
+          <div className="sm:col-span-1 min-h-0">
+            <RecentProjectsCard
+              projects={recentProjects?.map((p) => ({ ...p, key: p.key ?? "" }))}
+              isLoading={projectsLoading}
+              error={projectsError}
+              onCreateProject={handleGoToProjects}
+            />
+          </div>
+          <div className="sm:col-span-1 min-h-0">
+            <RecentActivityCard
+              items={recentActivity}
+              isLoading={activityLoading}
+              error={activityError}
+            />
+          </div>
+          {isAdmin && (
+            <div className="sm:col-span-2 lg:col-span-1 min-h-0">
+              <TeamCard members={teamAvailability} isLoading={teamLoading} />
+            </div>
+          )}
+        </motion.div>
 
       </div>
     </PageWrapper>

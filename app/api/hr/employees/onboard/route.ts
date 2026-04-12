@@ -1,45 +1,46 @@
-import { withAdmin, ok, err } from "@/lib/api/helpers";
+import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { users, organizationMembers, salaryStructures } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import { hash } from "bcryptjs";
 import { randomUUID } from "crypto";
 import type { NextRequest } from "next/server";
+import { invalidateHrDashboardCache } from "@/lib/hr-cache";
+import { inngest } from "@/lib/inngest/client";
+import { z } from "zod";
+
+const onboardSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string(),
+  phone: z.string().optional(),
+  whatsappSameAsPhone: z.boolean().optional(),
+  whatsappNumber: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  password: z.string().optional(),
+  designation: z.string(),
+  departmentId: z.number().optional(),
+  role: z.string().optional(),
+  employeeId: z.string().optional(),
+  joiningDate: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  skills: z.string().optional(),
+  experienceYears: z.number().optional(),
+  taxId: z.string().optional(),
+  monthlySalary: z.number().optional(),
+  bankDetails: z.object({
+    accountNumber: z.string().optional(),
+    bankName: z.string().optional(),
+    branch: z.string().optional(),
+    ifsc: z.string().optional(),
+    accountHolder: z.string().optional(),
+    pfUanNumber: z.string().optional(),
+  }).optional(),
+});
 
 export async function POST(req: NextRequest) {
   return withAdmin(async (session) => {
-    const body = await req.json() as {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone?: string;
-      whatsappSameAsPhone?: boolean;
-      whatsappNumber?: string;
-      gender?: "MALE" | "FEMALE" | "OTHER";
-      password?: string;
-      designation: string;
-      departmentId?: number;
-      role?: string;
-      employeeId?: string;
-      joiningDate?: string;
-      dateOfBirth?: string;
-      skills?: string;
-      experienceYears?: number;
-      taxId?: string;
-      monthlySalary?: number;
-      bankDetails?: {
-        accountNumber?: string;
-        bankName?: string;
-        branch?: string;
-        ifsc?: string;
-        accountHolder?: string;
-        pfUanNumber?: string;
-      };
-    };
-
-    if (!body.firstName || !body.lastName || !body.email || !body.designation) {
-      return err("firstName, lastName, email, and designation are required.", 400);
-    }
+    const body = await parseBody(req, onboardSchema);
 
     const existing = await db.query.users.findFirst({
       where: (u, { eq }) => eq(u.email, body.email.toLowerCase()),
@@ -101,6 +102,32 @@ export async function POST(req: NextRequest) {
         isActive: true,
       });
     }
+
+    // Invalidate HR dashboard caches so headcount reflects immediately
+    await invalidateHrDashboardCache(session.orgId);
+
+    // Trigger auto-onboarding workflow (non-blocking)
+    void inngest.send({
+      name: "hr/employee.onboarded",
+      data: {
+        userId: newUser.id,
+        orgId: session.orgId,
+        joiningDate: body.joiningDate ?? null,
+      },
+    }).catch(() => {
+      // Non-critical — onboarding can be initiated manually if this fails
+    });
+
+    // Fire webhook event (non-blocking)
+    void import("@/lib/inngest/dispatch-webhook").then(({ dispatchWebhook }) =>
+      dispatchWebhook(session.orgId, "employee.hired", {
+        userId: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        joiningDate: body.joiningDate ?? null,
+      })
+    );
 
     return ok({ success: true });
   });

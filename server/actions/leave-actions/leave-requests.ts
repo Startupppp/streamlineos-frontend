@@ -54,6 +54,8 @@ export async function submitLeaveRequest(data: {
   priority?: string;
   approverId: string;
   attachmentUrl?: string;
+  isHalfDay?: boolean;
+  halfDayPeriod?: "AM" | "PM";
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
@@ -93,6 +95,8 @@ export async function submitLeaveRequest(data: {
       approverId: isCeo ? session.user.id : data.approverId,
       attachmentUrl: data.attachmentUrl || null,
       status: isCeo ? "APPROVED" : "PENDING",
+      isHalfDay: data.isHalfDay ?? false,
+      halfDayPeriod: data.isHalfDay ? (data.halfDayPeriod ?? "AM") : null,
     });
 
     const leaveType = await db.query.leaveTypes.findFirst({ where: eq(leaveTypes.id, data.leaveTypeId) });
@@ -183,9 +187,15 @@ export async function processLeaveRequest(data: {
   requestId: number;
   status: "APPROVED" | "REJECTED" | "PENDING";
   rejectionReason?: string;
+  forceApprove?: boolean;
+  justification?: string;
 }) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
+
+  if (data.forceApprove && !data.justification?.trim()) {
+    return { error: "A justification note is required when approving beyond balance." };
+  }
 
   const request = await db.query.leaveRequests.findFirst({
     where: eq(leaveRequests.id, data.requestId),
@@ -274,7 +284,7 @@ export async function processLeaveRequest(data: {
 
           if (balanceRecord) {
             const newBal = Number(balanceRecord.balance) - diffDays;
-            if (newBal < 0) {
+            if (newBal < 0 && !data.forceApprove) {
               throw new Error(
                 `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`,
               );
@@ -445,6 +455,36 @@ export async function getAllIncomingRequests() {
     },
     orderBy: [desc(leaveRequests.createdAt)],
   });
+}
+
+export async function cancelLeaveRequest(requestId: number) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  const request = await db.query.leaveRequests.findFirst({
+    where: eq(leaveRequests.id, requestId),
+  });
+  if (!request) return { error: "Request not found" };
+
+  if (request.userId !== session.user.id) {
+    return { error: "You can only cancel your own leave requests" };
+  }
+  if (request.status !== "PENDING") {
+    return { error: "Only pending leave requests can be cancelled" };
+  }
+
+  try {
+    await db
+      .update(leaveRequests)
+      .set({ status: "CANCELLED" })
+      .where(eq(leaveRequests.id, requestId));
+
+    revalidatePath("/hr/leaves");
+    return { success: true };
+  } catch (error) {
+    logger.error("Failed to cancel leave request", error);
+    return { error: "Failed to cancel request" };
+  }
 }
 
 export async function getApprovedLeavesThisWeek() {

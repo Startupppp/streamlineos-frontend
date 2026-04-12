@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Upload, FileText, Download, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { useState, useCallback, useMemo } from "react";
+import { Upload, FileText, Download, AlertCircle, CheckCircle2, X, ArrowRight, ChevronLeft } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -10,6 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBulkImportLeads } from "@/lib/api/hooks/leads";
 import { toast } from "sonner";
 
@@ -34,6 +38,25 @@ interface ParsedLead {
 const VALID_SOURCES = ["referral", "campaign", "cold_call", "website", "social_media", "walk_in", "other"];
 const VALID_PRIORITIES = ["HOT", "WARM", "COLD"];
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
+
+const CRM_FIELDS: { value: string; label: string }[] = [
+  { value: "_skip", label: "— Skip —" },
+  { value: "name", label: "Name (required)" },
+  { value: "email", label: "Email" },
+  { value: "phone", label: "Phone" },
+  { value: "company", label: "Company" },
+  { value: "source", label: "Source" },
+  { value: "notes", label: "Notes / Remarks" },
+  { value: "city", label: "City / Location" },
+  { value: "designation", label: "Designation / Title" },
+  { value: "referredBy", label: "Referred By" },
+  { value: "potentialValue", label: "Potential Value" },
+  { value: "investmentInterest", label: "Investment Interest" },
+  { value: "whatsappNumber", label: "WhatsApp Number" },
+  { value: "website", label: "Website / URL" },
+  { value: "priority", label: "Priority (HOT/WARM/COLD)" },
+  { value: "tags", label: "Tags (comma-separated)" },
+];
 
 const HEADER_ALIASES: Record<string, string[]> = {
   name: ["name", "lead name", "full name", "contact name", "lead"],
@@ -61,123 +84,105 @@ function matchHeader(header: string): string | null {
   return null;
 }
 
-function rowToLead(row: string[], headers: string[]): { lead: ParsedLead | null; error: string | null } {
-  const mapping: Record<string, number> = {};
-  headers.forEach((h, i) => {
-    const field = matchHeader(h);
-    if (field) mapping[field] = i;
-  });
-
-  if (mapping.name === undefined) return { lead: null, error: "No 'name' column found" };
-
-  const get = (field: string) => {
-    const idx = mapping[field];
-    return idx !== undefined ? row[idx]?.trim().replace(/^["']|["']$/g, "") || undefined : undefined;
-  };
-
-  const name = get("name");
-  if (!name) return { lead: null, error: "Missing name" };
-
-  const source = get("source")?.toLowerCase();
-  const priority = get("priority")?.toUpperCase();
-
-  return {
-    lead: {
-      name,
-      email: get("email"),
-      phone: get("phone"),
-      company: get("company"),
-      source: source && VALID_SOURCES.includes(source) ? source : undefined,
-      notes: get("notes"),
-      city: get("city"),
-      designation: get("designation"),
-      referredBy: get("referredBy"),
-      potentialValue: get("potentialValue"),
-      investmentInterest: get("investmentInterest"),
-      whatsappNumber: get("whatsappNumber"),
-      website: get("website"),
-      priority: priority && VALID_PRIORITIES.includes(priority) ? priority : undefined,
-      tags: get("tags"),
-    },
-    error: null,
-  };
-}
-
-/* ─── CSV Parser ─── */
-function parseCSV(text: string): { leads: ParsedLead[]; errors: string[] } {
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  if (lines.length < 2) return { leads: [], errors: ["File must have a header row and at least one data row."] };
-
-  const headers = lines[0].split(",").map(h => h.trim().replace(/['"]/g, ""));
-  const leads: ParsedLead[] = [];
-  const errors: string[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",").map(c => c.trim());
-    const { lead, error } = rowToLead(cols, headers);
-    if (lead) {
-      leads.push(lead);
-    } else {
-      errors.push(`Row ${i + 1}: ${error || "Invalid row"}, skipped.`);
-    }
-  }
-
-  return { leads, errors };
-}
-
-/* ─── Excel Parser (ExcelJS) ─── */
-async function parseExcel(buffer: ArrayBuffer): Promise<{ leads: ParsedLead[]; errors: string[] }> {
-  const ExcelJS = (await import("exceljs")).default;
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer);
-
-  const sheet = workbook.worksheets[0];
-  if (!sheet || sheet.rowCount < 2) {
-    return { leads: [], errors: ["Excel file must have a header row and at least one data row."] };
-  }
-
-  // Extract headers from first row
-  const headerRow = sheet.getRow(1);
-  const headers: string[] = [];
-  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    headers[colNumber - 1] = String(cell.value || "").trim();
-  });
-
-  const leads: ParsedLead[] = [];
-  const errors: string[] = [];
-
-  for (let rowIdx = 2; rowIdx <= sheet.rowCount; rowIdx++) {
-    const row = sheet.getRow(rowIdx);
-    const cols: string[] = [];
-    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      cols[colNumber - 1] = String(cell.value || "").trim();
-    });
-
-    // Skip completely empty rows
-    if (cols.every(c => !c)) continue;
-
-    const { lead, error } = rowToLead(cols, headers);
-    if (lead) {
-      leads.push(lead);
-    } else {
-      errors.push(`Row ${rowIdx}: ${error || "Invalid row"}, skipped.`);
-    }
-  }
-
-  return { leads, errors };
-}
-
 function getFileExtension(name: string): string {
   return name.slice(name.lastIndexOf(".")).toLowerCase();
 }
 
+/* ─── Raw extractors (return headers + rows) ─── */
+function extractCSV(text: string): { headers: string[]; rows: string[][] } {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const headers = lines[0].split(",").map((h) => h.trim().replace(/['"]/g, ""));
+  const rows = lines.slice(1).map((l) => l.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")));
+  return { headers, rows };
+}
+
+async function extractExcel(buffer: ArrayBuffer): Promise<{ headers: string[]; rows: string[][] }> {
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+  const sheet = workbook.worksheets[0];
+  if (!sheet || sheet.rowCount < 2) return { headers: [], rows: [] };
+
+  const headerRow = sheet.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    headers[colNumber - 1] = String(cell.value ?? "").trim();
+  });
+
+  const rows: string[][] = [];
+  for (let rowIdx = 2; rowIdx <= sheet.rowCount; rowIdx++) {
+    const row = sheet.getRow(rowIdx);
+    const cols: string[] = [];
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      cols[colNumber - 1] = String(cell.value ?? "").trim();
+    });
+    if (!cols.every((c) => !c)) rows.push(cols);
+  }
+  return { headers, rows };
+}
+
+/* ─── Apply mapping to produce ParsedLead[] ─── */
+function applyMapping(
+  headers: string[],
+  rows: string[][],
+  fieldMappings: Record<number, string>,
+): { leads: ParsedLead[]; errors: string[] } {
+  // Reverse map: fieldKey → colIndex
+  const fieldToCol: Record<string, number> = {};
+  for (const [idxStr, field] of Object.entries(fieldMappings)) {
+    if (field !== "_skip") fieldToCol[field] = Number(idxStr);
+  }
+
+  const leads: ParsedLead[] = [];
+  const errors: string[] = [];
+
+  const get = (row: string[], field: string): string | undefined => {
+    const idx = fieldToCol[field];
+    return idx !== undefined ? row[idx]?.trim() || undefined : undefined;
+  };
+
+  rows.forEach((row, i) => {
+    const name = get(row, "name");
+    if (!name) { errors.push(`Row ${i + 2}: missing name, skipped.`); return; }
+
+    const source = get(row, "source")?.toLowerCase();
+    const priority = get(row, "priority")?.toUpperCase();
+
+    leads.push({
+      name,
+      email: get(row, "email"),
+      phone: get(row, "phone"),
+      company: get(row, "company"),
+      source: source && VALID_SOURCES.includes(source) ? source : undefined,
+      notes: get(row, "notes"),
+      city: get(row, "city"),
+      designation: get(row, "designation"),
+      referredBy: get(row, "referredBy"),
+      potentialValue: get(row, "potentialValue"),
+      investmentInterest: get(row, "investmentInterest"),
+      whatsappNumber: get(row, "whatsappNumber"),
+      website: get(row, "website"),
+      priority: priority && VALID_PRIORITIES.includes(priority) ? priority : undefined,
+      tags: get(row, "tags"),
+    });
+  });
+
+  return { leads, errors };
+}
+
 export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = useState(false);
-  const [parsed, setParsed] = useState<ParsedLead[] | null>(null);
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [step, setStep] = useState<"upload" | "mapping" | "preview">("upload");
+
+  const [rawHeaders, setRawHeaders] = useState<string[]>([]);
+  const [rawRows, setRawRows] = useState<string[][]>([]);
+  const [fieldMappings, setFieldMappings] = useState<Record<number, string>>({});
   const [fileName, setFileName] = useState("");
   const [isParsing, setIsParsing] = useState(false);
 
+  const [parsed, setParsed] = useState<ParsedLead[] | null>(null);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [autoDistribute, setAutoDistribute] = useState(true);
 
   const [importResult, setImportResult] = useState<{
@@ -203,42 +208,70 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     setIsParsing(true);
 
     try {
+      let headers: string[] = [];
+      let rows: string[][] = [];
+
       if (ext === ".csv") {
         const text = await file.text();
-        const { leads, errors } = parseCSV(text);
-        setParsed(leads);
-        setParseErrors(errors);
+        ({ headers, rows } = extractCSV(text));
       } else {
         const buffer = await file.arrayBuffer();
-        const { leads, errors } = await parseExcel(buffer);
-        setParsed(leads);
-        setParseErrors(errors);
+        ({ headers, rows } = await extractExcel(buffer));
       }
-    } catch (err) {
+
+      if (headers.length === 0) {
+        toast.error("Could not read file headers. Check the file format.");
+        return;
+      }
+
+      // Auto-detect initial mappings
+      const mappings: Record<number, string> = {};
+      headers.forEach((h, i) => {
+        const field = matchHeader(h);
+        mappings[i] = field ?? "_skip";
+      });
+
+      setRawHeaders(headers);
+      setRawRows(rows);
+      setFieldMappings(mappings);
+      setStep("mapping");
+    } catch {
       toast.error("Failed to parse file. Please check the format.");
     } finally {
       setIsParsing(false);
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const ext = getFileExtension(file.name);
-      if (ACCEPTED_EXTENSIONS.includes(ext)) {
-        handleFile(file);
-      } else {
-        toast.error("Please drop a .csv, .xlsx, or .xls file");
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const ext = getFileExtension(file.name);
+        if (ACCEPTED_EXTENSIONS.includes(ext)) handleFile(file);
+        else toast.error("Please drop a .csv, .xlsx, or .xls file");
       }
-    }
-  }, [handleFile]);
+    },
+    [handleFile],
+  );
 
-  const handleImport = () => {
+  const hasNameMapped = useMemo(
+    () => Object.values(fieldMappings).includes("name"),
+    [fieldMappings],
+  );
+
+  const handleConfirmMapping = useCallback(() => {
+    const { leads, errors } = applyMapping(rawHeaders, rawRows, fieldMappings);
+    setParsed(leads);
+    setParseErrors(errors);
+    setStep("preview");
+  }, [rawHeaders, rawRows, fieldMappings]);
+
+  const handleImport = useCallback(() => {
     if (!parsed?.length) return;
     bulkImport.mutate(
       {
-        leads: parsed.map(l => ({
+        leads: parsed.map((l) => ({
           name: l.name,
           email: l.email || "",
           phone: l.phone,
@@ -253,7 +286,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           whatsappNumber: l.whatsappNumber,
           website: l.website,
           priority: l.priority as "HOT" | "WARM" | "COLD" | undefined,
-          tags: l.tags ? l.tags.split(",").map(t => t.trim()) : undefined,
+          tags: l.tags ? l.tags.split(",").map((t) => t.trim()) : undefined,
         })),
         autoDistribute,
       },
@@ -268,12 +301,14 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           }
         },
         onError: (err) => toast.error(err.message),
-      }
+      },
     );
-  };
+  }, [parsed, autoDistribute, bulkImport, onSuccess]);
 
-  const downloadTemplate = () => {
-    const csv = "name,email,phone,company,source,notes,city,designation,priority,potential value,referred by\nJohn Doe,john@example.com,+919876543210,Acme Corp,website,Interested in premium plan,Hyderabad,CEO,HOT,500000,Ravi Kumar\n";
+  const downloadTemplate = useCallback(() => {
+    const csv =
+      "name,email,phone,company,source,notes,city,designation,priority,potential value,referred by\n" +
+      "John Doe,john@example.com,+919876543210,Acme Corp,website,Interested in premium plan,Hyderabad,CEO,HOT,500000,Ravi Kumar\n";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -281,16 +316,27 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
     a.download = "leads-template.csv";
     a.click();
     URL.revokeObjectURL(url);
-  };
+  }, []);
 
-  const reset = () => {
+  const reset = useCallback(() => {
+    setStep("upload");
+    setRawHeaders([]);
+    setRawRows([]);
+    setFieldMappings({});
     setParsed(null);
     setParseErrors([]);
     setFileName("");
     setIsParsing(false);
     setImportResult(null);
     setAutoDistribute(true);
-  };
+  }, []);
+
+  // ── Render steps ──
+
+  const stepLabel =
+    step === "upload" ? "Step 1 of 3 — Upload File" :
+    step === "mapping" ? "Step 2 of 3 — Map Columns" :
+    "Step 3 of 3 — Review & Import";
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
@@ -300,12 +346,34 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
           Import Leads
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader className="mb-4">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="mb-1">
           <DialogTitle>Import Leads</DialogTitle>
+          <p className="text-xs text-muted-foreground">{stepLabel}</p>
         </DialogHeader>
 
-        {!parsed && !isParsing ? (
+        {/* Step indicator */}
+        <div className="flex items-center gap-1 mb-4">
+          {["upload", "mapping", "preview"].map((s, i) => (
+            <div key={s} className="flex items-center gap-1">
+              <div
+                className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                  step === s
+                    ? "bg-gold text-white"
+                    : i < ["upload", "mapping", "preview"].indexOf(step)
+                    ? "bg-gold/30 text-gold"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i + 1}
+              </div>
+              {i < 2 && <div className="h-px w-6 bg-border" />}
+            </div>
+          ))}
+        </div>
+
+        {/* ── Step 1: Upload ── */}
+        {step === "upload" && !isParsing && (
           <div className="space-y-4">
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -331,7 +399,6 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                 Browse Files
               </Button>
             </div>
-
             <div className="flex items-center justify-between px-1">
               <p className="text-xs text-muted-foreground">
                 Required: <code className="text-foreground">name</code>. Optional: email, phone, company, source, city, designation, priority, notes
@@ -342,23 +409,126 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               </Button>
             </div>
           </div>
-        ) : isParsing ? (
+        )}
+
+        {isParsing && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="h-8 w-8 border-2 border-gold border-t-transparent rounded-full animate-spin mb-3" />
             <p className="text-sm text-muted-foreground">Parsing {fileName}...</p>
           </div>
-        ) : (
+        )}
+
+        {/* ── Step 2: Map Columns ── */}
+        {step === "mapping" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-gold" />
                 <span className="text-sm font-medium">{fileName}</span>
-                <Badge variant="secondary">{parsed!.length} leads</Badge>
+                <Badge variant="secondary">{rawRows.length} rows detected</Badge>
               </div>
               <Button variant="ghost" size="sm" onClick={reset}>
                 <X className="h-4 w-4 mr-1" />
-                Clear
+                Change File
               </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Review the auto-detected column mappings below. Adjust any that are incorrect or skip columns you don&apos;t need.
+            </p>
+
+            <ScrollArea className="max-h-[320px] border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs w-1/2">CSV Column</TableHead>
+                    <TableHead className="text-xs w-8 text-center"></TableHead>
+                    <TableHead className="text-xs">Maps To CRM Field</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rawHeaders.map((header, i) => {
+                    const previewVal = rawRows[0]?.[i];
+                    return (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs">
+                          <span className="font-medium">{header || `(column ${i + 1})`}</span>
+                          {previewVal && (
+                            <span className="block text-[10px] text-muted-foreground truncate max-w-[160px]">
+                              e.g. {previewVal}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center text-muted-foreground px-1">
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={fieldMappings[i] ?? "_skip"}
+                            onValueChange={(v) =>
+                              setFieldMappings((prev) => ({ ...prev, [i]: v }))
+                            }
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {CRM_FIELDS.map((f) => (
+                                <SelectItem key={f.value} value={f.value} className="text-xs">
+                                  {f.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+
+            {!hasNameMapped && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  Map at least one column to <strong>Name</strong> to continue.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={reset} className="gap-1">
+                <ChevronLeft className="h-3.5 w-3.5" />
+                Back
+              </Button>
+              <Button
+                className="flex-1 bg-gold hover:bg-gold/80 text-white gap-1"
+                disabled={!hasNameMapped}
+                onClick={handleConfirmMapping}
+              >
+                Apply Mapping
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3: Preview & Import ── */}
+        {step === "preview" && parsed !== null && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-gold" />
+                <span className="text-sm font-medium">{fileName}</span>
+                <Badge variant="secondary">{parsed.length} leads</Badge>
+              </div>
+              {!importResult && (
+                <Button variant="ghost" size="sm" onClick={() => setStep("mapping")}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Edit Mapping
+                </Button>
+              )}
             </div>
 
             {parseErrors.length > 0 && (
@@ -376,8 +546,8 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               </div>
             )}
 
-            {parsed && parsed.length > 0 && (
-              <div className="border rounded-lg overflow-hidden max-h-[300px] overflow-y-auto">
+            {parsed.length > 0 && (
+              <div className="border rounded-lg overflow-hidden max-h-[260px] overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -418,10 +588,14 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
               <div className="space-y-3">
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
                   <p className="text-sm font-medium text-green-700 dark:text-green-400">Import Complete</p>
-                  <p className="text-xs text-muted-foreground">{importResult.imported} imported, {importResult.skipped} skipped, {importResult.updated} updated</p>
+                  <p className="text-xs text-muted-foreground">
+                    {importResult.imported} imported, {importResult.skipped} skipped, {importResult.updated} updated
+                  </p>
                   {importResult.distributed && importResult.distributed > 0 && (
                     <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                      {importResult.distributed} leads distributed to {importResult.salesPeopleCount} sales rep{(importResult.salesPeopleCount ?? 0) > 1 ? "s" : ""} ({Math.floor(importResult.distributed / (importResult.salesPeopleCount || 1))} each)
+                      {importResult.distributed} leads distributed to {importResult.salesPeopleCount} sales rep
+                      {(importResult.salesPeopleCount ?? 0) > 1 ? "s" : ""} (
+                      {Math.floor(importResult.distributed / (importResult.salesPeopleCount || 1))} each)
                     </p>
                   )}
                   {importResult.errors.length > 0 && (
@@ -430,7 +604,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                         <p key={i} className="text-xs text-destructive">Row {err.row}: {err.message}</p>
                       ))}
                       {importResult.errors.length > 5 && (
-                        <p className="text-xs text-muted-foreground">...and {importResult.errors.length - 5} more errors</p>
+                        <p className="text-xs text-muted-foreground">
+                          ...and {importResult.errors.length - 5} more errors
+                        </p>
                       )}
                     </div>
                   )}
@@ -450,7 +626,9 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
                   />
                   <div>
                     <p className="text-sm font-medium leading-none">Auto-distribute to sales team</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Evenly split imported leads across active sales reps</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Evenly split imported leads across active sales reps
+                    </p>
                   </div>
                 </label>
 

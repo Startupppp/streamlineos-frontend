@@ -145,10 +145,38 @@ export const useUpdateOrgSettings = () => {
   return useMutation<
     { success: boolean },
     Error,
-    { name?: string; slug?: string }
+    {
+      name?: string;
+      slug?: string;
+      logo?: string | null;
+      timezone?: string;
+      currency?: string;
+      fiscalYearStart?: number;
+      directoryPublic?: boolean;
+      primaryColor?: string | null;
+      loginBgUrl?: string | null;
+      ipAllowlist?: string[];
+    }
   >({
     mutationFn: (data) =>
       apiClient.patch<{ success: boolean }>("/organization/settings", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.organization.settings(),
+      });
+    },
+  });
+};
+
+export const useUpdateOrgSecuritySettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    { success: boolean },
+    Error,
+    { mfaEnforced?: boolean; passwordExpiryDays?: number | null; allowedEmailDomains?: string[] }
+  >({
+    mutationFn: (data) =>
+      apiClient.patch<{ success: boolean }>("/organization/security", data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.organization.settings(),

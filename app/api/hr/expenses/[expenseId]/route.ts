@@ -1,9 +1,15 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { expenses } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
+
+const updateExpenseSchema = z.object({
+  status: z.enum(["APPROVED", "REJECTED", "PAID"]),
+  rejectionReason: z.string().optional(),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -18,10 +24,7 @@ export async function PATCH(
     const expenseId = Number(id);
     if (isNaN(expenseId)) return err("Invalid expense ID.", 400);
 
-    const body = await req.json() as {
-      status: "APPROVED" | "REJECTED" | "PAID";
-      rejectionReason?: string;
-    };
+    const body = await parseBody(req, updateExpenseSchema);
 
     if (!body.status || !["APPROVED", "REJECTED", "PAID"].includes(body.status)) {
       return err("status must be APPROVED, REJECTED, or PAID.", 400);

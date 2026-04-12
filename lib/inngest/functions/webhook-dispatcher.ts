@@ -46,7 +46,7 @@ export const webhookDispatcher = inngest.createFunction(
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "X-Webhook-Signature": `sha256=${signature}`,
+                "X-Vaivamm-Signature": `sha256=${signature}`,
                 "X-Webhook-Event": eventName,
               },
               body,

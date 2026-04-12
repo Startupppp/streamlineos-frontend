@@ -117,3 +117,41 @@ export function useDeleteCalendarEvent() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
   });
 }
+
+export type RsvpStatus = "accepted" | "declined" | "tentative";
+
+export interface EventAttendee {
+  id: number;
+  eventId: number;
+  userId: string;
+  status: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  } | null;
+}
+
+export function useEventAttendees(eventId: number | null) {
+  return useQuery({
+    queryKey: ["calendar", "attendees", eventId],
+    queryFn: () => apiClient.get<EventAttendee[]>(`/calendar/events/${eventId}/rsvp`),
+    enabled: eventId !== null,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useRsvpCalendarEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, status }: { eventId: number; status: RsvpStatus }) =>
+      apiClient.post<EventAttendee>(`/calendar/events/${eventId}/rsvp`, { status }),
+    onSuccess: (_data, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ["calendar", "attendees", eventId] });
+      void qc.invalidateQueries({ queryKey: ["calendar"] });
+    },
+  });
+}

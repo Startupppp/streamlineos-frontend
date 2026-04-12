@@ -1,7 +1,8 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { candidates } from "@/lib/db/schema";
+import { candidates, candidateSlaTracking } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
 import type { NextRequest } from "next/server";
 
 export async function GET(
@@ -13,18 +14,55 @@ export async function GET(
     const candidateId = Number(id);
     if (!candidateId) return err("Invalid candidate ID.", 400);
 
-    const candidate = await db.query.candidates.findFirst({
-      where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
-      with: {
-        applications: { with: { jobPosting: true } },
-        interviews: true,
-      },
-    });
+    const [candidate, slaRecords] = await Promise.all([
+      db.query.candidates.findFirst({
+        where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
+        with: {
+          applications: { with: { jobPosting: true } },
+          interviews: {
+            with: {
+              scorecards: true,
+              interviewer: { columns: { id: true, firstName: true, lastName: true, email: true, image: true } },
+            },
+            orderBy: (t, { desc }) => [desc(t.scheduledAt)],
+          },
+        },
+      }),
+      db.query.candidateSlaTracking.findMany({
+        where: and(
+          eq(candidateSlaTracking.candidateId, candidateId),
+          eq(candidateSlaTracking.orgId, session.orgId)
+        ),
+        orderBy: (t, { asc }) => [asc(t.stage)],
+      }),
+    ]);
 
     if (!candidate) return err("Candidate not found.", 404);
-    return ok(candidate);
+
+    return ok({ ...candidate, slaTracking: slaRecords });
   });
 }
+
+const CANDIDATE_STATUSES = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"] as const;
+const CANDIDATE_SOURCES = ["LINKEDIN", "NAUKRI", "INDEED", "REFERRAL", "CAREERS_PAGE", "DIRECT"] as const;
+
+const updateCandidateSchema = z.object({
+  firstName: z.string().min(1).max(100).optional(),
+  lastName: z.string().min(1).max(100).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().max(50).optional(),
+  linkedinUrl: z.string().url().max(500).optional().or(z.literal("")),
+  portfolioUrl: z.string().url().max(500).optional().or(z.literal("")),
+  currentCompany: z.string().max(200).optional(),
+  currentRole: z.string().max(200).optional(),
+  experienceYears: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+  source: z.enum(CANDIDATE_SOURCES).optional(),
+  status: z.enum(CANDIDATE_STATUSES).optional(),
+  notes: z.string().max(5000).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  resumeUrl: z.string().url().max(500).optional().or(z.literal("")),
+});
 
 export async function PATCH(
   req: NextRequest,
@@ -40,18 +78,26 @@ export async function PATCH(
     });
     if (!existing) return err("Candidate not found.", 404);
 
-    const body = await req.json() as Record<string, unknown>;
+    const body = await parseBody(req, updateCandidateSchema);
 
     await db
       .update(candidates)
       .set({
-        ...(body.firstName !== undefined && { firstName: body.firstName as string }),
-        ...(body.lastName !== undefined && { lastName: body.lastName as string }),
-        ...(body.email !== undefined && { email: body.email as string }),
-        ...(body.phone !== undefined && { phone: body.phone as string }),
-        ...(body.status !== undefined && { status: body.status as typeof existing.status }),
-        ...(body.notes !== undefined && { notes: body.notes as string }),
-        ...(body.rating !== undefined && { rating: body.rating as number }),
+        ...(body.firstName !== undefined && { firstName: body.firstName }),
+        ...(body.lastName !== undefined && { lastName: body.lastName }),
+        ...(body.email !== undefined && { email: body.email }),
+        ...(body.phone !== undefined && { phone: body.phone }),
+        ...(body.linkedinUrl !== undefined && { linkedinUrl: body.linkedinUrl || null }),
+        ...(body.portfolioUrl !== undefined && { portfolioUrl: body.portfolioUrl || null }),
+        ...(body.currentCompany !== undefined && { currentCompany: body.currentCompany }),
+        ...(body.currentRole !== undefined && { currentRole: body.currentRole }),
+        ...(body.experienceYears !== undefined && { experienceYears: body.experienceYears }),
+        ...(body.skills !== undefined && { skills: body.skills }),
+        ...(body.source !== undefined && { source: body.source }),
+        ...(body.status !== undefined && { status: body.status }),
+        ...(body.notes !== undefined && { notes: body.notes }),
+        ...(body.rating !== undefined && { rating: body.rating }),
+        ...(body.resumeUrl !== undefined && { resumeUrl: body.resumeUrl || null }),
         updatedAt: new Date(),
       })
       .where(eq(candidates.id, candidateId));

@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
-import { Phone, Mail, StickyNote, ListTodo } from "lucide-react";
+import { Phone, Mail, StickyNote, ListTodo, Wand2, Loader2, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,16 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useGenerateEmail } from "@/lib/api/hooks/ai";
+import { useEmailTemplates } from "@/lib/api/hooks/crm-settings";
 import {
   type QuickAction,
   type NoteForm,
@@ -43,6 +52,11 @@ interface LeadQuickActionsProps {
   isTaskPending: boolean;
   isEmailPending: boolean;
   isCallPending: boolean;
+
+  leadName?: string;
+  leadEmail?: string;
+  leadContext?: string;
+  onDraftEmail?: (subject: string, body: string) => void;
 }
 
 const ACTION_BUTTONS = [
@@ -69,6 +83,12 @@ const ACTION_BUTTONS = [
     label: "New Task",
     icon: ListTodo,
     color: "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
+  },
+  {
+    key: "draft" as const,
+    label: "Draft Email",
+    icon: Wand2,
+    color: "bg-violet-500/10 text-violet-400 hover:bg-violet-500/20",
   },
 ] as const;
 
@@ -110,8 +130,42 @@ export function LeadQuickActions({
   isTaskPending,
   isEmailPending,
   isCallPending,
+  leadName,
+  leadEmail: _leadEmail,
+  leadContext,
+  onDraftEmail,
 }: LeadQuickActionsProps) {
   const handleCancelAction = useCallback(() => onSetActiveAction(null), [onSetActiveAction]);
+  const generateEmailMutation = useGenerateEmail();
+  const { data: emailTemplates } = useEmailTemplates({ limit: 50 });
+
+  const handleApplyTemplate = useCallback((templateId: string) => {
+    const template = emailTemplates?.find((t) => String(t.id) === templateId);
+    if (!template) return;
+    // Substitute {{lead_name}} placeholder if present
+    const subject = template.subject.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
+    const body = template.body.replace(/\{\{lead_name\}\}/gi, leadName ?? "");
+    emailForm.setValue("subject", subject);
+    emailForm.setValue("body", body);
+  }, [emailTemplates, leadName, emailForm]);
+
+  const handleGenerateDraft = useCallback(() => {
+    if (!leadName) return;
+    generateEmailMutation.mutate(
+      {
+        leadName,
+        context: leadContext,
+        tone: "formal",
+      },
+      {
+        onSuccess: (result) => {
+          if (onDraftEmail) {
+            onDraftEmail(result.subject, result.body);
+          }
+        },
+      },
+    );
+  }, [leadName, leadContext, onDraftEmail, generateEmailMutation]);
 
   return (
     <Card className="shadow-noir">
@@ -130,6 +184,50 @@ export function LeadQuickActions({
             />
           ))}
         </div>
+
+        {activeAction === "draft" && (
+          <div className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30">
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium mb-1">AI Email Draft</p>
+                <p className="text-xs text-muted-foreground">
+                  Generate a professional email for{" "}
+                  <span className="font-medium text-foreground">{leadName ?? "this lead"}</span>{" "}
+                  using AI. The draft will pre-fill the email form for your review.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCancelAction}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="bg-violet-600 hover:bg-violet-700 text-white"
+                onClick={handleGenerateDraft}
+                disabled={generateEmailMutation.isPending || !leadName}
+              >
+                {generateEmailMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4 mr-1.5" />
+                    Generate
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {activeAction === "note" && (
           <Form {...noteForm}>
@@ -236,6 +334,23 @@ export function LeadQuickActions({
               onSubmit={emailForm.handleSubmit(onEmailSubmit)}
               className="space-y-3 p-4 rounded-lg bg-muted/20 border border-border/30"
             >
+              {emailTemplates && emailTemplates.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Select onValueChange={handleApplyTemplate}>
+                    <SelectTrigger className="h-8 text-xs flex-1">
+                      <SelectValue placeholder="Use a template…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {emailTemplates.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <FormField
                 control={emailForm.control}
                 name="to"

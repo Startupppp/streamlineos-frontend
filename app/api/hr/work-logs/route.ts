@@ -1,4 +1,4 @@
-import { withAuth, ok, err } from "@/lib/api/helpers";
+import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getWorkLogs } from "@/server/queries/hr";
 import { db } from "@/lib/db";
 import { timesheets } from "@/lib/db/schema/projects";
@@ -6,6 +6,13 @@ import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
+
+const postWorkLogSchema = z.object({
+  date: z.string(),
+  hours: z.number().optional(),
+  description: z.string().optional(),
+});
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -36,13 +43,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return withAuth(async (session) => {
-    const body = await req.json() as {
-      date: string;
-      hours?: number;
-      description?: string;
-    };
-
-    if (!body.date) return err("date is required.", 400);
+    const body = await parseBody(req, postWorkLogSchema);
 
     const dateStr = formatDateOnly(new Date(body.date));
     const normalizedDescription = body.description

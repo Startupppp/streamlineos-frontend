@@ -3,6 +3,7 @@ import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
 import {
   getCalendarEvents,
   createCalendarEvent,
+  getOooConflicts,
 } from "@/server/queries/calendar";
 import { z } from "zod";
 
@@ -25,6 +26,9 @@ const postSchema = z.object({
   attendeeIds: z.array(z.string()).optional(),
   isRecurring: z.boolean().optional(),
   recurringRule: z.string().optional(),
+  agenda: z.string().optional(),
+  linkedDealId: z.number().int().optional(),
+  linkedLeadId: z.number().int().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -62,23 +66,33 @@ export async function POST(req: NextRequest) {
       return err("Invalid request body", 400);
     }
 
-    const event = await createCalendarEvent({
-      orgId: session.orgId,
-      createdBy: session.user.id,
-      title: input.title,
-      description: input.description ?? null,
-      location: input.location ?? null,
-      startDate: new Date(input.startDate),
-      endDate: new Date(input.endDate),
-      allDay: input.allDay ?? false,
-      color: input.color ?? "blue",
-      category: input.category,
-      entityType: input.entityType ?? null,
-      entityId: input.entityId ?? null,
-      attendeeIds: input.attendeeIds ?? [],
-      isRecurring: input.isRecurring ?? false,
-      recurringRule: input.recurringRule ?? null,
-    });
-    return ok(event, 201);
+    const startDate = new Date(input.startDate);
+    const endDate = new Date(input.endDate);
+
+    const [event, oooConflicts] = await Promise.all([
+      createCalendarEvent({
+        orgId: session.orgId,
+        createdBy: session.user.id,
+        title: input.title,
+        description: input.description ?? null,
+        location: input.location ?? null,
+        startDate,
+        endDate,
+        allDay: input.allDay ?? false,
+        color: input.color ?? "blue",
+        category: input.category,
+        entityType: input.entityType ?? null,
+        entityId: input.entityId ?? null,
+        attendeeIds: input.attendeeIds ?? [],
+        isRecurring: input.isRecurring ?? false,
+        recurringRule: input.recurringRule ?? null,
+        agenda: input.agenda ?? null,
+        linkedDealId: input.linkedDealId ?? null,
+        linkedLeadId: input.linkedLeadId ?? null,
+      }),
+      getOooConflicts(session.orgId, input.attendeeIds ?? [], startDate, endDate),
+    ]);
+
+    return ok({ event, oooConflicts }, 201);
   });
 }

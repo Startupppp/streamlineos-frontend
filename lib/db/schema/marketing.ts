@@ -1,20 +1,40 @@
 /**
  * Marketing schema: landing pages + page view tracking + A/B tests + content calendar.
  */
-import { pgTable, text, serial, timestamp, boolean, integer, index, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer, index, date, jsonb } from "drizzle-orm/pg-core";
 // Note: integer is used for pageViews.pageId (references landing_pages.id which is serial/integer)
 import { relations } from "drizzle-orm";
 import { users } from "./auth";
 
 // ─── Landing Pages ───────────────────────────────────────────────────────────
 
+export interface LandingPageTestimonial {
+  id: string;
+  name: string;
+  role?: string;
+  text: string;
+  avatar?: string;
+  rating?: number;
+}
+
+export interface LandingPageSettings {
+  testimonials?: LandingPageTestimonial[];
+  trustBadges?: string[];
+  showTrustSection?: boolean;
+}
+
 export const landingPages = pgTable("landing_pages", {
   id: serial("id").primaryKey(),
   orgId: text("org_id").notNull(),
   name: text("name").notNull(),
+  slug: text("slug"),
+  title: text("title"),
+  content: text("content"),
+  isPublished: boolean("is_published").default(false),
   url: text("url").notNull(),
   description: text("description"),
   isActive: boolean("is_active").default(true),
+  settings: jsonb("settings").$type<LandingPageSettings>(),
   createdBy: text("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -28,6 +48,10 @@ export const pageViews = pgTable("page_views", {
   country: text("country"),
   city: text("city"),
   deviceType: text("device_type"),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  abVariant: text("ab_variant"),
   viewedAt: timestamp("viewed_at").defaultNow(),
 }, (table) => [
   index("page_views_page_id_idx").on(table.pageId),
