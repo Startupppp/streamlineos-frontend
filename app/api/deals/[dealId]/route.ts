@@ -160,16 +160,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       );
     }
 
-    // Email the deal owner on stage change (non-blocking)
+    // Email the deal owner on stage change
     if (input.stage !== undefined && updated.assignedToId) {
-      const existing = await db.query.deals.findFirst({
-        where: and(eq(deals.id, dealId), eq(deals.orgId, session.orgId!)),
-        columns: { stage: true },
-      });
-
-      void (async () => {
+      try {
+        const existingDeal = await db.query.deals.findFirst({
+          where: and(eq(deals.id, dealId), eq(deals.orgId, session.orgId!)),
+          columns: { stage: true },
+        });
         const assignee = await db.query.users.findFirst({
-          where: eq(users.id, updated.assignedToId!),
+          where: eq(users.id, updated.assignedToId),
           columns: { email: true, name: true },
         });
         if (assignee?.email) {
@@ -177,24 +176,26 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             assignee.email,
             assignee.name ?? "Team Member",
             updated.name,
-            existing?.stage ?? "Unknown",
-            input.stage!,
+            existingDeal?.stage ?? "Unknown",
+            input.stage,
             updated.value,
             session.user.name ?? "Team Member",
             dealId
           );
         }
-      })().catch(() => {});
+      } catch { /* email failure non-blocking */ }
     }
 
-    void createAuditLog({
-      action: input.stage !== undefined ? "deal.stage_changed" : "deal.updated",
-      userId: session.user.id,
-      orgId: session.orgId,
-      targetId: String(dealId),
-      targetType: "deal",
-      metadata: { changedFields: Object.keys(input), newStage: input.stage },
-    }).catch(() => {});
+    try {
+      await createAuditLog({
+        action: input.stage !== undefined ? "deal.stage_changed" : "deal.updated",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(dealId),
+        targetType: "deal",
+        metadata: { changedFields: Object.keys(input), newStage: input.stage },
+      });
+    } catch { /* non-critical */ }
 
     return ok(updated);
   });

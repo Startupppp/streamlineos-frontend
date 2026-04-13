@@ -29,20 +29,22 @@ export async function PATCH(
       })
       .where(eq(payrolls.id, payrollId));
 
-    void createAuditLog({
-      action: "hr.payroll_approved",
-      userId: session.user.id,
-      orgId: session.orgId,
-      targetId: String(payrollId),
-      targetType: "payroll",
-      metadata: { employeeId: existing.userId, month: existing.month },
-    }).catch(() => {});
+    // Await audit + email so serverless doesn't kill the promises
+    try {
+      await createAuditLog({
+        action: "hr.payroll_approved",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(payrollId),
+        targetType: "payroll",
+        metadata: { employeeId: existing.userId, month: existing.month },
+      });
+    } catch { /* non-critical */ }
 
-    // Notify the employee about payroll approval (non-blocking)
     if (existing.userId) {
-      void (async () => {
+      try {
         const employee = await db.query.users.findFirst({
-          where: eq(users.id, existing.userId!),
+          where: eq(users.id, existing.userId),
           columns: { email: true, name: true },
         });
         if (employee?.email) {
@@ -53,7 +55,7 @@ export async function PATCH(
             session.user.name ?? "Admin"
           );
         }
-      })().catch(() => {});
+      } catch { /* email failure is non-blocking */ }
     }
 
     return ok({ success: true });

@@ -69,17 +69,19 @@ export async function POST(req: NextRequest) {
       })
       .returning();
 
-    void createAuditLog({
-      action: "expense.created",
-      userId: session.user.id,
-      orgId: session.orgId,
-      targetId: String(expense.id),
-      targetType: "expense",
-      metadata: { category: body.category, amount: body.amount },
-    }).catch(() => {});
+    try {
+      await createAuditLog({
+        action: "expense.created",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(expense.id),
+        targetType: "expense",
+        metadata: { category: body.category, amount: body.amount },
+      });
+    } catch { /* non-critical */ }
 
-    // Notify HR/Admin about the new expense (non-blocking)
-    void (async () => {
+    // Notify HR/Admin about the new expense
+    try {
       const hrMembers = await db
         .select({ userId: organizationMembers.userId })
         .from(organizationMembers)
@@ -101,7 +103,7 @@ export async function POST(req: NextRequest) {
           );
         }
       }
-    })().catch(() => {});
+    } catch { /* email failure non-blocking */ }
 
     return ok(expense);
   });

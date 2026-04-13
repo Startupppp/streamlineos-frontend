@@ -58,41 +58,45 @@ export async function PATCH(
     });
 
     const auditAction = body.status === "APPROVED" ? "expense.approved" : body.status === "PAID" ? "expense.paid" : "expense.rejected";
-    void createAuditLog({
-      action: auditAction,
-      userId: session.user.id,
-      orgId: session.orgId,
-      targetId: String(expenseId),
-      targetType: "expense",
-      metadata: { status: body.status, rejectionReason: body.rejectionReason },
-    }).catch(() => {});
+    try {
+      await createAuditLog({
+        action: auditAction,
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(expenseId),
+        targetType: "expense",
+        metadata: { status: body.status, rejectionReason: body.rejectionReason },
+      });
+    } catch { /* non-critical */ }
 
-    // Send email to the expense owner (non-blocking)
-    void (async () => {
+    // Send email to the expense owner
+    try {
       const expenseRow = await db.query.expenses.findFirst({
         where: eq(expenses.id, expenseId),
         columns: { userId: true, category: true, amount: true },
       });
-      if (!expenseRow?.userId) return;
 
-      const employee = await db.query.users.findFirst({
-        where: eq(users.id, expenseRow.userId),
-        columns: { email: true, name: true },
-      });
-      if (!employee?.email) return;
+      if (expenseRow?.userId) {
+        const employee = await db.query.users.findFirst({
+          where: eq(users.id, expenseRow.userId),
+          columns: { email: true, name: true },
+        });
 
-      const approverName = session.user.name ?? "Admin";
-      const amount = expenseRow.amount ?? "0";
-      const category = expenseRow.category ?? "Expense";
+        if (employee?.email) {
+          const approverName = session.user.name ?? "Admin";
+          const amount = expenseRow.amount ?? "0";
+          const category = expenseRow.category ?? "Expense";
 
-      if (body.status === "APPROVED") {
-        await sendExpenseApprovedEmail(employee.email, employee.name ?? "Employee", category, amount, approverName);
-      } else if (body.status === "REJECTED") {
-        await sendExpenseRejectedEmail(employee.email, employee.name ?? "Employee", category, amount, approverName, body.rejectionReason ?? "No reason provided");
-      } else if (body.status === "PAID") {
-        await sendExpensePaidEmail(employee.email, employee.name ?? "Employee", category, amount);
+          if (body.status === "APPROVED") 
+            await sendExpenseApprovedEmail(employee.email, employee.name ?? "Employee", category, amount, approverName);
+           else if (body.status === "REJECTED") 
+            await sendExpenseRejectedEmail(employee.email, employee.name ?? "Employee", category, amount, approverName, body.rejectionReason ?? "No reason provided");
+          else if (body.status === "PAID") 
+            await sendExpensePaidEmail(employee.email, employee.name ?? "Employee", category, amount);
+          
+        }
       }
-    })().catch(() => {});
+    } catch { /* email failure non-blocking */ }
 
     return ok({ success: true });
   });

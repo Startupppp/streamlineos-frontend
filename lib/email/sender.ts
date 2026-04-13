@@ -48,10 +48,8 @@ export async function sendEmail(options: EmailOptions) {
   const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.SENDGRID_FROM_EMAIL || "noreply@vaivammcapital.com";
 
   if (!process.env.SENDGRID_API_KEY) {
-    if (process.env.NODE_ENV === "development") {
-      logger.info("Email skipped - No SendGrid API Key", { to: options.to, subject: options.subject });
-    }
-    return Promise.resolve();
+    logger.warn("EMAIL_SKIPPED: No SENDGRID_API_KEY configured", { to: options.to, subject: options.subject });
+    return;
   }
 
   const attachments = options.attachments?.map((a) => ({
@@ -61,7 +59,7 @@ export async function sendEmail(options: EmailOptions) {
     disposition: "attachment" as const,
   }));
 
-  const msg = {
+  const msg: sgMail.MailDataRequired = {
     to: options.to,
     from: fromEmail,
     subject: options.subject,
@@ -75,42 +73,24 @@ export async function sendEmail(options: EmailOptions) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await sgMail.send(msg);
-      if (process.env.NODE_ENV === "development") {
-        logger.info("Email sent", { to: options.to, subject: options.subject });
-      }
+      logger.info("Email sent", { to: options.to, subject: options.subject });
       return;
     } catch (error) {
       lastError = error;
 
       if (!isTransientError(error)) {
-        logger.error("Email send failed with non-retryable error", {
-          to: options.to,
-          subject: options.subject,
-          attempt,
-          error,
-        });
+        logger.error("Email send failed (non-retryable)", { to: options.to, subject: options.subject, attempt, error });
         throw error;
       }
 
       if (attempt < MAX_RETRIES) {
         const backoff = BASE_DELAY_MS * Math.pow(2, attempt - 1);
-        logger.warn(`Email send failed, retrying (attempt ${attempt}/${MAX_RETRIES})`, {
-          to: options.to,
-          subject: options.subject,
-          attempt,
-          nextRetryMs: backoff,
-          error,
-        });
+        logger.warn(`Email retry ${attempt}/${MAX_RETRIES}`, { to: options.to, nextRetryMs: backoff });
         await delay(backoff);
       }
     }
   }
 
-  logger.error("Email send failed after all retries exhausted", {
-    to: options.to,
-    subject: options.subject,
-    totalAttempts: MAX_RETRIES,
-    error: lastError,
-  });
+  logger.error("Email send failed after all retries", { to: options.to, subject: options.subject, error: lastError });
   throw lastError;
 }

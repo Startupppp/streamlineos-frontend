@@ -131,21 +131,24 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    void createAuditLog({
-      action: "hr.employee_onboarded",
-      userId: session.user.id,
-      orgId: session.orgId,
-      targetId: newUser.id,
-      targetType: "employee",
-      metadata: { email: body.email, name: `${body.firstName} ${body.lastName}`, role: body.role, designation: body.designation },
-    }).catch(() => {});
-
-    // Send welcome email with temp credentials (non-blocking)
-    void sendWelcomeEmail(
-      newUser.email,
-      `${body.firstName} ${body.lastName}`,
-      body.password || "Welcome@123"
-    ).catch(() => {});
+    // Await email + audit before returning — serverless kills detached promises
+    await Promise.allSettled([
+      createAuditLog({
+        action: "hr.employee_onboarded",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: newUser.id,
+        targetType: "employee",
+        metadata: { email: body.email, name: `${body.firstName} ${body.lastName}`, role: body.role, designation: body.designation },
+      }),
+      newUser.email
+        ? sendWelcomeEmail(
+            newUser.email,
+            `${body.firstName} ${body.lastName}`,
+            body.password || "Welcome@123"
+          )
+        : Promise.resolve(),
+    ]);
 
     return ok({ success: true });
   });

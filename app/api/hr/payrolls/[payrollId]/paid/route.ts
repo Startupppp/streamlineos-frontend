@@ -33,24 +33,25 @@ export async function PATCH(
       .set({ status: "PAID" })
       .where(eq(payrolls.id, payrollId));
 
-    void createAuditLog({
-      action: "hr.payroll_paid",
-      userId: session.user.id,
-      orgId: session.orgId,
-      targetId: String(payrollId),
-      targetType: "payroll",
-      metadata: { employeeId: existing.userId, month: existing.month, netSalary: existing.netSalary },
-    }).catch(() => {});
+    // Send payslip email with PDF attachment — awaited so serverless doesn't kill it
+    try {
+      await createAuditLog({
+        action: "hr.payroll_paid",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(payrollId),
+        targetType: "payroll",
+        metadata: { employeeId: existing.userId, month: existing.month, netSalary: existing.netSalary },
+      });
+    } catch { /* non-critical */ }
 
-    // Send payslip email with PDF attachment (non-blocking)
-    void (async () => {
-      try {
+    try {
         const [employee, org] = await Promise.all([
           db.query.users.findFirst({ where: eq(users.id, existing.userId) }),
           db.query.organizations.findFirst({ where: eq(organizations.id, session.orgId) }),
         ]);
 
-        if (!employee?.email) return;
+        if (!employee?.email) return ok({ success: true });
 
         const monthLabel = existing.month
           ? format(new Date(existing.month + "-01"), "MMMM yyyy")
@@ -124,10 +125,9 @@ export async function PATCH(
             },
           ],
         });
-      } catch (e) {
-        logger.error("Failed to send payslip email", { payrollId, error: e });
-      }
-    })();
+    } catch (e) {
+      logger.error("Failed to send payslip email", { payrollId, error: e });
+    }
 
     return ok({ success: true });
   });
