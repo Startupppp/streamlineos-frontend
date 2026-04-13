@@ -32,6 +32,9 @@ import { DealEditForm, type EditFormValues } from "@/features/crm/deals/detail/d
 import { ActivityTimeline } from "@/features/crm/deals/detail/activity-timeline";
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 import { AIPredictDealButton } from "@/features/crm/deals/ai-predict-deal-button";
+import Image from "next/image";
+import { MeetingsCard } from "./_components/meetings-card";
+import { MeetingDialog, CreateProjectDialog } from "./_components/deal-dialogs";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },
@@ -67,19 +70,7 @@ export default function DealDetailPage({
     label: string;
   } | null>(null);
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
-  const [meetingTitle, setMeetingTitle] = useState("");
-  const [meetingDate, setMeetingDate] = useState("");
-  const [meetingDuration, setMeetingDuration] = useState("30");
-  const [meetingAttendees, setMeetingAttendees] = useState("");
-  const [meetingAgenda, setMeetingAgenda] = useState("");
-  const [meetingNotes, setMeetingNotes] = useState("");
-  const [meetingActionItems, setMeetingActionItems] = useState("");
-  const [meetingRecordingLink, setMeetingRecordingLink] = useState("");
-
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [projectStartDate, setProjectStartDate] = useState("");
-  const [projectEndDate, setProjectEndDate] = useState("");
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const updateDeal = useUpdateDeal();
@@ -162,34 +153,28 @@ export default function DealDetailPage({
 
   const handleCloseLogDialog = useCallback(() => setPendingAction(null), []);
 
-  const handleCreateMeeting = useCallback(() => {
-    if (!meetingTitle.trim() || !meetingDate) {
+  const handleCreateMeeting = useCallback((data: {
+    title: string;
+    scheduledAt: string;
+    durationMinutes: number;
+    attendees: string[];
+    agenda?: string;
+    notes?: string;
+    actionItems?: string;
+    recordingLink?: string;
+  }) => {
+    if (!data.title.trim() || !data.scheduledAt) {
       toast.error("Title and date are required");
       return;
     }
-    createMeeting.mutate(
-      {
-        title: meetingTitle.trim(),
-        scheduledAt: meetingDate,
-        durationMinutes: Number(meetingDuration) || 30,
-        attendees: meetingAttendees ? meetingAttendees.split(",").map(s => s.trim()).filter(Boolean) : [],
-        agenda: meetingAgenda || undefined,
-        notes: meetingNotes || undefined,
-        actionItems: meetingActionItems || undefined,
-        recordingLink: meetingRecordingLink || undefined,
+    createMeeting.mutate(data, {
+      onSuccess: () => {
+        toast.success("Meeting added");
+        setMeetingDialogOpen(false);
       },
-      {
-        onSuccess: () => {
-          toast.success("Meeting added");
-          setMeetingDialogOpen(false);
-          setMeetingTitle(""); setMeetingDate(""); setMeetingDuration("30");
-          setMeetingAttendees(""); setMeetingAgenda(""); setMeetingNotes("");
-          setMeetingActionItems(""); setMeetingRecordingLink("");
-        },
-        onError: () => toast.error("Failed to add meeting"),
-      }
-    );
-  }, [meetingTitle, meetingDate, meetingDuration, meetingAttendees, meetingAgenda, meetingNotes, meetingActionItems, meetingRecordingLink, createMeeting]);
+      onError: () => toast.error("Failed to add meeting"),
+    });
+  }, [createMeeting]);
 
   const handleDeleteMeeting = useCallback((meetingId: number) => {
     deleteMeeting.mutate(meetingId, {
@@ -198,13 +183,8 @@ export default function DealDetailPage({
     });
   }, [deleteMeeting]);
 
-  const handleOpenCreateProject = useCallback(() => {
-    if (deal) setProjectName(deal.name);
-    setCreateProjectOpen(true);
-  }, [deal]);
-
-  const handleCreateProject = useCallback(async () => {
-    if (!projectName.trim()) {
+  const handleCreateProject = useCallback(async (data: { name: string; startDate?: string; endDate?: string }) => {
+    if (!data.name.trim()) {
       toast.error("Project name is required");
       return;
     }
@@ -212,9 +192,9 @@ export default function DealDetailPage({
     try {
       const newProject = await apiClient.post<{ id: number }>("/projects/from-deal", {
         dealId,
-        name: projectName.trim(),
-        startDate: projectStartDate || undefined,
-        endDate: projectEndDate || undefined,
+        name: data.name.trim(),
+        startDate: data.startDate,
+        endDate: data.endDate,
       });
       toast.success("Project created successfully");
       setCreateProjectOpen(false);
@@ -224,7 +204,7 @@ export default function DealDetailPage({
     } finally {
       setIsCreatingProject(false);
     }
-  }, [dealId, projectName, projectStartDate, projectEndDate, router]);
+  }, [dealId, router]);
 
   if (isLoading) {
     return (
@@ -295,7 +275,7 @@ export default function DealDetailPage({
             </>
           )}
           {(deal.stage === "WON" || deal.stage === "NEGOTIATION") && (
-            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleOpenCreateProject}>
+            <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setCreateProjectOpen(true)}>
               <FolderKanban className="h-4 w-4 mr-1" />
               Create Project
             </Button>
@@ -502,101 +482,11 @@ export default function DealDetailPage({
               </CardContent>
             </Card>
 
-            <Card className="shadow-noir">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <CalendarCheck className="h-4 w-4 text-gold" />
-                    Meetings
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs gap-1"
-                    onClick={() => setMeetingDialogOpen(true)}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {(!meetings || meetings.length === 0) ? (
-                  <div className="flex flex-col items-center justify-center py-6 gap-2 text-center">
-                    <CalendarCheck className="h-6 w-6 text-muted-foreground/30" />
-                    <p className="text-xs text-muted-foreground">No meetings recorded</p>
-                    <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setMeetingDialogOpen(true)}>
-                      <Plus className="h-3 w-3 mr-1" /> Log a meeting
-                    </Button>
-                  </div>
-                ) : (
-                  <ScrollArea className="max-h-[320px]">
-                    <div className="space-y-3 pr-1">
-                      {meetings.map((m: DealMeeting) => (
-                        <div key={m.id} className="group p-3 rounded-lg bg-muted/20 border border-border/30 hover:border-border/60 transition-colors">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{m.title}</p>
-                              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {new Date(m.scheduledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {m.durationMinutes}m
-                                </span>
-                                <Badge
-                                  variant="secondary"
-                                  className={`text-[10px] ${m.status === "completed" ? "bg-emerald-500/10 text-emerald-500" : m.status === "cancelled" ? "bg-red-500/10 text-red-500" : "bg-blue-500/10 text-blue-400"}`}
-                                >
-                                  {m.status}
-                                </Badge>
-                              </div>
-                              {m.attendees && m.attendees.length > 0 && (
-                                <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground">
-                                  <Users className="h-3 w-3" />
-                                  {m.attendees.join(", ")}
-                                </div>
-                              )}
-                              {m.agenda && (
-                                <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{m.agenda}</p>
-                              )}
-                              {m.recordingLink && (
-                                <a
-                                  href={m.recordingLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-xs text-gold hover:underline mt-1"
-                                >
-                                  <Link2 className="h-3 w-3" />
-                                  Recording
-                                </a>
-                              )}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive transition-opacity"
-                              onClick={() => handleDeleteMeeting(m.id)}
-                              aria-label="Delete meeting"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                          {m.actionItems && (
-                            <div className="mt-2 p-2 rounded bg-amber-500/5 border border-amber-500/10 text-xs">
-                              <span className="text-amber-400 font-medium">Action items:</span>{" "}
-                              <span className="text-muted-foreground">{m.actionItems}</span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
+            <MeetingsCard
+              meetings={meetings}
+              onAddMeeting={() => setMeetingDialogOpen(true)}
+              onDeleteMeeting={handleDeleteMeeting}
+            />
 
             <Card className="shadow-noir">
               <CardHeader>
