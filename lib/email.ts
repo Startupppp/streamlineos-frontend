@@ -30,6 +30,17 @@ import {
   getResignationSubmittedEmailTemplate,
   getResignationApprovedEmailTemplate,
   getTerminationEmailTemplate,
+  getWorkLogApprovedEmailTemplate,
+  getWorkLogRejectedEmailTemplate,
+  getOnboardingWelcomeEmailTemplate,
+  getOnboardingTaskEmailTemplate,
+  getTicketCreatedEmailTemplate,
+  getTicketReplyEmailTemplate,
+  getTicketStatusEmailTemplate,
+  getTaskAssignedEmailTemplate,
+  getDealStageChangeEmailTemplate,
+  getLeadAssignedEmailTemplate,
+  getReviewAssignedEmailTemplate,
 } from "./email-templates";
 import type { MonthlyExpenseReportRow } from "./email-templates";
 import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx";
@@ -735,6 +746,175 @@ export async function sendPasswordExpiryWarningEmail(
     to: email,
     subject: `Your Password Expires in ${daysLeft} Days - Vaivamm Capital`,
     html: getPasswordExpiryWarningEmailTemplate(name, daysLeft),
+  });
+}
+
+// ─── Work Log Status ──────────────────────────────────────────────────────────
+
+export async function sendWorkLogStatusEmail(
+  email: string,
+  employeeName: string,
+  date: string,
+  status: "APPROVED" | "REJECTED",
+  approverName: string,
+  rejectionReason?: string
+) {
+  const html =
+    status === "APPROVED"
+      ? getWorkLogApprovedEmailTemplate(employeeName, date, approverName)
+      : getWorkLogRejectedEmailTemplate(employeeName, date, approverName, rejectionReason);
+
+  await sendEmail({
+    to: email,
+    subject: `Work Log ${status === "APPROVED" ? "Approved" : "Rejected"} — ${date}`,
+    html,
+  });
+}
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+
+export async function sendOnboardingWelcomeEmail(
+  email: string,
+  employeeName: string,
+  designation: string,
+  joiningDate: string,
+  taskCount: number
+) {
+  await sendEmail({
+    to: email,
+    subject: "Welcome to Vaivamm Capital — Your Onboarding Starts Now!",
+    html: getOnboardingWelcomeEmailTemplate(employeeName, designation, joiningDate, taskCount),
+  });
+}
+
+export async function sendOnboardingTaskEmail(
+  email: string,
+  recipientName: string,
+  employeeName: string,
+  taskRole: string,
+  taskCount: number
+) {
+  await sendEmail({
+    to: email,
+    subject: `Onboarding Tasks Assigned: ${employeeName}`,
+    html: getOnboardingTaskEmailTemplate(recipientName, employeeName, taskRole, taskCount),
+  });
+}
+
+// ─── Support Ticket ───────────────────────────────────────────────────────────
+
+export async function sendSupportTicketCreatedEmail(
+  email: string,
+  assigneeName: string,
+  ticketTitle: string,
+  priority: string,
+  creatorName: string,
+  ticketId: number
+) {
+  await sendEmail({
+    to: email,
+    subject: `Support Ticket Assigned: #${ticketId} — ${ticketTitle}`,
+    html: getTicketCreatedEmailTemplate(assigneeName, ticketTitle, priority, creatorName, ticketId),
+  });
+}
+
+export async function sendSupportTicketReplyEmail(
+  email: string,
+  recipientName: string,
+  ticketTitle: string,
+  ticketId: number,
+  authorName: string,
+  messagePreview: string
+) {
+  await sendEmail({
+    to: email,
+    subject: `New Reply on Ticket #${ticketId}: ${ticketTitle}`,
+    html: getTicketReplyEmailTemplate(recipientName, ticketTitle, ticketId, authorName, messagePreview),
+  });
+}
+
+export async function sendSupportTicketStatusEmail(
+  email: string,
+  recipientName: string,
+  ticketTitle: string,
+  ticketId: number,
+  newStatus: string,
+  updatedBy: string
+) {
+  await sendEmail({
+    to: email,
+    subject: `Ticket #${ticketId} ${newStatus}: ${ticketTitle}`,
+    html: getTicketStatusEmailTemplate(recipientName, ticketTitle, ticketId, newStatus, updatedBy),
+  });
+}
+
+// ─── Task Assignment ──────────────────────────────────────────────────────────
+
+export async function sendTaskAssignedEmail(
+  email: string,
+  assigneeName: string,
+  taskTitle: string,
+  taskType: string,
+  dueDate: string | null,
+  creatorName: string,
+  entityLabel?: string
+) {
+  await sendEmail({
+    to: email,
+    subject: `Task Assigned: ${taskTitle}`,
+    html: getTaskAssignedEmailTemplate(assigneeName, taskTitle, taskType, dueDate, creatorName, entityLabel),
+  });
+}
+
+// ─── Deal Stage Change ────────────────────────────────────────────────────────
+
+export async function sendDealStageChangeEmail(
+  email: string,
+  recipientName: string,
+  dealName: string,
+  previousStage: string,
+  newStage: string,
+  dealValue: string | null,
+  changedBy: string,
+  dealId: number
+) {
+  await sendEmail({
+    to: email,
+    subject: `Deal ${newStage === "WON" ? "Won" : newStage === "LOST" ? "Lost" : "Updated"}: ${dealName}`,
+    html: getDealStageChangeEmailTemplate(recipientName, dealName, previousStage, newStage, dealValue, changedBy, dealId),
+  });
+}
+
+// ─── Lead Assignment ──────────────────────────────────────────────────────────
+
+export async function sendLeadAssignedEmail(
+  email: string,
+  repName: string,
+  leadName: string,
+  source: string,
+  priority: string,
+  assignedBy: string
+) {
+  await sendEmail({
+    to: email,
+    subject: `New Lead Assigned: ${leadName}`,
+    html: getLeadAssignedEmailTemplate(repName, leadName, source, priority, assignedBy),
+  });
+}
+
+// ─── Performance Review ───────────────────────────────────────────────────────
+
+export async function sendReviewAssignedEmail(
+  email: string,
+  employeeName: string,
+  reviewerName: string,
+  periodStart: string,
+  periodEnd: string
+) {
+  await sendEmail({
+    to: email,
+    subject: "Performance Review Assigned — Vaivamm Capital",
+    html: getReviewAssignedEmailTemplate(employeeName, reviewerName, periodStart, periodEnd),
   });
 }
 

@@ -1,11 +1,12 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { expenses } from "@/lib/db/schema";
+import { expenses, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
+import { sendExpenseApprovedEmail, sendExpenseRejectedEmail, sendExpensePaidEmail } from "@/lib/email";
 
 const updateExpenseSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED", "PAID"]),
@@ -65,6 +66,33 @@ export async function PATCH(
       targetType: "expense",
       metadata: { status: body.status, rejectionReason: body.rejectionReason },
     }).catch(() => {});
+
+    // Send email to the expense owner (non-blocking)
+    void (async () => {
+      const expenseRow = await db.query.expenses.findFirst({
+        where: eq(expenses.id, expenseId),
+        columns: { userId: true, category: true, amount: true },
+      });
+      if (!expenseRow?.userId) return;
+
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, expenseRow.userId),
+        columns: { email: true, name: true },
+      });
+      if (!employee?.email) return;
+
+      const approverName = session.user.name ?? "Admin";
+      const amount = expenseRow.amount ?? "0";
+      const category = expenseRow.category ?? "Expense";
+
+      if (body.status === "APPROVED") {
+        await sendExpenseApprovedEmail(employee.email, employee.name ?? "Employee", category, amount, approverName);
+      } else if (body.status === "REJECTED") {
+        await sendExpenseRejectedEmail(employee.email, employee.name ?? "Employee", category, amount, approverName, body.rejectionReason ?? "No reason provided");
+      } else if (body.status === "PAID") {
+        await sendExpensePaidEmail(employee.email, employee.name ?? "Employee", category, amount);
+      }
+    })().catch(() => {});
 
     return ok({ success: true });
   });

@@ -9,8 +9,9 @@ import {
   organizationMembers,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { addDays } from "date-fns";
+import { addDays, format } from "date-fns";
 import { logger } from "@/lib/logger";
+import { sendOnboardingWelcomeEmail, sendOnboardingTaskEmail } from "@/lib/email";
 
 const DEFAULT_TASKS: {
   title: string;
@@ -124,6 +125,33 @@ export const initiateOnboarding = inngest.createFunction(
       return { tasksCreated: taskInserts.length };
     });
 
+    // Send onboarding welcome email to the new employee
+    await step.run("send-welcome-onboarding-email", async () => {
+      const employee = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: { name: true, email: true, designation: true },
+      });
+
+      if (!employee?.email) return { skipped: true };
+
+      const taskCount = await db
+        .select({ id: onboardingTasks.id })
+        .from(onboardingTasks)
+        .where(and(eq(onboardingTasks.userId, userId), eq(onboardingTasks.orgId, orgId)));
+
+      const dateStr = joiningDate ? format(new Date(joiningDate), "dd MMM yyyy") : "Today";
+
+      await sendOnboardingWelcomeEmail(
+        employee.email,
+        employee.name ?? "Team Member",
+        employee.designation ?? "Team Member",
+        dateStr,
+        taskCount.length
+      );
+
+      return { sent: true };
+    });
+
     await step.run("notify-hr-and-manager", async () => {
       const employee = await db.query.users.findFirst({
         where: eq(users.id, userId),
@@ -142,12 +170,16 @@ export const initiateOnboarding = inngest.createFunction(
 
       const notificationRows: typeof notifications.$inferInsert[] = [];
 
+      const emailPromises: Promise<void>[] = [];
+
       // Notify HR members
       if (taskRoles.has("HR")) {
         const hrMembers = await db
           .select({ userId: organizationMembers.userId })
           .from(organizationMembers)
           .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.role, "HR")));
+
+        const hrTaskCount = createdTasks.filter((t) => t.ownerRole === "HR").length;
 
         for (const m of hrMembers) {
           notificationRows.push({
@@ -158,6 +190,17 @@ export const initiateOnboarding = inngest.createFunction(
             message: `Onboarding tasks have been automatically created for ${employeeName}. You have HR tasks assigned.`,
             link: `/hr/onboarding`,
           });
+
+          // Send email to HR members
+          const hrUser = await db.query.users.findFirst({
+            where: eq(users.id, m.userId),
+            columns: { email: true, name: true },
+          });
+          if (hrUser?.email) {
+            emailPromises.push(
+              sendOnboardingTaskEmail(hrUser.email, hrUser.name ?? "HR", employeeName, "HR", hrTaskCount)
+            );
+          }
         }
       }
 
@@ -168,6 +211,8 @@ export const initiateOnboarding = inngest.createFunction(
           .from(organizationMembers)
           .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.role, "IT")));
 
+        const itTaskCount = createdTasks.filter((t) => t.ownerRole === "IT").length;
+
         for (const m of itMembers) {
           notificationRows.push({
             orgId,
@@ -177,6 +222,17 @@ export const initiateOnboarding = inngest.createFunction(
             message: `New hire ${employeeName} has started onboarding. You have IT setup tasks assigned.`,
             link: `/hr/onboarding`,
           });
+
+          // Send email to IT members
+          const itUser = await db.query.users.findFirst({
+            where: eq(users.id, m.userId),
+            columns: { email: true, name: true },
+          });
+          if (itUser?.email) {
+            emailPromises.push(
+              sendOnboardingTaskEmail(itUser.email, itUser.name ?? "IT", employeeName, "IT", itTaskCount)
+            );
+          }
         }
       }
 
@@ -190,11 +246,26 @@ export const initiateOnboarding = inngest.createFunction(
           message: `${employeeName} has started onboarding. You have manager tasks assigned (introductions and 1-on-1).`,
           link: `/hr/onboarding`,
         });
+
+        const managerTaskCount = createdTasks.filter((t) => t.ownerRole === "MANAGER").length;
+        const manager = await db.query.users.findFirst({
+          where: eq(users.id, employee.reportingTo),
+          columns: { email: true, name: true },
+        });
+        if (manager?.email) {
+          emailPromises.push(
+            sendOnboardingTaskEmail(manager.email, manager.name ?? "Manager", employeeName, "MANAGER", managerTaskCount)
+          );
+        }
       }
 
       if (notificationRows.length === 0) return { notified: 0 };
 
       await db.insert(notifications).values(notificationRows);
+
+      // Send all emails (non-blocking, don't fail the step)
+      await Promise.allSettled(emailPromises);
+
       return { notified: notificationRows.length };
     });
 

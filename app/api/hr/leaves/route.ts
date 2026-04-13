@@ -1,12 +1,13 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getLeaves } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { leaveRequests, leaveBalances, leaveTypes } from "@/lib/db/schema";
+import { leaveRequests, leaveBalances, leaveTypes, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, lte, gte } from "drizzle-orm";
 import { formatDateOnly } from "@/lib/date-utils";
 import { LEAVE_POLICY } from "@/lib/leave-policy";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { sendLeaveRequestEmail } from "@/lib/email";
 
 const createLeaveSchema = z.object({
   typeId: z.number(),
@@ -92,6 +93,32 @@ export async function POST(req: NextRequest) {
         reason: body.reason,
         status: "PENDING",
       });
+
+      // Notify HR/Admin about the leave request (non-blocking)
+      void (async () => {
+        const hrMembers = await db
+          .select({ userId: organizationMembers.userId })
+          .from(organizationMembers)
+          .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+
+        for (const m of hrMembers) {
+          const hrUser = await db.query.users.findFirst({
+            where: eq(users.id, m.userId),
+            columns: { email: true, name: true },
+          });
+          if (hrUser?.email) {
+            await sendLeaveRequestEmail(
+              hrUser.email,
+              hrUser.name ?? "HR",
+              session.user.name ?? "Employee",
+              leaveType?.name ?? "Leave",
+              formatDateOnly(new Date(body.startDate)),
+              formatDateOnly(new Date(body.endDate)),
+              body.reason ?? "No reason provided"
+            );
+          }
+        }
+      })().catch(() => {});
 
       return ok({ success: true });
     } catch (e) {

@@ -64,3 +64,17 @@ export {
   getSlaBreachAlertEmail,
   getClientOnboardingEmail,
 } from "./crm";
+
+export {
+  getWorkLogApprovedEmailTemplate,
+  getWorkLogRejectedEmailTemplate,
+  getOnboardingWelcomeEmailTemplate,
+  getOnboardingTaskEmailTemplate,
+  getTicketCreatedEmailTemplate,
+  getTicketReplyEmailTemplate,
+  getTicketStatusEmailTemplate,
+  getTaskAssignedEmailTemplate,
+  getDealStageChangeEmailTemplate,
+  getLeadAssignedEmailTemplate,
+  getReviewAssignedEmailTemplate,
+} from "./notifications";

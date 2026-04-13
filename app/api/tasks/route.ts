@@ -1,9 +1,10 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseQuery, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/db/schema";
+import { tasks, users } from "@/lib/db/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { z } from "zod";
+import { sendTaskAssignedEmail } from "@/lib/email";
 
 // ─── Query Schema ─────────────────────────────────────────────────────────────
 
@@ -100,6 +101,33 @@ export async function POST(req: NextRequest) {
       .returning();
 
     if (!created) return err("Failed to create task", 500);
+
+    // Email the assignee if task is assigned to someone else (non-blocking)
+    const assigneeId = body.assigneeId ?? session.user.id;
+    if (assigneeId !== session.user.id) {
+      void (async () => {
+        const assignee = await db.query.users.findFirst({
+          where: eq(users.id, assigneeId),
+          columns: { email: true, name: true },
+        });
+        if (assignee?.email) {
+          const dueStr = body.dueDate
+            ? new Date(body.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+            : null;
+          const entityLabel = body.entityType ? `${body.entityType} #${body.entityId ?? ""}` : undefined;
+
+          await sendTaskAssignedEmail(
+            assignee.email,
+            assignee.name ?? "Team Member",
+            body.title,
+            body.type,
+            dueStr,
+            session.user.name ?? "Team Member",
+            entityLabel
+          );
+        }
+      })().catch(() => {});
+    }
 
     return ok(created, 201);
   });

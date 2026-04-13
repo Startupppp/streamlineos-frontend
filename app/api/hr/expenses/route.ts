@@ -1,13 +1,14 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getExpenses } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { expenses } from "@/lib/db/schema";
+import { expenses, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
+import { sendExpenseSubmittedEmail } from "@/lib/email";
 
 const createExpenseSchema = z.object({
   category: z.string(),
@@ -76,6 +77,31 @@ export async function POST(req: NextRequest) {
       targetType: "expense",
       metadata: { category: body.category, amount: body.amount },
     }).catch(() => {});
+
+    // Notify HR/Admin about the new expense (non-blocking)
+    void (async () => {
+      const hrMembers = await db
+        .select({ userId: organizationMembers.userId })
+        .from(organizationMembers)
+        .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+
+      for (const m of hrMembers) {
+        const hrUser = await db.query.users.findFirst({
+          where: eq(users.id, m.userId),
+          columns: { email: true, name: true },
+        });
+        if (hrUser?.email) {
+          await sendExpenseSubmittedEmail(
+            hrUser.email,
+            hrUser.name ?? "HR",
+            session.user.name ?? "Employee",
+            body.category,
+            body.amount.toString(),
+            body.description ?? ""
+          );
+        }
+      }
+    })().catch(() => {});
 
     return ok(expense);
   });

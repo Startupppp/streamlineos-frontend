@@ -1,10 +1,11 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { performanceReviews, organizationMembers } from "@/lib/db/schema";
+import { performanceReviews, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { createPerformanceReviewSchema } from "@/lib/validations/hr";
 import type { NextRequest } from "next/server";
+import { sendReviewAssignedEmail } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
@@ -68,6 +69,29 @@ export async function POST(req: NextRequest) {
         status: "DRAFT",
       })
       .returning();
+
+    // Notify the employee about the assigned review (non-blocking)
+    void (async () => {
+      const [employee, reviewer] = await Promise.all([
+        db.query.users.findFirst({
+          where: eq(users.id, body.userId),
+          columns: { email: true, name: true },
+        }),
+        db.query.users.findFirst({
+          where: eq(users.id, body.reviewerId ?? session.user.id),
+          columns: { name: true },
+        }),
+      ]);
+      if (employee?.email) {
+        await sendReviewAssignedEmail(
+          employee.email,
+          employee.name ?? "Employee",
+          reviewer?.name ?? session.user.name ?? "Manager",
+          body.periodStart,
+          body.periodEnd
+        );
+      }
+    })().catch(() => {});
 
     return ok(review, 201);
   });

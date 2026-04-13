@@ -3,11 +3,13 @@ import { withAuth, ok, parseQuery, parseBody } from "@/lib/api/helpers";
 import { invalidateCachePattern } from "@/lib/cache";
 import { getLeads } from "@/server/queries/leads";
 import { db } from "@/lib/db";
-import { leads, notifications } from "@/lib/db/schema";
+import { leads, notifications, users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
 import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
+import { sendLeadAssignedEmail } from "@/lib/email";
 
 const listSchema = z.object({
   status: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]).optional(),
@@ -96,6 +98,24 @@ export async function POST(req: NextRequest) {
         message: `You have been assigned a new lead: ${input.name}`,
         link: `/crm/leads`,
       });
+
+      // Email the assigned rep (non-blocking)
+      void (async () => {
+        const rep = await db.query.users.findFirst({
+          where: eq(users.id, input.assignedToId!),
+          columns: { email: true, name: true },
+        });
+        if (rep?.email) {
+          await sendLeadAssignedEmail(
+            rep.email,
+            rep.name ?? "Team Member",
+            input.name,
+            input.source,
+            input.priority,
+            session.user.name ?? "Manager"
+          );
+        }
+      })().catch(() => {});
     }
 
     if (!input.assignedToId) {

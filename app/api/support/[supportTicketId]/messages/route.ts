@@ -1,9 +1,10 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { supportTickets, supportTicketMessages } from "@/lib/db/schema";
+import { supportTickets, supportTicketMessages, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
+import { sendSupportTicketReplyEmail } from "@/lib/email";
 
 const replySchema = z.object({
   body: z.string().min(1),
@@ -98,6 +99,41 @@ export async function POST(
               eq(supportTickets.orgId, session.orgId)
             )
           );
+      }
+
+      // Notify the other party about the reply (non-blocking)
+      if (!input.isInternal) {
+        void (async () => {
+          // If author is the creator, notify assignee; otherwise notify creator
+          const notifyUserId =
+            session.user.id === ticket.createdBy
+              ? ticket.assigneeId
+              : ticket.createdBy;
+
+          if (!notifyUserId) return;
+
+          const [recipient, author] = await Promise.all([
+            db.query.users.findFirst({
+              where: eq(users.id, notifyUserId),
+              columns: { email: true, name: true },
+            }),
+            db.query.users.findFirst({
+              where: eq(users.id, session.user.id),
+              columns: { name: true },
+            }),
+          ]);
+
+          if (recipient?.email) {
+            await sendSupportTicketReplyEmail(
+              recipient.email,
+              recipient.name ?? "User",
+              ticket.title,
+              ticketId,
+              author?.name ?? session.user.name ?? "Team Member",
+              input.body
+            );
+          }
+        })().catch(() => {});
       }
 
       return ok(message, 201);

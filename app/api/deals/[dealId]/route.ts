@@ -2,11 +2,12 @@ import { type NextRequest } from "next/server";
 import { withAuth, withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { getDeal } from "@/server/queries/crm";
 import { db } from "@/lib/db";
-import { deals, dealActivities, chatChannels, chatChannelMembers } from "@/lib/db/schema";
+import { deals, dealActivities, chatChannels, chatChannelMembers, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { invalidateSalesKpiCache } from "@/server/queries/sales-dashboard";
 import { createAuditLog } from "@/lib/audit-log";
+import { sendDealStageChangeEmail } from "@/lib/email";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -157,6 +158,33 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           assignedToId: updated.assignedToId,
         })
       );
+    }
+
+    // Email the deal owner on stage change (non-blocking)
+    if (input.stage !== undefined && updated.assignedToId) {
+      const existing = await db.query.deals.findFirst({
+        where: and(eq(deals.id, dealId), eq(deals.orgId, session.orgId!)),
+        columns: { stage: true },
+      });
+
+      void (async () => {
+        const assignee = await db.query.users.findFirst({
+          where: eq(users.id, updated.assignedToId!),
+          columns: { email: true, name: true },
+        });
+        if (assignee?.email) {
+          await sendDealStageChangeEmail(
+            assignee.email,
+            assignee.name ?? "Team Member",
+            updated.name,
+            existing?.stage ?? "Unknown",
+            input.stage!,
+            updated.value,
+            session.user.name ?? "Team Member",
+            dealId
+          );
+        }
+      })().catch(() => {});
     }
 
     void createAuditLog({

@@ -2,9 +2,10 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { getSupportTicket } from "@/server/queries/support";
 import { db } from "@/lib/db";
-import { supportTickets } from "@/lib/db/schema";
+import { supportTickets, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { sendSupportTicketStatusEmail, sendSupportTicketCreatedEmail } from "@/lib/email";
 
 const updateSchema = z.object({
   status: z
@@ -74,6 +75,46 @@ export async function PATCH(
             eq(supportTickets.orgId, session.orgId)
           )
         );
+
+      // Email the ticket creator on status change (non-blocking)
+      if (input.status) {
+        void (async () => {
+          const creator = await db.query.users.findFirst({
+            where: eq(users.id, ticket.createdBy),
+            columns: { email: true, name: true },
+          });
+          if (creator?.email) {
+            await sendSupportTicketStatusEmail(
+              creator.email,
+              creator.name ?? "User",
+              ticket.title,
+              ticketId,
+              input.status!,
+              session.user.name ?? "Support"
+            );
+          }
+        })().catch(() => {});
+      }
+
+      // Email the new assignee on assignment change (non-blocking)
+      if (input.assigneeId && input.assigneeId !== ticket.assigneeId) {
+        void (async () => {
+          const assignee = await db.query.users.findFirst({
+            where: eq(users.id, input.assigneeId!),
+            columns: { email: true, name: true },
+          });
+          if (assignee?.email) {
+            await sendSupportTicketCreatedEmail(
+              assignee.email,
+              assignee.name ?? "Team Member",
+              ticket.title,
+              ticket.priority ?? "MEDIUM",
+              session.user.name ?? "Support",
+              ticketId
+            );
+          }
+        })().catch(() => {});
+      }
 
       return ok({ success: true });
     } catch (error) {

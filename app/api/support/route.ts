@@ -2,8 +2,10 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err, toNumber } from "@/lib/api/helpers";
 import { getSupportTickets } from "@/server/queries/support";
 import { db } from "@/lib/db";
-import { supportTickets } from "@/lib/db/schema";
+import { supportTickets, users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { sendSupportTicketCreatedEmail } from "@/lib/email";
 
 const SLA_HOURS: Record<string, number> = {
   LOW: 48,
@@ -80,6 +82,26 @@ export async function POST(req: NextRequest) {
           createdBy: session.user.id,
         })
         .returning();
+
+      // Email the assignee if one was set (non-blocking)
+      if (input.assigneeId) {
+        void (async () => {
+          const assignee = await db.query.users.findFirst({
+            where: eq(users.id, input.assigneeId!),
+            columns: { email: true, name: true },
+          });
+          if (assignee?.email) {
+            await sendSupportTicketCreatedEmail(
+              assignee.email,
+              assignee.name ?? "Team Member",
+              input.title,
+              input.priority,
+              session.user.name ?? "User",
+              ticket.id
+            );
+          }
+        })().catch(() => {});
+      }
 
       return ok(ticket, 201);
     } catch (error) {

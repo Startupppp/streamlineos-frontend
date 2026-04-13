@@ -9,6 +9,7 @@ import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 import { inngest } from "@/lib/inngest/client";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
+import { sendWelcomeEmail } from "@/lib/email";
 
 const onboardSchema = z.object({
   firstName: z.string(),
@@ -138,6 +139,13 @@ export async function POST(req: NextRequest) {
       targetType: "employee",
       metadata: { email: body.email, name: `${body.firstName} ${body.lastName}`, role: body.role, designation: body.designation },
     }).catch(() => {});
+
+    // Send welcome email with temp credentials (non-blocking)
+    void sendWelcomeEmail(
+      newUser.email,
+      `${body.firstName} ${body.lastName}`,
+      body.password || "Welcome@123"
+    ).catch(() => {});
 
     return ok({ success: true });
   });
