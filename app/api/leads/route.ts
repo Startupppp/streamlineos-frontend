@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { leads, notifications } from "@/lib/db/schema";
 import { evaluateAssignmentRules, recalculateLeadScore, applySlaPolicy } from "@/server/lib/lead-triggers";
 import { logger } from "@/lib/logger";
+import { createAuditLog } from "@/lib/audit-log";
 import { z } from "zod";
 
 const listSchema = z.object({
@@ -125,6 +126,15 @@ export async function POST(req: NextRequest) {
         assignedToId: newLead.assignedToId,
       })
     );
+
+    void createAuditLog({
+      action: "lead.created",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(newLead.id),
+      targetType: "lead",
+      metadata: { name: newLead.name, source: newLead.source, assignedToId: newLead.assignedToId },
+    }).catch(() => {});
 
     return ok(newLead, 201);
   });

@@ -57,6 +57,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
     if (!updated) return err("Lead not found", 404);
 
+    void createAuditLog({
+      action: "lead.updated",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(leadId),
+      targetType: "lead",
+      metadata: { changedFields: Object.keys(input) },
+    }).catch(() => {});
+
     try {
       await recalculateLeadScore(db, session.orgId!, updated.id);
     } catch (e) {

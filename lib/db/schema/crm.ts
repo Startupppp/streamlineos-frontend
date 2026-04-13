@@ -12,6 +12,7 @@ import {
   crmActivityTypeEnum, crmEventStatusEnum,
   invoiceStatusEnum, supportTicketStatusEnum, supportTicketPriorityEnum,
   taskEntityTypeEnum, taskTypeEnum, taskStatusEnum,
+  quoteStatusEnum,
 } from "./enums";
 import { organizations, users } from "./auth";
 import { projects } from "./projects";
@@ -1393,4 +1394,62 @@ export const leadImportBatches = pgTable("lead_import_batches", {
 export const leadImportBatchesRelations = relations(leadImportBatches, ({ one }) => ({
   organization: one(organizations, { fields: [leadImportBatches.orgId], references: [organizations.id] }),
   creator: one(users, { fields: [leadImportBatches.createdBy], references: [users.id] }),
+}));
+
+// ─── Quotes & Proposals ─────────────────────────────────────────────
+
+export const quotes = pgTable("quotes", {
+  id: serial("id").primaryKey(),
+  orgId: text("org_id").references(() => organizations.id).notNull(),
+  dealId: integer("deal_id").references(() => deals.id, { onDelete: "set null" }),
+  clientId: integer("client_id").references(() => clientAccounts.id, { onDelete: "set null" }),
+  quoteNumber: text("quote_number").notNull(),
+  subject: text("subject").notNull(),
+  description: text("description"),
+  status: quoteStatusEnum("status").default("DRAFT").notNull(),
+  currency: text("currency").default("INR").notNull(),
+  totalAmount: decimal("total_amount", { precision: 15, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 15, scale: 2 }).default("0"),
+  discountAmount: decimal("discount_amount", { precision: 15, scale: 2 }).default("0"),
+  netAmount: decimal("net_amount", { precision: 15, scale: 2 }).notNull(),
+  validUntil: date("valid_until").notNull(),
+  termsAndConditions: text("terms_and_conditions"),
+  createdById: text("created_by_id").references(() => users.id).notNull(),
+  sentAt: timestamp("sent_at"),
+  acceptedAt: timestamp("accepted_at"),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_quotes_org_status").on(table.orgId, table.status),
+  index("idx_quotes_deal").on(table.dealId),
+  index("idx_quotes_client").on(table.clientId),
+  index("idx_quotes_created_by").on(table.createdById),
+  uniqueIndex("idx_quotes_number").on(table.orgId, table.quoteNumber),
+]);
+
+export const quoteLineItems = pgTable("quote_line_items", {
+  id: serial("id").primaryKey(),
+  quoteId: integer("quote_id").references(() => quotes.id, { onDelete: "cascade" }).notNull(),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: decimal("unit_price", { precision: 15, scale: 2 }).notNull(),
+  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const quotesRelations = relations(quotes, ({ one, many }) => ({
+  organization: one(organizations, { fields: [quotes.orgId], references: [organizations.id] }),
+  deal: one(deals, { fields: [quotes.dealId], references: [deals.id] }),
+  client: one(clientAccounts, { fields: [quotes.clientId], references: [clientAccounts.id] }),
+  createdBy: one(users, { fields: [quotes.createdById], references: [users.id] }),
+  lineItems: many(quoteLineItems),
+}));
+
+export const quoteLineItemsRelations = relations(quoteLineItems, ({ one }) => ({
+  quote: one(quotes, { fields: [quoteLineItems.quoteId], references: [quotes.id] }),
 }));

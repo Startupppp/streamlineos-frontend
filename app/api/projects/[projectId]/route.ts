@@ -18,6 +18,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, and, desc, asc, inArray, ne } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
+import { createAuditLog } from "@/lib/audit-log";
 import { sendProjectAssignmentEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
@@ -220,6 +221,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       }
     }
 
+    void createAuditLog({
+      action: "project.updated",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(projectId),
+      targetType: "project",
+      metadata: { changedFields: Object.keys(body) },
+    }).catch(() => {});
+
     return ok({ success: true });
   });
 }
@@ -259,6 +269,15 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
       await tx.delete(projectStatuses).where(eq(projectStatuses.projectId, projectId));
       await tx.delete(projects).where(eq(projects.id, projectId));
     });
+
+    void createAuditLog({
+      action: "project.deleted",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(projectId),
+      targetType: "project",
+      metadata: { name: project.name },
+    }).catch(() => {});
 
     return ok({ success: true });
   });

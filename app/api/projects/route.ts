@@ -13,6 +13,7 @@ import {
 import { eq, and, desc, inArray, or, sql, count } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { sendProjectAssignmentEmail } from "@/lib/email";
+import { createAuditLog } from "@/lib/audit-log";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -274,6 +275,15 @@ export async function POST(req: NextRequest) {
         }
       }
     }
+
+    void createAuditLog({
+      action: "project.created",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(project.id),
+      targetType: "project",
+      metadata: { name: body.name, key: projectKey, managerId: body.managerId },
+    }).catch(() => {});
 
     return ok(project, 201);
   });

@@ -7,6 +7,7 @@ import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { createAuditLog } from "@/lib/audit-log";
 
 const createExpenseSchema = z.object({
   category: z.string(),
@@ -66,6 +67,15 @@ export async function POST(req: NextRequest) {
         status: "PENDING",
       })
       .returning();
+
+    void createAuditLog({
+      action: "expense.created",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(expense.id),
+      targetType: "expense",
+      metadata: { category: body.category, amount: body.amount },
+    }).catch(() => {});
 
     return ok(expense);
   });

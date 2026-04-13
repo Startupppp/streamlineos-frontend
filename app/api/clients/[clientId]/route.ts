@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { clientAccounts, clientAccountActivities, incentiveConfig, incentives, notifications } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
+import { createAuditLog } from "@/lib/audit-log";
 
 const updateStatusSchema = z.object({
   status: z.enum(["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"]),
@@ -113,6 +114,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         link: `/crm/clients/${account.id}`,
       });
     }
+
+    void createAuditLog({
+      action: "client.status_changed",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(accountId),
+      targetType: "client",
+      metadata: { status: input.status, investmentAmount: input.investmentAmount },
+    }).catch(() => {});
 
     return ok(updated);
   });

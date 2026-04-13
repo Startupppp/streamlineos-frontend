@@ -4,6 +4,7 @@ import { payrolls, salaryStructures } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { createAuditLog } from "@/lib/audit-log";
 
 const generateSinglePayrollSchema = z.object({
   userId: z.string(),
@@ -68,6 +69,15 @@ export async function POST(req: NextRequest) {
         overtimeAmount: body.overtimeAmount?.toString(),
       })
       .returning();
+
+    void createAuditLog({
+      action: "hr.payroll_generated",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(payroll.id),
+      targetType: "payroll",
+      metadata: { employeeId: body.userId, month: body.month, netSalary: netSalary },
+    }).catch(() => {});
 
     return ok({ success: true });
   });

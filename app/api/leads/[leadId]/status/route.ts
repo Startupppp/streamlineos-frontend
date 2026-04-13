@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { leads, deals, projects, tickets, clients, notifications } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 import { z } from "zod";
+import { createAuditLog } from "@/lib/audit-log";
 
 const schema = z.object({
   status: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]),
@@ -125,6 +126,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         });
       });
     }
+
+    void createAuditLog({
+      action: "lead.status_changed",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(leadId),
+      targetType: "lead",
+      metadata: { newStatus: input.status, lostReason: input.lostReason },
+    }).catch(() => {});
 
     return ok(updated);
   });

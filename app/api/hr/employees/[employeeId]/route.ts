@@ -10,6 +10,7 @@ import { format, differenceInDays, addDays } from "date-fns";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { inngest } from "@/lib/inngest/client";
+import { createAuditLog } from "@/lib/audit-log";
 
 const updateEmployeeSchema = z.object({
   name: z.string().optional(),
@@ -173,6 +174,15 @@ export async function PATCH(
         },
       });
     }
+
+    void createAuditLog({
+      action: body.isActive === false ? "hr.employee_terminated" : "hr.employee_updated",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: targetUserId,
+      targetType: "employee",
+      metadata: { changedFields: Object.keys(updateData), isTermination: body.isActive === false },
+    }).catch(() => {});
 
     return ok({ success: true });
   });

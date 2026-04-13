@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { createAuditLog } from "@/lib/audit-log";
 
 const updateExpenseSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED", "PAID"]),
@@ -54,6 +55,16 @@ export async function PATCH(
         })
         .where(eq(expenses.id, expenseId));
     });
+
+    const auditAction = body.status === "APPROVED" ? "expense.approved" : body.status === "PAID" ? "expense.paid" : "expense.rejected";
+    void createAuditLog({
+      action: auditAction,
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(expenseId),
+      targetType: "expense",
+      metadata: { status: body.status, rejectionReason: body.rejectionReason },
+    }).catch(() => {});
 
     return ok({ success: true });
   });

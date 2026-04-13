@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { generatePayslipPdf } from "@/lib/payslip-pdf";
 import { getPayslipEmailTemplate } from "@/lib/email-templates/hr";
 import { logger } from "@/lib/logger";
+import { createAuditLog } from "@/lib/audit-log";
 
 export async function PATCH(
   _req: NextRequest,
@@ -31,6 +32,15 @@ export async function PATCH(
       .update(payrolls)
       .set({ status: "PAID" })
       .where(eq(payrolls.id, payrollId));
+
+    void createAuditLog({
+      action: "hr.payroll_paid",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(payrollId),
+      targetType: "payroll",
+      metadata: { employeeId: existing.userId, month: existing.month, netSalary: existing.netSalary },
+    }).catch(() => {});
 
     // Send payslip email with PDF attachment (non-blocking)
     void (async () => {

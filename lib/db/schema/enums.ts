@@ -87,6 +87,8 @@ export const supportTicketPriorityEnum = pgEnum("support_ticket_priority", ["LOW
 
 export const socialPlatformEnum = pgEnum("social_platform", ["instagram", "twitter", "linkedin", "facebook", "youtube"]);
 
+export const quoteStatusEnum = pgEnum("quote_status", ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"]);
+
 export const taskEntityTypeEnum = pgEnum("task_entity_type", ["LEAD", "DEAL", "CONTACT", "PROJECT"]);
 export const taskTypeEnum = pgEnum("task_type", ["CALL", "EMAIL", "MEETING", "CUSTOM"]);
 export const taskStatusEnum = pgEnum("task_status", ["pending", "completed", "cancelled"]);

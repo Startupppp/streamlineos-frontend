@@ -339,6 +339,12 @@ export const queryKeys = {
     list: (month?: string) => [...base, "contentCalendar", "list", month] as const,
   },
 
+  quotes: {
+    all: [...base, "quotes"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "quotes", "list", params] as const,
+    detail: (id: number) => [...base, "quotes", "detail", id] as const,
+  },
+
   tasks: {
     all: [...base, "tasks"] as const,
     list: (params?: Record<string, unknown>) => [...base, "tasks", "list", params] as const,

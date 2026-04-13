@@ -7,6 +7,7 @@ import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { createAuditLog } from "@/lib/audit-log";
 
 const createSalaryStructureSchema = z.object({
   userId: z.string(),
@@ -79,6 +80,15 @@ export async function POST(req: NextRequest) {
         })
         .returning();
     });
+
+    void createAuditLog({
+      action: "hr.salary_changed",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: body.userId,
+      targetType: "salary_structure",
+      metadata: { basicSalary: body.basicSalary, effectiveFrom: body.effectiveFrom },
+    }).catch(() => {});
 
     return ok(structure);
   });

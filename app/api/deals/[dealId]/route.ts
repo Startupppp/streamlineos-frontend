@@ -6,6 +6,7 @@ import { deals, dealActivities, chatChannels, chatChannelMembers } from "@/lib/d
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { invalidateSalesKpiCache } from "@/server/queries/sales-dashboard";
+import { createAuditLog } from "@/lib/audit-log";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -158,6 +159,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       );
     }
 
+    void createAuditLog({
+      action: input.stage !== undefined ? "deal.stage_changed" : "deal.updated",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(dealId),
+      targetType: "deal",
+      metadata: { changedFields: Object.keys(input), newStage: input.stage },
+    }).catch(() => {});
+
     return ok(updated);
   });
 }
@@ -170,6 +180,15 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
   return withAdmin(async (session) => {
     await db.delete(deals)
       .where(and(eq(deals.id, dealId), eq(deals.orgId, session.orgId!)));
+
+    void createAuditLog({
+      action: "deal.deleted",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(dealId),
+      targetType: "deal",
+    }).catch(() => {});
+
     return ok({ success: true });
   });
 }

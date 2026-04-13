@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
+import { createAuditLog } from "@/lib/audit-log";
 
 const DOCUMENT_TYPES = [
   "CONTRACT",
@@ -82,6 +83,15 @@ export async function POST(req: NextRequest) {
         isActive: true,
       })
       .returning();
+
+    void createAuditLog({
+      action: "hr.document_uploaded",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(document.id),
+      targetType: "document",
+      metadata: { name: body.name, type: body.type, targetUserId },
+    }).catch(() => {});
 
     return ok(document);
   });
