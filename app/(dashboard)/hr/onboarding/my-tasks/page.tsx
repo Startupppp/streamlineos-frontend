@@ -9,6 +9,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { OnboardingProgressRing } from "@/components/hr/onboarding-progress-ring";
 import { OnboardingTaskCard } from "@/components/hr/onboarding-task-card";
@@ -122,7 +123,7 @@ export default function MyOnboardingTasksPage() {
         </div>
       ) : totalTasks === 0 ? (
         <EmptyState
-          icon={CheckCircle2}
+          illustration={<EmptyTasksIllustration className="h-40 w-40" />}
           title="No onboarding tasks yet"
           description="Your HR team hasn't set up any tasks for you. Check back soon."
         />

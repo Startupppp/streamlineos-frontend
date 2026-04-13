@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
 import { CalendarDays, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -40,7 +41,7 @@ export function UpcomingEventsWidget() {
           <p className="text-sm text-destructive">Failed to load.</p>
         ) : !events.length ? (
           <EmptyState
-            icon={CalendarDays}
+            illustration={<EmptyCalendarIllustration className="h-20 w-20" />}
             title="No upcoming events"
             description="Your schedule is clear."
             compact

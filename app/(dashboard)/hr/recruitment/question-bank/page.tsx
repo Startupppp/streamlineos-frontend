@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Plus, Search, MoreHorizontal, Trash2, BookOpen } from "lucide-react";
-import Image from "next/image";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 const CATEGORIES = ["GENERAL", "TECHNICAL", "BEHAVIOURAL", "SITUATIONAL", "ROLE_SPECIFIC", "CULTURE_FIT"];
 const DIFFICULTIES = ["EASY", "MEDIUM", "HARD"];
@@ -210,13 +210,7 @@ export default function QuestionBankPage() {
             </div>
           ) : !questions?.length ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-              <Image
-                src="/illustrations/undraw-online-survey.svg"
-                alt="No questions"
-                width={160}
-                height={120}
-                className="opacity-80"
-              />
+              <EmptyDocumentsIllustration className="h-32 w-32 opacity-95" />
               <div>
                 <p className="font-medium">No questions yet</p>
                 <p className="text-sm text-muted-foreground">Add questions to build your bank.</p>

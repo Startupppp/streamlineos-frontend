@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import { apiClient } from "@/lib/api-client";
 import { formatINR } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
@@ -188,20 +189,7 @@ export default function DealAgingPage() {
           <CardContent className="p-0">
             {sortedDeals.length === 0 ? (
               <EmptyState
-                illustration={
-                  <div className="h-14 w-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                    <svg
-                      className="h-7 w-7 text-emerald-500"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                }
+                illustration={<EmptyTargetIllustration className="h-36 w-36" />}
                 title="All deals are moving smoothly"
                 description="No deals are currently stuck in any pipeline stage. Keep it up!"
               />

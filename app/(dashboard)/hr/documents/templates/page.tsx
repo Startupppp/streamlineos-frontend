@@ -21,6 +21,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -303,7 +304,7 @@ export default function DocumentTemplatesPage() {
         {/* Table */}
         {list.length === 0 ? (
           <EmptyState
-            icon={FileText}
+            illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
             title="No templates yet"
             description="Create your first document template to automate offer letters, NDAs, and more."
             action={{ label: "Create your first template", href: "/hr/documents/templates/new" }}

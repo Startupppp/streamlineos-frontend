@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus, Trash2, GripVertical, Eye, EyeOff, ClipboardList } from "lucide-react";
+import { Plus, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -234,7 +235,7 @@ export default function ScorecardTemplatesPage() {
         </div>
       ) : !templates?.length ? (
         <EmptyState
-          icon={ClipboardList}
+          illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
           title="No Scorecard Templates"
           description="Create a template to standardize how interviewers evaluate candidates."
           action={{ label: "Create Template", onClick: () => setCreateOpen(true) }}

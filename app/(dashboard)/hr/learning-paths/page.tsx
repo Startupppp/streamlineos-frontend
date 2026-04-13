@@ -16,7 +16,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { Plus, GraduationCap, BookOpen, Clock, BarChart3 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 interface LearningPath {
   id: number; title: string; description: string | null; level: string | null;
@@ -93,14 +93,7 @@ export default function LearningPathsPage() {
     >
       {!paths?.length ? (
         <Card><CardContent className="py-12 text-center">
-          <GraduationCap className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
+          <EmptyDocumentsIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
             <p className="text-sm text-muted-foreground">No learning paths available.</p>
         </CardContent></Card>
       ) : (

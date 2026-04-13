@@ -15,7 +15,7 @@ import {
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
 import { Plus, Zap, BarChart3, CheckCircle2 } from "lucide-react";
-import Image from "next/image";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 
 const LEVELS = [
   { value: "1", label: "Beginner" },
@@ -83,14 +83,7 @@ export default function SkillsPage() {
     >
       {!skills?.length ? (
         <Card><CardContent className="py-12 text-center">
-          <Zap className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
+          <EmptyTeamIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
             <p className="text-sm text-muted-foreground">No skills recorded yet. Add your first skill.</p>
         </CardContent></Card>
       ) : (

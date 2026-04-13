@@ -11,7 +11,7 @@ import { Briefcase, Users, Calendar, UserCheck, ArrowRight } from "lucide-react"
 import Link from "next/link";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatDistanceToNow } from "date-fns";
-import Image from "next/image";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 
 // ─── Pie chart colours ────────────────────────────────────────────────────────
 
@@ -171,13 +171,7 @@ export default function RecruitmentDashboardPage() {
             <CardContent className="p-4 pt-0 space-y-2">
               {!recentJobs?.length ? (
                 <div className="py-4">
-                  <Image
-                    src="/illustrations/undraw-online-survey.svg"
-                    alt="Empty state illustration"
-                    width={200}
-                    height={160}
-                    className="mx-auto mb-4 opacity-90"
-                  />
+                  <EmptyPersonIllustration className="mx-auto mb-4 h-36 w-36 opacity-95" />
                   <p className="text-sm text-muted-foreground text-center">No open positions yet.</p>
                 </div>
               ) : (

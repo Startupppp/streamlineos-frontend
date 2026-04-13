@@ -41,6 +41,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import {
   useAbTests,
@@ -504,7 +505,7 @@ export default function AbTestingPage() {
           </div>
         ) : tests.length === 0 ? (
           <EmptyState
-            icon={FlaskConical}
+            illustration={<EmptyTargetIllustration className="h-40 w-40" />}
             title="No A/B Tests Yet"
             description="Create your first A/B test to start comparing email variants and optimizing open rates."
             action={{ label: "New A/B Test", onClick: openCreateSheet }}

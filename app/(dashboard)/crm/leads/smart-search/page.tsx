@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptySearchIllustration } from "@/components/illustrations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -102,7 +103,7 @@ function ResultsTable({ leads }: { leads: NLSearchLead[] }) {
   if (!leads.length) {
     return (
       <EmptyState
-        icon={Search}
+        illustration={<EmptySearchIllustration className="h-40 w-40" />}
         title="No leads match your search"
         description="Try adjusting your query or use different keywords."
       />

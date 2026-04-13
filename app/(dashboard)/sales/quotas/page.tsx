@@ -37,7 +37,7 @@ import { useHrEmployees } from "@/lib/api/hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { SalesQuota } from "@/lib/api/hooks/crm";
-import Image from "next/image";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 
 function fmt(amount: string | number) {
   return `₹${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -120,13 +120,7 @@ export default function SalesQuotasPage() {
                     <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : items.length === 0 ? (
                     <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
-                      <Image
-                        src="/illustrations/undraw-online-survey.svg"
-                        alt="Empty state illustration"
-                        width={180}
-                        height={140}
-                        className="opacity-90"
-                      />
+                      <EmptyTargetIllustration className="h-36 w-36 opacity-95" />
                       <p>No quotas set yet.</p>
                     </div></TableCell></TableRow>
                   ) : items.map((q) => (

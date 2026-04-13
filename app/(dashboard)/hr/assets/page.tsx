@@ -42,7 +42,7 @@ import { useHrAssets, useCreateAsset, useHrEmployees } from "@/lib/api/hooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { Asset } from "@/types/hr";
-import Image from "next/image";
+import { EmptyDevicesIllustration } from "@/components/illustrations";
 
 function fmt(amount: string | number | null) {
   if (amount === null || amount === undefined) return "—";
@@ -178,13 +178,7 @@ export default function HrAssetsPage() {
                     <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : filteredItems.length === 0 ? (
                     <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
-                      <Image
-                        src="/illustrations/undraw-online-survey.svg"
-                        alt="Empty state illustration"
-                        width={180}
-                        height={140}
-                        className="opacity-90"
-                      />
+                      <EmptyDevicesIllustration className="h-36 w-36 opacity-95" />
                       <p>No assets found.</p>
                     </div></TableCell></TableRow>
                   ) : filteredItems.map((a) => {

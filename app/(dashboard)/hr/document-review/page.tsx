@@ -7,13 +7,13 @@ import { toast } from "sonner";
 import {
   CheckCircle2,
   RefreshCw,
-  FileText,
   ExternalLink,
   Eye,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -300,7 +300,7 @@ export default function DocumentReviewPage() {
     >
       {list.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
           title="No documents to review"
           description="Once employees submit onboarding documents, they will appear here."
         />
@@ -399,7 +399,7 @@ export default function DocumentReviewPage() {
                 </div>
               ) : !employeeDocs || employeeDocs.length === 0 ? (
                 <EmptyState
-                  icon={FileText}
+                  illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
                   title="No documents submitted"
                   description="This employee has not submitted any documents yet."
                   compact

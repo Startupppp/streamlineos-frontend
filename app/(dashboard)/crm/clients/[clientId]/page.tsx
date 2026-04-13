@@ -28,7 +28,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 
 const STATUSES = ["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"] as const;
 
@@ -270,14 +270,8 @@ export default function ClientAccountDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div>
-                  <Image
-                    src="/illustrations/undraw-online-survey.svg"
-                    alt="Empty state illustration"
-                    width={200}
-                    height={160}
-                    className="mx-auto mb-4 opacity-90"
-                  />
+                <div className="flex flex-col items-center py-2">
+                  <EmptyPersonIllustration className="h-24 w-24 opacity-95 mb-2" />
                   <p className="text-sm text-muted-foreground text-center">Not assigned</p>
                 </div>
               )}

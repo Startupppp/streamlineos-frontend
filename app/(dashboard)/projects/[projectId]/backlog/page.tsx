@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useMemo, useCallback, useState } from "react";
-import Image from "next/image";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useProject, useSprints } from "@/lib/hooks/trpc-hooks";
 import { useBulkUpdateTickets } from "@/lib/api/hooks/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -235,13 +235,7 @@ export default function BacklogPage({ params }: PageProps) {
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <Image
-                      src="/illustrations/undraw-task-brief.svg"
-                      alt="No tickets"
-                      width={180}
-                      height={140}
-                      className="opacity-90"
-                    />
+                    <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
                     <p>No tickets found. Create one to get started.</p>
                   </div>
                 </TableCell>

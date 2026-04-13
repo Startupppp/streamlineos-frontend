@@ -25,7 +25,7 @@ import {
   Trash2, Play, Archive, UserPlus,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 function statusBadge(status: string | null): "default" | "secondary" | "outline" {
   if (status === "PUBLISHED") return "default";
@@ -129,14 +129,7 @@ export default function TrainingPage() {
       {!programs?.length ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <BookOpen className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-            <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
+            <EmptyDocumentsIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
             <p className="text-sm text-muted-foreground">No training programs yet.</p>
           </CardContent>
         </Card>

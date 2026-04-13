@@ -43,7 +43,7 @@ import {
   XCircle,
   Undo2,
 } from "lucide-react";
-import Image from "next/image";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
@@ -316,13 +316,7 @@ export default function ExitManagementPage() {
       {!resignations?.length ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Image
-              src="/illustrations/undraw-quitting-time.svg"
-              alt="No resignations"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
+            <EmptyPersonIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
             <p className="text-sm text-muted-foreground">No resignations on record.</p>
           </CardContent>
         </Card>

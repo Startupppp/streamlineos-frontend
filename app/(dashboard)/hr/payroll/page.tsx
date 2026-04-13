@@ -27,10 +27,11 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subMonths } from "date-fns";
 import { toast } from "sonner";
-import { Users, Loader2, DollarSign, CreditCard, FileText, Plus } from "lucide-react";
+import { Users, Loader2, DollarSign, CreditCard, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import type { Employee } from "@/types/hr";
@@ -398,7 +399,7 @@ export default function PayrollPage() {
 
         {(allPayrolls?.length ?? 0) === 0 ? (
           <EmptyState
-            icon={FileText}
+            illustration={<EmptyExpensesIllustration className="h-40 w-40" />}
             title="No payroll records yet"
             description={`No payroll generated for ${format(new Date(selectedMonth + "-01"), "MMMM yyyy")}. Generate payroll for all employees or create one for an individual.`}
           />

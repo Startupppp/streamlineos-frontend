@@ -18,7 +18,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, FileSpreadsheet, DollarSign, CheckCircle2, Clock } from "lucide-react";
-import Image from "next/image";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 
 interface FnfSettlement {
   id: number; userId: string; employeeName: string | null; lastWorkingDate: string | null;
@@ -99,14 +99,7 @@ function FnfContent() {
     >
       {!items?.length ? (
         <Card><CardContent className="py-12 text-center">
-          <FileSpreadsheet className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
+          <EmptyExpensesIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
             <p className="text-sm text-muted-foreground">No FnF settlements on record.</p>
         </CardContent></Card>
       ) : (

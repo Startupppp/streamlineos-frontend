@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, ShieldCheck, CheckCircle2, XCircle, BarChart2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
-import Image from "next/image";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"];
 
@@ -139,14 +139,7 @@ function BGVContent() {
             <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
           ) : !items?.length ? (
             <Card><CardContent className="py-12 text-center">
-              <ShieldCheck className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-              <Image
-                src="/illustrations/undraw-online-survey.svg"
-                alt="Empty state illustration"
-                width={200}
-                height={160}
-                className="mx-auto mb-4 opacity-90"
-              />
+              <EmptyDocumentsIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
               <p className="text-sm text-muted-foreground">No background verifications initiated.</p>
             </CardContent></Card>
           ) : (

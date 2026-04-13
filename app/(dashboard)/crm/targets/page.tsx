@@ -2,7 +2,11 @@
 
 import { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { EmptyTargetIllustration, EmptyLeaderboardIllustration } from "@/components/illustrations";
+import {
+  EmptyTargetIllustration,
+  EmptyLeaderboardIllustration,
+  EmptyCalendarIllustration,
+} from "@/components/illustrations";
 import {
   Trophy, Target, TrendingUp, Medal,
   Zap, Phone, UserCheck, BarChart3, Calendar, History,
@@ -29,8 +33,6 @@ import { toast } from "sonner";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTargetSheet } from "@/features/crm/targets/create-target-sheet";
-import Image from "next/image";
-
 const METRIC_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
   calls: { icon: Phone, color: "text-blue-400" },
   leads_converted: { icon: UserCheck, color: "text-emerald-400" },
@@ -75,13 +77,7 @@ function TargetHistoryDialog({ targetId, metricType }: { targetId: number; metri
           )}
           {history && history.length === 0 && (
             <div className="py-6">
-              <Image
-                src="/illustrations/undraw-online-survey.svg"
-                alt="Empty state illustration"
-                width={200}
-                height={160}
-                className="mx-auto mb-4 opacity-90"
-              />
+              <EmptyCalendarIllustration className="mx-auto mb-4 h-32 w-32 opacity-95" />
               <p className="text-sm text-muted-foreground text-center">No changes recorded yet.</p>
             </div>
           )}

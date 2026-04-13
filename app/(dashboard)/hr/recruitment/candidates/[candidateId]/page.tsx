@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Star, ExternalLink, Sparkles, FileText, ShieldCheck, ClipboardCheck, ChevronDown, ChevronUp, FileSignature, Users } from "lucide-react";
 import { format } from "date-fns";
 import type { CandidateStatus, InterviewType } from "@/types/hr";
-import Image from "next/image";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { DocumentsTab } from "./_components/documents-tab";
 import { VaultTab } from "./_components/vault-tab";
 import { ReferenceChecksTab } from "./_components/reference-checks-tab";
@@ -463,13 +463,7 @@ export default function CandidateDetailPage() {
                 <CardContent className="p-4 pt-0">
                   {!candidate.applications?.length ? (
                     <div className="py-4">
-                      <Image
-                        src="/illustrations/undraw-online-survey.svg"
-                        alt="Empty state illustration"
-                        width={200}
-                        height={160}
-                        className="mx-auto mb-4 opacity-90"
-                      />
+                      <EmptyPersonIllustration className="mx-auto mb-4 h-32 w-32 opacity-95" />
                       <p className="text-xs text-muted-foreground text-center">No applications yet.</p>
                     </div>
                   ) : (

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-import Image from "next/image";
+import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import {
   Users, UserPlus, TrendingUp, IndianRupee,
   CalendarCheck, Clock, Building2, Receipt,
@@ -119,13 +119,7 @@ function AnalyticsContent() {
                 <BarChart data={data.departments.map((d) => ({ label: d.name, value: d.count }))} />
               ) : (
                 <div className="py-6">
-                  <Image
-                    src="/illustrations/undraw-online-survey.svg"
-                    alt="Empty state illustration"
-                    width={200}
-                    height={160}
-                    className="mx-auto mb-4 opacity-90"
-                  />
+                  <EmptyLeaderboardIllustration className="mx-auto mb-4 h-36 w-36 opacity-95" />
                   <p className="text-xs text-muted-foreground text-center">No department data</p>
                 </div>
               )}

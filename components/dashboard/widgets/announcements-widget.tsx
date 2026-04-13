@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import {
   useAnnouncements,
   useCreateAnnouncement,
@@ -128,7 +129,7 @@ export function AnnouncementsWidget() {
           <p className="text-sm text-destructive">Failed to load announcements.</p>
         ) : !data?.length ? (
           <EmptyState
-            icon={Megaphone}
+            illustration={<EmptyMailIllustration className="h-20 w-20" />}
             title="No announcements"
             description="Nothing to show yet."
             compact

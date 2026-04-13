@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import Image from "next/image";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -206,13 +206,7 @@ export default function LeadDistributionPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <Image
-                        src="/illustrations/undraw-task-brief.svg"
-                        alt="No leads"
-                        width={180}
-                        height={140}
-                        className="opacity-90"
-                      />
+                      <EmptyTasksIllustration className="h-36 w-36 opacity-95" />
                       <p>No leads found. Upload leads or adjust filters.</p>
                     </div>
                   </TableCell>

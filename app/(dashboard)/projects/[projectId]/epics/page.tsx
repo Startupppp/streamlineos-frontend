@@ -46,7 +46,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import Image from "next/image";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -403,14 +402,8 @@ function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onL
             ))}
 
             {stories.length === 0 && (
-              <div className="p-4">
-                <Image
-                  src="/illustrations/undraw-online-survey.svg"
-                  alt="Empty state illustration"
-                  width={200}
-                  height={160}
-                  className="mx-auto mb-4 opacity-90"
-                />
+              <div className="p-4 flex flex-col items-center">
+                <EmptyTasksIllustration className="mx-auto mb-4 h-36 w-36 opacity-95" />
                 <p className="text-sm text-muted-foreground text-center">No stories linked yet</p>
               </div>
             )}

@@ -9,8 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert } from "@/lib/api/hooks/hr";
-import { Search, UserSearch } from "lucide-react";
+import { Search } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
 
@@ -47,7 +48,7 @@ export default function FindExpertPage() {
       <div className="mt-6">
         {!activeQuery ? (
           <EmptyState
-            icon={UserSearch}
+            illustration={<EmptyPersonIllustration className="h-40 w-40" />}
             title="Search for a skill"
             description="Enter a skill name above to find colleagues who can help."
           />
@@ -59,7 +60,7 @@ export default function FindExpertPage() {
           </div>
         ) : !experts || experts.length === 0 ? (
           <EmptyState
-            icon={UserSearch}
+            illustration={<EmptyPersonIllustration className="h-40 w-40" />}
             title={`No experts found for "${activeQuery}"`}
             description="Try a different skill or a broader search term."
           />

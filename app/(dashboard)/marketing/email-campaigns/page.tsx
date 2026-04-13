@@ -57,7 +57,7 @@ import {
 import type { EmailCampaign, CampaignLeadFilters } from "@/lib/api/hooks/crm";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import Image from "next/image";
+import { EmptyMailIllustration } from "@/components/illustrations";
 
 const STATUS_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   draft: { label: "Draft", variant: "secondary" },
@@ -315,13 +315,7 @@ export default function EmailCampaignsPage() {
                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : items.length === 0 ? (
                   <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
-                      <Image
-                        src="/illustrations/undraw-online-survey.svg"
-                        alt="Empty state illustration"
-                        width={180}
-                        height={140}
-                        className="opacity-90"
-                      />
+                      <EmptyMailIllustration className="h-36 w-36 opacity-95" />
                       <p>No email campaigns yet.</p>
                     </div></TableCell></TableRow>
                 ) : items.map((c) => {

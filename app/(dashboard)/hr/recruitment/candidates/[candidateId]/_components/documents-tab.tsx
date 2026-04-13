@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 import { useRolloutDocuments, type RolloutDocumentRecord } from "@/lib/api/hooks/hr/recruitment";
 import { RolloutDocumentsDialog } from "@/components/hr/recruitment/rollout-documents-dialog";
@@ -177,7 +178,7 @@ export function DocumentsTab({
 
       {list.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          illustration={<EmptyDocumentsIllustration className="h-24 w-24" />}
           title="No documents yet"
           description="Generate and send offer documents to this candidate."
           action={{ label: "Generate Offer", onClick: () => setRolloutOpen(true) }}

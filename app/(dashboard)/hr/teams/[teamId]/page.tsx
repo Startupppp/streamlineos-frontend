@@ -7,10 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import Link from "next/link";
 import type { TeamDetail } from "@/app/api/hr/teams/[teamId]/route";
@@ -54,7 +55,7 @@ export default function TeamPage({ params }: { params: Promise<{ teamId: string 
         </div>
       ) : !team || team.members.length === 0 ? (
         <EmptyState
-          icon={Users}
+          illustration={<EmptyTeamIllustration className="h-40 w-40" />}
           title="No team members"
           description="No active employees assigned to this department."
         />

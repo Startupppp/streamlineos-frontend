@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Gift, DollarSign, CheckCircle2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
-import Image from "next/image";
+import { EmptyExpensesIllustration } from "@/components/illustrations";
 
 interface Bonus {
   id: number; userId: string; employeeName: string | null; amount: string;
@@ -111,14 +111,7 @@ function BonusContent() {
     >
       {!bonuses?.length ? (
         <Card><CardContent className="py-12 text-center">
-          <Gift className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
-          <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
+          <EmptyExpensesIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
             <p className="text-sm text-muted-foreground">No bonuses on record.</p>
         </CardContent></Card>
       ) : (

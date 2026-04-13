@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import {
-  FileText,
   Loader2,
   Copy,
   CheckCheck,
@@ -31,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useGenerateContentBrief, type ContentBrief } from "@/lib/api/hooks/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
 
 const CONTENT_TYPES = [
   { value: "blog", label: "Blog Post" },
@@ -40,12 +40,10 @@ const CONTENT_TYPES = [
   { value: "video", label: "Video Script" },
 ] as const;
 
-function EmptyState() {
+function ContentBriefEmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-[360px] gap-4 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-        <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
-      </div>
+    <div className="flex flex-col items-center justify-center h-full min-h-[360px] gap-4 text-center px-4">
+      <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
       <div>
         <p className="text-sm font-medium text-foreground">No brief generated yet</p>
         <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
@@ -343,7 +341,7 @@ export default function ContentBriefPage() {
               ) : brief ? (
                 <BriefDisplay brief={brief} />
               ) : (
-                <EmptyState />
+                <ContentBriefEmptyState />
               )}
             </CardContent>
           </Card>

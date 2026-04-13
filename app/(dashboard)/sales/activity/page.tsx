@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   BarChart,
   Bar,
@@ -344,7 +345,7 @@ export default function SalesActivityPage() {
         <MyTasksPanel open={tasksOpen} onOpenChange={setTasksOpen} />
         <TaskAnalyticsBar />
         <EmptyState
-          icon={Activity}
+          illustration={<EmptyActivityIllustration className="h-40 w-40" />}
           title="No activity recorded"
           description={`No sales activities were logged ${period === "week" ? "this week" : "this month"}.`}
         />

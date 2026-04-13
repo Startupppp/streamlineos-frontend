@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import {
   Select,
   SelectContent,
@@ -28,7 +29,6 @@ import {
   Plus,
   CheckSquare,
   AlertTriangle,
-  Calendar,
   UserPlus,
   Sparkles,
   X,
@@ -440,7 +440,7 @@ export function MyTasksPanel({ open, onOpenChange }: MyTasksPanelProps) {
             </div>
           ) : filtered.length === 0 ? (
             <EmptyState
-              icon={Calendar}
+              illustration={<EmptyTasksIllustration className="h-24 w-24" />}
               title="No pending tasks"
               description="You're all caught up! Add a task to get started."
               compact

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
 import { ListChecks, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -47,7 +48,7 @@ export function MyTasksWidget() {
           <p className="text-sm text-destructive">Failed to load tasks.</p>
         ) : !data?.myTasks.length ? (
           <EmptyState
-            icon={ListChecks}
+            illustration={<EmptyTasksIllustration className="h-20 w-20" />}
             title="No pending tasks"
             description="You're all caught up."
             compact

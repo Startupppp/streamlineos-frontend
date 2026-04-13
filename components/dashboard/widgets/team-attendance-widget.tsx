@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 import { useManagerDashboard } from "@/lib/api/hooks/dashboard";
 import { Users, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -52,7 +53,11 @@ export function TeamAttendanceWidget() {
         ) : error ? (
           <p className="text-sm text-destructive">Failed to load.</p>
         ) : !members.length ? (
-          <EmptyState icon={Users} title="No team members" compact />
+          <EmptyState
+            illustration={<EmptyTeamIllustration className="h-20 w-20" />}
+            title="No team members"
+            compact
+          />
         ) : (
           <>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">

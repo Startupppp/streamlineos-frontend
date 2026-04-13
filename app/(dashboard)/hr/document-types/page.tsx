@@ -13,6 +13,7 @@ import {
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyUploadIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -295,7 +296,7 @@ export default function DocumentTypesPage() {
     >
       {list.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          illustration={<EmptyUploadIllustration className="h-40 w-40" />}
           title="No document types configured"
           description="Add document types to define what employees must submit during onboarding."
           action={

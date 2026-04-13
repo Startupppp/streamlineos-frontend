@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
-import { Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import type { Employee } from "@/types/hr";
 
@@ -19,7 +19,7 @@ import {
   type WorkLogFilters as WorkLogFiltersType,
 } from "@/features/hr/work-logs/work-log-filters";
 import { WorkLogMonthGroup } from "@/features/hr/work-logs/work-log-month-group";
-import Image from "next/image";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 
 export default function WorkLogsPage() {
   const { data: session } = useSession();
@@ -330,15 +330,8 @@ export default function WorkLogsPage() {
           <Card>
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center text-center">
-                <Search className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <EmptyTimeIllustration className="mb-4 h-40 w-40 opacity-95" />
                 <h3 className="text-lg font-medium text-foreground">No results found</h3>
-                <Image
-              src="/illustrations/undraw-online-survey.svg"
-              alt="Empty state illustration"
-              width={200}
-              height={160}
-              className="mx-auto mb-4 opacity-90"
-            />
             <p className="text-sm text-muted-foreground mt-1">
                   No work logs match &ldquo;{searchTerm}&rdquo;. Try a different keyword or date.
                 </p>

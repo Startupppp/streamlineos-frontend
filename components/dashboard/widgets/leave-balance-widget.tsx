@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { usePersonalDashboard } from "@/lib/api/hooks/dashboard";
 import { Umbrella, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -37,7 +38,7 @@ export function LeaveBalanceWidget() {
           <p className="text-sm text-destructive">Failed to load.</p>
         ) : !balances.length ? (
           <EmptyState
-            icon={Umbrella}
+            illustration={<EmptyCalendarIllustration className="h-20 w-20" />}
             title="No leave data"
             description="No leave balances set up yet."
             compact

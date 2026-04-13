@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Image from "next/image";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   Plus,
   Trash2,
@@ -97,24 +97,12 @@ export default function CampaignsPage() {
     >
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
-          <Image
-            src="/illustrations/undraw-social-media-post.svg"
-            alt="Loading campaigns"
-            width={200}
-            height={160}
-            className="mx-auto mb-4 opacity-90 animate-pulse"
-          />
+          <EmptyActivityIllustration className="mx-auto mb-4 h-40 w-40 opacity-90 animate-pulse" />
           Loading campaigns...
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <Image
-            src="/illustrations/undraw-social-media-post.svg"
-            alt="No campaigns"
-            width={200}
-            height={160}
-            className="mx-auto mb-4 opacity-90"
-          />
+          <EmptyActivityIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
           No campaigns yet. Create your first campaign.
         </div>
       ) : (

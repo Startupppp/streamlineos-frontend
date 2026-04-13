@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useMemo, useCallback } from "react";
-import Image from "next/image";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/lib/hooks/trpc-hooks";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
@@ -137,13 +137,7 @@ export default function MyTicketsPage({ params }: PageProps) {
     >
       {myTickets.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Image
-            src="/illustrations/undraw-task-brief.svg"
-            alt="No tickets assigned"
-            width={200}
-            height={160}
-            className="mb-4 opacity-90"
-          />
+          <EmptyTasksIllustration className="mb-4 h-40 w-40 opacity-95" />
           <p className="font-medium text-foreground mb-1">No tickets assigned to you</p>
           <p className="text-sm text-muted-foreground">
             Tickets you create or get assigned to will appear here.
@@ -168,13 +162,7 @@ export default function MyTicketsPage({ params }: PageProps) {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <Image
-                        src="/illustrations/undraw-task-brief.svg"
-                        alt="No filtered tickets"
-                        width={160}
-                        height={120}
-                        className="opacity-90"
-                      />
+                      <EmptyTasksIllustration className="h-32 w-32 opacity-95" />
                       <p>No tickets match your filters.</p>
                     </div>
                   </TableCell>

@@ -35,7 +35,7 @@ import { BigCalendarWrapper, type BigCalEvent, type View } from "@/features/cale
 import { startOfMonth, endOfMonth, addMonths, subMonths, addWeeks, subWeeks, format as fmtDate } from "date-fns";
 import { format } from "date-fns";
 import type { InterviewResult } from "@/types/hr";
-import Image from "next/image";
+import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
 function resultBadgeVariant(result: string | null): "default" | "secondary" | "outline" | "destructive" {
@@ -553,13 +553,7 @@ export default function InterviewsPage() {
                 <TableBody>
                   {!interviews?.length ? (
                     <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
-                      <Image
-                        src="/illustrations/undraw-online-survey.svg"
-                        alt="Empty state illustration"
-                        width={180}
-                        height={140}
-                        className="opacity-90"
-                      />
+                      <EmptyCalendarIllustration className="h-36 w-36 opacity-95" />
                       <p>No interviews scheduled.</p>
                     </div></TableCell></TableRow>
                   ) : (

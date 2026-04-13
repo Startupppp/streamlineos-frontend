@@ -11,6 +11,7 @@ import { ProjectListRow } from "./project-list-row";
 import { ProjectFilterBar } from "./project-filter-bar";
 import { ProjectPagination } from "./project-pagination";
 import { ProjectsEmptyState } from "./projects-empty-state";
+import { EmptySearchIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/use-expense-filters";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -145,6 +146,7 @@ export default function ProjectsPage() {
         <ProjectsEmptyState />
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
+          <EmptySearchIllustration className="mb-4 h-36 w-36 opacity-95" />
           <p className="text-muted-foreground text-sm">
             No projects match your filters.
           </p>

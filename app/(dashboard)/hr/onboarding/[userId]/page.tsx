@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, Circle, Clock, AlertCircle } from "lucide-reac
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTasksIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -153,7 +154,7 @@ export default function UserOnboardingPage({
         </div>
       ) : taskList.length === 0 ? (
         <EmptyState
-          icon={CheckCircle2}
+          illustration={<EmptyTasksIllustration className="h-24 w-24" />}
           title="No tasks yet"
           description="Onboarding hasn't been initiated for this employee yet."
           compact

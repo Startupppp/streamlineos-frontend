@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Users, Network, Building2 } from "lucide-react";
 import type { Employee } from "@/types/hr";
-import Image from "next/image";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 
 interface TreeNode {
   employee: Employee;
@@ -306,13 +306,7 @@ export default function OrgChartPage() {
                   ))}
                   {tree.length === 0 && (
                     <div className="py-8">
-                      <Image
-                        src="/illustrations/undraw-online-survey.svg"
-                        alt="Empty state illustration"
-                        width={200}
-                        height={160}
-                        className="mx-auto mb-4 opacity-90"
-                      />
+                      <EmptyTeamIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
                       <p className="text-sm text-muted-foreground text-center">No reporting structure found.</p>
                     </div>
                   )}

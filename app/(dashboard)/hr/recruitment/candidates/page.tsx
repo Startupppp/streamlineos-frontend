@@ -3,7 +3,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Image from "next/image";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 import Link from "next/link";
 import { useCandidates, useCreateCandidate, useUpdateCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -311,13 +311,7 @@ export default function CandidatesPage() {
         {filteredCandidates.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="py-12 text-center text-muted-foreground">
-              <Image
-                src="/illustrations/undraw-job-hunt.svg"
-                alt="No candidates"
-                width={200}
-                height={160}
-                className="mx-auto mb-4 opacity-90"
-              />
+              <EmptyPersonIllustration className="mx-auto mb-4 h-40 w-40 opacity-95" />
               {searchQuery ? "No candidates match your search." : "No candidates yet. Add your first one!"}
             </CardContent>
           </Card>

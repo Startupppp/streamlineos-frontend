@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import {
-  CheckCircle2,
   RefreshCw,
   Users,
   AlertTriangle,
@@ -12,6 +11,7 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptySearchIllustration } from "@/components/illustrations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -256,7 +256,7 @@ export default function DuplicateLeadsPage() {
           {/* Content */}
           {!data?.groups.length ? (
             <EmptyState
-              icon={CheckCircle2}
+              illustration={<EmptySearchIllustration className="h-40 w-40" />}
               title="No Duplicates Found"
               description="Great news — no potential duplicate leads were detected across your pipeline."
             />

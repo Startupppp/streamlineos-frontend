@@ -53,6 +53,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyActivityIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
@@ -509,7 +510,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8">
         <EmptyState
-          icon={Building2}
+          illustration={<EmptyActivityIllustration className="h-40 w-40" />}
           title="No data available"
           description="Dashboard statistics are not available. Please try refreshing."
           action={{

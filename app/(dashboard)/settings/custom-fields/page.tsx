@@ -40,6 +40,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTargetIllustration } from "@/components/illustrations";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -47,7 +48,6 @@ import {
   Plus,
   Trash2,
   Pencil,
-  Sliders,
 } from "lucide-react";
 import {
   useCustomFields,
@@ -158,7 +158,7 @@ function EntityFieldsTab({ entityType }: { entityType: EntityType }) {
 
       {fields.length === 0 ? (
         <EmptyState
-          icon={Sliders}
+          illustration={<EmptyTargetIllustration className="h-24 w-24" />}
           title="No custom fields yet"
           description={`Add custom fields to capture additional information on ${entityType}s.`}
           compact
