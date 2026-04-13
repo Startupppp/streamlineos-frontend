@@ -71,33 +71,37 @@ export default function AIHubPage() {
       subtitle="Intelligent tools powered by AI to supercharge your workflow"
     >
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList>
+        <TabsList className="h-auto w-full justify-start gap-1 rounded-lg p-1 overflow-x-auto">
           {CATEGORIES.map((cat) => (
-            <TabsTrigger key={cat.value} value={cat.value}>{cat.label}</TabsTrigger>
+            <TabsTrigger key={cat.value} value={cat.value} className="whitespace-nowrap">
+              {cat.label}
+            </TabsTrigger>
           ))}
         </TabsList>
 
-        <TabsContent value={selectedCategory} className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TabsContent value={selectedCategory} className="mt-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((feature) => {
               const Icon = feature.icon;
               return (
                 <Dialog key={feature.id} open={activeFeature === feature.id} onOpenChange={(open) => setActiveFeature(open ? feature.id : null)}>
                   <DialogTrigger asChild>
-                    <Card className="cursor-pointer hover:shadow-md transition-shadow border-l-4" style={{ borderLeftColor: "var(--gold, #bd882c)" }}>
+                    <Card className="h-full cursor-pointer border-l-4 rounded-xl transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderLeftColor: "var(--gold, #bd882c)" }}>
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg bg-muted ${feature.color}`}>
+                          <div className={`p-2 rounded-lg bg-muted shrink-0 ${feature.color}`}>
                             <Icon className="h-5 w-5" />
                           </div>
-                          <div>
-                            <CardTitle className="text-sm">{feature.title}</CardTitle>
+                          <div className="min-w-0">
+                            <CardTitle className="text-sm leading-tight">{feature.title}</CardTitle>
                             <Badge variant="outline" className="text-[10px] mt-1">{feature.category}</Badge>
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent>
-                        <CardDescription>{feature.description}</CardDescription>
+                      <CardContent className="pt-0">
+                        <CardDescription className="text-sm leading-relaxed line-clamp-2 min-h-[40px]">
+                          {feature.description}
+                        </CardDescription>
                       </CardContent>
                     </Card>
                   </DialogTrigger>

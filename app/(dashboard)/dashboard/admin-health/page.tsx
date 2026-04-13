@@ -29,9 +29,9 @@ export default function AdminHealthDashboardPage() {
   if (isLoading) {
     return (
       <PageWrapper title="System Health" subtitle="Real-time overview of critical metrics">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 md:gap-5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-36" />
+            <Skeleton key={i} className="h-[172px] rounded-xl" />
           ))}
         </div>
       </PageWrapper>
@@ -97,21 +97,29 @@ export default function AdminHealthDashboardPage() {
 
   return (
     <PageWrapper title="System Health" subtitle="Real-time overview of critical metrics for leadership">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 md:gap-5">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Link key={kpi.label} href={kpi.link}>
-              <Card className={`${kpi.bgColor} border-0 transition-shadow hover:shadow-md cursor-pointer`}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Link key={kpi.label} href={kpi.link} className="h-full">
+              <Card className={`${kpi.bgColor} h-full border-0 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer rounded-xl`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.label}</CardTitle>
                   <Icon className={`h-5 w-5 ${kpi.color}`} />
                 </CardHeader>
-                <CardContent>
-                  <p className={`text-3xl font-bold ${kpi.color}`}>{kpi.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{kpi.description}</p>
+                <CardContent className="flex min-h-[112px] flex-col justify-between gap-2">
+                  <div>
+                    <p className={`text-3xl font-bold leading-none tracking-tight ${kpi.color}`}>{kpi.value}</p>
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2 min-h-[32px]">{kpi.description}</p>
+                  </div>
                   {kpi.label === "Onboarding Progress" && (
-                    <Progress value={data?.onboarding.completionPercent ?? 100} className="mt-3 h-2" />
+                    <Progress
+                      value={data?.onboarding.completionPercent ?? 100}
+                      className="mt-3 h-2.5 bg-emerald-200/60 dark:bg-emerald-900/40 [&>div]:bg-gradient-to-r [&>div]:from-emerald-500 [&>div]:to-green-400"
+                    />
+                  )}
+                  {kpi.label !== "Onboarding Progress" && (
+                    <div className="mt-3 h-2" aria-hidden="true" />
                   )}
                 </CardContent>
               </Card>
