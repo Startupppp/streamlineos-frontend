@@ -6,7 +6,7 @@
 **\*\*Version:\*\* 1.0**  
 **\*\*Date:\*\* April 11, 2026**  
 **\*\*Author:\*\* Tarun (Product Owner)**  
-**\*\*Status:\*\* Draft**
+**\*\*Status:\*\* Final**
 
 **\# 1\. Overview & Objective**  
 **Provide structured scorecard inputs for individual interviewers that update instantly, alongside a secure vault tracking candidates' background verification and sensitive documents.**

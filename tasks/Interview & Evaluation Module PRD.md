@@ -6,7 +6,7 @@
 **\*\*Version:\*\* 1.0**  
 **\*\*Date:\*\* April 11, 2026**  
 **\*\*Author:\*\* Tarun (Product Owner)**  
-**\*\*Status:\*\* Draft**
+**\*\*Status:\*\* Final**
 
 **\# 1\. Overview & Objective**  
 **Standardize the interview methodology by having scorecards and interview schedules compiled directly within the CRM.**

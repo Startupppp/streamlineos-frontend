@@ -6,7 +6,7 @@
 **\*\*Version:\*\* 1.0**  
 **\*\*Date:\*\* April 11, 2026**  
 **\*\*Author:\*\* Tarun (Product Owner)**  
-**\*\*Status:\*\* Draft**
+**\*\*Status:\*\* Final**
 
 **\# 1\. Overview & Objective**  
 **Give HR executives a birds-eye view of staff composition, hiring bottlenecks, and overarching personnel health across the organization.**

@@ -21,33 +21,52 @@ const JOB_TYPE_LABELS: Record<string, string> = {
 };
 
 export default async function CareersPage() {
-  const jobs = await db
-    .select({
-      id: jobPostings.id,
-      title: jobPostings.title,
-      location: jobPostings.location,
-      type: jobPostings.type,
-      experience: jobPostings.experience,
-      openings: jobPostings.openings,
-      applicationDeadline: jobPostings.applicationDeadline,
-      createdAt: jobPostings.createdAt,
-      salaryMin: jobPostings.salaryMin,
-      salaryMax: jobPostings.salaryMax,
-      departmentId: jobPostings.departmentId,
-    })
-    .from(jobPostings)
-    .where(eq(jobPostings.status, "OPEN"))
-    .orderBy(desc(jobPostings.createdAt));
+  let jobs: Array<{
+    id: number;
+    title: string;
+    location: string | null;
+    type: string | null;
+    experience: string | null;
+    openings: number | null;
+    applicationDeadline: string | null;
+    createdAt: Date | null;
+    salaryMin: string | null;
+    salaryMax: string | null;
+    departmentId: number | null;
+  }> = [];
+  let deptMap = new Map<number, string>();
 
-  // Fetch department names for all unique departmentIds in one query
-  const departmentIds = [...new Set(jobs.map((j) => j.departmentId).filter((id): id is number => id !== null))];
-  const deptRows = departmentIds.length > 0
-    ? await db
-        .select({ id: departments.id, name: departments.name })
-        .from(departments)
-        .where(inArray(departments.id, departmentIds))
-    : [];
-  const deptMap = new Map(deptRows.map((d) => [d.id, d.name]));
+  try {
+    jobs = await db
+      .select({
+        id: jobPostings.id,
+        title: jobPostings.title,
+        location: jobPostings.location,
+        type: jobPostings.type,
+        experience: jobPostings.experience,
+        openings: jobPostings.openings,
+        applicationDeadline: jobPostings.applicationDeadline,
+        createdAt: jobPostings.createdAt,
+        salaryMin: jobPostings.salaryMin,
+        salaryMax: jobPostings.salaryMax,
+        departmentId: jobPostings.departmentId,
+      })
+      .from(jobPostings)
+      .where(eq(jobPostings.status, "OPEN"))
+      .orderBy(desc(jobPostings.createdAt));
+
+    // Fetch department names for all unique departmentIds in one query
+    const departmentIds = [...new Set(jobs.map((j) => j.departmentId).filter((id): id is number => id !== null))];
+    const deptRows = departmentIds.length > 0
+      ? await db
+          .select({ id: departments.id, name: departments.name })
+          .from(departments)
+          .where(inArray(departments.id, departmentIds))
+      : [];
+    deptMap = new Map(deptRows.map((d) => [d.id, d.name]));
+  } catch {
+    // DB may not have tables during initial build — gracefully show empty state
+  }
 
   return (
     <div className="min-h-screen bg-background">

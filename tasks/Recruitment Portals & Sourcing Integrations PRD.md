@@ -6,7 +6,7 @@ Recruitment Portals & Sourcing Integrations
 **\*\*Version:\*\*** 1.0  
 **\*\*Date:\*\*** April 11, 2026  
 **\*\*Author:\*\*** Tarun (Product Owner)  
-**\*\*Status:\*\*** Draft
+**\*\*Status:\*\* ** Final
 
 **\# 1\. Overview & Objective**  
 Enable direct pipeline ingestion from a dedicated careers portal and integrate seamlessly with third-party job boards (LinkedIn, Naukri, Indeed) to streamline applicant sourcing.
@@ -52,7 +52,7 @@ Portal creation: 1 week; External API Integrations: 2 weeks. Total: \~3 weeks.
 
 ---
 
-## Status: IN PROGRESS
+## Status: COMPLETE
 
 ## Checklist
 

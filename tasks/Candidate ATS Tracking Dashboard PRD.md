@@ -6,7 +6,7 @@
 **\*\*Version:\*\* 1.0**  
 **\*\*Date:\*\* April 11, 2026**  
 **\*\*Author:\*\* Tarun (Product Owner)**  
-**\*\*Status:\*\* Draft**
+**\*\*Status:\*\* Final**
 
 **\# 1\. Overview & Objective**  
 **Streamline the recruitment process by giving HR recruitment teams an Application Tracking System (ATS) to manage job applicants efficiently.**
