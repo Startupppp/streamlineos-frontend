@@ -13,11 +13,9 @@ import {
 } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -29,23 +27,16 @@ import {
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmActionDialog } from "@/features/hr/confirm-action-dialog";
 import { toast } from "sonner";
-import { format, differenceInDays, addDays } from "date-fns";
-import { resolveImageUrl } from "@/lib/utils";
+import { format, addDays } from "date-fns";
 import {
   Plus,
-  CheckCircle2,
-  Clock,
-  Calendar,
   FileText,
   Download,
-  ChevronDown,
-  ChevronUp,
-  XCircle,
-  Undo2,
 } from "lucide-react";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { ResignationCard } from "./_components/resignation-card";
 
 const NOTICE_PERIOD_DAYS = 60;
 
@@ -61,92 +52,6 @@ const REASON_CATEGORIES = [
   "Starting Own Venture",
   "Other",
 ];
-
-function statusBadge(
-  status: string | null
-): "default" | "secondary" | "outline" | "destructive" {
-  if (!status) return "outline";
-  if (status === "SUBMITTED" || status === "PENDING_HR") return "outline";
-  if (status === "HR_APPROVED") return "secondary";
-  if (status === "CEO_APPROVED" || status === "IN_PROGRESS" || status === "COMPLETED" || status === "APPROVED") return "default";
-  if (status === "REJECTED" || status === "WITHDRAWN") return "destructive";
-  return "outline";
-}
-
-const PROGRESS_STEPS = [
-  { step: "SUBMITTED", label: "Submitted" },
-  { step: "PENDING_HR", label: "HR Review" },
-  { step: "HR_APPROVED", label: "HR Approved" },
-  { step: "CEO_APPROVED", label: "CEO Approved" },
-  { step: "COMPLETED", label: "Completed" },
-];
-
-function ProgressTimeline({ id }: { id: number }) {
-  const { data, isLoading } = useResignationProgress(id, true);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-1 px-4 pb-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-5 w-full rounded-full" />
-        ))}
-      </div>
-    );
-  }
-
-  const steps = data?.steps ?? PROGRESS_STEPS.map((s, i) => ({
-    ...s,
-    status: i === 0 ? ("current" as const) : ("pending" as const),
-  }));
-
-  return (
-    <div className="px-4 pb-3 pt-1">
-      <div className="flex items-center gap-0">
-        {steps.map((step, i) => (
-          <div key={step.step} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1 shrink-0">
-              <div
-                className={cn(
-                  "h-4 w-4 rounded-full border-2 transition-colors",
-                  step.status === "completed"
-                    ? "bg-primary border-primary"
-                    : step.status === "current"
-                    ? "bg-background border-primary ring-2 ring-primary/30"
-                    : "bg-background border-muted-foreground/30"
-                )}
-              />
-              <span
-                className={cn(
-                  "text-[9px] text-center leading-tight max-w-[52px]",
-                  step.status === "completed"
-                    ? "text-primary font-medium"
-                    : step.status === "current"
-                    ? "text-foreground font-medium"
-                    : "text-muted-foreground"
-                )}
-              >
-                {step.label}
-              </span>
-              {step.status === "completed" && step.timestamp && (
-                <span className="text-[8px] text-muted-foreground">
-                  {format(new Date(step.timestamp), "MMM d")}
-                </span>
-              )}
-            </div>
-            {i < steps.length - 1 && (
-              <div
-                className={cn(
-                  "h-0.5 flex-1 mx-1 mb-4",
-                  step.status === "completed" ? "bg-primary" : "bg-muted-foreground/20"
-                )}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 interface RejectDialogState {
   id: number;
@@ -322,152 +227,23 @@ export default function ExitManagementPage() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {resignations.map((r: Resignation) => {
-            const daysLeft =
-              r.lastWorkingDate
-                ? differenceInDays(new Date(r.lastWorkingDate), new Date())
-                : null;
-            const isExpanded = expandedIds.has(r.id);
-            const isOwnRecord = r.userId === userId;
-            const canWithdraw =
-              !isAdmin &&
-              isOwnRecord &&
-              (r.status === "SUBMITTED" || r.status === "PENDING_HR");
-            const hrCanAct =
-              isHR &&
-              (r.status === "SUBMITTED" || r.status === "PENDING_HR");
-            const ceoCanAct = isCEO && r.status === "HR_APPROVED";
-
-            return (
-              <Card key={r.id} className="overflow-hidden">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <Avatar className="h-9 w-9 shrink-0">
-                    <AvatarImage src={resolveImageUrl(r.user?.image ?? null)} />
-                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                      {r.user?.name?.[0] ?? "?"}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold truncate">
-                        {r.user?.name ?? "Employee"}
-                      </p>
-                      <Badge variant={statusBadge(r.status)} className="text-[10px]">
-                        {r.status}
-                      </Badge>
-                      {r.reasonCategory && (
-                        <Badge variant="outline" className="text-[9px] hidden sm:inline-flex">
-                          {r.reasonCategory}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5 flex-wrap">
-                      {r.user?.designation && <span>{r.user.designation}</span>}
-                      {r.lastWorkingDate && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          LWD: {format(new Date(r.lastWorkingDate), "MMM d, yyyy")}
-                        </span>
-                      )}
-                      {daysLeft !== null && daysLeft > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {daysLeft} days left
-                        </span>
-                      )}
-                      <span>{r.noticePeriodDays}d notice</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {/* HR review actions */}
-                    {hrCanAct && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={() => setHrApproveId(r.id)}
-                        >
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs text-destructive hover:text-destructive"
-                          onClick={() => handleOpenRejectDialog(r.id, "hr")}
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-
-                    {/* CEO review actions */}
-                    {ceoCanAct && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={() => setCeoApproveId(r.id)}
-                        >
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs text-destructive hover:text-destructive"
-                          onClick={() => handleOpenRejectDialog(r.id, "ceo")}
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Reject
-                        </Button>
-                      </>
-                    )}
-
-                    {/* Employee withdraw */}
-                    {canWithdraw && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        onClick={() => setWithdrawId(r.id)}
-                      >
-                        <Undo2 className="h-3 w-3 mr-1" />
-                        Withdraw
-                      </Button>
-                    )}
-
-                    {/* Expand/collapse */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 w-7 p-0"
-                      aria-label={isExpanded ? "Collapse progress" : "Expand progress"}
-                      onClick={() => toggleExpand(r.id)}
-                    >
-                      {isExpanded ? (
-                        <ChevronUp className="h-3.5 w-3.5" />
-                      ) : (
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-
-                {/* Collapsible progress timeline */}
-                {isExpanded && (
-                  <div className="border-t bg-muted/20">
-                    <ProgressTimeline id={r.id} />
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+          {resignations.map((r: Resignation) => (
+            <ResignationCard
+              key={r.id}
+              resignation={r}
+              isExpanded={expandedIds.has(r.id)}
+              isAdmin={isAdmin}
+              isHR={isHR}
+              isCEO={isCEO}
+              userId={userId}
+              onToggleExpand={toggleExpand}
+              onHrApprove={setHrApproveId}
+              onHrReject={(id) => handleOpenRejectDialog(id, "hr")}
+              onCeoApprove={setCeoApproveId}
+              onCeoReject={(id) => handleOpenRejectDialog(id, "ceo")}
+              onWithdraw={setWithdrawId}
+            />
+          ))}
         </div>
       )}
 

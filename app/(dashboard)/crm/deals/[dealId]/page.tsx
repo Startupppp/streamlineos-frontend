@@ -6,13 +6,8 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Calendar, User, Edit2, Trophy, XCircle,
   ChevronRight, Clock, Phone, Mail, StickyNote, PhoneCall, Video,
-  Plus, Trash2, CalendarCheck, Users, Link2, Copy, FolderKanban,
+  Copy, FolderKanban,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +18,6 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity,
   useDealMeetings, useCreateDealMeeting, useDeleteDealMeeting, useCloneDeal,
-  type DealMeeting,
 } from "@/lib/api/hooks/crm";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -500,107 +494,20 @@ export default function DealDetailPage({
         </div>
       </motion.div>
 
-      {/* Add Meeting Dialog */}
-      <Dialog open={meetingDialogOpen} onOpenChange={setMeetingDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Log Meeting</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 space-y-1.5">
-                <Label htmlFor="m-title">Title *</Label>
-                <Input id="m-title" placeholder="e.g. Product demo call" value={meetingTitle} onChange={e => setMeetingTitle(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="m-date">Date & Time *</Label>
-                <Input id="m-date" type="datetime-local" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="m-dur">Duration (min)</Label>
-                <Input id="m-dur" type="number" min={5} max={480} value={meetingDuration} onChange={e => setMeetingDuration(e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="m-attendees">Attendees (comma separated)</Label>
-              <Input id="m-attendees" placeholder="e.g. John, Sarah, Client Name" value={meetingAttendees} onChange={e => setMeetingAttendees(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="m-agenda">Agenda</Label>
-              <Textarea id="m-agenda" rows={2} placeholder="Meeting objectives..." value={meetingAgenda} onChange={e => setMeetingAgenda(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="m-notes">Meeting Notes</Label>
-              <Textarea id="m-notes" rows={3} placeholder="Key discussion points..." value={meetingNotes} onChange={e => setMeetingNotes(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="m-actions">Action Items</Label>
-              <Textarea id="m-actions" rows={2} placeholder="Follow-ups and next steps..." value={meetingActionItems} onChange={e => setMeetingActionItems(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="m-recording">Recording Link (optional)</Label>
-              <Input id="m-recording" type="url" placeholder="https://..." value={meetingRecordingLink} onChange={e => setMeetingRecordingLink(e.target.value)} />
-            </div>
-          </div>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" className="flex-1" onClick={() => setMeetingDialogOpen(false)}>Cancel</Button>
-            <Button className="flex-1" onClick={handleCreateMeeting} disabled={createMeeting.isPending}>
-              {createMeeting.isPending ? "Saving..." : "Save Meeting"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <MeetingDialog
+        open={meetingDialogOpen}
+        onOpenChange={setMeetingDialogOpen}
+        onSubmit={handleCreateMeeting}
+        isPending={createMeeting.isPending}
+      />
 
-      {/* Create Project from Deal Dialog */}
-      <Dialog open={createProjectOpen} onOpenChange={setCreateProjectOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FolderKanban className="h-5 w-5 text-primary" />
-              Create Project from Deal
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="proj-name">Project Name *</Label>
-              <Input
-                id="proj-name"
-                placeholder="e.g. Website Redesign"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="proj-start">Start Date</Label>
-                <Input
-                  id="proj-start"
-                  type="date"
-                  value={projectStartDate}
-                  onChange={(e) => setProjectStartDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="proj-end">End Date</Label>
-                <Input
-                  id="proj-end"
-                  type="date"
-                  value={projectEndDate}
-                  onChange={(e) => setProjectEndDate(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" className="flex-1" onClick={() => setCreateProjectOpen(false)}>
-              Cancel
-            </Button>
-            <Button className="flex-1" onClick={handleCreateProject} disabled={isCreatingProject}>
-              {isCreatingProject ? "Creating..." : "Create Project"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateProjectDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+        defaultName={deal.name}
+        onSubmit={handleCreateProject}
+        isPending={isCreatingProject}
+      />
 
       <LogActivityDialog
         open={pendingAction !== null}
