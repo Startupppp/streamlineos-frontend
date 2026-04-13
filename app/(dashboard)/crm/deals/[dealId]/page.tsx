@@ -27,8 +27,8 @@ import { ActivityTimeline } from "@/features/crm/deals/detail/activity-timeline"
 import { LogActivityDialog } from "@/features/crm/deals/detail/log-activity-dialog";
 import { AIPredictDealButton } from "@/features/crm/deals/ai-predict-deal-button";
 import Image from "next/image";
-import { MeetingsCard } from "./_components/meetings-card";
-import { MeetingDialog, CreateProjectDialog } from "./_components/deal-dialogs";
+import { MeetingsCard } from "@/features/crm/deals/detail/meetings-card";
+import { MeetingDialog, CreateProjectDialog } from "@/features/crm/deals/detail/deal-dialogs";
 
 const STAGES = [
   { key: "LEAD", label: "Lead", color: "#3B82F6", bg: "bg-blue-500/10" },

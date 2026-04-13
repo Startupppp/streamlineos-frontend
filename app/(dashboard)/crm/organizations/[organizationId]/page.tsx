@@ -20,11 +20,11 @@ import {
   useCrmOrgTimeline,
   useCrmOrgRelatedLeads,
 } from "@/lib/api/hooks/crm";
-import { AccountHealthBadge, computeHealthScore } from "./_components/account-health-badge";
-import { HierarchyTree } from "./_components/hierarchy-tree";
-import { AccountTimeline } from "./_components/account-timeline";
-import { AccountNotes } from "./_components/account-notes";
-import { LinkParentDialog } from "./_components/link-parent-dialog";
+import { AccountHealthBadge, computeHealthScore } from "@/features/crm/organizations/detail/account-health-badge";
+import { HierarchyTree } from "@/features/crm/organizations/detail/hierarchy-tree";
+import { AccountTimeline } from "@/features/crm/organizations/detail/account-timeline";
+import { AccountNotes } from "@/features/crm/organizations/detail/account-notes";
+import { LinkParentDialog } from "@/features/crm/organizations/detail/link-parent-dialog";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 

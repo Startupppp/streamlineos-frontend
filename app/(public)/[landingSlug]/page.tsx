@@ -3,7 +3,7 @@ import { landingPages } from "@/lib/db/schema/marketing";
 import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { LandingForm } from "./_components/landing-form";
+import { LandingForm } from "@/features/landing/landing-form";
 import { clientEnv } from "@/lib/env";
 
 export const revalidate = 60;

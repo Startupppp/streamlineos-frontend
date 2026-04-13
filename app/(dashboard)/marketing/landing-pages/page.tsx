@@ -61,8 +61,8 @@ import {
 } from "@/lib/api/hooks/marketing";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { PageDetailContent } from "./_components/page-detail-content";
-import { CrmHostedPagesTab } from "./_components/crm-hosted-pages-tab";
+import { PageDetailContent } from "@/features/marketing/landing-pages/page-detail-content";
+import { CrmHostedPagesTab } from "@/features/marketing/landing-pages/crm-hosted-pages-tab";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

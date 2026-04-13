@@ -32,8 +32,8 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { PERMISSIONS } from "@/lib/rbac/permissions";
 import type { Permission } from "@/lib/rbac/permissions";
 import type { Role } from "@/types/organization";
-import { PermissionMatrix } from "./_components/permission-matrix";
-import { CreateRoleDialog, RoleTemplateDialog } from "./_components/role-dialogs";
+import { PermissionMatrix } from "@/features/settings/roles/permission-matrix";
+import { CreateRoleDialog, RoleTemplateDialog } from "@/features/settings/roles/role-dialogs";
 
 const RESOURCE_GROUPS: Record<string, string> = {
   "hr:employees": "HR - Employees",

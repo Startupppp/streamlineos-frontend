@@ -36,7 +36,7 @@ import {
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { ResignationCard } from "./_components/resignation-card";
+import { ResignationCard } from "@/features/hr/exit/resignation-card";
 
 const NOTICE_PERIOD_DAYS = 60;
 

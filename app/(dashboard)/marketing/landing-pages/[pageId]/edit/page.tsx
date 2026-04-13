@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useCrmPage } from "@/lib/api/hooks/marketing";
-import { PageBuilder } from "../../_components/page-builder";
+import { PageBuilder } from "@/features/marketing/landing-pages/page-builder";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 

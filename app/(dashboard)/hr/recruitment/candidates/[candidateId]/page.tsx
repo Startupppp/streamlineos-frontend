@@ -26,11 +26,11 @@ import { ArrowLeft, Mail, Phone, Briefcase, Calendar, Star, ExternalLink, Sparkl
 import { format } from "date-fns";
 import type { CandidateStatus, InterviewType } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { DocumentsTab } from "./_components/documents-tab";
-import { VaultTab } from "./_components/vault-tab";
-import { ReferenceChecksTab } from "./_components/reference-checks-tab";
-import { OffersTab } from "./_components/offers-tab";
-import { CalibrationTab } from "./_components/calibration-tab";
+import { DocumentsTab } from "@/features/hr/recruitment/candidate-detail/documents-tab";
+import { VaultTab } from "@/features/hr/recruitment/candidate-detail/vault-tab";
+import { ReferenceChecksTab } from "@/features/hr/recruitment/candidate-detail/reference-checks-tab";
+import { OffersTab } from "@/features/hr/recruitment/candidate-detail/offers-tab";
+import { CalibrationTab } from "@/features/hr/recruitment/candidate-detail/calibration-tab";
 
 const STATUSES: CandidateStatus[] = ["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"];
 
