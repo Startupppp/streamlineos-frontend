@@ -88,6 +88,8 @@ export const supportTicketPriorityEnum = pgEnum("support_ticket_priority", ["LOW
 export const socialPlatformEnum = pgEnum("social_platform", ["instagram", "twitter", "linkedin", "facebook", "youtube"]);
 
 export const quoteStatusEnum = pgEnum("quote_status", ["DRAFT", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", ["TRIAL", "ACTIVE", "PAST_DUE", "CANCELLED", "EXPIRED"]);
+export const subscriptionPlanEnum = pgEnum("subscription_plan", ["STARTER", "PROFESSIONAL", "ENTERPRISE"]);
 
 export const taskEntityTypeEnum = pgEnum("task_entity_type", ["LEAD", "DEAL", "CONTACT", "PROJECT"]);
 export const taskTypeEnum = pgEnum("task_type", ["CALL", "EMAIL", "MEETING", "CUSTOM"]);

@@ -322,6 +322,13 @@ export default function SignInPage() {
           </div>
         </div>
 
+        <p className="text-sm text-center text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="text-gold hover:underline font-medium">
+            Sign up free
+          </Link>
+        </p>
+
         <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
           Your session is protected with end-to-end encryption.
           <br />
