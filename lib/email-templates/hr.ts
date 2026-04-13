@@ -441,28 +441,33 @@ export function getCandidateRejectionEmail(params: {
   candidateName: string;
   jobTitle: string;
   companyName: string;
+  senderName?: string;
   notes?: string;
 }): { subject: string; html: string } {
   const sCandidateName = escapeHtml(params.candidateName);
   const sJobTitle = escapeHtml(params.jobTitle);
   const sCompanyName = escapeHtml(params.companyName);
+  const sSenderName = params.senderName ? escapeHtml(params.senderName) : sCompanyName;
 
   const content = `
     <p class="email-text">Dear ${sCandidateName},</p>
     <p class="email-text">
-      Thank you for your interest in the <strong>${sJobTitle}</strong> position at ${sCompanyName}
-      and for taking the time to go through our hiring process.
+      Thank you for attending the interview with <strong>${sCompanyName}</strong>.
     </p>
     <p class="email-text">
-      After careful consideration, we have decided to move forward with other candidates whose
-      qualifications more closely match our current requirements.
+      After careful consideration, we regret to inform you that we will not be proceeding
+      with your application at this time.
     </p>
     ${params.notes ? `<p class="email-text" style="color: #475569;">${escapeHtml(params.notes)}</p>` : ""}
     <p class="email-text">
-      We appreciate the time and effort you invested in your application, and we encourage you to
-      apply for future openings that match your skills and experience.
+      We appreciate your interest in our organization and wish you all the best in your
+      future endeavors.
     </p>
-    <p class="email-text">We wish you all the best in your job search.</p>
+    <p class="email-text">
+      Kind regards,<br/>
+      <strong>${sSenderName}</strong><br/>
+      ${sCompanyName}
+    </p>
   `;
 
   const subject = `Update on your application — ${sJobTitle} at ${sCompanyName}`;

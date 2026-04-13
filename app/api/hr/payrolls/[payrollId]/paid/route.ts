@@ -74,6 +74,8 @@ export async function PATCH(
           ? "XXXX" + bank.accountNumber.slice(-4)
           : "—";
 
+        const professionalTax = 200;
+
         const [pdfBuffer, emailContent] = await Promise.all([
           generatePayslipPdf({
             orgName: org?.name ?? "Company",
@@ -83,7 +85,7 @@ export async function PATCH(
             designation: employee.designation ?? undefined,
             department: employee.team ?? employee.role ?? undefined,
             panNumber: employee.taxId ?? undefined,
-            pfUan: bank?.pfUanNumber ?? undefined,
+            pfUan: bank?.pfUanNumber || undefined,
             bankName: bank?.bankName ?? undefined,
             maskedAccount,
             ifsc: bank?.ifsc ?? undefined,
@@ -91,13 +93,13 @@ export async function PATCH(
               ? format(new Date(employee.joiningDate), "dd MMM yyyy")
               : undefined,
             monthLabel,
-            payDate: format(new Date(), "dd MMM yyyy"),
             basicSalary: basic,
             hra,
             allowances,
             overtimeAmount,
             grossSalary,
             deductions,
+            professionalTax,
             netSalary,
           }),
           Promise.resolve(

@@ -4,10 +4,11 @@ import { db } from "@/lib/db";
 import { terminations, users, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { format } from "date-fns";
-import type { NextRequest } from "next/server";
+import { generateTerminationLetterPdf } from "@/lib/termination-letter-pdf";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ terminationId: string }> }
 ) {
   return withAuth(async (session) => {
@@ -28,7 +29,37 @@ export async function GET(
     });
 
     const employee = termination.user;
-    const letterHtml = generateTerminationLetter({
+    const effectiveDateStr = termination.effectiveDate
+      ? format(new Date(termination.effectiveDate), "dd-MM-yyyy")
+      : "N/A";
+
+    const wantsPdf = req.nextUrl.searchParams.get("format") === "pdf";
+
+    if (wantsPdf) {
+      const pdfBuffer = await generateTerminationLetterPdf({
+        employeeName: employee?.name ?? "Employee",
+        employeeId: employee?.employeeId ?? undefined,
+        designation: employee?.designation ?? "N/A",
+        effectiveDate: effectiveDateStr,
+        reasons: termination.reasons ?? [],
+        detailedExplanation: termination.detailedExplanation ?? undefined,
+        hrName: session.user.name ?? "HR Executive",
+        hrDesignation: session.user.role === "CEO" ? "CEO" : "HR Executive",
+        companyName: org?.name ?? "VAIVAMM CAPITAL ADVISORS LLP",
+      });
+
+      const filename = `Termination-Letter-${(employee?.name ?? "Employee").replace(/\s+/g, "-")}.pdf`;
+
+      return new NextResponse(new Uint8Array(pdfBuffer), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    // Default: return HTML letter for preview
+    const letterHtml = generateTerminationLetterHtml({
       employeeName: employee?.name ?? "Employee",
       designation: employee?.designation ?? "N/A",
       companyName: org?.name ?? "the Company",
@@ -42,7 +73,7 @@ export async function GET(
   });
 }
 
-function generateTerminationLetter(data: {
+function generateTerminationLetterHtml(data: {
   employeeName: string;
   designation: string;
   companyName: string;
@@ -80,16 +111,20 @@ function generateTerminationLetter(data: {
 
   <p><strong>Final Settlement:</strong> Your final settlement, including any pending salary, leave encashment, and other dues, will be processed within 45 days from the effective date of termination.</p>
 
-  <p><strong>Return of Company Property:</strong> You are required to return all company property including but not limited to: laptop, ID card, access cards, company phone, parking pass, and any other equipment issued to you. Please coordinate with HR for the handover process.</p>
+  <p><strong>Return of Company Property:</strong> You are requested to hand over all company assets, documents, and responsibilities to <strong>Reporting Manager/HR</strong> on your last working day.</p>
 
-  <p><strong>Confidentiality:</strong> Please be reminded that your obligations under the Non-Disclosure Agreement (NDA) signed at the time of your employment remain in effect even after termination. You must not disclose any confidential or proprietary information of the company.</p>
+  <p><strong>Confidentiality:</strong> All confidentiality and non-disclosure agreements remain in full effect even after termination.</p>
 
-  <p>We wish you well in your future endeavors.</p>
+  <p>We wish you the best in your future endeavours.</p>
 
   <p style="margin-top: 40px;">
   Sincerely,<br/><br/>
   <strong>Human Resources Department</strong><br/>
   ${data.companyName}
+  </p>
+
+  <p style="margin-top: 20px; font-size: 11px; color: #999; text-align: center;">
+    For queries, please contact HR at <a href="mailto:hr@vaivammcapital.com">hr@vaivammcapital.com</a>
   </p>
 </div>`.trim();
 }

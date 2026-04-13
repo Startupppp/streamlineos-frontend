@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { terminations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
 
 const reviewSchema = z.object({
@@ -42,6 +43,18 @@ export async function PATCH(
       ceoRemarks: body.remarks || null,
       updatedAt: new Date(),
     }).where(eq(terminations.id, terminationId));
+
+    void writeAuditLog({
+      action: body.action === "APPROVED" ? "TERMINATION_APPROVED" : "TERMINATION_REJECTED",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(terminationId),
+      targetType: "termination",
+      metadata: {
+        employeeId: existing.userId,
+        remarks: body.remarks,
+      },
+    }).catch(() => undefined);
 
     return ok({ success: true });
   });

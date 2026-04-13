@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { terminations, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
+import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
 
 const createSchema = z.object({
@@ -23,12 +24,23 @@ export async function GET(_req: NextRequest) {
     const rows = await db
       .select({
         id: terminations.id,
+        orgId: terminations.orgId,
+        userId: terminations.userId,
         status: terminations.status,
         reasons: terminations.reasons,
+        detailedExplanation: terminations.detailedExplanation,
         effectiveDate: terminations.effectiveDate,
+        severanceAmount: terminations.severanceAmount,
+        noticePeriodWaived: terminations.noticePeriodWaived,
+        internalNotes: terminations.internalNotes,
         createdAt: terminations.createdAt,
+        updatedAt: terminations.updatedAt,
         ceoRemarks: terminations.ceoRemarks,
+        ceoReviewedBy: terminations.ceoReviewedBy,
+        ceoReviewedAt: terminations.ceoReviewedAt,
         emailSentAt: terminations.emailSentAt,
+        emailStatus: terminations.emailStatus,
+        initiatedBy: terminations.initiatedBy,
         employee: {
           id: users.id,
           name: users.name,
@@ -38,7 +50,7 @@ export async function GET(_req: NextRequest) {
         },
       })
       .from(terminations)
-      .innerJoin(users, eq(terminations.userId, users.id))
+      .leftJoin(users, eq(terminations.userId, users.id))
       .where(eq(terminations.orgId, session.orgId))
       .orderBy(desc(terminations.createdAt));
 
@@ -78,6 +90,15 @@ export async function POST(req: NextRequest) {
         initiatedBy: session.user.id,
       })
       .returning();
+
+    void writeAuditLog({
+      action: "TERMINATION_CREATED",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(record.id),
+      targetType: "termination",
+      metadata: { employeeId: body.userId, reasons: body.reasons },
+    }).catch(() => undefined);
 
     return ok(record, 201);
   });

@@ -304,9 +304,15 @@ export default function OrganizationSettingsPage() {
 
   return (
     <PageWrapper title="Organization" subtitle="Manage your organization details and settings">
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="py-5 space-y-2">
+      <div className="space-y-6">
+        <Card className="rounded-xl border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Organization Details</CardTitle>
+            <CardDescription>
+              Update your workspace name and slug used across the platform.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pb-5">
             <div className="space-y-2">
               <Label htmlFor="name">Organization Name</Label>
               {isEditing ? (
@@ -336,7 +342,7 @@ export default function OrganizationSettingsPage() {
             <div className="flex gap-2">
               {canEdit && !isEditing && (
                 <Button variant="outline"
-                  disabled={isUpdatingOrg || !editName.trim() || !editSlug.trim()}
+                  disabled={isUpdatingOrg}
                   onClick={handleStartEdit}>
                   Edit Organization
                 </Button>
@@ -366,7 +372,7 @@ export default function OrganizationSettingsPage() {
         </Card>
 
         {canEdit && (
-          <Card>
+          <Card className="rounded-xl border shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -379,11 +385,11 @@ export default function OrganizationSettingsPage() {
                   </Button>
                 )}
               </div>
-              <CardDescription className="text-xs">
+              <CardDescription>
                 Branding, currency, timezone, and fiscal year settings for your organization.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               {/* Logo */}
               <div className="space-y-1.5">
                 <Label htmlFor="logo-url" className="text-sm flex items-center gap-1.5">
@@ -547,7 +553,7 @@ export default function OrganizationSettingsPage() {
                     <Users className="h-3.5 w-3.5 text-muted-foreground" />
                     Public Employee Directory
                   </Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Allow members to view the full employee directory. When off, only HR and admins can browse it.
                   </p>
                 </div>
@@ -569,7 +575,7 @@ export default function OrganizationSettingsPage() {
                 </Label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="primary-color" className="text-xs text-muted-foreground">Primary Color</Label>
+                    <Label htmlFor="primary-color" className="text-sm text-muted-foreground">Primary Color</Label>
                     {isEditingConfig ? (
                       <div className="flex gap-2 items-center">
                         <Input
@@ -594,7 +600,7 @@ export default function OrganizationSettingsPage() {
                     )}
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="login-bg" className="text-xs text-muted-foreground">Login Page Background URL</Label>
+                    <Label htmlFor="login-bg" className="text-sm text-muted-foreground">Login Page Background URL</Label>
                     {isEditingConfig ? (
                       <Input
                         id="login-bg"
@@ -632,21 +638,21 @@ export default function OrganizationSettingsPage() {
         )}
 
         {canEdit && (
-          <Card>
+          <Card className="rounded-xl border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Shield className="h-4 w-4 text-gold" />
                 Security Policies
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription>
                 Configure authentication and password policies for your organization.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium">Require MFA for all members</Label>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Members without MFA enabled will be redirected to set it up on their next login.
                   </p>
                 </div>
@@ -666,7 +672,7 @@ export default function OrganizationSettingsPage() {
                     Password expires every N days
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Leave empty to disable password expiry. Allowed range: 30–365 days.
                 </p>
                 <Input
@@ -690,7 +696,7 @@ export default function OrganizationSettingsPage() {
                   <Globe className="h-4 w-4 text-muted-foreground" />
                   <Label className="text-sm font-medium">Allowed Email Domains</Label>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Restrict invitations to specific email domains (e.g. <code>company.com</code>). Leave empty to allow any domain.
                 </p>
                 <div className="flex flex-wrap gap-2 min-h-8">
@@ -715,7 +721,7 @@ export default function OrganizationSettingsPage() {
                     value={domainInput}
                     onChange={(e) => setDomainInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddDomain(); } }}
-                    className="w-56"
+                  className="w-full max-w-sm"
                     aria-label="Email domain to add"
                   />
                   <Button type="button" variant="outline" size="sm" onClick={handleAddDomain}>
@@ -742,18 +748,18 @@ export default function OrganizationSettingsPage() {
         )}
 
         {canEdit && (
-          <Card>
+          <Card className="rounded-xl border shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Network className="h-4 w-4 text-gold" />
                 IP Allowlist
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription>
                 Restrict dashboard access to specific IP addresses or prefixes. Leave empty to allow access from any IP.
                 Add exact IPs (e.g. <code>203.0.113.5</code>) or prefixes (e.g. <code>192.168.1.</code>).
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-2 min-h-8">
                 {ipAllowlist.map((ip) => (
                   <Badge key={ip} variant="secondary" className="gap-1 pr-1 font-mono text-xs">
@@ -778,7 +784,7 @@ export default function OrganizationSettingsPage() {
                   value={ipInput}
                   onChange={(e) => setIpInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddIp(); } }}
-                  className="w-56 font-mono text-sm"
+                  className="w-full max-w-sm font-mono text-sm"
                   aria-label="IP address or prefix to add"
                 />
                 <Button type="button" variant="outline" size="sm" onClick={handleAddIp}>

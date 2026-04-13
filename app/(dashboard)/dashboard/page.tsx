@@ -479,10 +479,38 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : null}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`kpi-${i}`} className="rounded-xl border border-border bg-card p-4 shadow-noir">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            <WidgetSkeleton rows={4} />
             <WidgetSkeleton rows={3} />
-            <WidgetSkeleton rows={3} />
-            <WidgetSkeleton rows={3} />
+            <WidgetSkeleton rows={4} />
+          </div>
+
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`mini-${i}`} className="rounded-xl border border-border bg-card p-4 shadow-noir">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </PageWrapper>

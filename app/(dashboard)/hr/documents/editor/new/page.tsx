@@ -118,76 +118,85 @@ export default function NewDocumentPage() {
         </Button>
       }
     >
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Document Details</CardTitle>
-            <CardDescription>Give your document a title and select a template.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Title</label>
-              <Input
-                placeholder="e.g. Employee Handbook 2026"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Template</label>
-              <Select value={template} onValueChange={setTemplate}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TEMPLATES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mx-auto w-full max-w-6xl">
+        <div className="grid gap-4 lg:grid-cols-3 xl:gap-5">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Choose Template</CardTitle>
+              <CardDescription>Select a starter template for your document.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {TEMPLATES.map((t) => {
+                  const Icon = t.icon;
+                  const isSelected = template === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setTemplate(t.value)}
+                      className={`text-left p-4 rounded-lg border transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                          : "border-border hover:border-primary/30 bg-card"
+                      }`}
+                    >
+                      <Icon className={`h-7 w-7 mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                      <p className="font-medium text-sm">{t.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {TEMPLATES.map((t) => {
-            const Icon = t.icon;
-            const isSelected = template === t.value;
-            return (
-              <button
-                key={t.value}
-                type="button"
-                onClick={() => setTemplate(t.value)}
-                className={`text-left p-4 rounded-lg border-2 transition-all ${
-                  isSelected
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/30 bg-card"
-                }`}
-              >
-                <Icon className={`h-8 w-8 mb-2 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
-                <p className="font-medium text-sm">{t.label}</p>
-                <p className="text-xs text-muted-foreground mt-1">{t.description}</p>
-              </button>
-            );
-          })}
+          <Card className="h-fit lg:sticky lg:top-4">
+            <CardHeader>
+              <CardTitle>Document Details</CardTitle>
+              <CardDescription>Give your document a title and confirm template.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  placeholder="e.g. Employee Handbook 2026"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Template</label>
+                <Select value={template} onValueChange={setTemplate}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleCreate} disabled={createDoc.isPending} className="w-full" size="lg">
+                {createDoc.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Create & Open Editor
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-
-        <Button onClick={handleCreate} disabled={createDoc.isPending} className="w-full" size="lg">
-          {createDoc.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            <>
-              <FileText className="mr-2 h-4 w-4" />
-              Create & Open Editor
-            </>
-          )}
-        </Button>
       </div>
     </PageWrapper>
   );

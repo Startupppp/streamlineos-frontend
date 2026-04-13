@@ -162,6 +162,12 @@ export function DocumentTable({
               >
                 Size
               </TableHead>
+              <TableHead
+                scope="col"
+                className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-6 py-3 text-right"
+              >
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -169,14 +175,14 @@ export function DocumentTable({
             {page === 1 && selectedCategory === "All Files" && searchTerm === "" && (
               <>
                 <TableRow>
-                  <TableCell colSpan={4} className="px-6 py-3">
+                  <TableCell colSpan={5} className="px-6 py-3">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Folders
                     </p>
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={4} className="px-6 py-0 pb-4">
+                  <TableCell colSpan={5} className="px-6 py-0 pb-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {folders.map((folder) => (
                         <button
@@ -200,7 +206,7 @@ export function DocumentTable({
 
             {paginatedDocuments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   <div className="flex flex-col items-center justify-center py-16">
                     <EmptyDocumentsIllustration className="mb-3" />
                     <h3 className="text-lg font-medium text-foreground">No documents found</h3>
@@ -221,12 +227,12 @@ export function DocumentTable({
                 const typeLabel =
                   DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label || "General";
                 const categoryColor = CATEGORY_COLORS[typeLabel] || CATEGORY_COLORS.General;
+                const hasFileUrl = !!doc.fileUrl;
 
                 return (
                   <TableRow
                     key={doc.id}
-                    className="hover:bg-muted/30 transition-colors group cursor-pointer"
-                    onClick={() => viewFile(doc.fileUrl)}
+                    className="hover:bg-muted/30 transition-colors group"
                   >
                     <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -269,14 +275,50 @@ export function DocumentTable({
                       {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : "-"}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-muted-foreground text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <span>{formatFileSize(doc.fileSize)}</span>
+                      {formatFileSize(doc.fileSize)}
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={!hasFileUrl}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!hasFileUrl) {
+                              toast.error("This document has no file attached.");
+                              return;
+                            }
+                            viewFile(doc.fileUrl);
+                          }}
+                        >
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={!hasFileUrl}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!hasFileUrl) {
+                              toast.error("This document has no file attached.");
+                              return;
+                            }
+                            downloadFile(doc.fileUrl, doc.fileName || doc.name);
+                          }}
+                        >
+                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                          Download
+                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-7 w-7"
                               aria-label="More options"
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -284,8 +326,13 @@ export function DocumentTable({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
+                              disabled={!hasFileUrl}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (!hasFileUrl) {
+                                  toast.error("This document has no file attached.");
+                                  return;
+                                }
                                 viewFile(doc.fileUrl);
                               }}
                             >
@@ -293,8 +340,13 @@ export function DocumentTable({
                               View
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              disabled={!hasFileUrl}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (!hasFileUrl) {
+                                  toast.error("This document has no file attached.");
+                                  return;
+                                }
                                 downloadFile(doc.fileUrl, doc.fileName || doc.name);
                               }}
                             >

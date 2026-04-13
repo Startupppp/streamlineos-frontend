@@ -13,6 +13,7 @@ import {
   Calendar,
   User,
   BadgeDollarSign,
+  Check,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -52,23 +53,13 @@ import {
 import type { Employee } from "@/types/hr";
 
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  TERMINATION_REASONS,
+  TERMINATION_STATUSES,
+  TERMINATION_STATUS_LABELS,
+} from "@/lib/constants/hr-separation";
 
-
-const TERMINATION_REASONS = [
-  "Poor Performance",
-  "Misconduct",
-  "Insubordination",
-  "Attendance Issues",
-  "Policy Violation",
-  "Redundancy/Restructuring",
-  "End of Contract",
-  "Probation Failure",
-  "Fraud/Dishonesty",
-  "Breach of NDA",
-  "Health/Safety Violation",
-  "Other",
-];
-
+// ─── Status helpers ──────────────────────────────────────────────────────────
 
 function statusVariant(
   status: TerminationStatus | null
@@ -92,22 +83,10 @@ function statusVariant(
 }
 
 function statusLabel(status: TerminationStatus | null): string {
-  switch (status) {
-    case "DRAFT":
-      return "Draft";
-    case "PENDING_CEO":
-      return "Pending CEO";
-    case "APPROVED":
-      return "Approved";
-    case "REJECTED":
-      return "Rejected";
-    case "SENT":
-      return "Email Sent";
-    case "COMPLETED":
-      return "Completed";
-    default:
-      return status ?? "Unknown";
+  if (status && status in TERMINATION_STATUS_LABELS) {
+    return TERMINATION_STATUS_LABELS[status as keyof typeof TERMINATION_STATUS_LABELS];
   }
+  return status ?? "Unknown";
 }
 
 function getInitials(name: string | null): string {
@@ -171,6 +150,19 @@ Regards,
 Human Resources Department`;
 }
 
+// ─── Status filter tabs ──────────────────────────────────────────────────────
+
+type StatusFilter = "ALL" | TerminationStatus;
+
+const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "ALL", label: "All" },
+  ...TERMINATION_STATUSES.map((s) => ({
+    value: s as StatusFilter,
+    label: TERMINATION_STATUS_LABELS[s],
+  })),
+];
+
+// ─── Termination Card ────────────────────────────────────────────────────────
 
 interface TerminationCardProps {
   record: Termination;
@@ -180,7 +172,9 @@ interface TerminationCardProps {
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
   onSendEmail: (record: Termination) => void;
+  onComplete: (id: number) => void;
   isSubmitting: boolean;
+  isCompleting: boolean;
 }
 
 function TerminationCard({
@@ -191,9 +185,11 @@ function TerminationCard({
   onApprove,
   onReject,
   onSendEmail,
+  onComplete,
   isSubmitting,
+  isCompleting,
 }: TerminationCardProps) {
-  const { employee, status, reasons, effectiveDate, severanceAmount, noticePeriodWaived } =
+  const { employee, status, reasons, effectiveDate, severanceAmount, noticePeriodWaived, emailStatus } =
     record;
 
   const reasonsList = reasons ?? [];
@@ -217,6 +213,11 @@ function TerminationCard({
               <Badge variant={statusVariant(status)} className="text-[10px] shrink-0">
                 {statusLabel(status)}
               </Badge>
+              {emailStatus === "failed" && (
+                <Badge variant="destructive" className="text-[10px] shrink-0">
+                  Email Failed
+                </Badge>
+              )}
             </div>
 
             {/* Second row: designation + employeeId */}
@@ -244,6 +245,13 @@ function TerminationCard({
                 <span className="text-amber-600 dark:text-amber-400">Notice waived</span>
               )}
             </div>
+
+            {/* CEO remarks for rejected */}
+            {status === "REJECTED" && record.ceoRemarks && (
+              <p className="text-[11px] text-destructive mt-1 line-clamp-2">
+                CEO: {record.ceoRemarks}
+              </p>
+            )}
 
             {/* Reasons row */}
             {reasonsList.length > 0 && (
@@ -276,6 +284,21 @@ function TerminationCard({
               >
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 Submit for Approval
+              </Button>
+            )}
+
+            {/* HR: resubmit REJECTED for CEO approval */}
+            {isHR && status === "REJECTED" && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={() => onSubmit(record.id)}
+                disabled={isSubmitting}
+                aria-label={`Resubmit termination for ${employee?.name ?? "employee"} for CEO approval`}
+              >
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Resubmit
               </Button>
             )}
 
@@ -315,15 +338,28 @@ function TerminationCard({
                 aria-label={`Send termination email to ${employee?.name ?? "employee"}`}
               >
                 <Mail className="h-3 w-3 mr-1" />
-                Send Termination Email
+                Send Email
               </Button>
             )}
 
-            {/* Read-only labels for terminal states */}
-            {(status === "SENT" || status === "COMPLETED") && (
-              <span className="text-[11px] text-muted-foreground italic">
-                {status === "SENT" ? "Email sent" : "Completed"}
-              </span>
+            {/* HR: complete after SENT */}
+            {isHR && status === "SENT" && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={() => onComplete(record.id)}
+                disabled={isCompleting}
+                aria-label={`Complete termination for ${employee?.name ?? "employee"}`}
+              >
+                <Check className="h-3 w-3 mr-1" />
+                Complete
+              </Button>
+            )}
+
+            {/* Completed label */}
+            {status === "COMPLETED" && (
+              <span className="text-[11px] text-muted-foreground italic">Completed</span>
             )}
           </div>
         </div>
@@ -346,6 +382,9 @@ export default function TerminationPage() {
   const submitTermination = useSubmitTermination();
   const ceoReview = useCeoReviewTermination();
   const sendEmail = useSendTerminationEmail();
+  const completeTermination = useCompleteTermination();
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -364,6 +403,7 @@ export default function TerminationPage() {
   const [ceoSheetOpen, setCeoSheetOpen] = useState(false);
 
   const [emailRecord, setEmailRecord] = useState<Termination | null>(null);
+  const [completeId, setCompleteId] = useState<number | null>(null);
 
   const employees = useMemo<Employee[]>(() => {
     if (!employeesData) return [];
@@ -390,6 +430,24 @@ export default function TerminationPage() {
       }),
     [selectedEmployee, effectiveDate, selectedReasons, explanation, noticePeriodWaived, severanceAmount]
   );
+
+  // Filtered list based on status tab
+  const list = useMemo(() => {
+    const all = terminations ?? [];
+    if (statusFilter === "ALL") return all;
+    return all.filter((t) => t.status === statusFilter);
+  }, [terminations, statusFilter]);
+
+  // Count per status for badges
+  const statusCounts = useMemo(() => {
+    const all = terminations ?? [];
+    const counts: Record<string, number> = { ALL: all.length };
+    for (const s of TERMINATION_STATUSES) counts[s] = 0;
+    for (const t of all) {
+      if (t.status) counts[t.status] = (counts[t.status] ?? 0) + 1;
+    }
+    return counts;
+  }, [terminations]);
 
 
   const resetCreateForm = useCallback(() => {
@@ -504,6 +562,10 @@ export default function TerminationPage() {
   }, [reviewRecord, reviewDecision, ceoRemarks, ceoReview]);
 
   const handleSendEmailOpen = useCallback((record: Termination) => {
+    if (record.emailSentAt) {
+      toast.error("Termination email has already been sent");
+      return;
+    }
     setEmailRecord(record);
   }, []);
 
@@ -511,12 +573,26 @@ export default function TerminationPage() {
     if (!emailRecord) return;
     sendEmail.mutate(emailRecord.id, {
       onSuccess: () => {
-        toast.success("Termination email sent");
+        toast.success("Termination email sent successfully");
         setEmailRecord(null);
+      },
+      onError: (e) => {
+        toast.error(`Failed to send email: ${getErrorMessage(e)}`);
+        setEmailRecord(null);
+      },
+    });
+  }, [emailRecord, sendEmail]);
+
+  const handleCompleteConfirm = useCallback(() => {
+    if (!completeId) return;
+    completeTermination.mutate(completeId, {
+      onSuccess: () => {
+        toast.success("Termination completed. Employee deactivated, FnF and asset return initiated.");
+        setCompleteId(null);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
-  }, [emailRecord, sendEmail]);
+  }, [completeId, completeTermination]);
 
 
   if (isLoading) {
@@ -534,13 +610,11 @@ export default function TerminationPage() {
     );
   }
 
-  const list = terminations ?? [];
-
   return (
     <PageWrapper
       title="Termination Management"
       subtitle="Manage employee terminations"
-      badge={`${list.length} records`}
+      badge={`${(terminations ?? []).length} records`}
       actions={
         isHR ? (
           <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -550,11 +624,38 @@ export default function TerminationPage() {
         ) : undefined
       }
     >
+      {/* ── Status filter tabs ──────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-4">
+        {STATUS_FILTER_OPTIONS.map(({ value, label }) => (
+          <Button
+            key={value}
+            size="sm"
+            variant={statusFilter === value ? "default" : "outline"}
+            className="h-7 text-xs"
+            onClick={() => setStatusFilter(value)}
+          >
+            {label}
+            {statusCounts[value] > 0 && (
+              <Badge
+                variant={statusFilter === value ? "secondary" : "outline"}
+                className="ml-1.5 text-[9px] px-1.5 py-0 h-4"
+              >
+                {statusCounts[value]}
+              </Badge>
+            )}
+          </Button>
+        ))}
+      </div>
+
       {/* ── Records list ──────────────────────────────────────────────────── */}
       {list.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-sm text-muted-foreground">No termination records found.</p>
+            <p className="text-sm text-muted-foreground">
+              {statusFilter === "ALL"
+                ? "No termination records found."
+                : `No ${TERMINATION_STATUS_LABELS[statusFilter as keyof typeof TERMINATION_STATUS_LABELS] ?? statusFilter} records.`}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -575,7 +676,9 @@ export default function TerminationPage() {
                 if (r) handleOpenCeoReview(r, "reject");
               }}
               onSendEmail={handleSendEmailOpen}
+              onComplete={(id) => setCompleteId(id)}
               isSubmitting={submitTermination.isPending}
+              isCompleting={completeTermination.isPending}
             />
           ))}
         </div>
@@ -625,7 +728,7 @@ export default function TerminationPage() {
           <Label className="text-sm font-medium">
             Termination Reasons <span className="text-destructive">*</span>
           </Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {TERMINATION_REASONS.map((reason) => (
               <div key={reason} className="flex items-center gap-2">
                 <Checkbox
@@ -883,10 +986,18 @@ export default function TerminationPage() {
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">
                 CEO Remarks{" "}
-                <span className="text-muted-foreground font-normal">(optional)</span>
+                {reviewDecision === "reject" ? (
+                  <span className="text-destructive">*</span>
+                ) : (
+                  <span className="text-muted-foreground font-normal">(optional)</span>
+                )}
               </Label>
               <Textarea
-                placeholder="Add any remarks or comments..."
+                placeholder={
+                  reviewDecision === "reject"
+                    ? "Remarks are required when rejecting..."
+                    : "Add any remarks or comments..."
+                }
                 value={ceoRemarks}
                 onChange={(e) => setCeoRemarks(e.target.value)}
                 rows={3}
@@ -904,11 +1015,25 @@ export default function TerminationPage() {
           if (!open) setEmailRecord(null);
         }}
         title="Send Termination Email"
-        description={`Send termination email to ${emailRecord?.employee?.name ?? "this employee"}? This will deactivate their account and notify them officially.`}
+        description={`Send termination email to ${emailRecord?.employee?.name ?? "this employee"}? The employee will be officially notified. Account deactivation will happen when you mark the termination as Complete.`}
         confirmLabel="Send Email"
         variant="default"
         onConfirm={handleSendEmailConfirm}
         isPending={sendEmail.isPending}
+      />
+
+      {/* ── Complete Termination Confirm ──────────────────────────────────── */}
+      <ConfirmActionDialog
+        open={completeId !== null}
+        onOpenChange={(open) => {
+          if (!open) setCompleteId(null);
+        }}
+        title="Complete Termination"
+        description="This will deactivate the employee's account, initiate Full & Final settlement, and create asset return records. This action cannot be undone."
+        confirmLabel="Complete Termination"
+        variant="destructive"
+        onConfirm={handleCompleteConfirm}
+        isPending={completeTermination.isPending}
       />
     </PageWrapper>
   );

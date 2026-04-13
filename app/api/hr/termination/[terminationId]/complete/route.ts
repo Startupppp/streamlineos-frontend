@@ -2,6 +2,7 @@ import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { terminations, users, fnfSettlements, assetReturns, assets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
 import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 
@@ -61,6 +62,20 @@ export async function PATCH(
 
     // Invalidate HR dashboard caches so headcount reflects immediately
     await invalidateHrDashboardCache(session.orgId);
+
+    void writeAuditLog({
+      action: "TERMINATION_COMPLETED",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(terminationId),
+      targetType: "termination",
+      metadata: {
+        employeeId: existing.userId,
+        userDeactivated: true,
+        fnfInitiated: true,
+        assetsToReturn: assignedAssets.length,
+      },
+    }).catch(() => undefined);
 
     return ok({ success: true });
   });

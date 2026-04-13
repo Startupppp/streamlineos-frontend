@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
             candidateName: `${candidate.firstName} ${candidate.lastName}`,
             jobTitle: jobTitleMap[candidate.id] ?? "the position",
             companyName,
+            senderName: session.user.name ?? undefined,
           });
           await sendEmail({ to: candidate.email, subject, html });
           emailsSent++;

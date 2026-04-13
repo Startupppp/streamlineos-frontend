@@ -37,21 +37,11 @@ import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { ResignationCard } from "@/features/hr/exit/resignation-card";
+import { RESIGNATION_REASONS } from "@/lib/constants/hr-separation";
 
 const NOTICE_PERIOD_DAYS = 60;
 
-const REASON_CATEGORIES = [
-  "Better Opportunity",
-  "Personal Reasons",
-  "Higher Education",
-  "Work Environment",
-  "Compensation",
-  "Role Mismatch",
-  "Relocation",
-  "Health Issues",
-  "Starting Own Venture",
-  "Other",
-];
+const REASON_CATEGORIES = [...RESIGNATION_REASONS];
 
 interface RejectDialogState {
   id: number;

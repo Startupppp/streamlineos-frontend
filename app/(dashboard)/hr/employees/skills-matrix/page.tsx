@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSkillsMatrix } from "@/lib/api/hooks/hr";
-import { Grid3X3 } from "lucide-react";
+import { EmptyTeamIllustration } from "@/components/illustrations";
 
 const LEVEL_COLORS: Record<number, string> = {
   1: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
@@ -43,7 +43,7 @@ export default function SkillsMatrixPage() {
     >
       {employees.length === 0 || skills.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-2 text-muted-foreground">
-          <Grid3X3 className="h-10 w-10 opacity-30" />
+          <EmptyTeamIllustration className="h-40 w-40 opacity-95" />
           <p>No skills data yet. Add skills to employee profiles.</p>
         </div>
       ) : (

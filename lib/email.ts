@@ -596,9 +596,10 @@ export async function sendTerminationEmail(
   employeeDesignation: string,
   terminationDate: string,
   terminatedBy: string,
-  reason: string
+  reason: string,
+  attachments?: EmailAttachment[]
 ) {
-  const hrContactEmail = process.env.EMAIL_FROM_ADDRESS || "hr@vaivammcapital.com";
+  const hrContactEmail = "hr@vaivammcapital.com";
   await sendEmail({
     to: employeeEmail,
     subject: `Employment Termination Notice - Vaivamm Capital`,
@@ -610,6 +611,7 @@ export async function sendTerminationEmail(
       reason,
       hrContactEmail
     ),
+    attachments,
   });
 }
 

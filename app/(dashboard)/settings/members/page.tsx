@@ -183,8 +183,8 @@ export default function MembersSettingsPage() {
         </Button>
       }
     >
-        <Tabs defaultValue="members">
-          <TabsList className="w-full sm:w-fit">
+        <Tabs defaultValue="members" className="space-y-4">
+          <TabsList className="h-auto w-full sm:w-fit gap-1 rounded-lg p-1">
             <TabsTrigger value="members">
               Members
               {membersData && (
@@ -203,9 +203,9 @@ export default function MembersSettingsPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="members">
+          <TabsContent value="members" className="space-y-4">
             {showInviteForm && (
-              <Card>
+              <Card className="rounded-xl border shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base">Invite New Member</CardTitle>
                   <CardDescription>Send an invitation to join your organization</CardDescription>
@@ -213,7 +213,7 @@ export default function MembersSettingsPage() {
                 <CardContent>
                   <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div className="flex-1 space-y-1.5">
-                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <Label htmlFor="email" className="text-sm">Email</Label>
                       <Input
                         id="email"
                         type="email"
@@ -224,7 +224,7 @@ export default function MembersSettingsPage() {
                       />
                     </div>
                     <div className="w-full sm:w-[180px] space-y-1.5">
-                      <Label className="text-xs">Role</Label>
+                      <Label className="text-sm">Role</Label>
                       <Select value={inviteRole} onValueChange={setInviteRole}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -242,7 +242,7 @@ export default function MembersSettingsPage() {
               </Card>
             )}
 
-            <Card>
+            <Card className="rounded-xl border shadow-sm">
               <CardHeader className="pb-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -252,35 +252,35 @@ export default function MembersSettingsPage() {
                       {membersData && <Badge variant="secondary" className="ml-2 text-xs">{membersData.pagination.total}</Badge>}
                     </CardTitle>
                   </div>
-                  <div className="relative w-full sm:w-64">
+                  <div className="relative w-full sm:w-72">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
                       placeholder="Search members..."
                       value={memberSearch}
                       onChange={handleSearchChange}
-                      className="pl-8 h-8 text-xs"
+                      className="h-9 pl-8 text-sm"
                     />
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="w-full max-h-[65vh]" type="auto">
-                  <div className="min-w-max">
+                  <div className="min-w-[900px]">
                     <Table>
                       <TableHeader className="bg-muted/40">
                         <TableRow>
-                          <TableHead className="text-xs font-semibold px-4">Member</TableHead>
-                          <TableHead className="text-xs font-semibold px-4">Email</TableHead>
-                          <TableHead className="text-xs font-semibold px-4">Role</TableHead>
-                          <TableHead className="text-xs font-semibold px-4">Joined</TableHead>
-                          <TableHead className="text-xs font-semibold px-4 text-right">Actions</TableHead>
+                          <TableHead className="px-5 py-3 text-xs font-semibold">Member</TableHead>
+                          <TableHead className="px-5 py-3 text-xs font-semibold">Email</TableHead>
+                          <TableHead className="px-5 py-3 text-xs font-semibold">Role</TableHead>
+                          <TableHead className="px-5 py-3 text-xs font-semibold">Joined</TableHead>
+                          <TableHead className="px-5 py-3 text-right text-xs font-semibold">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {membersLoading ? (
                           Array.from({ length: 5 }).map((_, i) => (
                             <TableRow key={i}>
-                              <TableCell colSpan={5} className="px-4 py-3">
+                            <TableCell colSpan={5} className="px-5 py-4">
                                 <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
                               </TableCell>
                             </TableRow>
@@ -308,14 +308,14 @@ export default function MembersSettingsPage() {
                   </div>
                 </ScrollArea>
                 {membersData && membersData.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-2 border-t">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between border-t px-5 py-3">
+                    <span className="text-sm text-muted-foreground">
                       Page {membersData.pagination.page} of {membersData.pagination.totalPages}
                     </span>
                     <div className="flex gap-1">
-                      <Button variant="outline" size="sm" className="h-7 text-xs"
+                      <Button variant="outline" size="sm" className="h-8 text-xs"
                         disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
-                      <Button variant="outline" size="sm" className="h-7 text-xs"
+                      <Button variant="outline" size="sm" className="h-8 text-xs"
                         disabled={page >= membersData.pagination.totalPages} onClick={handleNextPage}>Next</Button>
                     </div>
                   </div>
@@ -324,8 +324,8 @@ export default function MembersSettingsPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="invitations">
-            <Card>
+          <TabsContent value="invitations" className="space-y-4">
+            <Card className="rounded-xl border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Pending Invitations</CardTitle>
               </CardHeader>
@@ -378,9 +378,9 @@ function MemberTableRow({ member, onUpdateRole, onResetMfa, canManageMfa, isRese
 
   return (
     <TableRow className="hover:bg-muted/30">
-      <TableCell className="px-4 py-2.5">
-        <div className="flex items-center gap-2.5">
-          <Avatar className="h-8 w-8">
+      <TableCell className="px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9">
             <AvatarImage src={resolveImageUrl(member.image)} />
             <AvatarFallback className="text-xs bg-gold/10 text-gold">{member.name?.charAt(0) || "?"}</AvatarFallback>
           </Avatar>
@@ -392,14 +392,14 @@ function MemberTableRow({ member, onUpdateRole, onResetMfa, canManageMfa, isRese
           </div>
         </div>
       </TableCell>
-      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">{member.email}</TableCell>
-      <TableCell className="px-4 py-2.5">
-        <Badge variant="outline" className={`text-[10px] border ${ROLE_COLORS[member.role] || ""}`}>{member.role}</Badge>
+      <TableCell className="px-5 py-3.5 text-sm text-muted-foreground">{member.email}</TableCell>
+      <TableCell className="px-5 py-3.5">
+        <Badge variant="outline" className={`text-[11px] border ${ROLE_COLORS[member.role] || ""}`}>{member.role}</Badge>
       </TableCell>
-      <TableCell className="px-4 py-2.5 text-xs text-muted-foreground">
+      <TableCell className="px-5 py-3.5 text-sm text-muted-foreground">
         {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString("en-IN") : "—"}
       </TableCell>
-      <TableCell className="px-4 py-2.5 text-right">
+      <TableCell className="px-5 py-3.5 text-right">
         <div className="flex items-center justify-end gap-2">
           {canManageMfa && member.totpEnabled && (
             <AlertDialog>
@@ -407,7 +407,7 @@ function MemberTableRow({ member, onUpdateRole, onResetMfa, canManageMfa, isRese
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
                   disabled={isResettingMfa}
                 >
                   <ShieldOff className="h-3 w-3 mr-1" />
@@ -434,7 +434,7 @@ function MemberTableRow({ member, onUpdateRole, onResetMfa, canManageMfa, isRese
             </AlertDialog>
           )}
           <Select value={member.role} onValueChange={handleRoleChange}>
-            <SelectTrigger className="h-7 w-[150px] text-xs ml-auto"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="ml-auto h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               {ALL_ROLES.map(r => (
                 <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>

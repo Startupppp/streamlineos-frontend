@@ -1,8 +1,10 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { terminations, users, organizations } from "@/lib/db/schema";
+import { terminations, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { sendTerminationEmail } from "@/lib/email";
+import { generateTerminationLetterPdf } from "@/lib/termination-letter-pdf";
+import { writeAuditLog } from "@/lib/db/audit";
 import { format } from "date-fns";
 import type { NextRequest } from "next/server";
 
@@ -26,6 +28,11 @@ export async function POST(
     if (!existing) return err("Termination not found.", 404);
     if (existing.status !== "APPROVED") return err("Termination must be CEO-approved before sending.", 400);
 
+    // Idempotency: prevent duplicate sends
+    if (existing.emailSentAt && existing.emailStatus === "sent") {
+      return err("Termination email has already been sent.", 409);
+    }
+
     const employee = existing.user;
     if (!employee?.email) return err("Employee email not found.", 400);
 
@@ -33,14 +40,41 @@ export async function POST(
       where: eq(organizations.id, session.orgId),
     });
 
+    const effectiveDateStr = existing.effectiveDate
+      ? format(new Date(existing.effectiveDate), "dd-MM-yyyy")
+      : "N/A";
+    const effectiveDateFormatted = existing.effectiveDate
+      ? format(new Date(existing.effectiveDate), "dd MMM yyyy")
+      : "N/A";
+
     try {
+      // Generate formal PDF termination letter
+      const pdfBuffer = await generateTerminationLetterPdf({
+        employeeName: employee.name ?? "Employee",
+        employeeId: employee.employeeId ?? undefined,
+        designation: employee.designation ?? "N/A",
+        effectiveDate: effectiveDateStr,
+        reasons: existing.reasons ?? [],
+        detailedExplanation: existing.detailedExplanation ?? undefined,
+        hrName: session.user.name ?? "HR Executive",
+        hrDesignation: session.user.role === "CEO" ? "CEO" : "HR Executive",
+        companyName: org?.name ?? "VAIVAMM CAPITAL ADVISORS LLP",
+      });
+
       await sendTerminationEmail(
         employee.email,
         employee.name ?? "Employee",
         employee.designation ?? "N/A",
-        existing.effectiveDate ? format(new Date(existing.effectiveDate), "dd MMM yyyy") : "N/A",
+        effectiveDateFormatted,
         session.user.name ?? "HR",
-        existing.reasons?.join(", ") ?? ""
+        existing.reasons?.join(", ") ?? "",
+        [
+          {
+            filename: `Termination-Letter-${(employee.name ?? "Employee").replace(/\s+/g, "-")}.pdf`,
+            content: pdfBuffer,
+            type: "application/pdf",
+          },
+        ]
       );
 
       await db.update(terminations).set({
@@ -50,14 +84,42 @@ export async function POST(
         updatedAt: new Date(),
       }).where(eq(terminations.id, terminationId));
 
+      void writeAuditLog({
+        action: "TERMINATION_EMAIL_SENT",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(terminationId),
+        targetType: "termination",
+        metadata: {
+          employeeId: existing.userId,
+          employeeName: employee.name,
+          employeeEmail: employee.email,
+          pdfAttached: true,
+        },
+      }).catch(() => undefined);
+
       return ok({ success: true });
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown email error";
+
       await db.update(terminations).set({
-        emailStatus: "failed",
+        emailStatus: `failed: ${errorMessage}`,
         updatedAt: new Date(),
       }).where(eq(terminations.id, terminationId));
 
-      return err("Failed to send email.", 500);
+      void writeAuditLog({
+        action: "TERMINATION_EMAIL_FAILED",
+        userId: session.user.id,
+        orgId: session.orgId,
+        targetId: String(terminationId),
+        targetType: "termination",
+        metadata: {
+          employeeId: existing.userId,
+          error: errorMessage,
+        },
+      }).catch(() => undefined);
+
+      return err(`Failed to send email: ${errorMessage}`, 500);
     }
   });
 }

@@ -19,13 +19,13 @@ export interface PayslipPdfData {
   ifsc?: string;
   joiningDate?: string;
   monthLabel: string;
-  payDate?: string;
   basicSalary: number;
   hra: number;
   allowances: number;
   overtimeAmount: number;
   grossSalary: number;
   deductions: number;
+  professionalTax?: number;
   netSalary: number;
 }
 
@@ -38,6 +38,7 @@ const BLACK = rgb(0, 0, 0);
 const GRAY = rgb(0.4, 0.4, 0.4);
 const LIGHT_GRAY = rgb(0.94, 0.95, 0.98);
 const GREEN = rgb(0.086, 0.502, 0.243);
+const RED = rgb(0.7, 0.1, 0.1);
 
 // ─── Helper: number to words (Indian system) ──────────────────────────────────
 
@@ -151,11 +152,9 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   }
   y -= 32;
 
-  // ── PAID badge ────────────────────────────────────────────────────────────
+  // ── PAID badge (no pay date) ────────────────────────────────────────────
   drawRect(page, margin, y - 22, 44, 16, GREEN);
   drawText(page, "PAID", margin + 8, y - 17, bold, 9, WHITE);
-  const payDateLabel = `Pay Date: ${data.payDate ?? format(new Date(), "dd MMM yyyy")}`;
-  drawText(page, payDateLabel, margin + 54, y - 16, regular, 8, GRAY);
   y -= 28;
 
   // ── Divider ───────────────────────────────────────────────────────────────
@@ -184,7 +183,10 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   rowY = drawSectionHeader(col1X, rowY, "EMPLOYEE INFORMATION");
   rowY = drawRow(col1X, rowY, "Date of Joining", data.joiningDate ?? "—");
   rowY = drawRow(col1X, rowY, "PAN Number", data.panNumber ?? "—");
-  rowY = drawRow(col1X, rowY, "PF UAN", data.pfUan ?? "—");
+  // Only show PF UAN if the employee actually has one
+  if (data.pfUan) {
+    rowY = drawRow(col1X, rowY, "PF UAN", data.pfUan);
+  }
 
   let rowY2 = y;
   rowY2 = drawSectionHeader(col2X, rowY2, "PAYROLL INFORMATION");
@@ -203,8 +205,6 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
 
   const earningsW = contentW * 0.35;
   const amtW = contentW * 0.15;
-  const dedW = contentW * 0.35;
-  const dedAmtW = contentW * 0.15;
 
   // Table header row
   drawRect(page, margin, y - 4, contentW, 16, LIGHT_GRAY);
@@ -214,6 +214,7 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawText(page, "Amount", margin + contentW - 4, y + 4, bold, 8, NAVY);
   y -= 18;
 
+  // Build earnings rows
   const earningsRows: [string, number][] = [
     ["Basic Salary", data.basicSalary],
     ...(data.hra > 0 ? [["HRA", data.hra] as [string, number]] : []),
@@ -221,19 +222,39 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
     ...(data.overtimeAmount > 0 ? [["Overtime", data.overtimeAmount] as [string, number]] : []),
   ];
 
-  const maxRows = Math.max(earningsRows.length, 1);
+  // Build deductions rows — itemize Professional Tax separately
+  const professionalTax = data.professionalTax ?? 200;
+  const otherDeductions = data.deductions - professionalTax;
+  const deductionRows: [string, number][] = [];
+  if (professionalTax > 0) {
+    deductionRows.push(["Professional Tax", professionalTax]);
+  }
+  if (otherDeductions > 0) {
+    deductionRows.push(["Other Deductions", otherDeductions]);
+  }
+  // If no itemized deductions but total > 0, show as single line
+  if (deductionRows.length === 0 && data.deductions > 0) {
+    deductionRows.push(["Total Deductions", data.deductions]);
+  }
+
+  const maxRows = Math.max(earningsRows.length, deductionRows.length);
 
   for (let i = 0; i < maxRows; i++) {
-    const [label, amount] = earningsRows[i] ?? ["", 0];
-    drawText(page, label, margin + 4, y, regular, 8);
-    if (amount > 0) {
-      const aw = regular.widthOfTextAtSize(fmt(amount), 8);
-      drawText(page, fmt(amount), margin + earningsW + amtW - 4 - aw, y, regular, 8);
+    // Earnings column
+    if (i < earningsRows.length) {
+      const [label, amount] = earningsRows[i];
+      drawText(page, label, margin + 4, y, regular, 8);
+      if (amount > 0) {
+        const aw = regular.widthOfTextAtSize(fmt(amount), 8);
+        drawText(page, fmt(amount), margin + earningsW + amtW - 4 - aw, y, regular, 8);
+      }
     }
-    if (i === 0 && data.deductions > 0) {
-      drawText(page, "Total Deductions", margin + earningsW + amtW + 4, y, regular, 8);
-      const dw = regular.widthOfTextAtSize(fmt(data.deductions), 8);
-      drawText(page, fmt(data.deductions), margin + contentW - 4 - dw, y, regular, 8, rgb(0.7, 0.1, 0.1));
+    // Deductions column
+    if (i < deductionRows.length) {
+      const [label, amount] = deductionRows[i];
+      drawText(page, label, margin + earningsW + amtW + 4, y, regular, 8);
+      const dw = regular.widthOfTextAtSize(fmt(amount), 8);
+      drawText(page, fmt(amount), margin + contentW - 4 - dw, y, regular, 8, RED);
     }
     y -= 14;
   }
@@ -245,7 +266,7 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
   drawText(page, fmt(data.grossSalary), margin + earningsW + amtW - 4 - gw, y + 4, bold, 8, NAVY);
   drawText(page, "Net Deductions", margin + earningsW + amtW + 4, y + 4, bold, 8, NAVY);
   const ndw = bold.widthOfTextAtSize(fmt(data.deductions), 8);
-  drawText(page, fmt(data.deductions), margin + contentW - 4 - ndw, y + 4, bold, 8, rgb(0.7, 0.1, 0.1));
+  drawText(page, fmt(data.deductions), margin + contentW - 4 - ndw, y + 4, bold, 8, RED);
   y -= 24;
 
   // ── Net pay bar ───────────────────────────────────────────────────────────
