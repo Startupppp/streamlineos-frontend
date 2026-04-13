@@ -1,15 +1,17 @@
 import { withAdmin, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { users, organizationMembers, salaryStructures } from "@/lib/db/schema";
+import { users, organizationMembers, salaryStructures, passwordResetTokens } from "@/lib/db/schema";
 import { formatDateOnly } from "@/lib/date-utils";
 import { hash } from "bcryptjs";
 import { randomUUID } from "crypto";
+import { nanoid } from "nanoid";
 import type { NextRequest } from "next/server";
 import { invalidateHrDashboardCache } from "@/lib/hr-cache";
 import { inngest } from "@/lib/inngest/client";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendWelcomeEmail } from "@/lib/email";
+import { appUrl } from "@/lib/app-url";
 
 const onboardSchema = z.object({
   firstName: z.string(),
@@ -131,24 +133,35 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // Await email + audit before returning — serverless kills detached promises
-    await Promise.allSettled([
-      createAuditLog({
+    // Audit log
+    try {
+      await createAuditLog({
         action: "hr.employee_onboarded",
         userId: session.user.id,
         orgId: session.orgId,
         targetId: newUser.id,
         targetType: "employee",
         metadata: { email: body.email, name: `${body.firstName} ${body.lastName}`, role: body.role, designation: body.designation },
-      }),
-      newUser.email
-        ? sendWelcomeEmail(
-            newUser.email,
-            `${body.firstName} ${body.lastName}`,
-            body.password || "Welcome@123"
-          )
-        : Promise.resolve(),
-    ]);
+      });
+    } catch { /* non-critical */ }
+
+    // Generate setup token and send welcome email with setup link
+    if (newUser.email) {
+      try {
+        const setupToken = nanoid(48);
+        await db.insert(passwordResetTokens).values({
+          id: randomUUID(),
+          email: newUser.email,
+          token: setupToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        });
+
+        const setupUrl = `${appUrl}/setup-password?token=${setupToken}`;
+        await sendWelcomeEmail(newUser.email, `${body.firstName} ${body.lastName}`, setupUrl);
+      } catch (emailErr) {
+        console.error("Failed to send setup email", { email: newUser.email, error: emailErr });
+      }
+    }
 
     return ok({ success: true });
   });

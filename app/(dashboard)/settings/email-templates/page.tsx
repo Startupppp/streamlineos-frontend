@@ -109,12 +109,11 @@ const TEMPLATE_REGISTRY: EmailTemplateConfig[] = [
     category: "Auth",
     name: "Welcome / Account Created",
     generate: () => ({
-      subject: "Welcome to Vaivamm Capital — Your Account Details",
+      subject: "Welcome to Vaivamm Capital — Set Up Your Account",
       html: getWelcomeEmailTemplate(
         "Priya Sharma",
         "priya@example.com",
-        "Temp@1234",
-        `${BASE_URL}/signin`
+        `${BASE_URL}/setup-password?token=sample-token`
       ),
     }),
   },

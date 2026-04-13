@@ -73,7 +73,7 @@ export function getPasswordResetEmailTemplate(resetUrl: string): string {
   });
 }
 
-export function getWelcomeEmailTemplate(name: string, email: string, tempPassword: string, loginUrl: string): string {
+export function getWelcomeEmailTemplate(name: string, email: string, setupUrl: string): string {
   const sName = escapeHtml(name);
   const sEmail = escapeHtml(email);
   const content = `
@@ -83,36 +83,32 @@ export function getWelcomeEmailTemplate(name: string, email: string, tempPasswor
     </p>
 
     <p class="email-text">
-      Here are your login credentials:
+      Click the button below to set up your password and activate your account:
     </p>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${setupUrl}" class="email-button">
+        Set Up Your Password
+      </a>
+    </div>
 
     <div class="credential-box">
       <div class="credential-item">
-        <span class="credential-label">Email:</span>
+        <span class="credential-label">Your Email:</span>
         <span class="credential-value">${sEmail}</span>
-      </div>
-      <div class="credential-item">
-        <span class="credential-label">Temporary Password:</span>
-        <span class="credential-value">${tempPassword}</span>
       </div>
     </div>
 
     <div class="security-notice">
       <p class="security-text">
-        <strong>Important:</strong> Please change your password immediately after your first login for security purposes.
+        This link expires in 7 days. If you didn't expect this email, please ignore it or contact your HR administrator.
       </p>
-    </div>
-
-    <div style="text-align: center;">
-      <a href="${loginUrl}" class="email-button">
-        Login Now
-      </a>
     </div>
 
     <div class="divider"></div>
 
     <p class="email-text">
-      <strong>Getting Started:</strong>
+      <strong>After setting up your password:</strong>
     </p>
     <ul style="color: #475569; font-size: 15px; line-height: 1.8; margin: 16px 0;">
       <li>Complete your profile with a photo and personal details</li>
@@ -123,8 +119,8 @@ export function getWelcomeEmailTemplate(name: string, email: string, tempPasswor
   `;
 
   return getEmailTemplate({
-    title: 'Welcome to Vaivamm Capital - Your Account Details',
-    preheader: 'Your account is ready. Let\'s get started!',
+    title: 'Welcome to Vaivamm Capital — Set Up Your Account',
+    preheader: 'Your account is ready — set up your password to get started!',
     content,
   });
 }

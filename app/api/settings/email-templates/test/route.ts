@@ -77,9 +77,9 @@ const TEMPLATE_MAP: Record<string, TemplateEntry> = {
     generateHtml: () => getPasswordResetEmailTemplate(`${BASE_URL}/auth/reset-password?token=test-token`),
   },
   "auth.welcome": {
-    subject: "Welcome to Vaivamm Capital — Your Account Details",
+    subject: "Welcome to Vaivamm Capital — Set Up Your Account",
     generateHtml: () =>
-      getWelcomeEmailTemplate("Test User", "test@example.com", "Temp@1234", `${BASE_URL}/signin`),
+      getWelcomeEmailTemplate("Test User", "test@example.com", `${BASE_URL}/setup-password?token=test-token`),
   },
   "auth.password_changed": {
     subject: "Password Changed Successfully - Vaivamm Capital",

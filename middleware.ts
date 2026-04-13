@@ -53,6 +53,7 @@ const AUTH_ROUTES = [
   "/signup",
   "/forgot-password",
   "/auth/reset-password",
+  "/setup-password",
   "/verify-email",
 ];
 

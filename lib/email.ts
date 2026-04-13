@@ -89,13 +89,12 @@ export async function sendInvitationEmail(
 export async function sendWelcomeEmail(
   email: string,
   name: string,
-  tempPassword: string,
-  loginUrl: string = `${baseUrl}/signin`
+  setupUrl: string
 ) {
   await sendEmail({
     to: email,
-    subject: "Welcome to Vaivamm Capital - Your Account Details",
-    html: getWelcomeEmailTemplate(name, email, tempPassword, loginUrl),
+    subject: "Welcome to Vaivamm Capital — Set Up Your Account",
+    html: getWelcomeEmailTemplate(name, email, setupUrl),
   });
 }
 
