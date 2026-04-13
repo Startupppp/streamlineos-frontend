@@ -8,12 +8,12 @@ import type { NextRequest } from "next/server";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ terminationId: string }> }
 ) {
   return withAuth(async (session) => {
     if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
 
-    const { id } = await params;
+    const { terminationId: id } = await params;
     const terminationId = Number(id);
     if (!terminationId) return err("Invalid ID.", 400);
 

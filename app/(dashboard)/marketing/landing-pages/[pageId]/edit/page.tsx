@@ -6,10 +6,10 @@ import { PageBuilder } from "../../_components/page-builder";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ pageId: string }> };
 
 export default function EditLandingPagePage({ params }: Props) {
-  const { id: rawId } = use(params);
+  const { pageId: rawId } = use(params);
   const pid = Number(rawId);
   const { data: page, isLoading } = useCrmPage(pid > 0 ? pid : null);
 

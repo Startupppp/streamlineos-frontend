@@ -6,14 +6,14 @@ import type { NextRequest } from "next/server";
 
 export async function PATCH(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ terminationId: string }> }
 ) {
   return withAuth(async (session) => {
     if (session.user.role !== "HR" && session.user.role !== "CEO") {
       return err("Only HR can submit for CEO approval.", 403);
     }
 
-    const { id } = await params;
+    const { terminationId: id } = await params;
     const terminationId = Number(id);
     if (!terminationId) return err("Invalid ID.", 400);
 

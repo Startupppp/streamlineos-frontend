@@ -8,10 +8,10 @@ import { clientEnv } from "@/lib/env";
 
 export const revalidate = 60;
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string>> };
+type Props = { params: Promise<{ landingSlug: string }>; searchParams: Promise<Record<string, string>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const { landingSlug: slug } = await params;
   const [page] = await db
     .select({ title: landingPages.title, description: landingPages.description })
     .from(landingPages)
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function LandingPageRoute({ params, searchParams }: Props) {
-  const { slug } = await params;
+  const { landingSlug: slug } = await params;
 
   const [page] = await db
     .select({

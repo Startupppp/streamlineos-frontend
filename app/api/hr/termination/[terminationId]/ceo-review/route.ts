@@ -12,14 +12,14 @@ const reviewSchema = z.object({
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ terminationId: string }> }
 ) {
   return withAuth(async (session) => {
     if (session.user.role !== "CEO") {
       return err("Only CEO can review terminations.", 403);
     }
 
-    const { id } = await params;
+    const { terminationId: id } = await params;
     const terminationId = Number(id);
     if (!terminationId) return err("Invalid ID.", 400);
 

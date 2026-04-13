@@ -36,7 +36,7 @@ import {
 
 export default function PersonDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params.personSlug as string;
   const { data: person, isLoading } = useCrmPerson(slug);
 
   if (isLoading) {

@@ -7,13 +7,13 @@ import type { NextRequest } from "next/server";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ terminationId: string }> }
 ) {
   return withAuth(async (session) => {
     if (!isAdminOrOwner(session.user.role)) return err("Forbidden", 403);
 
-    const { id } = await params;
-    const terminationId = Number(id);
+    const { terminationId: rawId } = await params;
+    const terminationId = Number(rawId);
     if (!terminationId) return err("Invalid ID.", 400);
 
     const data = await db.query.terminations.findFirst({
