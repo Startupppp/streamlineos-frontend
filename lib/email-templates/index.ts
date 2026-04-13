@@ -77,4 +77,7 @@ export {
   getDealStageChangeEmailTemplate,
   getLeadAssignedEmailTemplate,
   getReviewAssignedEmailTemplate,
+  getHelpdeskTicketEmailTemplate,
+  getAssetAssignedEmailTemplate,
+  getPayrollApprovedEmailTemplate,
 } from "./notifications";

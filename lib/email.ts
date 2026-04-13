@@ -41,6 +41,9 @@ import {
   getDealStageChangeEmailTemplate,
   getLeadAssignedEmailTemplate,
   getReviewAssignedEmailTemplate,
+  getHelpdeskTicketEmailTemplate,
+  getAssetAssignedEmailTemplate,
+  getPayrollApprovedEmailTemplate,
 } from "./email-templates";
 import type { MonthlyExpenseReportRow } from "./email-templates";
 import { generateMonthlyExpenseReportXlsx } from "./monthly-expense-report-xlsx";
@@ -915,6 +918,54 @@ export async function sendReviewAssignedEmail(
     to: email,
     subject: "Performance Review Assigned — Vaivamm Capital",
     html: getReviewAssignedEmailTemplate(employeeName, reviewerName, periodStart, periodEnd),
+  });
+}
+
+// ─── Helpdesk Ticket ──────────────────────────────────────────────────────────
+
+export async function sendHelpdeskTicketEmail(
+  email: string,
+  recipientName: string,
+  ticketTitle: string,
+  category: string,
+  priority: string,
+  creatorName: string
+) {
+  await sendEmail({
+    to: email,
+    subject: `Helpdesk Ticket: ${ticketTitle}`,
+    html: getHelpdeskTicketEmailTemplate(recipientName, ticketTitle, category, priority, creatorName),
+  });
+}
+
+// ─── Asset Assignment ─────────────────────────────────────────────────────────
+
+export async function sendAssetAssignedEmail(
+  email: string,
+  employeeName: string,
+  assetName: string,
+  assetType: string,
+  serialNumber: string | null
+) {
+  await sendEmail({
+    to: email,
+    subject: `Asset Assigned: ${assetName}`,
+    html: getAssetAssignedEmailTemplate(employeeName, assetName, assetType, serialNumber),
+  });
+}
+
+// ─── Payroll Approved ─────────────────────────────────────────────────────────
+
+export async function sendPayrollApprovedEmail(
+  email: string,
+  employeeName: string,
+  month: string,
+  approverName: string
+) {
+  await sendEmail({
+    to: email,
+    subject: `Payroll Approved — ${month}`,
+    html: getPayrollApprovedEmailTemplate(employeeName, month, approverName),
   });
 }
 

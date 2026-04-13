@@ -1,11 +1,13 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getAssets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { assets } from "@/lib/db/schema";
+import { assets, users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { formatDateOnly } from "@/lib/date-utils";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { sendAssetAssignedEmail } from "@/lib/email";
 
 const postAssetSchema = z.object({
   name: z.string(),
@@ -51,6 +53,25 @@ export async function POST(req: NextRequest) {
         status: (body.status as "AVAILABLE" | "ASSIGNED" | "MAINTENANCE" | "RETIRED") ?? (body.assignedTo ? "ASSIGNED" : "AVAILABLE"),
       })
       .returning();
+
+    // Email the assigned employee (non-blocking)
+    if (body.assignedTo) {
+      void (async () => {
+        const employee = await db.query.users.findFirst({
+          where: eq(users.id, body.assignedTo!),
+          columns: { email: true, name: true },
+        });
+        if (employee?.email) {
+          await sendAssetAssignedEmail(
+            employee.email,
+            employee.name ?? "Employee",
+            body.name,
+            body.type,
+            body.serialNumber ?? null
+          );
+        }
+      })().catch(() => {});
+    }
 
     return ok(asset);
   });

@@ -1,9 +1,10 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/db/schema";
+import { tasks, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { sendTaskAssignedEmail } from "@/lib/email";
 
 // ─── Update Schema ────────────────────────────────────────────────────────────
 
@@ -59,6 +60,30 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       .returning();
 
     if (!updated) return err("Failed to update task", 500);
+
+    // Email the new assignee on reassignment (non-blocking)
+    if (body.assigneeId && body.assigneeId !== existing.assigneeId && body.assigneeId !== session.user.id) {
+      void (async () => {
+        const assignee = await db.query.users.findFirst({
+          where: eq(users.id, body.assigneeId!),
+          columns: { email: true, name: true },
+        });
+        if (assignee?.email) {
+          const dueStr = updated.dueDate
+            ? new Date(updated.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+            : null;
+          await sendTaskAssignedEmail(
+            assignee.email,
+            assignee.name ?? "Team Member",
+            updated.title,
+            updated.type ?? "CUSTOM",
+            dueStr,
+            session.user.name ?? "Team Member"
+          );
+        }
+      })().catch(() => {});
+    }
+
     return ok(updated);
   });
 }

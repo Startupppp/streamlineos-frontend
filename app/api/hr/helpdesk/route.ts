@@ -1,11 +1,13 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getHelpdeskTickets } from "@/server/queries/hr";
 import { db } from "@/lib/db";
-import { helpdeskTickets } from "@/lib/db/schema";
+import { helpdeskTickets, users, organizationMembers } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import type { TicketPriority, TicketStatus } from "@/types/hr";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { sendHelpdeskTicketEmail } from "@/lib/email";
 
 const createTicketSchema = z.object({
   title: z.string(),
@@ -54,6 +56,31 @@ export async function POST(req: NextRequest) {
         status: "TODO",
       })
       .returning();
+
+    // Notify HR about new helpdesk ticket (non-blocking)
+    void (async () => {
+      const hrMembers = await db
+        .select({ userId: organizationMembers.userId })
+        .from(organizationMembers)
+        .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+
+      for (const m of hrMembers) {
+        const hrUser = await db.query.users.findFirst({
+          where: eq(users.id, m.userId),
+          columns: { email: true, name: true },
+        });
+        if (hrUser?.email) {
+          await sendHelpdeskTicketEmail(
+            hrUser.email,
+            hrUser.name ?? "HR",
+            body.title,
+            body.category ?? "General",
+            body.priority ?? "MEDIUM",
+            session.user.name ?? "Employee"
+          );
+        }
+      }
+    })().catch(() => {});
 
     return ok(ticket);
   });

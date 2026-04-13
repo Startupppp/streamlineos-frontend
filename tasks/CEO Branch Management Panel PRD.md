@@ -1,5 +1,7 @@
 # CEO Branch Management Panel — PRD
 
+## Status: COMPLETE
+
 ## Problem
 The CEO has no centralized view to monitor branch-level performance, manage branch operations, or compare branches. Branch data (tasks, work logs, targets, employees, expenses) exists but is scattered across different modules. The CEO needs a single panel to see everything at a glance and take action.
 
@@ -41,6 +43,20 @@ Build a CEO-only "Branch Command Center" that provides:
 - Branch cards grid with sparkline KPIs
 - Expandable branch detail panel
 - Branch comparison table
+
+## Checklist
+
+### Backend
+- [x] GET /api/dashboard/branch-overview — all branches with KPIs (employees, hours, expenses, clients)
+- [x] Branch scoping via branch.id filters
+- [x] CEO/HR/Admin role check
+
+### Frontend
+- [x] /dashboard/branches — branch card grid with summary KPIs
+- [x] Branch comparison table view (Tabs)
+- [x] Expandable branch detail panel
+- [x] Link to /settings/branches for editing
+- [x] Sidebar nav entries for CEO + HR roles
 
 ### Existing Infrastructure Used
 - `lib/db/branch-filter.ts` — branch scoping

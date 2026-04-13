@@ -3,12 +3,13 @@
 import { NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets, workItemRelations } from "@/lib/db/schema";
+import { tickets, ticketAssignees, ticketComments, ticketAttachments, ticketLabelMappings, ticketWatchers, timesheets, workItemRelations, users } from "@/lib/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
 import { isAdminOrOwner } from "@/lib/auth-helpers";
 import { createNotification } from "@/server/actions/create-notification";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { sendTicketAssignmentEmail, sendTicketReviewRequestEmail, sendTicketChangesRequestedEmail } from "@/lib/email";
 
 const updateTicketSchema = z.object({
   title: z.string().min(1).optional(),
@@ -147,7 +148,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (newAssigneeNotifyIds.size > 0) {
       const ticketData = await db.query.tickets.findFirst({
         where: eq(tickets.id, id),
-        columns: { title: true, projectId: true },
+        columns: { title: true, projectId: true, type: true, priority: true },
+        with: { project: { columns: { name: true } } },
       });
       for (const userId of newAssigneeNotifyIds) {
         if (userId === session.user.id) continue;
@@ -163,7 +165,77 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         } catch (notifErr) {
           logger.error("Failed to create ticket assignment notification", { error: notifErr });
         }
+
+        // Send assignment email (non-blocking)
+        void (async () => {
+          const assignee = await db.query.users.findFirst({
+            where: eq(users.id, userId),
+            columns: { email: true, name: true },
+          });
+          if (assignee?.email && ticketData && ticketData.projectId) {
+            await sendTicketAssignmentEmail(
+              assignee.email,
+              assignee.name ?? "Team Member",
+              ticketData.title ?? `#${id}`,
+              ticketData.type ?? "TASK",
+              ticketData.priority ?? "MEDIUM",
+              ticketData.project?.name ?? "Project",
+              ticketData.projectId,
+              id,
+              session.user.name ?? "Team Member"
+            );
+          }
+        })().catch(() => {});
       }
+    }
+
+    // Send review/changes request emails on status change (non-blocking)
+    if (body.status === "IN_REVIEW" || body.status === "CHANGES_REQUESTED") {
+      void (async () => {
+        const ticketData = await db.query.tickets.findFirst({
+          where: eq(tickets.id, id),
+          columns: { title: true, projectId: true, type: true, assigneeId: true, reporterId: true },
+          with: { project: { columns: { name: true } } },
+        });
+        if (!ticketData || !ticketData.projectId) return;
+
+        if (body.status === "IN_REVIEW" && ticketData.reporterId) {
+          const reviewer = await db.query.users.findFirst({
+            where: eq(users.id, ticketData.reporterId),
+            columns: { email: true, name: true },
+          });
+          if (reviewer?.email) {
+            await sendTicketReviewRequestEmail(
+              reviewer.email,
+              reviewer.name ?? "Reviewer",
+              ticketData.title ?? `#${id}`,
+              ticketData.type ?? "TASK",
+              ticketData.project?.name ?? "Project",
+              ticketData.projectId!,
+              id,
+              session.user.name ?? "Team Member"
+            );
+          }
+        }
+
+        if (body.status === "CHANGES_REQUESTED" && ticketData.assigneeId) {
+          const assignee = await db.query.users.findFirst({
+            where: eq(users.id, ticketData.assigneeId),
+            columns: { email: true, name: true },
+          });
+          if (assignee?.email) {
+            await sendTicketChangesRequestedEmail(
+              assignee.email,
+              assignee.name ?? "Team Member",
+              ticketData.title ?? `#${id}`,
+              ticketData.project?.name ?? "Project",
+              ticketData.projectId!,
+              id,
+              session.user.name ?? "Reviewer"
+            );
+          }
+        }
+      })().catch(() => {});
     }
 
     return ok({ success: true });

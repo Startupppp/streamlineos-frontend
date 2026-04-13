@@ -1,9 +1,10 @@
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { leaveRequests } from "@/lib/db/schema";
+import { leaveRequests, leaveTypes, users, organizationMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { writeAuditLog } from "@/lib/db/audit";
 import type { NextRequest } from "next/server";
+import { sendLeaveCancellationEmail } from "@/lib/email";
 
 export async function PATCH(
   _req: NextRequest,
@@ -42,6 +43,38 @@ export async function PATCH(
       targetId: String(leaveId),
       targetType: "leave_request",
     });
+
+    // Notify HR about the cancellation (non-blocking)
+    void (async () => {
+      const leaveType = existing.leaveTypeId
+        ? await db.query.leaveTypes.findFirst({
+            where: eq(leaveTypes.id, existing.leaveTypeId),
+            columns: { name: true },
+          })
+        : null;
+
+      const hrMembers = await db
+        .select({ userId: organizationMembers.userId })
+        .from(organizationMembers)
+        .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+
+      for (const m of hrMembers) {
+        const hrUser = await db.query.users.findFirst({
+          where: eq(users.id, m.userId),
+          columns: { email: true, name: true },
+        });
+        if (hrUser?.email) {
+          await sendLeaveCancellationEmail(
+            hrUser.email,
+            hrUser.name ?? "HR",
+            session.user.name ?? "Employee",
+            leaveType?.name ?? "Leave",
+            existing.startDate,
+            existing.endDate
+          );
+        }
+      }
+    })().catch(() => {});
 
     return ok({ success: true });
   });

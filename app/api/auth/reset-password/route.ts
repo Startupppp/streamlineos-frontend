@@ -6,6 +6,7 @@ import { eq, and, gt } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { sendPasswordChangeConfirmationEmail } from "@/lib/email";
 
 const schema = z.object({
   token: z.string(),
@@ -45,5 +46,16 @@ export async function POST(req: NextRequest) {
     .where(eq(passwordResetTokens.email, tokenRecord.email));
 
   logger.info("Auth: password reset completed", { email: tokenRecord.email });
+
+  // Send confirmation email (non-blocking)
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, tokenRecord.email),
+    columns: { name: true },
+  });
+  void sendPasswordChangeConfirmationEmail(
+    tokenRecord.email,
+    user?.name ?? "User"
+  ).catch(() => {});
+
   return ok({ success: true });
 }
