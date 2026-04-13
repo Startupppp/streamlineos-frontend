@@ -77,6 +77,8 @@ export {
   getDealStageChangeEmailTemplate,
   getLeadAssignedEmailTemplate,
   getReviewAssignedEmailTemplate,
+  getOnboardingCompleteEmployeeEmailTemplate,
+  getOnboardingCompleteHrEmailTemplate,
   getHelpdeskTicketEmailTemplate,
   getAssetAssignedEmailTemplate,
   getPayrollApprovedEmailTemplate,

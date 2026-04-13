@@ -3,7 +3,8 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { onboardingTasks } from "@/lib/db/schema";
+import { onboardingTasks, users, organizationMembers } from "@/lib/db/schema";
+import { sendOnboardingCompleteEmployeeEmail, sendOnboardingCompleteHrEmail } from "@/lib/email";
 
 const patchSchema = z.object({
   status: z.enum(["COMPLETED", "PENDING"]),
@@ -48,6 +49,57 @@ export async function PATCH(
         completedBy: body.status === "COMPLETED" ? session.user.id : null,
       })
       .where(eq(onboardingTasks.id, taskIdNum));
+
+    // Check if all onboarding tasks are now complete — send completion emails
+    if (body.status === "COMPLETED") {
+      void (async () => {
+        const pendingTasks = await db
+          .select({ id: onboardingTasks.id })
+          .from(onboardingTasks)
+          .where(
+            and(
+              eq(onboardingTasks.userId, task.userId),
+              eq(onboardingTasks.orgId, session.orgId),
+              eq(onboardingTasks.status, "PENDING")
+            )
+          );
+
+        if (pendingTasks.length > 0) return; // Still tasks remaining
+
+        // All tasks complete — notify employee + HR
+        const employee = await db.query.users.findFirst({
+          where: eq(users.id, task.userId),
+          columns: { email: true, name: true },
+        });
+
+        if (employee?.email) {
+          await sendOnboardingCompleteEmployeeEmail(
+            employee.email,
+            employee.name ?? "Team Member"
+          );
+        }
+
+        // Notify HR members
+        const hrMembers = await db
+          .select({ userId: organizationMembers.userId })
+          .from(organizationMembers)
+          .where(and(eq(organizationMembers.orgId, session.orgId), eq(organizationMembers.role, "HR")));
+
+        for (const m of hrMembers) {
+          const hrUser = await db.query.users.findFirst({
+            where: eq(users.id, m.userId),
+            columns: { email: true, name: true },
+          });
+          if (hrUser?.email) {
+            await sendOnboardingCompleteHrEmail(
+              hrUser.email,
+              hrUser.name ?? "HR",
+              employee?.name ?? "Employee"
+            );
+          }
+        }
+      })().catch(() => {});
+    }
 
     return ok({ success: true });
   });

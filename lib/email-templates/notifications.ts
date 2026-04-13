@@ -399,6 +399,43 @@ export function getReviewAssignedEmailTemplate(
   return getEmailTemplate({ title: "Performance Review Assigned", content });
 }
 
+// ─── Onboarding Complete ──────────────────────────────────────────────────────
+
+export function getOnboardingCompleteEmployeeEmailTemplate(
+  employeeName: string
+): string {
+  const content = `
+    <h2 class="email-title">🎉 Onboarding Complete!</h2>
+    <p class="email-text">
+      Congratulations <strong>${escapeHtml(employeeName)}</strong>, you've completed all your onboarding tasks!
+    </p>
+    <p class="email-text">
+      Your onboarding journey is now complete. You're all set to get started with your day-to-day work.
+      If you have any questions, don't hesitate to reach out to your manager or HR.
+    </p>
+    <div style="text-align: center;">
+      <a href="${baseUrl}/hr/onboarding/my-tasks" class="email-button">View Dashboard</a>
+    </div>
+  `;
+  return getEmailTemplate({ title: "Onboarding Complete", preheader: "You're all set!", content });
+}
+
+export function getOnboardingCompleteHrEmailTemplate(
+  hrName: string,
+  employeeName: string
+): string {
+  const content = `
+    <h2 class="email-title">✅ Onboarding Complete</h2>
+    <p class="email-text">
+      Hi <strong>${escapeHtml(hrName)}</strong>, <strong>${escapeHtml(employeeName)}</strong> has completed all onboarding tasks.
+    </p>
+    <div style="text-align: center;">
+      <a href="${baseUrl}/hr/onboarding" class="email-button">View Onboarding</a>
+    </div>
+  `;
+  return getEmailTemplate({ title: "Onboarding Complete", content });
+}
+
 // ─── Helpdesk Ticket ──────────────────────────────────────────────────────────
 
 export function getHelpdeskTicketEmailTemplate(

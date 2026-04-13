@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import {
   onboardingTasks,
   onboardingTemplates,
-  onboardingTemplateSteps,
   users,
   notifications,
   organizationMembers,
