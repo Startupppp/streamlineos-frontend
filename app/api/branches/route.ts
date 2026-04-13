@@ -6,16 +6,32 @@ import { branches, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
+const optionalTrimmed = z
+  .string()
+  .transform((v) => v.trim())
+  .optional()
+  .transform((v) => (v && v.length > 0 ? v : undefined));
+
 const createSchema = z.object({
-  name: z.string().min(1),
-  code: z.string().min(1),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().optional(),
-  pincode: z.string().optional(),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
+  name: z.string().trim().min(2, "Branch name is required"),
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9-]{2,20}$/, "Invalid branch code format"),
+  city: optionalTrimmed,
+  state: optionalTrimmed,
+  country: optionalTrimmed,
+  pincode: optionalTrimmed.refine((v) => !v || /^[A-Za-z0-9 -]{3,12}$/.test(v), {
+    message: "Invalid pincode",
+  }),
+  address: optionalTrimmed,
+  phone: optionalTrimmed.refine((v) => !v || /^[+()\d\s-]{7,20}$/.test(v), {
+    message: "Invalid phone number",
+  }),
+  email: optionalTrimmed.refine((v) => !v || z.string().email().safeParse(v).success, {
+    message: "Invalid email",
+  }),
   branchManagerId: z.string().optional(),
   branchHrId: z.string().optional(),
 });

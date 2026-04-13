@@ -24,27 +24,88 @@ const EMPTY_FORM = {
   pincode: "", address: "", phone: "", email: "",
 };
 
+const CODE_REGEX = /^[A-Z0-9-]{2,20}$/;
+const PINCODE_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
+const PHONE_REGEX = /^[+()\d\s-]{7,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type FormErrors = Partial<Record<keyof typeof EMPTY_FORM, string>>;
+
 export default function BranchManagementPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const { data: branchList, isLoading } = useBranches();
   const createMutation = useCreateBranch();
 
   const branches = branchList ?? [];
 
-  const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFormData(f => ({ ...f, [key]: e.target.value }));
+  const set = (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = key === "code" ? e.target.value.toUpperCase() : e.target.value;
+    setFormData((f) => ({ ...f, [key]: value }));
+    setFormErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
-  const handleCloseCreate = useCallback(() => setShowCreate(false), []);
+  const handleCloseCreate = useCallback(() => {
+    setShowCreate(false);
+    setFormErrors({});
+  }, []);
+
+  const validateForm = () => {
+    const trimmed = {
+      name: formData.name.trim(),
+      code: formData.code.trim().toUpperCase(),
+      city: formData.city.trim(),
+      state: formData.state.trim(),
+      country: formData.country.trim(),
+      pincode: formData.pincode.trim(),
+      address: formData.address.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim().toLowerCase(),
+    };
+
+    const errors: FormErrors = {};
+
+    if (!trimmed.name) errors.name = "Branch name is required";
+    else if (trimmed.name.length < 2) errors.name = "Branch name must be at least 2 characters";
+
+    if (!trimmed.code) errors.code = "Branch code is required";
+    else if (!CODE_REGEX.test(trimmed.code)) {
+      errors.code = "Use 2-20 chars: A-Z, numbers, hyphen";
+    }
+
+    if (trimmed.email && !EMAIL_REGEX.test(trimmed.email)) {
+      errors.email = "Enter a valid email";
+    }
+
+    if (trimmed.phone && !PHONE_REGEX.test(trimmed.phone)) {
+      errors.phone = "Enter a valid phone number";
+    }
+
+    if (trimmed.pincode && !PINCODE_REGEX.test(trimmed.pincode)) {
+      errors.pincode = "Enter a valid pincode";
+    }
+
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return null;
+    return trimmed;
+  };
 
   const handleCreate = () => {
-    createMutation.mutate(formData, {
+    const validData = validateForm();
+    if (!validData) {
+      toast.error("Please fix the highlighted fields");
+      return;
+    }
+
+    createMutation.mutate(validData, {
       onSuccess: () => {
         toast.success("Branch created");
         setShowCreate(false);
         setFormData({ ...EMPTY_FORM });
+        setFormErrors({});
       },
       onError: (err) => toast.error(err.message),
     });
@@ -157,10 +218,12 @@ export default function BranchManagementPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Branch Name *</Label>
                   <Input value={formData.name} onChange={set("name")} placeholder="e.g., Mumbai Office" />
+                  {formErrors.name && <p className="text-[11px] text-destructive">{formErrors.name}</p>}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Branch Code *</Label>
                   <Input value={formData.code} onChange={set("code")} placeholder="e.g., MUM-01" />
+                  {formErrors.code && <p className="text-[11px] text-destructive">{formErrors.code}</p>}
                 </div>
               </div>
 
@@ -183,6 +246,7 @@ export default function BranchManagementPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Pincode</Label>
                   <Input value={formData.pincode} onChange={set("pincode")} placeholder="e.g., 400001" />
+                  {formErrors.pincode && <p className="text-[11px] text-destructive">{formErrors.pincode}</p>}
                 </div>
               </div>
 
@@ -195,10 +259,12 @@ export default function BranchManagementPage() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Phone</Label>
                   <Input value={formData.phone} onChange={set("phone")} placeholder="e.g., +91 9876543210" />
+                  {formErrors.phone && <p className="text-[11px] text-destructive">{formErrors.phone}</p>}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Email</Label>
                   <Input value={formData.email} onChange={set("email")} placeholder="branch@company.com" />
+                  {formErrors.email && <p className="text-[11px] text-destructive">{formErrors.email}</p>}
                 </div>
               </div>
             </div>
