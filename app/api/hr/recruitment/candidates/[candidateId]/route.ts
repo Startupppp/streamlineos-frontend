@@ -1,6 +1,6 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { candidates, candidateSlaTracking } from "@/lib/db/schema";
+import { candidates, candidateSlaTracking, candidateApplications, interviews } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import type { NextRequest } from "next/server";
@@ -101,6 +101,30 @@ export async function PATCH(
         updatedAt: new Date(),
       })
       .where(eq(candidates.id, candidateId));
+
+    return ok({ success: true });
+  });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ candidateId: string }> }
+) {
+  return withAuth(async (session) => {
+    const { candidateId: id } = await params;
+    const candidateId = Number(id);
+    if (!candidateId) return err("Invalid candidate ID.", 400);
+
+    const existing = await db.query.candidates.findFirst({
+      where: and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)),
+    });
+    if (!existing) return err("Candidate not found.", 404);
+
+    // Delete in dependency order
+    await db.delete(candidateSlaTracking).where(eq(candidateSlaTracking.candidateId, candidateId));
+    await db.delete(interviews).where(eq(interviews.candidateId, candidateId));
+    await db.delete(candidateApplications).where(eq(candidateApplications.candidateId, candidateId));
+    await db.delete(candidates).where(and(eq(candidates.id, candidateId), eq(candidates.orgId, session.orgId)));
 
     return ok({ success: true });
   });

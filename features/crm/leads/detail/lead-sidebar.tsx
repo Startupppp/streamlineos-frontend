@@ -1,6 +1,8 @@
 "use client";
 
+import { CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { LeadActivityTimeline } from "./lead-activity-timeline";
 
 interface TimelineItem {
@@ -26,6 +28,16 @@ interface LeadSidebarProps {
   timelineLoading: boolean;
 }
 
+function formatDate(val: Date | string | null | undefined): string {
+  if (!val) return "—";
+  const d = new Date(val);
+  return d.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function LeadSidebar({
   lead,
   timeline,
@@ -33,28 +45,47 @@ export function LeadSidebar({
 }: LeadSidebarProps) {
   const keyDates = [
     { label: "Created", value: lead.createdAt },
-    { label: "Updated", value: lead.updatedAt },
+    { label: "Last Updated", value: lead.updatedAt },
     { label: "Assigned", value: lead.assignedAt },
     { label: "Converted", value: lead.convertedAt },
   ].filter((d) => d.value);
 
-  return (
-    <div className="space-y-6">
+  const avatarInitials = lead.assignedTo?.name
+    ? lead.assignedTo.name
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? "")
+        .join("")
+    : "?";
 
+  return (
+    <div className="space-y-4">
+      {/* Assigned To */}
       {lead.assignedTo && (
         <Card className="shadow-noir">
-          <CardHeader>
-            <CardTitle className="text-base">Assigned To</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
+              Assigned To
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gold/10 flex items-center justify-center text-sm font-semibold text-gold">
-                {lead.assignedTo.name?.[0] ?? "?"}
+              <div
+                className={cn(
+                  "h-11 w-11 rounded-full shrink-0",
+                  "ring-2 ring-gold/50 ring-offset-2 ring-offset-background",
+                  "bg-gold/10 flex items-center justify-center",
+                  "text-gold font-bold text-base select-none"
+                )}
+              >
+                {avatarInitials}
               </div>
-              <div>
-                <p className="text-sm font-medium">{lead.assignedTo.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {lead.assignedTo.email}
+              <div className="min-w-0">
+                <p className="font-semibold text-sm truncate">
+                  {lead.assignedTo.name ?? "Unknown"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {lead.assignedTo.email ?? ""}
                 </p>
               </div>
             </div>
@@ -62,29 +93,49 @@ export function LeadSidebar({
         </Card>
       )}
 
-      <Card className="shadow-noir">
-        <CardHeader>
-          <CardTitle className="text-base">Key Dates</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {keyDates.map((d) => (
-            <div
-              key={d.label}
-              className="flex items-center justify-between text-sm"
-            >
-              <span className="text-muted-foreground">{d.label}</span>
-              <span>
-                {new Date(d.value as string | Date).toLocaleDateString()}
-              </span>
+      {/* Key Dates */}
+      {keyDates.length > 0 && (
+        <Card className="shadow-noir">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
+              Key Dates
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              {/* Vertical connector line */}
+              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-border/50" />
+              <div className="space-y-3">
+                {keyDates.map((d, idx) => (
+                  <div key={d.label} className="flex items-center gap-3 pl-5 relative">
+                    {/* Dot */}
+                    <div
+                      className={cn(
+                        "absolute left-0 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center",
+                        idx === 0
+                          ? "border-gold bg-gold/20"
+                          : "border-border bg-background"
+                      )}
+                    />
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {d.label}
+                      </span>
+                      <span className="text-xs font-medium tabular-nums">
+                        {formatDate(d.value as Date | string | null)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      <LeadActivityTimeline
-        timeline={timeline}
-        isLoading={timelineLoading}
-      />
+      {/* Activity Timeline */}
+      <LeadActivityTimeline timeline={timeline} isLoading={timelineLoading} />
     </div>
   );
 }

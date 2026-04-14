@@ -20,71 +20,128 @@ interface LeadActivityTimelineProps {
   isLoading: boolean;
 }
 
+function timeAgo(ts: string | Date | null | undefined): string {
+  if (!ts) return "";
+  const now = Date.now();
+  const then = new Date(ts).getTime();
+  const diff = now - then;
+  if (diff < 0) return "just now";
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks}w ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  note: "Note",
+  task: "Task",
+  email: "Email",
+  activity: "Activity",
+  call: "Call",
+};
+
 export function LeadActivityTimeline({
   timeline,
   isLoading,
 }: LeadActivityTimelineProps) {
   return (
     <Card className="shadow-noir">
-      <CardHeader>
-        <CardTitle className="text-base">Activity Timeline</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm text-muted-foreground uppercase tracking-wide font-semibold">
+          Activity Timeline
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-16" />
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <Skeleton className="h-16 flex-1" />
+              </div>
             ))}
           </div>
         ) : timeline && timeline.length > 0 ? (
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[450px] pr-2">
             <div className="relative">
-              <div className="absolute left-4 top-0 bottom-0 w-px bg-border/50" />
-              <div className="space-y-4">
-                {timeline.map((item) => {
+              {/* Vertical spine */}
+              <div className="absolute left-[15px] top-4 bottom-4 w-px bg-border/40" />
+
+              <div className="space-y-3">
+                {timeline.map((item, idx) => {
                   const config =
                     TIMELINE_ICONS[item.type] ?? TIMELINE_ICONS.note;
                   const ItemIcon = config.icon;
                   const data = item.data;
+                  const isLast = idx === timeline.length - 1;
+
                   return (
                     <div
                       key={`${item.type}-${item.id}`}
-                      className="relative flex gap-4 pl-10"
+                      className="relative flex gap-3 pl-9"
                     >
+                      {/* Icon circle on the spine */}
                       <div
                         className={cn(
-                          "absolute left-0 top-0 h-8 w-8 rounded-full flex items-center justify-center",
+                          "absolute left-0 top-1 h-[30px] w-[30px] rounded-full",
+                          "flex items-center justify-center shrink-0",
+                          "ring-2 ring-background",
                           config.color
                         )}
                       >
-                        <ItemIcon className="h-4 w-4" />
+                        <ItemIcon className="h-3.5 w-3.5" />
                       </div>
 
-                      <div className="flex-1 p-3 rounded-lg bg-muted/20 border border-border/30">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium capitalize">
-                            {item.type}
+                      {/* Content card */}
+                      <div
+                        className={cn(
+                          "flex-1 rounded-lg border border-border/40 bg-muted/15 px-3 py-2.5",
+                          "hover:bg-muted/25 transition-colors",
+                          !isLast && "mb-0"
+                        )}
+                      >
+                        {/* Header row */}
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-xs font-semibold capitalize text-foreground/80">
+                            {TYPE_LABELS[item.type] ?? item.type}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {item.timestamp
-                              ? new Date(item.timestamp).toLocaleDateString()
-                              : ""}
+                          <span
+                            className="text-[10px] text-muted-foreground tabular-nums shrink-0"
+                            title={
+                              item.timestamp
+                                ? new Date(item.timestamp).toLocaleString()
+                                : ""
+                            }
+                          >
+                            {timeAgo(item.timestamp)}
                           </span>
                         </div>
 
+                        {/* Type-specific content */}
                         {item.type === "note" && (
-                          <p className="text-sm mt-1">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
                             {String(data.body ?? "")}
                           </p>
                         )}
 
                         {item.type === "task" && (
-                          <div className="mt-1">
-                            <p className="text-sm">{String(data.title ?? "")}</p>
+                          <div className="space-y-1">
+                            <p className="text-xs text-foreground/80">
+                              {String(data.title ?? "")}
+                            </p>
                             {typeof data.status === "string" && data.status && (
                               <Badge
                                 variant="secondary"
-                                className="text-[10px] mt-1"
+                                className="text-[10px] px-1.5 py-0"
                               >
                                 {data.status}
                               </Badge>
@@ -93,33 +150,36 @@ export function LeadActivityTimeline({
                         )}
 
                         {item.type === "email" && (
-                          <div className="mt-1">
-                            <p className="text-sm font-medium">
-                              {String(data.subject ?? "")}
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-medium text-foreground/80">
+                              {String(data.subject ?? "(No subject)")}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {String(data.direction ?? "sent")} -{" "}
+                            <p className="text-[10px] text-muted-foreground">
+                              {String(data.direction ?? "sent")} ·{" "}
                               {String(data.toEmail ?? "")}
                             </p>
                           </div>
                         )}
 
-                        {item.type === "activity" && (
-                          <div className="mt-1">
+                        {(item.type === "activity" || item.type === "call") && (
+                          <div className="space-y-0.5">
                             {data.subject ? (
-                              <p className="text-sm">{String(data.subject)}</p>
+                              <p className="text-xs text-foreground/80">
+                                {String(data.subject)}
+                              </p>
                             ) : null}
                             {data.notes ? (
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <p className="text-[10px] text-muted-foreground leading-relaxed">
                                 {String(data.notes)}
                               </p>
                             ) : null}
                           </div>
                         )}
 
+                        {/* Author */}
                         {data.author ? (
-                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                            <User className="h-3 w-3" />
+                          <p className="text-[10px] text-muted-foreground/70 mt-1.5 flex items-center gap-1">
+                            <User className="h-2.5 w-2.5" />
                             {String(
                               (data.author as Record<string, unknown>).name ??
                                 ""
@@ -134,9 +194,12 @@ export function LeadActivityTimeline({
             </div>
           </ScrollArea>
         ) : (
-          <div className="text-center py-8 text-muted-foreground/60">
-            <p className="text-sm">No activities recorded yet</p>
-            <p className="text-xs mt-1">
+          <div className="flex flex-col items-center justify-center py-10 gap-2 text-center">
+            <div className="h-10 w-10 rounded-full bg-muted/30 flex items-center justify-center">
+              <User className="h-5 w-5 text-muted-foreground/50" />
+            </div>
+            <p className="text-sm text-muted-foreground">No activities yet</p>
+            <p className="text-xs text-muted-foreground/60">
               Log your first interaction with this lead
             </p>
           </div>

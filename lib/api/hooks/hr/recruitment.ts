@@ -172,8 +172,22 @@ export function useUpdateCandidate() {
   return useMutation({
     mutationFn: ({ id, ...data }: UpdateCandidateInput & { id: number }) =>
       apiClient.patch<{ success: boolean }>(`/hr/recruitment/candidates/${id}`, data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.candidate(id) });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
+    },
+  });
+}
+
+export function useDeleteCandidate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/recruitment/candidates/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.candidates() });
+      qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentStats() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.recruitmentPipeline() });
     },
   });

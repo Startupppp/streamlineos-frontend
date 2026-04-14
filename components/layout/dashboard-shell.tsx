@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Menu } from "lucide-react";
 import { AppSidebar } from "./app-sidebar";
@@ -9,8 +10,12 @@ import { NotActivatedPage } from "../auth/not-activated-page";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
-import { ChatUnreadNotifications } from "@/components/chat/chat-unread-notifications";
 import Image from "next/image";
+
+const ChatUnreadNotifications = dynamic(
+  () => import("@/components/chat/chat-unread-notifications").then((m) => m.ChatUnreadNotifications),
+  { ssr: false }
+);
 
 const SIDEBAR_COOKIE = "sidebar-collapsed";
 const SIDEBAR_COLLAPSED_W = "3.5rem";

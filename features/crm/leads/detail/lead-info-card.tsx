@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import {
   Mail,
@@ -8,6 +9,8 @@ import {
   Building2,
   Target,
   User,
+  Copy,
+  CheckCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +33,10 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
 import { type EditForm } from "./lead-types";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface LeadInfoCardProps {
   lead: {
@@ -52,6 +58,86 @@ interface LeadInfoCardProps {
   isUpdatePending: boolean;
   onEditSubmit: (data: EditForm) => void;
   onCancelEdit: () => void;
+}
+
+function CopyChip({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | null | undefined;
+  href?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+        toast.success(`${label} copied`);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        toast.error("Failed to copy");
+      }
+    },
+    [value, label]
+  );
+
+  if (!value) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/30 opacity-40 select-none">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <div className="min-w-0">
+          <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
+            {label}
+          </p>
+          <p className="text-xs text-muted-foreground">—</p>
+        </div>
+      </div>
+    );
+  }
+
+  const content = (
+    <>
+      <Icon className="h-3.5 w-3.5 text-gold shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
+          {label}
+        </p>
+        <p className="text-xs font-medium truncate">{value}</p>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="shrink-0 p-0.5 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+        title={`Copy ${label}`}
+      >
+        {copied ? (
+          <CheckCheck className="h-3 w-3 text-emerald-400" />
+        ) : (
+          <Copy className="h-3 w-3" />
+        )}
+      </button>
+    </>
+  );
+
+  return href ? (
+    <a
+      href={href}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-gold/40 hover:bg-gold/5 transition-all group"
+    >
+      {content}
+    </a>
+  ) : (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-gold/40 hover:bg-gold/5 transition-all">
+      {content}
+    </div>
+  );
 }
 
 export function LeadInfoCard({
@@ -108,7 +194,11 @@ export function LeadInfoCard({
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <PhoneInput defaultCountry="IN" placeholder="Enter phone number" {...field} />
+                        <PhoneInput
+                          defaultCountry="IN"
+                          placeholder="Enter phone number"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -209,11 +299,7 @@ export function LeadInfoCard({
               </div>
 
               <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancelEdit}
-                >
+                <Button type="button" variant="outline" onClick={onCancelEdit}>
                   Cancel
                 </Button>
                 <Button
@@ -231,90 +317,104 @@ export function LeadInfoCard({
     );
   }
 
+  const contactChips = [
+    {
+      icon: Mail,
+      label: "Email",
+      value: lead.email,
+      href: lead.email ? `mailto:${lead.email}` : undefined,
+    },
+    {
+      icon: Phone,
+      label: "Phone",
+      value: lead.phone,
+      href: lead.phone ? `tel:${lead.phone}` : undefined,
+    },
+    {
+      icon: MessageSquare,
+      label: "WhatsApp",
+      value: lead.whatsappNumber,
+      href: lead.whatsappNumber
+        ? `https://wa.me/${lead.whatsappNumber.replace(/\D/g, "")}`
+        : undefined,
+    },
+    { icon: Building2, label: "Company", value: lead.company },
+    {
+      icon: Target,
+      label: "Source",
+      value: lead.source?.replace(/_/g, " "),
+    },
+    { icon: User, label: "City", value: lead.city },
+  ];
+
   return (
     <Card className="shadow-noir">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-base">Lead Information</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            {
-              icon: Mail,
-              label: "Email",
-              value: lead.email,
-              href: lead.email ? `mailto:${lead.email}` : undefined,
-            },
-            {
-              icon: Phone,
-              label: "Phone",
-              value: lead.phone,
-              href: lead.phone ? `tel:${lead.phone}` : undefined,
-            },
-            {
-              icon: MessageSquare,
-              label: "WhatsApp",
-              value: lead.whatsappNumber,
-            },
-            { icon: Building2, label: "Company", value: lead.company },
-            {
-              icon: Target,
-              label: "Source",
-              value: lead.source?.replace("_", " "),
-            },
-            { icon: User, label: "City", value: lead.city },
-          ].map((item) => (
-            <div key={item.label} className="flex items-start gap-2">
-              <item.icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                {item.href ? (
-                  <a
-                    href={item.href}
-                    className="text-sm text-gold hover:underline"
-                  >
-                    {item.value || "\u2014"}
-                  </a>
-                ) : (
-                  <p className="text-sm capitalize">{item.value || "\u2014"}</p>
-                )}
-              </div>
-            </div>
+        {/* Contact chips grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {contactChips.map((chip) => (
+            <CopyChip
+              key={chip.label}
+              icon={chip.icon}
+              label={chip.label}
+              value={chip.value as string | null | undefined}
+              href={chip.href}
+            />
           ))}
         </div>
 
+        {/* Financial gradient band */}
         {(lead.potentialValue || lead.investmentInterest) && (
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-gradient-to-r from-emerald-500/5 to-gold/5 border border-border/50">
+          <div
+            className={cn(
+              "grid gap-4 p-4 rounded-xl border border-border/40",
+              lead.potentialValue && lead.investmentInterest
+                ? "grid-cols-2"
+                : "grid-cols-1",
+              "bg-gradient-to-r from-emerald-500/5 via-transparent to-gold/5"
+            )}
+          >
             {lead.potentialValue && (
-              <div>
-                <p className="text-xs text-muted-foreground">Potential Value</p>
-                <p className="text-xl font-bold text-emerald-400">
-                  {"\u20B9"}
-                  {Number(lead.potentialValue).toLocaleString("en-IN")}
+              <div className="space-y-0.5">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                  Potential Value
+                </p>
+                <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+                  ₹{Number(lead.potentialValue).toLocaleString("en-IN")}
                 </p>
               </div>
             )}
             {lead.investmentInterest && (
-              <div>
-                <p className="text-xs text-muted-foreground">
+              <div className="space-y-0.5">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
                   Investment Interest
                 </p>
-                <p className="text-xl font-bold text-gold">
-                  {"\u20B9"}
-                  {Number(lead.investmentInterest).toLocaleString("en-IN")}
+                <p className="text-2xl font-bold text-gold tabular-nums">
+                  ₹{Number(lead.investmentInterest).toLocaleString("en-IN")}
                 </p>
               </div>
             )}
           </div>
         )}
 
+        {/* Notes block */}
         {lead.notes && (
-          <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
-            <p className="text-xs text-muted-foreground mb-1">Notes</p>
-            <p className="text-sm whitespace-pre-wrap">{lead.notes}</p>
+          <div className="rounded-lg bg-muted/20 border border-border/30 overflow-hidden">
+            <div className="px-3 py-1.5 bg-muted/30 border-b border-border/20">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                Notes
+              </p>
+            </div>
+            <p className="text-sm whitespace-pre-wrap px-3 py-2.5 font-mono leading-relaxed text-muted-foreground">
+              {lead.notes}
+            </p>
           </div>
         )}
 
+        {/* Tags */}
         {Array.isArray(lead.tags) && (lead.tags as string[]).length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {(lead.tags as string[]).map((tag) => (

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLead, useUpdateLeadStatus, useLogLeadActivity } from "@/lib/api/hooks/leads";
+import { useCreateTask } from "@/lib/api/hooks/tasks";
 import { toast } from "sonner";
 
 import { LeadDetailHeader } from "@/features/crm/leads/detail/lead-detail-header";
@@ -50,6 +51,7 @@ export default function LeadDetailPage({
   const updateLeadMutation = useUpdateLead();
   const updateStatusMutation = useUpdateLeadStatus();
   const logActivityMutation = useLogLeadActivity();
+  const createTaskMutation = useCreateTask();
 
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema),
@@ -117,15 +119,26 @@ export default function LeadDetailPage({
 
   const onTaskSubmit = useCallback(
     (data: TaskForm) => {
-      logActivityMutation.mutate(
-        { leadId, type: "task", date: new Date().toISOString(), subject: data.title, notes: data.dueDate || undefined },
+      // Build ISO dueDate: DatePicker returns "yyyy-MM-dd", default time to 09:00
+      const dueDate = data.dueDate
+        ? new Date(`${data.dueDate}T09:00:00`).toISOString()
+        : undefined;
+
+      createTaskMutation.mutate(
+        {
+          title: data.title,
+          type: "CUSTOM",
+          entityType: "LEAD",
+          entityId: leadId,
+          dueDate,
+        },
         {
           onSuccess: () => { toast.success("Task created"); setActiveAction(null); taskForm.reset(); },
           onError: (err) => toast.error(err.message),
         }
       );
     },
-    [leadId, logActivityMutation, taskForm]
+    [leadId, createTaskMutation, taskForm]
   );
 
   const onEmailSubmit = useCallback(
@@ -216,15 +229,16 @@ export default function LeadDetailPage({
         initial="hidden"
         animate="visible"
       >
-        <LeadDetailHeader
-          lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
-          isEditing={isEditing}
-          onToggleEdit={handleToggleEdit}
-          onStatusChange={handleStatusChange}
-        />
+        <motion.div variants={fadeUp}>
+          <LeadDetailHeader
+            lead={lead as unknown as Parameters<typeof LeadDetailHeader>[0]["lead"]}
+            isEditing={isEditing}
+            onToggleEdit={handleToggleEdit}
+            onStatusChange={handleStatusChange}
+          />
+        </motion.div>
 
         <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
-
           <div className="lg:col-span-3 space-y-4">
             <LeadInfoCard
               lead={lead as unknown as Parameters<typeof LeadInfoCard>[0]["lead"]}
@@ -247,7 +261,7 @@ export default function LeadDetailPage({
               onEmailSubmit={onEmailSubmit}
               onCallSubmit={onCallSubmit}
               isNotePending={logActivityMutation.isPending}
-              isTaskPending={logActivityMutation.isPending}
+              isTaskPending={createTaskMutation.isPending}
               isEmailPending={logActivityMutation.isPending}
               isCallPending={logActivityMutation.isPending}
               leadName={lead.name}

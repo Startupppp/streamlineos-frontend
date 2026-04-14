@@ -1100,6 +1100,12 @@ export interface UpdateCandidateInput {
   lastName?: string;
   email?: string;
   phone?: string;
+  currentRole?: string;
+  currentCompany?: string;
+  experienceYears?: number;
+  linkedinUrl?: string;
+  source?: string;
+  skills?: string[];
   status?: CandidateStatus;
   notes?: string;
   rating?: number;
