@@ -7,7 +7,7 @@ const listSchema = z.object({
   status: z.enum(["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"]).optional(),
   search: z.string().optional(),
   page: z.coerce.number().min(1).optional(),
-  limit: z.coerce.number().min(1).max(100).optional(),
+  limit: z.coerce.number().min(1).max(500).optional(),
 });
 
 export async function GET(req: NextRequest) {
