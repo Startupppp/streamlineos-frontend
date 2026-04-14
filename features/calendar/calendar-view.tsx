@@ -228,7 +228,7 @@ export function CalendarView() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuLabel className="text-xs">Export to .ics</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs">Export to CSV</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-xs" onClick={() => handleExport("month")}>
                 This month

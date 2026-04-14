@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
         .set({
           description: normalizedDescription,
           hours: body.hours?.toString() || existing.hours,
+          status: "LOGGED",
         })
         .where(eq(timesheets.id, existing.id))
         .returning();
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
         date: dateStr,
         description: normalizedDescription,
         hours: body.hours?.toString() || "0",
+        status: "LOGGED",
       })
       .returning();
 

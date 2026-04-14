@@ -11,32 +11,15 @@ const querySchema = z.object({
   to: z.string(),
 });
 
-function toIcsDatetime(date: Date): string {
-  return format(date, "yyyyMMdd'T'HHmmss'Z'");
-}
-
-function escapeIcsText(value: string): string {
-  return value
-    .replace(/\\/g, "\\\\")
-    .replace(/;/g, "\\;")
-    .replace(/,/g, "\\,")
-    .replace(/\n/g, "\\n");
-}
-
-function foldLine(line: string): string {
-  // RFC 5545: fold lines longer than 75 octets
-  const MAX = 75;
-  if (line.length <= MAX) return line;
-
-  const chunks: string[] = [];
-  let i = 0;
-  chunks.push(line.slice(i, i + MAX));
-  i += MAX;
-  while (i < line.length) {
-    chunks.push(" " + line.slice(i, i + MAX - 1));
-    i += MAX - 1;
+function csvEscape(value: string): string {
+  if (value.includes('"') || value.includes(",") || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
   }
-  return chunks.join("\r\n");
+  return value;
+}
+
+function formatDatetime(date: Date): string {
+  return format(date, "yyyy-MM-dd HH:mm");
 }
 
 export async function GET(req: NextRequest) {
@@ -64,42 +47,27 @@ export async function GET(req: NextRequest) {
       orderBy: (t, { asc }) => [asc(t.startDate)],
     });
 
-    const lines: string[] = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Vaivamm Capital CRM//EN",
-      "CALSCALE:GREGORIAN",
-      "METHOD:PUBLISH",
-    ];
+    const headers = ["Title", "Start", "End", "All Day", "Category", "Location", "Description", "Color"];
+    const rows = events.map((event) => [
+      csvEscape(event.title),
+      csvEscape(formatDatetime(event.startDate)),
+      csvEscape(formatDatetime(event.endDate)),
+      event.allDay ? "Yes" : "No",
+      csvEscape(event.category ?? ""),
+      csvEscape(event.location ?? ""),
+      csvEscape(event.description ?? ""),
+      csvEscape(event.color ?? ""),
+    ]);
 
-    for (const event of events) {
-      lines.push("BEGIN:VEVENT");
-      lines.push(foldLine(`UID:${event.id}@vaivamm`));
-      lines.push(foldLine(`DTSTART:${toIcsDatetime(event.startDate)}`));
-      lines.push(foldLine(`DTEND:${toIcsDatetime(event.endDate)}`));
-      lines.push(foldLine(`DTSTAMP:${toIcsDatetime(new Date())}`));
-      lines.push(foldLine(`SUMMARY:${escapeIcsText(event.title)}`));
-      if (event.description) {
-        lines.push(foldLine(`DESCRIPTION:${escapeIcsText(event.description)}`));
-      }
-      if (event.location) {
-        lines.push(foldLine(`LOCATION:${escapeIcsText(event.location)}`));
-      }
-      if (event.recurringRule) {
-        lines.push(foldLine(`RRULE:${event.recurringRule}`));
-      }
-      lines.push("END:VEVENT");
-    }
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
 
-    lines.push("END:VCALENDAR");
+    const filename = `calendar-${format(fromDate, "yyyy-MM-dd")}-to-${format(toDate, "yyyy-MM-dd")}.csv`;
 
-    const icsContent = lines.join("\r\n");
-
-    return new NextResponse(icsContent, {
+    return new NextResponse(csvContent, {
       status: 200,
       headers: {
-        "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="calendar.ics"',
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "no-store",
       },
     }) as NextResponse<never>;

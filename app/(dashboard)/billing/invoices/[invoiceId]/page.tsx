@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -11,6 +11,8 @@ import {
   Ban,
   Plus,
   Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -84,6 +86,32 @@ export default function InvoiceDetailPage({
     referenceNumber: "",
     notes: "",
   });
+
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLineItems, setEditLineItems] = useState<{ description: string; quantity: number; rate: number; amount: number }[]>([]);
+  const [editTaxRate, setEditTaxRate] = useState(0);
+  const [editDiscount, setEditDiscount] = useState(0);
+  const [editDueDate, setEditDueDate] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editCurrency, setEditCurrency] = useState("INR");
+
+  useEffect(() => {
+    if (editOpen && invoice) {
+      setEditLineItems(invoice.lineItems.map((i) => ({
+        description: i.description,
+        quantity: Number(i.quantity),
+        rate: Number(i.rate),
+        amount: Number(i.amount),
+      })));
+      setEditTaxRate(Number(invoice.taxRate ?? 0));
+      setEditDiscount(Number(invoice.discount ?? 0));
+      setEditDueDate(invoice.dueDate ? format(new Date(invoice.dueDate), "yyyy-MM-dd") : "");
+      setEditNotes(invoice.notes ?? "");
+      setEditCurrency(invoice.currency ?? "INR");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editOpen]);
 
   if (isLoading) {
     return (
@@ -210,6 +238,11 @@ export default function InvoiceDetailPage({
       badge={<Badge variant={badge.variant}>{badge.label}</Badge>}
       actions={
         <div className="flex items-center gap-2 flex-wrap">
+          {invoice.status === "DRAFT" && (
+            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+            </Button>
+          )}
           {invoice.status === "DRAFT" && (
             <Button size="sm" variant="outline" onClick={() => handleStatusUpdate("SENT")} disabled={updateInvoice.isPending}>
               <Send className="h-3.5 w-3.5 mr-1.5" /> Mark Sent
@@ -376,6 +409,149 @@ export default function InvoiceDetailPage({
           </div>
         )}
       </div>
+
+      {/* Edit Dialog — only available for DRAFT invoices */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Edit Invoice</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            {/* Line items */}
+            <div className="rounded-lg border border-border overflow-hidden">
+              <div className="px-4 py-2 border-b border-border">
+                <p className="text-xs font-semibold">Line Items</p>
+              </div>
+              <div className="p-3 space-y-2">
+                <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground px-1">
+                  <span className="col-span-5">Description</span>
+                  <span className="col-span-2 text-right">Qty</span>
+                  <span className="col-span-2 text-right">Rate</span>
+                  <span className="col-span-2 text-right">Amount</span>
+                </div>
+                {editLineItems.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                    <Input
+                      className="col-span-5 h-8 text-sm"
+                      placeholder="Description"
+                      value={item.description}
+                      onChange={(e) => setEditLineItems((prev) => prev.map((li, i) => i === idx ? { ...li, description: e.target.value } : li))}
+                    />
+                    <Input
+                      className="col-span-2 h-8 text-sm text-right"
+                      type="number" min={1}
+                      value={item.quantity || ""}
+                      onChange={(e) => setEditLineItems((prev) => prev.map((li, i) => {
+                        if (i !== idx) return li;
+                        const qty = Number(e.target.value);
+                        return { ...li, quantity: qty, amount: qty * li.rate };
+                      }))}
+                      aria-label={`Quantity for item ${idx + 1}`}
+                    />
+                    <Input
+                      className="col-span-2 h-8 text-sm text-right"
+                      type="number" min={0}
+                      value={item.rate || ""}
+                      onChange={(e) => setEditLineItems((prev) => prev.map((li, i) => {
+                        if (i !== idx) return li;
+                        const rate = Number(e.target.value);
+                        return { ...li, rate, amount: li.quantity * rate };
+                      }))}
+                      aria-label={`Rate for item ${idx + 1}`}
+                    />
+                    <div className="col-span-2 text-sm font-medium text-right pr-1">
+                      {fmt(item.amount)}
+                    </div>
+                    <Button
+                      variant="ghost" size="icon"
+                      className="col-span-1 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setEditLineItems((p) => p.filter((_, i) => i !== idx))}
+                      disabled={editLineItems.length === 1}
+                      aria-label={`Remove item ${idx + 1}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline" size="sm" className="mt-1"
+                  onClick={() => setEditLineItems((p) => [...p, { description: "", quantity: 1, rate: 0, amount: 0 }])}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Item
+                </Button>
+              </div>
+              <div className="px-4 py-3 border-t border-border space-y-1 text-sm">
+                {(() => {
+                  const sub = editLineItems.reduce((s, i) => s + i.amount, 0);
+                  const tax = sub * (editTaxRate / 100);
+                  const total = sub + tax - editDiscount;
+                  return (
+                    <>
+                      <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{fmt(sub)}</span></div>
+                      <div className="flex justify-between text-muted-foreground"><span>Tax ({editTaxRate}%)</span><span>{fmt(tax)}</span></div>
+                      {editDiscount > 0 && <div className="flex justify-between text-muted-foreground"><span>Discount</span><span className="text-destructive">-{fmt(editDiscount)}</span></div>}
+                      <div className="flex justify-between font-bold border-t border-border pt-1.5"><span>Total</span><span>{fmt(total)}</span></div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Settings */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Tax Rate (%)</Label>
+                <Input type="number" min={0} max={100} value={editTaxRate} onChange={(e) => setEditTaxRate(Number(e.target.value))} className="h-8 text-sm" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Discount (₹)</Label>
+                <Input type="number" min={0} value={editDiscount} onChange={(e) => setEditDiscount(Number(e.target.value))} className="h-8 text-sm" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Due Date</Label>
+                <DatePicker value={editDueDate} onChange={setEditDueDate} placeholder="Select due date" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Currency</Label>
+                <Input value={editCurrency} onChange={(e) => setEditCurrency(e.target.value)} className="h-8 text-sm" placeholder="INR" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Notes / Payment Terms</Label>
+              <Input value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="h-8 text-sm" placeholder="e.g. Payment due within 30 days" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button
+              size="sm"
+              disabled={updateInvoice.isPending}
+              onClick={() => {
+                const validItems = editLineItems.filter((i) => i.description.trim() && i.amount > 0);
+                if (validItems.length === 0) { toast.error("Add at least one line item"); return; }
+                updateInvoice.mutate(
+                  {
+                    id,
+                    lineItems: validItems,
+                    taxRate: editTaxRate,
+                    discount: editDiscount,
+                    currency: editCurrency,
+                    dueDate: editDueDate || undefined,
+                    notes: editNotes || undefined,
+                  },
+                  {
+                    onSuccess: () => { toast.success("Invoice updated"); setEditOpen(false); },
+                    onError: () => toast.error("Failed to update invoice"),
+                  }
+                );
+              }}
+            >
+              {updateInvoice.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
         <DialogContent className="sm:max-w-md">

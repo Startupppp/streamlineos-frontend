@@ -259,7 +259,7 @@ export default function WorkLogsPage() {
           date: format(date, "dd MMM yyyy"),
           day: format(date, "EEEE"),
           description: log?.description || "",
-          status: log?.status || (log?.description ? "PENDING" : ""),
+          status: log?.status === "PENDING" ? "LOGGED" : (log?.status || (log?.description ? "LOGGED" : "")),
         });
       }
 

@@ -118,9 +118,9 @@ export function WorkLogEntryRow({
                 Draft
               </span>
             )}
-            {status === "PENDING" && initialContent && (
-              <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded font-medium text-amber-700 dark:text-amber-400 inline-block">
-                Pending
+            {(status === "LOGGED" || status === "PENDING") && initialContent && !hasUnsavedChanges && (
+              <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded font-medium text-blue-700 dark:text-blue-400 inline-block">
+                Logged
               </span>
             )}
             {status === "APPROVED" && (

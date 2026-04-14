@@ -107,7 +107,7 @@ export function WorkLogMonthGroup({
                   showApprovalActions={
                     isViewingOther &&
                     isAdminOrCeo &&
-                    log?.status === "PENDING" &&
+                    (log?.status === "LOGGED" || log?.status === "PENDING") &&
                     !!log?.description
                   }
                   onApprove={log ? () => onApprove(log.id) : undefined}

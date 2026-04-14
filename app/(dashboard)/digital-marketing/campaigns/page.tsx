@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,23 +10,35 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
+} from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus, Megaphone, IndianRupee, TrendingUp, Target,
+  Pencil, Trash2, Eye, CalendarDays, Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDmCampaigns, useDmCampaignStats, useCreateDmCampaign } from "@/lib/api/hooks/dm";
+import { useUpdateMarketingCampaign, useDeleteMarketingCampaign } from "@/lib/api/hooks/crm";
+import type { MarketingCampaign } from "@/lib/api/hooks/crm";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { format } from "date-fns";
 
 function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
@@ -35,16 +47,70 @@ function formatINR(val: string | number | null | undefined): string {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(num);
 }
 
+function fmtDate(d: string | null | undefined) {
+  if (!d) return "—";
+  try { return format(new Date(d), "dd MMM yyyy"); } catch { return d; }
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  active: "bg-green-500/15 text-green-700 dark:text-green-400",
+  paused: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
+  completed: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+};
+
 export default function CampaignsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [formData, setFormData] = useState({ name: "", budgetAllocated: "", status: "active" as "active" | "paused" | "completed" });
+  const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", budgetAllocated: "", status: "active" as "active" | "paused" | "completed" });
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [previewCampaign, setPreviewCampaign] = useState<MarketingCampaign | null>(null);
 
   const qc = useQueryClient();
   const { data: stats } = useDmCampaignStats();
   const { data, isLoading } = useDmCampaigns();
   const createMutation = useCreateDmCampaign();
+  const updateMutation = useUpdateMarketingCampaign();
+  const deleteMutation = useDeleteMarketingCampaign();
 
-  const campaigns = data?.campaigns ?? [];
+  const campaigns = (data?.campaigns ?? []) as MarketingCampaign[];
+
+  useEffect(() => {
+    if (editingCampaign) {
+      setEditForm({
+        name: editingCampaign.name,
+        budgetAllocated: editingCampaign.budgetAllocated ?? "",
+        status: (editingCampaign.status as "active" | "paused" | "completed") ?? "active",
+      });
+    }
+  }, [editingCampaign]);
+
+  const handleEdit = () => {
+    if (!editingCampaign || !editForm.name.trim()) return;
+    updateMutation.mutate(
+      { id: editingCampaign.id, name: editForm.name, budgetAllocated: editForm.budgetAllocated || undefined, status: editForm.status },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
+          toast.success("Campaign updated");
+          setEditingCampaign(null);
+        },
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  };
+
+  const handleDelete = () => {
+    if (!deleteId) return;
+    deleteMutation.mutate(deleteId, {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
+        toast.success("Campaign deleted");
+        setDeleteId(null);
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
 
   return (
     <PageWrapper
@@ -76,55 +142,74 @@ export default function CampaignsPage() {
 
         <Card>
           <ScrollArea className="w-full max-h-[60vh]" type="auto">
-          <div className="min-w-[640px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Campaign</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs">Budget</TableHead>
-                  <TableHead className="text-xs">Spent</TableHead>
-                  <TableHead className="text-xs">Leads</TableHead>
-                  <TableHead className="text-xs">CPL</TableHead>
-                  <TableHead className="text-xs">ROI</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={7} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
-                  ))
-                ) : campaigns.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground"><div className="flex flex-col items-center justify-center gap-2 py-2">
-                      <EmptyActivityIllustration className="h-36 w-36 opacity-95" />
-                      <p>No campaigns yet</p>
-                    </div></TableCell></TableRow>
-                ) : (
-                  campaigns.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="text-sm font-medium">{c.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn("text-[10px]",
-                          c.status === "active" && "text-emerald-400 bg-emerald-500/10",
-                          c.status === "paused" && "text-amber-400 bg-amber-500/10",
-                          c.status === "completed" && "text-muted-foreground",
-                        )}>{c.status}</Badge>
+            <div className="min-w-[760px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Campaign</TableHead>
+                    <TableHead className="text-xs">Status</TableHead>
+                    <TableHead className="text-xs">Budget</TableHead>
+                    <TableHead className="text-xs">Spent</TableHead>
+                    <TableHead className="text-xs">Leads</TableHead>
+                    <TableHead className="text-xs">CPL</TableHead>
+                    <TableHead className="text-xs">ROI</TableHead>
+                    <TableHead className="text-xs w-[90px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <TableRow key={i}><TableCell colSpan={8} className="h-12"><Skeleton className="h-4 w-full" /></TableCell></TableRow>
+                    ))
+                  ) : campaigns.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                        <div className="flex flex-col items-center justify-center gap-2 py-2">
+                          <EmptyActivityIllustration className="h-36 w-36 opacity-95" />
+                          <p>No campaigns yet</p>
+                        </div>
                       </TableCell>
-                      <TableCell className="text-xs font-mono">{formatINR(c.budgetAllocated)}</TableCell>
-                      <TableCell className="text-xs font-mono">{formatINR(c.budgetSpent || c.spend)}</TableCell>
-                      <TableCell className="text-xs font-mono">{c.leadsGenerated}</TableCell>
-                      <TableCell className="text-xs font-mono">{c.costPerLead ? formatINR(c.costPerLead) : "—"}</TableCell>
-                      <TableCell className="text-xs font-mono">{c.roi ? `${c.roi}%` : "—"}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    campaigns.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="text-sm font-medium">{c.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={cn("text-[10px]",
+                            c.status === "active" && "text-emerald-400 bg-emerald-500/10",
+                            c.status === "paused" && "text-amber-400 bg-amber-500/10",
+                            c.status === "completed" && "text-muted-foreground",
+                          )}>{c.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">{formatINR(c.budgetAllocated)}</TableCell>
+                        <TableCell className="text-xs font-mono">{formatINR(c.budgetSpent ?? c.spend)}</TableCell>
+                        <TableCell className="text-xs font-mono">{c.leads ?? 0}</TableCell>
+                        <TableCell className="text-xs font-mono">{formatINR((c as Record<string, unknown>).costPerLead as string)}</TableCell>
+                        <TableCell className="text-xs font-mono">{c.roi ? `${c.roi}%` : "—"}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-0.5">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => setPreviewCampaign(c)} aria-label="Preview">
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => setEditingCampaign(c)} aria-label="Edit">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => setDeleteId(c.id)} aria-label="Delete">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </ScrollArea>
         </Card>
       </div>
 
+      {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Create Campaign</DialogTitle></DialogHeader>
@@ -155,6 +240,123 @@ export default function CampaignsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingCampaign} onOpenChange={(open) => { if (!open) setEditingCampaign(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Edit Campaign</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5"><Label>Name *</Label><Input value={editForm.name} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} /></div>
+            <div className="space-y-1.5"><Label>Budget Allocated</Label><Input type="number" value={editForm.budgetAllocated} onChange={(e) => setEditForm(f => ({ ...f, budgetAllocated: e.target.value }))} /></div>
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select value={editForm.status} onValueChange={(v) => setEditForm(f => ({ ...f, status: v as "active" | "paused" | "completed" }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCampaign(null)}>Cancel</Button>
+            <Button disabled={!editForm.name || updateMutation.isPending} onClick={handleEdit}>
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Sheet */}
+      <Sheet open={!!previewCampaign} onOpenChange={(open) => { if (!open) setPreviewCampaign(null); }}>
+        <SheetContent className="flex flex-col p-0 gap-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
+            <SheetTitle className="text-base">{previewCampaign?.name}</SheetTitle>
+            <SheetDescription className="text-xs">Campaign details</SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="flex-1 min-h-0">
+            {previewCampaign && (
+              <div className="px-5 py-4 space-y-5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${STATUS_COLORS[previewCampaign.status] ?? "bg-muted text-muted-foreground"}`}>
+                    {previewCampaign.status}
+                  </span>
+                  {previewCampaign.channel && (
+                    <Badge variant="outline" className="text-xs">{previewCampaign.channel}</Badge>
+                  )}
+                </div>
+                {previewCampaign.description && (
+                  <p className="text-sm text-muted-foreground">{previewCampaign.description}</p>
+                )}
+                <Separator />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Budget Allocated</p>
+                    <p className="text-sm font-semibold">{formatINR(previewCampaign.budgetAllocated)}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Budget Spent</p>
+                    <p className="text-sm font-semibold">{formatINR(previewCampaign.budgetSpent ?? previewCampaign.spend)}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Leads</p>
+                    <p className="text-sm font-semibold">{previewCampaign.leads ?? 0}</p>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3" /> ROI</p>
+                    <p className="text-sm font-semibold">{previewCampaign.roi ? `${previewCampaign.roi}%` : "—"}</p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-muted-foreground">Duration:</span>
+                    <span className="font-medium">{fmtDate(previewCampaign.startDate)} – {fmtDate(previewCampaign.endDate)}</span>
+                  </div>
+                  {previewCampaign.targetAudience && (
+                    <div className="space-y-0.5">
+                      <p className="text-xs text-muted-foreground">Target Audience</p>
+                      <p className="text-sm">{previewCampaign.targetAudience}</p>
+                    </div>
+                  )}
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Created</p>
+                    <p className="text-sm">{fmtDate(previewCampaign.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+          <SheetFooter className="shrink-0 px-5 py-4 border-t">
+            <Button
+              className="w-full"
+              onClick={() => { setPreviewCampaign(null); setEditingCampaign(previewCampaign); }}
+            >
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit Campaign
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Campaign?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageWrapper>
   );
 }

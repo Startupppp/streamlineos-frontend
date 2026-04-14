@@ -363,8 +363,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "All Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
             { label: "Templates", icon: LayoutTemplate, href: "/projects/templates", isSubItem: true },
             { label: "Resource Allocation", icon: Users, href: "/projects/resource-allocation", isSubItem: true },
-            { label: "Timesheets", icon: Timer, href: "/timesheets" },
-            { label: "Team Timesheets", icon: Users, href: "/timesheets/team", isSubItem: true },
           ],
         },
         {
@@ -424,7 +422,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
           ],
         },
         {
@@ -439,7 +437,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
             { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
-            { label: "Termination", icon: UserX, href: "/hr/termination", isSubItem: true },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
@@ -478,7 +475,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
           ],
         },
         {
@@ -493,7 +490,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "My Reimbursements", icon: RefreshCcw, href: "/hr/reimbursements" },
             { label: "My Onboarding", icon: ClipboardList, href: "/hr/onboarding/my-tasks", isSubItem: true },
             { label: "Exit", icon: UserMinus, href: "/hr/exit" },
-            { label: "Termination", icon: UserX, href: "/hr/termination", isSubItem: true },
             { label: "Helpdesk", icon: HeadphonesIcon, href: "/hr/helpdesk" },
           ],
         },
@@ -543,7 +539,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
           ],
         },
         {
@@ -581,7 +577,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
             { label: "Support", icon: LifeBuoy, href: "/support" },
           ],
         },
@@ -618,7 +614,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Timesheets", icon: Timer, href: "/timesheets" },
+            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
             { label: "Support", icon: LifeBuoy, href: "/support" },
           ],
         },
