@@ -100,6 +100,7 @@ export function OnboardingWizard() {
 
   const handleSubmit = useCallback(
     (data: FormValues) => {
+      if (currentStep !== STEPS.length) return;
       onboardEmployee.mutate(
         {
           ...data,
@@ -117,7 +118,7 @@ export function OnboardingWizard() {
         }
       );
     },
-    [onboardEmployee, router]
+    [onboardEmployee, router, currentStep]
   );
 
   return (
@@ -156,7 +157,15 @@ export function OnboardingWizard() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && currentStep < STEPS.length) {
+              e.preventDefault();
+            }
+          }}
+          className="flex flex-col flex-1 min-h-0"
+        >
           <div className="flex-1 min-h-0 overflow-y-auto">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (

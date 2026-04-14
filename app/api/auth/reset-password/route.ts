@@ -38,7 +38,11 @@ export async function POST(req: NextRequest) {
 
   await db
     .update(users)
-    .set({ password: hashedPassword, isPasswordChangeRequired: false })
+    .set({
+      password: hashedPassword,
+      isPasswordChangeRequired: false,
+      emailVerified: new Date(),
+    })
     .where(eq(users.email, tokenRecord.email));
 
   await db

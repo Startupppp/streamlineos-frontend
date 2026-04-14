@@ -105,50 +105,39 @@ function useSubmitOnboardingDoc() {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function docStatusIcon(status: OnboardingDoc["status"]) {
-  switch (status) {
-    case "APPROVED":
-      return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-    case "SUBMITTED":
-      return <Clock className="h-4 w-4 text-amber-500" />;
-    case "REJECTED":
-      return <AlertCircle className="h-4 w-4 text-destructive" />;
-    case "RE_UPLOAD_REQUESTED":
-      return <RefreshCw className="h-4 w-4 text-orange-500" />;
-    default:
-      return <FileText className="h-4 w-4 text-muted-foreground" />;
-  }
+  const icons = {
+    "APPROVED": <CheckCircle2 className="h-4 w-4 text-green-600" />,
+    "SUBMITTED": <Clock className="h-4 w-4 text-amber-500" />,
+    "REJECTED": <AlertCircle className="h-4 w-4 text-destructive" />,
+    "RE_UPLOAD_REQUESTED": <RefreshCw className="h-4 w-4 text-orange-500" />,
+    default: <FileText className="h-4 w-4 text-muted-foreground" />,
+  };
+  return icons[status as keyof typeof icons] || icons.default;
 }
 
 function docStatusVariant(
   status: OnboardingDoc["status"]
-): "default" | "secondary" | "outline" | "destructive" {
-  switch (status) {
-    case "APPROVED":
-      return "default";
-    case "SUBMITTED":
-      return "secondary";
-    case "REJECTED":
-      return "destructive";
-    case "RE_UPLOAD_REQUESTED":
-      return "outline";
-    default:
-      return "outline";
-  }
+): "default" | "secondary" | "outline" | "destructive" | "outline" {
+  const variants = {
+    "APPROVED": "default",
+    "SUBMITTED": "secondary",
+    "REJECTED": "destructive",
+    "RE_UPLOAD_REQUESTED": "outline",
+    default: "outline",
+  };
+
+  return (variants[status as keyof typeof variants] || variants.default) as "default" | "secondary" | "outline" | "destructive" | "outline";
 }
 
 function docStatusLabel(status: OnboardingDoc["status"]): string {
-  switch (status) {
-    case "PENDING":
-      return "Pending";
-    case "SUBMITTED":
-      return "Under Review";
-    case "APPROVED":
-      return "Approved";
-    case "REJECTED":
-      return "Rejected";
-    case "RE_UPLOAD_REQUESTED":
-      return "Re-upload Required";
-  }
+  const labels = {
+    "APPROVED": "Approved",
+    "SUBMITTED": "Under Review",
+    "REJECTED": "Rejected",
+    "RE_UPLOAD_REQUESTED": "Re-upload Required",
+    default: "Pending",
+  };
+  return labels[status as keyof typeof labels] || labels.default;
 }
 
 function canUpload(status: OnboardingDoc["status"] | undefined): boolean {
@@ -536,13 +525,8 @@ function HrWorkflowTab() {
   const rows = data ?? [];
 
   return (
-    <div className="space-y-4 pt-2">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length > 0
-            ? `${rows.length} employee${rows.length !== 1 ? "s" : ""} in onboarding`
-            : "No active onboardings yet."}
-        </p>
+    <div className="space-y-4">
+      <div className="flex items-center justify-center w-full gap-3">
         <Button
           size="sm"
           className="h-8 gap-1.5"
@@ -615,7 +599,7 @@ function HrWorkflowTab() {
 
 function HrDocumentsTab() {
   return (
-    <div className="space-y-3 pt-2">
+    <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
         Manage onboarding document configuration and review employee submissions.
       </p>
@@ -691,7 +675,7 @@ export default function OnboardingPage() {
     >
       {isHROrCEO ? (
         <Tabs defaultValue="workflow" className="space-y-4">
-          <TabsList className="h-8">
+          <TabsList>
             <TabsTrigger value="workflow" className="text-xs h-7 px-3">
               Workflow
             </TabsTrigger>
@@ -723,7 +707,7 @@ export default function OnboardingPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="checklist" className="mt-3 flex-1 overflow-auto pb-6">
+          <TabsContent value="checklist" className="flex-1 overflow-auto pb-6">
             <EmployeeDocumentsTab />
           </TabsContent>
         </Tabs>

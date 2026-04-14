@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Phone, Mail, MapPin, Building2, Target, ArrowRight, Calendar, Clock, MessageSquare,
+  Phone, Mail, MapPin, Building2, Target, ArrowRight, Calendar, Clock, MessageSquare, Edit3,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -51,9 +52,16 @@ function StatusMoveButton({ status: s, leadId, onMoveStatus }: StatusMoveButtonP
 }
 
 export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDetailSheetProps) {
+  const router = useRouter();
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
   const logActivity = useLogLeadActivity();
   const [activityTab, setActivityTab] = useState("details");
+
+  const handleEditLead = useCallback(() => {
+    if (!leadId) return;
+    onClose();
+    router.push(`/crm/leads/${leadId}`);
+  }, [leadId, onClose, router]);
 
   const handleLogActivity = useCallback(async (formData: FormData) => {
     if (!leadId) return;
@@ -94,7 +102,7 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
 
             <div className="px-6 pt-6 pb-5 border-b border-border/50">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <SheetHeader className="p-0">
                     <SheetTitle className="text-xl font-semibold">{lead.name}</SheetTitle>
                   </SheetHeader>
@@ -108,17 +116,28 @@ export function LeadDetailSheet({ leadId, open, onClose, onMoveStatus }: LeadDet
                     </p>
                   )}
                 </div>
-                <Badge
-                  className={cn(
-                    "shrink-0 mt-0.5",
-                    STATUS_CONFIG[lead.status as LeadStatus]?.bg,
-                    STATUS_CONFIG[lead.status as LeadStatus]?.color,
-                    STATUS_CONFIG[lead.status as LeadStatus]?.border,
-                    "border",
-                  )}
-                >
-                  {STATUS_CONFIG[lead.status as LeadStatus]?.label}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEditLead}
+                    className="h-8 text-xs gap-1.5"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                  <Badge
+                    className={cn(
+                      "shrink-0",
+                      STATUS_CONFIG[lead.status as LeadStatus]?.bg,
+                      STATUS_CONFIG[lead.status as LeadStatus]?.color,
+                      STATUS_CONFIG[lead.status as LeadStatus]?.border,
+                      "border",
+                    )}
+                  >
+                    {STATUS_CONFIG[lead.status as LeadStatus]?.label}
+                  </Badge>
+                </div>
               </div>
             </div>
 
