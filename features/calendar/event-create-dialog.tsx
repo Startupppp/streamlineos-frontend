@@ -32,8 +32,9 @@ import {
   useCalendarOrgMembers,
   useGoogleMeetStatus,
   useCreateMeetLink,
+  extractEventNumericId,
 } from "@/lib/api/hooks/calendar";
-import type { CalendarEvent } from "@/lib/api/hooks/calendar";
+import type { CalendarListItem } from "@/lib/api/hooks/calendar";
 import { toast } from "sonner";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -89,9 +90,10 @@ function toDefaultForm(slot?: { start: Date; end: Date } | null): FormState {
   };
 }
 
-function toEditForm(event: CalendarEvent): FormState {
-  const start = new Date(event.startDate);
-  const end = new Date(event.endDate);
+function toEditForm(event: CalendarListItem): FormState {
+  // API returns `start`/`end` as ISO strings (serialised from Date)
+  const start = new Date(event.start);
+  const end = new Date(event.end);
   return {
     title: event.title,
     description: event.description ?? "",
@@ -103,7 +105,7 @@ function toEditForm(event: CalendarEvent): FormState {
     startTime: format(start, "HH:mm"),
     endDate: format(end, "yyyy-MM-dd"),
     endTime: format(end, "HH:mm"),
-    attendeeIds: event.attendeeIds ?? [],
+    attendeeIds: [],
   };
 }
 
@@ -120,7 +122,7 @@ interface EventCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultSlot?: { start: Date; end: Date } | null;
-  event?: CalendarEvent | null;
+  event?: CalendarListItem | null;
 }
 
 export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: EventCreateDialogProps) {
@@ -234,7 +236,12 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
     };
     try {
       if (isEdit && event) {
-        await updateEvent.mutateAsync({ id: event.id, ...payload });
+        const numericId = extractEventNumericId(event.id);
+        if (numericId === null) {
+          toast.error("Cannot edit this event type");
+          return;
+        }
+        await updateEvent.mutateAsync({ id: numericId, ...payload });
         toast.success("Event updated");
       } else {
         await createEvent.mutateAsync(payload);

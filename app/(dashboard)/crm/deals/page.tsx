@@ -30,6 +30,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-p
 import { useDeals, useUpdateDealStage, useDeleteDeal } from "@/lib/api/hooks/crm";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import { CreateDealForm } from "@/features/crm/deals/create-deal-form";
 import { DealKanbanCard } from "@/features/crm/deals/deal-kanban-card";
@@ -192,7 +193,7 @@ export default function DealsPage() {
         rows,
       }]);
       toast.success("Deals exported");
-    } catch { toast.error("Export failed"); }
+    } catch (error) { toast.error(getErrorMessage(error)); }
   }, [allDeals]);
 
   const updateStageMutation = useUpdateDealStage();
@@ -233,7 +234,7 @@ export default function DealsPage() {
       { id, stage: stage as "LEAD" | "CONTACTED" | "PROPOSAL" | "NEGOTIATION" | "WON" | "LOST", version },
       {
         onSuccess: () => toast.success("Deal stage updated"),
-        onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update stage"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [updateStageMutation, allDeals]);

@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -87,7 +88,7 @@ export default function EpicsPage({ params }: PageProps) {
           { ticketId: epicId },
           {
             onSuccess: () => toast.success("Epic deleted"),
-            onError: (error) => toast.error((error as Error).message || "Failed to delete epic"),
+            onError: (error) => toast.error(getErrorMessage(error)),
           }
         );
       })
@@ -181,7 +182,7 @@ export default function EpicsPage({ params }: PageProps) {
                   { projectId, title, type: "STORY", epicId: epic.id },
                   {
                     onSuccess: () => toast.success("Story created"),
-                    onError: (error) => toast.error((error as Error).message || "Failed to create story"),
+                    onError: (error) => toast.error(getErrorMessage(error)),
                   }
                 )
               }

@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useCreateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { addDays, format } from "date-fns";
 
 const createSprintSchema = z.object({
@@ -73,7 +74,7 @@ export function CreateSprintDialog({ projectId, trigger }: CreateSprintDialogPro
           form.reset();
         },
         onError: (error) => {
-          toast.error((error as Error).message || "Failed to create sprint");
+          toast.error(getErrorMessage(error));
         },
       }
     );

@@ -60,6 +60,35 @@ export interface CalendarEvent {
   creator?: { name: string | null } | null;
 }
 
+/**
+ * Shape returned by GET /api/calendar/events (aggregated list).
+ * The server returns events, OOO leaves, interviews and tasks in this format.
+ */
+export interface CalendarListItem {
+  /** Prefixed string ID: "event-123", "leave-456", "interview-789", "task-012" */
+  id: string;
+  title: string;
+  /** ISO date string (Date serialised to JSON) */
+  start: string;
+  /** ISO date string */
+  end: string;
+  allDay?: boolean;
+  color?: string | null;
+  category: string;
+  source: "event" | "leave" | "interview" | "task";
+  location?: string | null;
+  description?: string | null;
+  creatorName?: string | null;
+  entityId?: string | null;
+  entityType?: string | null;
+}
+
+/** Extract the numeric DB id from a prefixed list-item id like "event-123" → 123 */
+export function extractEventNumericId(id: string): number | null {
+  const match = id.match(/(\d+)$/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 export interface CreateCalendarEventPayload {
   title: string;
   description?: string;
@@ -84,7 +113,7 @@ export function useCalendarEvents(start: Date, end: Date) {
   return useQuery({
     queryKey: ["calendar", "events", start.toISOString(), end.toISOString()],
     queryFn: () =>
-      apiClient.get<CalendarEvent[]>("/calendar/events", {
+      apiClient.get<CalendarListItem[]>("/calendar/events", {
         start: start.toISOString(),
         end: end.toISOString(),
       }),
@@ -97,7 +126,8 @@ export function useCreateCalendarEvent() {
   return useMutation({
     mutationFn: (payload: CreateCalendarEventPayload) =>
       apiClient.post<CalendarEvent>("/calendar/events", payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
   });
 }
 
@@ -106,7 +136,8 @@ export function useUpdateCalendarEvent() {
   return useMutation({
     mutationFn: ({ id, ...payload }: UpdateCalendarEventPayload) =>
       apiClient.put<CalendarEvent>(`/calendar/events/${id}`, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
   });
 }
 
@@ -114,7 +145,8 @@ export function useDeleteCalendarEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => apiClient.delete<{ deleted: boolean }>(`/calendar/events/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["calendar"] }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["calendar", "events"], exact: false }),
   });
 }
 

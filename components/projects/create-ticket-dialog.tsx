@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Upload, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { createTicketInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -127,7 +128,7 @@ export function CreateTicketDialog({
       }
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to create ticket");
+      toast.error(getErrorMessage(error));
     },
   });
 

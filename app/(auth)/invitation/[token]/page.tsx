@@ -19,6 +19,7 @@ import { PasswordConfirmField } from "@/components/auth/password-confirm-field";
 import { motion } from "framer-motion";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { Users, Mail, User, Lock, Loader2, Eye, EyeOff, ArrowRight, X, Shield } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const invitationSchema = z.object({
   firstName: z.string().optional(),
@@ -84,7 +85,7 @@ export default function InvitationPage() {
           router.push("/dashboard");
         },
         onError: (error) => {
-          toast.error(error.message || "An error occurred");
+          toast.error(getErrorMessage(error));
         },
       }
     );

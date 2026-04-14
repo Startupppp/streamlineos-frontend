@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useHrPendingWfhRequests, useProcessWfhRequest } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -230,7 +231,7 @@ export function LeaveApprovalsContent({
           toast.success("WFH request approved");
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to process request");
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -253,7 +254,7 @@ export function LeaveApprovalsContent({
           setRejectingId(null);
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to process request");
+          toast.error(getErrorMessage(error));
         },
       }
     );

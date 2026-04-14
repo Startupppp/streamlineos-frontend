@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useForgotPassword } from "@/lib/hooks/auth-hooks";
 import { ArrowLeft, CheckCircle2, KeyRound, Loader2, AlertCircle, RefreshCw, ArrowRight } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -57,7 +58,7 @@ export default function ForgotPasswordPage() {
         toast.success("Password reset email sent! Check your inbox.");
       },
       onError: (error) => {
-        toast.error(error.message || "An error occurred");
+        toast.error(getErrorMessage(error));
       },
     });
   };
@@ -71,7 +72,7 @@ export default function ForgotPasswordPage() {
         startCooldown();
       },
       onError: (error) => {
-        toast.error(error.message || "Failed to resend email");
+        toast.error(getErrorMessage(error));
       },
     });
   };

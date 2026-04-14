@@ -18,6 +18,7 @@ import { useQuotes, useCreateQuote, type Quote } from "@/lib/api/hooks/quotes";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { toast } from "sonner";
 import { Plus, Search, FileText, Download, Trash2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -220,7 +221,7 @@ function CreateQuoteForm({ onSuccess }: { onSuccess: () => void }) {
           toast.success("Quote created successfully");
           onSuccess();
         },
-        onError: (error) => toast.error(error.message),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   };

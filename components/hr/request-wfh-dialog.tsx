@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Home, Loader2 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import type { Employee } from "@/types/hr";
@@ -91,7 +92,7 @@ export function RequestWfhDialog({ trigger }: { trigger?: React.ReactNode } = {}
           handleClose();
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to submit WFH request");
+          toast.error(getErrorMessage(error));
         },
       }
     );

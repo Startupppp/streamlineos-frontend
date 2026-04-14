@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { getSignedFileUrl, viewFile } from "@/hooks/use-file-url";
 import { TicketHeader } from "./ticket-header";
@@ -154,9 +155,9 @@ export function TicketDetailsDialog({
       setSaving(false);
       invalidateAll();
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       setSaving(false);
-      toast.error(error.message || "Failed to update ticket");
+      toast.error(getErrorMessage(error));
     },
   });
 
@@ -166,8 +167,8 @@ export function TicketDetailsDialog({
       invalidateAll();
       onOpenChange(false);
     },
-    onError: (error: Error) =>
-      toast.error(error.message || "Failed to delete ticket"),
+    onError: (error) =>
+      toast.error(getErrorMessage(error)),
   });
 
   const autoSave = useCallback(

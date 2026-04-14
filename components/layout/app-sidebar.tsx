@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useChatUnreadTotal } from "@/lib/api/hooks/chat";
+import { useUnreadNotificationCount } from "@/lib/api/hooks/notifications";
 import { getNavGroupsForRole } from "./sidebar/sidebar-nav-items";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { SidebarUserMenu } from "./sidebar/sidebar-user-menu";
@@ -82,10 +83,14 @@ export function AppSidebar({
   const { data: chatUnread } = useChatUnreadTotal();
   const unreadChatCount = typeof chatUnread === "number" ? chatUnread : 0;
 
+  const { data: notifData } = useUnreadNotificationCount();
+  const unreadNotifCount = notifData?.count ?? 0;
+
   useEffect(() => {
     const base = "Vaivamm CRM";
-    document.title = unreadChatCount > 0 ? `(${unreadChatCount}) ${base}` : base;
-  }, [unreadChatCount]);
+    const total = unreadChatCount + unreadNotifCount;
+    document.title = total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base;
+  }, [unreadChatCount, unreadNotifCount]);
 
   const orgName = organizations?.[0]?.name;
 

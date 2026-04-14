@@ -16,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Check, ChevronRight, Hash, Loader2, Search, Users, X } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatOrgUsers, useCreateGroupChannel } from "@/lib/hooks/trpc-hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
@@ -130,7 +131,7 @@ export function NewGroupDialog({
       const data = await res.json();
       if (data.url) setAvatarUrl(data.url);
       else toast.error("Upload failed");
-    } catch { toast.error("Upload failed"); }
+    } catch (error) { toast.error(getErrorMessage(error)); }
     finally { setUploadingAvatar(false); if (avatarInputRef.current) avatarInputRef.current.value = ""; }
   };
 
@@ -151,8 +152,8 @@ export function NewGroupDialog({
       setSelectedIds(new Set());
       setSearch("");
       setStep("info");
-    } catch {
-      toast.error("Failed to create channel");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   };
 

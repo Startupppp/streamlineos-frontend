@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, Hash, ImageIcon, Loader2, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
 import { useChatChannel, useChatOnlineUsers, useUpdateChannel } from "@/lib/hooks/trpc-hooks";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -69,7 +70,7 @@ export function ChannelInfoPanel({
       const data = await res.json();
       if (data.url) setEditAvatar(data.url);
       else toast.error("Upload failed");
-    } catch { toast.error("Upload failed"); }
+    } catch (error) { toast.error(getErrorMessage(error)); }
     finally { setUploadingAvatar(false); if (editAvatarRef.current) editAvatarRef.current.value = ""; }
   };
 
@@ -83,7 +84,7 @@ export function ChannelInfoPanel({
       });
       setEditing(false);
       toast.success("Channel updated");
-    } catch { toast.error("Failed to update channel"); }
+    } catch (error) { toast.error(getErrorMessage(error)); }
   };
 
   const otherMember =

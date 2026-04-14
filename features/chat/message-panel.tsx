@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -196,7 +197,7 @@ export function MessagePanel({
           { fileName: file.name, fileUrl: result.url, fileKey: result.key, fileSize: result.size ?? file.size, mimeType: result.mimeType ?? file.type },
         ]);
       }
-    } catch { toast.error("Upload failed"); }
+    } catch (error) { toast.error(getErrorMessage(error)); }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
   }, []);
 
@@ -240,10 +241,10 @@ export function MessagePanel({
     try {
       await sendMessage.mutateAsync({ channelId, content: content || undefined, replyToId: replyId, attachments: attachments.length > 0 ? attachments : undefined });
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    } catch {
+    } catch (error) {
       setMessageInput(content);
       setPendingAttachments(attachments);
-      toast.error("Failed to send message");
+      toast.error(getErrorMessage(error));
     }
   }, [messageInput, channelId, replyTo, sendMessage, pendingAttachments]);
 
@@ -254,7 +255,7 @@ export function MessagePanel({
       await editMessage.mutateAsync({ channelId, messageId, content });
       setEditingMessage(null);
       setEditInput("");
-    } catch { toast.error("Failed to edit message"); }
+    } catch (error) { toast.error(getErrorMessage(error)); }
   }, [editInput, editMessage, channelId]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {

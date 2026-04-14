@@ -15,6 +15,7 @@ import { PASSWORD_REGEX, getPasswordStrength } from "@/lib/password-utils";
 import { PasswordStrengthIndicator } from "@/components/auth/password-strength-indicator";
 import { Loader2, Eye, EyeOff, ArrowRight, Shield, Rocket, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export const dynamic = "force-dynamic";
 
@@ -67,7 +68,7 @@ function SetupPasswordContent() {
       toast.success("Password set successfully! You can now sign in.");
       router.push("/signin");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to set password");
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

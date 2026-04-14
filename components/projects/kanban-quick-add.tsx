@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { useCreateTicket } from "@/lib/hooks/trpc-hooks";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
 
 type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
@@ -23,7 +24,7 @@ export function QuickAddInput({ columnId, projectId }: { columnId: string; proje
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to create ticket");
+      toast.error(getErrorMessage(error));
     },
   });
 

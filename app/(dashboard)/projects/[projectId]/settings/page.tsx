@@ -37,6 +37,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { updateProjectSettingsInputSchema } from "@/lib/validations/project";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -147,9 +148,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           router.push("/projects");
         },
         onError: (error) => {
-          toast.error(
-            (error as Error).message || "Failed to delete project"
-          );
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -200,9 +199,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           router.push(`/projects/${projectId}`);
         },
         onError: (error) => {
-          toast.error(
-            (error as Error).message || "Failed to update project settings"
-          );
+          toast.error(getErrorMessage(error));
         },
       }
     );

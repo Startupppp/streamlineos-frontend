@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUpdateTicket } from "@/lib/api/hooks/projects";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useQueryClient } from "@tanstack/react-query";
 
 const editEpicSchema = z.object({
@@ -87,7 +88,7 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
       setOpen(false);
     },
-    onError: (error: Error) => toast.error(error.message || "Failed to update epic"),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   function onSubmit(data: EditEpicInput) {

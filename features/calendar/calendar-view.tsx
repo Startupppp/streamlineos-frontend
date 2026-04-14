@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCalendarEvents } from "@/lib/api/hooks/calendar";
+import type { CalendarListItem } from "@/lib/api/hooks/calendar";
 import { EventCreateDialog } from "./event-create-dialog";
 import { EventDetailSheet } from "./event-detail-sheet";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
@@ -53,14 +54,15 @@ export function CalendarView() {
   const [view, setView] = useState<View>("month");
   const [createSlot, setCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  // ID is a string like "event-123" matching CalendarListItem.id
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const rangeStart = useMemo(() => startOfMonth(subMonths(currentDate, 0)), [currentDate]);
   const rangeEnd = useMemo(() => endOfMonth(addMonths(currentDate, 1)), [currentDate]);
 
   const { data: events = [] } = useCalendarEvents(rangeStart, rangeEnd);
 
-  const selectedEvent = useMemo(
+  const selectedEvent = useMemo<CalendarListItem | null>(
     () => (selectedEventId !== null ? (events.find((e) => e.id === selectedEventId) ?? null) : null),
     [selectedEventId, events]
   );
@@ -70,8 +72,9 @@ export function CalendarView() {
       events.map((e) => ({
         id: e.id,
         title: e.title,
-        start: new Date(e.startDate),
-        end: new Date(e.endDate),
+        // API returns serialised Date objects as ISO strings under `start`/`end`
+        start: new Date(e.start),
+        end: new Date(e.end),
         allDay: e.allDay ?? false,
         resource: {
           color: e.color,
@@ -94,7 +97,8 @@ export function CalendarView() {
   }, []);
 
   const handleSelectEvent = useCallback((event: BigCalEvent) => {
-    setSelectedEventId(event.id);
+    // BigCalEvent.id is string (the prefixed CalendarListItem.id)
+    setSelectedEventId(String(event.id));
   }, []);
 
   const eventPropGetter = useCallback(
@@ -151,7 +155,7 @@ export function CalendarView() {
   );
 
   return (
-    <div className="flex flex-col gap-3 h-[calc(100dvh-10rem)]">
+    <div className="flex flex-col gap-3 h-full">
       <div className="flex items-center justify-between flex-wrap gap-2 shrink-0">
         <div className="flex items-center gap-1.5">
           <Button
@@ -226,7 +230,7 @@ export function CalendarView() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden bg-card calendar-container">
+      <div className="flex-1 min-h-0 rounded-lg border border-border overflow-y-auto bg-card calendar-container">
         <BigCalendarWrapper
           events={calEvents}
           date={currentDate}

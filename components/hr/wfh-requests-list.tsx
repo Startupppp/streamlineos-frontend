@@ -16,6 +16,7 @@ import {
 import { EmptyWfhIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -109,7 +110,7 @@ export function PendingWfhApprovals() {
           toast.success("WFH request approved");
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to process request");
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -136,7 +137,7 @@ export function PendingWfhApprovals() {
           setRejectingId(null);
         },
         onError: (error) => {
-          toast.error(error.message || "Failed to process request");
+          toast.error(getErrorMessage(error));
         },
       }
     );

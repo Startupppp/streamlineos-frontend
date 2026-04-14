@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, ArrowRight, Check } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export default function SignupPage() {
         window.location.href = "/signin";
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Signup failed";
+      const msg = getErrorMessage(error);
       toast.error(msg);
     } finally {
       setIsSubmitting(false);

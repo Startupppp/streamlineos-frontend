@@ -19,7 +19,7 @@ const localizer = dateFnsLocalizer({
 });
 
 export interface BigCalEvent {
-  id: number;
+  id: number | string;
   title: string;
   start: Date;
   end: Date;

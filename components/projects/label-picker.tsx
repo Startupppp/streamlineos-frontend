@@ -19,6 +19,7 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface LabelPickerProps {
   ticketId: number;
@@ -42,21 +43,21 @@ export function LabelPicker({ ticketId, projectId, currentLabels }: LabelPickerP
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.labels() });
       addLabel.mutate({ ticketId, projectId, labelId: newLabel.id });
     },
-    onError: (error: Error) => toast.error(error.message || "Failed to create label"),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const addLabel = useAddLabelToTicket({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
     },
-    onError: (error: Error) => toast.error(error.message || "Failed to add label"),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const removeLabel = useRemoveLabelFromTicket({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.ticket(ticketId) });
     },
-    onError: (error: Error) => toast.error(error.message || "Failed to remove label"),
+    onError: (error) => toast.error(getErrorMessage(error)),
   });
 
   const currentLabelIds = new Set(currentLabels.map(l => l.label.id));

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useVerifyEmail, useResendVerificationEmail } from "@/lib/hooks/auth-hooks";
 import { CheckCircle2, Mail, Loader2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -52,7 +53,7 @@ function VerifyEmailForm() {
             setTimeout(() => router.push("/signin"), 2000);
           },
           onError: (error) => {
-            toast.error(error.message || "Verification failed");
+            toast.error(getErrorMessage(error));
           },
         }
       );

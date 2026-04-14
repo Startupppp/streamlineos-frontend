@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Search, UserPlus, Shield, ShieldOff, RefreshCw } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -119,7 +120,7 @@ export default function MembersSettingsPage() {
           setShowInviteForm(false);
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : "Failed to send invitation");
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -128,7 +129,7 @@ export default function MembersSettingsPage() {
   const handleCancelInvitation = useCallback((invitationId: string) => {
     cancelInvitation.mutate(
       { invitationId },
-      { onError: (err) => toast.error(err.message) }
+      { onError: (err) => toast.error(getErrorMessage(err)) }
     );
   }, [cancelInvitation]);
 
@@ -137,7 +138,7 @@ export default function MembersSettingsPage() {
       { invitationId },
       {
         onSuccess: () => toast.success("Invitation resent"),
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [resendInvitation]);
@@ -148,7 +149,7 @@ export default function MembersSettingsPage() {
       { userId, role: newRole },
       {
         onSuccess: () => toast.success("Role updated successfully"),
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [updateRole]);
@@ -158,7 +159,7 @@ export default function MembersSettingsPage() {
       { userId },
       {
         onSuccess: () => toast.success("MFA reset successfully"),
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [resetMfa]);

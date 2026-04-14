@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useUpdateSprint } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 
 const editSprintSchema = z.object({
@@ -90,7 +91,7 @@ export function EditSprintDialog({ sprint, projectId, trigger }: EditSprintDialo
           setOpen(false);
         },
         onError: (error) => {
-          toast.error((error as Error).message || "Failed to update sprint");
+          toast.error(getErrorMessage(error));
         },
       }
     );

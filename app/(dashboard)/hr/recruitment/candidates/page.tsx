@@ -5,7 +5,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import Link from "next/link";
-import { useCandidates, useCreateCandidate, useUpdateCandidate, useDeleteCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
+import { useCandidates, useCreateCandidate, useUpdateCandidate, useUpdateCandidateStage, useDeleteCandidate, useBulkRejectCandidates } from "@/lib/api/hooks/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +80,7 @@ export default function CandidatesPage() {
   );
   const createCandidate = useCreateCandidate();
   const updateCandidate = useUpdateCandidate();
+  const updateCandidateStage = useUpdateCandidateStage();
   const deleteCandidate = useDeleteCandidate();
   const bulkReject = useBulkRejectCandidates();
 
@@ -155,12 +156,12 @@ export default function CandidatesPage() {
 
   const handleStatusChange = useCallback(
     (id: number, status: CandidateStatus) => {
-      updateCandidate.mutate({ id, status }, {
+      updateCandidateStage.mutate({ candidateId: id, stage: status }, {
         onSuccess: () => toast.success("Status updated"),
         onError: (e) => toast.error(getErrorMessage(e)),
       });
     },
-    [updateCandidate]
+    [updateCandidateStage]
   );
 
   const openEditSheet = useCallback((candidate: Candidate) => {

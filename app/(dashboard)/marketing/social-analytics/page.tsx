@@ -60,6 +60,7 @@ import {
 } from "@/lib/api/hooks/marketing";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -193,7 +194,7 @@ function LogMetricsSheet({ open, onClose }: LogMetricsSheetProps) {
             onClose();
           },
           onError: (error) => {
-            toast.error(error instanceof Error ? error.message : "Failed to record metrics");
+            toast.error(getErrorMessage(error));
           },
         }
       );
@@ -348,8 +349,8 @@ export default function SocialAnalyticsPage() {
         toast.success("Metric entry deleted");
         setDeleteId(null);
       },
-      onError: () => {
-        toast.error("Failed to delete metric");
+      onError: (error) => {
+        toast.error(getErrorMessage(error));
         setDeleteId(null);
       },
     });

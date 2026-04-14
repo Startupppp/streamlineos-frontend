@@ -13,6 +13,7 @@ import { useCreateTicket, useUpdateTicket } from "@/lib/hooks/trpc-hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface Subtask {
   id: number;
@@ -61,8 +62,8 @@ export function TicketSubtasks({
         queryKey: queryKeys.projects.ticket(ticketId),
       });
     },
-    onError: (error: Error) =>
-      toast.error(error.message || "Failed to create subtask"),
+    onError: (error) =>
+      toast.error(getErrorMessage(error)),
   });
 
   const updateTicketMutation = useUpdateTicket(projectId, {
@@ -71,8 +72,8 @@ export function TicketSubtasks({
         queryClient.invalidateQueries({ queryKey: subtaskQueryKey });
       }, 300);
     },
-    onError: (error: Error) =>
-      toast.error(error.message || "Failed to update subtask"),
+    onError: (error) =>
+      toast.error(getErrorMessage(error)),
   });
 
   const handleAddSubtask = () => {

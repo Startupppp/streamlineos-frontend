@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaignInsights, type CampaignInsightsResult } from "@/lib/api/hooks/ai";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -124,7 +125,7 @@ export default function AIInsightsPage() {
         toast.success("Insights generated successfully");
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to generate insights");
+        toast.error(getErrorMessage(error));
       },
     });
   }, [period, mutate]);

@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Loader2, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import {
   useApproveTimesheet,
@@ -48,7 +49,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error((error as Error).message || "Failed to approve timesheet");
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -73,7 +74,7 @@ export function TimeEntryDetailSheet({ entry, open, onOpenChange }: TimeEntryDet
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error((error as Error).message || "Failed to reject timesheet");
+          toast.error(getErrorMessage(error));
         },
       }
     );

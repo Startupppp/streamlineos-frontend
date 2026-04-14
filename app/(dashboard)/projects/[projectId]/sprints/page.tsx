@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Play, Calendar, CheckCircle2, Loader2 } from "lucide-react";
 import { EmptySprintIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { DropResult } from "@hello-pangea/dnd";
 import { SprintCard } from "@/features/projects/sprints/sprint-card";
@@ -40,7 +41,7 @@ export default function SprintsPage({ params }: PageProps) {
       { sprintId, status: "ACTIVE" },
       {
         onSuccess: () => toast.success("Sprint started"),
-        onError: (error) => toast.error((error as Error).message || "Failed to start sprint"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       }
     );
   }, [updateSprint]);
@@ -80,7 +81,7 @@ export default function SprintsPage({ params }: PageProps) {
           { sprintId: completionSprintId, status: "COMPLETED" },
           {
             onSuccess: () => toast.success("Sprint completed"),
-            onError: (error) => toast.error((error as Error).message || "Failed to complete sprint"),
+            onError: (error) => toast.error(getErrorMessage(error)),
           }
         );
         setCompletionSprintId(null);
@@ -99,7 +100,7 @@ export default function SprintsPage({ params }: PageProps) {
 
     updateTicket.mutate(
       { ticketId, ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}) },
-      { onError: (error) => toast.error((error as Error).message || "Failed to move ticket") }
+      { onError: (error) => toast.error(getErrorMessage(error)) }
     );
   }, [updateTicket]);
 

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, ArrowRight, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { validatePasswordStrength } from "@/lib/utils/password-validation";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export const dynamic = "force-dynamic";
 
@@ -97,8 +98,8 @@ export default function SignInPage() {
         window.location.href = target;
       }
     },
-    onError: (error: Error) => {
-      toast.error(error.message);
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
     },
   });
 

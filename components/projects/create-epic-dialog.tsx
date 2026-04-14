@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { useCreateTicket } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const createEpicSchema = z.object({
   title: z.string().min(1, "Epic title is required"),
@@ -77,7 +78,7 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
           form.reset();
         },
         onError: (error) => {
-          toast.error((error as Error).message || "Failed to create epic");
+          toast.error(getErrorMessage(error));
         },
       }
     );

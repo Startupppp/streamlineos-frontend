@@ -8,6 +8,7 @@ import { Send, Loader2, MessageSquare } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { useAddComment } from "@/lib/api/hooks/projects";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { formatDistanceToNow } from "date-fns";
 import type { TicketComment, TicketUser } from "@/types/projects";
 
@@ -23,8 +24,8 @@ export function ActivityFeed({ ticketId, projectId, comments }: ActivityFeedProp
     onSuccess: () => {
       setNewComment("");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to add comment");
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
     },
   });
 

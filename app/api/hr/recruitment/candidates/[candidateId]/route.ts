@@ -1,8 +1,11 @@
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { candidates, candidateSlaTracking, candidateApplications, interviews } from "@/lib/db/schema";
+import { candidates, candidateSlaTracking, candidateApplications, interviews, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { getCandidateRejectionEmail } from "@/lib/email-templates/hr";
+import { sendEmail } from "@/lib/email";
+import { notifyByRoles } from "@/server/actions/create-notification";
 import type { NextRequest } from "next/server";
 
 export async function GET(
@@ -101,6 +104,41 @@ export async function PATCH(
         updatedAt: new Date(),
       })
       .where(eq(candidates.id, candidateId));
+
+    // Send rejection email if status flipped to REJECTED (and wasn't already)
+    if (body.status === "REJECTED" && existing.status !== "REJECTED") {
+      const emailTarget = body.email ?? existing.email;
+
+      void notifyByRoles(session.orgId, ["HR_MANAGER", "CEO", "HR"], {
+        type: "INFO",
+        title: "Candidate Rejected",
+        message: `${existing.firstName} ${existing.lastName} has been moved to Rejected.`,
+        link: `/hr/recruitment/candidates/${candidateId}`,
+        metadata: { candidateId, stage: "REJECTED" },
+      });
+
+      if (emailTarget) {
+         try {
+            const [latestApp, org] = await Promise.all([
+              db.query.candidateApplications.findFirst({
+                where: eq(candidateApplications.candidateId, candidateId),
+                with: { jobPosting: true },
+                orderBy: (t, { desc }) => [desc(t.appliedAt)],
+              }),
+              db.query.organizations.findFirst({ where: eq(organizations.id, session.orgId) }),
+            ]);
+            const { subject, html } = getCandidateRejectionEmail({
+              candidateName: `${existing.firstName} ${existing.lastName}`,
+              jobTitle: latestApp?.jobPosting?.title ?? "the position",
+              companyName: org?.name ?? "our company",
+            });
+            await sendEmail({ to: emailTarget, subject, html });
+          } catch {
+            // Non-blocking — don't fail the request if email fails
+          }
+   
+      }
+    }
 
     return ok({ success: true });
   });
