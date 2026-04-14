@@ -2,10 +2,11 @@ import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { getClientAccount } from "@/server/queries/crm";
 import { db } from "@/lib/db";
-import { clientAccounts, clientAccountActivities, incentiveConfig, incentives, notifications } from "@/lib/db/schema";
+import { clientAccounts, clientAccountActivities, incentiveConfig, incentives, notifications, organizationMembers, users } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
+import { sendNotification } from "@/lib/notifications/send";
 
 const updateStatusSchema = z.object({
   status: z.enum(["ACCOUNT_OPENING", "QUERIES", "PLAN_SELECTED", "INVESTED"]),
@@ -105,14 +106,77 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         });
       }
 
+      // Notify salesperson (in-app)
       await db.insert(notifications).values({
         orgId,
         userId: account.salesRepId,
         type: "SUCCESS",
         title: "Client Invested!",
-        message: `${account.clientName} has invested ${input.investmentAmount}. Your incentive is being processed.`,
+        message: `${account.clientName} has invested ₹${parseFloat(input.investmentAmount).toLocaleString("en-IN")}. Your incentive is being processed.`,
         link: `/crm/clients/${account.id}`,
       });
+
+      // Notify all HR users (in-app)
+      const hrMembers = await db
+        .select({ userId: organizationMembers.userId })
+        .from(organizationMembers)
+        .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.role, "HR")));
+
+      for (const hr of hrMembers) {
+        await db.insert(notifications).values({
+          orgId,
+          userId: hr.userId,
+          type: "SUCCESS",
+          title: "Client Invested!",
+          message: `${account.clientName} has invested ₹${parseFloat(input.investmentAmount).toLocaleString("en-IN")}. Sales rep: ${account.salesRepId ? "assigned" : "N/A"}.`,
+          link: `/crm/clients/${account.id}`,
+        });
+      }
+
+      // Send email notifications (non-blocking)
+      void (async () => {
+        try {
+          // Email to salesperson
+          const salesRep = await db.query.users.findFirst({
+            where: eq(users.id, account.salesRepId),
+            columns: { email: true, name: true },
+          });
+          if (salesRep?.email) {
+            await sendNotification({
+              orgId,
+              userId: account.salesRepId,
+              type: "SUCCESS",
+              title: "Client Invested!",
+              message: `${account.clientName} has invested ₹${parseFloat(input.investmentAmount!).toLocaleString("en-IN")}. Your incentive is being processed.`,
+              link: `/crm/clients/${account.id}`,
+              channel: "email",
+              recipientEmail: salesRep.email,
+            });
+          }
+
+          // Email to HR
+          for (const hr of hrMembers) {
+            const hrUser = await db.query.users.findFirst({
+              where: eq(users.id, hr.userId),
+              columns: { email: true },
+            });
+            if (hrUser?.email) {
+              await sendNotification({
+                orgId,
+                userId: hr.userId,
+                type: "SUCCESS",
+                title: "Client Invested!",
+                message: `${account.clientName} has invested ₹${parseFloat(input.investmentAmount!).toLocaleString("en-IN")}. Sales rep: ${salesRep?.name ?? "N/A"}.`,
+                link: `/crm/clients/${account.id}`,
+                channel: "email",
+                recipientEmail: hrUser.email,
+              });
+            }
+          }
+        } catch {
+          // Non-critical
+        }
+      })();
     }
 
     void createAuditLog({

@@ -1,10 +1,14 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { leads, deals, projects, tickets, clients, clientAccounts, notifications } from "@/lib/db/schema";
+import {
+  leads, deals, projects, tickets, clients, clientAccounts,
+  notifications, organizationMembers, users,
+} from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
+import { sendNotification } from "@/lib/notifications/send";
 
 const schema = z.object({
   status: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]),
@@ -13,6 +17,53 @@ const schema = z.object({
 });
 
 type Ctx = { params: Promise<{ leadId: string }> };
+
+/**
+ * Round-robin: pick the next CUSTOMER_SUPPORT user for CRM assignment.
+ * Cycles through all CS members, assigning to whoever has the fewest active accounts.
+ */
+async function getNextCrmAssignee(orgId: string): Promise<string | null> {
+  // Get all CUSTOMER_SUPPORT members
+  const csMembers = await db
+    .select({ userId: organizationMembers.userId })
+    .from(organizationMembers)
+    .where(
+      and(
+        eq(organizationMembers.orgId, orgId),
+        eq(organizationMembers.role, "CUSTOMER_SUPPORT")
+      )
+    );
+
+  if (csMembers.length === 0) return null;
+
+  // Count active (non-INVESTED) accounts per CS member
+  const counts: Record<string, number> = {};
+  for (const m of csMembers) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(clientAccounts)
+      .where(
+        and(
+          eq(clientAccounts.orgId, orgId),
+          eq(clientAccounts.assignedCrmId, m.userId),
+          sql`${clientAccounts.status} != 'INVESTED'`
+        )
+      );
+    counts[m.userId] = result?.count ?? 0;
+  }
+
+  // Assign to the member with fewest active accounts (load-balanced round-robin)
+  let minCount = Infinity;
+  let assignee: string | null = null;
+  for (const m of csMembers) {
+    if (counts[m.userId] < minCount) {
+      minCount = counts[m.userId];
+      assignee = m.userId;
+    }
+  }
+
+  return assignee;
+}
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { leadId: id } = await ctx.params;
@@ -72,7 +123,11 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     }
 
     if (input.status === "CONVERTED") {
+      // Get CRM assignee via round-robin before transaction
+      const crmAssigneeId = await getNextCrmAssignee(orgId);
+
       await db.transaction(async (tx) => {
+        // Create onboarding ticket
         const firstProject = await tx.query.projects.findFirst({
           where: eq(projects.orgId, orgId),
         });
@@ -97,6 +152,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           });
         }
 
+        // Create client record
         const existingClient = await tx.query.clients.findFirst({
           where: and(eq(clients.leadId, updated.id), eq(clients.orgId, orgId)),
         });
@@ -116,6 +172,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           });
         }
 
+        // Create client account with CRM round-robin assignment
         const existingClientAccount = await tx.query.clientAccounts.findFirst({
           where: and(eq(clientAccounts.leadId, updated.id), eq(clientAccounts.orgId, orgId)),
         });
@@ -124,6 +181,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             orgId,
             leadId: updated.id,
             salesRepId: updated.assignedToId ?? session.user.id,
+            assignedCrmId: crmAssigneeId,
             clientName: updated.name,
             clientEmail: updated.email,
             clientPhone: updated.phone,
@@ -134,15 +192,73 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
           });
         }
 
+        // Notify the salesperson
         await tx.insert(notifications).values({
           orgId,
           userId: updated.assignedToId || session.user.id,
           type: "SUCCESS",
           title: "Lead Converted",
-          message: `Lead "${updated.name}" has been converted to a client.`,
-          link: `/crm/leads/${updated.id}`,
+          message: `Lead "${updated.name}" has been converted to a client.${crmAssigneeId ? " A CRM executive has been assigned." : ""}`,
+          link: `/crm/clients`,
         });
+
+        // Notify the assigned CRM executive
+        if (crmAssigneeId) {
+          await tx.insert(notifications).values({
+            orgId,
+            userId: crmAssigneeId,
+            type: "INFO",
+            title: "New Client Assigned",
+            message: `Client "${updated.name}" has been assigned to you for onboarding. Estimated investment: ${updated.potentialValue ?? "N/A"}.`,
+            link: `/crm/clients`,
+          });
+        }
       });
+
+      // Send email notifications (non-blocking, outside transaction)
+      void (async () => {
+        try {
+          // Email to salesperson
+          const salesRep = await db.query.users.findFirst({
+            where: eq(users.id, updated.assignedToId || session.user.id),
+            columns: { email: true, name: true },
+          });
+          if (salesRep?.email) {
+            await sendNotification({
+              orgId,
+              userId: updated.assignedToId || session.user.id,
+              type: "SUCCESS",
+              title: "Lead Converted",
+              message: `Lead "${updated.name}" has been converted to a client.`,
+              link: `/crm/clients`,
+              channel: "email",
+              recipientEmail: salesRep.email,
+            });
+          }
+
+          // Email to CRM assignee
+          if (crmAssigneeId) {
+            const crmUser = await db.query.users.findFirst({
+              where: eq(users.id, crmAssigneeId),
+              columns: { email: true, name: true },
+            });
+            if (crmUser?.email) {
+              await sendNotification({
+                orgId,
+                userId: crmAssigneeId,
+                type: "INFO",
+                title: "New Client Assigned",
+                message: `Client "${updated.name}" has been assigned to you for onboarding.`,
+                link: `/crm/clients`,
+                channel: "email",
+                recipientEmail: crmUser.email,
+              });
+            }
+          }
+        } catch {
+          // Non-critical
+        }
+      })();
     }
 
     void createAuditLog({
