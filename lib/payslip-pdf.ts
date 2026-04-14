@@ -1,6 +1,9 @@
 import "server-only";
 
 import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
+import sharp from "sharp";
+import path from "path";
+import fs from "fs/promises";
 import { format } from "date-fns";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -114,17 +117,36 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
 
   let y = height - margin;
 
+  // ── Load logo ────────────────────────────────────────────────────────────
+  let logoImage: Awaited<ReturnType<typeof doc.embedPng>> | null = null;
+  try {
+    const svgPath = path.join(process.cwd(), "public", "logo.svg");
+    const svgBuffer = await fs.readFile(svgPath);
+    const pngBuffer = await sharp(svgBuffer)
+      .resize(50, 50, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } })
+      .png()
+      .toBuffer();
+    logoImage = await doc.embedPng(pngBuffer);
+  } catch {
+    // Fallback handled below
+  }
+
   // ── Header ────────────────────────────────────────────────────────────────
   drawRect(page, 0, y - 70, pageW, 70, NAVY);
 
-  // Logo box
-  drawRect(page, margin, y - 62, 52, 52, GOLD);
-  drawText(page, "V", margin + 14, y - 42, bold, 28, WHITE);
+  // Logo
+  if (logoImage) {
+    page.drawImage(logoImage, { x: margin + 2, y: y - 60, width: 46, height: 46 });
+  } else {
+    drawRect(page, margin, y - 62, 52, 52, GOLD);
+    drawText(page, "V", margin + 14, y - 42, bold, 28, WHITE);
+  }
 
-  // Company name + address
-  drawText(page, data.orgName, margin + 62, y - 20, bold, 15, WHITE);
+  // Company name — always use full name
+  const companyFullName = "Vaivamm Capital Advisors LLP";
+  drawText(page, companyFullName, margin + 56, y - 20, bold, 14, WHITE);
   if (data.orgAddress) {
-    drawText(page, data.orgAddress, margin + 62, y - 34, regular, 8, rgb(0.8, 0.85, 1));
+    drawText(page, data.orgAddress, margin + 56, y - 34, regular, 8, rgb(0.8, 0.85, 1));
   }
 
   // Right side: Salary Slip label
@@ -308,7 +330,7 @@ export async function generatePayslipPdf(data: PayslipPdfData): Promise<Buffer> 
 
   // ── Footer ────────────────────────────────────────────────────────────────
   drawRect(page, 0, 0, pageW, 28, LIGHT_GRAY);
-  const footerText = `Generated ${format(new Date(), "dd MMM yyyy 'at' HH:mm")}  ·  ${data.orgName}  ·  Confidential — For Employee Use Only`;
+  const footerText = `Generated ${format(new Date(), "dd MMM yyyy 'at' HH:mm")}  ·  Vaivamm Capital Advisors LLP  ·  Confidential — For Employee Use Only`;
   const fw = regular.widthOfTextAtSize(footerText, 7.5);
   drawText(page, footerText, pageW / 2 - fw / 2, 10, regular, 7.5, GRAY);
   void y;
