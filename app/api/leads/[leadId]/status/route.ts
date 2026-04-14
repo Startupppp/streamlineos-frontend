@@ -129,32 +129,8 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       // Get CRM assignee via round-robin before transaction
       const crmAssigneeId = await getNextCrmAssignee(orgId);
 
+      // ── Critical: create client + client account (must succeed) ──
       await db.transaction(async (tx) => {
-        // Create onboarding ticket
-        const firstProject = await tx.query.projects.findFirst({
-          where: eq(projects.orgId, orgId),
-        });
-        if (firstProject) {
-          await tx.execute(sql`SELECT pg_advisory_xact_lock(${firstProject.id})`);
-          const ticketCountResult = await tx
-            .select({ count: count() })
-            .from(tickets)
-            .where(eq(tickets.projectId, firstProject.id));
-          const nextTicketNumber = (ticketCountResult[0]?.count ?? 0) + 1;
-
-          await tx.insert(tickets).values({
-            orgId,
-            title: `Onboard converted lead: ${updated.name}`,
-            description: `Lead "${updated.name}" has been converted.\nCompany: ${updated.company || "N/A"}\nEmail: ${updated.email || "N/A"}\nPhone: ${updated.phone || "N/A"}`,
-            type: "TASK",
-            status: "TODO",
-            priority: "HIGH",
-            projectId: firstProject.id,
-            ticketNumber: nextTicketNumber,
-            reporterId: session.user.id,
-          });
-        }
-
         // Create client record
         const existingClient = await tx.query.clients.findFirst({
           where: and(eq(clients.leadId, updated.id), eq(clients.orgId, orgId)),
@@ -189,7 +165,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             clientEmail: updated.email,
             clientPhone: updated.phone,
             clientWhatsapp: updated.whatsappNumber,
-            // Prefer modal-submitted value, then lead's stored values
             estimatedInvestment:
               input.estimatedInvestment ||
               updated.potentialValue ||
@@ -209,34 +184,57 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             })
             .where(eq(leads.id, updated.id));
         }
-
-        // Notify the salesperson
-        await tx.insert(notifications).values({
-          orgId,
-          userId: updated.assignedToId || session.user.id,
-          type: "SUCCESS",
-          title: "Lead Converted",
-          message: `Lead "${updated.name}" has been converted to a client.${crmAssigneeId ? " A CRM executive has been assigned." : ""}`,
-          link: `/crm/clients`,
-        });
-
-        // Notify the assigned CRM executive
-        if (crmAssigneeId) {
-          await tx.insert(notifications).values({
-            orgId,
-            userId: crmAssigneeId,
-            type: "INFO",
-            title: "New Client Assigned",
-            message: `Client "${updated.name}" has been assigned to you for onboarding. Estimated investment: ${updated.potentialValue ?? "N/A"}.`,
-            link: `/crm/clients`,
-          });
-        }
       });
 
-      // Send email notifications (non-blocking, outside transaction)
+      // ── Non-critical side effects (don't block conversion) ──
       void (async () => {
         try {
-          // Email to salesperson
+          // Create onboarding ticket
+          const firstProject = await db.query.projects.findFirst({
+            where: eq(projects.orgId, orgId),
+          });
+          if (firstProject) {
+            const ticketCountResult = await db
+              .select({ count: count() })
+              .from(tickets)
+              .where(eq(tickets.projectId, firstProject.id));
+            const nextTicketNumber = (ticketCountResult[0]?.count ?? 0) + 1;
+
+            await db.insert(tickets).values({
+              orgId,
+              title: `Onboard converted lead: ${updated.name}`,
+              description: `Lead "${updated.name}" has been converted.\nCompany: ${updated.company || "N/A"}\nEmail: ${updated.email || "N/A"}\nPhone: ${updated.phone || "N/A"}`,
+              type: "TASK",
+              status: "TODO",
+              priority: "HIGH",
+              projectId: firstProject.id,
+              ticketNumber: nextTicketNumber,
+              reporterId: session.user.id,
+            });
+          }
+
+          // In-app notifications
+          await db.insert(notifications).values({
+            orgId,
+            userId: updated.assignedToId || session.user.id,
+            type: "SUCCESS",
+            title: "Lead Converted",
+            message: `Lead "${updated.name}" has been converted to a client.${crmAssigneeId ? " A CRM executive has been assigned." : ""}`,
+            link: `/crm/clients`,
+          });
+
+          if (crmAssigneeId) {
+            await db.insert(notifications).values({
+              orgId,
+              userId: crmAssigneeId,
+              type: "INFO",
+              title: "New Client Assigned",
+              message: `Client "${updated.name}" has been assigned to you for onboarding. Estimated investment: ${updated.potentialValue ?? "N/A"}.`,
+              link: `/crm/clients`,
+            });
+          }
+
+          // Email notifications
           const salesRep = await db.query.users.findFirst({
             where: eq(users.id, updated.assignedToId || session.user.id),
             columns: { email: true, name: true },
@@ -254,7 +252,6 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             });
           }
 
-          // Email to CRM assignee
           if (crmAssigneeId) {
             const crmUser = await db.query.users.findFirst({
               where: eq(users.id, crmAssigneeId),
@@ -274,7 +271,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             }
           }
         } catch {
-          // Non-critical
+          // Non-critical — notifications and tickets don't block conversion
         }
       })();
     }

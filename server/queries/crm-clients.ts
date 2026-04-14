@@ -1,4 +1,4 @@
-"server-only";
+import "server-only";
 
 import { db } from "@/lib/db";
 import { clientAccounts, clientAccountActivities, leads } from "@/lib/db/schema";
@@ -76,8 +76,8 @@ export async function backfillConvertedLeadsToClientAccounts(
       l.email,
       l.phone,
       l.whatsapp_number,
-      COALESCE(l.potential_value, l.investment_interest),
-      'ACCOUNT_OPENING',
+      COALESCE(l.potential_value, l.investment_interest)::numeric(15,2),
+      'ACCOUNT_OPENING'::text,
       COALESCE(l.converted_at, NOW()),
       NOW(),
       NOW()

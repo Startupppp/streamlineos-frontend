@@ -1,17 +1,74 @@
+import { type NextRequest } from "next/server";
 import { withAuth, ok, err } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
 import { leaveRequests, users } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, SQL } from "drizzle-orm";
 import { EXPENSE_ADMIN_ROLES } from "@/lib/constants/roles";
 
 export const dynamic = "force-dynamic";
 
+const WITH_RELATIONS = {
+  user: {
+    columns: {
+      id: true as const,
+      name: true as const,
+      firstName: true as const,
+      lastName: true as const,
+      email: true as const,
+      image: true as const,
+      designation: true as const,
+    },
+  },
+  leaveType: { columns: { id: true as const, name: true as const } },
+  approver: {
+    columns: {
+      id: true as const,
+      name: true as const,
+      firstName: true as const,
+      lastName: true as const,
+    },
+  },
+};
+
+async function queryLeaves(conditions: SQL[], orgId: string, userId: string, isAdmin: boolean) {
+  const base = await db.query.leaveRequests.findMany({
+    where: and(...conditions),
+    with: WITH_RELATIONS,
+    orderBy: [desc(leaveRequests.createdAt)],
+  });
+
+  if (isAdmin) return base;
+
+  // For non-admin managers, also include requests where they are the reporting manager
+  const reportingUsers = await db.query.users.findMany({
+    where: eq(users.reportingTo, userId),
+    columns: { id: true },
+  });
+
+  if (reportingUsers.length === 0) return base;
+
+  const reportingUserIds = new Set(reportingUsers.map((u) => u.id));
+  const alreadyFetchedIds = new Set(base.map((r) => r.id));
+
+  const reporteeRequests = await db.query.leaveRequests.findMany({
+    where: and(eq(leaveRequests.orgId, orgId), eq(leaveRequests.status, "PENDING")),
+    with: WITH_RELATIONS,
+    orderBy: [desc(leaveRequests.createdAt)],
+  });
+
+  const extra = reporteeRequests.filter(
+    (r) => !alreadyFetchedIds.has(r.id) && reportingUserIds.has(r.userId),
+  );
+
+  return [...base, ...extra];
+}
+
 /**
  * GET /api/hr/leaves/team
- * Returns all pending leave requests assigned to the current user as approver.
- * HR/CEO/Admin see all org-wide pending requests.
+ * Returns { pending, all } for admins/managers.
+ * Used by the approvals tab to show pending and full history.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const role = session.user.role ?? "";
     const isAdmin = EXPENSE_ADMIN_ROLES.includes(role) || role === "ADMIN";
@@ -20,79 +77,24 @@ export async function GET() {
       return err("Only managers and admins can access team leave requests.", 403);
     }
 
-    const conditions = isAdmin
-      ? [eq(leaveRequests.orgId, session.orgId), eq(leaveRequests.status, "PENDING")]
-      : [
-          eq(leaveRequests.orgId, session.orgId),
-          eq(leaveRequests.approverId, session.user.id),
-          eq(leaveRequests.status, "PENDING"),
-        ];
+    const orgId = session.orgId;
+    const userId = session.user.id;
 
-    const requests = await db.query.leaveRequests.findMany({
-      where: and(...conditions),
-      with: {
-        user: {
-          columns: {
-            id: true,
-            name: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            image: true,
-            designation: true,
-          },
-        },
-        leaveType: { columns: { id: true, name: true } },
-        approver: { columns: { id: true, name: true, firstName: true, lastName: true } },
-      },
-      orderBy: [desc(leaveRequests.createdAt)],
-    });
+    const baseConditions: SQL[] = isAdmin
+      ? [eq(leaveRequests.orgId, orgId)]
+      : [eq(leaveRequests.orgId, orgId), eq(leaveRequests.approverId, userId)];
 
-    // For non-admin managers, also include requests where they are the reporting manager
-    // (reportingTo = session.user.id) even if not set as explicit approverId
-    if (!isAdmin) {
-      const reportingUsers = await db.query.users.findMany({
-        where: eq(users.reportingTo, session.user.id),
-        columns: { id: true },
-      });
+    const pendingConditions: SQL[] = [...baseConditions, eq(leaveRequests.status, "PENDING")];
 
-      if (reportingUsers.length > 0) {
-        const reportingUserIds = new Set(reportingUsers.map((u) => u.id));
-        const alreadyFetchedIds = new Set(requests.map((r) => r.id));
+    const [pending, all] = await Promise.all([
+      queryLeaves(pendingConditions, orgId, userId, isAdmin),
+      db.query.leaveRequests.findMany({
+        where: and(...baseConditions),
+        with: WITH_RELATIONS,
+        orderBy: [desc(leaveRequests.createdAt)],
+      }),
+    ]);
 
-        const reportingRequests = await db.query.leaveRequests.findMany({
-          where: and(
-            eq(leaveRequests.orgId, session.orgId),
-            eq(leaveRequests.status, "PENDING"),
-          ),
-          with: {
-            user: {
-              columns: {
-                id: true,
-                name: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                image: true,
-                designation: true,
-              },
-            },
-            leaveType: { columns: { id: true, name: true } },
-            approver: { columns: { id: true, name: true, firstName: true, lastName: true } },
-          },
-          orderBy: [desc(leaveRequests.createdAt)],
-        });
-
-        const extra = reportingRequests.filter(
-          (r) =>
-            !alreadyFetchedIds.has(r.id) &&
-            reportingUserIds.has(r.userId),
-        );
-
-        return ok([...requests, ...extra]);
-      }
-    }
-
-    return ok(requests);
+    return ok({ pending, all });
   });
 }

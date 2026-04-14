@@ -323,6 +323,13 @@
       "when": 1774390000000,
       "tag": "0039_ensure_schema_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1774390001000,
+      "tag": "0103_leave_lop_auto_convert",
+      "breakpoints": true
     }
   ]
 }
