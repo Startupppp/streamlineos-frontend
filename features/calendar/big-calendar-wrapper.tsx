@@ -36,6 +36,7 @@ interface BigCalendarWrapperProps {
   events: BigCalEvent[];
   date: Date;
   view: View;
+  calHeight?: number;
   onView: (view: View) => void;
   onNavigate: (date: Date) => void;
   onSelectSlot?: (slotInfo: SlotInfo) => void;
@@ -47,12 +48,20 @@ export function BigCalendarWrapper({
   events,
   date,
   view,
+  calHeight = 720,
   onView,
   onNavigate,
   onSelectSlot,
   onSelectEvent,
   eventPropGetter,
 }: BigCalendarWrapperProps) {
+  // Month view: measured container height (min 720px) so overflow-y-auto kicks in on small screens.
+  // Week/day views fill the container and use react-big-calendar's internal timeline scroll.
+  const calendarStyle =
+    view === "month"
+      ? { height: calHeight }
+      : { height: "100%" };
+
   return (
     <Calendar
       localizer={localizer}
@@ -66,7 +75,7 @@ export function BigCalendarWrapper({
       onSelectEvent={onSelectEvent as ((event: object) => void) | undefined}
       eventPropGetter={eventPropGetter as EventPropGetter<object>}
       toolbar={false}
-      style={{ height: "100%" }}
+      style={calendarStyle}
     />
   );
 }

@@ -326,9 +326,52 @@ export default function MembersSettingsPage() {
           </TabsContent>
 
           <TabsContent value="invitations" className="space-y-4">
+            {/* Invite form — always visible on this tab */}
             <Card className="rounded-xl border shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base">Pending Invitations</CardTitle>
+                <CardTitle className="text-base">Invite New Member</CardTitle>
+                <CardDescription>Send an invitation to join your organization</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row sm:items-end gap-3">
+                  <div className="flex-1 space-y-1.5">
+                    <Label htmlFor="inv-tab-email" className="text-sm">Email</Label>
+                    <Input
+                      id="inv-tab-email"
+                      type="email"
+                      placeholder="user@example.com"
+                      value={inviteEmail}
+                      onChange={handleEmailChange}
+                      required
+                    />
+                  </div>
+                  <div className="w-full sm:w-[180px] space-y-1.5">
+                    <Label className="text-sm">Role</Label>
+                    <Select value={inviteRole} onValueChange={setInviteRole}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {ALL_ROLES.filter(r => r.value !== "CEO").map(r => (
+                          <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" disabled={inviteUser.isPending} className="w-full sm:w-auto">
+                    {inviteUser.isPending ? "Sending..." : "Send Invite"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Pending invitations list */}
+            <Card className="rounded-xl border shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Pending Invitations
+                  {invitations && invitations.length > 0 && (
+                    <Badge variant="secondary" className="ml-2 text-xs">{invitations.length}</Badge>
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {invitations && invitations.length > 0 ? (

@@ -2,7 +2,7 @@
 
 import {
   LayoutDashboard, Users, Briefcase, Settings, Clock, CalendarCheck, CalendarDays,
-  Receipt, FileText, Laptop, Timer, UserPlus, QrCode, DollarSign, Handshake,
+  Receipt, FileText, Laptop, Timer, QrCode, DollarSign, Handshake,
   Contact2, Trophy, BarChart3, UserCheck, Network, ClipboardList, MessageSquareText,
   Shield, ShieldCheck, CreditCard, Wallet, Star, HeadphonesIcon, UserSearch,
   TrendingUp, BookOpen, Heart, UserMinus, Target, Megaphone, Mail, Package,
@@ -260,7 +260,6 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
             { label: "Employees", icon: Users, href: "/hr" },
             { label: "Skills Matrix", icon: Grid3X3, href: "/hr/employees/skills-matrix", isSubItem: true },
             { label: "Find Expert", icon: Search, href: "/hr/employees/find-expert", isSubItem: true },
-            { label: "Add Employee", icon: UserPlus, href: "/hr/employees/new", isSubItem: true },
             { label: "Onboarding", icon: ClipboardList, href: "/hr/onboarding", isSubItem: true },
             { label: "Doc Types", icon: FileCheck, href: "/hr/document-types", isSubItem: true },
             { label: "Doc Review", icon: FileText, href: "/hr/document-review", isSubItem: true },

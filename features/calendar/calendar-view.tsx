@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   format,
@@ -52,6 +52,24 @@ const VIEWS: View[] = ["month", "week", "day"];
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
+
+  // Measure the container height so month view can be set taller,
+  // ensuring the parent scroll kicks in just like week/day's internal time scroll.
+  const calContainerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(600);
+  useEffect(() => {
+    const el = calContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerHeight(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Month view: add 200px on top of the measured container so there's always
+  // something to scroll (min 900px so all 6 week-rows have room to breathe).
+  const calHeight = Math.max(containerHeight + 200, 900);
   const [createSlot, setCreateSlot] = useState<{ start: Date; end: Date } | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   // ID is a string like "event-123" matching CalendarListItem.id
@@ -230,11 +248,15 @@ export function CalendarView() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 rounded-lg border border-border overflow-y-auto bg-card calendar-container">
+      <div
+        ref={calContainerRef}
+        className={`flex-1 min-h-0 rounded-lg border border-border bg-card calendar-container ${view === "month" ? "overflow-y-scroll" : "overflow-hidden"}`}
+      >
         <BigCalendarWrapper
           events={calEvents}
           date={currentDate}
           view={view}
+          calHeight={calHeight}
           onView={setView}
           onNavigate={setCurrentDate}
           onSelectSlot={handleSelectSlot}

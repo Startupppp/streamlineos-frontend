@@ -8,7 +8,7 @@ import {
   Plus,
   Pencil,
   PowerOff,
-  FileText,
+  Power,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";

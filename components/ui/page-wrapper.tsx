@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface PageWrapperProps {
@@ -72,11 +71,11 @@ export function PageWrapper({
           {children}
         </div>
       ) : (
-        <ScrollArea className="flex-1 min-h-0">
-          <div className={cn("px-4 sm:px-6 pt-3 pb-6 overflow-x-hidden", contentClassName)}>
+        <div className={cn("flex-1 min-h-0 overflow-y-auto scrollbar-thin", contentClassName)}>
+          <div className="px-4 sm:px-6 pt-3 pb-6">
             {children}
           </div>
-        </ScrollArea>
+        </div>
       )}
     </div>
   );
