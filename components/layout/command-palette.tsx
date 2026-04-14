@@ -52,7 +52,7 @@ function ItemIcon({ icon: Icon }: { icon: React.ElementType }) {
       "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
       "bg-muted text-foreground/50",
       "transition-colors duration-150",
-      "group-data-[selected=true]:bg-primary/15 group-data-[selected=true]:text-primary",
+      "group-data-[selected=true]:bg-white/20 group-data-[selected=true]:text-white",
     )}>
       {/* Isolate icon from CommandDialog's [cmdk-item]_svg size override */}
       <span className="flex items-center justify-center [&_svg]:!h-4 [&_svg]:!w-4">
@@ -227,7 +227,7 @@ export function CommandPalette() {
                   {item.status && (
                     <Badge variant="secondary" className="text-[10px] h-4 shrink-0">{item.status}</Badge>
                   )}
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-primary/60 transition-colors" />
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -251,7 +251,7 @@ export function CommandPalette() {
                 <span className="text-[11px] text-muted-foreground/50 shrink-0 hidden sm:block group-data-[selected=true]:text-muted-foreground transition-colors">
                   {page.href}
                 </span>
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-primary/60 transition-colors" />
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
               </CommandItem>
             ))}
           </CommandGroup>
@@ -277,7 +277,7 @@ export function CommandPalette() {
                     >
                       <ItemIcon icon={route.icon} />
                       <span className="flex-1 text-sm">{route.label}</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 shrink-0 group-data-[selected=true]:text-primary/60 transition-colors" />
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 shrink-0 group-data-[selected=true]:text-white/70 transition-colors" />
                     </CommandItem>
                   ))}
                 </CommandGroup>
