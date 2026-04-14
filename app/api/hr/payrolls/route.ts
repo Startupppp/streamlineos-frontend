@@ -127,12 +127,12 @@ export async function POST(req: NextRequest) {
           ? parseFloat(salaryStructure.basicSalary)
           : monthlySalary * 0.5;
         const hraPercentage = salaryStructure
-          ? parseFloat(salaryStructure.hraPercentage || "40")
-          : 40;
-        const hra = salaryStructure ? basic * (hraPercentage / 100) : monthlySalary * 0.5;
+          ? parseFloat(salaryStructure.hraPercentage || "50")
+          : 50;
+        const hra = salaryStructure ? basic * (hraPercentage / 100) : monthlySalary * 0.25;
         const allowances = salaryStructure
           ? parseFloat(salaryStructure.allowances || "0")
-          : 0;
+          : monthlySalary * 0.25;
         let deductions = salaryStructure
           ? parseFloat(salaryStructure.deductions || "0")
           : 0;

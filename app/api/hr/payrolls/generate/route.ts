@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     const basicSalary = Number(salary.basicSalary);
-    const hraPercentage = Number(salary.hraPercentage || 40);
+    const hraPercentage = Number(salary.hraPercentage || 50);
     const allowances = Number(salary.allowances || 0);
     const deductions = Number(salary.deductions || 0);
 

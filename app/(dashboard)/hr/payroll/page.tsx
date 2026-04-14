@@ -102,7 +102,7 @@ export default function PayrollPage() {
     const lopDeduction = (parseFloat(lopDays) || 0) * perDaySalary;
     const halfDayDeduction = ((parseFloat(halfDays) || 0) * perDaySalary) / 2;
     const basicPay = monthlySalary * 0.5;
-    const hra = monthlySalary * 0.5;
+    const hra = monthlySalary * 0.25;
     const professionalTax = 200;
 
     const otAmt = parseFloat(overtimeAmount) || 0;

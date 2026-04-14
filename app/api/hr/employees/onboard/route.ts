@@ -93,12 +93,13 @@ export async function POST(req: NextRequest) {
 
     if (body.monthlySalary && body.monthlySalary > 0) {
       const basicSalary = body.monthlySalary * 0.5;
+      const specialAllowance = body.monthlySalary * 0.25;
       await db.insert(salaryStructures).values({
         orgId: session.orgId,
         userId: newUser.id,
         basicSalary: basicSalary.toString(),
-        hraPercentage: "40",
-        allowances: (body.monthlySalary * 0.2).toString(),
+        hraPercentage: "50",
+        allowances: specialAllowance.toString(),
         deductions: "0",
         effectiveFrom: body.joiningDate
           ? formatDateOnly(new Date(body.joiningDate))
