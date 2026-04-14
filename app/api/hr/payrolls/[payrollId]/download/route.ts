@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { payrolls, users, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { format } from "date-fns";
+import fs from "fs/promises";
+import path from "path";
 import type { NextRequest } from "next/server";
 
 export async function GET(
@@ -42,7 +44,8 @@ export async function GET(
 
     const empName = `${employee?.name ?? "Employee"}`;
     const empDesignation = employee?.designation ?? "—";
-    const orgName = org?.name ?? "Company";
+    const orgName = org?.name ?? "Vaivamm Capital Advisors LLP";
+    const orgFullName = "Vaivamm Capital Advisors LLP";
 
     const basic = parseFloat(payroll.basicSalary || "0");
     const hra = parseFloat(payroll.hra || "0");
@@ -61,10 +64,25 @@ export async function GET(
     const maskedAccount = bank?.accountNumber
       ? "XXXX" + bank.accountNumber.slice(-4)
       : "—";
-    const pfUan = bank?.pfUanNumber ?? "—";
+    const pfUan = bank?.pfUanNumber || null;
+    const professionalTax = 200;
+    const otherDeductions = deductions - professionalTax;
     const joiningDate = employee?.joiningDate
       ? format(new Date(employee.joiningDate), "dd MMM yyyy")
       : "—";
+
+    // Load SVG logo
+    let logoSvg = "";
+    try {
+      const svgPath = path.join(process.cwd(), "public", "logo.svg");
+      const svgContent = await fs.readFile(svgPath, "utf-8");
+      // Remove XML declaration and set size
+      logoSvg = svgContent
+        .replace(/<\?xml[^?]*\?>/, "")
+        .replace(/viewBox="[^"]*"/, 'viewBox="0 0 180 180" width="54" height="54"');
+    } catch {
+      // Fallback handled in template
+    }
 
     function toWords(n: number): string {
       const a = ["", "One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
@@ -96,7 +114,8 @@ export async function GET(
 
     /* Header */
     .header { display: flex; align-items: center; padding: 16px 20px; border-bottom: 3px solid #0f2b7f; gap: 16px; }
-    .header-logo { width: 64px; height: 64px; background: #0f2b7f; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #bd882c; font-size: 22px; font-weight: 900; letter-spacing: -1px; flex-shrink: 0; }
+    .header-logo { width: 64px; height: 64px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #bd882c; font-size: 22px; font-weight: 900; letter-spacing: -1px; flex-shrink: 0; overflow: hidden; }
+    .header-logo svg { width: 54px; height: 54px; }
     .header-company { flex: 1; }
     .header-company h1 { font-size: 20px; font-weight: 700; color: #0f2b7f; }
     .header-company p { font-size: 11px; color: #555; margin-top: 2px; }
@@ -165,11 +184,10 @@ export async function GET(
   <div class="page">
     <!-- Header -->
     <div class="header">
-      <div class="header-logo">V</div>
+      <div class="header-logo">${logoSvg || "V"}</div>
       <div class="header-company">
-        <h1>${orgName}</h1>
+        <h1>${orgFullName}</h1>
         ${addressLine ? `<p>${addressLine}</p>` : ""}
-        ${org?.website ? `<p>${org.website}</p>` : ""}
       </div>
       <div class="header-slip">
         <h2>Salary Slip</h2>
@@ -192,14 +210,13 @@ export async function GET(
         <h3>Employee Information</h3>
         <div class="dl"><span class="dk">Date of Joining</span><span class="dv">${joiningDate}</span></div>
         <div class="dl"><span class="dk">PAN Number</span><span class="dv">${pan}</span></div>
-        <div class="dl"><span class="dk">PF UAN</span><span class="dv">${pfUan}</span></div>
+        ${pfUan ? `<div class="dl"><span class="dk">PF UAN</span><span class="dv">${pfUan}</span></div>` : ""}
         <div class="dl"><span class="dk">Email</span><span class="dv">${employee?.email ?? "—"}</span></div>
       </div>
       <div class="detail-col">
         <h3>Payroll Information</h3>
         <div class="dl"><span class="dk">Pay Period</span><span class="dv">${monthLabel}</span></div>
         <div class="dl"><span class="dk">Payment Mode</span><span class="dv">Bank Transfer</span></div>
-        <div class="dl"><span class="dk">Pay Date</span><span class="dv">${format(new Date(), "dd MMM yyyy")}</span></div>
         <div class="dl"><span class="dk">Working Days</span><span class="dv">30</span></div>
       </div>
     </div>
@@ -220,17 +237,17 @@ export async function GET(
           <tr>
             <td>Basic Salary</td>
             <td>${fmt(payroll.basicSalary)}</td>
-            <td rowspan="${deductions > 0 ? 2 : 1}" style="vertical-align:middle;">Total Deductions</td>
-            <td rowspan="${deductions > 0 ? 2 : 1}" style="vertical-align:middle;">${deductions > 0 ? fmt(payroll.deductions) : "—"}</td>
+            <td>Professional Tax</td>
+            <td class="deduction">${professionalTax > 0 ? fmt(String(professionalTax)) : "—"}</td>
           </tr>
-          ${hra > 0 ? `<tr><td>House Rent Allowance (HRA)</td><td>${fmt(payroll.hra)}</td></tr>` : ""}
-          ${allowances > 0 ? `<tr><td>Special Allowance</td><td>${fmt(payroll.allowances)}</td></tr>` : ""}
-          ${overtime > 0 ? `<tr><td>Overtime (${payroll.overtimeDays ?? 0} days / ${payroll.overtimeHours ?? 0} hrs)</td><td>${fmt(payroll.overtimeAmount)}</td></tr>` : ""}
+          ${hra > 0 ? `<tr><td>House Rent Allowance (HRA)</td><td>${fmt(payroll.hra)}</td>${otherDeductions > 0 ? `<td>Other Deductions</td><td class="deduction">${fmt(String(otherDeductions))}</td>` : `<td></td><td></td>`}</tr>` : ""}
+          ${allowances > 0 ? `<tr><td>Special Allowance</td><td>${fmt(payroll.allowances)}</td><td></td><td></td></tr>` : ""}
+          ${overtime > 0 ? `<tr><td>Overtime (${payroll.overtimeDays ?? 0} days / ${payroll.overtimeHours ?? 0} hrs)</td><td>${fmt(payroll.overtimeAmount)}</td><td></td><td></td></tr>` : ""}
           <tr class="subtotal">
             <td>Gross Earnings</td>
             <td>${fmt(payroll.grossSalary)}</td>
             <td>Net Deductions</td>
-            <td>${deductions > 0 ? fmt(payroll.deductions) : "0.00"}</td>
+            <td>${fmt(payroll.deductions)}</td>
           </tr>
         </tbody>
       </table>
