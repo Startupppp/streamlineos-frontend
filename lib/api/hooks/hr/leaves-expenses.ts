@@ -98,8 +98,12 @@ export function useApproveLeaveDedicated() {
   return useMutation({
     mutationFn: ({ leaveId, comment }: { leaveId: number; comment?: string }) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/approve`, { comment }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leaveApprovals"] });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leavesThisWeek"] });
+    },
   });
 }
 
@@ -108,8 +112,11 @@ export function useRejectLeaveDedicated() {
   return useMutation({
     mutationFn: ({ leaveId, reason, comment }: { leaveId: number; reason: string; comment?: string }) =>
       apiClient.put<{ success: boolean }>(`/hr/leaves/${leaveId}/reject`, { reason, comment }),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leaveApprovals"] });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] });
+    },
   });
 }
 
@@ -118,8 +125,63 @@ export function useCancelLeave() {
   return useMutation({
     mutationFn: (leaveId: number) =>
       apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}/cancel`, {}),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] });
+    },
+  });
+}
+
+export function useRevertLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (leaveId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/leaves/${leaveId}`, { status: "PENDING" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leaveApprovals"] });
+      qc.invalidateQueries({ queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] });
+    },
+  });
+}
+
+interface LeaveContextResult {
+  balances: Array<{ id: number; leaveTypeId: number | null; balance: string; typeName: string | null; daysPerYear: number | null }>;
+  types: Array<{ id: number; name: string; daysPerYear: number; orgId: string }>;
+  joiningDate: string | null;
+  approvers: Array<{ id: string; name: string | null; email: string; firstName?: string | null; lastName?: string | null; image?: string | null }>;
+}
+
+export function useHrLeaveContext() {
+  return useQuery({
+    queryKey: [...["vaivamm"], "hr", "leaveContext"] as const,
+    queryFn: () => apiClient.get<LeaveContextResult>("/hr/leaves/context"),
+  });
+}
+
+interface LeaveApprovalsResult {
+  pending: unknown[];
+  all: unknown[];
+}
+
+export function useHrLeaveApprovals() {
+  return useQuery({
+    queryKey: [...["vaivamm"], "hr", "leaveApprovals"] as const,
+    queryFn: () => apiClient.get<LeaveApprovalsResult>("/hr/leaves/approvals"),
+  });
+}
+
+export function useHrLeavesThisWeek() {
+  return useQuery({
+    queryKey: [...["vaivamm"], "hr", "leavesThisWeek"] as const,
+    queryFn: () => apiClient.get<unknown[]>("/hr/leaves/this-week"),
+  });
+}
+
+export function useHrMyLeaveRequests() {
+  return useQuery({
+    queryKey: [...["vaivamm"], "hr", "leavesMyRequests"] as const,
+    queryFn: () => apiClient.get<{ requests: unknown[]; balances: unknown[] }>("/hr/leaves/my"),
   });
 }
 

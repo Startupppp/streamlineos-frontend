@@ -306,6 +306,8 @@ export interface UpdateLeadStatusInput {
   status: PipelineStatus;
   expectedStatus?: PipelineStatus;
   lostReason?: string;
+  estimatedInvestment?: string;
+  conversionNotes?: string;
 }
 
 export interface AssignLeadInput {

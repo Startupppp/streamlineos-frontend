@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Search, Bell } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useGetOrganizations } from "@/lib/hooks/auth-hooks";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,18 +41,52 @@ export function AppSidebar({
   }
   const effectiveRole = role || lastKnownRoleRef.current;
 
+  const pathname = usePathname();
+
   const navGroups = useMemo(
     () => getNavGroupsForRole(effectiveRole),
     [effectiveRole]
   );
   const isAdmin = effectiveRole === "CEO" || effectiveRole === "HR";
 
+  // Which group label contains the currently active route
+  const activeGroupLabel = useMemo(() => {
+    for (const group of navGroups) {
+      const match = group.routes.some((route) => {
+        if (route.isProjectsList) return pathname.startsWith("/projects/");
+        return pathname === route.href || pathname.startsWith(route.href + "/");
+      });
+      if (match) return group.label;
+    }
+    return null;
+  }, [navGroups, pathname]);
+
+  // All groups start collapsed; user overrides are stored in localStorage
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  // Load saved state from localStorage once on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("sidebar-groups");
+      if (stored) setCollapsedGroups(JSON.parse(stored));
+    } catch { }
+  }, []);
+
+  // Auto-open the group containing the active route whenever the path changes
+  useEffect(() => {
+    if (!activeGroupLabel) return;
+    setCollapsedGroups((prev) => {
+      if (prev[activeGroupLabel] === false) return prev; // already open
+      const next = { ...prev, [activeGroupLabel]: false };
+      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { }
+      return next;
+    });
+  }, [activeGroupLabel]);
 
   const toggleGroup = useCallback((label: string) => {
     setCollapsedGroups((prev) => {
       const next = { ...prev, [label]: !prev[label] };
-      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch {  }
+      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch { }
       return next;
     });
   }, []);
@@ -103,13 +138,6 @@ export function AppSidebar({
         bubbles: true,
       })
     );
-  }, []);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("sidebar-groups");
-      if (stored) setCollapsedGroups(JSON.parse(stored));
-    } catch {  }
   }, []);
 
   if (
@@ -235,7 +263,7 @@ export function AppSidebar({
               const groupLabel = group.label;
               const isGroupCollapsed = groupLabel in collapsedGroups
                 ? collapsedGroups[groupLabel]
-                : (group.defaultCollapsed ?? false);
+                : true; // all groups collapsed by default
               return (
                 <SidebarSection
                   key={groupLabel}

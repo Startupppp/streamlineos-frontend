@@ -178,8 +178,19 @@ export default function LeadsPipelinePage() {
     extra?: { conversionNotes?: string; lostReason?: string; estimatedAmount?: string; investmentInterest?: string; createDeal?: boolean; dealName?: string },
   ) => {
     if (status === "CONVERTED" && extra) {
-      updateLeadMutation.mutate({ id, notes: extra.conversionNotes, investmentInterest: extra.investmentInterest, potentialValue: extra.estimatedAmount || undefined });
-      updateStatus.mutate({ leadId: id, status: "CONVERTED" });
+      // Pass conversion data directly into the status request (server handles lead update atomically)
+      updateStatus.mutate(
+        {
+          leadId: id,
+          status: "CONVERTED",
+          estimatedInvestment: extra.estimatedAmount || extra.investmentInterest || undefined,
+          conversionNotes: extra.conversionNotes,
+        },
+        {
+          onSuccess: () => toast.success("Lead converted — client account created"),
+          onError: (err) => toast.error(`Conversion failed: ${err.message}`),
+        },
+      );
 
       if (extra.createDeal && extra.dealName) {
         createDealMutation.mutate(

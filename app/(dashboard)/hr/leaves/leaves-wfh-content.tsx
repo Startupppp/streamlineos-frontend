@@ -3,7 +3,13 @@
 import React, { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
-import { useHrPendingWfhRequests } from "@/lib/api/hooks/hr";
+import {
+  useHrPendingWfhRequests,
+  useHrLeaveContext,
+  useHrLeaveApprovals,
+  useHrMyLeaveRequests,
+  useHrLeavesThisWeek,
+} from "@/lib/api/hooks/hr";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Users, Home, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 
@@ -25,36 +32,18 @@ import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
 
-interface LeavesWfhContentProps {
-  balances: LeaveBalance[];
-  leaveTypes: LeaveType[];
-  approvers: Approver[];
-  myLeaveRequests: LeaveRequest[];
-  incomingLeaveRequests: LeaveRequest[];
-  allIncomingLeaveRequests: LeaveRequest[];
-  approvedLeavesThisWeek: ApprovedLeave[];
-  joiningDate: string | null;
-}
-
-export function LeavesWfhContent({
-  balances,
-  leaveTypes,
-  approvers,
-  myLeaveRequests,
-  incomingLeaveRequests,
-  allIncomingLeaveRequests,
-  approvedLeavesThisWeek,
-  joiningDate,
-}: LeavesWfhContentProps) {
+export function LeavesWfhContent() {
   const { data: session } = useSession();
   const isAdmin =
     session?.user?.role === "CEO" ||
     session?.user?.role === "ADMIN" ||
     session?.user?.role === "HR";
 
+  const { data: contextData, isLoading: contextLoading } = useHrLeaveContext();
+  const { data: myData, isLoading: myLoading } = useHrMyLeaveRequests();
+  const { data: approvalsData, isLoading: approvalsLoading } = useHrLeaveApprovals();
+  const { data: thisWeekData } = useHrLeavesThisWeek();
   const { data: pendingWfhRequests } = useHrPendingWfhRequests();
-  const totalPendingApprovals =
-    incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
 
   const [leaveSheetOpen, setLeaveSheetOpen] = useState(false);
   const [wfhSheetOpen, setWfhSheetOpen] = useState(false);
@@ -62,9 +51,35 @@ export function LeavesWfhContent({
   const handleOpenLeaveSheet = useCallback(() => setLeaveSheetOpen(true), []);
   const handleOpenWfhSheet = useCallback(() => setWfhSheetOpen(true), []);
 
+  const balances = (contextData?.balances ?? []) as LeaveBalance[];
+  const leaveTypes = (contextData?.types ?? []) as LeaveType[];
+  const approvers = (contextData?.approvers ?? []) as Approver[];
+  const joiningDate = contextData?.joiningDate ?? null;
+
+  const myLeaveRequests = ((myData?.requests ?? []) as LeaveRequest[]);
+  const incomingLeaveRequests = ((approvalsData?.pending ?? []) as LeaveRequest[]);
+  const allIncomingLeaveRequests = ((approvalsData?.all ?? []) as LeaveRequest[]);
+  const approvedLeavesThisWeek = ((thisWeekData ?? []) as ApprovedLeave[]);
+
+  const totalPendingApprovals =
+    incomingLeaveRequests.length + (pendingWfhRequests?.length || 0);
+
   const totalAvailable = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
   const pendingCount = myLeaveRequests.filter((r) => r.status === "PENDING").length;
   const approvedCount = myLeaveRequests.filter((r) => r.status === "APPROVED").length;
+
+  if (contextLoading || myLoading) {
+    return (
+      <PageWrapper title="Leaves & Time Off" subtitle="Manage your leave requests, work from home, and approvals.">
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+          </div>
+          <Skeleton className="h-64" />
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <>
@@ -208,6 +223,7 @@ export function LeavesWfhContent({
                 <LeaveApprovalsContent
                   incomingLeaveRequests={incomingLeaveRequests}
                   allIncomingLeaveRequests={allIncomingLeaveRequests}
+                  isLoading={approvalsLoading}
                 />
               </TabsContent>
             )}

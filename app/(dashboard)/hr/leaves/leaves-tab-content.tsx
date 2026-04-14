@@ -2,7 +2,6 @@
 
 import React, { useCallback, useMemo } from "react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval } from "date-fns";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
 import { useSession } from "next-auth/react";
@@ -14,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
 import { Filter, Download, CalendarDays } from "lucide-react";
-import { processLeaveRequest, cancelLeaveRequest } from "@/server/actions/leave-actions";
+import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/lib/api/hooks/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
 
 import type { LeaveBalance, LeaveRequest, ApprovedLeave } from "./leaves-shared";
@@ -207,7 +206,6 @@ interface LeavesTabContentProps {
 }
 
 export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThisWeek = [] }: LeavesTabContentProps) {
-  const router = useRouter();
   const { data: session } = useSession();
   const isAdmin =
     session?.user?.role === "CEO" ||
@@ -216,33 +214,44 @@ export function LeavesTabContent({ balances, myLeaveRequests, approvedLeavesThis
 
   const currentYear = new Date().getFullYear();
 
-  const handleStatusChange = useCallback(async (
-    requestId: number,
-    status: "APPROVED" | "REJECTED" | "PENDING",
-    rejectionReason?: string,
-  ) => {
-    const result = await processLeaveRequest({ requestId, status, rejectionReason });
-    if (result && "error" in result) {
-      toast.error(result.error);
-    } else {
-      toast.success(`Leave request ${status.toLowerCase()}`);
-      router.refresh();
-    }
-  }, [router]);
+  const approveMutation = useApproveLeaveDedicated();
+  const rejectMutation = useRejectLeaveDedicated();
+  const revertMutation = useRevertLeave();
+  const cancelMutation = useCancelLeave();
 
-  const handleApproveRequest = useCallback((id: number) => handleStatusChange(id, "APPROVED"), [handleStatusChange]);
-  const handleRejectRequest = useCallback((id: number, reason?: string) => handleStatusChange(id, "REJECTED", reason), [handleStatusChange]);
-  const handleRevertRequest = useCallback((id: number) => handleStatusChange(id, "PENDING"), [handleStatusChange]);
+  const handleApproveRequest = useCallback((id: number) => {
+    approveMutation.mutate(
+      { leaveId: id },
+      {
+        onSuccess: () => toast.success("Leave request approved"),
+        onError: (err) => toast.error(err.message || "Failed to approve"),
+      },
+    );
+  }, [approveMutation]);
 
-  const handleCancelRequest = useCallback(async (id: number) => {
-    const result = await cancelLeaveRequest(id);
-    if (result && "error" in result) {
-      toast.error(result.error);
-    } else {
-      toast.success("Leave request cancelled");
-      router.refresh();
-    }
-  }, [router]);
+  const handleRejectRequest = useCallback((id: number, reason?: string) => {
+    rejectMutation.mutate(
+      { leaveId: id, reason: reason ?? "" },
+      {
+        onSuccess: () => toast.success("Leave request rejected"),
+        onError: (err) => toast.error(err.message || "Failed to reject"),
+      },
+    );
+  }, [rejectMutation]);
+
+  const handleRevertRequest = useCallback((id: number) => {
+    revertMutation.mutate(id, {
+      onSuccess: () => toast.success("Leave request reverted to pending"),
+      onError: (err) => toast.error(err.message || "Failed to revert"),
+    });
+  }, [revertMutation]);
+
+  const handleCancelRequest = useCallback((id: number) => {
+    cancelMutation.mutate(id, {
+      onSuccess: () => toast.success("Leave request cancelled"),
+      onError: (err) => toast.error(err.message || "Failed to cancel"),
+    });
+  }, [cancelMutation]);
 
   const handleExportExcel = useCallback(async () => {
     if (myLeaveRequests.length === 0) {

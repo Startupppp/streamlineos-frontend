@@ -14,6 +14,9 @@ const schema = z.object({
   status: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]),
   expectedStatus: z.enum(["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"]).optional(),
   lostReason: z.string().optional(),
+  // Conversion extras — passed from the conversion modal
+  estimatedInvestment: z.string().optional(),
+  conversionNotes: z.string().optional(),
 });
 
 type Ctx = { params: Promise<{ leadId: string }> };
@@ -186,10 +189,25 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             clientEmail: updated.email,
             clientPhone: updated.phone,
             clientWhatsapp: updated.whatsappNumber,
-            estimatedInvestment: updated.potentialValue ?? updated.investmentInterest ?? null,
+            // Prefer modal-submitted value, then lead's stored values
+            estimatedInvestment:
+              input.estimatedInvestment ||
+              updated.potentialValue ||
+              updated.investmentInterest ||
+              null,
             status: "ACCOUNT_OPENING",
             convertedAt: new Date(),
           });
+        }
+
+        // Update lead notes/investmentInterest from conversion modal if provided
+        if (input.conversionNotes || input.estimatedInvestment) {
+          await tx.update(leads)
+            .set({
+              ...(input.conversionNotes ? { notes: input.conversionNotes } : {}),
+              ...(input.estimatedInvestment ? { potentialValue: input.estimatedInvestment, investmentInterest: input.estimatedInvestment } : {}),
+            })
+            .where(eq(leads.id, updated.id));
         }
 
         // Notify the salesperson

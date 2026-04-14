@@ -80,13 +80,16 @@ export default function LeadDetailPage({
 
   const handleStatusChange = useCallback(
     (status: PipelineStatus) => {
-      updateStatusMutation.mutate(
-        { leadId, status, expectedStatus: lead?.status as PipelineStatus },
-        {
-          onSuccess: () => toast.success("Status updated"),
-          onError: (err) => toast.error(err.message),
-        }
-      );
+      const promise = updateStatusMutation.mutateAsync({
+        leadId,
+        status,
+        expectedStatus: lead?.status as PipelineStatus,
+      });
+      toast.promise(promise, {
+        loading: "Updating status...",
+        success: "Status updated",
+        error: (err: Error) => err?.message || "Failed to update status",
+      });
     },
     [leadId, updateStatusMutation, lead]
   );
@@ -235,6 +238,7 @@ export default function LeadDetailPage({
             isEditing={isEditing}
             onToggleEdit={handleToggleEdit}
             onStatusChange={handleStatusChange}
+            isStatusPending={updateStatusMutation.isPending}
           />
         </motion.div>
 

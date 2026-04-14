@@ -3,8 +3,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useHrPendingWfhRequests, useProcessWfhRequest } from "@/lib/api/hooks/hr";
+import { useHrPendingWfhRequests, useProcessWfhRequest, useApproveLeaveDedicated, useRejectLeaveDedicated } from "@/lib/api/hooks/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -138,26 +137,40 @@ function LeaveApprovalItem({
 }
 
 function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
-  const [processingId, setProcessingId] = useState<number | null>(null);
-  const router = useRouter();
+  const approveMutation = useApproveLeaveDedicated();
+  const rejectMutation = useRejectLeaveDedicated();
+  const processingId = approveMutation.variables?.leaveId ?? rejectMutation.variables?.leaveId ?? null;
+  const isPending = approveMutation.isPending || rejectMutation.isPending;
 
-  const handleProcess = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED") => {
-    setProcessingId(requestId);
-    const { processLeaveRequest } = await import("@/server/actions/leave-actions");
-    const res = await processLeaveRequest({ requestId, status });
-    setProcessingId(null);
-    if (res.success) {
-      toast.success(`Request ${status.toLowerCase()} successfully`);
-      router.refresh();
+  const handleProcess = useCallback((requestId: number, status: "APPROVED" | "REJECTED") => {
+    if (status === "APPROVED") {
+      approveMutation.mutate(
+        { leaveId: requestId },
+        {
+          onSuccess: () => toast.success("Request approved successfully"),
+          onError: (err) => toast.error(err.message || "Failed to approve"),
+        },
+      );
     } else {
-      toast.error(res.error || "Failed to process");
+      rejectMutation.mutate(
+        { leaveId: requestId, reason: "" },
+        {
+          onSuccess: () => toast.success("Request rejected successfully"),
+          onError: (err) => toast.error(err.message || "Failed to reject"),
+        },
+      );
     }
-  }, [router]);
+  }, [approveMutation, rejectMutation]);
 
   return (
     <div className="space-y-4" role="list" aria-label="Leave approvals">
       {requests.map((req) => (
-        <LeaveApprovalItem key={req.id} req={req} processingId={processingId} onProcess={handleProcess} />
+        <LeaveApprovalItem
+          key={req.id}
+          req={req}
+          processingId={isPending ? (processingId ?? null) : null}
+          onProcess={handleProcess}
+        />
       ))}
     </div>
   );
@@ -166,6 +179,7 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
 interface LeaveApprovalsContentProps {
   incomingLeaveRequests: LeaveRequest[];
   allIncomingLeaveRequests: LeaveRequest[];
+  isLoading?: boolean;
 }
 
 export function LeaveApprovalsContent({

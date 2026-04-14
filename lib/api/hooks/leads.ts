@@ -169,6 +169,11 @@ export function useUpdateLeadStatus() {
     onSettled: (_data, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.leads.board() });
       qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.leadId) });
+      qc.invalidateQueries({ queryKey: queryKeys.leads.all });
+      // Refresh client accounts list when a lead is converted
+      if (vars.status === "CONVERTED") {
+        qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+      }
     },
   });
 }

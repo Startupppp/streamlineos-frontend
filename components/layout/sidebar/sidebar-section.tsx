@@ -41,7 +41,7 @@ export function SidebarSection({
           onClick={onToggleGroup}
           className="w-full flex items-center justify-between px-2 py-1 mb-0.5 group/header rounded-md hover:bg-white/[0.04] transition-colors"
         >
-          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/30 group-hover/header:text-sidebar-foreground/50 select-none transition-colors">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground group-hover/header:text-sidebar-foreground select-none transition-colors">
             {group.label}
           </span>
           <ChevronDown

@@ -378,7 +378,7 @@
   font-size: 0.8125rem;
   font-weight: 500;
   transition: background 0.15s ease, color 0.15s ease;
-  color: rgba(158, 163, 184, 0.9);
+  color: rgba(185, 190, 210, 0.88);
   cursor: pointer;
   text-decoration: none;
 }
@@ -389,12 +389,12 @@
 }
 
 .nav-item.active {
-  background: rgba(212,162,58,0.12);
+  background: var(--sidebar-accent);
   color: #f0f0f5;
 }
 
 .nav-item.active .nav-icon {
-  color: #d4a23a;
+  color: var(--sidebar-primary);
 }
 
 .nav-item .nav-icon {
@@ -404,7 +404,7 @@
 }
 
 .nav-item:hover .nav-icon {
-  color: rgba(212,162,58,0.8);
+  color: color-mix(in srgb, var(--sidebar-primary) 80%, transparent);
 }
 
 /* ─── Page wrapper transitions ───────────────────────────────────────────────── */

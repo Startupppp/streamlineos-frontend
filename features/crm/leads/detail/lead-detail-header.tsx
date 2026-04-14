@@ -37,6 +37,7 @@ interface LeadDetailHeaderProps {
     [key: string]: unknown;
   };
   isEditing: boolean;
+  isStatusPending?: boolean;
   onToggleEdit: () => void;
   onStatusChange: (status: PipelineStatus) => void;
 }
@@ -47,6 +48,7 @@ interface PipelineStepProps {
   isActive: boolean;
   isPast: boolean;
   isLast: boolean;
+  isPending: boolean;
   onStatusChange: (status: PipelineStatus) => void;
 }
 
@@ -64,6 +66,7 @@ function PipelineStep({
   isActive,
   isPast,
   isLast,
+  isPending,
   onStatusChange,
 }: PipelineStepProps) {
   const handleClick = useCallback(
@@ -77,7 +80,8 @@ function PipelineStep({
     <div className="flex items-center flex-1 min-w-0">
       <button
         onClick={handleClick}
-        className="flex flex-col items-center gap-1.5 group shrink-0"
+        disabled={isPending || isActive}
+        className="flex flex-col items-center gap-1.5 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         title={`Move to ${STATUS_LABELS[status]}`}
       >
         {/* Circle node */}
@@ -136,6 +140,7 @@ function PipelineStep({
 export function LeadDetailHeader({
   lead,
   isEditing,
+  isStatusPending = false,
   onToggleEdit,
   onStatusChange,
 }: LeadDetailHeaderProps) {
@@ -302,9 +307,10 @@ export function LeadDetailHeader({
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={handleConvert}
+                  disabled={isStatusPending}
                 >
                   <ArrowRightCircle className="h-3.5 w-3.5 mr-1" />
-                  Convert
+                  {isStatusPending ? "Updating..." : "Convert"}
                 </Button>
               )}
             </div>
@@ -322,6 +328,7 @@ export function LeadDetailHeader({
                 isActive={status === lead.status}
                 isPast={i < currentStatusIndex}
                 isLast={i === STATUS_PIPELINE.length - 1}
+                isPending={isStatusPending}
                 onStatusChange={onStatusChange}
               />
             ))}
