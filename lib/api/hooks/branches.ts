@@ -80,3 +80,13 @@ export const useUpdateBranch = () => {
     },
   });
 };
+
+export const useDeleteBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationFn: (id) => apiClient.delete(`/branches/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.branches.all });
+    },
+  });
+};

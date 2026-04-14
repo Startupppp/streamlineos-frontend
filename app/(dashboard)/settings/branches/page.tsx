@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,14 +10,16 @@ import { Label } from "@/components/ui/label";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyTeamIllustration } from "@/components/illustrations";
-import { Plus, MapPin, Phone, Mail } from "lucide-react";
-import { useBranches, useCreateBranch } from "@/lib/api/hooks/branches";
+import { Plus, MapPin, Phone, Mail, Pencil, Trash2 } from "lucide-react";
+import { useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch } from "@/lib/api/hooks/branches";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { Branch } from "@/types/organization";
 
 const EMPTY_FORM = {
   name: "", code: "", city: "", state: "", country: "India",
@@ -36,15 +38,46 @@ export default function BranchManagementPage() {
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [editFormData, setEditFormData] = useState({ ...EMPTY_FORM });
+  const [editFormErrors, setEditFormErrors] = useState<FormErrors>({});
+
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+
   const { data: branchList, isLoading } = useBranches();
   const createMutation = useCreateBranch();
+  const updateMutation = useUpdateBranch();
+  const deleteMutation = useDeleteBranch();
 
   const branches = branchList ?? [];
+
+  useEffect(() => {
+    if (editingBranch) {
+      setEditFormData({
+        name: editingBranch.name ?? "",
+        code: editingBranch.code ?? "",
+        city: editingBranch.city ?? "",
+        state: editingBranch.state ?? "",
+        country: editingBranch.country ?? "India",
+        pincode: editingBranch.pincode ?? "",
+        address: editingBranch.address ?? "",
+        phone: editingBranch.phone ?? "",
+        email: editingBranch.email ?? "",
+      });
+      setEditFormErrors({});
+    }
+  }, [editingBranch]);
 
   const set = (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = key === "code" ? e.target.value.toUpperCase() : e.target.value;
     setFormData((f) => ({ ...f, [key]: value }));
     setFormErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const setEdit = (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = key === "code" ? e.target.value.toUpperCase() : e.target.value;
+    setEditFormData((f) => ({ ...f, [key]: value }));
+    setEditFormErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
   const handleOpenCreate = useCallback(() => setShowCreate(true), []);
@@ -53,17 +86,17 @@ export default function BranchManagementPage() {
     setFormErrors({});
   }, []);
 
-  const validateForm = () => {
+  const validateForm = (data: typeof EMPTY_FORM, setErrors: (e: FormErrors) => void) => {
     const trimmed = {
-      name: formData.name.trim(),
-      code: formData.code.trim().toUpperCase(),
-      city: formData.city.trim(),
-      state: formData.state.trim(),
-      country: formData.country.trim(),
-      pincode: formData.pincode.trim(),
-      address: formData.address.trim(),
-      phone: formData.phone.trim(),
-      email: formData.email.trim().toLowerCase(),
+      name: data.name.trim(),
+      code: data.code.trim().toUpperCase(),
+      city: data.city.trim(),
+      state: data.state.trim(),
+      country: data.country.trim(),
+      pincode: data.pincode.trim(),
+      address: data.address.trim(),
+      phone: data.phone.trim(),
+      email: data.email.trim().toLowerCase(),
     };
 
     const errors: FormErrors = {};
@@ -88,13 +121,13 @@ export default function BranchManagementPage() {
       errors.pincode = "Enter a valid pincode";
     }
 
-    setFormErrors(errors);
+    setErrors(errors);
     if (Object.keys(errors).length > 0) return null;
     return trimmed;
   };
 
   const handleCreate = () => {
-    const validData = validateForm();
+    const validData = validateForm(formData, setFormErrors);
     if (!validData) {
       toast.error("Please fix the highlighted fields");
       return;
@@ -110,6 +143,99 @@ export default function BranchManagementPage() {
       onError: (err) => toast.error(err.message),
     });
   };
+
+  const handleUpdate = () => {
+    if (!editingBranch) return;
+    const validData = validateForm(editFormData, setEditFormErrors);
+    if (!validData) {
+      toast.error("Please fix the highlighted fields");
+      return;
+    }
+
+    updateMutation.mutate(
+      { id: editingBranch.id, ...validData },
+      {
+        onSuccess: () => {
+          toast.success("Branch updated");
+          setEditingBranch(null);
+        },
+        onError: (err) => toast.error(err.message),
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!deletingBranch) return;
+    deleteMutation.mutate(deletingBranch.id, {
+      onSuccess: () => {
+        toast.success("Branch deleted");
+        setDeletingBranch(null);
+      },
+      onError: (err) => toast.error(err.message),
+    });
+  };
+
+  const branchFormFields = (
+    data: typeof EMPTY_FORM,
+    setter: (key: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement>) => void,
+    errors: FormErrors
+  ) => (
+    <div className="px-4 py-4 space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Branch Name *</Label>
+          <Input value={data.name} onChange={setter("name")} placeholder="e.g., Mumbai Office" />
+          {errors.name && <p className="text-[11px] text-destructive">{errors.name}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Branch Code *</Label>
+          <Input value={data.code} onChange={setter("code")} placeholder="e.g., MUM-01" />
+          {errors.code && <p className="text-[11px] text-destructive">{errors.code}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">City</Label>
+          <Input value={data.city} onChange={setter("city")} placeholder="e.g., Mumbai" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">State</Label>
+          <Input value={data.state} onChange={setter("state")} placeholder="e.g., Maharashtra" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Country</Label>
+          <Input value={data.country} onChange={setter("country")} placeholder="e.g., India" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Pincode</Label>
+          <Input value={data.pincode} onChange={setter("pincode")} placeholder="e.g., 400001" />
+          {errors.pincode && <p className="text-[11px] text-destructive">{errors.pincode}</p>}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Address</Label>
+        <Input value={data.address} onChange={setter("address")} placeholder="Full street address" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Phone</Label>
+          <Input value={data.phone} onChange={setter("phone")} placeholder="e.g., +91 9876543210" />
+          {errors.phone && <p className="text-[11px] text-destructive">{errors.phone}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Email</Label>
+          <Input value={data.email} onChange={setter("email")} placeholder="branch@company.com" />
+          {errors.email && <p className="text-[11px] text-destructive">{errors.email}</p>}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <PageWrapper
@@ -146,11 +272,29 @@ export default function BranchManagementPage() {
                     <CardTitle className="text-base">{branch.name}</CardTitle>
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{branch.code}</p>
                   </div>
-                  <Badge variant="outline" className={cn("text-[10px]",
-                    branch.status === "ACTIVE" ? "text-emerald-400 bg-emerald-500/10" : "text-muted-foreground"
-                  )}>
-                    {branch.status}
-                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      branch.status === "ACTIVE" ? "text-emerald-400 bg-emerald-500/10" : "text-muted-foreground"
+                    )}>
+                      {branch.status}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setEditingBranch(branch)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => setDeletingBranch(branch)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 pb-4">
@@ -206,6 +350,7 @@ export default function BranchManagementPage() {
       )}
       </div>
 
+      {/* Create Sheet */}
       <Sheet open={showCreate} onOpenChange={setShowCreate}>
         <SheetContent className="sm:max-w-md p-0 gap-0">
           <SheetHeader className="px-4 py-3 border-b">
@@ -213,61 +358,7 @@ export default function BranchManagementPage() {
           </SheetHeader>
 
           <ScrollArea className="flex-1 min-h-0">
-            <div className="px-4 py-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Branch Name *</Label>
-                  <Input value={formData.name} onChange={set("name")} placeholder="e.g., Mumbai Office" />
-                  {formErrors.name && <p className="text-[11px] text-destructive">{formErrors.name}</p>}
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Branch Code *</Label>
-                  <Input value={formData.code} onChange={set("code")} placeholder="e.g., MUM-01" />
-                  {formErrors.code && <p className="text-[11px] text-destructive">{formErrors.code}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">City</Label>
-                  <Input value={formData.city} onChange={set("city")} placeholder="e.g., Mumbai" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">State</Label>
-                  <Input value={formData.state} onChange={set("state")} placeholder="e.g., Maharashtra" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Country</Label>
-                  <Input value={formData.country} onChange={set("country")} placeholder="e.g., India" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Pincode</Label>
-                  <Input value={formData.pincode} onChange={set("pincode")} placeholder="e.g., 400001" />
-                  {formErrors.pincode && <p className="text-[11px] text-destructive">{formErrors.pincode}</p>}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs">Address</Label>
-                <Input value={formData.address} onChange={set("address")} placeholder="Full street address" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Phone</Label>
-                  <Input value={formData.phone} onChange={set("phone")} placeholder="e.g., +91 9876543210" />
-                  {formErrors.phone && <p className="text-[11px] text-destructive">{formErrors.phone}</p>}
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Email</Label>
-                  <Input value={formData.email} onChange={set("email")} placeholder="branch@company.com" />
-                  {formErrors.email && <p className="text-[11px] text-destructive">{formErrors.email}</p>}
-                </div>
-              </div>
-            </div>
+            {branchFormFields(formData, set, formErrors)}
           </ScrollArea>
 
           <div className="shrink-0 border-t px-4 py-3 bg-background">
@@ -284,6 +375,43 @@ export default function BranchManagementPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Edit Sheet */}
+      <Sheet open={!!editingBranch} onOpenChange={(open) => { if (!open) setEditingBranch(null); }}>
+        <SheetContent className="sm:max-w-md p-0 gap-0">
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle className="text-sm">Edit Branch</SheetTitle>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 min-h-0">
+            {branchFormFields(editFormData, setEdit, editFormErrors)}
+          </ScrollArea>
+
+          <div className="shrink-0 border-t px-4 py-3 bg-background">
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setEditingBranch(null)}>Cancel</Button>
+              <Button
+                className="flex-1"
+                disabled={!editFormData.name || !editFormData.code || updateMutation.isPending}
+                onClick={handleUpdate}
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={!!deletingBranch}
+        onOpenChange={(open) => { if (!open) setDeletingBranch(null); }}
+        title="Delete Branch"
+        description={`Are you sure you want to delete "${deletingBranch?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

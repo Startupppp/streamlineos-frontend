@@ -70,6 +70,7 @@ export interface LeaveRequest {
   rejectionReason?: string | null;
   isHalfDay?: boolean;
   halfDayPeriod?: string | null;
+  lopDays?: string | number | null;
   createdAt?: string | Date | null;
   leaveType: { name: string } | null;
   approver?: { name: string | null } | null;

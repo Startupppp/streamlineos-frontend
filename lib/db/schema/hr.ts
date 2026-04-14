@@ -96,6 +96,7 @@ export const leaveRequests = pgTable("leave_requests", {
   isHalfDay: boolean("is_half_day").default(false).notNull(),
   halfDayPeriod: text("half_day_period"),
   coveringEmployeeId: text("covering_employee_id").references(() => users.id),
+  lopDays: decimal("lop_days", { precision: 5, scale: 1 }).default("0"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_leave_requests_user_id").on(table.userId),

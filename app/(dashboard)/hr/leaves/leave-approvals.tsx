@@ -13,13 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyApprovalIllustration, EmptyCalendarIllustration } from "@/components/illustrations";
-import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck, ShieldAlert } from "lucide-react";
+import { Home, CheckCircle2, XCircle, Loader2, CalendarDays, Clock, UserCheck, AlertTriangle } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 
@@ -61,24 +60,15 @@ function LeaveApprovalItem({
 }: {
   req: LeaveRequest;
   processingId: number | null;
-  onProcess: (requestId: number, status: "APPROVED" | "REJECTED", forceApprove?: boolean, justification?: string) => void;
+  onProcess: (requestId: number, status: "APPROVED" | "REJECTED") => void;
 }) {
-  const [overrideOpen, setOverrideOpen] = useState(false);
-  const [forceApprove, setForceApprove] = useState(false);
-  const [justification, setJustification] = useState("");
-
   const status = req.status ?? "PENDING";
   const isPending = status === "PENDING";
   const priority = req.priority || "MEDIUM";
   const pConfig = priorityConfig[priority] ?? priorityConfig.MEDIUM;
+  const lopDays = Number(req.lopDays ?? 0);
 
-  const handleApprove = useCallback(() => {
-    if (forceApprove && !justification.trim()) {
-      toast.error("Justification is required for override approval.");
-      return;
-    }
-    onProcess(req.id, "APPROVED", forceApprove, justification || undefined);
-  }, [req.id, onProcess, forceApprove, justification]);
+  const handleApprove = useCallback(() => onProcess(req.id, "APPROVED"), [req.id, onProcess]);
   const handleReject = useCallback(() => onProcess(req.id, "REJECTED"), [req.id, onProcess]);
 
   return (
@@ -92,7 +82,7 @@ function LeaveApprovalItem({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-medium text-foreground">
                 {req.user?.firstName ? `${req.user.firstName} ${req.user.lastName}` : req.user?.email}
               </p>
@@ -100,6 +90,12 @@ function LeaveApprovalItem({
                 <span className={`h-1.5 w-1.5 rounded-full ${pConfig.dotColor}`} />
                 {pConfig.label}
               </Badge>
+              {lopDays > 0 && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-1 text-orange-600 border-orange-400/30 bg-orange-500/10">
+                  <AlertTriangle className="h-2.5 w-2.5" />
+                  LOP: {lopDays}d
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               {req.leaveType?.name} · {format(new Date(req.startDate), "MMM dd")} –{" "}
@@ -131,48 +127,12 @@ function LeaveApprovalItem({
                 <XCircle className="h-3 w-3 mr-1" />
                 Reject
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 px-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                onClick={() => setOverrideOpen((v) => !v)}
-                title="HR override options"
-              >
-                <ShieldAlert className="h-3.5 w-3.5" />
-              </Button>
             </>
           ) : (
             <LeaveStatusBadge status={status} />
           )}
         </div>
       </div>
-      {isPending && overrideOpen && (
-        <div className="border-t border-border px-4 pb-4 pt-3 space-y-3 bg-amber-50/50 dark:bg-amber-900/10 rounded-b-xl">
-          <div className="flex items-center gap-3">
-            <Switch
-              id={`force-approve-${req.id}`}
-              checked={forceApprove}
-              onCheckedChange={setForceApprove}
-            />
-            <Label htmlFor={`force-approve-${req.id}`} className="text-xs font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-              <ShieldAlert className="h-3.5 w-3.5" />
-              Approve beyond balance (HR override)
-            </Label>
-          </div>
-          {forceApprove && (
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Justification note <span className="text-destructive">*</span></Label>
-              <Textarea
-                placeholder="Required: reason for overriding leave balance..."
-                value={justification}
-                onChange={(e) => setJustification(e.target.value)}
-                rows={2}
-                className="resize-none text-xs"
-              />
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -181,10 +141,10 @@ function LeaveApprovalsList({ requests }: { requests: LeaveRequest[] }) {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const router = useRouter();
 
-  const handleProcess = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED", forceApprove?: boolean, justification?: string) => {
+  const handleProcess = useCallback(async (requestId: number, status: "APPROVED" | "REJECTED") => {
     setProcessingId(requestId);
     const { processLeaveRequest } = await import("@/server/actions/leave-actions");
-    const res = await processLeaveRequest({ requestId, status, forceApprove, justification });
+    const res = await processLeaveRequest({ requestId, status });
     setProcessingId(null);
     if (res.success) {
       toast.success(`Request ${status.toLowerCase()} successfully`);

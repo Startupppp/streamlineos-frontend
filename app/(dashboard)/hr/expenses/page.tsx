@@ -165,11 +165,16 @@ export default function ExpensesPage() {
     return <ExpensesLoading />;
   }
 
-  const { expenses, pendingExpenses, stats, pagination, categories: expenseCategories } = pageData || {
+  const { expenses, pendingExpenses, stats, pagination, categories: rawCategories } = pageData || {
     expenses: [], pendingExpenses: [], stats: null,
     pagination: { page: 1, pageSize: 5, total: 0, totalPages: 0 },
     categories: [],
   };
+
+  // Fall back to static list when no DB categories exist yet
+  const expenseCategories = rawCategories.length > 0
+    ? rawCategories
+    : EXPENSE_CATEGORIES.map((name, i) => ({ id: i + 1, name, description: null, budgetLimit: null, budgetPeriod: null, isActive: true }));
 
   const filteredExpenses = statusFilter === "ALL"
     ? expenses

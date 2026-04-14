@@ -79,3 +79,36 @@ export async function PATCH(
     }
   });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ branchId: string }> }
+) {
+  return withAuth(async (session) => {
+    try {
+      const role = session.user.role ?? "";
+      if (!["HR", "CEO"].includes(role)) {
+        return err("Forbidden", 403);
+      }
+
+      const { branchId: id } = await params;
+      const branchId = Number(id);
+      if (!Number.isFinite(branchId)) return err("Invalid ID", 400);
+
+      const [deleted] = await db
+        .delete(branches)
+        .where(
+          and(eq(branches.id, branchId), eq(branches.orgId, session.orgId))
+        )
+        .returning();
+
+      if (!deleted) return err("Branch not found", 404);
+      return ok({ success: true });
+    } catch (error) {
+      return err(
+        error instanceof Error ? error.message : "Failed to delete branch",
+        500
+      );
+    }
+  });
+}

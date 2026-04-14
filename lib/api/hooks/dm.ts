@@ -114,6 +114,27 @@ export const useCreateDmCampaign = () => {
   });
 };
 
+export const useUpdateDmCampaign = () => {
+  const queryClient = useQueryClient();
+  return useMutation<DmCampaign, Error, Partial<CreateDmCampaignInput> & { id: number }>({
+    mutationFn: ({ id, ...data }) =>
+      apiClient.patch<DmCampaign>(`/dm/campaigns/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
+    },
+  });
+};
+
+export const useDeleteDmCampaign = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationFn: (id) => apiClient.delete(`/dm/campaigns/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
+    },
+  });
+};
+
 export const useDmLeadStats = () => {
   return useQuery({
     queryKey: queryKeys.dmLeads.all,

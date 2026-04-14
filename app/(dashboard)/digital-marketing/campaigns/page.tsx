@@ -17,10 +17,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from "@/components/ui/sheet";
@@ -28,12 +25,11 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus, Megaphone, IndianRupee, TrendingUp, Target,
-  Pencil, Trash2, Eye, CalendarDays, Users,
+  Pencil, Trash2, Eye, Users,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDmCampaigns, useDmCampaignStats, useCreateDmCampaign } from "@/lib/api/hooks/dm";
-import { useUpdateMarketingCampaign, useDeleteMarketingCampaign } from "@/lib/api/hooks/crm";
-import type { MarketingCampaign } from "@/lib/api/hooks/crm";
+import { useDmCampaigns, useDmCampaignStats, useCreateDmCampaign, useUpdateDmCampaign, useDeleteDmCampaign } from "@/lib/api/hooks/dm";
+import type { DmCampaign } from "@/types/dm";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -61,26 +57,26 @@ const STATUS_COLORS: Record<string, string> = {
 export default function CampaignsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [formData, setFormData] = useState({ name: "", budgetAllocated: "", status: "active" as "active" | "paused" | "completed" });
-  const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
+  const [editingCampaign, setEditingCampaign] = useState<DmCampaign | null>(null);
   const [editForm, setEditForm] = useState({ name: "", budgetAllocated: "", status: "active" as "active" | "paused" | "completed" });
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [previewCampaign, setPreviewCampaign] = useState<MarketingCampaign | null>(null);
+  const [previewCampaign, setPreviewCampaign] = useState<DmCampaign | null>(null);
 
   const qc = useQueryClient();
   const { data: stats } = useDmCampaignStats();
   const { data, isLoading } = useDmCampaigns();
   const createMutation = useCreateDmCampaign();
-  const updateMutation = useUpdateMarketingCampaign();
-  const deleteMutation = useDeleteMarketingCampaign();
+  const updateMutation = useUpdateDmCampaign();
+  const deleteMutation = useDeleteDmCampaign();
 
-  const campaigns = (data?.campaigns ?? []) as MarketingCampaign[];
+  const campaigns = data?.campaigns ?? [];
 
   useEffect(() => {
     if (editingCampaign) {
       setEditForm({
         name: editingCampaign.name,
         budgetAllocated: editingCampaign.budgetAllocated ?? "",
-        status: (editingCampaign.status as "active" | "paused" | "completed") ?? "active",
+        status: editingCampaign.status ?? "active",
       });
     }
   }, [editingCampaign]);
@@ -91,7 +87,6 @@ export default function CampaignsPage() {
       { id: editingCampaign.id, name: editForm.name, budgetAllocated: editForm.budgetAllocated || undefined, status: editForm.status },
       {
         onSuccess: () => {
-          qc.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
           toast.success("Campaign updated");
           setEditingCampaign(null);
         },
@@ -104,7 +99,6 @@ export default function CampaignsPage() {
     if (!deleteId) return;
     deleteMutation.mutate(deleteId, {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: queryKeys.dmCampaigns.all });
         toast.success("Campaign deleted");
         setDeleteId(null);
       },
@@ -182,9 +176,9 @@ export default function CampaignsPage() {
                           )}>{c.status}</Badge>
                         </TableCell>
                         <TableCell className="text-xs font-mono">{formatINR(c.budgetAllocated)}</TableCell>
-                        <TableCell className="text-xs font-mono">{formatINR(c.budgetSpent ?? c.spend)}</TableCell>
-                        <TableCell className="text-xs font-mono">{c.leads ?? 0}</TableCell>
-                        <TableCell className="text-xs font-mono">{formatINR((c as Record<string, unknown>).costPerLead as string)}</TableCell>
+                        <TableCell className="text-xs font-mono">{formatINR(c.budgetSpent)}</TableCell>
+                        <TableCell className="text-xs font-mono">{c.leadsGenerated ?? 0}</TableCell>
+                        <TableCell className="text-xs font-mono">{formatINR(c.costPerLead)}</TableCell>
                         <TableCell className="text-xs font-mono">{c.roi ? `${c.roi}%` : "—"}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-0.5">
@@ -283,13 +277,7 @@ export default function CampaignsPage() {
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${STATUS_COLORS[previewCampaign.status] ?? "bg-muted text-muted-foreground"}`}>
                     {previewCampaign.status}
                   </span>
-                  {previewCampaign.channel && (
-                    <Badge variant="outline" className="text-xs">{previewCampaign.channel}</Badge>
-                  )}
                 </div>
-                {previewCampaign.description && (
-                  <p className="text-sm text-muted-foreground">{previewCampaign.description}</p>
-                )}
                 <Separator />
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-0.5">
@@ -298,33 +286,26 @@ export default function CampaignsPage() {
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground">Budget Spent</p>
-                    <p className="text-sm font-semibold">{formatINR(previewCampaign.budgetSpent ?? previewCampaign.spend)}</p>
+                    <p className="text-sm font-semibold">{formatINR(previewCampaign.budgetSpent)}</p>
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Leads</p>
-                    <p className="text-sm font-semibold">{previewCampaign.leads ?? 0}</p>
+                    <p className="text-sm font-semibold">{previewCampaign.leadsGenerated ?? 0}</p>
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3" /> ROI</p>
                     <p className="text-sm font-semibold">{previewCampaign.roi ? `${previewCampaign.roi}%` : "—"}</p>
                   </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-muted-foreground">Cost Per Lead</p>
+                    <p className="text-sm font-semibold">{formatINR(previewCampaign.costPerLead)}</p>
+                  </div>
                 </div>
                 <Separator />
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-muted-foreground">Duration:</span>
-                    <span className="font-medium">{fmtDate(previewCampaign.startDate)} – {fmtDate(previewCampaign.endDate)}</span>
-                  </div>
-                  {previewCampaign.targetAudience && (
-                    <div className="space-y-0.5">
-                      <p className="text-xs text-muted-foreground">Target Audience</p>
-                      <p className="text-sm">{previewCampaign.targetAudience}</p>
-                    </div>
-                  )}
                   <div className="space-y-0.5">
                     <p className="text-xs text-muted-foreground">Created</p>
-                    <p className="text-sm">{fmtDate(previewCampaign.createdAt)}</p>
+                    <p className="text-sm">{fmtDate(String(previewCampaign.createdAt))}</p>
                   </div>
                 </div>
               </div>
@@ -343,20 +324,15 @@ export default function CampaignsPage() {
       </Sheet>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Campaign?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleteMutation.isPending}>
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+        title="Delete Campaign?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDelete}
+      />
     </PageWrapper>
   );
 }

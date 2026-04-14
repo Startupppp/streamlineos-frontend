@@ -193,10 +193,6 @@ export async function processLeaveRequest(data: {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
 
-  if (data.forceApprove && !data.justification?.trim()) {
-    return { error: "A justification note is required when approving beyond balance." };
-  }
-
   const request = await db.query.leaveRequests.findFirst({
     where: eq(leaveRequests.id, data.requestId),
   });
@@ -216,6 +212,7 @@ export async function processLeaveRequest(data: {
   }
 
   try {
+    let lopDaysApplied = 0;
     await db.transaction(async (tx) => {
       const updated = await tx
         .update(leaveRequests)
@@ -229,6 +226,7 @@ export async function processLeaveRequest(data: {
         throw new Error("Leave request not found");
       }
 
+      // ── Revert APPROVED → PENDING: restore only paid days (not LOP days) ──
       if (data.status === "PENDING" && request.status === "APPROVED" && request.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, request.leaveTypeId),
@@ -237,12 +235,14 @@ export async function processLeaveRequest(data: {
         if (leaveType?.name !== LEAVE_POLICY.UNPAID.name) {
           const start = new Date(request.startDate);
           const end = new Date(request.endDate);
-          let diffDays = 0;
-          const cursor = new Date(start);
-          while (cursor <= end) {
-            const day = cursor.getDay();
-            if (day !== 0 && day !== 6) diffDays++;
-            cursor.setDate(cursor.getDate() + 1);
+          let diffDays = request.isHalfDay ? 0.5 : 0;
+          if (!request.isHalfDay) {
+            const cursor = new Date(start);
+            while (cursor <= end) {
+              const day = cursor.getDay();
+              if (day !== 0 && day !== 6) diffDays++;
+              cursor.setDate(cursor.getDate() + 1);
+            }
           }
           const balanceRecord = await tx.query.leaveBalances.findFirst({
             where: and(
@@ -252,12 +252,17 @@ export async function processLeaveRequest(data: {
             ),
           });
           if (balanceRecord) {
-            const restored = Number(balanceRecord.balance) + diffDays;
+            // Only restore the paid portion (not LOP days — those were never deducted)
+            const prevLopDays = Number(request.lopDays ?? 0);
+            const paidDays = diffDays - prevLopDays;
+            const restored = Number(balanceRecord.balance) + paidDays;
             await tx.update(leaveBalances).set({ balance: restored.toString() }).where(eq(leaveBalances.id, balanceRecord.id));
+            await tx.update(leaveRequests).set({ lopDays: "0" }).where(eq(leaveRequests.id, data.requestId));
           }
         }
       }
 
+      // ── Approve: auto-convert excess to LOP, no manual override needed ──
       if (data.status === "APPROVED" && request.leaveTypeId) {
         const leaveType = await tx.query.leaveTypes.findFirst({
           where: eq(leaveTypes.id, request.leaveTypeId),
@@ -266,12 +271,14 @@ export async function processLeaveRequest(data: {
         if (leaveType?.name !== LEAVE_POLICY.UNPAID.name) {
           const start = new Date(request.startDate);
           const end = new Date(request.endDate);
-          let diffDays = 0;
-          const cursor = new Date(start);
-          while (cursor <= end) {
-            const day = cursor.getDay();
-            if (day !== 0 && day !== 6) diffDays++;
-            cursor.setDate(cursor.getDate() + 1);
+          let diffDays = request.isHalfDay ? 0.5 : 0;
+          if (!request.isHalfDay) {
+            const cursor = new Date(start);
+            while (cursor <= end) {
+              const day = cursor.getDay();
+              if (day !== 0 && day !== 6) diffDays++;
+              cursor.setDate(cursor.getDate() + 1);
+            }
           }
 
           const balanceRecord = await tx.query.leaveBalances.findFirst({
@@ -283,14 +290,17 @@ export async function processLeaveRequest(data: {
           });
 
           if (balanceRecord) {
-            const newBal = Number(balanceRecord.balance) - diffDays;
-            if (newBal < 0 && !data.forceApprove) {
-              throw new Error(
-                `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}`,
-              );
-            }
-            await tx
-              .update(leaveBalances)
+            const available = Number(balanceRecord.balance);
+            // Excess days beyond balance automatically become LOP
+            const lopDays = available <= 0 ? diffDays : Math.max(0, diffDays - available);
+            const paidDays = diffDays - lopDays;
+            const newBal = Math.max(0, available - paidDays);
+
+            lopDaysApplied = lopDays;
+            await tx.update(leaveRequests)
+              .set({ lopDays: lopDays.toString() })
+              .where(eq(leaveRequests.id, data.requestId));
+            await tx.update(leaveBalances)
               .set({ balance: newBal.toString() })
               .where(eq(leaveBalances.id, balanceRecord.id));
           }
@@ -327,7 +337,7 @@ export async function processLeaveRequest(data: {
       userId: request.userId,
       type: notifType,
       title: notifTitle,
-      message: `Your leave request has been ${data.status === "APPROVED" ? "approved" : "rejected"} by ${approver?.name || "a manager"}.${data.rejectionReason ? ` Reason: ${data.rejectionReason}` : ""}`,
+      message: `Your leave request has been ${data.status === "APPROVED" ? "approved" : "rejected"} by ${approver?.name || "a manager"}.${lopDaysApplied > 0 ? ` Note: ${lopDaysApplied} day(s) will be Loss of Pay (LOP) due to insufficient balance.` : ""}${data.rejectionReason ? ` Reason: ${data.rejectionReason}` : ""}`,
       link: "/hr/leaves",
     });
     if (data.status === "APPROVED" && employee) {

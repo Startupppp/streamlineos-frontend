@@ -33,22 +33,14 @@ export async function PUT(
     }
 
     let comment: string | undefined;
-    let forceApprove = false;
-    let justification: string | undefined;
     try {
       const raw = await req.json() as unknown;
       const parsed = bodySchema.safeParse(raw);
       if (parsed.success) {
         comment = parsed.data.comment;
-        forceApprove = parsed.data.forceApprove ?? false;
-        justification = parsed.data.justification;
       }
     } catch {
       comment = undefined;
-    }
-
-    if (forceApprove && !justification?.trim()) {
-      return err("A justification note is required when approving beyond balance.", 400);
     }
 
     const existing = await db.query.leaveRequests.findFirst({
@@ -65,7 +57,8 @@ export async function PUT(
       return err("You cannot approve your own leave request.", 403);
     }
 
-    // Deduct leave balance
+    // Approve with auto-LOP: excess days beyond balance are automatically Loss of Pay
+    let lopDaysApplied = 0;
     await db.transaction(async (tx) => {
       await tx
         .update(leaveRequests)
@@ -104,14 +97,17 @@ export async function PUT(
           });
 
           if (balanceRecord) {
-            const newBal = Number(balanceRecord.balance) - diffDays;
-            if (newBal < 0 && !forceApprove) {
-              throw new Error(
-                `Insufficient leave balance. Available: ${balanceRecord.balance}, Required: ${diffDays}. Use forceApprove with a justification to override.`,
-              );
-            }
-            await tx
-              .update(leaveBalances)
+            const available = Number(balanceRecord.balance);
+            // Excess days beyond available balance are automatically converted to LOP
+            const lopDays = available <= 0 ? diffDays : Math.max(0, diffDays - available);
+            const paidDays = diffDays - lopDays;
+            const newBal = Math.max(0, available - paidDays);
+            lopDaysApplied = lopDays;
+
+            await tx.update(leaveRequests)
+              .set({ lopDays: lopDays.toString() })
+              .where(eq(leaveRequests.id, leaveId));
+            await tx.update(leaveBalances)
               .set({ balance: newBal.toString() })
               .where(eq(leaveBalances.id, balanceRecord.id));
           }
@@ -137,7 +133,7 @@ export async function PUT(
         userId: existing.userId,
         type: "SUCCESS",
         title: "Leave Approved",
-        message: `Your leave request has been approved${forceApprove ? " (HR override)" : ""}${comment ? `: "${comment}"` : "."}`,
+        message: `Your leave request has been approved.${lopDaysApplied > 0 ? ` Note: ${lopDaysApplied} day(s) will be Loss of Pay (LOP) due to insufficient balance.` : ""}${comment ? ` Manager note: "${comment}"` : ""}`,
         link: "/hr/leaves",
       }),
       writeAuditLog({
@@ -146,7 +142,7 @@ export async function PUT(
         orgId: session.orgId,
         targetId: String(leaveId),
         targetType: "leave_request",
-        metadata: { comment, forceApprove, justification },
+        metadata: { comment, lopDaysApplied },
       }),
       employee?.email
         ? sendLeaveStatusUpdateEmail(
