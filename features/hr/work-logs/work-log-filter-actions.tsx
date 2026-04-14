@@ -184,6 +184,70 @@ export function WorkLogFilterActions({
         </SelectContent>
       </Select>
 
+      {/* Employee selector — visible directly for HR/CEO */}
+      {isAdminOrCeo && employees && employees.length > 0 && (
+        <Popover open={employeeSearchOpen} onOpenChange={setEmployeeSearchOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={employeeSearchOpen}
+              className="h-9 w-[180px] sm:w-[220px] justify-between font-normal"
+            >
+              <span className="flex items-center gap-1.5 truncate">
+                <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                {filters.selectedUserId
+                  ? (() => {
+                      const emp = (employees ?? []).find((e) => e.id === filters.selectedUserId);
+                      return emp ? `${emp.firstName} ${emp.lastName}` : "Employee";
+                    })()
+                  : "My Logs"}
+              </span>
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[260px] p-0" align="start">
+            <Command>
+              <CommandInput
+                placeholder="Search employee..."
+                value={employeeSearch}
+                onValueChange={setEmployeeSearch}
+              />
+              <CommandEmpty>No employee found.</CommandEmpty>
+              <CommandGroup className="max-h-60 overflow-y-auto">
+                <CommandItem
+                  value="My Logs"
+                  onSelect={() => {
+                    setFilters((p) => ({ ...p, selectedUserId: undefined }));
+                    setDraftFilters((p) => ({ ...p, selectedUserId: undefined }));
+                    setEmployeeSearchOpen(false);
+                    setEmployeeSearch("");
+                  }}
+                >
+                  <Check className={cn("mr-2 h-4 w-4", !filters.selectedUserId ? "opacity-100" : "opacity-0")} />
+                  My Logs
+                </CommandItem>
+                {(employees ?? []).map((emp) => (
+                  <CommandItem
+                    key={emp.id}
+                    value={`${emp.firstName} ${emp.lastName}`}
+                    onSelect={() => {
+                      setFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                      setDraftFilters((p) => ({ ...p, selectedUserId: emp.id }));
+                      setEmployeeSearchOpen(false);
+                      setEmployeeSearch("");
+                    }}
+                  >
+                    <Check className={cn("mr-2 h-4 w-4", filters.selectedUserId === emp.id ? "opacity-100" : "opacity-0")} />
+                    {emp.firstName} {emp.lastName}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
+
       <Sheet onOpenChange={handleSheetOpen}>
         <SheetTrigger asChild>
           <Button variant="outline" size="sm" className="h-9 gap-1.5 relative">

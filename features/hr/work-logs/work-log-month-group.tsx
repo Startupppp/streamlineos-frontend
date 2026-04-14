@@ -9,6 +9,7 @@ interface WorkLog {
   id: number;
   date: string;
   description?: string | null;
+  workLink?: string | null;
   status?: string | null;
   ticket?: {
     id: number;
@@ -21,23 +22,16 @@ interface WorkLog {
 interface WorkLogMonthGroupProps {
   monthKey: string;
   label: string;
-
   allDays: Date[];
-
   displayDays: Date[];
   isCollapsed: boolean;
   onToggle: (monthKey: string) => void;
-
   filled: number;
   searchTerm: string;
   logs: WorkLog[] | undefined;
   selectedUserId: string | undefined;
-  isAdminOrCeo: boolean;
-  onSave: (date: Date, content: string) => void;
+  onSave: (date: Date, content: string, workLink: string) => void;
   isSaving: boolean;
-  onApprove: (logId: number) => void;
-  onReject: (logId: number, reason?: string) => void;
-  isUpdatingStatus: boolean;
 }
 
 export function WorkLogMonthGroup({
@@ -51,15 +45,12 @@ export function WorkLogMonthGroup({
   searchTerm,
   logs,
   selectedUserId,
-  isAdminOrCeo,
   onSave,
   isSaving,
-  onApprove,
-  onReject,
-  isUpdatingStatus,
 }: WorkLogMonthGroupProps) {
   const weekdays = allDays.filter((d) => !isWeekend(d)).length;
   const regionId = `month-content-${monthKey}`;
+  const isViewingOther = !!selectedUserId;
 
   return (
     <Card>
@@ -99,27 +90,18 @@ export function WorkLogMonthGroup({
             {displayDays.map((date) => {
               const dateStr = format(date, "yyyy-MM-dd");
               const log = logs?.find((l) => l.date === dateStr);
-              const isViewingOther = !!selectedUserId;
               return (
                 <WorkLogEntryRow
                   key={dateStr}
                   date={date}
                   initialContent={log?.description ?? ""}
+                  initialWorkLink={log?.workLink ?? ""}
                   ticket={log?.ticket}
-                  onSave={(content) => onSave(date, content)}
+                  onSave={(content, workLink) => onSave(date, content, workLink)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}
                   readOnly={isViewingOther}
                   status={log?.status ?? undefined}
-                  showApprovalActions={
-                    isViewingOther &&
-                    isAdminOrCeo &&
-                    (log?.status === "LOGGED" || log?.status === "PENDING") &&
-                    !!log?.description
-                  }
-                  onApprove={log ? () => onApprove(log.id) : undefined}
-                  onReject={log ? (reason) => onReject(log.id, reason) : undefined}
-                  isUpdatingStatus={isUpdatingStatus}
                 />
               );
             })}

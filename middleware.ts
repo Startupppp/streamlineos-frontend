@@ -71,7 +71,7 @@ const ROUTE_ROLE_MAP: Record<string, string[]> = {
   "/hr/payroll": ["CEO", "HR", "BRANCH_HR"],
   "/hr/devices": ["CEO", "HR", "BRANCH_HR"],
   "/hr/documents": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
-  "/hr/work-logs": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
+  "/hr/work-logs": ["CEO", "HR", "SALES", "CUSTOMER_SUPPORT", "ENGINEERING", "DESIGN", "VIDEO_EDITOR", "DIGITAL_MARKETING", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/performance": ["CEO", "HR", "BRANCH_MANAGER", "BRANCH_HR"],
   "/hr/org-chart": ["CEO", "HR"],
   "/hr/incentives": ["CEO", "HR"],

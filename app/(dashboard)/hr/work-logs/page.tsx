@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { format, eachDayOfInterval, parse, isValid } from "date-fns";
-import { useGetWorkLogs, useUpsertWorkLog, useUpdateWorkLogStatus } from "@/lib/api/hooks/hr";
+import { useGetWorkLogs, useUpsertWorkLog } from "@/lib/api/hooks/hr";
 import { useHrEmployees, useHrDepartments } from "@/lib/api/hooks/hr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,15 +148,6 @@ export default function WorkLogsPage() {
     },
     onError: () => {
       toast.error("Failed to save log");
-    },
-  });
-
-  const updateStatus = useUpdateWorkLogStatus({
-    onSuccess: () => {
-      toast.success("Work log status updated");
-    },
-    onError: () => {
-      toast.error("Failed to update status");
     },
   });
 
@@ -364,12 +355,8 @@ export default function WorkLogsPage() {
                   searchTerm={searchTerm}
                   logs={logs}
                   selectedUserId={selectedUserId}
-                  isAdminOrCeo={isAdminOrCeo}
-                  onSave={(date, content) => upsertLog.mutate({ date, description: content })}
+                  onSave={(date, content, workLink) => upsertLog.mutate({ date, description: content, workLink })}
                   isSaving={upsertLog.isPending}
-                  onApprove={(logId) => updateStatus.mutate({ id: logId, status: "APPROVED" })}
-                  onReject={(logId, reason) => updateStatus.mutate({ id: logId, status: "REJECTED", rejectionReason: reason })}
-                  isUpdatingStatus={updateStatus.isPending}
                 />
               );
             })}

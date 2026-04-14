@@ -598,6 +598,7 @@ export interface UpsertWorkLogInput {
   date: Date | string;
   hours?: number;
   description?: string;
+  workLink?: string;
 }
 
 export interface UpdateWorkLogStatusInput {

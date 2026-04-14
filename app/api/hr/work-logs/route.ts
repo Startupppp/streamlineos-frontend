@@ -12,6 +12,7 @@ const postWorkLogSchema = z.object({
   date: z.string(),
   hours: z.number().optional(),
   description: z.string().optional(),
+  workLink: z.string().url().optional().or(z.literal("")),
 });
 
 export async function GET(req: NextRequest) {
@@ -61,13 +62,17 @@ export async function POST(req: NextRequest) {
       ),
     });
 
+    const workLink = body.workLink || null;
+
     if (existing) {
       const [updated] = await db
         .update(timesheets)
         .set({
           description: normalizedDescription,
           hours: body.hours?.toString() || existing.hours,
-          status: "LOGGED",
+          workLink,
+          status: "APPROVED",
+          updatedAt: new Date(),
         })
         .where(eq(timesheets.id, existing.id))
         .returning();
@@ -82,7 +87,8 @@ export async function POST(req: NextRequest) {
         date: dateStr,
         description: normalizedDescription,
         hours: body.hours?.toString() || "0",
-        status: "LOGGED",
+        workLink,
+        status: "APPROVED",
       })
       .returning();
 
