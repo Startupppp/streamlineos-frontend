@@ -177,9 +177,14 @@ export function LeadDetailHeader({
 
           {/* Name + company */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <h2 className="text-xl font-bold truncate leading-tight">
-              {lead.name}
-            </h2>
+            <div className="flex items-baseline gap-2">
+              <h2 className="text-xl font-bold truncate leading-tight">
+                {lead.name}
+              </h2>
+              <span className="text-xs font-mono text-muted-foreground/60 shrink-0">
+                LD-{String((lead as Record<string, unknown>).id as number ?? 0).padStart(5, "0")}
+              </span>
+            </div>
             {(lead.company || lead.designation) && (
               <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5 flex-wrap">
                 {lead.company && (

@@ -104,6 +104,7 @@ function useUpdateDocumentType() {
       name?: string;
       description?: string;
       isMandatory?: boolean;
+      isActive?: boolean;
       sortOrder?: number;
       applicableRoles?: string[];
     }) => {
@@ -143,6 +144,7 @@ function blankForm() {
     name: "",
     description: "",
     isMandatory: false,
+    isActive: true,
     sortOrder: "",
     applicableRoles: [] as string[],
   };
@@ -165,8 +167,9 @@ export default function DocumentTypesPage() {
   const [editTarget, setEditTarget] = useState<DocumentType | null>(null);
   const [form, setForm] = useState(blankForm());
 
-  // ── Deactivate confirm ────────────────────────────────────────────────────
+  // ── Deactivate / Reactivate confirm ──────────────────────────────────────
   const [deactivateTarget, setDeactivateTarget] = useState<DocumentType | null>(null);
+  const [reactivateTarget, setReactivateTarget] = useState<DocumentType | null>(null);
 
   // ── Form helpers ──────────────────────────────────────────────────────────
   const setField = useCallback(
@@ -206,6 +209,7 @@ export default function DocumentTypesPage() {
       name: dt.name,
       description: dt.description ?? "",
       isMandatory: dt.isMandatory ?? false,
+      isActive: dt.isActive !== false,
       sortOrder: dt.sortOrder != null ? String(dt.sortOrder) : "",
       applicableRoles: dt.applicableRoles ?? [],
     });
@@ -229,7 +233,7 @@ export default function DocumentTypesPage() {
 
     if (editTarget) {
       updateMutation.mutate(
-        { id: editTarget.id, ...payload },
+        { id: editTarget.id, ...payload, isActive: form.isActive },
         {
           onSuccess: () => {
             toast.success("Document type updated");
@@ -260,6 +264,21 @@ export default function DocumentTypesPage() {
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deactivateTarget, deleteMutation]);
+
+  // ── Reactivate ────────────────────────────────────────────────────────────
+  const handleReactivate = useCallback(() => {
+    if (!reactivateTarget) return;
+    updateMutation.mutate(
+      { id: reactivateTarget.id, isActive: true },
+      {
+        onSuccess: () => {
+          toast.success("Document type reactivated");
+          setReactivateTarget(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      }
+    );
+  }, [reactivateTarget, updateMutation]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -388,7 +407,7 @@ export default function DocumentTypesPage() {
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          {dt.isActive !== false && (
+                          {dt.isActive !== false ? (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -397,6 +416,16 @@ export default function DocumentTypesPage() {
                               aria-label={`Deactivate ${dt.name}`}
                             >
                               <PowerOff className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-green-600"
+                              onClick={() => setReactivateTarget(dt)}
+                              aria-label={`Reactivate ${dt.name}`}
+                            >
+                              <Power className="h-3.5 w-3.5" />
                             </Button>
                           )}
                         </div>
@@ -477,6 +506,23 @@ export default function DocumentTypesPage() {
           />
         </div>
 
+        {/* Active toggle — only shown when editing */}
+        {editTarget && (
+          <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium">Active</p>
+              <p className="text-xs text-muted-foreground">
+                Inactive types won&apos;t appear in new onboarding checklists.
+              </p>
+            </div>
+            <Switch
+              checked={form.isActive}
+              onCheckedChange={(v) => setField("isActive", v)}
+              aria-label="Active"
+            />
+          </div>
+        )}
+
         {/* Sort order */}
         <div className="space-y-1.5">
           <Label className="text-sm font-medium">
@@ -540,6 +586,20 @@ export default function DocumentTypesPage() {
         variant="destructive"
         onConfirm={handleDeactivate}
         isPending={deleteMutation.isPending}
+      />
+
+      {/* ── Reactivate Confirm ─────────────────────────────────────────────── */}
+      <ConfirmActionDialog
+        open={reactivateTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setReactivateTarget(null);
+        }}
+        title="Reactivate Document Type"
+        description={`Are you sure you want to reactivate "${reactivateTarget?.name}"? It will appear again in new onboarding checklists.`}
+        confirmLabel="Reactivate"
+        variant="default"
+        onConfirm={handleReactivate}
+        isPending={updateMutation.isPending}
       />
     </PageWrapper>
   );

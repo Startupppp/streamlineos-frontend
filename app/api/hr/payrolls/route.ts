@@ -146,7 +146,8 @@ export async function POST(req: NextRequest) {
           lopDeduction = Math.round(dailySalary * absentDays * 100) / 100;
         }
 
-        const totalDeductions = deductions + lopDeduction;
+        const PROFESSIONAL_TAX = 200;
+        const totalDeductions = deductions + lopDeduction + PROFESSIONAL_TAX;
         const net = gross - totalDeductions;
 
         return {

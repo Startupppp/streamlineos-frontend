@@ -443,8 +443,8 @@
 
 /* ─── React Big Calendar overrides ──────────────────────────────────────────── */
 .calendar-container .rbc-calendar {
-  height: auto;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   font-family: var(--font-sans);
   background: transparent;
   color: var(--foreground);
@@ -452,8 +452,9 @@
 
 .calendar-container .rbc-month-view {
   border: none;
-  height: auto;
-  min-height: 100%;
+  flex: 1 0 0;
+  min-height: 0;
+  height: 100%;
   background: transparent;
 }
 
@@ -471,7 +472,8 @@
 
 .calendar-container .rbc-row-content {
   background: transparent;
-  overflow-y: auto;
+  flex: 1 0 0;
+  min-height: 0;
 }
 
 .calendar-container .rbc-time-header,
@@ -495,8 +497,10 @@
 
 .calendar-container .rbc-month-row {
   border-top: 1px solid var(--border);
-  min-height: 120px;
-  flex: 0 0 auto;
+  flex: 1 0 0;
+  flex-basis: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-container .rbc-day-bg + .rbc-day-bg {

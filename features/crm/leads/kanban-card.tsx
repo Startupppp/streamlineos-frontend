@@ -170,7 +170,12 @@ export function KanbanCard({ lead, index, status, onOpen, onMoveStatus }: Kanban
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium truncate">{lead.name}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{lead.name}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground/50 leading-none mt-0.5">
+                        LD-{String(lead.id).padStart(5, "0")}
+                      </p>
+                    </div>
                     {lead.assignedTo ? (
                       <Avatar className="h-6 w-6 shrink-0">
                         <AvatarImage src={resolveImageUrl(lead.assignedTo.image)} />

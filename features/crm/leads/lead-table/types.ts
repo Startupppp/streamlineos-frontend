@@ -104,6 +104,7 @@ export const SOURCE_COLORS: Record<string, string> = {
 };
 
 export const ALL_COLUMNS = [
+  { key: "leadId",             label: "Lead ID",           defaultVisible: true,  sortable: false },
   { key: "createdAt",          label: "Date",              defaultVisible: true,  sortable: true  },
   { key: "name",               label: "Name",              defaultVisible: true,  sortable: true  },
   { key: "phone",              label: "Mobile",            defaultVisible: true,  sortable: false },
@@ -127,6 +128,10 @@ export const ALL_COLUMNS = [
 export const DEFAULT_VISIBLE = new Set(
   ALL_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.key),
 );
+
+export function formatLeadId(id: number): string {
+  return `LD-${String(id).padStart(5, "0")}`;
+}
 
 export function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";

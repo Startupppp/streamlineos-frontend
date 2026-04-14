@@ -16,7 +16,7 @@ import {
   Lead, TeamMember,
   STATUSES, PRIORITIES,
   STATUS_COLORS, PRIORITY_COLORS, SOURCE_COLORS,
-  formatINR, timeAgo, formatDate,
+  formatINR, timeAgo, formatDate, formatLeadId,
 } from "./types";
 import { AIScoreButton } from "../ai-score-button";
 
@@ -63,6 +63,17 @@ export function useLeadCellRenderer({
     const isEditing = editingCell?.leadId === lead.id && editingCell?.column === colKey;
 
     switch (colKey) {
+      case "leadId":
+        return (
+          <button
+            onClick={() => copyToClipboard(formatLeadId(lead.id), "Lead ID")}
+            className="font-mono text-[10px] text-muted-foreground hover:text-foreground tabular-nums whitespace-nowrap"
+            title="Click to copy"
+          >
+            {formatLeadId(lead.id)}
+          </button>
+        );
+
       case "createdAt":
         return <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">{formatDate(lead.createdAt)}</span>;
 

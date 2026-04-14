@@ -327,7 +327,7 @@ export default function MyPayslipsPage() {
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>Basic Pay</td>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{basicSalary.toLocaleString()}/-</td>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>Professional Tax</td>
-                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹{deductions.toLocaleString()}/-</td>
+                    <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", textAlign: "center", color: "#111827" }}>₹200/-</td>
                   </tr>
                   <tr>
                     <td style={{ border: "1px solid #9ca3af", padding: "8px 16px", color: "#374151" }}>House Rent Allowance</td>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DropResult } from "@hello-pangea/dnd";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -231,14 +230,6 @@ export default function LeadsPipelinePage() {
     );
   }, [bulkUpdateMutation]);
 
-  const handleExportCsv = useCallback(() => {
-    const params = new URLSearchParams();
-    if (statusFilter) params.set("status", statusFilter);
-    if (priorityFilter) params.set("priority", priorityFilter);
-    const qs = params.toString();
-    window.open(`/api/leads/export${qs ? `?${qs}` : ""}`, "_blank");
-  }, [statusFilter, priorityFilter]);
-
   const handleBulkDelete = useCallback((ids: number[]) => {
     bulkDeleteMutation.mutate(
       { leadIds: ids },
@@ -271,9 +262,6 @@ export default function LeadsPipelinePage() {
       noInternalScroll
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportCsv}>
-            <FileDown className="h-4 w-4 mr-1" /> Export CSV
-          </Button>
           <LeadExportDialog />
           <CsvUploadDialog />
           <CreateLeadSheet
