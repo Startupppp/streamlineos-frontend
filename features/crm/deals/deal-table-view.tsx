@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDealId } from "@/lib/format-utils";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
 
 interface Deal {
@@ -81,6 +82,7 @@ export function DealTableView({
   const [editingCell, setEditingCell] = useState<{ dealId: number; column: string } | null>(null);
 
   const columns = [
+    { key: "dealId", label: "Deal ID", sortable: false },
     { key: "name", label: "Deal Name", sortable: true },
     { key: "value", label: "Value", sortable: true },
     { key: "stage", label: "Stage", sortable: true },
@@ -150,6 +152,11 @@ export function DealTableView({
                       key={deal.id}
                       className={cn("h-8", idx % 2 === 1 && "bg-muted/10", "hover:bg-muted/30 transition-colors")}
                     >
+                      <TableCell className="px-2 py-1">
+                        <span className="font-mono text-[10px] text-muted-foreground select-all">
+                          {formatDealId(deal.id)}
+                        </span>
+                      </TableCell>
                       <TableCell className="px-2 py-1">
                         <button
                           className="font-medium text-[12px] hover:text-gold hover:underline text-left truncate max-w-[160px] block"

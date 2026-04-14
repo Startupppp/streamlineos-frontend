@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, err, parseBody } from "@/lib/api/helpers";
 import { db } from "@/lib/db";
-import { leads, deals, projects, tickets, clients, notifications } from "@/lib/db/schema";
+import { leads, deals, projects, tickets, clients, clientAccounts, notifications } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
@@ -113,6 +113,24 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
             investmentValue: updated.potentialValue,
             accountManagerId: updated.assignedToId,
             status: "active",
+          });
+        }
+
+        const existingClientAccount = await tx.query.clientAccounts.findFirst({
+          where: and(eq(clientAccounts.leadId, updated.id), eq(clientAccounts.orgId, orgId)),
+        });
+        if (!existingClientAccount) {
+          await tx.insert(clientAccounts).values({
+            orgId,
+            leadId: updated.id,
+            salesRepId: updated.assignedToId ?? session.user.id,
+            clientName: updated.name,
+            clientEmail: updated.email,
+            clientPhone: updated.phone,
+            clientWhatsapp: updated.whatsappNumber,
+            estimatedInvestment: updated.potentialValue ?? updated.investmentInterest ?? null,
+            status: "ACCOUNT_OPENING",
+            convertedAt: new Date(),
           });
         }
 

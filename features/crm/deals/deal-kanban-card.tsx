@@ -11,7 +11,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatINRCompact, formatDealId } from "@/lib/format-utils";
 import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import type { Deal } from "@/types/crm";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
@@ -75,7 +75,8 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 mr-1">
             <h4 className="text-sm font-medium line-clamp-1">{deal.name}</h4>
-            <div className="mt-0.5">
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="font-mono text-[10px] text-muted-foreground/70 select-all">{formatDealId(deal.id)}</span>
               <DealHealthBadge expectedCloseDate={deal.expectedCloseDate} />
             </div>
           </div>

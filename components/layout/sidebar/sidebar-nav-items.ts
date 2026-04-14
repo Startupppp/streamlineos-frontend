@@ -420,7 +420,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
+            { label: "Work Logs", icon: History, href: "/hr/work-logs" },
           ],
         },
         {
@@ -472,7 +472,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
+            { label: "Work Logs", icon: History, href: "/hr/work-logs" },
           ],
         },
         {
@@ -536,7 +536,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
+            { label: "Work Logs", icon: History, href: "/hr/work-logs" },
           ],
         },
         {
@@ -573,7 +573,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
+            { label: "Work Logs", icon: History, href: "/hr/work-logs" },
             { label: "Support", icon: LifeBuoy, href: "/support" },
           ],
         },
@@ -609,7 +609,7 @@ export function getNavGroupsForRole(role: string | undefined): NavGroup[] {
           label: "My Work",
           routes: [
             { label: "My Projects", icon: Briefcase, href: "/projects", isProjectsList: true },
-            { label: "My Worklogs", icon: Timer, href: "/timesheets" },
+            { label: "Work Logs", icon: History, href: "/hr/work-logs" },
             { label: "Support", icon: LifeBuoy, href: "/support" },
           ],
         },

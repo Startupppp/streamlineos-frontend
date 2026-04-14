@@ -29,6 +29,8 @@ export interface BigCalEvent {
     category?: string;
     description?: string | null;
     location?: string | null;
+    source?: string;
+    myRsvpStatus?: string | null;
   };
 }
 

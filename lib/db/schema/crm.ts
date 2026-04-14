@@ -819,28 +819,6 @@ export const payments = pgTable("payments", {
   index("idx_payments_org_date").on(table.orgId, table.paymentDate),
 ]);
 
-export const invoiceAiExtractions = pgTable("invoice_ai_extractions", {
-  id: serial("id").primaryKey(),
-  orgId: text("org_id").references(() => organizations.id).notNull(),
-  invoiceId: integer("invoice_id").references(() => invoices.id),
-  fileUrl: text("file_url").notNull(),
-  extractedData: jsonb("extracted_data").$type<{
-    vendor: string;
-    invoiceNumber: string;
-    date: string;
-    dueDate: string;
-    lineItems: { description: string; qty: number; rate: number; amount: number }[];
-    subtotal: number;
-    tax: number;
-    total: number;
-    currency: string;
-  }>(),
-  status: text("status").default("pending").notNull(),
-  createdBy: text("created_by").references(() => users.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("idx_invoice_ai_extractions_org").on(table.orgId),
-]);
 
 export const supportTickets = pgTable("support_tickets", {
   id: serial("id").primaryKey(),
@@ -1210,11 +1188,6 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   creator: one(users, { fields: [payments.createdBy], references: [users.id] }),
 }));
 
-export const invoiceAiExtractionsRelations = relations(invoiceAiExtractions, ({ one }) => ({
-  organization: one(organizations, { fields: [invoiceAiExtractions.orgId], references: [organizations.id] }),
-  invoice: one(invoices, { fields: [invoiceAiExtractions.invoiceId], references: [invoices.id] }),
-  creator: one(users, { fields: [invoiceAiExtractions.createdBy], references: [users.id] }),
-}));
 
 export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
   organization: one(organizations, { fields: [supportTickets.orgId], references: [organizations.id] }),

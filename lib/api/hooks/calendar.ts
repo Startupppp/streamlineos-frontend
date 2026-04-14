@@ -75,12 +75,13 @@ export interface CalendarListItem {
   allDay?: boolean;
   color?: string | null;
   category: string;
-  source: "event" | "leave" | "interview" | "task";
+  source: "event" | "leave" | "interview" | "task" | "holiday";
   location?: string | null;
   description?: string | null;
   creatorName?: string | null;
   entityId?: string | null;
   entityType?: string | null;
+  myRsvpStatus?: string | null;
 }
 
 /** Extract the numeric DB id from a prefixed list-item id like "event-123" → 123 */

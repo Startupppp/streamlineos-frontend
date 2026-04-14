@@ -372,6 +372,12 @@ export interface WorkLog {
   isBillable: boolean | null;
   createdAt: Date | string | null;
   updatedAt: Date | string | null;
+  ticket?: {
+    id: number;
+    title: string;
+    ticketNumber: number;
+    project?: { id: number; name: string; key: string } | null;
+  } | null;
 }
 
 export interface OrgChartNode {

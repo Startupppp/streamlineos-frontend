@@ -1,7 +1,7 @@
 "server-only";
 import { db } from "@/lib/db";
-import { calendarEvents, leaveRequests, interviews, users, tasks } from "@/lib/db/schema";
-import { eq, and, gte, lte, or, isNotNull } from "drizzle-orm";
+import { calendarEvents, leaveRequests, interviews, users, tasks, eventAttendees, holidays } from "@/lib/db/schema";
+import { eq, and, gte, lte, isNotNull, inArray } from "drizzle-orm";
 
 export interface CalendarEventItem {
   id: string;
@@ -11,12 +11,13 @@ export interface CalendarEventItem {
   allDay?: boolean;
   color?: string | null;
   category: string;
-  source: "event" | "leave" | "interview" | "task";
+  source: "event" | "leave" | "interview" | "task" | "holiday";
   location?: string | null;
   description?: string | null;
   creatorName?: string | null;
   entityId?: string | null;
   entityType?: string | null;
+  myRsvpStatus?: string | null;
 }
 
 export async function getCalendarEvents(
@@ -25,7 +26,7 @@ export async function getCalendarEvents(
   start: Date,
   end: Date
 ): Promise<CalendarEventItem[]> {
-  const [eventsData, leavesData, interviewsData, tasksData] = await Promise.all([
+  const [eventsData, leavesData, interviewsData, tasksData, holidaysData] = await Promise.all([
     // 1. Calendar events
     db.query.calendarEvents.findMany({
       where: and(
@@ -96,11 +97,46 @@ export async function getCalendarEvents(
           lte(tasks.dueDate, end)
         )
       ),
+
+    // 5. Org holidays in range
+    db
+      .select({
+        id: holidays.id,
+        name: holidays.name,
+        date: holidays.date,
+        message: holidays.message,
+      })
+      .from(holidays)
+      .where(
+        and(
+          eq(holidays.orgId, orgId),
+          gte(holidays.date, start.toISOString().slice(0, 10)),
+          lte(holidays.date, end.toISOString().slice(0, 10))
+        )
+      ),
   ]);
+
+  // Build a map of the current user's RSVP status for calendar events
+  const eventIds = eventsData.map((e) => e.id);
+  const rsvpMap = new Map<number, string>();
+  if (eventIds.length > 0) {
+    const attendeeRows = await db
+      .select({ eventId: eventAttendees.eventId, status: eventAttendees.status })
+      .from(eventAttendees)
+      .where(
+        and(
+          eq(eventAttendees.userId, userId),
+          inArray(eventAttendees.eventId, eventIds)
+        )
+      );
+    for (const row of attendeeRows) {
+      rsvpMap.set(row.eventId, row.status ?? "pending");
+    }
+  }
 
   const result: CalendarEventItem[] = [];
 
-  // Map calendar events
+  // Map calendar events (with current user's RSVP status)
   for (const ev of eventsData) {
     result.push({
       id: `event-${ev.id}`,
@@ -116,6 +152,7 @@ export async function getCalendarEvents(
       creatorName: ev.creator?.name ?? null,
       entityId: ev.entityId,
       entityType: ev.entityType,
+      myRsvpStatus: rsvpMap.get(ev.id) ?? null,
     });
   }
 
@@ -164,6 +201,22 @@ export async function getCalendarEvents(
       color: tk.status === "completed" ? "gray" : "red",
       category: "task",
       source: "task",
+    });
+  }
+
+  // Map holidays
+  for (const hd of holidaysData) {
+    const hdDate = new Date(hd.date);
+    result.push({
+      id: `holiday-${hd.id}`,
+      title: hd.name,
+      start: hdDate,
+      end: hdDate,
+      allDay: true,
+      color: "purple",
+      category: "holiday",
+      source: "holiday",
+      description: hd.message ?? null,
     });
   }
 

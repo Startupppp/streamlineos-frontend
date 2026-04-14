@@ -5,13 +5,20 @@ import { format, isWeekend } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Check, XCircle, Link2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Save, Check, XCircle, Link2, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkLogRejectDialog } from "./work-log-editor";
 
 interface WorkLogEntryRowProps {
   date: Date;
   initialContent: string;
+  ticket?: {
+    id: number;
+    title: string;
+    ticketNumber: number;
+    project?: { id: number; name: string; key: string } | null;
+  } | null;
   onSave: (content: string) => void;
   isSaving: boolean;
   searchTerm: string;
@@ -26,6 +33,7 @@ interface WorkLogEntryRowProps {
 export function WorkLogEntryRow({
   date,
   initialContent,
+  ticket,
   onSave,
   isSaving,
   searchTerm,
@@ -137,6 +145,18 @@ export function WorkLogEntryRow({
         </div>
 
         <div className="flex-1 min-w-0 space-y-2">
+          {ticket && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className="flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30">
+                <Ticket className="h-3 w-3" />
+                #{ticket.ticketNumber}
+              </Badge>
+              <span className="text-sm font-medium text-foreground truncate">{ticket.title}</span>
+              {ticket.project && (
+                <span className="text-xs text-muted-foreground">— {ticket.project.name}</span>
+              )}
+            </div>
+          )}
           <Textarea
             value={content}
             onChange={(e) => {

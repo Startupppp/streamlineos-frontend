@@ -1,7 +1,7 @@
 "server-only";
 
 import { db } from "@/lib/db";
-import { clientAccounts, clientAccountActivities } from "@/lib/db/schema";
+import { clientAccounts, clientAccountActivities, leads } from "@/lib/db/schema";
 import { eq, and, desc, sql, count, or } from "drizzle-orm";
 import type { ClientAccountFilters } from "@/types/crm";
 import { ROLES } from "@/lib/constants/roles";
@@ -52,6 +52,44 @@ export async function getClientAccounts(
     page,
     totalPages: Math.ceil((countResult?.count ?? 0) / limit),
   };
+}
+
+/**
+ * Backfill clientAccount records for CONVERTED leads that don't have one yet.
+ * Uses a single INSERT ... SELECT query — safe to call on every page load (idempotent).
+ */
+export async function backfillConvertedLeadsToClientAccounts(
+  orgId: string,
+  fallbackSalesRepId: string
+) {
+  await db.execute(sql`
+    INSERT INTO client_accounts (
+      org_id, lead_id, sales_rep_id,
+      client_name, client_email, client_phone, client_whatsapp,
+      estimated_investment, status, converted_at, created_at, updated_at
+    )
+    SELECT
+      l.org_id,
+      l.id,
+      COALESCE(l.assigned_to_id, ${fallbackSalesRepId}),
+      l.name,
+      l.email,
+      l.phone,
+      l.whatsapp_number,
+      COALESCE(l.potential_value, l.investment_interest),
+      'ACCOUNT_OPENING',
+      COALESCE(l.converted_at, NOW()),
+      NOW(),
+      NOW()
+    FROM leads l
+    WHERE l.org_id = ${orgId}
+      AND l.status = 'CONVERTED'
+      AND l.deleted_at IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM client_accounts ca
+        WHERE ca.org_id = l.org_id AND ca.lead_id = l.id
+      )
+  `);
 }
 
 export async function getClientAccount(orgId: string, id: number) {

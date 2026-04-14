@@ -545,6 +545,14 @@ export async function getWorkLogs(
       eq(timesheets.orgId, orgId),
       eq(timesheets.userId, targetUserId)
     ),
+    with: {
+      ticket: {
+        columns: { id: true, title: true, ticketNumber: true },
+        with: {
+          project: { columns: { id: true, name: true, key: true } },
+        },
+      },
+    },
   });
 
   return logs.filter((l) => l.date >= startStr && l.date <= endStr) as unknown as WorkLog[];

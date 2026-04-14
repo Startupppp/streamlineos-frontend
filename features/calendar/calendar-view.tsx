@@ -99,6 +99,8 @@ export function CalendarView() {
           category: e.category,
           description: e.description,
           location: e.location,
+          source: e.source,
+          myRsvpStatus: e.myRsvpStatus,
         },
       })),
     [events]
@@ -119,17 +121,28 @@ export function CalendarView() {
     setSelectedEventId(String(event.id));
   }, []);
 
+  const RSVP_BORDER_COLORS: Record<string, string> = {
+    accepted: "#22c55e",
+    declined: "#ef4444",
+    tentative: "#f59e0b",
+  };
+
   const eventPropGetter = useCallback(
-    (event: BigCalEvent) => ({
-      style: {
-        backgroundColor: EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
-        border: "none",
-        borderRadius: "4px",
-        color: "#fff",
-        fontSize: "12px",
-        padding: "1px 6px",
-      },
-    }),
+    (event: BigCalEvent) => {
+      const rsvp = event.resource?.myRsvpStatus as string | null | undefined;
+      const rsvpBorderColor = rsvp ? (RSVP_BORDER_COLORS[rsvp] ?? null) : null;
+      return {
+        style: {
+          backgroundColor: EVENT_COLORS[event.resource?.color ?? "blue"] ?? EVENT_COLORS.blue,
+          border: "none",
+          borderLeft: rsvpBorderColor ? `4px solid ${rsvpBorderColor}` : "none",
+          borderRadius: "4px",
+          color: "#fff",
+          fontSize: "12px",
+          padding: rsvpBorderColor ? "1px 6px 1px 4px" : "1px 6px",
+        },
+      };
+    },
     []
   );
 

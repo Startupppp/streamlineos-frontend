@@ -10,6 +10,12 @@ interface WorkLog {
   date: string;
   description?: string | null;
   status?: string | null;
+  ticket?: {
+    id: number;
+    title: string;
+    ticketNumber: number;
+    project?: { id: number; name: string; key: string } | null;
+  } | null;
 }
 
 interface WorkLogMonthGroupProps {
@@ -99,6 +105,7 @@ export function WorkLogMonthGroup({
                   key={dateStr}
                   date={date}
                   initialContent={log?.description ?? ""}
+                  ticket={log?.ticket}
                   onSave={(content) => onSave(date, content)}
                   isSaving={isSaving}
                   searchTerm={searchTerm}

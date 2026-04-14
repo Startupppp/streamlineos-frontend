@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface PageWrapperProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   badge?: React.ReactNode;
   actions?: React.ReactNode;
   filters?: React.ReactNode;

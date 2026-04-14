@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery } from "@/lib/api/helpers";
-import { getClientAccounts } from "@/server/queries/crm";
+import { getClientAccounts, backfillConvertedLeadsToClientAccounts } from "@/server/queries/crm-clients";
 import { z } from "zod";
 
 const listSchema = z.object({
@@ -13,7 +13,11 @@ const listSchema = z.object({
 export async function GET(req: NextRequest) {
   return withAuth(async (session) => {
     const filters = parseQuery(req, listSchema);
-    const data = await getClientAccounts(session.orgId!, {
+
+    // Backfill any CONVERTED leads that don't have a client account yet (single SQL, idempotent)
+    await backfillConvertedLeadsToClientAccounts(session.orgId, session.user.id);
+
+    const data = await getClientAccounts(session.orgId, {
       ...filters,
       role: session.user.role ?? undefined,
       userId: session.user.id,

@@ -19,6 +19,7 @@ import {
   useDealDetail, useUpdateDeal, useUpdateDealStage, useDealActivities, useLogDealActivity,
   useDealMeetings, useCreateDealMeeting, useDeleteDealMeeting, useCloneDeal,
 } from "@/lib/api/hooks/crm";
+import { formatDealId } from "@/lib/format-utils";
 import { toast } from "sonner";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
@@ -230,7 +231,12 @@ export default function DealDetailPage({
   return (
     <PageWrapper
       title={deal.name}
-      subtitle={formatINR(dealValue)}
+      subtitle={
+        <span className="flex items-center gap-2">
+          <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded select-all">{formatDealId(dealId)}</span>
+          <span>{formatINR(dealValue)}</span>
+        </span>
+      }
       badge={
         <Badge
           className="text-sm px-3 py-1"
