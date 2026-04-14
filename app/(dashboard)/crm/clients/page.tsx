@@ -24,7 +24,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
-import { useClientAccountStats, useClientAccounts, useUpdateClientAccount } from "@/lib/api/hooks/crm";
+import { useClientAccounts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
 
@@ -195,34 +195,39 @@ export default function ClientAccountsPage() {
     updateParams({ view: mode === "kanban" ? null : mode });
   }, [updateParams]);
 
-  const { data: stats, isLoading: statsLoading } = useClientAccountStats();
+  // Load all accounts just for stats (separate lightweight call)
+  const { data: allData, isLoading: statsLoading } = useClientAccounts({ limit: 500 });
+  const allAccounts = (allData?.accounts ?? []) as ClientAccount[];
+  const stats = {
+    total: allAccounts.length,
+    accountOpening: allAccounts.filter((a) => a.status === "ACCOUNT_OPENING").length,
+    queries: allAccounts.filter((a) => a.status === "QUERIES").length,
+    planSelected: allAccounts.filter((a) => a.status === "PLAN_SELECTED").length,
+    invested: allAccounts.filter((a) => a.status === "INVESTED").length,
+  };
 
-  // For kanban, load all accounts (no status filter, high limit)
-  const { data: kanbanData, isLoading: kanbanLoading } = useClientAccounts(
-    viewMode === "kanban" ? { search: debouncedSearch || undefined, limit: 200 } : undefined
-  );
-  // For table, load with filters and pagination
-  const { data: tableData, isLoading: tableLoading } = useClientAccounts(
-    viewMode === "table" ? {
-      status: statusFilter !== "all" ? statusFilter as ClientStatus : undefined,
-      search: debouncedSearch || undefined,
-      page,
-      limit: 25,
-    } : undefined
-  );
+  // Single query — kanban uses high limit with no status filter, table uses pagination
+  const queryFilters = viewMode === "kanban"
+    ? { search: debouncedSearch || undefined, limit: 200 }
+    : {
+        status: statusFilter !== "all" ? statusFilter as ClientStatus : undefined,
+        search: debouncedSearch || undefined,
+        page,
+        limit: 25,
+      };
 
-  const isLoading = viewMode === "kanban" ? kanbanLoading : tableLoading;
-  const data = viewMode === "kanban" ? kanbanData : tableData;
+  const { data, isLoading } = useClientAccounts(queryFilters);
   const accounts = (data?.accounts ?? []) as ClientAccount[];
 
-  // Group accounts by status for kanban
+  // Group accounts by status for kanban — use allAccounts for complete view
+  const kanbanAccounts = viewMode === "kanban" ? accounts : allAccounts;
   const kanbanColumns = STATUSES.map((status) => ({
     status,
-    accounts: accounts.filter((a) => a.status === status),
-    count: status === "ACCOUNT_OPENING" ? (stats?.accountOpening ?? 0)
-      : status === "QUERIES" ? (stats?.queries ?? 0)
-      : status === "PLAN_SELECTED" ? (stats?.planSelected ?? 0)
-      : (stats?.invested ?? 0),
+    accounts: kanbanAccounts.filter((a) => a.status === status),
+    count: stats[status === "ACCOUNT_OPENING" ? "accountOpening"
+      : status === "QUERIES" ? "queries"
+      : status === "PLAN_SELECTED" ? "planSelected"
+      : "invested"],
   }));
 
   return (
