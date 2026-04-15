@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useClientAccounts } from "@/lib/api/hooks/crm";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import { AIChurnRiskButton } from "@/features/crm/clients/ai-churn-risk-button";
+import { AssignCrmDialog } from "@/features/crm/clients/assign-crm-dialog";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -235,25 +236,28 @@ export default function ClientAccountsPage() {
       title="Client Accounts"
       subtitle="Post-conversion client management — track account opening through investment"
       actions={
-        <div className="flex items-center gap-1 border rounded-md p-0.5">
-          <Button
-            variant={viewMode === "kanban" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2.5 gap-1.5"
-            onClick={() => handleViewMode("kanban")}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline text-xs">Board</span>
-          </Button>
-          <Button
-            variant={viewMode === "table" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2.5 gap-1.5"
-            onClick={() => handleViewMode("table")}
-          >
-            <List className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline text-xs">Table</span>
-          </Button>
+        <div className="flex items-center gap-2">
+          <AssignCrmDialog />
+          <div className="flex items-center gap-1 border rounded-md p-0.5">
+            <Button
+              variant={viewMode === "kanban" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 gap-1.5"
+              onClick={() => handleViewMode("kanban")}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-xs">Board</span>
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2.5 gap-1.5"
+              onClick={() => handleViewMode("table")}
+            >
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-xs">Table</span>
+            </Button>
+          </div>
         </div>
       }
       filters={

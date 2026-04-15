@@ -255,6 +255,39 @@ export function useLogClientActivity() {
   });
 }
 
+export interface CrmAssignmentMember {
+  userId: string;
+  name: string | null;
+  image: string | null;
+  activeCount: number;
+  totalCount: number;
+}
+
+export interface CrmAssignmentStats {
+  members: CrmAssignmentMember[];
+  unassignedCount: number;
+}
+
+export function useCrmAssignmentStats(enabled = false) {
+  return useQuery({
+    queryKey: queryKeys.clients.crmStats(),
+    queryFn: () => apiClient.get<CrmAssignmentStats>("/clients/assign-crm"),
+    enabled,
+  });
+}
+
+export function useAssignCrmReps() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<CrmAssignmentStats>("/clients/assign-crm", {}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.clients.all });
+      qc.invalidateQueries({ queryKey: queryKeys.clients.crmStats() });
+    },
+  });
+}
+
 export function useRenewalAccounts() {
   return useQuery({
     queryKey: [...queryKeys.clients.all, "renewals"] as const,

@@ -150,6 +150,82 @@ export async function backfillCrmAssignments(orgId: string) {
   }
 }
 
+/**
+ * Return CRM assignment stats: each CUSTOMER_SUPPORT member with their
+ * active (non-INVESTED) account count and total count, plus the number
+ * of unassigned client accounts.
+ */
+export async function getCrmAssignmentStats(orgId: string) {
+  const { organizationMembers, users } = await import("@/lib/db/schema");
+
+  const csMembers = await db
+    .select({
+      userId: organizationMembers.userId,
+      name: users.name,
+      image: users.image,
+    })
+    .from(organizationMembers)
+    .innerJoin(users, eq(users.id, organizationMembers.userId))
+    .where(
+      and(
+        eq(organizationMembers.orgId, orgId),
+        eq(organizationMembers.role, "CUSTOMER_SUPPORT")
+      )
+    );
+
+  const members: {
+    userId: string;
+    name: string | null;
+    image: string | null;
+    activeCount: number;
+    totalCount: number;
+  }[] = [];
+
+  for (const m of csMembers) {
+    const [active] = await db
+      .select({ count: count() })
+      .from(clientAccounts)
+      .where(
+        and(
+          eq(clientAccounts.orgId, orgId),
+          eq(clientAccounts.assignedCrmId, m.userId),
+          sql`${clientAccounts.status} != 'INVESTED'`
+        )
+      );
+    const [total] = await db
+      .select({ count: count() })
+      .from(clientAccounts)
+      .where(
+        and(
+          eq(clientAccounts.orgId, orgId),
+          eq(clientAccounts.assignedCrmId, m.userId)
+        )
+      );
+    members.push({
+      userId: m.userId,
+      name: m.name,
+      image: m.image,
+      activeCount: active?.count ?? 0,
+      totalCount: total?.count ?? 0,
+    });
+  }
+
+  const [unassignedResult] = await db
+    .select({ count: count() })
+    .from(clientAccounts)
+    .where(
+      and(
+        eq(clientAccounts.orgId, orgId),
+        sql`${clientAccounts.assignedCrmId} IS NULL`
+      )
+    );
+
+  return {
+    members,
+    unassignedCount: unassignedResult?.count ?? 0,
+  };
+}
+
 export async function getClientAccount(orgId: string, id: number) {
   const account = await db.query.clientAccounts.findFirst({
     where: and(eq(clientAccounts.id, id), eq(clientAccounts.orgId, orgId)),
