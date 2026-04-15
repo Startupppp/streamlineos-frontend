@@ -1,12 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { useState } from "react";
 import {
   Plus,
-  Settings,
-  Trash2,
-  Edit2,
   AlertTriangle,
   TrendingUp,
   DollarSign,
@@ -44,79 +40,46 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import {
-  getExpenseCategories,
-  createExpenseCategory,
-  getCategorySpending,
-} from "@/server/actions/expense-actions";
-
-interface CategorySpending {
-  categoryId: number;
-  categoryName: string;
-  budgetLimit: number;
-  budgetPeriod: string;
-  totalSpent: number;
-  pendingAmount: number;
-  approvedAmount: number;
-}
+import { useHrExpenseCategories, useCreateExpenseCategory } from "@/lib/api/hooks/hr/leaves-expenses";
 
 interface BudgetManagementProps {
   onClose?: () => void;
 }
 
 export function BudgetManagement({ onClose }: BudgetManagementProps) {
-  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getExpenseCategories>>>([]);
-  const [spending, setSpending] = useState<CategorySpending[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: categories = [], isLoading: loading } = useHrExpenseCategories();
+  const createCategoryMutation = useCreateExpenseCategory();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newCategory, setNewCategory] = useState({
     name: "",
     description: "",
     budgetLimit: "",
-    budgetPeriod: "MONTHLY",
+    budgetPeriod: "MONTHLY" as "MONTHLY" | "YEARLY",
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [catData, spendingData] = await Promise.all([
-        getExpenseCategories(),
-        getCategorySpending(),
-      ]);
-      setCategories(catData);
-      setSpending(spendingData || []);
-    } catch (error) {
-      toast.error("Failed to load budget data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateCategory = async () => {
+  const handleCreateCategory = () => {
     if (!newCategory.name) {
       toast.error("Category name is required");
       return;
     }
 
-    const result = await createExpenseCategory({
-      name: newCategory.name,
-      description: newCategory.description,
-      budgetLimit: newCategory.budgetLimit ? parseFloat(newCategory.budgetLimit) : undefined,
-      budgetPeriod: newCategory.budgetPeriod,
-    });
-
-    if (result.success) {
-      toast.success("Category created successfully");
-      setIsCreateOpen(false);
-      setNewCategory({ name: "", description: "", budgetLimit: "", budgetPeriod: "MONTHLY" });
-      loadData();
-    } else {
-      toast.error(result.error);
-    }
+    toast.promise(
+      createCategoryMutation.mutateAsync({
+        name: newCategory.name,
+        description: newCategory.description || undefined,
+        budgetLimit: newCategory.budgetLimit ? parseFloat(newCategory.budgetLimit) : undefined,
+        budgetPeriod: newCategory.budgetPeriod,
+      }),
+      {
+        loading: "Creating category...",
+        success: () => {
+          setIsCreateOpen(false);
+          setNewCategory({ name: "", description: "", budgetLimit: "", budgetPeriod: "MONTHLY" });
+          return "Category created successfully";
+        },
+        error: "Failed to create category",
+      }
+    );
   };
 
   const getUsagePercentage = (spent: number, limit: number) => {
@@ -130,9 +93,9 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
     return "bg-emerald-500";
   };
 
-  const totalBudget = spending.reduce((sum, s) => sum + (s.budgetLimit || 0), 0);
-  const totalSpent = spending.reduce((sum, s) => sum + s.totalSpent, 0);
-  const totalPending = spending.reduce((sum, s) => sum + s.pendingAmount, 0);
+  const totalBudget = categories.reduce((sum, s) => sum + (parseFloat(s.budgetLimit ?? "0") || 0), 0);
+  const totalSpent = categories.reduce((sum, s) => sum + s.totalSpent, 0);
+  const totalPending = categories.reduce((sum, s) => sum + s.pendingAmount, 0);
 
   if (loading) {
     return (
@@ -203,7 +166,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
           <CardDescription>Monitor spending against budget limits by category</CardDescription>
         </CardHeader>
         <CardContent>
-          {spending.length === 0 ? (
+          {categories.length === 0 ? (
             <div className="text-center py-8">
               <div className="flex flex-col items-center gap-3">
                 <EmptyExpensesIllustration />
@@ -229,18 +192,19 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {spending.map((item) => {
-                  const percentage = getUsagePercentage(item.totalSpent, item.budgetLimit);
+                {categories.map((item) => {
+                  const limit = parseFloat(item.budgetLimit ?? "0") || 0;
+                  const percentage = getUsagePercentage(item.totalSpent, limit);
                   return (
-                    <TableRow key={item.categoryId}>
-                      <TableCell className="font-medium">{item.categoryName}</TableCell>
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
                           {item.budgetPeriod?.toLowerCase() || "Monthly"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {item.budgetLimit ? formatCurrency(item.budgetLimit) : "-"}
+                        {limit ? formatCurrency(limit) : "-"}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {formatCurrency(item.totalSpent)}
@@ -249,7 +213,7 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
                         {formatCurrency(item.pendingAmount)}
                       </TableCell>
                       <TableCell className="w-[150px]">
-                        {item.budgetLimit ? (
+                        {limit ? (
                           <div className="space-y-1">
                             <Progress
                               value={percentage}
@@ -328,14 +292,13 @@ export function BudgetManagement({ onClose }: BudgetManagementProps) {
                 <Label htmlFor="budgetPeriod">Budget Period</Label>
                 <Select
                   value={newCategory.budgetPeriod}
-                  onValueChange={(value) => setNewCategory({ ...newCategory, budgetPeriod: value })}
+                  onValueChange={(value) => setNewCategory({ ...newCategory, budgetPeriod: value as "MONTHLY" | "YEARLY" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    <SelectItem value="QUARTERLY">Quarterly</SelectItem>
                     <SelectItem value="YEARLY">Yearly</SelectItem>
                   </SelectContent>
                 </Select>

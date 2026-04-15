@@ -258,14 +258,14 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
   return (
     <Sheet open={open} onOpenChange={(v) => !v && handleClose()}>
       <SheetContent side="right" className="flex flex-col p-0 w-full sm:max-w-[480px]">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
+        <SheetHeader className="px-6 border-b shrink-0">
           <SheetTitle className="text-base font-semibold">
             {isEdit ? "Edit Event" : "New Calendar Event"}
           </SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 py-5 space-y-5">
+          <div className="px-6 space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="ev-title" className="text-xs font-medium">
                 Title <span className="text-destructive">*</span>
@@ -445,11 +445,11 @@ export function EventCreateDialog({ open, onOpenChange, defaultSlot, event }: Ev
           </div>
         </ScrollArea>
 
-        <SheetFooter className="px-6 py-4 border-t shrink-0 flex-row gap-2 justify-end">
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+        <SheetFooter className="px-6 border-t shrink-0 flex-row gap-2 justify-end">
+          <Button variant="outline" className="flex-1" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isPending || !form.title.trim()}>
+          <Button className="flex-1" onClick={handleSave} disabled={isPending || !form.title.trim()}>
             {isPending
               ? (isEdit ? "Saving..." : "Creating...")
               : (isEdit ? "Save Changes" : "Create Event")}

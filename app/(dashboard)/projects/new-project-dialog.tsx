@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { createProject } from "@/server/actions/project-actions";
+import { useCreateProject } from "@/lib/api/hooks/projects";
 import { Plus, Check, User, Search } from "lucide-react";
 import { useHrEmployees } from "@/lib/api/hooks/hr";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,7 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
   const setOpen = onOpenChange ?? setInternalOpen;
   const [memberSearch, setMemberSearch] = useState("");
   const { data: employeesData } = useHrEmployees();
+  const createProjectMutation = useCreateProject();
   const employees = Array.isArray(employeesData)
     ? employeesData
     : employeesData?.data ?? [];
@@ -77,19 +78,23 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     const capitalizedValues = {
       ...values,
       name: values.name.replace(/^\w/, (c) => c.toUpperCase()),
     };
-    const res = await createProject(capitalizedValues);
-    if (res.success) {
-      toast.success("Project created successfully");
-      setOpen(false);
-      form.reset();
-    } else {
-      toast.error(res.error || "Failed to create project");
-    }
+    toast.promise(
+      createProjectMutation.mutateAsync(capitalizedValues),
+      {
+        loading: "Creating project...",
+        success: () => {
+          setOpen(false);
+          form.reset();
+          return "Project created successfully";
+        },
+        error: "Failed to create project",
+      }
+    );
   }
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const name = e.target.value;

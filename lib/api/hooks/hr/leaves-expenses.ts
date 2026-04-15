@@ -275,6 +275,16 @@ export function useUpdateExpenseStatus() {
   });
 }
 
+export function useUpdateExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ expenseId, ...data }: { expenseId: number; category?: string; amount?: number; description?: string; merchant?: string; paymentMethod?: string; expenseDate?: string; receiptUrl?: string; receiptFileName?: string }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+  });
+}
+
 export function useDeleteExpense() {
   const qc = useQueryClient();
   return useMutation({
@@ -702,6 +712,101 @@ export function useHrLeaveAnalytics(year?: number) {
     queryFn: () =>
       apiClient.get<HrLeaveAnalytics>("/hr/leaves/analytics", { year: String(y) }),
     staleTime: 120_000,
+  });
+}
+
+// ─── Expense Categories ───────────────────────────────────────────────────────
+
+export interface ExpenseCategory {
+  id: number;
+  orgId: string;
+  name: string;
+  description: string | null;
+  budgetLimit: string | null;
+  budgetPeriod: string;
+  isActive: boolean;
+  createdAt: string;
+  totalSpent: number;
+  pendingAmount: number;
+  approvedAmount: number;
+  expenseCount: number;
+}
+
+export interface CreateExpenseCategoryInput {
+  name: string;
+  description?: string;
+  budgetLimit?: number;
+  budgetPeriod?: "MONTHLY" | "YEARLY";
+}
+
+export function useHrExpenseCategories() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "expenseCategories"] as const,
+    queryFn: () => apiClient.get<ExpenseCategory[]>("/hr/expenses/categories"),
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateExpenseCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateExpenseCategoryInput) =>
+      apiClient.post<ExpenseCategory>("/hr/expenses/categories", data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "expenseCategories"] }),
+  });
+}
+
+// ─── Expense Report ───────────────────────────────────────────────────────────
+
+export interface ExpenseReportData {
+  summary: {
+    totalExpenses: number;
+    totalAmount: number;
+    approvedAmount: number;
+    rejectedAmount: number;
+    pendingAmount: number;
+    avgExpenseAmount: number;
+  };
+  byCategory: {
+    category: string;
+    count: number;
+    amount: number;
+    percentage: number;
+  }[];
+  byEmployee: {
+    userId: string;
+    userName: string;
+    count: number;
+    amount: number;
+  }[];
+  byMonth: {
+    month: string;
+    count: number;
+    amount: number;
+  }[];
+  byStatus: {
+    status: string;
+    count: number;
+    amount: number;
+  }[];
+  topExpenses: {
+    id: number;
+    category: string;
+    amount: number;
+    description: string;
+    userName: string;
+    expenseDate: string;
+  }[];
+}
+
+export function useExpenseReport(startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "expenseReport", startDate, endDate] as const,
+    queryFn: () =>
+      apiClient.get<ExpenseReportData>("/hr/expenses/report", { startDate, endDate }),
+    staleTime: 60_000,
+    enabled: !!startDate && !!endDate,
   });
 }
 

@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { toast } from "sonner";
-import { format, subMonths, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { useState, useMemo } from "react";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import {
   Download,
-  FileText,
   TrendingUp,
   Calendar,
   Users,
@@ -33,96 +31,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getExpenseReportData } from "@/server/actions/expense-actions";
+import { useExpenseReport } from "@/lib/api/hooks/hr/leaves-expenses";
 
 interface ExpenseReportsProps {
   isAdmin: boolean;
 }
 
-interface ReportData {
-  summary: {
-    totalExpenses: number;
-    totalAmount: number;
-    approvedAmount: number;
-    rejectedAmount: number;
-    pendingAmount: number;
-    avgExpenseAmount: number;
-  };
-  byCategory: {
-    category: string;
-    count: number;
-    amount: number;
-    percentage: number;
-  }[];
-  byEmployee: {
-    userId: string;
-    userName: string;
-    count: number;
-    amount: number;
-  }[];
-  byMonth: {
-    month: string;
-    count: number;
-    amount: number;
-  }[];
-  topExpenses: {
-    id: number;
-    category: string;
-    amount: number;
-    description: string;
-    userName: string;
-    expenseDate: string;
-  }[];
-}
-
 export function ExpenseReports({ isAdmin }: ExpenseReportsProps) {
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("this_month");
 
-  useEffect(() => {
-    loadReportData();
+  const { startDate, endDate } = useMemo(() => {
+    const now = new Date();
+    let start: Date;
+    let end: Date = now;
+
+    switch (period) {
+      case "this_month":
+        start = startOfMonth(now);
+        end = endOfMonth(now);
+        break;
+      case "last_month":
+        start = startOfMonth(subMonths(now, 1));
+        end = endOfMonth(subMonths(now, 1));
+        break;
+      case "last_3_months":
+        start = startOfMonth(subMonths(now, 3));
+        break;
+      case "last_6_months":
+        start = startOfMonth(subMonths(now, 6));
+        break;
+      case "this_year":
+        start = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        start = startOfMonth(now);
+    }
+
+    return {
+      startDate: format(start, "yyyy-MM-dd"),
+      endDate: format(end, "yyyy-MM-dd"),
+    };
   }, [period]);
 
-  const loadReportData = async () => {
-    setLoading(true);
-    try {
-      let startDate: Date;
-      let endDate: Date = new Date();
-
-      switch (period) {
-        case "this_month":
-          startDate = startOfMonth(new Date());
-          endDate = endOfMonth(new Date());
-          break;
-        case "last_month":
-          startDate = startOfMonth(subMonths(new Date(), 1));
-          endDate = endOfMonth(subMonths(new Date(), 1));
-          break;
-        case "last_3_months":
-          startDate = startOfMonth(subMonths(new Date(), 3));
-          break;
-        case "last_6_months":
-          startDate = startOfMonth(subMonths(new Date(), 6));
-          break;
-        case "this_year":
-          startDate = new Date(new Date().getFullYear(), 0, 1);
-          break;
-        default:
-          startDate = startOfMonth(new Date());
-      }
-
-      const data = await getExpenseReportData({
-        startDate: format(startDate, "yyyy-MM-dd"),
-        endDate: format(endDate, "yyyy-MM-dd"),
-      });
-      setReportData(data);
-    } catch {
-      toast.error("Failed to load expense report");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: reportData, isLoading: loading } = useExpenseReport(startDate, endDate);
 
   const exportToCSV = () => {
     if (!reportData) return;

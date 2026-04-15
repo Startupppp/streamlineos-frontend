@@ -9,8 +9,7 @@ import { Button } from "@/components/ui/button";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
-import { uploadDocument } from "@/server/actions/document-actions";
-import { useHrEmployees } from "@/lib/api/hooks/hr";
+import { useCreateDocument, useHrEmployees } from "@/lib/api/hooks/hr";
 import {
   formSchema, type DocumentFormData, DocumentFormFields,
 } from "@/features/hr/documents/document-form-fields";
@@ -41,6 +40,7 @@ export function UploadDocumentDialog({
   const [tags, setTags] = useState<string[]>([]);
 
   const { data: employees } = useHrEmployees(undefined);
+  const createDocumentMutation = useCreateDocument();
 
   const filteredCategories = useMemo(
     () => categories.filter((cat) => cat && cat.trim() !== ""),
@@ -179,21 +179,23 @@ export function UploadDocumentDialog({
         const uploaded = await uploadFileFn(file);
         if (!uploaded) { failCount++; continue; }
         const docName = files.length === 1 ? data.name : file.name.replace(/\.[^/.]+$/, "");
-        const result = await uploadDocument({
-          name: docName,
-          description: data.description,
-          type: data.type,
-          category: data.category,
-          userId: data.userId,
-          isPublic: data.isPublic,
-          expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
-          tags: data.tags,
-          fileUrl: uploaded.url,
-          fileName: file.name,
-          fileSize: uploaded.size,
-          mimeType: uploaded.mimeType,
-        });
-        if (result.success) { successCount++; } else { failCount++; }
+        try {
+          await createDocumentMutation.mutateAsync({
+            name: docName,
+            description: data.description,
+            type: data.type,
+            category: data.category,
+            userId: data.userId,
+            isPublic: data.isPublic,
+            expiryDate: data.expiryDate ? format(data.expiryDate, "yyyy-MM-dd") : undefined,
+            tags: data.tags,
+            fileUrl: uploaded.url,
+            fileName: file.name,
+            fileSize: uploaded.size,
+            mimeType: uploaded.mimeType,
+          });
+          successCount++;
+        } catch { failCount++; }
       }
 
       if (successCount > 0) {

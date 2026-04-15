@@ -12,9 +12,14 @@ import { sendExpenseSubmittedEmail } from "@/lib/email";
 
 const createExpenseSchema = z.object({
   category: z.string(),
+  categoryId: z.number().int().optional(),
   amount: z.number(),
   description: z.string().optional(),
   receiptUrl: z.string().optional(),
+  receiptFileName: z.string().optional(),
+  merchant: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  projectId: z.number().int().optional(),
   expenseDate: z.string(),
 });
 
@@ -61,9 +66,14 @@ export async function POST(req: NextRequest) {
         orgId: session.orgId,
         userId: session.user.id,
         category: body.category,
+        categoryId: body.categoryId,
         amount: body.amount.toString(),
         description: body.description,
         receiptUrl: body.receiptUrl,
+        receiptFileName: body.receiptFileName,
+        merchant: body.merchant,
+        paymentMethod: body.paymentMethod,
+        projectId: body.projectId,
         expenseDate: formatDateOnly(new Date(body.expenseDate)),
         status: "PENDING",
       })

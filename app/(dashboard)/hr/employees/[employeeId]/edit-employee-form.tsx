@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { updateEmployee } from "@/server/actions/hr-actions";
+import { useUpdateProfile } from "@/lib/api/hooks/hr";
 import { Loader2 } from "lucide-react";
 import { useRolesList } from "@/lib/api/hooks/roles";
-import { useState } from "react";
 import { PersonalInfoSection } from "@/features/hr/employees/detail/personal-info-section";
 import { ProfessionalInfoSection } from "@/features/hr/employees/detail/professional-info-section";
 import { BankDetailsSection } from "@/features/hr/employees/detail/bank-details-section";
@@ -69,7 +68,7 @@ interface EditEmployeeFormProps {
 
 export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const updateProfileMutation = useUpdateProfile();
   const { data: orgRoles } = useRolesList();
   const assignableRoles = useMemo(
     () => (orgRoles || []).filter((r) => r.slug !== "CEO"),
@@ -100,45 +99,46 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
   });
 
   const onSubmit = useCallback(async (values: EmployeeFormValues) => {
-    setLoading(true);
     const skillsArray = values.skills
       ? values.skills.split(",").map((s) => s.trim()).filter(Boolean)
       : [];
 
-    const result = await updateEmployee({
-      id: employee.id,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      role: values.role as string,
-      designation: values.designation,
-      departmentId: values.departmentId,
-      phone: values.phone,
-      gender: values.gender,
-      joiningDate: values.joiningDate,
-      experienceYears: values.experienceYears,
-      skills: skillsArray,
-      taxId: values.taxId,
-      monthlySalary: values.monthlySalary,
-      bankDetails: values.bankAccount
-        ? {
-            accountNumber: values.bankAccount,
-            bankName: values.bankName || "",
-            branch: values.branch || "",
-            ifsc: values.ifsc || "",
-            accountHolder: values.accountHolder || "",
-          }
-        : undefined,
-    });
-    setLoading(false);
-
-    if (result.success) {
-      toast.success("Employee updated successfully!");
-      router.push("/hr/employees");
-      router.refresh();
-    } else {
-      toast.error(result.error || "Failed to update employee");
-    }
-  }, [employee.id, router]);
+    toast.promise(
+      updateProfileMutation.mutateAsync({
+        userId: employee.id,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        role: values.role as string,
+        designation: values.designation,
+        departmentId: values.departmentId,
+        phone: values.phone,
+        gender: values.gender,
+        joiningDate: values.joiningDate?.toISOString().slice(0, 10),
+        experienceYears: values.experienceYears,
+        skills: skillsArray,
+        taxId: values.taxId,
+        monthlySalary: values.monthlySalary,
+        bankDetails: values.bankAccount
+          ? {
+              accountNumber: values.bankAccount,
+              bankName: values.bankName || "",
+              branch: values.branch || "",
+              ifsc: values.ifsc || "",
+              accountHolder: values.accountHolder || "",
+            }
+          : undefined,
+      }),
+      {
+        loading: "Updating employee...",
+        success: () => {
+          router.push("/hr/employees");
+          router.refresh();
+          return "Employee updated successfully!";
+        },
+        error: "Failed to update employee",
+      }
+    );
+  }, [employee.id, router, updateProfileMutation]);
 
   const handleCancel = useCallback(() => router.back(), [router]);
 
@@ -160,11 +160,11 @@ export function EditEmployeeForm({ employee }: EditEmployeeFormProps) {
             </div>
           </div>
           <div className="shrink-0 flex justify-end gap-2 px-4 py-3 bg-muted/30 border-t">
-            <Button variant="outline" size="sm" type="button" onClick={handleCancel} disabled={loading}>
+            <Button variant="outline" size="sm" type="button" onClick={handleCancel} disabled={updateProfileMutation.isPending}>
               Cancel
             </Button>
-            <Button size="sm" type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+            <Button size="sm" type="submit" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
               Save Changes
             </Button>
           </div>

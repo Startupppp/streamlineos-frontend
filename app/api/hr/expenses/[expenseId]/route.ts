@@ -8,9 +8,20 @@ import type { NextRequest } from "next/server";
 import { createAuditLog } from "@/lib/audit-log";
 import { sendExpenseApprovedEmail, sendExpenseRejectedEmail, sendExpensePaidEmail } from "@/lib/email";
 
-const updateExpenseSchema = z.object({
+const updateStatusSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED", "PAID"]),
   rejectionReason: z.string().optional(),
+});
+
+const updateDetailsSchema = z.object({
+  category: z.string().optional(),
+  amount: z.number().optional(),
+  description: z.string().optional(),
+  merchant: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  expenseDate: z.string().optional(),
+  receiptUrl: z.string().optional(),
+  receiptFileName: z.string().optional(),
 });
 
 export async function PATCH(
@@ -26,9 +37,42 @@ export async function PATCH(
     const expenseId = Number(id);
     if (isNaN(expenseId)) return err("Invalid expense ID.", 400);
 
-    const body = await parseBody(req, updateExpenseSchema);
+    const rawBody = await req.json() as Record<string, unknown>;
 
-    if (!body.status || !["APPROVED", "REJECTED", "PAID"].includes(body.status)) {
+    // Route to details update if no status field
+    if (!rawBody.status) {
+      const body = updateDetailsSchema.safeParse(rawBody);
+      if (!body.success) return err("Invalid update data.", 400);
+
+      const expense = await db.query.expenses.findFirst({
+        where: and(eq(expenses.id, expenseId), eq(expenses.orgId, session.orgId)),
+        columns: { id: true, userId: true, status: true },
+      });
+      if (!expense) return err("Expense not found.", 404);
+
+      const isOwner = expense.userId === session.user.id;
+      const isAdmin = isAdminOrOwner(session.user.role);
+      if (!isOwner && !isAdmin) return err("Not authorized.", 403);
+      if (expense.status !== "PENDING" && !isAdmin) return err("Can only edit pending expenses.", 400);
+
+      await db.update(expenses).set({
+        ...(body.data.category && { category: body.data.category }),
+        ...(body.data.amount !== undefined && { amount: body.data.amount.toString() }),
+        ...(body.data.description !== undefined && { description: body.data.description }),
+        ...(body.data.merchant !== undefined && { merchant: body.data.merchant }),
+        ...(body.data.paymentMethod !== undefined && { paymentMethod: body.data.paymentMethod }),
+        ...(body.data.expenseDate && { expenseDate: body.data.expenseDate }),
+        ...(body.data.receiptUrl !== undefined && { receiptUrl: body.data.receiptUrl }),
+        ...(body.data.receiptFileName !== undefined && { receiptFileName: body.data.receiptFileName }),
+        updatedAt: new Date(),
+      }).where(and(eq(expenses.id, expenseId), eq(expenses.orgId, session.orgId)));
+
+      return ok({ success: true });
+    }
+
+    const body = updateStatusSchema.parse(rawBody);
+
+    if (!["APPROVED", "REJECTED", "PAID"].includes(body.status)) {
       return err("status must be APPROVED, REJECTED, or PAID.", 400);
     }
 

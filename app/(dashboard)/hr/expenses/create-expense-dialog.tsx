@@ -29,7 +29,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { toast } from "sonner";
-import { createExpense, updateExpense } from "@/server/actions/expense-actions";
+import { useCreateExpense, useUpdateExpense } from "@/lib/api/hooks/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const formSchema = z.object({
@@ -111,6 +111,8 @@ export function CreateExpenseDialog({
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const createExpenseMutation = useCreateExpense();
+  const updateExpenseMutation = useUpdateExpense();
   const isEditMode = !!editExpense;
 
   const form = useForm<FormData>({
@@ -224,18 +226,15 @@ export function CreateExpenseDialog({
         receiptFileName,
       };
 
-      const result = isEditMode
-        ? await updateExpense(editExpense!.id, expenseData)
-        : await createExpense(expenseData);
-
-      if (result.success) {
-        toast.success(isEditMode ? "Expense updated successfully" : "Expense submitted successfully");
-        form.reset();
-        removeFile();
-        onSuccess();
+      if (isEditMode && editExpense) {
+        await updateExpenseMutation.mutateAsync({ expenseId: editExpense.id, ...expenseData });
       } else {
-        toast.error(result.error || "Failed to submit expense");
+        await createExpenseMutation.mutateAsync(expenseData);
       }
+      toast.success(isEditMode ? "Expense updated successfully" : "Expense submitted successfully");
+      form.reset();
+      removeFile();
+      onSuccess();
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -251,7 +250,7 @@ export function CreateExpenseDialog({
       description="Submit an expense for reimbursement"
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={isEditMode ? "Update Expense" : "Submit Expense"}
-      isPending={isLoading || uploading}
+      isPending={isLoading || uploading || createExpenseMutation.isPending || updateExpenseMutation.isPending}
     >
       <Form {...form}>
         <div className="space-y-4">

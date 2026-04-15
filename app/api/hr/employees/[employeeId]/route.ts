@@ -14,19 +14,33 @@ import { createAuditLog } from "@/lib/audit-log";
 
 const updateEmployeeSchema = z.object({
   name: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   designation: z.string().optional(),
   departmentId: z.number().optional(),
   phone: z.string().optional(),
   image: z.string().optional(),
   isActive: z.boolean().optional(),
   hasDashboardAccess: z.boolean().optional(),
+  role: z.string().optional(),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+  experienceYears: z.number().optional(),
+  taxId: z.string().optional(),
+  monthlySalary: z.number().optional(),
+  bankDetails: z.object({
+    accountNumber: z.string().optional(),
+    bankName: z.string().optional(),
+    branch: z.string().optional(),
+    ifsc: z.string().optional(),
+    accountHolder: z.string().optional(),
+  }).optional(),
   skills: z.array(z.string()).optional(),
   bio: z.string().max(500).optional(),
   linkedinUrl: z.string().url().optional().or(z.literal("")),
   twitterUrl: z.string().url().optional().or(z.literal("")),
   githubUrl: z.string().url().optional().or(z.literal("")),
   websiteUrl: z.string().url().optional().or(z.literal("")),
-  joiningDate: z.string().optional(), // ISO date string (YYYY-MM-DD)
+  joiningDate: z.string().optional(),
   reportingTo: z.string().nullable().optional(),
 });
 
@@ -100,6 +114,24 @@ export async function PATCH(
 
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
+    if (body.firstName !== undefined || body.lastName !== undefined) {
+      // Compose name from first/last if provided
+      const existing = await db.query.users.findFirst({
+        where: eq(users.id, targetUserId),
+        columns: { firstName: true, lastName: true, name: true },
+      });
+      const first = body.firstName ?? existing?.firstName ?? "";
+      const last = body.lastName ?? existing?.lastName ?? "";
+      updateData.firstName = first;
+      updateData.lastName = last;
+      if (!body.name) updateData.name = `${first} ${last}`.trim();
+    }
+    if (body.role !== undefined && isOwnerOrAdmin) updateData.role = body.role;
+    if (body.gender !== undefined) updateData.gender = body.gender;
+    if (body.experienceYears !== undefined) updateData.experienceYears = body.experienceYears;
+    if (body.taxId !== undefined) updateData.taxId = body.taxId;
+    if (body.monthlySalary !== undefined && isOwnerOrAdmin) updateData.monthlySalary = body.monthlySalary;
+    if (body.bankDetails !== undefined) updateData.bankDetails = body.bankDetails;
     if (body.designation !== undefined) updateData.designation = body.designation;
     if (body.departmentId !== undefined) updateData.departmentId = body.departmentId;
     if (body.phone !== undefined) updateData.phone = body.phone;

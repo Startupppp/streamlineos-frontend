@@ -410,6 +410,8 @@ export interface CreateDepartmentInput {
 export interface UpdateProfileInput {
   userId: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
   designation?: string;
   departmentId?: number;
   phone?: string;
@@ -420,6 +422,20 @@ export interface UpdateProfileInput {
   githubUrl?: string;
   websiteUrl?: string;
   skills?: string[];
+  role?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
+  experienceYears?: number;
+  taxId?: string;
+  monthlySalary?: number;
+  bankDetails?: {
+    accountNumber?: string;
+    bankName?: string;
+    branch?: string;
+    ifsc?: string;
+    accountHolder?: string;
+  };
+  joiningDate?: string;
+  reportingTo?: string | null;
 }
 
 export interface CheckInInput {
@@ -464,9 +480,14 @@ export interface CreateSalaryStructureInput {
 
 export interface CreateExpenseInput {
   category: string;
+  categoryId?: number;
   amount: number;
   description?: string;
   receiptUrl?: string;
+  receiptFileName?: string;
+  merchant?: string;
+  paymentMethod?: string;
+  projectId?: number;
   expenseDate: Date | string;
 }
 
@@ -503,9 +524,15 @@ export interface CreateDocumentInput {
   name: string;
   type: DocumentType;
   fileUrl: string;
+  fileName?: string;
   fileSize?: number;
   mimeType?: string;
   userId?: string;
+  description?: string;
+  category?: string;
+  isPublic?: boolean;
+  expiryDate?: string;
+  tags?: string[];
 }
 
 export interface CreateReviewCycleInput {

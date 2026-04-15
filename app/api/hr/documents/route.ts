@@ -23,9 +23,15 @@ const createDocumentSchema = z.object({
   name: z.string().min(1).max(255),
   type: z.enum(DOCUMENT_TYPES),
   fileUrl: z.string().url(),
+  fileName: z.string().optional(),
   fileSize: z.number().int().positive().optional(),
   mimeType: z.string().optional(),
   userId: z.string().optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  isPublic: z.boolean().optional().default(false),
+  expiryDate: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -77,10 +83,17 @@ export async function POST(req: NextRequest) {
         name: body.name,
         type: body.type,
         fileUrl: body.fileUrl,
+        fileName: body.fileName,
         fileSize: body.fileSize,
         mimeType: body.mimeType,
+        description: body.description,
+        category: body.category,
+        isPublic: body.isPublic ?? false,
+        expiryDate: body.expiryDate,
+        tags: body.tags,
         uploadedBy: session.user.id,
         isActive: true,
+        version: 1,
       })
       .returning();
 

@@ -37,9 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { viewFile, downloadFile } from "@/hooks/use-file-url";
-import { getDocuments } from "@/server/actions/document-actions";
-
-export type Document = Awaited<ReturnType<typeof getDocuments>>[number];
+import type { Document } from "@/types/hr";
 
 const DOCUMENT_TYPES = [
   { value: "CONTRACT", label: "Contract" },
