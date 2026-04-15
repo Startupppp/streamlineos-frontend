@@ -92,6 +92,64 @@ export async function backfillConvertedLeadsToClientAccounts(
   `);
 }
 
+/**
+ * Auto-assign CRM reps to unassigned client accounts via round-robin.
+ * Runs on every page load (idempotent — skips if no CS users exist).
+ */
+export async function backfillCrmAssignments(orgId: string) {
+  // Get CUSTOMER_SUPPORT members
+  const { organizationMembers } = await import("@/lib/db/schema");
+  const csMembers = await db
+    .select({ userId: organizationMembers.userId })
+    .from(organizationMembers)
+    .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.role, "CUSTOMER_SUPPORT")));
+
+  if (csMembers.length === 0) return;
+
+  // Get unassigned accounts
+  const unassigned = await db.query.clientAccounts.findMany({
+    where: and(
+      eq(clientAccounts.orgId, orgId),
+      sql`${clientAccounts.assignedCrmId} IS NULL`
+    ),
+    orderBy: [desc(clientAccounts.createdAt)],
+  });
+
+  if (unassigned.length === 0) return;
+
+  // Count current assignments per CS member
+  const counts: Record<string, number> = {};
+  for (const m of csMembers) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(clientAccounts)
+      .where(and(
+        eq(clientAccounts.orgId, orgId),
+        eq(clientAccounts.assignedCrmId, m.userId),
+        sql`${clientAccounts.status} != 'INVESTED'`
+      ));
+    counts[m.userId] = result?.count ?? 0;
+  }
+
+  // Assign each unassigned account to the CS member with fewest accounts
+  for (const account of unassigned) {
+    let minCount = Infinity;
+    let assignee: string | null = null;
+    for (const m of csMembers) {
+      if ((counts[m.userId] ?? 0) < minCount) {
+        minCount = counts[m.userId] ?? 0;
+        assignee = m.userId;
+      }
+    }
+    if (assignee) {
+      await db.update(clientAccounts)
+        .set({ assignedCrmId: assignee, updatedAt: new Date() })
+        .where(eq(clientAccounts.id, account.id));
+      counts[assignee] = (counts[assignee] ?? 0) + 1;
+    }
+  }
+}
+
 export async function getClientAccount(orgId: string, id: number) {
   const account = await db.query.clientAccounts.findFirst({
     where: and(eq(clientAccounts.id, id), eq(clientAccounts.orgId, orgId)),

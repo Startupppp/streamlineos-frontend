@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { withAuth, ok, parseQuery } from "@/lib/api/helpers";
-import { getClientAccounts, backfillConvertedLeadsToClientAccounts } from "@/server/queries/crm-clients";
+import { getClientAccounts, backfillConvertedLeadsToClientAccounts, backfillCrmAssignments } from "@/server/queries/crm-clients";
 import { z } from "zod";
 
 const listSchema = z.object({
@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     // Non-blocking: if backfill fails, still return existing data
     try {
       await backfillConvertedLeadsToClientAccounts(session.orgId, session.user.id);
+      await backfillCrmAssignments(session.orgId);
     } catch {
       // Backfill failure should not block the main query
     }
