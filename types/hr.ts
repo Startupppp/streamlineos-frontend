@@ -431,10 +431,15 @@ export interface CheckInInput {
 }
 
 export interface RequestLeaveInput {
-  typeId: number;
-  startDate: Date | string;
-  endDate: Date | string;
+  leaveTypeId: number;
+  startDate: string;
+  endDate: string;
   reason?: string;
+  priority?: "LOW" | "MEDIUM" | "HIGH";
+  approverId?: string;
+  attachmentUrl?: string;
+  isHalfDay?: boolean;
+  halfDayPeriod?: "AM" | "PM";
 }
 
 export interface ApproveLeaveInput {

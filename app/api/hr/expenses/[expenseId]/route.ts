@@ -101,3 +101,39 @@ export async function PATCH(
     return ok({ success: true });
   });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ expenseId: string }> }
+) {
+  return withAuth(async (session) => {
+    const { expenseId: id } = await params;
+    const expenseId = Number(id);
+    if (isNaN(expenseId)) return err("Invalid expense ID.", 400);
+
+    const expense = await db.query.expenses.findFirst({
+      where: and(eq(expenses.id, expenseId), eq(expenses.orgId, session.orgId)),
+      columns: { id: true, userId: true, status: true },
+    });
+
+    if (!expense) return err("Expense not found.", 404);
+
+    const isOwner = expense.userId === session.user.id;
+    const isAdmin = isAdminOrOwner(session.user.role);
+
+    if (!isOwner && !isAdmin) return err("Not authorized to delete this expense.", 403);
+    if (expense.status === "PAID") return err("Paid expenses cannot be deleted.", 400);
+
+    await db.delete(expenses).where(and(eq(expenses.id, expenseId), eq(expenses.orgId, session.orgId)));
+
+    void createAuditLog({
+      action: "expense.deleted",
+      userId: session.user.id,
+      orgId: session.orgId,
+      targetId: String(expenseId),
+      targetType: "expense",
+    }).catch(() => {});
+
+    return ok({ success: true });
+  });
+}

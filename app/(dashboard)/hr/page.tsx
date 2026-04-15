@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useTransition } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import { EmptySearchIllustration, EmptyTeamIllustration } from "@/components/illustrations";
-import { getEmployees, deleteEmployee, toggleDashboardAccess } from "@/server/actions/hr-actions";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { useDebouncedValue } from "@/hooks/use-debounce";
+import { useHrEmployees, useTerminateEmployee, useToggleDashboardAccess } from "@/lib/api/hooks/hr";
 
 import {
   type Employee,
@@ -35,13 +35,9 @@ export default function HRDashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [, startTransition] = useTransition();
 
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
-  const [togglingAccess, setTogglingAccess] = useState<Set<string>>(new Set());
 
   const searchTerm = searchParams.get("q") || "";
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
@@ -51,6 +47,12 @@ export default function HRDashboardPage() {
   const page = Number(searchParams.get("page")) || 1;
   const pageSize = (Number(searchParams.get("size")) || PAGE_SIZE) as PageSizeOption;
 
+  const { data: rawEmployees, isLoading } = useHrEmployees();
+  const terminateMutation = useTerminateEmployee();
+  const toggleAccessMutation = useToggleDashboardAccess();
+
+  const employees = useMemo(() => (Array.isArray(rawEmployees) ? rawEmployees : []) as unknown as Employee[], [rawEmployees]);
+
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -58,9 +60,7 @@ export default function HRDashboardPage() {
         if (value === null || value === "") params.delete(key);
         else params.set(key, value);
       }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-      });
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [searchParams, router, pathname],
   );
@@ -94,31 +94,20 @@ export default function HRDashboardPage() {
           const roleRaw = e.role.toLowerCase();
           const roleLabel = ROLE_LABELS[e.role]?.toLowerCase() ?? "";
           return (
-            name.includes(term) ||
-            email.includes(term) ||
-            first.includes(term) ||
-            last.includes(term) ||
-            designation.includes(term) ||
-            roleRaw.includes(term) ||
+            name.includes(term) || email.includes(term) || first.includes(term) ||
+            last.includes(term) || designation.includes(term) || roleRaw.includes(term) ||
             roleLabel.includes(term)
           );
         });
       }
     }
 
-    if (deptFilter !== "All") {
-      result = result.filter((e) => e.department?.name === deptFilter);
-    }
+    if (deptFilter !== "All") result = result.filter((e) => e.department?.name === deptFilter);
 
-    if (statusFilter === "Active") {
-      result = result.filter((e) => e.isActive !== false);
-    } else if (statusFilter === "Inactive") {
-      result = result.filter((e) => e.isActive === false);
-    }
+    if (statusFilter === "Active") result = result.filter((e) => e.isActive !== false);
+    else if (statusFilter === "Inactive") result = result.filter((e) => e.isActive === false);
 
-    if (roleFilter !== "All") {
-      result = result.filter((e) => e.role === roleFilter);
-    }
+    if (roleFilter !== "All") result = result.filter((e) => e.role === roleFilter);
 
     return result;
   }, [employees, debouncedSearchTerm, deptFilter, statusFilter, roleFilter]);
@@ -134,64 +123,29 @@ export default function HRDashboardPage() {
     [updateParams],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const data = await getEmployees();
-        if (!cancelled) setEmployees(data as Employee[]);
-      } catch {
-        if (!cancelled) toast.error("Failed to load employees");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const handleDelete = useCallback(async () => {
     if (!employeeToDelete) return;
-    try {
-      await deleteEmployee(employeeToDelete.id);
-      setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id));
-      toast.success("Employee terminated");
-    } catch {
-      toast.error("Failed to terminate employee");
-    } finally {
-      setDeleteDialogOpen(false);
-      setEmployeeToDelete(null);
-    }
-  }, [employeeToDelete]);
+    terminateMutation.mutate(employeeToDelete.id, {
+      onSuccess: () => {
+        toast.success("Employee terminated");
+        setDeleteDialogOpen(false);
+        setEmployeeToDelete(null);
+      },
+      onError: () => toast.error("Failed to terminate employee"),
+    });
+  }, [employeeToDelete, terminateMutation]);
 
   const handleToggleDashboardAccess = useCallback(
-    async (userId: string, newValue: boolean) => {
-      setTogglingAccess((prev) => new Set(prev).add(userId));
-      try {
-        const result = await toggleDashboardAccess(userId, newValue);
-        if (result.error) {
-          toast.error(result.error);
-        } else {
-          setEmployees((prev) =>
-            prev.map((e) =>
-              e.id === userId ? { ...e, hasDashboardAccess: newValue } : e,
-            ),
-          );
-          toast.success(`Dashboard access ${newValue ? "enabled" : "disabled"}`);
-        }
-      } catch {
-        toast.error("Failed to toggle dashboard access");
-      } finally {
-        setTogglingAccess((prev) => {
-          const next = new Set(prev);
-          next.delete(userId);
-          return next;
-        });
-      }
+    (userId: string, newValue: boolean) => {
+      toggleAccessMutation.mutate(
+        { userId, hasDashboardAccess: newValue },
+        {
+          onSuccess: () => toast.success(`Dashboard access ${newValue ? "enabled" : "disabled"}`),
+          onError: () => toast.error("Failed to toggle dashboard access"),
+        },
+      );
     },
-    [],
+    [toggleAccessMutation],
   );
 
   const handleExport = useCallback(async () => {
@@ -203,22 +157,19 @@ export default function HRDashboardPage() {
       department: e.department?.name ?? "",
       status: e.isActive !== false ? "Active" : "Inactive",
     }));
-    await downloadXlsx(
-      `employees-${new Date().toISOString().slice(0, 10)}.xlsx`,
-      [
-        {
-          name: "Employees",
-          columns: [
-            { header: "Name", key: "name", width: 25 },
-            { header: "Email", key: "email", width: 30 },
-            { header: "Role", key: "role", width: 20 },
-            { header: "Department", key: "department", width: 20 },
-            { header: "Status", key: "status", width: 12 },
-          ],
-          rows,
-        },
-      ],
-    );
+    await downloadXlsx(`employees-${new Date().toISOString().slice(0, 10)}.xlsx`, [
+      {
+        name: "Employees",
+        columns: [
+          { header: "Name", key: "name", width: 25 },
+          { header: "Email", key: "email", width: 30 },
+          { header: "Role", key: "role", width: 20 },
+          { header: "Department", key: "department", width: 20 },
+          { header: "Status", key: "status", width: 12 },
+        ],
+        rows,
+      },
+    ]);
     toast.success("Employees exported");
   }, [filteredEmployees]);
 
@@ -232,17 +183,14 @@ export default function HRDashboardPage() {
     setDeleteDialogOpen(true);
   }, []);
 
-  if (loading) {
-    return <EmployeesLoadingSkeleton />;
-  }
+  if (isLoading) return <EmployeesLoadingSkeleton />;
 
   const showFrom = filteredEmployees.length > 0 ? (page - 1) * pageSize + 1 : 0;
   const showTo = Math.min(page * pageSize, filteredEmployees.length);
-  const hasActiveFilters =
-    !!searchTerm ||
-    deptFilter !== "All" ||
-    statusFilter !== "Active" ||
-    roleFilter !== "All";
+  const hasActiveFilters = !!searchTerm || deptFilter !== "All" || statusFilter !== "Active" || roleFilter !== "All";
+  const togglingAccess = toggleAccessMutation.isPending
+    ? new Set([toggleAccessMutation.variables?.userId].filter(Boolean) as string[])
+    : new Set<string>();
 
   return (
     <PageWrapper
@@ -308,10 +256,7 @@ export default function HRDashboardPage() {
           illustration={<EmptyTeamIllustration className="mb-3" />}
           title="No employees found"
           description="Get started by adding your first team member."
-          action={{
-            label: "Add Employee",
-            href: "/hr/onboarding",
-          }}
+          action={{ label: "Add Employee", href: "/hr/onboarding" }}
         />
       )}
 
@@ -319,7 +264,11 @@ export default function HRDashboardPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Terminate Employee"
-        description={employeeToDelete ? `Are you sure you want to terminate ${employeeToDelete.firstName ?? ""} ${employeeToDelete.lastName ?? ""}? This action cannot be undone.` : ""}
+        description={
+          employeeToDelete
+            ? `Are you sure you want to terminate ${employeeToDelete.firstName ?? ""} ${employeeToDelete.lastName ?? ""}? This action cannot be undone.`
+            : ""
+        }
         confirmLabel="Terminate"
         variant="destructive"
         onConfirm={handleDelete}

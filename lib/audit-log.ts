@@ -72,7 +72,9 @@ export type AuditAction =
   | "quote.exported"
   | "onboarding.reminder_sent"
   | "worklog.exported"
-  | "expense.exported";
+  | "expense.exported"
+  | "expense.deleted"
+  | "hr.document_deleted";
 
 interface AuditLogEntry {
   action: AuditAction;

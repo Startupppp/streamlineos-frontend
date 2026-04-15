@@ -50,8 +50,8 @@ const RSVP_STATUS_LABELS: Record<string, string> = {
 export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const deleteEvent = useDeleteCalendarEvent();
-  const rsvpMutation = useRsvpCalendarEvent();
+  const { mutateAsync: deleteEvent, isPending: deleteEventIsPending } = useDeleteCalendarEvent();
+  const { mutateAsync: rsvpMutation, isPending: rsvpMutationIsPending } = useRsvpCalendarEvent();
 
   // The list item id is like "event-123"; extract the numeric part for API calls
   const numericEventId = event ? extractEventNumericId(event.id) : null;
@@ -62,7 +62,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
   const handleDelete = useCallback(async () => {
     if (!event || numericEventId === null) return;
     try {
-      await deleteEvent.mutateAsync(numericEventId);
+      await deleteEvent(numericEventId);
       toast.success("Event deleted");
       onClose();
     } catch {
@@ -74,7 +74,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
     async (status: "accepted" | "declined" | "tentative") => {
       if (!event || numericEventId === null) return;
       try {
-        await rsvpMutation.mutateAsync({ eventId: numericEventId, status });
+        await rsvpMutation({ eventId: numericEventId, status });
         toast.success(`RSVP updated: ${RSVP_STATUS_LABELS[status]}`);
       } catch {
         toast.error("Failed to update RSVP");
@@ -164,7 +164,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             size="sm"
                             variant="outline"
                             className="flex-1 h-8 text-xs gap-1.5 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:border-green-900 dark:hover:bg-green-950"
-                            disabled={rsvpMutation.isPending}
+                            disabled={deleteEventIsPending || rsvpMutationIsPending}
                             onClick={() => handleRsvp("accepted")}
                             aria-label="Accept event"
                           >
@@ -175,7 +175,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             size="sm"
                             variant="outline"
                             className="flex-1 h-8 text-xs gap-1.5 text-yellow-600 border-yellow-200 hover:bg-yellow-50 hover:text-yellow-700 dark:text-yellow-400 dark:border-yellow-900 dark:hover:bg-yellow-950"
-                            disabled={rsvpMutation.isPending}
+                            disabled={rsvpMutationIsPending}
                             onClick={() => handleRsvp("tentative")}
                             aria-label="Mark as tentative"
                           >
@@ -186,7 +186,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                             size="sm"
                             variant="outline"
                             className="flex-1 h-8 text-xs gap-1.5 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950"
-                            disabled={rsvpMutation.isPending}
+                            disabled={rsvpMutationIsPending}
                             onClick={() => handleRsvp("declined")}
                             aria-label="Decline event"
                           >

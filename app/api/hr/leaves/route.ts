@@ -10,10 +10,15 @@ import type { NextRequest } from "next/server";
 import { sendLeaveRequestEmail } from "@/lib/email";
 
 const createLeaveSchema = z.object({
-  typeId: z.number(),
+  leaveTypeId: z.number(),
   startDate: z.string(),
   endDate: z.string(),
   reason: z.string().optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional().default("MEDIUM"),
+  approverId: z.string().optional(),
+  attachmentUrl: z.string().optional(),
+  isHalfDay: z.boolean().optional().default(false),
+  halfDayPeriod: z.enum(["AM", "PM"]).optional(),
 });
 
 export const dynamic = "force-dynamic";
@@ -108,42 +113,41 @@ export async function POST(req: NextRequest) {
     try {
       const body = await parseBody(req, createLeaveSchema);
 
-      if (!body.typeId || !body.startDate || !body.endDate) {
-        return err("typeId, startDate, and endDate are required.", 400);
+      if (!body.leaveTypeId || !body.startDate || !body.endDate) {
+        return err("leaveTypeId, startDate, and endDate are required.", 400);
       }
 
       if (body.startDate > body.endDate) {
         return err("Start date must be before or equal to end date.", 400);
       }
 
-      const diffDays =
-        Math.round(
-          Math.abs(
-            new Date(body.endDate).getTime() -
-              new Date(body.startDate).getTime()
-          ) /
-            (1000 * 60 * 60 * 24)
-        ) + 1;
+      const requestedDays = body.isHalfDay
+        ? 0.5
+        : Math.round(
+            Math.abs(
+              new Date(body.endDate).getTime() - new Date(body.startDate).getTime()
+            ) / (1000 * 60 * 60 * 24)
+          ) + 1;
 
       const [balance, leaveType] = await Promise.all([
         db.query.leaveBalances.findFirst({
           where: and(
             eq(leaveBalances.userId, session.user.id),
             eq(leaveBalances.orgId, session.orgId),
-            eq(leaveBalances.leaveTypeId, body.typeId),
+            eq(leaveBalances.leaveTypeId, body.leaveTypeId),
             eq(leaveBalances.year, new Date().getFullYear())
           ),
         }),
         db.query.leaveTypes.findFirst({
-          where: eq(leaveTypes.id, body.typeId),
+          where: eq(leaveTypes.id, body.leaveTypeId),
           columns: { name: true },
         }),
       ]);
 
       const isUnpaid = leaveType?.name === LEAVE_POLICY.UNPAID.name;
-      if (!isUnpaid && balance && Number(balance.balance) < diffDays) {
+      if (!isUnpaid && balance && Number(balance.balance) < requestedDays) {
         return err(
-          `Insufficient leave balance. Available: ${balance.balance}, Required: ${diffDays}`,
+          `Insufficient leave balance. Available: ${balance.balance}, Required: ${requestedDays}`,
           400
         );
       }
@@ -167,10 +171,15 @@ export async function POST(req: NextRequest) {
       await db.insert(leaveRequests).values({
         orgId: session.orgId,
         userId: session.user.id,
-        leaveTypeId: body.typeId,
+        leaveTypeId: body.leaveTypeId,
         startDate: formatDateOnly(new Date(body.startDate)),
         endDate: formatDateOnly(new Date(body.endDate)),
         reason: body.reason,
+        priority: body.priority ?? "MEDIUM",
+        approverId: body.approverId ?? null,
+        attachmentUrl: body.attachmentUrl ?? null,
+        isHalfDay: body.isHalfDay ?? false,
+        halfDayPeriod: body.halfDayPeriod ?? null,
         status: "PENDING",
       });
 

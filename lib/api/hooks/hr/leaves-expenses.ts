@@ -64,8 +64,10 @@ export function useRequestLeave() {
   return useMutation({
     mutationFn: (data: RequestLeaveInput) =>
       apiClient.post<{ success: boolean }>("/hr/leaves", data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.leaves() });
+      qc.invalidateQueries({ queryKey: ["vaivamm", "hr", "leavesMyRequests"] });
+    },
   });
 }
 
@@ -192,6 +194,49 @@ export function useHrDirectory() {
   });
 }
 
+export interface ExpensePageFilters {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  startDate?: string;
+  endDate?: string;
+  month?: string;
+  status?: string;
+  category?: string;
+  categoryId?: number;
+  search?: string;
+  userId?: string;
+  paymentMethod?: string;
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+export function useExpensePageData(filters: ExpensePageFilters = {}) {
+  const params: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(filters)) {
+    if (v !== undefined && v !== "" && v !== null) params[k] = v;
+  }
+  return useQuery({
+    queryKey: [...queryKeys.hr.expenses(), "pageData", params] as const,
+    queryFn: () =>
+      apiClient.get<{
+        expenses: unknown[];
+        pendingExpenses: unknown[];
+        stats: {
+          totalAmount: number; pendingAmount: number; approvedAmount: number;
+          rejectedAmount: number; paidAmount: number; totalCount: number;
+          pendingCount: number; approvedCount: number; rejectedCount: number;
+          paidCount: number; avgExpenseAmount: number;
+        } | null;
+        categories: Array<{ id: number; name: string; description: string | null; budgetLimit: string | null; budgetPeriod: string | null; isActive: boolean | null }>;
+        pagination: { page: number; pageSize: number; total: number; totalPages: number };
+        isAdmin: boolean;
+      }>("/hr/expenses/page-data", Object.keys(params).length ? params : undefined),
+    staleTime: 30_000,
+  });
+}
+
 export function useHrExpenses(
   userId?: string,
   status?: "PENDING" | "APPROVED" | "REJECTED" | "PAID"
@@ -225,6 +270,16 @@ export function useUpdateExpenseStatus() {
   return useMutation({
     mutationFn: ({ expenseId, ...data }: UpdateExpenseStatusInput) =>
       apiClient.patch<{ success: boolean }>(`/hr/expenses/${expenseId}`, data),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
+  });
+}
+
+export function useDeleteExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (expenseId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/expenses/${expenseId}`),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.expenses() }),
   });
@@ -282,6 +337,32 @@ export function useCreateDocument() {
       apiClient.post<Document>("/hr/documents", data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.hr.documents() }),
+  });
+}
+
+export function useDeleteDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/documents/${documentId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.hr.documents() });
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "documentStats"] });
+    },
+  });
+}
+
+interface DocumentStats {
+  total: number;
+  byType: Record<string, number>;
+  expiringIn30Days: number;
+}
+
+export function useHrDocumentStats() {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "documentStats"] as const,
+    queryFn: () => apiClient.get<DocumentStats>("/hr/documents/stats"),
+    staleTime: 60_000,
   });
 }
 

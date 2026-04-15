@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, startOfDay, differenceInCalendarDays } from "date-fns";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import {
@@ -20,9 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileUpload } from "@/components/storage/file-upload";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { AlertCircle } from "lucide-react";
-import { submitLeaveRequest } from "@/server/actions/leave-actions";
+import { useRequestLeave } from "@/lib/api/hooks/hr";
 import { LEAVE_MAX_DAYS } from "@/lib/leave-policy";
-import { getErrorMessage } from "@/lib/get-error-message";
 import type { LeaveType, Approver, LeaveBalance } from "@/app/(dashboard)/hr/leaves/leaves-shared";
 
 const leaveFormSchema = z.object({
@@ -49,8 +47,7 @@ interface LeaveRequestSheetProps {
 export function LeaveRequestSheet({
   open, onOpenChange, leaveTypes, approvers, joiningDate, balances = [],
 }: LeaveRequestSheetProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const requestLeaveMutation = useRequestLeave();
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
 
   const minDate = joiningDate
@@ -114,38 +111,34 @@ export function LeaveRequestSheet({
 
   const handleAttachmentUpload = useCallback((url: string) => setAttachmentUrl(url), []);
 
-  const onSubmit = useCallback(async (data: LeaveFormValues) => {
+  const onSubmit = useCallback((data: LeaveFormValues) => {
     if (leaveDayLimitError) { toast.error(leaveDayLimitError); return; }
     const approverId = data.approverId || approvers[0]?.id;
     if (!approverId) { toast.error("No approver available"); return; }
-    setIsLoading(true);
-    try {
-      const result = await submitLeaveRequest({
+
+    requestLeaveMutation.mutate(
+      {
         leaveTypeId: parseInt(data.leaveTypeId),
-        startDate: new Date(data.startDate),
-        endDate: new Date(data.endDate),
+        startDate: data.startDate,
+        endDate: data.endDate,
         reason: data.reason,
         priority: data.priority,
         approverId,
         attachmentUrl: attachmentUrl || undefined,
         isHalfDay: data.halfDay,
         halfDayPeriod: data.halfDay ? data.halfDayPeriod : undefined,
-      });
-      if (result.success) {
-        toast.success("Leave requested successfully!");
-        form.reset();
-        setAttachmentUrl(null);
-        onOpenChange(false);
-        router.refresh();
-      } else {
-        toast.error(result.error || "Failed to submit request");
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, router]);
+      },
+      {
+        onSuccess: () => {
+          toast.success("Leave requested successfully!");
+          form.reset();
+          setAttachmentUrl(null);
+          onOpenChange(false);
+        },
+        onError: (err) => toast.error(err.message || "Failed to submit request"),
+      },
+    );
+  }, [leaveDayLimitError, approvers, attachmentUrl, form, onOpenChange, requestLeaveMutation]);
 
   return (
     <HrSheet
@@ -155,7 +148,7 @@ export function LeaveRequestSheet({
       description="Fill in the details to submit a leave request"
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel="Submit Request"
-      isPending={isLoading}
+      isPending={requestLeaveMutation.isPending}
     >
       <Form {...form}>
         <div className="space-y-4">

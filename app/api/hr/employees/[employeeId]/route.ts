@@ -19,6 +19,7 @@ const updateEmployeeSchema = z.object({
   phone: z.string().optional(),
   image: z.string().optional(),
   isActive: z.boolean().optional(),
+  hasDashboardAccess: z.boolean().optional(),
   skills: z.array(z.string()).optional(),
   bio: z.string().max(500).optional(),
   linkedinUrl: z.string().url().optional().or(z.literal("")),
@@ -104,6 +105,10 @@ export async function PATCH(
     if (body.phone !== undefined) updateData.phone = body.phone;
     if (body.image !== undefined) updateData.image = body.image;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    if (body.hasDashboardAccess !== undefined) {
+      if (!isOwnerOrAdmin) return err("Only admins can toggle dashboard access.", 403);
+      updateData.hasDashboardAccess = body.hasDashboardAccess;
+    }
     if (body.skills !== undefined) updateData.skills = body.skills;
     if (body.bio !== undefined) updateData.bio = body.bio;
     if (body.linkedinUrl !== undefined) updateData.linkedinUrl = body.linkedinUrl || null;

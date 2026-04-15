@@ -64,6 +64,16 @@ export function useTerminateEmployee() {
   });
 }
 
+export function useToggleDashboardAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, hasDashboardAccess }: { userId: string; hasDashboardAccess: boolean }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/employees/${userId}`, { hasDashboardAccess }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.hr.employees() }),
+  });
+}
+
 export function useHrOrgChart() {
   return useQuery({
     queryKey: queryKeys.hr.orgChart(),
